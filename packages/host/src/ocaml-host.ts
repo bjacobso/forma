@@ -884,7 +884,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
     child.stderr.on("data", (chunk) => {
       daemon.stderr += chunk.toString();
     });
-    child.on("error", (error) => {
+    const onError = (error: Error) => {
       for (const waiter of daemon.waiters.splice(0)) {
         waiter(
           JSON.stringify({
@@ -896,6 +896,12 @@ export class NodeOcamlLanguageHost implements LanguageHost {
       if (this.#daemon === daemon) {
         this.#daemon = undefined;
       }
+    };
+    child.on("error", onError);
+    child.stdin.on("error", (error: NodeJS.ErrnoException) => {
+      // A daemon that exits during startup can close stdin before our first
+      // write. Let the exit handler report its exit code and stderr.
+      if (error.code !== "EPIPE") onError(error);
     });
     child.on("exit", (code) => {
       const message = `OCaml language daemon exited with code ${code ?? "unknown"}${daemon.stderr ? `: ${daemon.stderr.trim()}` : ""}`;
