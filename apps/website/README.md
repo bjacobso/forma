@@ -1,14 +1,14 @@
-# `@forma/website`
+# `@formalang/website`
 
 The static Vite/React site and browser compiler explorer for `forma-lang.com`.
-Its live pipelines run `@forma/ts` in a Web Worker and expose source, syntax,
+Its live pipelines run `@formalang/ts` in a Web Worker and expose source, syntax,
 inferred types, evaluated values, and generated artifacts.
 
 ```sh
-pnpm --filter @forma/website dev
-pnpm --filter @forma/website test
-pnpm --filter @forma/website build
-pnpm --filter @forma/website test:visual
+pnpm --filter @formalang/website dev
+pnpm --filter @formalang/website test
+pnpm --filter @formalang/website build
+pnpm --filter @formalang/website test:visual
 pnpm website:dry-run
 ```
 

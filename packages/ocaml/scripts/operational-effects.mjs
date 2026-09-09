@@ -10,7 +10,7 @@ const source = readFileSync(resolve(fixtureDir, "program.lisp"), "utf8");
 const golden = JSON.parse(readFileSync(resolve(fixtureDir, "expected.json"), "utf8"));
 
 if (!existsSync(nativeCli)) {
-  throw new Error("Missing native Forma CLI. Build @forma/ocaml first.");
+  throw new Error("Missing native Forma CLI. Build @formalang/ocaml first.");
 }
 
 const daemon = spawn(nativeCli, ["daemon"], { cwd: packageDir, stdio: ["pipe", "pipe", "pipe"] });

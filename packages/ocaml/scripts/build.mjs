@@ -22,7 +22,7 @@ const run = (command, args, options = {}) => {
 
   if (result.error?.code === "ENOENT") {
     console.error(
-      `Missing required command: ${command}. Install OCaml and Dune before building @forma/ocaml.`,
+      `Missing required command: ${command}. Install OCaml and Dune before building @formalang/ocaml.`,
     );
     process.exit(127);
   }

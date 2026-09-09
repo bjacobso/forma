@@ -35,7 +35,7 @@ import { createHoverExtension } from "../codemirror/hover.js";
 import { createDiagnosticsExtension } from "../codemirror/diagnostics.js";
 import { createSemanticHighlightPlugin } from "../codemirror/highlight.js";
 import type { LispEditorIntelligence } from "../codemirror/types.js";
-import type { EditorAnalysisResult } from "@forma/host/types";
+import type { EditorAnalysisResult } from "@formalang/host/types";
 import type { EditorAnalysisHost } from "../analysis-host.js";
 import { useLispAnalysis } from "./use-lisp-analysis.js";
 import type { LispSemanticVisibilityOptions } from "./use-lisp-analysis.js";

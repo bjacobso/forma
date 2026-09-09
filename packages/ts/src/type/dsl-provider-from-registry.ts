@@ -174,7 +174,7 @@ function defaultExtractTypeBindings(
  *
  * @example
  * ```typescript
- * import { createDSLTypeProviderFromRegistry, DSLRegistry } from "@forma/ts";
+ * import { createDSLTypeProviderFromRegistry, DSLRegistry } from "@formalang/ts";
  *
  * const registry = DSLRegistry.from(myHandler1, myHandler2);
  * const provider = createDSLTypeProviderFromRegistry(registry);

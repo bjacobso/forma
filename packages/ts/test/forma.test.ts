@@ -21,7 +21,7 @@ const run = (source: string) =>
 
 const runFixture = (name: string) => run(readFileSync(join(fixturesDir, name), "utf8"));
 
-describe("@forma/ts reader and formatter", () => {
+describe("@formalang/ts reader and formatter", () => {
   test("parses S-expressions with maps, vectors, and source locations", () => {
     const expr = Effect.runSync(Reader.parseToSExpr('(entity Worker {:name "Maria" :active true})'));
     expect(expr._tag).toBe("List");
@@ -38,7 +38,7 @@ describe("@forma/ts reader and formatter", () => {
   });
 });
 
-describe("@forma/ts evaluator fixtures", () => {
+describe("@formalang/ts evaluator fixtures", () => {
   test("arithmetic + let fixture", async () => {
     const result = (await runFixture("arithmetic-let.lisp")) as ReadonlyMap<
       string,
@@ -59,7 +59,7 @@ describe("@forma/ts evaluator fixtures", () => {
   });
 });
 
-describe("@forma/ts type inference", () => {
+describe("@formalang/ts type inference", () => {
   test("infers primitive and function types", async () => {
     expect(await Effect.runPromise(Type.inferSourceStr("42"))).toBe("Number");
     expect(await Effect.runPromise(Type.inferSourceStr("(fn [x] (+ x 1))"))).toBe(

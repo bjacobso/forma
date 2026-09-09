@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { AstNode } from "@forma/ts/engine";
+import type { AstNode } from "@formalang/ts/engine";
 import { nodeToSource, sameSpan, spanRange, type SpanRange } from "../lib/artifacts";
 
 export function SExprTree({

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { LispEditor, type LispEditorRef } from "@forma/editor/react";
+import { LispEditor, type LispEditorRef } from "@formalang/editor/react";
 import { sameSpan, spanContains, spanSize, type SpanRange } from "../lib/artifacts";
 import { useTheme } from "../lib/theme";
 import type { PipelineContext } from "../pipelines/types";

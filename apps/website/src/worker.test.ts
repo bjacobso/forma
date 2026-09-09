@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { typecheck } from "@forma/ts/engine";
+import { typecheck } from "@formalang/ts/engine";
 import { serializablePassResult, timeoutRunResult } from "./engine/protocol";
 import { getPipeline, pipelines } from "./pipelines";
 import worker from "./worker";

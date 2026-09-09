@@ -1,5 +1,5 @@
 /**
- * @forma/editor
+ * @formalang/editor
  *
  * Generic Lisp language editor built on CodeMirror 6.
  * Provides syntax highlighting, structural editing, HM type inference,

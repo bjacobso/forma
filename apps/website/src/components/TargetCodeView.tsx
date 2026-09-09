@@ -8,7 +8,7 @@ import {
   appDarkTheme,
   appLightSyntaxHighlighting,
   appLightTheme,
-} from "@forma/editor/codemirror";
+} from "@formalang/editor/codemirror";
 import { useEffect, useRef } from "react";
 import { useTheme } from "../lib/theme";
 import type { PipelinePreview } from "../pipelines/types";

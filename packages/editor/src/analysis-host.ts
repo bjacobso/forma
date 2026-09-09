@@ -1,10 +1,10 @@
-import { createDefaultLanguageHost } from "@forma/host/default-host";
-import { findEditorTypeAtOffset } from "@forma/host/editor";
+import { createDefaultLanguageHost } from "@formalang/host/default-host";
+import { findEditorTypeAtOffset } from "@formalang/host/editor";
 import type {
   EditorAnalysisRequest,
   EditorAnalysisResult,
   EditorTypedSpan,
-} from "@forma/host/types";
+} from "@formalang/host/types";
 
 export interface EditorAnalysisHost {
   analyzeEditor(request: EditorAnalysisRequest): Promise<EditorAnalysisResult>;

@@ -1,31 +1,33 @@
 {
-  "name": "@forma/editor",
+  "name": "@formalang/editor",
   "version": "0.1.0",
-  "description": "Forma editor: CodeMirror + React editor integration for the Forma language (via @forma/host).",
+  "description": "Forma editor: CodeMirror + React editor integration for the Forma language (via @formalang/host).",
   "license": "MIT",
+  "publishConfig": { "access": "public" },
+  "repository": { "type": "git", "url": "git+https://github.com/bjacobso/forma.git", "directory": "packages/editor" },
+  "homepage": "https://forma-lang.com",
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./src/index.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "default": "./src/index.ts"
+      "default": "./dist/index.js"
     },
     "./codemirror": {
-      "types": "./src/codemirror/index.ts",
+      "types": "./dist/codemirror/index.d.ts",
       "import": "./dist/codemirror/index.js",
-      "default": "./src/codemirror/index.ts"
+      "default": "./dist/codemirror/index.js"
     },
     "./react": {
-      "types": "./src/react/index.ts",
+      "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.js",
-      "default": "./src/react/index.ts"
+      "default": "./dist/react/index.js"
     }
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "scripts": {
     "generate": "lezer-generator src/grammar/lisp.grammar -o src/grammar/parser.generated.ts && node -e \"const fs=require('fs'); for(const f of ['src/grammar/parser.generated.ts','src/grammar/parser.generated.terms.ts']){const c=fs.readFileSync(f,'utf8'); fs.writeFileSync(f,'// @ts-nocheck\\n'+c)}\"",
@@ -42,7 +44,7 @@
     "@codemirror/lint": "^6.8.5",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.36.8",
-    "@forma/host": "workspace:*",
+    "@formalang/host": "workspace:*",
     "@lezer/highlight": "^1.2.1",
     "@lezer/lr": "^1.4.2",
     "effect": "^3.21.3"

@@ -795,7 +795,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
   private async request(payload: Record<string, unknown>): Promise<AbiResponse> {
     if (!existsSync(this.#cliPath)) {
       throw new Error(
-        `Missing OCaml language CLI at ${this.#cliPath}. Build it with \`pnpm --filter @forma/ocaml build\`.`,
+        `Missing OCaml language CLI at ${this.#cliPath}. Build it with \`pnpm --filter @formalang/ocaml build\`.`,
       );
     }
     const output = await new Promise<string>((resolveOutput, reject) => {
@@ -867,7 +867,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
     if (this.#daemon) return this.#daemon;
     if (!existsSync(this.#cliPath)) {
       throw new Error(
-        `Missing OCaml language CLI at ${this.#cliPath}. Build it with \`pnpm --filter @forma/ocaml build\`.`,
+        `Missing OCaml language CLI at ${this.#cliPath}. Build it with \`pnpm --filter @formalang/ocaml build\`.`,
       );
     }
 

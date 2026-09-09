@@ -31,7 +31,7 @@ const repl = Effect.gen(function* () {
   let env = createReplEnv();
   const rl = createInterface({ input, output, terminal: Boolean(input.isTTY && output.isTTY) });
 
-  output.write("\nWelcome to @forma/ts REPL\n");
+  output.write("\nWelcome to @formalang/ts REPL\n");
   output.write("Type :help for commands.\n\n");
 
   while (true) {

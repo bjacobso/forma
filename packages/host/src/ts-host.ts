@@ -1,14 +1,14 @@
 import { Effect, Ref } from "effect";
-import * as Builtins from "@forma/ts/builtins";
-import { KernelTypeError, type KernelError } from "@forma/ts/diagnostic";
-import { Env } from "@forma/ts/env";
-import * as Evaluator from "@forma/ts/evaluator";
-import type { BuiltinFn, KFn, KValue } from "@forma/ts/evaluator";
-import * as Lsp from "@forma/ts/lsp";
-import * as Reader from "@forma/ts/reader";
-import * as Engine from "@forma/ts/engine";
-import * as LanguageSession from "@forma/ts/session";
-import * as VM from "@forma/ts/vm";
+import * as Builtins from "@formalang/ts/builtins";
+import { KernelTypeError, type KernelError } from "@formalang/ts/diagnostic";
+import { Env } from "@formalang/ts/env";
+import * as Evaluator from "@formalang/ts/evaluator";
+import type { BuiltinFn, KFn, KValue } from "@formalang/ts/evaluator";
+import * as Lsp from "@formalang/ts/lsp";
+import * as Reader from "@formalang/ts/reader";
+import * as Engine from "@formalang/ts/engine";
+import * as LanguageSession from "@formalang/ts/session";
+import * as VM from "@formalang/ts/vm";
 
 import { typeProjection } from "./abi-projections.js";
 import { keyStringFromProjection, projectInlineValue } from "./value-projections.js";

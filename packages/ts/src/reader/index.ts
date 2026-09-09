@@ -1,5 +1,5 @@
 /**
- * @forma/ts/reader
+ * @formalang/ts/reader
  *
  * S-expression parser for the Lisp query DSL
  *

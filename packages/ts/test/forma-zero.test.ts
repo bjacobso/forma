@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Builtins, Evaluator } from "../src/index.js";
 
-// Shared conformance suite — the same fixtures run against @forma/ocaml via
+// Shared conformance suite — the same fixtures run against @formalang/ocaml via
 // packages/ocaml/scripts/forma-zero.mjs. See
 // conformance/README.md and docs/language.md.
 const __dirname = dirname(fileURLToPath(import.meta.url));

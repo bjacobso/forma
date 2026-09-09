@@ -1134,17 +1134,17 @@ for (const file of listFiles(lib)) {
 
 expectTextIncludes(new URL("scripts/require-build.mjs", cwd), [
   "dist/native/forma_cli.exe",
-  "@forma/ocaml#build completes first",
+  "@formalang/ocaml#build completes first",
 ]);
 
 expectTextIncludes(new URL("package.json", repoRoot), [
   '"build:js"',
   "turbo run build",
-  "--filter=@forma/ts",
-  "--filter=@forma/host",
-  "--filter=@forma/editor",
-  "--filter=@forma/language-server",
-  "--filter=@forma/website",
+  "--filter=@formalang/ts",
+  "--filter=@formalang/host",
+  "--filter=@formalang/editor",
+  "--filter=@formalang/language-server",
+  "--filter=@formalang/website",
   '"test:ocaml"',
 ]);
 

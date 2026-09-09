@@ -252,8 +252,8 @@ import { Effect } from "effect";
 import {
   generateMechanicsEffectTypeScriptModule,
   mechanicsPackageableDeclarations,
-} from "@forma/ts/mechanics";
-import { parseManyToSExpr } from "@forma/ts/reader";
+} from "@formalang/ts/mechanics";
+import { parseManyToSExpr } from "@formalang/ts/reader";
 
 const forms = Effect.runSync(parseManyToSExpr(source));
 const projected = mechanicsPackageableDeclarations(forms, "checkout.forma");
@@ -351,12 +351,12 @@ mise run forma:ocaml:test
 
 | Project | Purpose |
 | --- | --- |
-| `@forma/ts` | TypeScript reader, evaluator, VM, typechecker, and elaborator |
-| `@forma/ocaml` | Native/JavaScript/WebAssembly compiler and interpreter engine |
-| `@forma/host` | Shared host ABI across engine implementations |
-| `@forma/editor` | CodeMirror and React editing components |
-| `@forma/language-server` | Language Server Protocol implementation |
-| `@forma/website` | Browser-based compiler explorer and project site |
+| `@formalang/ts` | TypeScript reader, evaluator, VM, typechecker, and elaborator |
+| `@formalang/ocaml` | Native/JavaScript/WebAssembly compiler and interpreter engine |
+| `@formalang/host` | Shared host ABI across engine implementations |
+| `@formalang/editor` | CodeMirror and React editing components |
+| `@formalang/language-server` | Language Server Protocol implementation |
+| `@formalang/website` | Browser-based compiler explorer and project site |
 | `conformance/` | Cross-engine semantic and effect fixtures |
 
 ## Runtime configuration
@@ -372,9 +372,10 @@ mise run forma:ocaml:test
 ## Project status
 
 Forma is pre-alpha. Expect APIs, package boundaries, syntax, and artifact
-contracts to change while the language model is validated. Package names
-reserve the intended `@forma` surface, but nothing in this repository is
-published automatically.
+contracts to change while the language model is validated. Public packages use
+the `@formalang` npm scope. Changesets manages version PRs and the Release
+workflow publishes validated packages after those PRs merge. First publication
+and npm trusted-publisher setup are described in [Publishing](docs/publishing.md).
 
 ## Website deployment
 

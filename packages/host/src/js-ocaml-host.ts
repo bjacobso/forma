@@ -369,7 +369,7 @@ export class JsOcamlLanguageHost implements LanguageHost {
   private async request(payload: Record<string, unknown>): Promise<AbiResponse> {
     if (!existsSync(this.#jsPath)) {
       throw new Error(
-        `Missing OCaml JS language artifact at ${this.#jsPath}. Build it with \`pnpm --filter @forma/ocaml build\`.`,
+        `Missing OCaml JS language artifact at ${this.#jsPath}. Build it with \`pnpm --filter @formalang/ocaml build\`.`,
       );
     }
     const output = await new Promise<string>((resolveOutput, reject) => {
