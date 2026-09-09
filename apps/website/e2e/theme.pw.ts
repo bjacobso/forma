@@ -14,7 +14,7 @@ interface EditorReport {
 for (const theme of ["light", "dark"] as const) {
   test(`effect target is readable in ${theme} mode`, async ({ page }, testInfo) => {
     await setTheme(page, theme);
-    await page.goto("/demo/effect-ts", { waitUntil: "networkidle" });
+    await page.goto("/playground/demo/effect-ts", { waitUntil: "networkidle" });
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
     await expect(page.getByRole("heading", { name: "Target: Effect-Flavored TypeScript" })).toBeVisible();
 

@@ -44,7 +44,7 @@ jobs:
       - name: Verify production
         run: |
           response="$(mktemp)"
-          for path in / /about /demo; do
+          for path in / /vision /language /playground /playground/demo/types; do
             curl --fail --silent --show-error --location \
               --retry 5 --retry-delay 2 --retry-all-errors \
               --output "$response" "https://forma-lang.com$path"

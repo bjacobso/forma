@@ -2,6 +2,7 @@ node_modules/
 _opam/
 dist/
 dist-docs/
+dist-site/
 docs/.vitepress/cache/
 .turbo/
 coverage/

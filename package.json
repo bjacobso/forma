@@ -27,7 +27,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.alchemy.json && turbo run typecheck --filter=@formalang/ts --filter=@formalang/host --filter=@formalang/editor --filter=@formalang/language-server --filter=@formalang/website",
     "check": "pnpm check:branding && pnpm typecheck && pnpm test:js && pnpm docs:build",
     "check:branding": "bash scripts/check-branding.sh",
-    "website:build": "turbo run build --filter=@formalang/website",
+    "website:build": "pnpm docs:build && turbo run build --filter=@formalang/website && node scripts/assemble-website.mjs",
     "website:plan": "alchemy plan --stage prod",
     "website:deploy": "alchemy deploy --stage prod",
     "website:dry-run": "pnpm --filter @formalang/website exec wrangler deploy --dry-run"

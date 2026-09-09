@@ -309,8 +309,8 @@ export class CartRepo extends Context.Tag("CartRepo")<
   });
 ```
 
-Run `pnpm dev` and open `/demo/effect-ts` to edit this program and inspect its
-generated target. The sibling `/demo/effect-schema` pipeline uses
+Run `pnpm dev` and open `/playground/demo/effect-ts` to edit this program and inspect its
+generated target. The sibling `/playground/demo/effect-schema` pipeline uses
 `generateMechanicsEffectSchemaModule` to produce Effect Schema declarations.
 
 ## Quick start
@@ -382,7 +382,7 @@ and npm trusted-publisher setup are described in [Publishing](docs/publishing.md
 
 ## Website deployment
 
-The docs and compiler explorer deploy to https://forma-lang.com with Alchemy
+The docs homepage and compiler explorer at `/playground` deploy to https://forma-lang.com with Alchemy
 and Cloudflare Workers. After CI succeeds for a push to `main`, the Deploy
 workflow builds and deploys that validated revision, then checks the home,
 about, and demo pages. Pull requests do not deploy.

@@ -18,10 +18,28 @@ const indexHtml = `<!doctype html>
 </html>`;
 
 describe("forma website worker metadata", () => {
+  test.each(["/", "/vision", "/language", "/playground/assets/app.js", "/missing"])("passes %s through to assets", async (path) => {
+    const env = mockEnv(new Response("docs or asset"));
+    const request = new Request(`https://forma-lang.com${path}`);
+    expect(await (await worker.fetch(request, env)).text()).toBe("docs or asset");
+    expect(env.ASSETS.fetch).toHaveBeenCalledWith(request);
+  });
+
+  test.each(["/playground", "/playground/"])("serves the playground at %s", async (path) => {
+    const response = await worker.fetch(new Request(`https://forma-lang.com${path}`), mockEnv());
+    expect(await response.text()).toContain("<title>Forma Playground</title>");
+  });
+
+  test("redirects old shared demo URLs without losing editor state", async () => {
+    const response = await worker.fetch(new Request("https://forma-lang.com/demo/types?source=abc"), mockEnv());
+    expect(response.status).toBe(301);
+    expect(response.headers.get("location")).toBe("https://forma-lang.com/playground/demo/types?source=abc");
+  });
+
   test("injects pipeline metadata into cold shared demo routes", async () => {
     const env = mockEnv();
 
-    const response = await worker.fetch(new Request("https://forma-lang.com/demo/types"), env);
+    const response = await worker.fetch(new Request("https://forma-lang.com/playground/demo/types"), env);
     const html = await response.text();
 
     expect(response.status).toBe(200);
@@ -33,12 +51,12 @@ describe("forma website worker metadata", () => {
     expect(html).toContain(
       '<meta property="og:title" content="Types Without Writing Types - Forma" />',
     );
-    expect(html).toContain('<meta property="og:url" content="https://forma-lang.com/demo/types" />');
-    expect(env.ASSETS.fetch).toHaveBeenCalledWith(expect.objectContaining({ url: "https://forma-lang.com/index.html" }));
+    expect(html).toContain('<meta property="og:url" content="https://forma-lang.com/playground/demo/types" />');
+    expect(env.ASSETS.fetch).toHaveBeenCalledWith(expect.objectContaining({ url: "https://forma-lang.com/playground/" }));
   });
 
   test("injects route metadata for /about", async () => {
-    const response = await worker.fetch(new Request("https://forma-lang.com/about"), mockEnv());
+    const response = await worker.fetch(new Request("https://forma-lang.com/playground/about"), mockEnv());
     const html = await response.text();
 
     expect(html).toContain("<title>About Forma</title>");

@@ -11,14 +11,14 @@ export default Alchemy.Stack(
       name: stage === "prod" ? "forma-website" : `forma-website-${stage}`,
       ...(stage === "prod" ? { domain: "forma-lang.com" } : {}),
       command: "pnpm website:build",
-      outdir: "apps/website/dist",
+      outdir: "dist-site",
       main: "apps/website/src/worker.ts",
       compatibility: { date: "2026-06-10" },
       workersDev: true,
       assets: {
-        htmlHandling: "none",
-        notFoundHandling: "single-page-application",
-        runWorkerFirst: ["/", "/about", "/demo", "/demo/*"],
+        htmlHandling: "auto-trailing-slash",
+        notFoundHandling: "404-page",
+        runWorkerFirst: ["/playground", "/playground/*", "/about", "/demo", "/demo/*"],
       },
       dev: { command: "pnpm dev" },
     });

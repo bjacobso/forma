@@ -8,7 +8,7 @@ import "./styles.css";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
-      <BrowserRouter>
+      <BrowserRouter basename="/playground">
         <App />
       </BrowserRouter>
     </ThemeProvider>
