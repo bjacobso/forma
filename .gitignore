@@ -1,6 +1,8 @@
 node_modules/
 _opam/
 dist/
+dist-docs/
+docs/.vitepress/cache/
 .turbo/
 coverage/
 test-results/

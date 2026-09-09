@@ -1,0 +1,4 @@
+dune.3.20.2
+js_of_ocaml.6.2.0
+js_of_ocaml-compiler.6.2.0
+wasm_of_ocaml-compiler.6.2.0

@@ -13,6 +13,9 @@ type inference, evaluation, elaboration, and artifact emission. Domain concepts
 arrive through ordinary Forma preludes instead of being built into the language
 core.
 
+The documentation site can be started locally with `pnpm docs:dev`. Use
+`pnpm docs:build` to produce the static site in `dist-docs/`.
+
 ## Forma at a glance
 
 Functions, collections, and control flow use compact Lisp syntax:

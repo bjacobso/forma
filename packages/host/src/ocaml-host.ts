@@ -116,6 +116,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
         readonly responses: string[];
         readonly waiters: ((line: string) => void)[];
         stderr: string;
+        stdinError: string;
       }
     | undefined;
   #openSessions = 0;
@@ -880,9 +881,16 @@ export class NodeOcamlLanguageHost implements LanguageHost {
       responses: [] as string[],
       waiters: [] as ((line: string) => void)[],
       stderr: "",
+      stdinError: "",
     };
     child.stderr.on("data", (chunk) => {
       daemon.stderr += chunk.toString();
+    });
+    child.stdin.on("error", (error) => {
+      // A daemon can exit between spawn and the first write. The child exit
+      // handler below owns request settlement so its stderr and exit code are
+      // preserved; retaining the stream error prevents an unhandled EPIPE.
+      daemon.stdinError = error.message;
     });
     child.on("error", (error) => {
       for (const waiter of daemon.waiters.splice(0)) {
@@ -897,8 +905,9 @@ export class NodeOcamlLanguageHost implements LanguageHost {
         this.#daemon = undefined;
       }
     });
-    child.on("exit", (code) => {
-      const message = `OCaml language daemon exited with code ${code ?? "unknown"}${daemon.stderr ? `: ${daemon.stderr.trim()}` : ""}`;
+    child.on("close", (code) => {
+      const detail = daemon.stderr.trim() || daemon.stdinError;
+      const message = `OCaml language daemon exited with code ${code ?? "unknown"}${detail ? `: ${detail}` : ""}`;
       for (const waiter of daemon.waiters.splice(0)) {
         waiter(
           JSON.stringify({
@@ -926,6 +935,20 @@ export class NodeOcamlLanguageHost implements LanguageHost {
   private closeDaemon(): void {
     const daemon = this.#daemon;
     if (!daemon) return;
+    for (const waiter of daemon.waiters.splice(0)) {
+      waiter(
+        JSON.stringify({
+          ok: false,
+          diagnostics: [
+            {
+              message: "OCaml language daemon was closed by the host",
+              severity: "error",
+              code: "daemon/exit",
+            },
+          ],
+        }),
+      );
+    }
     daemon.lines.close();
     daemon.child.stdin.end();
     daemon.child.kill();

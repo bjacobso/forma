@@ -10,6 +10,54 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Detect OCaml changes
+    runs-on: ubuntu-latest
+    outputs:
+      ocaml: ${{ steps.ocaml.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: ocaml
+        name: Check OCaml inputs
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          PUSH_HEAD_SHA: ${{ github.sha }}
+        run: |
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            base="$PR_BASE_SHA"
+            head="$PR_HEAD_SHA"
+          else
+            base="$PUSH_BEFORE_SHA"
+            head="$PUSH_HEAD_SHA"
+          fi
+
+          if [[ -z "$base" || "$base" =~ ^0+$ ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --quiet "$base" "$head" -- \
+            packages/ocaml \
+            packages/language-server \
+            conformance \
+            preludes \
+            examples \
+            turbo.json \
+            .github/ocaml-packages.txt \
+            .github/workflows/ci.yml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
   javascript:
     name: JavaScript, TypeScript, and website
     runs-on: ubuntu-latest
@@ -30,6 +78,8 @@ jobs:
 
   ocaml:
     name: OCaml engine and parity suites
+    needs: changes
+    if: ${{ needs.changes.outputs.ocaml == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,5 +94,11 @@ jobs:
         with:
           ocaml-compiler: "5.2"
       - run: pnpm install --frozen-lockfile
-      - run: opam install -y dune.3.20.2 js_of_ocaml.6.2.0 js_of_ocaml-compiler.6.2.0 wasm_of_ocaml-compiler.6.2.0
+      - name: Cache OCaml dependencies
+        uses: actions/cache@v4
+        with:
+          path: _opam
+          key: ocaml-deps-v1-${{ runner.os }}-${{ runner.arch }}-5.2-${{ hashFiles('.github/ocaml-packages.txt') }}
+      - name: Install OCaml dependencies
+        run: xargs opam install -y < .github/ocaml-packages.txt
       - run: opam exec -- pnpm test:ocaml
