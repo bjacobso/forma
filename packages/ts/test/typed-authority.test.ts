@@ -26,7 +26,7 @@ const check = (source: string, options: { author: string; grants: Type.GrantFact
 
 const attrs = async (source: string) => (await authority(source)).authority.attributes;
 
-describe("@forma/ts typed authority inference", () => {
+describe("@formalang/ts typed authority inference", () => {
   test("infers a literal attribute assertion effect", async () => {
     await expect(attrs('(fn [f fs] [[(nth f 0) "must" "i9"]])')).resolves.toEqual(["must"]);
   });

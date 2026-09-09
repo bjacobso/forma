@@ -6,7 +6,7 @@
  */
 
 import { hoverTooltip, type Tooltip } from "@codemirror/view";
-import type { EditorAnalysisResult, EditorTypedSpan } from "@forma/host/types";
+import type { EditorAnalysisResult, EditorTypedSpan } from "@formalang/host/types";
 import { getDefaultEditorAnalysisHost } from "../analysis-host.js";
 import type { HoverProvider } from "./types.js";
 

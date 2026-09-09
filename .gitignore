@@ -2,12 +2,14 @@ node_modules/
 _opam/
 dist/
 dist-docs/
+dist-site/
 docs/.vitepress/cache/
 .turbo/
 coverage/
 test-results/
 playwright-report/
 .wrangler/
+.alchemy/
 
 .env
 .env.local

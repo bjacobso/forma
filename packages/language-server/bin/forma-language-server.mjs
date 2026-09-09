@@ -10,7 +10,7 @@ if (!existsSync(serverPath)) {
   console.error(
     [
       "forma-language-server has not been built yet.",
-      "Run `pnpm --filter @forma/language-server build` from the repository root, then retry.",
+      "Run `pnpm --filter @formalang/language-server build` from the repository root, then retry.",
     ].join("\n"),
   );
   process.exit(1);

@@ -11,8 +11,8 @@ const pkg = JSON.parse(readFileSync(resolve(cwd, "package.json"), "utf8")) as Pa
 const packageName = pkg.name ?? basename(cwd);
 
 const packageEntries: Record<string, UserConfig["entry"]> = {
-  "@forma/ts": ["src/*.ts"],
-  "@forma/host": ["src/*.ts"],
+  "@formalang/ts": ["src/*.ts"],
+  "@formalang/host": ["src/*.ts"],
 };
 
 export default defineConfig({
@@ -25,6 +25,6 @@ export default defineConfig({
   clean: true,
   platform: "node",
   target: "esnext",
-  fixedExtension: packageName === "@forma/ts" || packageName === "@forma/host",
+  fixedExtension: packageName === "@formalang/ts" || packageName === "@formalang/host",
   unbundle: true,
 });

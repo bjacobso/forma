@@ -11,7 +11,7 @@ import {
   type EditorAnalysisResult,
   type Span,
   type SyntaxTreeProjection,
-} from "@forma/host/types";
+} from "@formalang/host/types";
 import { getDefaultEditorAnalysisHost, type EditorAnalysisHost } from "../analysis-host.js";
 import { diagnosticRangeFromLoc } from "../codemirror/types.js";
 import type { CompletionProvider, DiagnosticsProvider } from "../codemirror/types.js";

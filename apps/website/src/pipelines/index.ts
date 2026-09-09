@@ -1,11 +1,11 @@
 import { Effect } from "effect";
-import { PRELUDE_SOURCE } from "@forma/ts/expander";
+import { PRELUDE_SOURCE } from "@formalang/ts/expander";
 import {
   generateMechanicsEffectSchemaModule,
   generateMechanicsEffectTypeScriptModule,
   mechanicsPackageableDeclarations,
-} from "@forma/ts/mechanics";
-import { parseManyToSExpr } from "@forma/ts/reader";
+} from "@formalang/ts/mechanics";
+import { parseManyToSExpr } from "@formalang/ts/reader";
 import type { PipelineDef } from "./types";
 
 const helloSource = `(let [rate 150
@@ -238,7 +238,7 @@ export const pipelines: readonly PipelineDef[] = [
       targetLabel: "Generated Effect TypeScript",
       language: "typescript",
       output: effectTypeScriptTarget(effectTsSource),
-      notice: "This target is generated in-browser from mechanics service and operation declarations through @forma/ts/mechanics.",
+      notice: "This target is generated in-browser from mechanics service and operation declarations through @formalang/ts/mechanics.",
     },
     narration: [
       {
@@ -262,7 +262,7 @@ export const pipelines: readonly PipelineDef[] = [
       targetLabel: "Generated Effect Schema",
       language: "typescript",
       output: effectSchemaTarget(schemaSource),
-      notice: "This target is generated in-browser from the parsed Forma schema declarations through @forma/ts/mechanics.",
+      notice: "This target is generated in-browser from the parsed Forma schema declarations through @formalang/ts/mechanics.",
     },
     narration: [
       {
@@ -271,7 +271,7 @@ export const pipelines: readonly PipelineDef[] = [
       },
       {
         stage: "target",
-        md: "The target pane is generated from those parsed schema declarations through `@forma/ts/mechanics`, then emitted as Effect Schema code.",
+        md: "The target pane is generated from those parsed schema declarations through `@formalang/ts/mechanics`, then emitted as Effect Schema code.",
       },
     ],
   },

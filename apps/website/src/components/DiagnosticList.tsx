@@ -1,4 +1,4 @@
-import type { Diagnostic } from "@forma/ts/engine";
+import type { Diagnostic } from "@formalang/ts/engine";
 
 export function DiagnosticList({
   diagnostics,

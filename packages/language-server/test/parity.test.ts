@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { TsLanguageHost } from "@forma/host";
+import { TsLanguageHost } from "@formalang/host";
 
 import { OcamlAbiClient } from "../src/abi.js";
 import { getCompletions } from "../src/handlers/completion.js";

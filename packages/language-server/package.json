@@ -1,24 +1,27 @@
 {
-  "name": "@forma/language-server",
+  "name": "@formalang/language-server",
   "version": "0.1.0",
   "description": "Language Server Protocol implementation for Forma, backed by the OCaml engine.",
   "license": "MIT",
+  "publishConfig": { "access": "public" },
+  "repository": { "type": "git", "url": "git+https://github.com/bjacobso/forma.git", "directory": "packages/language-server" },
+  "homepage": "https://forma-lang.com",
   "bin": {
     "forma-language-server": "./bin/forma-language-server.mjs"
   },
   "type": "module",
-  "main": "./dist/server.js",
-  "types": "./dist/server.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "types": "./dist/index.d.ts",
-      "default": "./src/index.ts"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./server": {
-      "import": "./dist/server.js",
       "types": "./dist/server.d.ts",
-      "default": "./src/server.ts"
+      "import": "./dist/server.js",
+      "default": "./dist/server.js"
     }
   },
   "files": [
@@ -26,6 +29,7 @@
     "dist"
   ],
   "scripts": {
+    "build:release": "pnpm build && node scripts/prepare-release.mjs",
     "build": "tsc -p tsconfig.build.json",
     "test": "vitest --run",
     "test:parity": "vitest --run test/parity.test.ts",
@@ -33,7 +37,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@forma/host": "workspace:*",
+    "@formalang/host": "workspace:*",
     "vscode-languageserver": "^9.0.1",
     "vscode-languageserver-textdocument": "^1.0.12"
   },

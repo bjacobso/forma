@@ -7,7 +7,7 @@ import {
   type EditorTypedSpan,
   type Span,
   type TypeProjection,
-} from "@forma/host";
+} from "@formalang/host";
 
 import type { AbiDiagnostic, AbiSpan } from "./protocol.js";
 import { isRecord } from "./protocol.js";

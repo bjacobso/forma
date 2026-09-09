@@ -16,6 +16,7 @@ const DemoPipeline = lazy(() =>
 export function App() {
   return (
     <>
+      <a href="/">Forma docs</a>
       <ThemeToggle />
       <Suspense fallback={<main className="route-loading">Loading...</main>}>
         <Routes>

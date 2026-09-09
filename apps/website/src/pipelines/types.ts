@@ -1,4 +1,4 @@
-import type { PassName } from "@forma/ts/engine";
+import type { PassName } from "@formalang/ts/engine";
 
 export type StageKey = "source" | PassName | "target";
 export type PipelineBadge = "live" | "preview";

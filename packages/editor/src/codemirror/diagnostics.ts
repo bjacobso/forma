@@ -6,7 +6,7 @@
  */
 
 import { linter, type Diagnostic } from "@codemirror/lint";
-import type { EditorAnalysisResult } from "@forma/host/types";
+import type { EditorAnalysisResult } from "@formalang/host/types";
 import { getDefaultEditorAnalysisHost, type EditorAnalysisHost } from "../analysis-host.js";
 import { diagnosticRangeFromLoc, type DiagnosticsProvider } from "./types.js";
 

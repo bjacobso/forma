@@ -1,9 +1,12 @@
 {
-  "name": "@forma/ts",
+  "name": "@formalang/ts",
   "version": "0.1.0",
   "description": "The TypeScript implementation of Forma, a typed Lisp for extensible domain languages.",
   "type": "module",
   "license": "MIT",
+  "publishConfig": { "access": "public" },
+  "repository": { "type": "git", "url": "git+https://github.com/bjacobso/forma.git", "directory": "packages/ts" },
+  "homepage": "https://forma-lang.com",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "exports": {

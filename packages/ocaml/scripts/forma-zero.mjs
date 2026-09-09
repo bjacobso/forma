@@ -1,6 +1,6 @@
 // Forma Zero conformance suite — runs the shared fixtures in
 // packages/conformance/forma-zero against the OCaml engine.
-// The same fixtures run against @forma/ts via
+// The same fixtures run against @formalang/ts via
 // packages/ts/test/forma-zero.test.ts.
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
@@ -13,7 +13,7 @@ const nativeCli = resolve(packageDir, "dist/native/forma_cli.exe");
 
 if (!existsSync(nativeCli)) {
   console.error(
-    `Missing ${nativeCli}. Build @forma/ocaml first (pnpm --filter @forma/ocaml build).`,
+    `Missing ${nativeCli}. Build @formalang/ocaml first (pnpm --filter @formalang/ocaml build).`,
   );
   process.exit(127);
 }

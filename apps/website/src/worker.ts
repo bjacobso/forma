@@ -19,12 +19,19 @@ export default {
     }
 
     const url = new URL(request.url);
-    const meta = metaForPath(url.pathname);
+    if (url.pathname === "/about" || url.pathname === "/demo" || url.pathname.startsWith("/demo/")) {
+      url.pathname = `/playground${url.pathname}`;
+      return Response.redirect(url.toString(), 301);
+    }
+    const pathname = url.pathname === "/playground" ? "/" : url.pathname.startsWith("/playground/")
+      ? url.pathname.slice("/playground".length)
+      : null;
+    const meta = pathname === null ? null : metaForPath(pathname);
     if (!meta) {
       return env.ASSETS.fetch(request);
     }
 
-    const indexUrl = new URL("/index.html", url);
+    const indexUrl = new URL("/playground/", url);
     const response = await env.ASSETS.fetch(new Request(indexUrl, request));
     const html = await response.text();
     const headers = new Headers(response.headers);
@@ -41,7 +48,7 @@ export default {
 function metaForPath(pathname: string): RouteMeta | null {
   if (pathname === "/") {
     return {
-      title: "Forma",
+      title: "Forma Playground",
       description:
         "Forma is a small typed language that compiles into the systems you already use. Watch every compiler pass happen.",
       path: "/",
@@ -81,8 +88,8 @@ function metaForPath(pathname: string): RouteMeta | null {
 function injectMeta(html: string, meta: RouteMeta, origin: string): string {
   const title = escapeHtml(meta.title);
   const description = escapeHtml(meta.description);
-  const url = escapeHtml(new URL(meta.path, origin).toString());
-  const image = escapeHtml(new URL("/og-image.svg", origin).toString());
+  const url = escapeHtml(new URL(`/playground${meta.path === "/" ? "" : meta.path}`, origin).toString());
+  const image = escapeHtml(new URL("/playground/og-image.svg", origin).toString());
 
   return html
     .replace(/<title>.*?<\/title>/, `<title>${title}</title>`)

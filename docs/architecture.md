@@ -15,8 +15,8 @@ source
 
 ## Engines
 
-`@forma/ts` is the embeddable TypeScript engine used by the browser demo and
-the default host. `@forma/ocaml` is the typed engine and compiler substrate,
+`@formalang/ts` is the embeddable TypeScript engine used by the browser demo and
+the default host. `@formalang/ocaml` is the typed engine and compiler substrate,
 building to native code, JavaScript, and WebAssembly. Cross-engine fixtures
 define the portable semantic intersection.
 
@@ -26,7 +26,7 @@ hook registrations.
 
 ## Host boundary
 
-`@forma/host` presents one asynchronous ABI for parsing, inference, evaluation,
+`@formalang/host` presents one asynchronous ABI for parsing, inference, evaluation,
 sessions, editor analysis, retained values, and host calls. Implementations
 adapt the TypeScript engine, the native OCaml daemon, or the JavaScript OCaml
 artifact to that contract.
@@ -37,8 +37,8 @@ calls. One-shot requests remain available for simple compiler invocations.
 
 ## Tooling
 
-`@forma/editor` provides syntax, structural editing, diagnostics, hover, and
-React bindings. `@forma/language-server` projects the OCaml editor ABI into
+`@formalang/editor` provides syntax, structural editing, diagnostics, hover, and
+React bindings. `@formalang/language-server` projects the OCaml editor ABI into
 standard Language Server Protocol requests. It starts domain-neutral and loads
 only preludes explicitly supplied by its consumer.
 

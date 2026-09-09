@@ -72,8 +72,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
-      - run: pnpm --filter @forma/website exec playwright install --with-deps chromium
+      - run: pnpm --filter @formalang/website exec playwright install --with-deps chromium
       - run: pnpm test:visual
+      - run: pnpm website:build
       - run: pnpm website:dry-run
 
   ocaml:
@@ -102,3 +103,6 @@ jobs:
       - name: Install OCaml dependencies
         run: xargs opam install -y < .github/ocaml-packages.txt
       - run: opam exec -- pnpm test:ocaml
+      - run: pnpm build:js
+      - run: pnpm --filter @formalang/language-server build:release
+      - run: pnpm pack:check

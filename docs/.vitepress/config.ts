@@ -27,6 +27,7 @@ export default defineConfig({
     logo: { src: "/mark.svg", alt: "Forma" },
     siteTitle: "Forma",
     nav: [
+      { text: "Playground", link: "/playground", target: "_self", rel: "" },
       { text: "Vision", link: "/vision" },
       { text: "Language", link: "/language" },
       { text: "Architecture", link: "/architecture" },

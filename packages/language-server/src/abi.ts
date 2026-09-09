@@ -9,7 +9,10 @@ import type { AbiRequest, AbiResponse } from "./protocol.js";
 
 const packagesDir = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const defaultLanguageOcamlDir = resolve(packagesDir, "ocaml");
-const defaultOcamlJsArtifact = resolve(defaultLanguageOcamlDir, "dist/js/jsoo_entry.cjs");
+const bundledArtifact = fileURLToPath(new URL("./runtime/jsoo_entry.cjs", import.meta.url));
+const defaultOcamlJsArtifact = existsSync(bundledArtifact)
+  ? bundledArtifact
+  : resolve(defaultLanguageOcamlDir, "dist/js/jsoo_entry.cjs");
 
 export interface ArtifactInspection {
   readonly status: "ready" | "unavailable";
@@ -53,10 +56,12 @@ async function inspectArtifact(artifactPath: string): Promise<ArtifactInspection
     return {
       status: "unavailable",
       reason:
-        "Missing packages/ocaml/dist/js/jsoo_entry.cjs. Build it with `pnpm --filter @forma/ocaml build` before starting the Forma language server.",
+        "Missing packages/ocaml/dist/js/jsoo_entry.cjs. Build it with `pnpm --filter @formalang/ocaml build` before starting the Forma language server.",
       metadata: { artifactPath },
     };
   }
+
+  if (artifactPath === bundledArtifact) return { status: "ready" };
 
   const languageOcamlDir = resolve(dirname(artifactPath), "../..");
   const artifactStat = await stat(artifactPath);
@@ -66,7 +71,7 @@ async function inspectArtifact(artifactPath: string): Promise<ArtifactInspection
     return {
       status: "unavailable",
       reason:
-        "The Forma OCaml JS artifact looks stale. Rebuild with `pnpm --filter @forma/ocaml build` before starting the Forma language server.",
+        "The Forma OCaml JS artifact looks stale. Rebuild with `pnpm --filter @formalang/ocaml build` before starting the Forma language server.",
       metadata: {
         artifactPath,
         artifactMtimeMs: artifactStat.mtimeMs,

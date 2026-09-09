@@ -8,7 +8,7 @@
  *  - NodeTypeMap population for IDE features
  *
  * Usage:
- *   import { inferSource, inferSourceStr } from "@forma/ts/type"
+ *   import { inferSource, inferSourceStr } from "@formalang/ts/type"
  *
  *   const type = Effect.runPromise(inferSourceStr("(fn [x] (+ x 1))"))
  *   // => "Num -> Num"

@@ -18,6 +18,7 @@ pageClass: forma-index
     </p>
     <div class="forma-home__actions">
       <a class="forma-home__primary" href="/vision">Get started →</a>
+      <a class="forma-home__secondary" href="/playground" target="_self">Playground →</a>
       <a class="forma-home__secondary" href="https://github.com/bjacobso/forma-lang">GitHub</a>
     </div>
   </header>

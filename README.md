@@ -255,8 +255,8 @@ import { Effect } from "effect";
 import {
   generateMechanicsEffectTypeScriptModule,
   mechanicsPackageableDeclarations,
-} from "@forma/ts/mechanics";
-import { parseManyToSExpr } from "@forma/ts/reader";
+} from "@formalang/ts/mechanics";
+import { parseManyToSExpr } from "@formalang/ts/reader";
 
 const forms = Effect.runSync(parseManyToSExpr(source));
 const projected = mechanicsPackageableDeclarations(forms, "checkout.forma");
@@ -309,8 +309,8 @@ export class CartRepo extends Context.Tag("CartRepo")<
   });
 ```
 
-Run `pnpm dev` and open `/demo/effect-ts` to edit this program and inspect its
-generated target. The sibling `/demo/effect-schema` pipeline uses
+Run `pnpm dev` and open `/playground/demo/effect-ts` to edit this program and inspect its
+generated target. The sibling `/playground/demo/effect-schema` pipeline uses
 `generateMechanicsEffectSchemaModule` to produce Effect Schema declarations.
 
 ## Quick start
@@ -354,12 +354,12 @@ mise run forma:ocaml:test
 
 | Project | Purpose |
 | --- | --- |
-| `@forma/ts` | TypeScript reader, evaluator, VM, typechecker, and elaborator |
-| `@forma/ocaml` | Native/JavaScript/WebAssembly compiler and interpreter engine |
-| `@forma/host` | Shared host ABI across engine implementations |
-| `@forma/editor` | CodeMirror and React editing components |
-| `@forma/language-server` | Language Server Protocol implementation |
-| `@forma/website` | Browser-based compiler explorer and project site |
+| `@formalang/ts` | TypeScript reader, evaluator, VM, typechecker, and elaborator |
+| `@formalang/ocaml` | Native/JavaScript/WebAssembly compiler and interpreter engine |
+| `@formalang/host` | Shared host ABI across engine implementations |
+| `@formalang/editor` | CodeMirror and React editing components |
+| `@formalang/language-server` | Language Server Protocol implementation |
+| `@formalang/website` | Browser-based compiler explorer and project site |
 | `conformance/` | Cross-engine semantic and effect fixtures |
 
 ## Runtime configuration
@@ -375,10 +375,30 @@ mise run forma:ocaml:test
 ## Project status
 
 Forma is pre-alpha. Expect APIs, package boundaries, syntax, and artifact
-contracts to change while the language model is validated. Package names
-reserve the intended `@forma` surface, but nothing in this repository is
-published automatically. The website configuration supports a deployment dry
-run; CI never deploys it.
+contracts to change while the language model is validated. Public packages use
+the `@formalang` npm scope. Changesets manages version PRs and the Release
+workflow publishes validated packages after those PRs merge. First publication
+and npm trusted-publisher setup are described in [Publishing](docs/publishing.md).
+
+## Website deployment
+
+The docs homepage and compiler explorer at `/playground` deploy to https://forma-lang.com with Alchemy
+and Cloudflare Workers. After CI succeeds for a push to `main`, the Deploy
+workflow builds and deploys that validated revision, then checks the home,
+about, and demo pages. Pull requests do not deploy.
+
+Configure `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in the repository's
+GitHub `production` environment. Match the Triplex/Foldworks token permissions:
+Workers Scripts edit, Account Settings read, and Secrets Store read on the
+deployment account; Zone read and Workers Routes edit on `forma-lang.com`.
+Alchemy stores deployment state in Cloudflare, shared by local and GitHub
+deployments.
+
+Use `pnpm website:build` to build, `pnpm website:plan` to inspect infrastructure
+changes, and `pnpm website:deploy` to deploy locally with Alchemy credentials.
+The `prod` stage owns the custom domain. Other stages use separate Worker
+names without binding the production domain. The existing Wrangler config
+remains available for `pnpm website:dry-run` in CI.
 
 ## License
 

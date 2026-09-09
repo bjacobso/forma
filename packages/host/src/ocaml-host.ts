@@ -796,7 +796,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
   private async request(payload: Record<string, unknown>): Promise<AbiResponse> {
     if (!existsSync(this.#cliPath)) {
       throw new Error(
-        `Missing OCaml language CLI at ${this.#cliPath}. Build it with \`pnpm --filter @forma/ocaml build\`.`,
+        `Missing OCaml language CLI at ${this.#cliPath}. Build it with \`pnpm --filter @formalang/ocaml build\`.`,
       );
     }
     const output = await new Promise<string>((resolveOutput, reject) => {
@@ -868,7 +868,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
     if (this.#daemon) return this.#daemon;
     if (!existsSync(this.#cliPath)) {
       throw new Error(
-        `Missing OCaml language CLI at ${this.#cliPath}. Build it with \`pnpm --filter @forma/ocaml build\`.`,
+        `Missing OCaml language CLI at ${this.#cliPath}. Build it with \`pnpm --filter @formalang/ocaml build\`.`,
       );
     }
 
@@ -886,13 +886,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
     child.stderr.on("data", (chunk) => {
       daemon.stderr += chunk.toString();
     });
-    child.stdin.on("error", (error) => {
-      // A daemon can exit between spawn and the first write. The child exit
-      // handler below owns request settlement so its stderr and exit code are
-      // preserved; retaining the stream error prevents an unhandled EPIPE.
-      daemon.stdinError = error.message;
-    });
-    child.on("error", (error) => {
+    const onError = (error: Error) => {
       for (const waiter of daemon.waiters.splice(0)) {
         waiter(
           JSON.stringify({
@@ -904,6 +898,13 @@ export class NodeOcamlLanguageHost implements LanguageHost {
       if (this.#daemon === daemon) {
         this.#daemon = undefined;
       }
+    };
+    child.on("error", onError);
+    child.stdin.on("error", (error: NodeJS.ErrnoException) => {
+      // A daemon that exits during startup can close stdin before our first
+      // write. Let the close handler report its exit code and stderr.
+      daemon.stdinError = error.message;
+      if (error.code !== "EPIPE") onError(error);
     });
     child.on("close", (code) => {
       const detail = daemon.stderr.trim() || daemon.stdinError;

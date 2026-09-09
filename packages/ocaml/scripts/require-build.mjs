@@ -8,6 +8,6 @@ export const requireNativeCli = () => {
   if (existsSync(nativeCli)) return nativeCli;
 
   throw new Error(
-    "Missing dist/native/forma_cli.exe. Run through Turbo so @forma/ocaml#build completes first.",
+    "Missing dist/native/forma_cli.exe. Run through Turbo so @formalang/ocaml#build completes first.",
   );
 };

@@ -2,9 +2,9 @@
 
 Shared, implementation-neutral fixtures exercised by **both** Forma engines:
 
-- `@forma/ts` — `packages/ts/test/forma-zero.test.ts` (vitest)
-- `@forma/ocaml` — `packages/ocaml/scripts/forma-zero.mjs` (daemon ABI;
-  wired into `test:ocaml` and runnable alone via `pnpm --filter @forma/ocaml forma-zero`)
+- `@formalang/ts` — `packages/ts/test/forma-zero.test.ts` (vitest)
+- `@formalang/ocaml` — `packages/ocaml/scripts/forma-zero.mjs` (daemon ABI;
+  wired into `test:ocaml` and runnable alone via `pnpm --filter @formalang/ocaml forma-zero`)
 
 A suite is a directory containing:
 

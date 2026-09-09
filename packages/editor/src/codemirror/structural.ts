@@ -7,8 +7,8 @@
 
 import { keymap } from "@codemirror/view";
 import type { Command, EditorView } from "@codemirror/view";
-import { createDefaultLanguageHost } from "@forma/host/default-host";
-import type { AstNode, Span } from "@forma/host/types";
+import { createDefaultLanguageHost } from "@formalang/host/default-host";
+import type { AstNode, Span } from "@formalang/host/types";
 
 interface OffsetRange {
   readonly start: number;

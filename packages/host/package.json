@@ -1,9 +1,12 @@
 {
-  "name": "@forma/host",
+  "name": "@formalang/host",
   "version": "0.1.0",
-  "description": "Forma host: the shared ABI facade bridging the TypeScript (@forma/ts) and OCaml (@forma/ocaml) language engines.",
+  "description": "Forma host: the shared ABI facade bridging the TypeScript (@formalang/ts) and OCaml (@formalang/ocaml) language engines.",
   "type": "module",
   "license": "MIT",
+  "publishConfig": { "access": "public" },
+  "repository": { "type": "git", "url": "git+https://github.com/bjacobso/forma.git", "directory": "packages/host" },
+  "homepage": "https://forma-lang.com",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "exports": {
@@ -47,7 +50,7 @@
     "pack:check": "node ../../scripts/pnpm-pack-check.mjs"
   },
   "dependencies": {
-    "@forma/ts": "workspace:*",
+    "@formalang/ts": "workspace:*",
     "effect": "^3.21.3"
   },
   "devDependencies": {

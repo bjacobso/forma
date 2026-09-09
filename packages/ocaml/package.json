@@ -1,5 +1,5 @@
 {
-  "name": "@forma/ocaml",
+  "name": "@formalang/ocaml",
   "version": "0.1.0",
   "private": true,
   "description": "Forma (OCaml): the OCaml implementation of the Forma language compiler/interpreter engine. Built from source via dune.",

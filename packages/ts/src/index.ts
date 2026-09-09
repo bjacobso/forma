@@ -1,32 +1,32 @@
 /**
- * @forma/ts
+ * @formalang/ts
  *
  * Lisp infrastructure v2: pipeline-oriented architecture.
  *
  * Subpath exports:
- * - `@forma/ts/reader`       — S-expression parser
- * - `@forma/ts/source`       — Source identity and provenance
- * - `@forma/ts/session`      — Loaded source/session state
- * - `@forma/ts/engine`       — Engine-owned host operations
- * - `@forma/ts/artifact`     — Validated artifact packaging
- * - `@forma/ts/mechanics`    — Mechanics artifacts + hosted runtime
- * - `@forma/ts/sexpr`        — Core AST types
- * - `@forma/ts/evaluator`    — Direct interpreter
- * - `@forma/ts/expander`     — Macro expansion
- * - `@forma/ts/vm`           — Bytecode compiler + executor
- * - `@forma/ts/builtins`     — Primitive operations
- * - `@forma/ts/type`         — Hindley-Milner type system
- * - `@forma/ts/core-expr`    — Typed core expression AST
- * - `@forma/ts/elaboration`  — DSL handler framework
- * - `@forma/ts/form`         — Form/pattern/compiler framework
- * - `@forma/ts/env`          — Value environment
- * - `@forma/ts/diagnostic`   — Errors and diagnostics
- * - `@forma/ts/formatter`    — Code formatter
- * - `@forma/ts/editor`       — Structural editing
- * - `@forma/ts/lsp`          — Language server support
- * - `@forma/ts/codegen`      — S-expression builder for code gen
- * - `@forma/ts/descriptor-codegen` — FormDescriptor → Effect Schema source generation
- * - `@forma/ts/descriptor`   — Self-describing form system + bootstrap
+ * - `@formalang/ts/reader`       — S-expression parser
+ * - `@formalang/ts/source`       — Source identity and provenance
+ * - `@formalang/ts/session`      — Loaded source/session state
+ * - `@formalang/ts/engine`       — Engine-owned host operations
+ * - `@formalang/ts/artifact`     — Validated artifact packaging
+ * - `@formalang/ts/mechanics`    — Mechanics artifacts + hosted runtime
+ * - `@formalang/ts/sexpr`        — Core AST types
+ * - `@formalang/ts/evaluator`    — Direct interpreter
+ * - `@formalang/ts/expander`     — Macro expansion
+ * - `@formalang/ts/vm`           — Bytecode compiler + executor
+ * - `@formalang/ts/builtins`     — Primitive operations
+ * - `@formalang/ts/type`         — Hindley-Milner type system
+ * - `@formalang/ts/core-expr`    — Typed core expression AST
+ * - `@formalang/ts/elaboration`  — DSL handler framework
+ * - `@formalang/ts/form`         — Form/pattern/compiler framework
+ * - `@formalang/ts/env`          — Value environment
+ * - `@formalang/ts/diagnostic`   — Errors and diagnostics
+ * - `@formalang/ts/formatter`    — Code formatter
+ * - `@formalang/ts/editor`       — Structural editing
+ * - `@formalang/ts/lsp`          — Language server support
+ * - `@formalang/ts/codegen`      — S-expression builder for code gen
+ * - `@formalang/ts/descriptor-codegen` — FormDescriptor → Effect Schema source generation
+ * - `@formalang/ts/descriptor`   — Self-describing form system + bootstrap
  */
 
 export * as SExpr from "./SExpr.js";

@@ -1,5 +1,5 @@
-import { evaluate, expand, parse, typecheck } from "@forma/ts/engine";
-import type { PassName } from "@forma/ts/engine";
+import { evaluate, expand, parse, typecheck } from "@formalang/ts/engine";
+import type { PassName } from "@formalang/ts/engine";
 import {
   hasErrors,
   serializablePassResult,

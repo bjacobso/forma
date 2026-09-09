@@ -7,7 +7,7 @@ import type {
   PassName,
   Span,
   TypecheckResult,
-} from "@forma/ts/engine";
+} from "@formalang/ts/engine";
 
 export type EnginePassName = PassName;
 export type { AstNode, Diagnostic, Span };

@@ -1,4 +1,4 @@
-import type { EditorAnalysisResult } from "@forma/host/types";
+import type { EditorAnalysisResult } from "@formalang/host/types";
 
 export interface LispEditorCursorContext {
   lineNumber: number;

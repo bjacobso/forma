@@ -1,8 +1,8 @@
 ; forma-zero prelude
 ; -----------------------------------------------------------------------------
 ; The portable Forma kernel described in docs/language.md, written in the shared
-; Forma dialect so the same source runs on @forma/ts (dynamic) and
-; @forma/ocaml (HM-typechecked).
+; Forma dialect so the same source runs on @formalang/ts (dynamic) and
+; @formalang/ocaml (HM-typechecked).
 ;
 ; Representation — chosen to satisfy both engines:
 ;   fact      = a 3-vector of strings          ["ben" "works-for" "onboarded"]
