@@ -374,8 +374,27 @@ mise run forma:ocaml:test
 Forma is pre-alpha. Expect APIs, package boundaries, syntax, and artifact
 contracts to change while the language model is validated. Package names
 reserve the intended `@forma` surface, but nothing in this repository is
-published automatically. The website configuration supports a deployment dry
-run; CI never deploys it.
+published automatically.
+
+## Website deployment
+
+The docs and compiler explorer deploy to https://forma-lang.com with Alchemy
+and Cloudflare Workers. After CI succeeds for a push to `main`, the Deploy
+workflow builds and deploys that validated revision, then checks the home,
+about, and demo pages. Pull requests do not deploy.
+
+Configure `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in the repository's
+GitHub `production` environment. Match the Triplex/Foldworks token permissions:
+Workers Scripts edit, Account Settings read, and Secrets Store read on the
+deployment account; Zone read and Workers Routes edit on `forma-lang.com`.
+Alchemy stores deployment state in Cloudflare, shared by local and GitHub
+deployments.
+
+Use `pnpm website:build` to build, `pnpm website:plan` to inspect infrastructure
+changes, and `pnpm website:deploy` to deploy locally with Alchemy credentials.
+The `prod` stage owns the custom domain. Other stages use separate Worker
+names without binding the production domain. The existing Wrangler config
+remains available for `pnpm website:dry-run` in CI.
 
 ## License
 
