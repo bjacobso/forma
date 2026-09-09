@@ -6,7 +6,7 @@ run_mode = "concurrent"
 
 [scripts.run.website]
 available_in = [ "local" ]
-command = "pnpm --filter @forma/website dev --host 0.0.0.0 --port $CONDUCTOR_PORT"
+command = "pnpm --filter @formalang/website dev --host 0.0.0.0 --port $CONDUCTOR_PORT"
 default = true
 icon = "play"
 
