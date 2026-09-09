@@ -1,6 +1,6 @@
 {
   "name": "@formalang/language-server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Language Server Protocol implementation for Forma, backed by the OCaml engine.",
   "license": "MIT",
   "publishConfig": { "access": "public" },

@@ -1,6 +1,6 @@
 {
   "name": "@formalang/ts",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "The TypeScript implementation of Forma, a typed Lisp for extensible domain languages.",
   "type": "module",
   "license": "MIT",

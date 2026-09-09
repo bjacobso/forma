@@ -1,6 +1,6 @@
 {
   "name": "@formalang/host",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Forma host: the shared ABI facade bridging the TypeScript (@formalang/ts) and OCaml (@formalang/ocaml) language engines.",
   "type": "module",
   "license": "MIT",
