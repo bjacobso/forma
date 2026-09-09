@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="250 150 770 980" fill="none" role="img" aria-labelledby="forma-title forma-desc">
+  <title id="forma-title">Forma icon</title>
+  <desc id="forma-desc">Three nested blue panels representing forms and visible transformation passes.</desc>
+  <path id="outer-layer" fill="#2A4EC8" d="M 744 192
+    C 755 187 767 195 767 208
+    L 767 281
+    C 767 322 744 358 706 374
+    L 575 428
+    C 535 444 511 480 511 523
+    L 511 907
+    C 511 952 529 984 566 1005
+    C 572 1008 575 1013 575 1020
+    L 575 1062
+    C 575 1076 563 1084 550 1078
+    L 384 1001
+    C 331 977 299 937 299 877
+    L 299 469
+    C 299 412 341 357 396 330
+    C 406 325 416 321 427 317
+    Z"/>
+  <path id="middle-layer" fill="#84A4FA" d="M 947 348
+    C 958 343 969 350 969 363
+    L 969 421
+    C 969 455 952 482 922 497
+    L 821 539
+    C 787 553 766 582 766 618
+    L 766 888
+    C 766 918 778 940 803 954
+    C 808 957 811 962 811 968
+    L 811 1003
+    C 811 1016 800 1024 788 1018
+    L 653 957
+    C 612 939 588 910 588 870
+    L 589 567
+    C 589 522 622 478 665 458
+    C 672 455 680 452 688 449
+    Z"/>
+  <path id="inner-layer" fill="#B8CCFD" d="M 951 549
+    C 960 545 970 551 970 562
+    L 969 891
+    C 969 903 960 910 949 905
+    L 871 872
+    C 846 861 832 841 832 815
+    L 832 653
+    C 832 621 852 593 881 580
+    Z"/>
+</svg>
