@@ -58,7 +58,7 @@ jobs:
           fi
 
   javascript:
-    name: JavaScript, TypeScript, website, and docs
+    name: JavaScript, TypeScript, and website
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
