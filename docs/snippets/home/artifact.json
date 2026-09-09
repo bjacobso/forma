@@ -1,0 +1,10 @@
+{
+  "kind": "Query",
+  "name": "employee-directory",
+  "from": "Employee",
+  "where": "employee/active",
+  "select": [
+    "employee/name",
+    "employee/department"
+  ]
+}

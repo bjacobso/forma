@@ -11,20 +11,26 @@
     "build:js": "turbo run build --filter=@forma/ts --filter=@forma/host --filter=@forma/editor --filter=@forma/language-server --filter=@forma/website",
     "build:ocaml": "pnpm --filter @forma/ocaml build",
     "dev": "pnpm --filter @forma/website dev",
+    "docs:build": "vitepress build docs",
+    "docs:dev": "vitepress dev docs",
+    "docs:preview": "vitepress preview docs",
     "test": "pnpm test:js",
     "test:js": "turbo run test --filter=@forma/ts --filter=@forma/host --filter=@forma/editor --filter=@forma/language-server --filter=@forma/website",
     "test:ocaml": "pnpm build:ocaml && turbo run build --filter=@forma/language-server && pnpm --filter @forma/ocaml test:ocaml && pnpm --filter @forma/language-server test:parity",
     "test:all": "pnpm test:js && pnpm test:ocaml",
     "test:visual": "pnpm --filter @forma/website test:visual",
     "typecheck": "turbo run typecheck --filter=@forma/ts --filter=@forma/host --filter=@forma/editor --filter=@forma/language-server --filter=@forma/website",
-    "check": "pnpm check:branding && pnpm typecheck && pnpm test:js",
+    "check": "pnpm check:branding && pnpm typecheck && pnpm test:js && pnpm docs:build",
     "check:branding": "bash scripts/check-branding.sh",
     "website:dry-run": "pnpm --filter @forma/website exec wrangler deploy --dry-run"
   },
   "devDependencies": {
+    "@fontsource-variable/ibm-plex-sans": "^5.2.8",
+    "@fontsource/ibm-plex-mono": "^5.2.6",
     "tsdown": "^0.22.2",
     "turbo": "^2.9.16",
     "typescript": "^6.0.3",
+    "vitepress": "2.0.0-alpha.18",
     "vitest": "^4.1.8"
   },
   "pnpm": {
