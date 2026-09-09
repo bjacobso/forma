@@ -74,6 +74,7 @@ jobs:
       - run: pnpm check
       - run: pnpm --filter @formalang/website exec playwright install --with-deps chromium
       - run: pnpm test:visual
+      - run: pnpm website:build
       - run: pnpm website:dry-run
 
   ocaml:
