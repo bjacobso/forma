@@ -388,9 +388,12 @@ workflow builds and deploys that validated revision, then checks the home,
 about, and demo pages. Pull requests do not deploy.
 
 Configure `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in the repository's
-GitHub `production` environment. Match the Triplex/Foldworks token permissions:
-Workers Scripts edit, Account Settings read, and Secrets Store read on the
-deployment account; Zone read and Workers Routes edit on `forma-lang.com`.
+GitHub `production` environment. The token needs Workers Scripts Edit, Account
+Settings Read, and Secrets Store Edit on the deployment account; Zone Read and
+Workers Routes Edit on `forma-lang.com`. Secrets Store Edit is required to bind
+Alchemy's state-store secret to a temporary Worker when CI authenticates; Read
+alone does not allow binding. The secret must also have the `workers` scope.
+See [Cloudflare's Secrets Store access control](https://developers.cloudflare.com/secrets-store/access-control/).
 Alchemy stores deployment state in Cloudflare, shared by local and GitHub
 deployments.
 
