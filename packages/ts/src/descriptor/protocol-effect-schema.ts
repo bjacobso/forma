@@ -59,7 +59,7 @@ function defaultSchemaRef(ref: string): string {
 }
 
 function suspendedSchemaRef(ref: string, schemaName: string): string {
-  return `Schema.suspend((): Schema.Schema<${ref}> => ${schemaName}).annotations({ identifier: ${JSON.stringify(ref)} })`;
+  return `Schema.suspend((): Schema.Schema<${ref}> => ${schemaName}).annotate({ identifier: ${JSON.stringify(ref)} })`;
 }
 
 function importSpecifierName(importDescriptor: ProtocolModuleImportDescriptor): string {
@@ -285,7 +285,7 @@ export function emitProtocolObjectSchema(
     );
   }
   lines.push(
-    "}).annotations({",
+    "}).annotate({",
     `  identifier: ${JSON.stringify(object.name)},`,
     `}) as unknown as Schema.Schema<${object.name}>;`,
   );
@@ -300,7 +300,7 @@ export function emitProtocolTypeAliasSchema(
   const lines = [
     `${exportPrefix}const ${alias.schemaName}: Schema.Schema<${alias.name}> = Schema.suspend(`,
     `  (): Schema.Schema<${alias.name}> => ${schemaProtocolType(alias.type, options)},`,
-    ").annotations({",
+    ").annotate({",
     `  identifier: ${JSON.stringify(alias.name)},`,
   ];
 
@@ -326,7 +326,7 @@ export function emitProtocolUnionSchema(
   const lines = [
     `${options.exportSchema ? "export " : ""}const ${union.schemaName}: Schema.Schema<${union.name}> = Schema.suspend(`,
     `  (): Schema.Schema<${union.name}> => Schema.Union(${schemaNames.join(", ")}),`,
-    ").annotations({",
+    ").annotate({",
     `  identifier: ${JSON.stringify(union.name)},`,
   ];
 
@@ -340,7 +340,7 @@ export function emitProtocolUnionSchema(
 
 export function emitProtocolEnumSchema(schema: ProtocolEnumDescriptor): string[] {
   const lines = [
-    `export const ${schema.schemaName} = Schema.Literal(${schema.values.map((value) => JSON.stringify(value)).join(", ")}).annotations({`,
+    `export const ${schema.schemaName} = Schema.Literal(${schema.values.map((value) => JSON.stringify(value)).join(", ")}).annotate({`,
     `  identifier: ${JSON.stringify(schema.name)},`,
   ];
 
@@ -354,7 +354,7 @@ export function emitProtocolEnumSchema(schema: ProtocolEnumDescriptor): string[]
 
 export function emitProtocolLiteralSchema(schema: EmitProtocolLiteralSchemaOptions): string[] {
   const lines = [
-    `export const ${schema.name} = Schema.Literal(${schema.values.map((value) => JSON.stringify(value)).join(", ")}).annotations({`,
+    `export const ${schema.name} = Schema.Literal(${schema.values.map((value) => JSON.stringify(value)).join(", ")}).annotate({`,
     `  identifier: ${JSON.stringify(schema.name)},`,
   ];
 
@@ -470,7 +470,7 @@ export function schemaProtocolType(
     case "array":
       return `Schema.Array(${schemaProtocolType(type.item, options)})`;
     case "record":
-      return `Schema.Record({ key: Schema.String, value: ${schemaProtocolType(type.value, options)} })`;
+      return `Schema.Record(Schema.String, ${schemaProtocolType(type.value, options)})`;
     case "union":
       return `Schema.Union(${type.variants.map((variant) => schemaProtocolType(variant, options)).join(", ")})`;
   }

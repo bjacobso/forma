@@ -138,10 +138,7 @@ export interface InferContextService {
   ) => Effect.Effect<never, InferenceError>;
 }
 
-export class InferContext extends Context.Tag("InferContext")<
-  InferContext,
-  InferContextService
->() {}
+export class InferContext extends Context.Service<InferContext, InferContextService>()("InferContext") {}
 
 export interface MakeInferContextOptions {
   readonly builtinScheme?: BuiltinSchemeProvider;

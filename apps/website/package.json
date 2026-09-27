@@ -21,7 +21,7 @@
     "@codemirror/view": "^6.43.1",
     "@formalang/editor": "workspace:*",
     "@formalang/ts": "workspace:*",
-    "effect": "^3.21.3",
+    "effect": "4.0.0-rc.112",
     "lucide-react": "^1.17.0",
     "lz-string": "^1.5.0",
     "react": "^19.2.7",

@@ -110,7 +110,7 @@ function emitDescriptorSchema(
     lines.push(`  ${fieldLine}`);
   }
   lines.push(
-    `}).annotations({ identifier: "${schemaConst}" })${context.descriptorTree ? " as Schema.Schema<unknown>" : ""};`,
+    `}).annotate({ identifier: "${schemaConst}" })${context.descriptorTree ? " as Schema.Schema<unknown>" : ""};`,
   );
   lines.push(`export type ${schemaConst.replace(/Schema$/, "")} = typeof ${schemaConst}.Type;`);
   return lines;
@@ -124,7 +124,7 @@ function emitUnionSchema(
   const unionSchemaName = `${unionType.name}Schema`;
   const members = descriptors.map((descriptor) => schemaName(descriptor.name)).join(", ");
   return [
-    `export const ${unionSchemaName} = Schema.Union(${members}).annotations({ identifier: "${unionType.name}" })${useUnknownSchemaAnnotation ? " as Schema.Schema<unknown>" : ""};`,
+    `export const ${unionSchemaName} = Schema.Union(${members}).annotate({ identifier: "${unionType.name}" })${useUnknownSchemaAnnotation ? " as Schema.Schema<unknown>" : ""};`,
     `export type ${unionType.name} = typeof ${unionSchemaName}.Type;`,
   ];
 }

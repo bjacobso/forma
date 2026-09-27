@@ -148,9 +148,9 @@ export function analyzeLsp(
     const dslProvider = options?.dslProvider;
 
     // Parse
-    const parseResult = yield* Effect.either(parseManyToSExpr(source));
-    if (parseResult._tag === "Left") {
-      const err = parseResult.left;
+    const parseResult = yield* Effect.result(parseManyToSExpr(source));
+    if (parseResult._tag === "Failure") {
+      const err = parseResult.failure;
       return {
         success: false,
         typedSpans: [],
@@ -164,7 +164,7 @@ export function analyzeLsp(
       };
     }
 
-    const sexprs = parseResult.right;
+    const sexprs = parseResult.success;
     if (sexprs.length === 0) {
       return {
         success: true,
@@ -200,15 +200,15 @@ export function analyzeLsp(
     const ctxService = yield* makeInferContext();
     const layer = Layer.succeed(InferContext, ctxService);
 
-    const inferResult = yield* Effect.either(
+    const inferResult = yield* Effect.result(
       Effect.provide(inferProgram(coreExprs, undefined, dslProvider, sexprs), layer),
     );
 
     // Collect diagnostics regardless of success/failure
     const collectedDiagnostics = yield* Ref.get(ctxService.diagnostics);
 
-    if (inferResult._tag === "Left") {
-      const err = inferResult.left;
+    if (inferResult._tag === "Failure") {
+      const err = inferResult.failure;
       return {
         success: false,
         typedSpans: [],
@@ -223,7 +223,7 @@ export function analyzeLsp(
       };
     }
 
-    const resultType = inferResult.right;
+    const resultType = inferResult.success;
     const nodeTypes = yield* Ref.get(ctxService.nodeTypes);
 
     // Collect all nodes and build typed spans

@@ -50,7 +50,7 @@ function effectSchemaExpr(schema: JsonValue | undefined): string {
     case "Optional":
       return `Schema.optional(${effectSchemaExpr(schema["item"])})`;
     case "Map":
-      return `Schema.Record({ key: Schema.String, value: ${effectSchemaExpr(schema["value"])} })`;
+      return `Schema.Record(Schema.String, ${effectSchemaExpr(schema["value"])})`;
     case "Ref":
       return refSchema(schema["name"]);
     case "Brand":
@@ -95,7 +95,7 @@ function annotatedSchema(schema: Readonly<Record<string, JsonValue>>): string {
     if (key === "identifier") annotations.push(`identifier: ${JSON.stringify(String(value))}`);
     if (key === "pattern") annotations.push(`pattern: ${JSON.stringify(String(value))}`);
   }
-  return annotations.length === 0 ? base : `${base}.annotations({ ${annotations.join(", ")} })`;
+  return annotations.length === 0 ? base : `${base}.annotate({ ${annotations.join(", ")} })`;
 }
 
 function primitiveSchema(name: JsonValue | undefined): string {
@@ -112,9 +112,9 @@ function primitiveSchema(name: JsonValue | undefined): string {
     case "Unit":
       return "Schema.Void";
     case "Json":
-      return "Schema.JsonValue";
+      return "Schema.Json";
     case "Bytes":
-      return "Schema.Uint8ArrayFromSelf";
+      return "Schema.Uint8Array";
     case "DateTime":
       return "Schema.Date";
     default:

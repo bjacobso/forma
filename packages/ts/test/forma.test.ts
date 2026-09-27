@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Builtins, Evaluator, Formatter, Reader, Type } from "../src/index.js";
+import { Builtins, Elaboration, Evaluator, Formatter, Reader, Type } from "../src/index.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = resolve(__dirname, "fixtures/language-features");
@@ -36,6 +36,12 @@ describe("@formalang/ts reader and formatter", () => {
     const result = Effect.runSync(Formatter.formatLispSource("(define x 1)  (+ x 2)"));
     expect(result).toBe("(define x 1)\n(+ x 2)\n");
   });
+
+  test("returns a typed parse failure through Effect 4", () => {
+    const result = Effect.runSync(Effect.result(Reader.parseToSExpr("(unclosed")));
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) expect(result.failure).toBeInstanceOf(Reader.ParseError);
+  });
 });
 
 describe("@formalang/ts evaluator fixtures", () => {
@@ -56,6 +62,16 @@ describe("@formalang/ts evaluator fixtures", () => {
 
   test("cond branching fixture", async () => {
     expect(await runFixture("cond-grades.lisp")).toEqual(["A", "B", "C", "D", "F"]);
+  });
+});
+
+describe("@formalang/ts elaboration", () => {
+  test("compiles through an Effect 4 prelude service", async () => {
+    const result = await Effect.runPromise(
+      Effect.provide(Elaboration.compile("42", { builtins: Builtins.defaultBuiltins }), PreludeLive),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.results).toEqual([{ kind: "value", value: 42 }]);
   });
 });
 

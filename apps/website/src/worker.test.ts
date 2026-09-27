@@ -1,4 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
+import { resolve } from "node:path";
+import ts from "typescript";
 import { typecheck } from "@formalang/ts/engine";
 import { serializablePassResult, timeoutRunResult } from "./engine/protocol";
 import { getPipeline, pipelines } from "./pipelines";
@@ -196,9 +198,33 @@ describe("pipeline registry", () => {
     expect(pipeline.preview?.output).toContain('readonly "cart-id": CartId;');
     expect(pipeline.preview?.output).toContain("readonly coupon?: string;");
     expect(pipeline.preview?.output).toContain("export interface CheckoutRejected");
-    expect(pipeline.preview?.output).toContain("export class CartRepo extends Context.Tag");
+    expect(pipeline.preview?.output).toContain("export class CartRepo extends Context.Service<");
     expect(pipeline.preview?.output).toContain("const cart = yield* cartRepo.load(request);");
     expect(pipeline.preview?.output).toContain("Effect.gen(function* ()");
+  });
+
+  test.each(["effect-schema", "effect-ts"])("emits %s code accepted by Effect 4", (id) => {
+    const code = getPipeline(id).preview?.output;
+    expect(code).toBeDefined();
+    if (!code) return;
+
+    const file = resolve(import.meta.dirname, `generated-${id}.ts`);
+    const options: ts.CompilerOptions = {
+      target: ts.ScriptTarget.ESNext,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      strict: true,
+      skipLibCheck: true,
+      noEmit: true,
+    };
+    const host = ts.createCompilerHost(options);
+    const originalGetSourceFile = host.getSourceFile;
+    host.getSourceFile = (name, languageVersionOrOptions, onError, shouldCreateNewSourceFile) =>
+      name === file
+        ? ts.createSourceFile(name, code, ts.ScriptTarget.ESNext)
+        : originalGetSourceFile(name, languageVersionOrOptions, onError, shouldCreateNewSourceFile);
+    const diagnostics = ts.getPreEmitDiagnostics(ts.createProgram([file], options, host));
+    expect(diagnostics.map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"))).toEqual([]);
   });
 
   test("typechecks the Effect TypeScript pipeline without diagnostics", () => {

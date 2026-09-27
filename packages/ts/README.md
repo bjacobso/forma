@@ -18,3 +18,15 @@ pnpm --filter @formalang/ts build
 pnpm --filter @formalang/ts test
 pnpm --filter @formalang/ts typecheck
 ```
+
+## Effect 4 consumer migration
+
+The next release uses `effect@4.0.0-rc.112` in its public Effect types and
+runtime. Consumers should install that same version, remove any Effect 3 alias
+used only for Forma, and import `Effect` directly from `effect`. Generated
+Effect TypeScript and Schema modules now target the Effect 4 APIs, including
+`Context.Service` and `Schema.annotate`.
+
+Release this change through the repository's normal changeset/version workflow.
+After publication, consumers can replace the Effect 3 based
+`@formalang/ts@0.2.0` with the new version.
