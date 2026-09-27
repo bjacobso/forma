@@ -1,5 +1,13 @@
 # @formalang/language-server
 
+## 0.2.1
+
+### Patch Changes
+
+- 7c1d7da: Use Effect 4.0.0-rc.112 throughout Forma's TypeScript packages. Update service keys, result handling, host callbacks, and generated Effect TypeScript and Schema modules for the Effect 4 API.
+- Updated dependencies [7c1d7da]
+  - @formalang/host@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes
