@@ -604,7 +604,7 @@ export class TsLanguageHost implements LanguageHost {
     args: readonly KValue[],
     apply: (fn: KValue, args: readonly KValue[]) => Effect.Effect<KValue, KernelError>,
   ): Effect.Effect<KValue, KernelError> {
-    return Effect.async<KValue, KernelError>((resume) => {
+    return Effect.callback<KValue, KernelError>((resume) => {
       if (evaluation.aborted) {
         resume(Effect.fail(hostCallDiagnosticsError("evaluation/aborted", "Evaluation aborted")));
         return Effect.void;

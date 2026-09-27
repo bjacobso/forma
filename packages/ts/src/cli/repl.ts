@@ -49,15 +49,15 @@ const repl = Effect.gen(function* () {
       continue;
     }
 
-    const result = yield* Effect.either(evaluateReplLine(line, env));
+    const result = yield* Effect.result(evaluateReplLine(line, env));
 
-    if (result._tag === "Left") {
-      output.write(`${printError(result.left)}\n`);
+    if (result._tag === "Failure") {
+      output.write(`${printError(result.failure)}\n`);
       continue;
     }
 
-    env = result.right.env;
-    output.write(`${Evaluator.printKValue(result.right.value)}\n`);
+    env = result.success.env;
+    output.write(`${Evaluator.printKValue(result.success.value)}\n`);
   }
 });
 

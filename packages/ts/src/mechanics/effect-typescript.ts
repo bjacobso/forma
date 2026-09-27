@@ -152,7 +152,7 @@ function structFieldLine(field: JsonValue): string | null {
 function serviceClassLines(service: ServiceDefPayload): readonly string[] {
   const serviceName = typeName(service.name);
   const lines = [
-    `export class ${serviceName} extends Context.Tag(${JSON.stringify(service.name)})<`,
+    `export class ${serviceName} extends Context.Service<`,
     `  ${serviceName},`,
     "  {",
   ];
@@ -163,7 +163,7 @@ function serviceClassLines(service: ServiceDefPayload): readonly string[] {
       `    readonly ${safePropertyName(method["name"])}: (${params}) => ${effectTypeTs(method["effect"], { includeRequirements: false })};`,
     );
   }
-  lines.push("  }", ">() {}");
+  lines.push("  }", `>()(${JSON.stringify(service.name)}) {}`);
   return lines;
 }
 
@@ -295,7 +295,7 @@ function effectTypeTs(effect: JsonValue | undefined, options: { readonly include
   const success = typeExprTs(effect["success"]);
   const errors = symbolUnion(effect["errors"], "never");
   if (!options.includeRequirements) return `Effect.Effect<${success}, ${errors}>`;
-  return `Effect.Effect<${success}, ${errors}, ${symbolUnion(effect["requirements"], "never")}>`;
+  return `Effect.Effect<${success}, ${errors}, ${serviceRequirements(effect["requirements"])}>`;
 }
 
 function typeExprTs(type: JsonValue | undefined): string {
@@ -361,6 +361,12 @@ function primitiveTs(name: JsonValue | undefined): string {
 function symbolUnion(value: JsonValue | undefined, empty: string): string {
   const items = arrayItems(value).filter((item): item is string => typeof item === "string");
   return items.length === 0 ? empty : items.map(typeName).join(" | ");
+}
+
+function serviceRequirements(value: JsonValue | undefined): string {
+  const capabilities = arrayItems(value).filter((item): item is string => typeof item === "string");
+  const services = [...new Set(capabilities.map((capability) => typeName(capability.split(".")[0] ?? capability)))];
+  return services.length === 0 ? "never" : services.join(" | ");
 }
 
 function uniqueBrands(schemas: readonly JsonValue[]): readonly BrandDef[] {

@@ -161,12 +161,12 @@ const validateWithSchema = (
         return [{ path, message: "transform schema requires :schema/encode" }];
       }
 
-      const encodedAttempt = yield* Effect.either(apply(encodeFn, [value]));
-      if (encodedAttempt._tag === "Left") {
+      const encodedAttempt = yield* Effect.result(apply(encodeFn, [value]));
+      if (encodedAttempt._tag === "Failure") {
         return directIssues;
       }
 
-      const encodedIssues = yield* validateWithSchema(inner, encodedAttempt.right, apply, path);
+      const encodedIssues = yield* validateWithSchema(inner, encodedAttempt.success, apply, path);
       return encodedIssues.length === 0 ? [] : directIssues;
     }
 

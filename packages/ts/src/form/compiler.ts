@@ -152,32 +152,32 @@ export function createCompiler<T extends DSLType>(): Compiler<T> {
         const errors: DSLError[] = [];
 
         // Match the pattern
-        const matchResult = yield* Effect.either(form.pattern.match(tree));
-        if (matchResult._tag === "Left") {
-          errors.push(matchResult.left);
+        const matchResult = yield* Effect.result(form.pattern.match(tree));
+        if (matchResult._tag === "Failure") {
+          errors.push(matchResult.failure);
           return { result: undefined, type: undefined, errors, context: ctx, loc };
         }
-        const args = matchResult.right;
+        const args = matchResult.success;
 
         // Build context (bindings)
         let newCtx = ctx;
         if (form.bind) {
-          const bindResult = yield* Effect.either(form.bind(ctx, args, loc));
-          if (bindResult._tag === "Left") {
-            errors.push(bindResult.left);
+          const bindResult = yield* Effect.result(form.bind(ctx, args, loc));
+          if (bindResult._tag === "Failure") {
+            errors.push(bindResult.failure);
           } else {
-            newCtx = bindResult.right;
+            newCtx = bindResult.success;
           }
         }
 
         // Synthesize type
         let type: T | undefined;
         if (form.type) {
-          const typeResult = yield* Effect.either(form.type(newCtx, args, loc));
-          if (typeResult._tag === "Left") {
-            errors.push(typeResult.left);
+          const typeResult = yield* Effect.result(form.type(newCtx, args, loc));
+          if (typeResult._tag === "Failure") {
+            errors.push(typeResult.failure);
           } else {
-            type = typeResult.right;
+            type = typeResult.success;
           }
         }
 
@@ -190,11 +190,11 @@ export function createCompiler<T extends DSLType>(): Compiler<T> {
         // Extract result
         let result: R | undefined;
         if (errors.length === 0 && form.extract) {
-          const extractResult = yield* Effect.either(form.extract(newCtx, args, loc));
-          if (extractResult._tag === "Left") {
-            errors.push(extractResult.left);
+          const extractResult = yield* Effect.result(form.extract(newCtx, args, loc));
+          if (extractResult._tag === "Failure") {
+            errors.push(extractResult.failure);
           } else {
-            result = extractResult.right;
+            result = extractResult.success;
           }
         } else if (errors.length === 0) {
           result = args as unknown as R;
@@ -230,8 +230,8 @@ export function createCompiler<T extends DSLType>(): Compiler<T> {
         const pos = getCompletionPosition(tree, cursorNode, offset);
 
         // Try to get partial args from the pattern
-        const matchResult = yield* Effect.either(form.pattern.match(tree));
-        const partialArgs = matchResult._tag === "Right" ? matchResult.right : {};
+        const matchResult = yield* Effect.result(form.pattern.match(tree));
+        const partialArgs = matchResult._tag === "Success" ? matchResult.success : {};
 
         // Get completions from the form
         if (form.complete) {
@@ -264,11 +264,11 @@ export function createCompiler<T extends DSLType>(): Compiler<T> {
         const tree = topLevel[0]!;
 
         // Match the pattern to get args
-        const matchResult = yield* Effect.either(form.pattern.match(tree));
-        if (matchResult._tag === "Left") {
+        const matchResult = yield* Effect.result(form.pattern.match(tree));
+        if (matchResult._tag === "Failure") {
           return undefined;
         }
-        const args = matchResult.right;
+        const args = matchResult.success;
 
         // Find the node at the cursor
         const hoverNode = nodeAtOffset(tree, offset);

@@ -6,7 +6,7 @@
  * error recovery and trivia preservation.
  */
 
-import { Effect, Either } from "effect";
+import { Effect, Result } from "effect";
 import type { Token } from "./lexer.js";
 import type { Loc } from "./types.js";
 import { ParseError } from "./types.js";
@@ -186,15 +186,15 @@ export const runParser = <A>(
           let lastError: ParseError | null = null;
 
           for (const altFn of op.parsers) {
-            const result = yield* runParser(altFn, currentState).pipe(Effect.either);
+            const result = yield* runParser(altFn, currentState).pipe(Effect.result);
 
-            if (Either.isRight(result)) {
-              currentState = result.right.state;
-              step = parser.next(result.right.value);
+            if (Result.isSuccess(result)) {
+              currentState = result.success.state;
+              step = parser.next(result.success.value);
               succeeded = true;
               break;
             }
-            lastError = result.left;
+            lastError = result.failure;
           }
 
           if (!succeeded) {
@@ -210,14 +210,14 @@ export const runParser = <A>(
           const items: unknown[] = [];
 
           while (true) {
-            const result = yield* runParser(op.parser, currentState).pipe(Effect.either);
+            const result = yield* runParser(op.parser, currentState).pipe(Effect.result);
 
-            if (Either.isLeft(result)) {
+            if (Result.isFailure(result)) {
               break;
             }
 
-            items.push(result.right.value);
-            currentState = result.right.state;
+            items.push(result.success.value);
+            currentState = result.success.state;
           }
 
           step = parser.next(items);
@@ -225,11 +225,11 @@ export const runParser = <A>(
         }
 
         case "Optional": {
-          const result = yield* runParser(op.parser, currentState).pipe(Effect.either);
+          const result = yield* runParser(op.parser, currentState).pipe(Effect.result);
 
-          if (Either.isRight(result)) {
-            currentState = result.right.state;
-            step = parser.next(result.right.value);
+          if (Result.isSuccess(result)) {
+            currentState = result.success.state;
+            step = parser.next(result.success.value);
           } else {
             step = parser.next(undefined);
           }

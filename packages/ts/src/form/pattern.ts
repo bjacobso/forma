@@ -319,13 +319,13 @@ export function List<Args extends Record<string, Pattern<unknown, unknown>>>(
 
             for (const child of remainingChildren) {
               const innerPattern = (argPattern as unknown as ManyPattern<unknown, Req>)._inner;
-              const matchResult = yield* Effect.either(innerPattern.match(child));
-              if (matchResult._tag === "Right") {
-                results.push(matchResult.right);
+              const matchResult = yield* Effect.result(innerPattern.match(child));
+              if (matchResult._tag === "Success") {
+                results.push(matchResult.success);
                 childIndex++;
               } else {
                 // For Many in List context, propagate the error instead of stopping silently
-                return yield* Effect.fail(matchResult.left);
+                return yield* Effect.fail(matchResult.failure);
               }
             }
 
@@ -395,11 +395,11 @@ export function OneOf<T, R>(...patterns: Pattern<T, R>[]): Pattern<T, R> {
         const errors: DSLError[] = [];
 
         for (const pattern of patterns) {
-          const result = yield* Effect.either(pattern.match(node));
-          if (result._tag === "Right") {
-            return result.right;
+          const result = yield* Effect.result(pattern.match(node));
+          if (result._tag === "Success") {
+            return result.success;
           }
-          errors.push(result.left);
+          errors.push(result.failure);
         }
 
         // All patterns failed - combine error messages
@@ -433,7 +433,7 @@ export function Optional<T, R>(pattern: Pattern<T, R>): Pattern<T | undefined, R
     meta: { type: "optional", inner: pattern as Pattern<unknown, unknown> },
 
     match(node: RedNode): Effect.Effect<T | undefined, DSLError, R> {
-      return Effect.catchAll(pattern.match(node), () => Effect.succeed(undefined));
+      return Effect.catch(pattern.match(node), () => Effect.succeed(undefined));
     },
 
     complete(partial: string, pos: CompletionPosition): Completion[] {
@@ -473,9 +473,9 @@ export function Many<T, R>(pattern: Pattern<T, R>): ManyPattern<T, R> {
         const results: T[] = [];
 
         for (const child of children) {
-          const result = yield* Effect.either(pattern.match(child));
-          if (result._tag === "Right") {
-            results.push(result.right);
+          const result = yield* Effect.result(pattern.match(child));
+          if (result._tag === "Success") {
+            results.push(result.success);
           }
           // For Many, we stop at the first non-match
           // This allows mixing Many with other patterns
@@ -591,9 +591,9 @@ export function Clauses<
             if (matched.has(name)) continue;
 
             const clausePattern = spec.pattern as Pattern<unknown, Req>;
-            const matchResult = yield* Effect.either(clausePattern.match(child));
-            if (matchResult._tag === "Right") {
-              result[name] = matchResult.right;
+            const matchResult = yield* Effect.result(clausePattern.match(child));
+            if (matchResult._tag === "Success") {
+              result[name] = matchResult.success;
               matched.add(name);
               break;
             }

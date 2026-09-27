@@ -51,7 +51,7 @@
   },
   "dependencies": {
     "@formalang/ts": "workspace:*",
-    "effect": "^3.21.3"
+    "effect": "4.0.0-rc.112"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

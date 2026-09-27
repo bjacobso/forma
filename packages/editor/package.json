@@ -47,7 +47,7 @@
     "@formalang/host": "workspace:*",
     "@lezer/highlight": "^1.2.1",
     "@lezer/lr": "^1.4.2",
-    "effect": "^3.21.3"
+    "effect": "4.0.0-rc.112"
   },
   "devDependencies": {
     "@lezer/generator": "^1.7.2",

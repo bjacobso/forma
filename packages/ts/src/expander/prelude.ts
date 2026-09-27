@@ -17,7 +17,7 @@ import type { Env } from "../Env.js";
  * Effect service providing the prelude environment.
  * Contains macro definitions (not, when, cond, and, or, ->, ->>).
  */
-export class PreludeEnv extends Context.Tag("PreludeEnv")<PreludeEnv, Env>() {}
+export class PreludeEnv extends Context.Service<PreludeEnv, Env>()("PreludeEnv") {}
 
 /**
  * The prelude source — pure Lisp defining 7 sugar macros.

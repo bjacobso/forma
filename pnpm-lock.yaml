@@ -69,8 +69,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ts
       effect:
-        specifier: ^3.21.3
-        version: 3.22.1
+        specifier: 4.0.0-rc.112
+        version: 4.0.0-rc.112
       lucide-react:
         specifier: ^1.17.0
         version: 1.28.0(react@19.2.8)
@@ -151,8 +151,8 @@ importers:
         specifier: ^1.4.2
         version: 1.4.10
       effect:
-        specifier: ^3.21.3
-        version: 3.22.1
+        specifier: 4.0.0-rc.112
+        version: 4.0.0-rc.112
       react:
         specifier: ^19.0.0
         version: 19.2.8
@@ -185,8 +185,8 @@ importers:
         specifier: workspace:*
         version: link:../ts
       effect:
-        specifier: ^3.21.3
-        version: 3.22.1
+        specifier: 4.0.0-rc.112
+        version: 4.0.0-rc.112
     devDependencies:
       '@types/node':
         specifier: ^24.10.1
@@ -228,8 +228,8 @@ importers:
   packages/ts:
     dependencies:
       effect:
-        specifier: ^3.21.3
-        version: 3.22.1
+        specifier: 4.0.0-rc.112
+        version: 4.0.0-rc.112
     devDependencies:
       '@types/node':
         specifier: ^24.10.1
@@ -2369,9 +2369,6 @@ packages:
       oxc-resolver:
         optional: true
 
-  effect@3.22.1:
-    resolution: {integrity: sha512-TNoXushmPOBAjJlthF5d2QwnX2xBPEtcNJr5XKNKbRLbDvBcOYkXlYDfvGfSA0zriwLFuCll5MDtNMAdZL17PQ==}
-
   effect@4.0.0-rc.112:
     resolution: {integrity: sha512-wXxwuh1Ywnv4cPRM3Wfa0vDwuOHnZ1TsTgHJkG9XgzND6inhBH9n1vBxhg3iIXOia/OrpmvVmd3lrD4vq6bF3A==}
 
@@ -2425,10 +2422,6 @@ packages:
   expect-type@1.4.0:
     resolution: {integrity: sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA==}
     engines: {node: '>=12.0.0'}
-
-  fast-check@3.23.2:
-    resolution: {integrity: sha512-h5+1OzzfCC3Ef7VbtKdcv7zsstUQwUDlYpUTvjeUsJAssPgLn7QzbboPtL5ro04Mq0rPOsMzl7q5hIbRs2wD1A==}
-    engines: {node: '>=8.0.0'}
 
   fast-check@4.9.0:
     resolution: {integrity: sha512-7ms6T7SybUev/PQITciI0yLM2pOSFy5zpG8Ty7tQofcVaQUvrMXp6CBwqF6fThLCLOrfBtuHAtwq6Yu4XPCllg==}
@@ -2945,9 +2938,6 @@ packages:
 
   property-information@7.2.0:
     resolution: {integrity: sha512-IAtzIB6sUiWaJYrX9smp3V46pBGbBeLFRGdh25kg1334VcBlD8HzhPeNIWQH9zhGmo2itIe25EHt9dQP7G5hmg==}
-
-  pure-rand@6.1.0:
-    resolution: {integrity: sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==}
 
   pure-rand@8.4.2:
     resolution: {integrity: sha512-vvuOGgcuPJAirlHvuQw1TrOiw7ptaIXXmIbNuiNOY6lNGJJH49PQ1Kj4nd783nPdQhQdicgOjVI2yI/9BD6/Ng==}
@@ -5539,11 +5529,6 @@ snapshots:
 
   dts-resolver@3.0.0: {}
 
-  effect@3.22.1:
-    dependencies:
-      '@standard-schema/spec': 1.1.0
-      fast-check: 3.23.2
-
   effect@4.0.0-rc.112:
     dependencies:
       fast-check: 4.9.0
@@ -5608,10 +5593,6 @@ snapshots:
       '@types/estree': 1.0.9
 
   expect-type@1.4.0: {}
-
-  fast-check@3.23.2:
-    dependencies:
-      pure-rand: 6.1.0
 
   fast-check@4.9.0:
     dependencies:
@@ -6095,8 +6076,6 @@ snapshots:
       signal-exit: 3.0.7
 
   property-information@7.2.0: {}
-
-  pure-rand@6.1.0: {}
 
   pure-rand@8.4.2: {}
 
