@@ -1760,6 +1760,7 @@ exit 1
       expect(version).toMatchObject({
         hostAbiVersion: "0.1.0",
         capabilities: expect.arrayContaining(["parse", "expand", "typecheck", "projectValue"]),
+        sourceLoadSemantics: host.name === "ts" ? "parse-and-store" : host.name === "ocaml-native" ? "apply-declarations" : "unsupported",
       });
       for (const note of version.capabilityNotes ?? []) {
         if (host.name === "ocaml-js" && note.capability === "openSession") {
@@ -1818,6 +1819,7 @@ exit 1
       expect(version).toMatchObject({
         hostAbiVersion: "0.1.0",
         capabilities: expect.arrayContaining(["parse", "expand", "typecheck", "projectValue"]),
+        sourceLoadSemantics: host.name === "ts" ? "parse-and-store" : "apply-declarations",
       });
       for (const note of version.capabilityNotes ?? []) {
         expect(

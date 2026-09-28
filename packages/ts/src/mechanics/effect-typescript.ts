@@ -53,6 +53,9 @@ export function generateMechanicsEffectTypeScriptModule(
     .filter((payload): payload is EffectDefPayload => payload !== undefined);
 
   const lines = ['import { Context, Effect } from "effect";', ""];
+  if (effects.some((effect) => usesTruthiness(effect.body))) {
+    lines.push("const formaTruthy = (value: unknown): boolean => value !== null && value !== false && value !== undefined;", "");
+  }
   const brands = uniqueBrands([...schemas.map((schema) => schema.schema), ...errors.map((error) => error.schema)]);
   if (brands.length > 0) {
     lines.push('type Brand<Name extends string, Type> = Type & { readonly "__brand": Name };');
@@ -131,7 +134,7 @@ function schemaTypeLines(name: string, schema: JsonValue, kind: "type" | "error"
   }
   const lines = [`export interface ${type} {`];
   if (kind === "error") {
-    lines.push(`  readonly _tag?: ${JSON.stringify(type)};`);
+    lines.push(`  readonly _tag: ${JSON.stringify(type)};`);
   }
   for (const field of arrayItems(schema["fields"])) {
     const fieldLine = structFieldLine(field);
@@ -188,90 +191,166 @@ function operationLines(effect: EffectDefPayload): readonly string[] {
 }
 
 function effectBodyLines(body: JsonValue | undefined, indent: string): readonly string[] {
-  if (!isRecord(body)) return [`${indent}return undefined as never;`];
+  if (!isRecord(body)) throw new Error("Effect TypeScript: expected an effect body node");
 
   switch (body["kind"]) {
+    case "Succeed":
+    case "Pure":
+      return [`${indent}return ${valueExprTs(body["value"])};`];
+    case "Fail":
+      return [`${indent}return yield* Effect.fail(${errorExprTs(body["error"])});`];
+    case "ServiceCall":
+      return [`${indent}return yield* ${serviceVar(requiredString(body, "service"))}.${safePropertyName(requiredString(body, "method"))}(${arrayItems(body["args"]).map(valueExprTs).join(", ")});`];
+    case "OperationCall":
+      return [`${indent}return yield* ${safeIdentifier(requiredString(body, "operation"))}(${arrayItems(body["args"]).map(valueExprTs).join(", ")});`];
     case "Do": {
       const lines: string[] = [];
       for (const binding of arrayItems(body["bindings"])) {
-        if (!isRecord(binding) || typeof binding["name"] !== "string") continue;
-        lines.push(`${indent}const ${safeIdentifier(binding["name"])} = ${yieldableExpr(binding["value"])};`);
+        if (!isRecord(binding)) throw new Error("Effect TypeScript: invalid Do binding");
+        const name = requiredString(binding, "name");
+        const value = `yield* ${effectExprTs(binding["value"], indent)}`;
+        lines.push(name === "_" ? `${indent}${value};` : `${indent}const ${safeIdentifier(name)} = ${value};`);
       }
-      lines.push(...returnLines(body["body"], indent));
+      if (body["body"] !== undefined) {
+        lines.push(...effectBodyLines(body["body"], indent));
+      } else {
+        const forms = arrayItems(body["forms"]);
+        for (const form of forms.slice(0, -1)) {
+          lines.push(`${indent}yield* ${effectExprTs(form, indent)};`);
+        }
+        lines.push(...(forms.length > 0 ? effectBodyLines(forms[forms.length - 1], indent) : [`${indent}return null;`]));
+      }
+      return lines;
+    }
+    case "Let": {
+      const lines: string[] = [];
+      for (const binding of arrayItems(body["bindings"])) {
+        if (!isRecord(binding)) throw new Error("Effect TypeScript: invalid Let binding");
+        lines.push(`${indent}const ${safeIdentifier(requiredString(binding, "name"))} = yield* ${effectExprTs(binding["value"], indent)};`);
+      }
+      lines.push(...effectBodyLines(body["body"], indent));
+      return lines;
+    }
+    case "Bind": {
+      const value = effectExprTs(body["value"], indent);
+      if (body["body"] === undefined) return [`${indent}return yield* ${value};`];
+      const name = typeof body["name"] === "string" ? safeIdentifier(body["name"]) : "_bound";
+      return [`${indent}const ${name} = yield* ${value};`, ...effectBodyLines(body["body"], indent)];
+    }
+    case "Catch":
+      return [`${indent}return yield* Effect.catchTag(${effectExprTs(body["body"], indent)}, ${JSON.stringify(requiredString(body, "errorType"))}, (${safeIdentifier(requiredString(body, "binding"))}) => ${effectExprTs(body["handler"], indent)});`];
+    case "If":
+      return [
+        `${indent}if (formaTruthy(${valueExprTs(body["condition"])})) {`,
+        ...effectBodyLines(body["then"], `${indent}  `),
+        `${indent}} else {`,
+        ...effectBodyLines(body["else"], `${indent}  `),
+        `${indent}}`,
+      ];
+    case "When":
+    case "Unless": {
+      const condition = valueExprTs(body["condition"]);
+      return [
+        `${indent}if (${body["kind"] === "Unless" ? "!" : ""}formaTruthy(${condition})) {`,
+        ...effectBodyLines(body["body"], `${indent}  `),
+        `${indent}}`,
+        `${indent}return null;`,
+      ];
+    }
+    case "Cond": {
+      const lines: string[] = [];
+      for (const clause of arrayItems(body["clauses"])) {
+        if (!isRecord(clause)) throw new Error("Effect TypeScript: invalid Cond clause");
+        lines.push(`${indent}if (formaTruthy(${valueExprTs(clause["condition"])})) {`);
+        lines.push(...effectBodyLines(clause["body"], `${indent}  `));
+        lines.push(`${indent}}`);
+      }
+      lines.push(`${indent}return null;`);
       return lines;
     }
     default:
-      return returnLines(body, indent);
+      throw new Error(`Effect TypeScript: unsupported effect body kind ${String(body["kind"])}`);
   }
 }
 
-function returnLines(expr: JsonValue | undefined, indent: string): readonly string[] {
-  if (!isRecord(expr)) return [`${indent}return undefined as never;`];
-  switch (expr["kind"]) {
-    case "Succeed":
-      return [`${indent}return ${valueExprTs(expr["value"])};`];
-    case "Pure":
-      return [`${indent}return ${valueExprTs(expr["value"])};`];
-    case "Fail":
-      return [`${indent}return yield* Effect.fail(${errorExprTs(expr["error"])});`];
-    default:
-      return [`${indent}return ${yieldableExpr(expr)};`];
+function effectExprTs(body: JsonValue | undefined, indent: string): string {
+  if (isRecord(body)) {
+    switch (body["kind"]) {
+      case "ServiceCall":
+        return `${serviceVar(requiredString(body, "service"))}.${safePropertyName(requiredString(body, "method"))}(${arrayItems(body["args"]).map(valueExprTs).join(", ")})`;
+      case "OperationCall":
+        return `${safeIdentifier(requiredString(body, "operation"))}(${arrayItems(body["args"]).map(valueExprTs).join(", ")})`;
+      case "Succeed":
+      case "Pure":
+        return `Effect.succeed(${valueExprTs(body["value"])})`;
+      case "Fail":
+        return `Effect.fail(${errorExprTs(body["error"])})`;
+    }
   }
-}
-
-function yieldableExpr(expr: JsonValue | undefined): string {
-  if (!isRecord(expr)) return "undefined as never";
-  switch (expr["kind"]) {
-    case "ServiceCall":
-      return `yield* ${serviceVar(String(expr["service"] ?? "service"))}.${safePropertyName(String(expr["method"] ?? "method"))}(${arrayItems(expr["args"]).map(valueExprTs).join(", ")})`;
-    case "OperationCall":
-      return `yield* ${safeIdentifier(String(expr["operation"] ?? "operation"))}(${arrayItems(expr["args"]).map(valueExprTs).join(", ")})`;
-    case "Succeed":
-      return `yield* Effect.succeed(${valueExprTs(expr["value"])})`;
-    case "Fail":
-      return `yield* Effect.fail(${errorExprTs(expr["error"])})`;
-    case "Pure":
-      return valueExprTs(expr["value"]);
-    default:
-      return "undefined as never";
-  }
+  const nested = `${indent}  `;
+  return `Effect.gen(function* () {\n${effectBodyLines(body, nested).join("\n")}\n${indent}})`;
 }
 
 function valueExprTs(expr: JsonValue | undefined): string {
-  if (!isRecord(expr)) return JSON.stringify(expr) ?? "undefined";
+  if (!isRecord(expr)) {
+    if (expr === undefined) throw new Error("Effect TypeScript: missing value node");
+    return JSON.stringify(expr);
+  }
   switch (expr["kind"]) {
-    case "Var":
-      return safeIdentifier(String(expr["name"] ?? "value"));
+    case "Var": {
+      const name = requiredString(expr, "name");
+      if (name === "nil") return "null";
+      if (name === "true" || name === "false") return name;
+      return safeIdentifier(name);
+    }
     case "Literal":
-      return JSON.stringify(expr["value"]) ?? "undefined";
+      if (expr["value"] === undefined) throw new Error("Effect TypeScript: missing literal value");
+      return JSON.stringify(expr["value"]);
     case "Record":
       return `{ ${arrayItems(expr["entries"]).map(recordEntryTs).join(", ")} }`;
     case "Vector":
     case "List":
       return `[${arrayItems(expr["items"]).map(valueExprTs).join(", ")}]`;
-    case "Expr":
-      return "undefined";
+    case "Error":
+      return `({ ...${valueExprTs(expr["payload"])}, _tag: ${JSON.stringify(requiredString(expr, "errorType"))} as const })`;
+    case "Expr": {
+      const source = expr["source"];
+      if (isRecord(source) && source["kind"] === "Symbol") return JSON.stringify(requiredString(source, "name"));
+      if (isRecord(source) && (source["kind"] === "String" || source["kind"] === "Number" || source["kind"] === "Bool")) {
+        return JSON.stringify(source["value"]);
+      }
+      throw new Error(`Effect TypeScript: unsupported expression value ${JSON.stringify(source)}`);
+    }
     default:
-      return "undefined";
+      throw new Error(`Effect TypeScript: unsupported value kind ${String(expr["kind"])}`);
   }
 }
 
 function recordEntryTs(entry: JsonValue | undefined): string {
-  if (!isRecord(entry)) return "";
+  if (!isRecord(entry)) throw new Error("Effect TypeScript: invalid record entry");
   const key = recordKeyTs(entry["key"]);
   return `${key}: ${valueExprTs(entry["value"])}`;
 }
 
 function recordKeyTs(key: JsonValue | undefined): string {
-  if (!isRecord(key)) return String(key);
-  if (key["kind"] === "Literal") return safePropertyName(String(key["value"]));
-  if (key["kind"] === "Var") return safePropertyName(String(key["name"]));
-  return "unknown";
+  if (!isRecord(key)) throw new Error("Effect TypeScript: invalid record key");
+  if (key["kind"] === "Literal") return safePropertyName(String(key["value"]).replace(/^:/, ""));
+  if (key["kind"] === "Var") return `[${valueExprTs(key)}]`;
+  if (key["kind"] === "Expr" && isRecord(key["source"]) && key["source"]["kind"] === "Symbol") {
+    return safePropertyName(requiredString(key["source"], "name").replace(/^:/, ""));
+  }
+  throw new Error(`Effect TypeScript: unsupported record key ${JSON.stringify(key)}`);
 }
 
 function errorExprTs(error: JsonValue | undefined): string {
   if (typeof error === "string") return `{ _tag: ${JSON.stringify(error)} }`;
-  return valueExprTs(error ?? null);
+  return valueExprTs(error);
+}
+
+function requiredString(record: Readonly<Record<string, JsonValue>>, key: string): string {
+  const value = record[key];
+  if (typeof value !== "string") throw new Error(`Effect TypeScript: expected string ${key}`);
+  return value;
 }
 
 function collectServiceCalls(
@@ -288,6 +367,13 @@ function collectServiceCalls(
   }
   for (const value of Object.values(expr)) collectServiceCalls(value, services);
   return services;
+}
+
+function usesTruthiness(value: JsonValue): boolean {
+  if (Array.isArray(value)) return value.some(usesTruthiness);
+  if (!isRecord(value)) return false;
+  if (["If", "When", "Unless", "Cond"].includes(String(value["kind"]))) return true;
+  return Object.values(value).some(usesTruthiness);
 }
 
 function effectTypeTs(effect: JsonValue | undefined, options: { readonly includeRequirements: boolean }): string {

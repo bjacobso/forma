@@ -16,7 +16,27 @@ const golden = JSON.parse(readFileSync(resolve(fixtureDir, "expected.json"), "ut
   readonly failedErrorType: string;
   readonly caughtErrorType: string;
   readonly authorityCapabilities: readonly string[];
+  readonly effectBodies: Readonly<Record<string, unknown>>;
 };
+
+function effectBodyShape(value: unknown): unknown {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return value;
+  const node = value as Record<string, unknown>;
+  switch (node["kind"]) {
+    case "Fail":
+      return { kind: "Fail", errorType: (node["error"] as Record<string, unknown>)["errorType"] };
+    case "Catch":
+      return { kind: "Catch", errorType: node["errorType"], body: effectBodyShape(node["body"]), handler: effectBodyShape(node["handler"]) };
+    case "Do":
+      return { kind: "Do", bindings: (node["bindings"] as readonly Record<string, unknown>[]).map((binding) => ({ name: binding["name"], value: effectBodyShape(binding["value"]) })), body: effectBodyShape(node["body"]) };
+    case "ServiceCall":
+      return { kind: "ServiceCall", service: node["service"], method: node["method"] };
+    case "OperationCall":
+      return { kind: "OperationCall", operation: node["operation"] };
+    default:
+      return { kind: node["kind"] };
+  }
+}
 
 function declarations() {
   const exprs = Effect.runSync(Reader.parseManyToSExpr(source));
@@ -62,6 +82,10 @@ describe("operational Effect contract", () => {
     expect(log?.payload).toMatchObject({
       authority: { capabilities: golden.authorityCapabilities },
     });
+    for (const [name, expected] of Object.entries(golden.effectBodies)) {
+      const operation = projected.find((item) => item.summary.name === name);
+      expect(effectBodyShape((operation?.payload as Record<string, unknown> | undefined)?.["body"])).toEqual(expected);
+    }
   });
 
   test("runs typed recovery and enforces operation-granular provisioning", async () => {

@@ -9,6 +9,23 @@ const fixtureDir = resolve(packageDir, "../../conformance/operational-effects");
 const source = readFileSync(resolve(fixtureDir, "program.lisp"), "utf8");
 const golden = JSON.parse(readFileSync(resolve(fixtureDir, "expected.json"), "utf8"));
 
+const effectBodyShape = (node) => {
+  switch (node?.kind) {
+    case "Fail":
+      return { kind: "Fail", errorType: node.error?.errorType };
+    case "Catch":
+      return { kind: "Catch", errorType: node.errorType, body: effectBodyShape(node.body), handler: effectBodyShape(node.handler) };
+    case "Do":
+      return { kind: "Do", bindings: node.bindings?.map((binding) => ({ name: binding.name, value: effectBodyShape(binding.value) })), body: effectBodyShape(node.body) };
+    case "ServiceCall":
+      return { kind: "ServiceCall", service: node.service, method: node.method };
+    case "OperationCall":
+      return { kind: "OperationCall", operation: node.operation };
+    default:
+      return { kind: node?.kind };
+  }
+};
+
 if (!existsSync(nativeCli)) {
   throw new Error("Missing native Forma CLI. Build @formalang/ocaml first.");
 }
@@ -114,6 +131,12 @@ try {
     logged?.authority?.capabilities?.join(",") !== golden.authorityCapabilities.join(",")
   ) {
     throw new Error(`Unexpected operational IR:\n${JSON.stringify(emitted, null, 2)}`);
+  }
+  for (const [name, expected] of Object.entries(golden.effectBodies)) {
+    const actual = effectBodyShape(find("EffectDef", name)?.body);
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+      throw new Error(`Operational IR body mismatch for ${name}: ${JSON.stringify(actual)}`);
+    }
   }
 } catch (error) {
   failure = error;

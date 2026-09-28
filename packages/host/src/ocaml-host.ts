@@ -139,6 +139,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
       engine: readString(value, "engine") ?? "forma-ocaml",
       engineVersion: readString(value, "version") ?? "0.0.0",
       hostAbiVersion: "0.1.0",
+      sourceLoadSemantics: "apply-declarations",
       capabilities: [
         "parse",
         "expand",

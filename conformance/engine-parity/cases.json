@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "arithmetic",
+      "source": "(+ 1 2)",
+      "passes": ["parse", "expand", "typecheck", "evaluate"]
+    },
+    {
+      "id": "boolean",
+      "source": "(= 1 1)",
+      "passes": ["parse", "typecheck", "evaluate"]
+    },
+    {
+      "id": "keyword-map",
+      "source": "(get {:name \"Ada\"} :name)",
+      "passes": ["parse", "evaluate"]
+    },
+    {
+      "id": "unbound-symbol",
+      "source": "unknownVar",
+      "passes": ["typecheck"]
+    },
+    {
+      "id": "operational-effects",
+      "sourceFile": "../operational-effects/program.lisp",
+      "passes": ["parse", "typecheck", "effect-ir"],
+      "typeAliases": { "Str": "String" }
+    }
+  ]
+}

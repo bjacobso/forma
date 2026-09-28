@@ -192,6 +192,8 @@ export interface VersionResult {
   readonly engineVersion: string;
   readonly hostAbiVersion: string;
   readonly capabilities: readonly string[];
+  /** What loadSource does before returning. Consumers can call typecheck explicitly for either engine. */
+  readonly sourceLoadSemantics?: "parse-and-store" | "apply-declarations" | "unsupported";
   readonly capabilityNotes?: readonly {
     readonly capability: string;
     readonly status: "ready" | "partial" | "unsupported";
