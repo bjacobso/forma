@@ -56,7 +56,7 @@ The engines still package declarations in different artifact envelopes. The
 TypeScript package uses `language-ts-artifact/v0`, while the OCaml canonical
 package uses IR version `1`. Consumers should compare the normalized
 declarations and diagnostics, not assume the envelopes are interchangeable.
-The [engine parity runner](../conformance/engine-parity/README.md) performs
+The [engine parity runner](https://github.com/bjacobso/forma/blob/main/conformance/engine-parity/README.md) performs
 that comparison and reports differences by JSON path. Its matrix records
 intentional differences and missing surfaces.
 
