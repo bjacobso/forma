@@ -287,16 +287,16 @@ export interface CheckoutRequest {
 }
 
 export interface CheckoutRejected {
-  readonly _tag?: "CheckoutRejected";
+  readonly _tag: "CheckoutRejected";
   readonly reason: string;
 }
 
-export class CartRepo extends Context.Tag("CartRepo")<
+export class CartRepo extends Context.Service<
   CartRepo,
   {
     readonly load: (request: CheckoutRequest) => Effect.Effect<Cart, CheckoutRejected>;
   }
->() {}
+>()("CartRepo") {}
 
   Effect.gen(function* () {
     const cartRepo = yield* CartRepo;
@@ -312,6 +312,8 @@ export class CartRepo extends Context.Tag("CartRepo")<
 Run `pnpm dev` and open `/playground/demo/effect-ts` to edit this program and inspect its
 generated target. The sibling `/playground/demo/effect-schema` pipeline uses
 `generateMechanicsEffectSchemaModule` to produce Effect Schema declarations.
+The Effect TypeScript generator throws when a body node has no translation;
+it does not emit a placeholder program.
 
 ## Quick start
 

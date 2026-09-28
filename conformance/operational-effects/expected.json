@@ -6,5 +6,21 @@
   "serviceCapability": "Console.print",
   "failedErrorType": "ConsoleUnavailable",
   "caughtErrorType": "ConsoleUnavailable",
-  "authorityCapabilities": ["Console.print"]
+  "authorityCapabilities": ["Console.print"],
+  "effectBodies": {
+    "always-fail": { "kind": "Fail", "errorType": "ConsoleUnavailable" },
+    "recover": {
+      "kind": "Catch",
+      "errorType": "ConsoleUnavailable",
+      "body": { "kind": "OperationCall", "operation": "always-fail" },
+      "handler": { "kind": "Succeed" }
+    },
+    "log": {
+      "kind": "Do",
+      "bindings": [
+        { "name": "_", "value": { "kind": "ServiceCall", "service": "Console", "method": "print" } }
+      ],
+      "body": { "kind": "Succeed" }
+    }
+  }
 }

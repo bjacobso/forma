@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "surfaces": [
+    { "id": "parse", "status": "compared", "fixture": "cases.json" },
+    { "id": "expand", "status": "compared", "fixture": "cases.json" },
+    { "id": "typecheck", "status": "compared", "fixture": "cases.json" },
+    { "id": "evaluate", "status": "compared", "fixture": "cases.json and ../forma-zero" },
+    { "id": "effect-ir", "status": "compared", "fixture": "../operational-effects" },
+    {
+      "id": "loadSource",
+      "status": "intentional-difference",
+      "typescript": "parse-and-store",
+      "ocaml": "apply-declarations",
+      "reason": "OCaml applies and validates session-updating forms on load; TypeScript stores parsed source."
+    },
+    {
+      "id": "typed-authority",
+      "status": "gap",
+      "fixture": "../typed-authority",
+      "reason": "The OCaml host has no equivalent of the TypeScript inferAuthoritySource/checkAuthority API."
+    },
+    {
+      "id": "artifact-envelope",
+      "status": "intentional-difference",
+      "reason": "The packages have different envelope versions; the runner compares declaration payloads and provenance."
+    },
+    {
+      "id": "effect-typescript-match",
+      "status": "gap",
+      "reason": "The Effect TypeScript generator rejects Match bodies explicitly."
+    }
+  ]
+}

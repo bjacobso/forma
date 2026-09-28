@@ -138,6 +138,7 @@ export class TsLanguageHost implements LanguageHost {
       engine: "forma-typescript",
       engineVersion: "0.0.0",
       hostAbiVersion: "0.1.0",
+      sourceLoadSemantics: "parse-and-store",
       capabilities: [
         "parse",
         "expand",

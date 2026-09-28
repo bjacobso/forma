@@ -103,6 +103,7 @@ export class JsOcamlLanguageHost implements LanguageHost {
       engine: readString(value, "engine") ?? "forma-ocaml",
       engineVersion: readString(value, "version") ?? "0.0.0",
       hostAbiVersion: "0.1.0",
+      sourceLoadSemantics: "unsupported",
       capabilities: ["parse", "expand", "typecheck", "evaluate", "projectValue"],
       capabilityNotes: [
         {
