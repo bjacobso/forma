@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "deploy": "pnpm -w website:deploy",
     "test": "vitest run",
+    "snippets:home": "UPDATE_HOME_SNIPPETS=1 vitest run src/docsSnippets.test.ts",
     "test:visual": "playwright test",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

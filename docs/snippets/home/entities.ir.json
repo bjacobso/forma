@@ -1,0 +1,47 @@
+[
+  {
+    "kind": "Entity",
+    "name": "Department",
+    "fields": [
+      {
+        "name": "department/name",
+        "required": "true",
+        "type": "String"
+      }
+    ]
+  },
+  {
+    "kind": "Entity",
+    "name": "Employee",
+    "fields": [
+      {
+        "name": "employee/name",
+        "required": "true",
+        "type": "String"
+      },
+      {
+        "name": "employee/department",
+        "required": null,
+        "type": [
+          "Ref",
+          "Department"
+        ]
+      },
+      {
+        "name": "employee/active",
+        "required": null,
+        "type": "Bool"
+      }
+    ]
+  },
+  {
+    "kind": "Query",
+    "name": "employee-directory",
+    "from": "Employee",
+    "select": [
+      "employee/name",
+      "employee/department"
+    ],
+    "where": "employee/active"
+  }
+]

@@ -6,11 +6,7 @@
     (print [message String]
       (Effect Unit [ConsoleUnavailable] []))))
 
-(: log
-  (-> String
-      (Effect Unit
-        [ConsoleUnavailable]
-        [Console.print])))
+(: log (-> String (Effect Unit [ConsoleUnavailable] [])))
 (define-operation log [message]
   (do! [_ (Console.print message)]
     (succeed nil)))

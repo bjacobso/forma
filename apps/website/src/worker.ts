@@ -1,3 +1,4 @@
+import { aboutDescription, galleryDescription, plainText, playgroundDescription } from "./lib/siteCopy";
 import { getPipeline } from "./pipelines";
 
 interface Env {
@@ -49,8 +50,7 @@ function metaForPath(pathname: string): RouteMeta | null {
   if (pathname === "/") {
     return {
       title: "Forma Playground",
-      description:
-        "Forma is a small typed language that compiles into the systems you already use. Watch every compiler pass happen.",
+      description: playgroundDescription,
       path: "/",
     };
   }
@@ -58,16 +58,15 @@ function metaForPath(pathname: string): RouteMeta | null {
   if (pathname === "/about") {
     return {
       title: "About Forma",
-      description:
-        "Forma is a Lisp-shaped authoring surface for typed ontology, runtime, and deployment artifacts.",
+      description: aboutDescription,
       path: "/about",
     };
   }
 
   if (pathname === "/demo") {
     return {
-      title: "Forma Pipeline Gallery",
-      description: "Choose a Forma compiler pipeline and inspect each pass from source to output.",
+      title: "Forma Examples",
+      description: galleryDescription,
       path: "/demo",
     };
   }
@@ -77,7 +76,7 @@ function metaForPath(pathname: string): RouteMeta | null {
     const pipeline = getPipeline(pipelineId);
     return {
       title: `${pipeline.title} - Forma`,
-      description: pipeline.tagline,
+      description: plainText(pipeline.tagline),
       path: `/demo/${pipeline.id}`,
     };
   }

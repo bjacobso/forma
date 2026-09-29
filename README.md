@@ -14,7 +14,9 @@ arrive through ordinary Forma preludes instead of being built into the language
 core.
 
 The documentation site can be started locally with `pnpm docs:dev`. Use
-`pnpm docs:build` to produce the static site in `dist-docs/`.
+`pnpm docs:build` to produce the static site in `dist-docs/`. Homepage code
+samples in `docs/snippets/home/` are generated from real engine output; run
+`pnpm --filter @formalang/website snippets:home` after changing them.
 
 ## Forma at a glance
 
@@ -326,8 +328,9 @@ pnpm dev
 ```
 
 The website and live compiler demos run at the Vite URL printed by `pnpm dev`.
-There is currently no published `forma` CLI or npm release: work from this
-repository, embed its workspace packages, or build the OCaml engine locally.
+There is currently no published `forma` CLI. Pre-1.0 packages such as
+`@formalang/ts` are published to npm under the `@formalang` scope; otherwise
+work from this repository or build the OCaml engine locally.
 
 The OCaml engine additionally requires OCaml 5.2, Dune, `js_of_ocaml`, and
 `wasm_of_ocaml`:

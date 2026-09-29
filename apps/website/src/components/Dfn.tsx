@@ -37,6 +37,21 @@ export function InlineGlossaryText({ text }: { readonly text: string }) {
   );
 }
 
+/** Renders `code` spans without glossary definitions, for short labels. */
+export function InlineCodeText({ text }: { readonly text: string }) {
+  return (
+    <>
+      {text.split(/(`[^`]+`)/g).map((chunk, index) =>
+        chunk.startsWith("`") && chunk.endsWith("`") ? (
+          <code key={index}>{chunk.slice(1, -1)}</code>
+        ) : (
+          chunk
+        ),
+      )}
+    </>
+  );
+}
+
 function GlossaryWords({ text }: { readonly text: string }) {
   const parts = text.split(/\b(elaboration|macro|inference|S-expression|typecheck|diagnostic)s?\b/gi);
   return (

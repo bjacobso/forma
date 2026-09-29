@@ -18,7 +18,7 @@ test("full pipeline target stays live and example links keep the playground base
   await expect(page.locator(".target-code-view")).toContainText("4");
 
   await page.getByRole("link", { name: "Next example" }).click();
-  await expect(page).toHaveURL(/\/playground\/demo\/hello/);
+  await expect(page).toHaveURL(/\/playground\/demo\/types/);
   await page.getByRole("link", { name: "Examples", exact: true }).first().click();
   await expect(page).toHaveURL(/\/playground\/demo$/);
   await expect(page.getByRole("heading", { name: "Choose a program to inspect." })).toBeVisible();
