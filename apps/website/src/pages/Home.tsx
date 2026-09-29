@@ -5,83 +5,56 @@ import { useDocumentMeta } from "../lib/documentMeta";
 
 export function Home() {
   useDocumentMeta({
-    title: "Forma",
-    description:
-      "Forma is a small typed language that compiles into the systems you already use. Watch every compiler pass happen.",
+    title: "Forma Playground",
+    description: "Edit a Forma program and inspect every compiler pass from source to target.",
   });
 
   return (
     <main>
       <section className="hero">
         <div className="hero-copy">
-          <span className="eyebrow">Working note</span>
-          <h1>Forma</h1>
-          <p>
-            A small Lisp-shaped language for writing programs that can be checked, run, or
-            elaborated into typed target artifacts.
-          </p>
+          <span className="eyebrow">FORMA / LIVE LANGUAGE LAB</span>
+          <h1>Explore every <em>transformation.</em></h1>
+          <p>Edit a Forma program and follow it from source text to a checked value or target artifact. Every pass runs in your browser.</p>
           <div className="hero-actions">
-            <Link className="primary-action" to="/demo/hello">
-              Demo
-            </Link>
-            <a
-              className="secondary-action"
-              href="https://github.com/bjacobso/forma-lang"
-              rel="noreferrer"
-              target="_blank"
-            >
-              Repository
-            </a>
+            <Link className="primary-action" to="/demo/full-pipeline">Try the full pipeline ↗</Link>
+            <Link className="secondary-action" to="/demo">Browse examples →</Link>
           </div>
         </div>
-        <pre className="hero-transcript">{`source      (* rate hours)
-read        (list * rate hours)
-type        Number
-evaluate    {:revenue 6000}`}</pre>
+        <div className="hero-specimen">
+          <span>EXPERIMENT 01 / FULL PIPELINE</span>
+          <pre>{`(define grade (fn [score]
+  (cond (>= score 90) "A"
+        (>= score 80) "B"
+        :else "C")))
+
+(map grade [95 82 75])`}</pre>
+          <div>Source → Read → Expand → Typecheck → Eval → Target</div>
+          <strong>["A", "B", "C"]</strong>
+        </div>
       </section>
 
       <section className="claim-row">
-        <Link to="/demo/pipes">Operators are libraries</Link>
-        <Link to="/demo/types">Types without writing types</Link>
-        <Link to="/demo/effect-schema">Schemas become validators</Link>
+        <Link to="/demo/full-pipeline">The complete pipeline ↗</Link>
+        <Link to="/demo/pipes">Explore macros ↗</Link>
+        <Link to="/demo/types">Inspect types ↗</Link>
       </section>
 
       <section className="gallery gallery-compact">
         <div className="section-heading">
-          <span>Examples</span>
-          <h2>Compiler passes as evidence</h2>
+          <span>EXAMPLES / CHOOSE A PATH</span>
+          <h2>Start with a program. Follow the evidence.</h2>
         </div>
         <PipelineGrid />
       </section>
 
       <section className="story-band">
-        <h2>Abstract</h2>
-        <p>
-          Forma treats compiler passes as product surface. Instead of asking you to trust that a
-          {" "}
-          <Dfn term="macro">macro</Dfn>, type checker, or target backend did the right thing, it exposes
-          the artifact at each stage.
-        </p>
-        <p>
-          That makes <Dfn term="elaboration">elaboration</Dfn> concrete: a program can evaluate to
-          a value, or it can elaborate into a description another system executes. The demo keeps
-          both cases visible.
-        </p>
-        <p>
-          This is a research project and APIs are unstable, but the live passes in the demo run in
-          the browser from the same monorepo engine.
-        </p>
+        <h2>See what the compiler knows.</h2>
+        <p>Forma exposes the artifact at each stage, from the S-expression tree to the final value or target projection.</p>
+        <p>A <Dfn term="macro">macro</Dfn> can rewrite a program; <Dfn term="elaboration">elaboration</Dfn> can turn it into an artifact another system uses. The examples keep both visible.</p>
       </section>
 
-      <footer className="site-footer">
-        <span>Research project. APIs unstable.</span>
-        <nav>
-          <Link to="/about">About</Link>
-          <a href="https://github.com/bjacobso/forma-lang" rel="noreferrer" target="_blank">
-            GitHub
-          </a>
-        </nav>
-      </footer>
+      <footer className="site-footer"><span>Research project. APIs unstable.</span><nav><a href="/">Home</a><Link to="/demo">All examples</Link></nav></footer>
     </main>
   );
 }

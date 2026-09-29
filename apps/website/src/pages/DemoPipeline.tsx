@@ -1,6 +1,6 @@
 import { RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { DiagnosticList } from "../components/DiagnosticList";
 import { ExpandDiff } from "../components/ExpandDiff";
 import { NarrationCard } from "../components/NarrationCard";
@@ -27,12 +27,11 @@ import {
 } from "../lib/artifacts";
 import { useDocumentMeta } from "../lib/documentMeta";
 import { readDemoUrlState, writeDemoUrlState } from "../lib/urlState";
-import { getPipeline } from "../pipelines";
+import { getPipeline, pipelines } from "../pipelines";
 import { stageLabels, type PipelineVariant, type StageKey } from "../pipelines/types";
 
 export function DemoPipeline() {
   const { pipelineId } = useParams();
-  const location = useLocation();
   const [search] = useSearchParams();
   const pipeline = getPipeline(pipelineId);
   const embed = search.get("embed") === "1";
@@ -72,6 +71,7 @@ export function DemoPipeline() {
     const token = ++runToken.current;
     setRunStatus("running");
     setRunError(null);
+    setRunResult(null);
     const timeout = window.setTimeout(() => {
       clientRef.current
         ?.run(source, pipeline.passes, pipeline.id)
@@ -97,7 +97,7 @@ export function DemoPipeline() {
   }, []);
 
   useEffect(() => {
-    writeDemoUrlState(location.pathname, {
+    writeDemoUrlState(window.location.pathname, {
       step: tourStep,
       source,
       presetSource: pipeline.source,
@@ -105,7 +105,7 @@ export function DemoPipeline() {
       selectedOffset: selectedSpan?.[0] ?? null,
       embed,
     });
-  }, [embed, location.pathname, pipeline.source, selectedSpan, selectedStage, source, tourStep]);
+  }, [embed, pipeline.id, pipeline.source, selectedSpan, selectedStage, source, tourStep]);
 
   useEffect(() => {
     if (tourStep === null) return;
@@ -120,7 +120,8 @@ export function DemoPipeline() {
   const expandResult = passOf(results, "expand");
   const typecheckResult = passOf(results, "typecheck");
   const evaluateResult = passOf(results, "evaluate");
-  const activeStages: StageKey[] = ["source", ...pipeline.passes, ...(pipeline.preview ? ["target" as const] : [])];
+  const activeStages: StageKey[] = ["source", ...pipeline.passes, ...(pipeline.preview || pipeline.target ? ["target" as const] : [])];
+  const pipelineIndex = pipelines.findIndex((item) => item.id === pipeline.id);
   const selectableSpans = useMemo(
     () =>
       uniqueSpans([
@@ -149,9 +150,10 @@ export function DemoPipeline() {
       {!embed ? (
         <header className="demo-header">
           <div>
-            <Link className="back-link" to="/demo">
-              Pipeline gallery
-            </Link>
+            <nav className="breadcrumbs" aria-label="Breadcrumb">
+              <a href="/">Home</a><span>/</span><Link to="/demo">Examples</Link><span>/</span><span>{pipeline.title}</span>
+            </nav>
+            <span className="eyebrow">EXPERIMENT {String(pipelineIndex + 1).padStart(2, "0")} / LIVE COMPILER</span>
             <h1>{pipeline.title}</h1>
             <p>{pipeline.tagline}</p>
           </div>
@@ -199,6 +201,16 @@ export function DemoPipeline() {
         </header>
       )}
 
+      {!embed ? (
+        <nav className="example-navigation" aria-label="Example navigation">
+          <Link to="/demo">← All examples</Link>
+          <div>
+            {pipelineIndex > 0 ? <Link to={`/demo/${pipelines[pipelineIndex - 1]!.id}`}>← Previous</Link> : null}
+            {pipelineIndex < pipelines.length - 1 ? <Link to={`/demo/${pipelines[pipelineIndex + 1]!.id}`}>Next example →</Link> : null}
+          </div>
+        </nav>
+      ) : null}
+
       <StageRail
         activeStages={activeStages}
         onSelect={(stage) => {
@@ -241,6 +253,7 @@ export function DemoPipeline() {
               typecheckResult,
               evaluateResult,
               preview: pipeline.preview,
+              target: pipeline.target,
               context: pipeline.context,
               selectedSpan,
               selectedInspection,
@@ -303,7 +316,18 @@ function renderInputPane(
   parseResult: Extract<TimedPassResult, { readonly pass: "parse" }> | null,
   expandResult: Extract<TimedPassResult, { readonly pass: "expand" }> | null,
 ) {
-  if (stage === "source") return <p className="empty-state">The source pane is editable on the right.</p>;
+  if (stage === "source") return (
+    <div className="source-intro">
+      <span className="eyebrow">01 / START WITH SOURCE</span>
+      <h2>Make one change. Follow it through.</h2>
+      <p>Edit the program in the pane on the right. Forma reruns the available compiler passes as you type.</p>
+      <ol>
+        <li>Choose a stage above to inspect its output.</li>
+        <li>Click an expression to trace it back to source.</li>
+        <li>Use the tour to follow the example step by step.</li>
+      </ol>
+    </div>
+  );
   if (stage === "parse") return <pre>{source}</pre>;
   if (stage === "expand") return <pre>{astToSource(parseResult?.ast)}</pre>;
   if (stage === "typecheck" || stage === "evaluate" || stage === "target") {
@@ -321,6 +345,7 @@ function renderOutputPane({
   typecheckResult,
   evaluateResult,
   preview,
+  target,
   context,
   selectedSpan,
   selectedInspection,
@@ -335,6 +360,7 @@ function renderOutputPane({
   readonly typecheckResult: Extract<TimedPassResult, { readonly pass: "typecheck" }> | null;
   readonly evaluateResult: Extract<TimedPassResult, { readonly pass: "evaluate" }> | null;
   readonly preview: ReturnType<typeof getPipeline>["preview"];
+  readonly target: ReturnType<typeof getPipeline>["target"];
   readonly context: ReturnType<typeof getPipeline>["context"];
   readonly selectedSpan: SpanRange | null;
   readonly selectedInspection: SelectedInspection | null;
@@ -383,7 +409,7 @@ function renderOutputPane({
     case "evaluate":
       return <ValueView result={evaluateResult} />;
     case "target":
-      return <TargetPane preview={preview} />;
+      return <TargetPane preview={preview} target={target} evaluation={evaluateResult} />;
   }
 }
 

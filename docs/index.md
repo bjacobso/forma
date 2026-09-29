@@ -16,7 +16,7 @@ pageClass: forma-index
       <p class="forma-home__kicker"><span class="forma-home__pulse"></span> A language laboratory</p>
       <h1>What if one language could <em>author every system?</em></h1>
       <p class="forma-home__lead">Forma is a typed Lisp for making domain languages. Write the idea once, then elaborate it into checked, inspectable artifacts for the systems that will run it.</p>
-      <div class="forma-home__actions"><a class="forma-home__primary" href="/playground" target="_self">Enter the playground <span aria-hidden="true">↗</span></a><a class="forma-home__secondary" href="/vision">Read the thesis <span aria-hidden="true">→</span></a></div>
+      <div class="forma-home__actions"><a class="forma-home__primary" href="/playground/demo/full-pipeline" target="_self">Try the full pipeline <span aria-hidden="true">↗</span></a><a class="forma-home__secondary" href="/playground/demo" target="_self">Browse examples <span aria-hidden="true">→</span></a></div>
       <p class="forma-home__hero-footnote">A working compiler. An unfinished hypothesis. Every pass is open to inspection.</p>
     </div>
     <div class="forma-home__specimen" aria-label="Forma source elaborating into typed artifacts">
@@ -37,6 +37,16 @@ pageClass: forma-index
       <div class="forma-home__specimen-bottom"><span>THE COMPILER SHOWS ITS WORK</span><span>⌁</span></div>
     </div>
   </header>
+
+  <section class="forma-home__examples" aria-labelledby="examples-heading">
+    <div class="forma-home__examples-intro"><span class="forma-home__section-index">LIVE / EXAMPLE PLAYGROUND</span><h2 id="examples-heading">See the compiler <em>show its work.</em></h2><p>Choose a program, edit the source, and step through the actual compiler passes in your browser.</p></div>
+    <div class="forma-home__example-links">
+      <a href="/playground/demo/full-pipeline" target="_self"><span>01 / START HERE</span><strong>The complete pipeline</strong><small>Source → Read → Expand → Typecheck → Eval → Target</small><b>Open example ↗</b></a>
+      <a href="/playground/demo/grades" target="_self"><span>02 / MACROS + TYPES</span><strong>Grade the scores</strong><small>Watch cond expand, infer, and evaluate.</small><b>Open example ↗</b></a>
+      <a href="/playground/demo/effect-schema" target="_self"><span>03 / TARGET OUTPUT</span><strong>Effect Schema</strong><small>Inspect a generated validator projection.</small><b>Open example ↗</b></a>
+    </div>
+    <a class="forma-home__examples-all" href="/playground/demo" target="_self">Explore all examples <span aria-hidden="true">→</span></a>
+  </section>
 
   <section class="forma-home__thesis" aria-labelledby="thesis-heading">
     <div class="forma-home__section-index">01 / THE THESIS</div>
@@ -76,6 +86,6 @@ pageClass: forma-index
     </div>
   </section>
 
-  <section class="forma-home__closing"><span class="forma-home__section-index">THE EXPERIMENT IS OPEN</span><h2>Build a language.<br /><em>See what it becomes.</em></h2><div class="forma-home__actions"><a class="forma-home__primary" href="/playground" target="_self">Explore the live compiler <span aria-hidden="true">↗</span></a><a class="forma-home__secondary" href="https://github.com/bjacobso/forma-lang">Explore the source <span aria-hidden="true">→</span></a></div></section>
+  <section class="forma-home__closing"><span class="forma-home__section-index">THE EXPERIMENT IS OPEN</span><h2>Build a language.<br /><em>See what it becomes.</em></h2><div class="forma-home__actions"><a class="forma-home__primary" href="/playground/demo/full-pipeline" target="_self">Try the full pipeline <span aria-hidden="true">↗</span></a><a class="forma-home__secondary" href="/playground/demo" target="_self">Browse examples <span aria-hidden="true">→</span></a></div></section>
   <nav class="forma-home__guides" aria-label="Guides"><a href="/language">Language</a><a href="/architecture">Architecture</a><a href="/design-decisions">Design decisions</a><a href="/roadmap">Roadmap</a></nav>
 </div>

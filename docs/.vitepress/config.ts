@@ -28,6 +28,7 @@ export default defineConfig({
     siteTitle: "Forma",
     nav: [
       { text: "Playground", link: "/playground", target: "_self", rel: "" },
+      { text: "Examples", link: "/playground/demo", target: "_self", rel: "" },
       { text: "Vision", link: "/vision" },
       { text: "Language", link: "/language" },
       { text: "Architecture", link: "/architecture" },
