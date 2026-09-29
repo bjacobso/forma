@@ -2,6 +2,29 @@ import type { PassName } from "@formalang/ts/engine";
 
 export type StageKey = "source" | PassName | "target";
 export type PipelineBadge = "live" | "preview";
+export type PipelineGroup = "domain" | "core";
+
+export const pipelineGroups: readonly {
+  readonly id: PipelineGroup;
+  readonly label: string;
+  readonly title: string;
+  readonly description: string;
+}[] = [
+  {
+    id: "domain",
+    label: "Domain languages",
+    title: "Define the keywords. Get the contracts.",
+    description:
+      "Keywords defined in preludes, effect contracts the compiler checks, and the typed output they generate.",
+  },
+  {
+    id: "core",
+    label: "The core language",
+    title: "The checked core underneath.",
+    description:
+      "Every domain language runs on the same small core: macros, inference, and evaluation.",
+  },
+];
 
 export interface PipelineNarrationStep {
   readonly stage: StageKey;
@@ -37,6 +60,7 @@ export interface PipelineContext {
 
 export interface PipelineDef {
   readonly id: string;
+  readonly group: PipelineGroup;
   readonly title: string;
   readonly tagline: string;
   readonly badge: PipelineBadge;

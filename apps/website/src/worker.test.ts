@@ -4,6 +4,7 @@ import ts from "typescript";
 import { typecheck } from "@formalang/ts/engine";
 import { serializablePassResult, timeoutRunResult } from "./engine/protocol";
 import { getPipeline, pipelines } from "./pipelines";
+import { aboutDescription } from "./lib/siteCopy";
 import worker from "./worker";
 
 const indexHtml = `<!doctype html>
@@ -63,7 +64,7 @@ describe("forma website worker metadata", () => {
 
     expect(html).toContain("<title>About Forma</title>");
     expect(html).toContain(
-      '<meta property="og:description" content="Forma is a Lisp-shaped authoring surface for typed ontology, runtime, and deployment artifacts." />',
+      `<meta property="og:description" content="${aboutDescription}" />`,
     );
   });
 
@@ -236,6 +237,32 @@ describe("pipeline registry", () => {
     });
 
     expect(result.diagnostics).toEqual([]);
+  });
+
+  test("orders domain-language examples before the core language", () => {
+    expect(pipelines.map((pipeline) => `${pipeline.group}:${pipeline.id}`)).toEqual([
+      "domain:entities",
+      "domain:contracts",
+      "domain:effect-ts",
+      "domain:effect-schema",
+      "core:full-pipeline",
+      "core:types",
+      "core:pipes",
+      "core:hello",
+    ]);
+  });
+
+  test("keeps retired grades links on the complete pipeline", () => {
+    expect(getPipeline("grades").id).toBe("full-pipeline");
+  });
+
+  test("strips inline code from pipeline metadata", async () => {
+    const response = await worker.fetch(new Request("https://forma-lang.com/playground/demo/pipes"), mockEnv());
+    const html = await response.text();
+
+    expect(html).toContain(
+      '<meta name="description" content="-&gt;&gt; is a prelude macro, not syntax, so it expands away before typechecking." />',
+    );
   });
 
   test("defers the Alchemy infrastructure preview", () => {

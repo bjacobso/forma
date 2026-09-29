@@ -2,90 +2,239 @@
 layout: home
 title: Forma
 titleTemplate: false
-description: Forma is a typed Lisp for inventing domain languages and elaborating them into reviewable, portable systems.
+description: Forma is a typed Lisp for building your own domain language. Define the keywords as library code; the compiler checks programs that use them and emits typed artifacts.
 sidebar: false
 aside: false
 pageClass: forma-index
 ---
 
 <div class="forma-home">
-  <div class="forma-home__signal" aria-hidden="true"><span>FORMA / FIELD NOTES 001</span><span>AN EXPERIMENT IN UNIVERSAL AUTHORING</span><span>PRE-ALPHA · OPEN RESEARCH</span></div>
 
-  <header class="forma-home__hero">
-    <div class="forma-home__hero-copy">
-      <p class="forma-home__kicker"><span class="forma-home__pulse"></span> A language laboratory</p>
-      <h1>What if one language could <em>author every system?</em></h1>
-      <p class="forma-home__lead">Forma is a typed Lisp for making domain languages. Write the idea once, then elaborate it into checked, inspectable artifacts for the systems that will run it.</p>
-      <div class="forma-home__actions"><a class="forma-home__primary" href="/playground/demo/full-pipeline" target="_self">Try the full pipeline <span aria-hidden="true">↗</span></a><a class="forma-home__secondary" href="/playground/demo" target="_self">Browse examples <span aria-hidden="true">→</span></a></div>
-      <p class="forma-home__hero-footnote">A working compiler. An unfinished hypothesis. Every pass is open to inspection.</p>
-    </div>
-    <div class="forma-home__specimen" aria-label="Forma source elaborating into typed artifacts">
-      <div class="forma-home__specimen-top"><span>EXPERIMENT 01 / ELABORATION</span><span class="forma-home__specimen-live">LIVE LANGUAGE CORE</span></div>
-      <div class="forma-home__specimen-source">
-        <div class="forma-home__specimen-label"><span>INPUT / FORMA</span><span>01:07</span></div>
-        <pre><code><span class="syn-comment">; the author's vocabulary</span>
-<span class="syn-keyword">(define-entity</span> Employee
-  (:field [employee/name <span class="syn-type">String</span> {:required true}])
-  (:field [employee/active <span class="syn-type">Bool</span>]))
-<span class="syn-keyword">(define-query</span> directory
-  (:from Employee)
-  (:where employee/active)
-  (:select [employee/name]))</code></pre>
-      </div>
-      <div class="forma-home__specimen-mid"><span>READ</span><i></i><span>EXPAND</span><i></i><span>INFER</span><i></i><span>ELABORATE</span><b>↓</b></div>
-      <div class="forma-home__specimen-output"><span>OUTPUT / TYPED ARTIFACT</span><strong>Query · directory</strong><small>source-linked · reviewable · portable</small></div>
-      <div class="forma-home__specimen-bottom"><span>THE COMPILER SHOWS ITS WORK</span><span>⌁</span></div>
-    </div>
-  </header>
+<header class="fh-hero">
+<div class="fh-hero__copy">
+<p class="fh-eyebrow"><span class="fh-dot"></span>Pre-alpha research · MIT licensed</p>
+<h1>Build your own typed domain language.</h1>
+<p class="fh-lead">Forma is a small typed Lisp. You define domain keywords like <code>define-entity</code> or <code>define-operation</code> as library code. The compiler checks programs that use them, reports errors at the line you wrote, and emits typed artifacts that other systems consume.</p>
+<div class="fh-actions">
+<a class="fh-button fh-button--primary" href="/playground/demo/entities" target="_self">Try it in the playground</a>
+<a class="fh-button" href="#how-it-works">How it works</a>
+</div>
+<p class="fh-passes" aria-label="Compiler passes"><span>read</span><span>expand</span><span>infer</span><span>elaborate</span><span>emit</span></p>
+</div>
+<div class="fh-hero__demo">
 
-  <section class="forma-home__examples" aria-labelledby="examples-heading">
-    <div class="forma-home__examples-intro"><span class="forma-home__section-index">LIVE / EXAMPLE PLAYGROUND</span><h2 id="examples-heading">See the compiler <em>show its work.</em></h2><p>Choose a program, edit the source, and step through the actual compiler passes in your browser.</p></div>
-    <div class="forma-home__example-links">
-      <a href="/playground/demo/full-pipeline" target="_self"><span>01 / START HERE</span><strong>The complete pipeline</strong><small>Source → Read → Expand → Typecheck → Eval → Target</small><b>Open example ↗</b></a>
-      <a href="/playground/demo/grades" target="_self"><span>02 / MACROS + TYPES</span><strong>Grade the scores</strong><small>Watch cond expand, infer, and evaluate.</small><b>Open example ↗</b></a>
-      <a href="/playground/demo/effect-schema" target="_self"><span>03 / TARGET OUTPUT</span><strong>Effect Schema</strong><small>Inspect a generated validator projection.</small><b>Open example ↗</b></a>
-    </div>
-    <a class="forma-home__examples-all" href="/playground/demo" target="_self">Explore all examples <span aria-hidden="true">→</span></a>
-  </section>
+::: code-group
 
-  <section class="forma-home__thesis" aria-labelledby="thesis-heading">
-    <div class="forma-home__section-index">01 / THE THESIS</div>
-    <div><h2 id="thesis-heading">The DSL to make <em>the next DSL.</em></h2><p>Most domain languages stop at a bespoke syntax and a black-box generator. Forma treats the language itself as a programmable material: Lisp forms become typed domain concepts, and elaborators turn those concepts into artifacts a human can trace back to source.</p></div>
-    <div class="forma-home__thesis-aside">ONE SMALL CORE<br />MANY DOMAIN VOCABULARIES<br />VISIBLE TRANSFORMATIONS</div>
-  </section>
+<<< @/snippets/home/entities.lisp [schema.lisp]
 
-  <section class="forma-home__machine" aria-labelledby="machine-heading">
-    <div class="forma-home__section-heading"><div><span class="forma-home__section-index">02 / THE MACHINE</span><h2 id="machine-heading">Author once. Inspect every transformation.</h2></div><p>Elaboration is the experiment: preserve meaning as a compact source program becomes a typed contract, then a target projection.</p></div>
-    <div class="forma-home__stages">
-      <article><span class="forma-home__stage-number">01</span><div class="forma-home__stage-icon">( )</div><h3>Author</h3><p>Write a human-sized domain language with forms and macros.</p></article>
-      <article><span class="forma-home__stage-number">02</span><div class="forma-home__stage-icon">∴</div><h3>Prove</h3><p>Infer values, typed failures, and required capabilities.</p></article>
-      <article><span class="forma-home__stage-number">03</span><div class="forma-home__stage-icon">↗</div><h3>Elaborate</h3><p>Produce a portable artifact with a path back to its source.</p></article>
-      <article><span class="forma-home__stage-number">04</span><div class="forma-home__stage-icon">{ }</div><h3>Project</h3><p>Let target adapters give the same idea a concrete home.</p></article>
-    </div>
-  </section>
+<<< @/snippets/home/entities.ir.json [ir.json]
 
-  <section class="forma-home__targets" aria-labelledby="targets-heading">
-    <div class="forma-home__targets-copy"><span class="forma-home__section-index">03 / THE HORIZON</span><h2 id="targets-heading">One idea.<br /><em>Many runtimes.</em></h2><p>The authoring layer should outlive any one framework. Today, Forma has two language engines, portable effect artifacts, and an Effect TypeScript projection. Rust and OCaml output are directions for future target experiments.</p><a href="/roadmap">See what exists and what comes next <span aria-hidden="true">→</span></a></div>
-    <div class="forma-home__target-board" aria-label="Current and proposed target projections">
-      <div class="forma-home__target-board-head"><span>PROJECTION BOARD</span><span>STATUS / 2026</span></div>
-      <div class="forma-home__target-row"><span class="forma-home__target-glyph">E<span>.</span></span><div><strong>Effect / TypeScript</strong><small>Types, services, schemas</small></div><span class="forma-home__target-status is-active">WORKING PROJECTION</span></div>
-      <div class="forma-home__target-row"><span class="forma-home__target-glyph">R<span>.</span></span><div><strong>Rust</strong><small>Contracts, services, native systems</small></div><span class="forma-home__target-status">RESEARCH DIRECTION</span></div>
-      <div class="forma-home__target-row"><span class="forma-home__target-glyph">O<span>.</span></span><div><strong>OCaml</strong><small>Typed modules and native tooling</small></div><span class="forma-home__target-status">RESEARCH DIRECTION</span></div>
-      <div class="forma-home__target-board-foot">THE ARTIFACT IS THE HANDOFF. THE SOURCE IS THE CONTRACT.</div>
-    </div>
-  </section>
+:::
 
-  <section class="forma-home__review" aria-labelledby="review-heading">
-    <div class="forma-home__review-copy"><span class="forma-home__section-index">04 / THE HUMAN LOOP</span><h2 id="review-heading">A review surface for humans, not just compilers.</h2><p>Generated code is useful. It is a poor place to decide whether a system means the right thing. Forma keeps the authored form, inferred contract, expansion, and emitted artifact in view so reviewers can follow the decision from intention to implementation.</p><a href="/playground" target="_self">Watch the compiler passes <span aria-hidden="true">↗</span></a></div>
-    <div class="forma-home__review-panel" aria-label="Example of source-linked review">
-      <div class="forma-home__review-panel-head"><span>REVIEW / OPERATION CONTRACT</span><span>● SOURCE-LINKED</span></div>
-      <div class="forma-home__review-line"><span>01</span><code>(define-operation log [message]</code></div>
-      <div class="forma-home__review-line"><span>02</span><code>  (do! [_ (Console.print message)]</code></div>
-      <div class="forma-home__review-line"><span>03</span><code>    (succeed nil)))</code></div>
-      <div class="forma-home__review-reading"><span>THE CONTRACT, IN PLAIN SIGHT</span><p>Returns <strong>Unit</strong>. May fail with <strong>ConsoleUnavailable</strong>. Requires <strong>Console.print</strong>.</p></div>
-    </div>
-  </section>
+<p class="fh-caption">The <strong>ir.json</strong> tab is real compiler output: the declarations the OCaml engine emits for this source, pinned by a <a href="https://github.com/bjacobso/forma-lang/tree/main/conformance/fixtures/canonical-ir">conformance fixture</a> that CI checks.</p>
+</div>
+</header>
 
-  <section class="forma-home__closing"><span class="forma-home__section-index">THE EXPERIMENT IS OPEN</span><h2>Build a language.<br /><em>See what it becomes.</em></h2><div class="forma-home__actions"><a class="forma-home__primary" href="/playground/demo/full-pipeline" target="_self">Try the full pipeline <span aria-hidden="true">↗</span></a><a class="forma-home__secondary" href="/playground/demo" target="_self">Browse examples <span aria-hidden="true">→</span></a></div></section>
-  <nav class="forma-home__guides" aria-label="Guides"><a href="/language">Language</a><a href="/architecture">Architecture</a><a href="/design-decisions">Design decisions</a><a href="/roadmap">Roadmap</a></nav>
+<section class="fh-problem" aria-labelledby="problem-heading">
+<p class="fh-label">The problem</p>
+<h2 id="problem-heading">Your domain model lives in six places.</h2>
+<p>Entities in JSON Schema. Endpoints in OpenAPI. Types in TypeScript. Permissions in YAML. The glue in a code generator nobody wants to touch. Every copy drifts, and when something breaks, the error points at generated code instead of the decision someone made.</p>
+<div class="fh-scatter" aria-hidden="true">
+<span>schema.json</span><span>openapi.yaml</span><span>types.ts</span><span>policy.yaml</span><span>codegen.hbs</span><span>glue.ts</span>
+<b>→</b>
+<strong>domain.lisp</strong>
+</div>
+<p>Forma gives that model one typed source, written in a vocabulary you define.</p>
+</section>
+
+<section id="how-it-works" class="fh-section" aria-labelledby="library-heading">
+<div class="fh-section__head">
+<p class="fh-label">01 · Extension</p>
+<h2 id="library-heading">The keyword is library code.</h2>
+<p><code>define-entity</code> is not built into the compiler. A prelude describes it with <code>define-form</code>: its slots, the name it binds, its result type, and the hook that constructs its output. Swap the prelude and you have a different language on the same checked core.</p>
+</div>
+<ol class="fh-steps">
+<li><strong>Define the form.</strong> A descriptor in a prelude teaches the compiler a new keyword.</li>
+<li><strong>Write in it.</strong> Authors use the keyword like any built-in.</li>
+<li><strong>Get an artifact.</strong> Elaboration validates each use and constructs typed IR.</li>
+</ol>
+<div class="fh-pair">
+<div>
+<p class="fh-file">preludes/ontology.lisp · the definition</p>
+
+<<< @/snippets/home/define-entity.lisp{6,18,24,31}
+
+</div>
+<div>
+<p class="fh-file">schema.lisp · the use</p>
+
+<<< @/snippets/home/entities.lisp
+
+<p class="fh-note">The elaboration hooks resolve <code>Employee</code>, check that <code>:where</code> is boolean, and project the selected fields into the artifact at the top of this page. The same prelude machinery could describe endpoints, policies, workflows, or UI instead.</p>
+</div>
+</div>
+</section>
+
+<section class="fh-section" aria-labelledby="contract-heading">
+<div class="fh-split">
+<div class="fh-split__copy">
+<p class="fh-label">02 · Contracts</p>
+<h2 id="contract-heading">The type says what the code can do.</h2>
+<p>Operations infer <code>Effect&lt;A, E, R&gt;</code>. A reviewer reads one line instead of a call graph:</p>
+<dl class="fh-effect">
+<div><dt>A</dt><dd>the value it returns</dd></div>
+<div><dt>E</dt><dd>every failure it can raise, as a closed set</dd></div>
+<div><dt>R</dt><dd>every capability it touches, as a closed set</dd></div>
+</dl>
+<p>The contract survives code generation: the Effect TypeScript tab is generated from the same declarations, with requirements lowered to <code>Context</code> services.</p>
+<a class="fh-link" href="/playground/demo/contracts" target="_self">Edit this contract live →</a>
+</div>
+<div class="fh-split__demo">
+
+::: code-group
+
+<<< @/snippets/home/log.lisp [log.lisp]
+
+<<< @/snippets/home/log.type.txt [inferred type]
+
+<<< @/snippets/home/log.ts [generated.ts]
+
+:::
+
+</div>
+</div>
+</section>
+
+<section class="fh-section" aria-labelledby="errors-heading">
+<div class="fh-section__head">
+<p class="fh-label">03 · Diagnostics</p>
+<h2 id="errors-heading">Forget a capability, and it won't compile.</h2>
+<p>Here the body calls <code>Console.print</code>, but the signature declares no requirements. The typechecker rejects the operation and the diagnostic's span points at the author's <code>define-operation</code> form, not at generated code. Macro expansion keeps the same provenance.</p>
+</div>
+<div class="fh-pair">
+<div>
+<p class="fh-file">log.lisp · signature missing <code>Console.print</code></p>
+
+<<< @/snippets/home/log-undeclared.lisp{10-12} [log.lisp]
+
+</div>
+<div>
+<p class="fh-file">typecheck diagnostic · verbatim engine output</p>
+
+<<< @/snippets/home/log-undeclared.diagnostic.json
+
+<p class="fh-note">The wording is still pre-alpha. The check and the span are real, and they run in your browser in the <a href="/playground/demo/contracts" target="_self">contracts demo</a>.</p>
+</div>
+</div>
+</section>
+
+<section class="fh-section" aria-labelledby="compare-heading">
+<div class="fh-section__head">
+<p class="fh-label">04 · Alternatives</p>
+<h2 id="compare-heading">Where Forma fits.</h2>
+<p>Each common approach covers some of this well. Forma's bet is covering all of it in one small language.</p>
+</div>
+<div class="fh-table">
+
+| | New domain forms | Checking | Output | Trade-off |
+| --- | --- | --- | --- | --- |
+| **YAML/JSON + a generator** | No, the format is fixed | Schema validation | Whatever the templates emit | Errors surface in generated code |
+| **Config languages** (CUE, Pkl, Dhall, Nickel) | Functions and schemas, not new forms | Strong, for data | JSON, YAML, and other data | No effect or capability tracking |
+| **Racket `#lang`** | Yes, full language construction | Whatever you build; Typed Racket is separate | Programs on the Racket runtime | Hard to embed in a TypeScript or browser stack |
+| **TypeScript builder DSLs** | Functions and objects | TypeScript's types | Runtime objects in one host | The DSL is the host program, so it's hard to review, sandbox, or port |
+| **Forma** | `define-form` descriptors in preludes | Hindley–Milner inference, descriptor validation, effect sets | Typed IR (`application/vnd.forma.ir+json`), Effect TypeScript | Pre-alpha, with one generated target so far |
+
+</div>
+</section>
+
+<section class="fh-section" aria-labelledby="embed-heading">
+<div class="fh-section__head">
+<p class="fh-label">05 · Engines</p>
+<h2 id="embed-heading">Built to embed.</h2>
+</div>
+<div class="fh-facts">
+<article><h3>TypeScript engine</h3><p><code>@formalang/ts</code> on npm. Runs in Node and in the browser; the playground runs it in a Web Worker.</p></article>
+<article><h3>OCaml engine</h3><p>Builds to native code, JavaScript, and WebAssembly behind the same JSON host ABI.</p></article>
+<article><h3>Conformance</h3><p>Shared fixtures pin the behavior both engines must agree on, and a parity runner reports differences.</p></article>
+<article><h3>Editor tooling</h3><p>A language server plus CodeMirror and React components for diagnostics, hover, and structural editing.</p></article>
+</div>
+</section>
+
+<section class="fh-section" aria-labelledby="fit-heading">
+<div class="fh-section__head">
+<p class="fh-label">06 · Audience</p>
+<h2 id="fit-heading">Who it's for.</h2>
+</div>
+<div class="fh-columns">
+<div class="fh-list fh-list--yes">
+<h3>A good fit</h3>
+<ul>
+<li>Your schemas, endpoints, workflows, or policies are spread across files that drift.</li>
+<li>You're building a domain language and want typed extensions, real diagnostics, and inspectable passes instead of a hand-rolled parser.</li>
+<li>Reviewers need to see what authored code can fail with and what it can touch.</li>
+</ul>
+</div>
+<div class="fh-list fh-list--no">
+<h3>Not a fit yet</h3>
+<ul>
+<li>General application programming. Forma isn't trying to replace Clojure, OCaml, or TypeScript.</li>
+<li>Numeric or throughput-critical code.</li>
+<li>Teams that need stable APIs, wire formats, or a CLI today.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="fh-section" aria-labelledby="status-heading">
+<div class="fh-section__head">
+<p class="fh-label">07 · Status</p>
+<h2 id="status-heading">What exists today.</h2>
+</div>
+<div class="fh-columns">
+<div class="fh-list fh-list--yes">
+<h3>Working</h3>
+<ul>
+<li>Lossless reader, formatter, macros, Hindley–Milner inference, and effect inference</li>
+<li>Canonical IR emission from the OCaml engine</li>
+<li>Effect TypeScript and Effect Schema generation from the TypeScript engine</li>
+<li>Browser playground, language server, and cross-engine conformance suites</li>
+</ul>
+</div>
+<div class="fh-list fh-list--no">
+<h3>Not yet</h3>
+<ul>
+<li>No <code>forma</code> CLI. Packages are 0.x and change without notice.</li>
+<li>The TypeScript engine does not elaborate ontology forms yet; the playground shows the OCaml engine's pinned output.</li>
+<li>A consumer-prelude SDK and a stable host ABI are next on the roadmap.</li>
+<li>Rust and OCaml code generation are research directions, not built.</li>
+</ul>
+</div>
+</div>
+<a class="fh-link" href="/roadmap">Read the roadmap →</a>
+</section>
+
+<section class="fh-section" aria-labelledby="examples-heading">
+<div class="fh-section__head">
+<p class="fh-label">08 · Examples</p>
+<h2 id="examples-heading">See the compiler show its work.</h2>
+<p>Edit the source and step through each compiler pass in your browser. Preview examples label any output pinned from the OCaml engine.</p>
+</div>
+<div class="fh-examples">
+<a href="/playground/demo/entities" target="_self"><span>Domain languages · 01</span><strong>Keywords are library code</strong><small>A prelude defines <code>define-entity</code>; the source elaborates into typed IR.</small><b>Open example →</b></a>
+<a href="/playground/demo/contracts" target="_self"><span>Domain languages · 02</span><strong>The type says what code can do</strong><small>Drop a capability from the signature and watch the typechecker reject it.</small><b>Open example →</b></a>
+<a href="/playground/demo/full-pipeline" target="_self"><span>The core language</span><strong>The complete pipeline</strong><small>Read, expand, typecheck, eval, and a live JSON target for one program.</small><b>Open example →</b></a>
+</div>
+<a class="fh-link" href="/playground/demo" target="_self">All examples →</a>
+</section>
+
+<section class="fh-closing" aria-labelledby="closing-heading">
+<h2 id="closing-heading">Build a language on a checked core.</h2>
+<p>Start with the entity example, then read how preludes and descriptors work.</p>
+<div class="fh-actions">
+<a class="fh-button fh-button--primary" href="/playground/demo/entities" target="_self">Open the playground</a>
+<a class="fh-button" href="/language">Read the language guide</a>
+<a class="fh-button" href="https://github.com/bjacobso/forma-lang">GitHub</a>
+</div>
+</section>
+
 </div>

@@ -25,10 +25,18 @@ import {
   uniqueSpans,
   type SpanRange,
 } from "../lib/artifacts";
+import { InlineCodeText } from "../components/Dfn";
 import { useDocumentMeta } from "../lib/documentMeta";
+import { plainText } from "../lib/siteCopy";
 import { readDemoUrlState, writeDemoUrlState } from "../lib/urlState";
 import { getPipeline, pipelines } from "../pipelines";
-import { stageLabels, type PipelineVariant, type StageKey } from "../pipelines/types";
+import {
+  pipelineGroups,
+  stageLabels,
+  type PipelineDef,
+  type PipelineVariant,
+  type StageKey,
+} from "../pipelines/types";
 
 export function DemoPipeline() {
   const { pipelineId } = useParams();
@@ -38,7 +46,7 @@ export function DemoPipeline() {
   const initialUrl = useMemo(() => readDemoUrlState(search), [search]);
   useDocumentMeta({
     title: `${pipeline.title} - Forma`,
-    description: pipeline.tagline,
+    description: plainText(pipeline.tagline),
   });
   const [source, setSource] = useState(initialUrl.source ?? pipeline.source);
   const [selectedStage, setSelectedStage] = useState<StageKey>(
@@ -153,9 +161,9 @@ export function DemoPipeline() {
             <nav className="breadcrumbs" aria-label="Breadcrumb">
               <a href="/">Home</a><span>/</span><Link to="/demo">Examples</Link><span>/</span><span>{pipeline.title}</span>
             </nav>
-            <span className="eyebrow">EXPERIMENT {String(pipelineIndex + 1).padStart(2, "0")} / LIVE COMPILER</span>
+            <span className="eyebrow">{groupEyebrow(pipeline)}</span>
             <h1>{pipeline.title}</h1>
-            <p>{pipeline.tagline}</p>
+            <p><InlineCodeText text={pipeline.tagline} /></p>
           </div>
           <div className="demo-toolbar">
             <span className={`badge ${pipeline.badge === "live" ? "badge-live" : "badge-preview"}`}>
@@ -276,6 +284,12 @@ export function DemoPipeline() {
       ) : null}
     </main>
   );
+}
+
+function groupEyebrow(pipeline: PipelineDef): string {
+  const group = pipelineGroups.find((item) => item.id === pipeline.group);
+  const position = pipelines.filter((item) => item.group === pipeline.group).indexOf(pipeline) + 1;
+  return `${group?.label ?? "Example"} / ${String(position).padStart(2, "0")}`;
 }
 
 function initialTourStep(initialUrl: ReturnType<typeof readDemoUrlState>): number | null {

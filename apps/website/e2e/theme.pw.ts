@@ -16,7 +16,7 @@ for (const theme of ["light", "dark"] as const) {
     await setTheme(page, theme);
     await page.goto("/playground/demo/effect-ts", { waitUntil: "networkidle" });
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-    await expect(page.getByRole("heading", { name: "Target: Effect-Flavored TypeScript" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Contracts Generate Effect TypeScript" })).toBeVisible();
 
     await stageButton(page, "Source").click();
     await expect(page.locator(".embedded-editor .cm-line").first()).toBeVisible();
