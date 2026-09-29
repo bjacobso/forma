@@ -248,6 +248,19 @@ body {
 .forma-home__specimen-bottom { padding: 14px 21px; border-top: 1px solid #385046; color: #8faa9a; }
 
 .forma-home__section-index { color: var(--fh-blue); font: 600 11px/1.4 var(--vp-font-family-mono); letter-spacing: .12em; }
+.forma-home__examples { padding: 48px 0 94px; border-top: 1px solid var(--fh-line); }
+.forma-home__examples-intro { display: grid; grid-template-columns: 180px minmax(0, 1fr) minmax(240px, .5fr); align-items: end; gap: 26px; }
+.forma-home__examples-intro h2 { font-size: clamp(38px, 4vw, 62px); font-weight: 540; line-height: 1.08; }
+.forma-home__examples-intro p { color: var(--fh-muted); font-size: 16px; line-height: 1.6; }
+.forma-home__example-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 34px; border: 1px solid var(--fh-line); }
+.forma-home__example-links a { display: flex; flex-direction: column; min-height: 226px; padding: 22px; color: var(--fh-ink); transition: background .18s ease, transform .18s ease; }
+.forma-home__example-links a + a { border-left: 1px solid var(--fh-line); }
+.forma-home__example-links a:hover { background: color-mix(in srgb, var(--fh-accent) 19%, var(--fh-paper)); transform: translateY(-3px); }
+.forma-home__example-links span { color: var(--fh-blue); font: 600 10px/1.4 var(--vp-font-family-mono); letter-spacing: .09em; }
+.forma-home__example-links strong { margin-top: 27px; font-size: 23px; letter-spacing: -.035em; }
+.forma-home__example-links small { margin-top: 10px; color: var(--fh-muted); font: 12px/1.5 var(--vp-font-family-mono); }
+.forma-home__example-links b { margin-top: auto; padding-top: 22px; font-size: 13px; }
+.forma-home__examples-all { display: inline-flex; gap: 14px; margin-top: 22px; border-bottom: 1px solid var(--fh-ink); color: var(--fh-ink); font-size: 14px; font-weight: 650; }
 .forma-home__thesis {
   display: grid;
   grid-template-columns: 170px minmax(0, 1fr) 200px;
@@ -369,6 +382,10 @@ body {
 }
 
 @media (max-width: 800px) {
+  .forma-home__examples-intro { grid-template-columns: 1fr; gap: 14px; }
+  .forma-home__example-links { grid-template-columns: 1fr; }
+  .forma-home__example-links a { min-height: 190px; }
+  .forma-home__example-links a + a { border-left: 0; border-top: 1px solid var(--fh-line); }
   .forma-home__signal span:nth-child(2) { display: none; }
   .forma-home__hero, .forma-home__targets, .forma-home__review { grid-template-columns: 1fr; }
   .forma-home__hero { padding: 76px 0 90px; gap: 60px; }

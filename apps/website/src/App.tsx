@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { ThemeToggle } from "./components/ThemeToggle";
+import { SiteHeader } from "./components/SiteHeader";
 import { Home } from "./pages/Home";
 
 const About = lazy(() =>
@@ -16,8 +16,7 @@ const DemoPipeline = lazy(() =>
 export function App() {
   return (
     <>
-      <a href="/">Forma docs</a>
-      <ThemeToggle />
+      <SiteHeader />
       <Suspense fallback={<main className="route-loading">Loading...</main>}>
         <Routes>
           <Route element={<Home />} path="/" />

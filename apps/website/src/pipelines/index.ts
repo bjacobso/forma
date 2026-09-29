@@ -112,6 +112,27 @@ const threadLastMacro = preludeSection(";; ->>") ?? `(define-macro ->> [x & form
 
 export const pipelines: readonly PipelineDef[] = [
   {
+    id: "full-pipeline",
+    title: "The Complete Pipeline",
+    tagline: "Follow one program from editable source through every pass to a portable JSON result.",
+    badge: "live",
+    source: gradesSource,
+    passes: ["parse", "expand", "typecheck", "evaluate"],
+    target: {
+      targetLabel: "Portable JSON result",
+      language: "json",
+      notice: "Generated live from the evaluated value. Edit the source to update this projection.",
+    },
+    narration: [
+      { stage: "source", md: "Edit the grade function or its sample scores. Every stage below runs again from this source." },
+      { stage: "parse", md: "Read turns the text into an S-expression tree with source locations." },
+      { stage: "expand", md: "The prelude's `cond` macro expands to the smaller core language." },
+      { stage: "typecheck", md: "Typecheck infers types for the grade function and its expressions." },
+      { stage: "evaluate", md: "Eval runs the checked program and produces a list of grades." },
+      { stage: "target", md: "The evaluated list is projected into portable JSON. This result updates when the source changes." },
+    ],
+  },
+  {
     id: "hello",
     title: "A Tiny Program",
     tagline: "Numbers and maps flow from source text into a concrete value.",

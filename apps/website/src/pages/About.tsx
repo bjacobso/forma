@@ -12,9 +12,7 @@ export function About() {
   return (
     <main className="about-page">
       <header className="about-hero">
-        <Link className="back-link" to="/">
-          Forma
-        </Link>
+        <a className="back-link" href="/">Home</a>
         <h1>Notes toward one ontology, many front ends, many targets.</h1>
         <p>
           Forma is a typed Lisp for building domain-specific languages: author

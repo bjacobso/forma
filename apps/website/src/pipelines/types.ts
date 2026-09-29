@@ -16,6 +16,12 @@ export interface PipelinePreview {
   readonly notice?: string | undefined;
 }
 
+export interface PipelineTarget {
+  readonly targetLabel: string;
+  readonly language: "json";
+  readonly notice: string;
+}
+
 export interface PipelineVariant {
   readonly id: string;
   readonly label: string;
@@ -38,6 +44,7 @@ export interface PipelineDef {
   readonly passes: readonly PassName[];
   readonly context?: PipelineContext | undefined;
   readonly preview?: PipelinePreview | undefined;
+  readonly target?: PipelineTarget | undefined;
   readonly variants?: readonly PipelineVariant[] | undefined;
   readonly narration: readonly PipelineNarrationStep[];
 }

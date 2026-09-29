@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { pipelines } from "../pipelines";
+import { stageLabels } from "../pipelines/types";
 import { Badge } from "./Badge";
 
 export function PipelineGrid() {
@@ -14,10 +15,11 @@ export function PipelineGrid() {
           <h3>{pipeline.title}</h3>
           <p>{pipeline.tagline}</p>
           <div className="mini-stages">
+            <code>Source</code>
             {pipeline.passes.map((pass) => (
-              <code key={pass}>{pass === "parse" ? "read" : pass}</code>
+              <code key={pass}>{stageLabels[pass]}</code>
             ))}
-            {pipeline.preview ? <code>target</code> : null}
+            {pipeline.preview || pipeline.target ? <code>Target</code> : null}
           </div>
         </Link>
       ))}
