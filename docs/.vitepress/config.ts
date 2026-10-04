@@ -50,7 +50,10 @@ export default defineConfig({
       },
       {
         text: "Project",
-        items: [{ text: "Roadmap", link: "/roadmap" }],
+        items: [
+          { text: "Roadmap", link: "/roadmap" },
+          { text: "WorldVM Program IR", link: "/worldvm" },
+        ],
       },
     ],
     search: {

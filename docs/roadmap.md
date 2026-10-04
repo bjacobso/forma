@@ -28,3 +28,5 @@
 - A stable package or wire-format compatibility promise.
 - Automatic registry publication or website deployment.
 - Additional backends without a concrete consumer and conformance target.
+- A WorldVM Program IR backend. It waits on a published IR schema and a
+  conformance target; see the [design note](/worldvm).
