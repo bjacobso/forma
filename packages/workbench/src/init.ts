@@ -1,0 +1,27 @@
+import type { Update } from "foldkit";
+import { Outliner } from "@foldworks/outliner";
+
+import { ReadProgram } from "./commands.js";
+import type { FormaHost } from "./host.js";
+import type { Message } from "./message.js";
+import { domIds, type Model } from "./model.js";
+
+export type InitConfig = Readonly<{
+  /** Prefixes element ids. Unique on the page. */
+  id: string;
+  /** The program's source. */
+  source: string;
+  /** Names the program in the title bar. */
+  title: string;
+}>;
+
+export const init = (config: InitConfig): Update.Return<Model, Message, FormaHost> => ({
+  model: {
+    id: config.id,
+    title: config.title,
+    outline: Outliner.init({ id: domIds(config.id).outline }),
+    document: null,
+    failure: null,
+  },
+  commands: [ReadProgram({ source: config.source })],
+});

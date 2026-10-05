@@ -1,0 +1,101 @@
+/* The Foldworks surfaces the workbench renders. An application adds the
+   @foldworks/ui base and a theme. */
+@import "@foldworks/outliner/styles.css";
+@import "@foldworks/text-intelligence/styles.css";
+@import "@foldworks/code-editor/styles.css";
+
+.wb {
+  --wb-mono: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  --wb-code-special: var(--foldworks-ui-code-keyword, #8741a0);
+  --wb-code-string: var(--foldworks-ui-code-string, #246b46);
+  --wb-code-number: var(--foldworks-ui-code-number, #975312);
+  --wb-code-comment: var(--foldworks-ui-code-comment, #6c7180);
+  --wb-code-type: var(--foldworks-ui-code-type, #13677b);
+  --wb-code-property: var(--foldworks-ui-code-property, #315ba6);
+  --wb-danger: var(--foldworks-ui-danger, #dc2626);
+  --wb-warning: var(--foldworks-ui-warning, #a16207);
+  --wb-success: var(--foldworks-ui-success, #15803d);
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px clamp(12px, 2.5vw, 32px) 64px;
+}
+
+/* The program window: a title bar over the outline. */
+
+.wb__window {
+  max-width: 1120px;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: var(--shadow-card, 0 3px 12px #0000000a);
+}
+
+.wb__titlebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+  font-size: 12px;
+}
+
+.wb__name {
+  flex: 1;
+  font-family: var(--wb-mono);
+  font-weight: 600;
+}
+
+.wb__stats {
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.wb__page {
+  padding: 8px 4px 16px;
+}
+
+.wb-error {
+  margin: 0;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--wb-danger);
+  font-size: 13px;
+}
+
+/* Rows are code. */
+
+.wb .fw-outliner__text,
+.wb .fw-outliner__mirror {
+  font-family: var(--wb-mono);
+  font-size: 13px;
+}
+
+/* Token kinds, shared by outline rows and the source pane. */
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="paren"] {
+  color: var(--muted-foreground);
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="string"] {
+  color: var(--wb-code-string);
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic):is([data-kind="number"], [data-kind="constant"]) {
+  color: var(--wb-code-number);
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="keyword"] {
+  color: var(--wb-code-property);
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="comment"] {
+  color: var(--wb-code-comment);
+  font-style: italic;
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="error"] {
+  color: var(--wb-danger);
+}
