@@ -71,6 +71,8 @@ Effect and function types.
 | `(match opt (some x) a none b)` | `Option.isSome` with the payload bound |
 | `(match res (success v) a (failure e) b)` | `Result.isSuccess` |
 | `(match shape (circle c) a (square s) b)` | `switch (shape.kind)` with narrowing |
+| `(match code 200 a 404 b _ c)`, `(match flag true a false b)` | `switch` on the value; strings and numbers need a final `_` |
+| `(match error (NotFound e) a (Forbidden f) b)` | `switch (error._tag)` over a union of tagged errors |
 | `(catch eff (NotFound e) handler)` | `Effect.catchTag` |
 | `(catch eff (A a) h1 (B b) h2)` | `Effect.catchTags` |
 | `(catch eff (_ e) handler)` | `Effect.catch` |
@@ -106,7 +108,17 @@ Values use ordinary Forma expressions:
 - options: `get-or-else is-some is-none`;
 - durations: `millis seconds minutes`.
 
-Getting an `(Optional T)` field or a `Map` key produces `(Option T)`.
+Getting an `(Optional T)` field or a `Map` key produces `(Option T)`. Map
+functions use Effect's `Record` module, which only sees own keys. A builtin
+with one signature can be passed as a function, as in `(map upcase names)`.
+
+### Literal types
+
+As in TypeScript, a record or array literal with no target type widens its
+literals: `{:role "member"}` has `:role String`. To build a value of a schema
+with enum or tag fields, construct it, as in `(Member {:name n :role
+"member"})`, or pass it where the schema is expected. Constructed records
+generate `{...} satisfies Member` when TypeScript would otherwise widen them.
 
 ## Checking
 
@@ -128,16 +140,24 @@ consumes. It rejects a program when:
 - a service method declares a requirement (Effect service methods are
   requirement-free; give the layer the dependency instead);
 - names, types, errors, or requirements are unknown, or definitions are
-  duplicated, or schemas are recursive (`Schema.suspend` is not generated yet).
+  duplicated, or schemas are recursive (`Schema.suspend` is not generated yet);
+- two Forma names become the same TypeScript name (`foo-bar` and `fooBar`),
+  or a declaration takes a name the module needs (`Effect`, `Math`);
+- a value cannot be represented (`1e400`, integers beyond ±2^53, `__proto__`
+  keys, duplicate keys, `Unit` stored in a collection, an error field named
+  `_tag`);
+- a function or constant calls a service;
+- a top-level form is not part of an Effect program (an untyped `define`, a
+  misspelled `define-...`, a bare expression, or an orphan signature).
 
 TypeScript would also reject most of these mistakes once the code is
 generated. Forma reports them first, against the Forma source. Some checks
 are stricter than TypeScript:
 
 - conditions must be `Bool`, with no JavaScript truthiness;
-- `=` compares only primitives, enums, and brands, because records would be
-  compared by reference;
-- `str` interpolates only primitives, not records;
+- `=` and `includes?` compare only primitives, enums, and brands, because
+  records would be compared by reference;
+- `str` and `to-string` accept only primitives, not records;
 - `Int` is a subtype of `Number`, so `(/ a b)` cannot flow into an `Int` (use
   `quot`);
 - `let` cannot silently run an effect.

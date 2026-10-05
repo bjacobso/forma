@@ -77,6 +77,11 @@
       "id": "effect-typescript/stream-pipeline",
       "sourceFile": "../effect-typescript/cases/stream-pipeline/program.lisp",
       "passes": ["parse", "effect-ir"]
+    },
+    {
+      "id": "effect-typescript/edge-cases",
+      "sourceFile": "../effect-typescript/cases/edge-cases/program.lisp",
+      "passes": ["parse", "effect-ir"]
     }
   ]
 }

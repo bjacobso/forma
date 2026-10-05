@@ -109,7 +109,8 @@ Status key:
 | Located diagnostics | supported | Read, projection, and check diagnostics all carry a line and column span (`elaborateEffectProgram`). |
 | Values match schemas | supported | Record fields, unknown and missing fields, `Int` versus `Number`, literals and enums, brands, and classes. |
 | Error and requirement sets | supported | Each undeclared error or requirement is reported at the call that introduced it. |
-| Exhaustive and reachable `match` | supported | |
+| Exhaustive and reachable `match` | supported | Also covers matches on strings, numbers, booleans, and tagged-error unions. |
+| TypeScript-representable programs | supported | Generated-name collisions, reserved names, unrepresentable numbers and keys, `Unit` in collections, and stray top-level forms are rejected. Literal widening follows TypeScript. |
 | Impossible `catch`, failing finalizers | supported | |
 | Layer completeness and signatures | supported | |
 | Stricter than TypeScript | supported | `Bool` conditions, primitive-only `=`, `str` of primitives, `Int` versus `Number`, and `let` versus `do!`. See the `typescript` field of each rejection case. |
