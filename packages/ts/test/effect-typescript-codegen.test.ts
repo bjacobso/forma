@@ -112,6 +112,33 @@ describe("Effect TypeScript projection", () => {
     expect(await Effect.runPromise(choose(false))).toBe("no");
   });
 
+  test("keeps shadowed bindings distinct within one generated block", async () => {
+    const program = `
+      (define-service Counter (:methods (next [] (Effect Int [] []))))
+      (: shadow (-> (Effect Int [] [Counter])))
+      (define-operation shadow []
+        (do! [x (Counter.next)]
+          (do (do! [x (Counter.next) y (succeed (+ x 100))] (log y))
+              (do! [x (Counter.next) y (succeed (* x 10))] (log y))
+              (succeed x))))`;
+    const result = Mechanics.generateEffectProgram(program);
+    expect(result.diagnostics).toEqual([]);
+    const code = result.code ?? "";
+    checkGeneratedTypes(code);
+    const js = ts.transpileModule(code, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    }).outputText;
+    const exports: Record<string, unknown> = {};
+    new Function("require", "exports", js)(createRequire(import.meta.url), exports);
+    const shadow = exports["shadow"] as () => Effect.Effect<number, never, never>;
+    const Counter = exports["Counter"] as never;
+    let next = 0;
+    const counted = Effect.provideService(shadow(), Counter, { next: () => Effect.sync(() => ++next) });
+    // The final x is the first binding, not either shadowing one.
+    expect(await Effect.runPromise(counted)).toBe(1);
+    expect(next).toBe(3);
+  });
+
   test("rejects a body node without a translation", () => {
     const forms = Effect.runSync(Reader.parseManyToSExpr(source));
     const declarations = Mechanics.mechanicsPackageableDeclarations(forms, "effects/conformance");

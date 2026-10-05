@@ -103,13 +103,23 @@ class Names {
   private readonly bindings: Map<string, string>;
   private readonly taken: Set<string>;
 
-  constructor(parent?: Names, reserved: Iterable<string> = []) {
+  constructor(parent?: Names, reserved: Iterable<string> = [], sharedTaken?: Set<string>) {
     this.bindings = new Map(parent?.bindings);
-    this.taken = new Set([...(parent?.taken ?? []), ...reserved]);
+    this.taken = sharedTaken ?? new Set([...(parent?.taken ?? []), ...reserved]);
   }
 
+  /** A new JavaScript block (branch, callback, or generator body). */
   child(): Names {
     return new Names(this);
+  }
+
+  /**
+   * New Forma bindings that are emitted into the current JavaScript block:
+   * they shadow like a child scope but share its identifiers, so sibling
+   * `do!` forms in one block never declare the same `const`.
+   */
+  sameBlock(): Names {
+    return new Names(this, [], this.taken);
   }
 
   bind(name: string, preferred = camelIdentifier(name)): string {
@@ -439,7 +449,7 @@ class Generator {
       case "Do":
       case "Let": {
         const lines: string[] = [];
-        const scope = names.child();
+        const scope = names.sameBlock();
         const bindings = arrayItems(node["bindings"]).filter(isRecord);
         const rest = [...bindings.map((binding) => binding["value"] ?? null), node["body"] ?? null, ...arrayItems(node["forms"])];
         bindings.forEach((binding, index) => {
