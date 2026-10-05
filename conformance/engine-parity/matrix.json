@@ -35,6 +35,11 @@
       "reason": "Per-expression observation (evaluate observe) is implemented by the TypeScript VM and evaluator only. The OCaml hosts ignore the observe field."
     },
     {
+      "id": "symbol-index",
+      "status": "gap",
+      "reason": "symbolIndex and findReferences are implemented by the TypeScript host only; they use the TypeScript expander and descriptor parser."
+    },
+    {
       "id": "effect-typescript-match",
       "status": "gap",
       "reason": "The Effect TypeScript generator rejects Match bodies explicitly."

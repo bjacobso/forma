@@ -548,6 +548,77 @@ export interface SyntaxIdentityResult {
   readonly diagnostics: readonly Diagnostic[];
 }
 
+export interface SymbolDocumentInput extends SourceDocument {
+  readonly identity?: SyntaxIdentity | undefined;
+}
+
+export interface SymbolIndexRequest {
+  readonly sourceId?: string | undefined;
+  readonly source: string;
+  /** Ids for `source`. A fresh identity is used when omitted. */
+  readonly identity?: SyntaxIdentity | undefined;
+  /** Further documents indexed before `source`, in load order. */
+  readonly documents?: readonly SymbolDocumentInput[] | undefined;
+  /** Index the session's loaded preludes and sources before `source`. */
+  readonly sessionId?: string | undefined;
+}
+
+export type SymbolDefinitionKind =
+  | "value"
+  | "function"
+  | "macro"
+  | "type"
+  | "constructor"
+  | "method"
+  | "declaration"
+  | "parameter"
+  | "local";
+
+export interface SymbolDefinition {
+  /** Unique key: `sourceId#nodeId`. */
+  readonly key: string;
+  readonly name: string;
+  readonly kind: SymbolDefinitionKind;
+  readonly scope: "global" | "local";
+  readonly nodeId: string;
+  readonly span: Span;
+  /** Head of the author-written form that introduced the name (`define`, `let`, a macro, a descriptor form). */
+  readonly form: string;
+  readonly formNodeId?: string | undefined;
+  /** For locals, the node that bounds where the name is visible. */
+  readonly scopeNodeId?: string | undefined;
+}
+
+export interface SymbolReference {
+  readonly name: string;
+  readonly nodeId: string;
+  readonly span: Span;
+  readonly resolution: "definition" | "builtin" | "form" | "unresolved";
+  /** Key of the definition the reference resolves to. */
+  readonly definition?: string | undefined;
+}
+
+export interface SymbolIndexResult {
+  readonly sourceId: string;
+  readonly definitions: readonly SymbolDefinition[];
+  readonly references: readonly SymbolReference[];
+  readonly diagnostics: readonly Diagnostic[];
+}
+
+export interface FindReferencesRequest extends SymbolIndexRequest {
+  /** A position inside the symbol in `source`. */
+  readonly offset?: number | undefined;
+  /** Or the symbol's node id in `identity`. */
+  readonly nodeId?: string | undefined;
+}
+
+export interface FindReferencesResult {
+  readonly sourceId: string;
+  readonly definition?: SymbolDefinition | undefined;
+  readonly references: readonly SymbolReference[];
+  readonly diagnostics: readonly Diagnostic[];
+}
+
 export interface LanguageHost {
   readonly name: string;
   version(): Promise<VersionResult>;
@@ -570,4 +641,6 @@ export interface LanguageHost {
   closeSession(request: CloseSessionRequest): Promise<CloseSessionResult>;
   analyzeEditor?(request: EditorAnalysisRequest): Promise<EditorAnalysisResult>;
   identifySyntax?(request: SyntaxIdentityRequest): Promise<SyntaxIdentityResult>;
+  symbolIndex?(request: SymbolIndexRequest): Promise<SymbolIndexResult>;
+  findReferences?(request: FindReferencesRequest): Promise<FindReferencesResult>;
 }

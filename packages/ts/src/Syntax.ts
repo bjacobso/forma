@@ -8,6 +8,7 @@ export {
   diffChange,
   identifySyntax,
   indexSyntax,
+  matchesSyntaxKind,
   reconcileSyntax,
   type IdentifyOptions,
   type PreviousSyntax,

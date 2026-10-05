@@ -7,7 +7,7 @@ describe("structural editor services on the TypeScript host", () => {
 
   it("advertises the services it implements", async () => {
     const version = await host.version();
-    expect(version.capabilities).toEqual(expect.arrayContaining(["identifySyntax", "observe"]));
+    expect(version.capabilities).toEqual(expect.arrayContaining(["identifySyntax", "observe", "symbolIndex", "findReferences"]));
   });
 
   it("identifies syntax and carries ids across an edit", async () => {
@@ -147,6 +147,37 @@ describe("structural editor services on the TypeScript host", () => {
       kind: "int",
       value: 41,
     });
+    await host.closeSession({ sessionId });
+  });
+
+  it("indexes symbols across session sources and finds references", async () => {
+    const { sessionId } = await host.openSession();
+    await host.loadSource({
+      sessionId,
+      sourceId: "lib.lisp",
+      source: "(define (greet name) name)",
+      kind: "prelude",
+    });
+    const source = "(greet 1)\n(greet 2)";
+    const index = await host.symbolIndex({ sessionId, sourceId: "main.lisp", source });
+    expect(index.definitions).toContainEqual(
+      expect.objectContaining({
+        name: "greet",
+        kind: "function",
+        span: expect.objectContaining({ sourceId: "lib.lisp" }),
+      }),
+    );
+    const references = await host.findReferences({
+      sessionId,
+      sourceId: "main.lisp",
+      source,
+      offset: source.lastIndexOf("greet") + 1,
+    });
+    expect(references.definition).toMatchObject({ name: "greet", key: expect.stringMatching(/^lib\.lisp#/) });
+    expect(references.references.map((reference) => reference.span)).toEqual([
+      { sourceId: "main.lisp", startOffset: 1, endOffset: 6 },
+      { sourceId: "main.lisp", startOffset: 11, endOffset: 16 },
+    ]);
     await host.closeSession({ sessionId });
   });
 });

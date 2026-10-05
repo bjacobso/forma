@@ -12,6 +12,7 @@ import {
   parse,
   type RedNode,
   type RedToken,
+  type SExpr,
   type SyntaxKind,
 } from "../reader/index.js";
 
@@ -466,6 +467,31 @@ function positionMapper(changes: readonly TextChange[]): PositionMapper {
     return offset + delta;
   };
   return { start: (offset) => map(offset, "start"), end: (offset) => map(offset, "end") };
+}
+
+/** Whether a parsed expression can be the syntax node of this kind at the same span. */
+export function matchesSyntaxKind(expr: SExpr, kind: SyntaxNodeKind): boolean {
+  switch (expr._tag) {
+    case "List":
+      // Reader macros read as `(quote x)`-style lists spanning the whole node.
+      return kind === "List" || kind === "ReaderMacro";
+    case "Vector":
+      return kind === "Vector";
+    case "Map":
+      return kind === "Map";
+    case "Set":
+      return kind === "Set";
+    case "Sym":
+      return kind === "Symbol";
+    case "Str":
+      return kind === "String";
+    case "Num":
+      return kind === "Number";
+    case "Bool":
+      return kind === "Boolean";
+    case "Error":
+      return kind === "Error";
+  }
 }
 
 // =============================================================================
