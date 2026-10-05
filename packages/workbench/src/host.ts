@@ -63,3 +63,23 @@ export const configureSession = async (
     hostBuiltins: (config.capabilities ?? []).map(hostBuiltinOf),
   });
 };
+
+/** A host service the workbench needs, or a failure naming the missing capability. */
+export const required = <K extends keyof LanguageHost>(
+  host: LanguageHost,
+  name: K,
+): Effect.Effect<NonNullable<LanguageHost[K]>, string> => {
+  const service = host[name];
+  return service === undefined
+    ? Effect.fail(`The ${host.name} host does not implement ${String(name)}.`)
+    : Effect.succeed(
+        (service as (...args: never) => unknown).bind(host) as NonNullable<LanguageHost[K]>,
+      );
+};
+
+/** A host request, failing with the error's message. */
+export const call = <A>(run: () => Promise<A>): Effect.Effect<A, string> =>
+  Effect.tryPromise({
+    try: run,
+    catch: (error) => (error instanceof Error ? error.message : String(error)),
+  });

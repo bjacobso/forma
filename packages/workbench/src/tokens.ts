@@ -17,6 +17,7 @@ export type SymbolKind =
   | "macro"
   | "form"
   | "builtin"
+  | "capability"
   | "unresolved";
 
 const CLOSERS: Readonly<Record<string, string>> = { "(": ")", "[": "]", "{": "}" };

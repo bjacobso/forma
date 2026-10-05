@@ -14,7 +14,7 @@ export default defineConfig({
   },
   webServer: {
     // A fresh server: the Foldkit plugin pushes a kept model into pages after hot updates.
-    command: `pnpm exec vite --host 127.0.0.1 --port ${port} --strictPort`,
+    command: `pnpm --filter @formalang/workbench build && pnpm exec vite --host 127.0.0.1 --port ${port} --strictPort`,
     url: `http://127.0.0.1:${port}/`,
     reuseExistingServer: false,
     timeout: 60_000,

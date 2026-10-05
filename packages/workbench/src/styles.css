@@ -99,3 +99,51 @@
 .wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="error"] {
   color: var(--wb-danger);
 }
+
+.wb :is(.fw-outliner__span, .native-token--semantic):is([data-kind="special"], [data-kind="macro"]) {
+  color: var(--wb-code-special);
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="form"] {
+  color: var(--wb-code-special);
+  font-weight: 600;
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="definition"] {
+  color: var(--wb-code-type);
+  font-weight: 600;
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic):is([data-kind="defined"], [data-kind="declared"]) {
+  color: var(--wb-code-type);
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="declared"] {
+  text-decoration: underline dotted color-mix(in oklab, var(--wb-code-type) 50%, transparent);
+  text-underline-offset: 3px;
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="builtin"] {
+  color: color-mix(in oklab, var(--wb-code-special) 70%, var(--foreground));
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="capability"] {
+  color: var(--wb-warning);
+  font-weight: 600;
+}
+
+.wb :is(.fw-outliner__span, .native-token--semantic)[data-kind="unresolved"] {
+  color: var(--wb-danger);
+}
+
+/* A row with a problem. */
+
+.wb .fw-outliner__row[data-tone="error"] .fw-outliner__cell {
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--wb-danger) 6%, transparent);
+}
+
+.wb .fw-outliner__row[data-tone="warning"] .fw-outliner__cell {
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--wb-warning) 7%, transparent);
+}

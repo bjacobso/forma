@@ -3,6 +3,7 @@ import { TsLanguageHost } from "@formalang/host/ts-host";
 import { FormaHost, Workbench, type WorkbenchConfig } from "@formalang/workbench";
 
 import { capabilities } from "./program/capabilities";
+import { dataflow } from "./program/checks";
 import source from "./program/onboarding.forma?raw";
 import workflow from "./program/workflow.lisp?raw";
 
@@ -10,6 +11,7 @@ const config: WorkbenchConfig = {
   sourceId: "onboarding.forma",
   preludes: [{ sourceId: "workflow.lisp", source: workflow }],
   capabilities,
+  checks: [dataflow],
 };
 
 const application = Runtime.makeElement({

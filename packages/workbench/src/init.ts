@@ -21,6 +21,7 @@ export const init = (config: InitConfig): Update.Return<Model, Message, FormaHos
     title: config.title,
     outline: Outliner.init({ id: domIds(config.id).outline }),
     document: null,
+    analysis: null,
     failure: null,
   },
   commands: [ReadProgram({ source: config.source })],
