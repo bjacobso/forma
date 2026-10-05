@@ -14,14 +14,14 @@ import { parse } from "../reader/index.js";
 import {
   identifySyntax,
   indexSyntax,
-  reconcileSyntax,
-  type SyntaxAnchor,
   type SyntaxIdentity,
   type SyntaxIndex,
   type SyntaxNode,
+  type SyntaxNodeKind,
   type SyntaxSpan,
   type TextChange,
 } from "../syntax/identity.js";
+import { joinSource, SourceBuilder } from "../syntax/lexical.js";
 import type { DescriptorSource } from "./descriptors.js";
 import {
   findReferences,
@@ -294,77 +294,258 @@ interface OpContext {
   readonly descriptors: DescriptorSource | undefined;
 }
 
-/** Replacements in the current document plus the ids to pin in the result. */
-interface Plan {
-  readonly changes: TextChange[];
-  /** Pins a node id to the text at `offset` (relative to change `change`) with `length`. */
-  readonly anchors: { id: string; change: number; offset: number; length: number }[];
+// =============================================================================
+// The intended tree
+// =============================================================================
+
+/**
+ * A node of the tree an operation intends. Atoms and comments are compared by
+ * their text, reader macros by their prefix, containers by their kind.
+ */
+interface TreeNode {
+  readonly id: string;
+  kind: SyntaxNodeKind;
+  text: string;
+  children: TreeNode[];
 }
+
+/**
+ * The document as a tree of identified nodes, edited by an operation. Ids of
+ * new nodes come from the identity's counter, so they are never reused.
+ */
+class Tree {
+  readonly roots: TreeNode[];
+  readonly #byId = new Map<string, { node: TreeNode; parent: TreeNode | null }>();
+  readonly #taken: Set<string>;
+  /** Containers whose children the operation changed: the grammar is checked on these. */
+  readonly #changed = new Set<TreeNode>();
+  /** Braces that held forms before the operation; they keep their kind. */
+  readonly #filledBraces = new Set<TreeNode>();
+  #nextId: number;
+
+  constructor(
+    readonly source: string,
+    readonly identity: SyntaxIdentity,
+  ) {
+    const index = indexSyntax(identity);
+    const build = (node: SyntaxNode): TreeNode => {
+      const built: TreeNode = {
+        id: node.id,
+        kind: node.kind,
+        text: nodeText(source, node),
+        children: index.children(node.id).map(build),
+      };
+      if (isBraces(built.kind) && formsOf(built.children).length > 0) this.#filledBraces.add(built);
+      return built;
+    };
+    this.roots = index.children(null).map(build);
+    this.#reindex();
+    this.#taken = new Set(identity.nodes.map((node) => node.id));
+    this.#nextId = identity.nextId;
+  }
+
+  get nextId(): number {
+    return this.#nextId;
+  }
+
+  node(id: string): TreeNode {
+    const entry = this.#byId.get(id);
+    if (!entry) throw new EditFailure("edit/unknown-node", `No node with id ${id}`);
+    return entry.node;
+  }
+
+  parentOf(id: string): TreeNode | null {
+    this.node(id);
+    return this.#byId.get(id)!.parent;
+  }
+
+  childrenOf(parent: TreeNode | null): TreeNode[] {
+    return parent === null ? this.roots : parent.children;
+  }
+
+  /** Forms read from new source text, with fresh ids. The first may keep `keep`'s id. */
+  forms(text: string, keep?: string): TreeNode[] {
+    const identity = identifySyntax(text);
+    const index = indexSyntax(identity);
+    const build = (node: SyntaxNode, id: string): TreeNode => ({
+      id,
+      kind: node.kind,
+      text: nodeText(text, node),
+      children: index.children(node.id).map((child) => build(child, this.fresh())),
+    });
+    return index.children(null).map((node, position) =>
+      build(node, position === 0 && keep !== undefined ? keep : this.fresh()),
+    );
+  }
+
+  fresh(): string {
+    let id: string;
+    do {
+      id = `${this.identity.idPrefix}${this.#nextId++}`;
+    } while (this.#taken.has(id));
+    this.#taken.add(id);
+    return id;
+  }
+
+  /** Replace `count` children of `parent` starting at `at` with `nodes`. */
+  splice(parent: TreeNode | null, at: number, count: number, nodes: readonly TreeNode[]): void {
+    this.childrenOf(parent).splice(at, count, ...nodes);
+    if (parent) this.#changed.add(parent);
+    this.#reindex();
+  }
+
+  /** Remove a node from its parent. */
+  remove(id: string): void {
+    const parent = this.parentOf(id);
+    const siblings = this.childrenOf(parent);
+    this.splice(parent, siblings.indexOf(this.node(id)), 1, []);
+  }
+
+  /** Check the grammar where the operation changed children. */
+  checkGrammar(): void {
+    for (const node of this.#changed) {
+      if (!this.#byId.has(node.id)) continue;
+      const forms = formsOf(node.children);
+      // A reader macro has no closing delimiter, so its form comes last;
+      // only comments between the prefix and the form are inside it.
+      if (node.kind === "ReaderMacro" && (forms.length !== 1 || node.children.at(-1) !== forms[0])) {
+        throw new EditFailure(
+          "edit/reader-macro-operand",
+          "A reader macro must be followed by exactly one form",
+        );
+      }
+      if (isBraces(node.kind)) {
+        const kind = braceKind(node.children);
+        if (this.#filledBraces.has(node) && kind !== node.kind) {
+          throw new EditFailure(
+            "edit/brace-kind",
+            node.kind === "Map"
+              ? "The edit would turn a map into a set"
+              : "The edit would turn a set into a map",
+          );
+        }
+        node.kind = kind;
+        if (kind === "Map" && forms.length % 2 !== 0) {
+          throw new EditFailure("edit/map-entry", "A map must hold keys and values in pairs");
+        }
+      }
+    }
+  }
+
+  /** Nodes in document order with the index of their parent in the same order. */
+  flatten(): { node: TreeNode; parent: number; index: number }[] {
+    const result: { node: TreeNode; parent: number; index: number }[] = [];
+    const visit = (nodes: readonly TreeNode[], parent: number) => {
+      nodes.forEach((node, index) => {
+        const position = result.push({ node, parent, index }) - 1;
+        visit(node.children, position);
+      });
+    };
+    visit(this.roots, -1);
+    return result;
+  }
+
+  #reindex(): void {
+    this.#byId.clear();
+    const visit = (nodes: readonly TreeNode[], parent: TreeNode | null) => {
+      for (const node of nodes) {
+        this.#byId.set(node.id, { node, parent });
+        visit(node.children, node);
+      }
+    };
+    visit(this.roots, null);
+  }
+}
+
+/** What a node is compared by: an atom's or comment's text, a reader macro's prefix. */
+function nodeText(source: string, node: SyntaxNode): string {
+  const text = source.slice(node.span.start, node.span.end);
+  switch (node.kind) {
+    case "List":
+    case "Vector":
+    case "Map":
+    case "Set":
+      return "";
+    case "ReaderMacro":
+      return text.startsWith("~@") ? "~@" : text.slice(0, 1);
+    case "Comment":
+      // A carriage return before the line break belongs to the line break.
+      return text.replace(/\r+$/, "");
+    default:
+      return text;
+  }
+}
+
+const isBraces = (kind: SyntaxNodeKind) => kind === "Map" || kind === "Set";
+
+const formsOf = (nodes: readonly TreeNode[]) => nodes.filter((node) => node.kind !== "Comment");
+
+/** How the reader reads braces with these children: a set when every form is a plain symbol. */
+function braceKind(children: readonly TreeNode[]): "Map" | "Set" {
+  const forms = formsOf(children);
+  return forms.length > 0 && forms.every((form) => form.kind === "Symbol" && !form.text.startsWith(":"))
+    ? "Set"
+    : "Map";
+}
+
+// =============================================================================
+// Operations
+// =============================================================================
 
 function applyOp(state: DocumentState, operation: EditOp, context: OpContext): DocumentState {
   const { source, identity } = state;
   const index = indexSyntax(identity);
-  const plan: Plan = { changes: [], anchors: [] };
+  const tree = new Tree(source, identity);
+  const changes: TextChange[] = [];
   const doc = new Layout(source, index);
   switch (operation.op) {
     case "replace": {
       const target = doc.node(operation.target);
       const text = checkedText(operation.text, "replace");
-      const forms = topElements(text);
+      const sameKind = topElements(text).length === 1 && topElements(text)[0]!.kind === target.kind;
+      const forms = tree.forms(text, sameKind ? target.id : undefined);
       if (forms.length === 0) throw new EditFailure("edit/empty-text", "Replacement text is empty");
-      if (target.parent !== null && doc.node(target.parent).kind === "ReaderMacro" && (forms.length !== 1 || forms[0]!.kind === "Comment")) {
-        throw new EditFailure(
-          "edit/reader-macro-operand",
-          "The form after a reader macro can only be replaced by one form",
-        );
-      }
-      const replaced = doc.place(text, doc.column(target.span.start));
-      const breakAfter = doc.breakAfter(text, target.span.end, doc.column(target.span.start));
-      const change = plan.changes.push({ ...target.span, text: `${replaced.text}${breakAfter}` }) - 1;
-      if (forms.length === 1 && forms[0]!.kind === target.kind) {
-        plan.anchors.push({
-          id: target.id,
-          change,
-          offset: replaced.map(forms[0]!.span.start),
-          length: replaced.map(forms[0]!.span.end) - replaced.map(forms[0]!.span.start),
-        });
-      }
+      const parent = tree.parentOf(target.id);
+      tree.splice(parent, tree.childrenOf(parent).indexOf(tree.node(target.id)), 1, forms);
+      changes.push({ ...target.span, text: doc.place(text, doc.column(target.span.start)).text });
       break;
     }
     case "insert": {
       const text = checkedText(operation.text, "insert");
-      if (topElements(text).length === 0) {
-        throw new EditFailure("edit/empty-text", "Inserted text is empty");
-      }
-      plan.changes.push(doc.insertion(doc.resolvePlace(operation.at), text));
+      const forms = tree.forms(text);
+      if (forms.length === 0) throw new EditFailure("edit/empty-text", "Inserted text is empty");
+      const place = doc.resolvePlace(operation.at);
+      tree.splice(place.parent === null ? null : tree.node(place.parent), place.index, 0, forms);
+      changes.push(doc.insertion(place, text));
       break;
     }
-    case "delete":
-      plan.changes.push(doc.deletion(doc.detachable(operation.target)));
+    case "delete": {
+      const target = doc.node(operation.target);
+      const deletion = doc.deletion(target);
+      tree.remove(target.id);
+      if (deletion.comment) tree.remove(deletion.comment.id);
+      changes.push(deletion);
       break;
+    }
     case "wrap": {
       const targets = doc.siblings(operation.targets);
       const head = operation.head.trim();
-      if (head !== "") checkedText(head, "wrap");
-      if (head !== "" && topElements(head).at(-1)?.kind === "Comment") {
-        throw new EditFailure("edit/trailing-comment", "The wrap head must not end with a comment");
-      }
+      const headForms = head === "" ? [] : tree.forms(checkedText(head, "wrap"));
       const first = targets[0]!;
       const last = targets.at(-1)!;
+      const parent = first.parent === null ? null : tree.node(first.parent);
+      tree.splice(parent, first.index, targets.length, [
+        { id: tree.fresh(), kind: "List", text: "", children: [...headForms, ...targets.map((target) => tree.node(target.id))] },
+      ]);
       const region = { start: first.span.start, end: last.span.end };
-      const regionText = textOf(source, region);
       const column = doc.column(region.start);
-      const multiline = regionText.includes("\n");
-      const opening = head === "" ? "(" : multiline ? `(${head}\n${spaces(column + 2)}` : `(${head} `;
-      const shift = head === "" ? 1 : multiline ? 2 : opening.length;
-      const body = doc.reindent(region, shift);
-      const closing = last.kind === "Comment" ? `\n${spaces(column)})` : ")";
-      const change = plan.changes.push({ ...region, text: `${opening}${body.text}${closing}` }) - 1;
-      for (const target of targets) {
-        const start = opening.length + body.map(target.span.start - region.start);
-        const end = opening.length + body.map(target.span.end - region.start);
-        plan.anchors.push({ id: target.id, change, offset: start, length: end - start });
-      }
+      const multiline = textOf(source, region).includes("\n");
+      const separator = head === "" ? "" : multiline ? `\n${spaces(column + 2)}` : " ";
+      const body = doc.reindent(region, head === "" ? 1 : multiline ? 2 : head.length + 2);
+      changes.push({
+        ...region,
+        text: joinSource([`(${head}`, separator, body.text, ")"], { breakColumn: column }),
+      });
       break;
     }
     case "splice":
@@ -376,28 +557,21 @@ function applyOp(state: DocumentState, operation: EditOp, context: OpContext): D
       }
       const elements = index.children(target.id);
       const kept = operation.op === "unwrap" ? dropHead(elements) : elements;
-      const operand = target.parent !== null && doc.node(target.parent).kind === "ReaderMacro";
-      if (operand && kept.filter((element) => element.kind !== "Comment").length !== 1) {
-        throw new EditFailure(
-          "edit/reader-macro-operand",
-          "A reader macro's form can only be spliced down to one form",
-        );
-      }
+      const parent = tree.parentOf(target.id);
+      tree.splice(
+        parent,
+        tree.childrenOf(parent).indexOf(tree.node(target.id)),
+        1,
+        kept.map((element) => tree.node(element.id)),
+      );
       if (kept.length === 0) {
-        plan.changes.push(doc.deletion(target));
+        // Only the list goes; a comment after it stays.
+        changes.push(doc.deletion(target, false));
         break;
       }
       const region = { start: kept[0]!.span.start, end: kept.at(-1)!.span.end };
       const body = doc.reindent(region, doc.column(target.span.start) - doc.column(region.start));
-      // Code after the list must not join a line that now ends in a comment.
-      const after =
-        kept.at(-1)!.kind === "Comment" ? doc.lineBreakAt(target.span.end, doc.column(target.span.start)) : "";
-      const change = plan.changes.push({ ...target.span, text: `${body.text}${after}` }) - 1;
-      for (const element of kept) {
-        const start = body.map(element.span.start - region.start);
-        const end = body.map(element.span.end - region.start);
-        plan.anchors.push({ id: element.id, change, offset: start, length: end - start });
-      }
+      changes.push({ ...target.span, text: body.text });
       break;
     }
     case "raise": {
@@ -407,30 +581,36 @@ function applyOp(state: DocumentState, operation: EditOp, context: OpContext): D
         throw new EditFailure("edit/top-level", "A top-level node has no parent to replace");
       }
       const parent = doc.node(target.parent);
+      const grandparent = tree.parentOf(parent.id);
+      tree.splice(
+        grandparent,
+        tree.childrenOf(grandparent).indexOf(tree.node(parent.id)),
+        1,
+        [tree.node(target.id)],
+      );
       const body = doc.reindent(target.span, doc.column(parent.span.start) - doc.column(target.span.start));
-      const change = plan.changes.push({ ...parent.span, text: body.text }) - 1;
-      plan.anchors.push({ id: target.id, change, offset: 0, length: body.text.length });
+      changes.push({ ...parent.span, text: body.text });
       break;
     }
     case "move": {
-      const target = doc.detachable(operation.target);
+      const target = doc.node(operation.target);
       const place = doc.resolvePlace(operation.to);
-      if (place.parent !== null && index.ancestors(place.parent).some((a) => a.id === target.id)) {
+      if (place.parent === target.id || (place.parent !== null && index.ancestors(place.parent).some((a) => a.id === target.id))) {
         throw new EditFailure("edit/move-into-self", "Cannot move a node into itself");
       }
-      if (place.parent === target.id) {
-        throw new EditFailure("edit/move-into-self", "Cannot move a node into itself");
+      const moved = tree.node(target.id);
+      const origin = tree.parentOf(target.id);
+      const from = tree.childrenOf(origin).indexOf(moved);
+      const destination = place.parent === null ? null : tree.node(place.parent);
+      const before = place.before && place.before.id !== target.id ? tree.node(place.before.id) : undefined;
+      tree.remove(target.id);
+      const to = before ? tree.childrenOf(destination).indexOf(before) : tree.childrenOf(destination).length;
+      // Moving a node to where it is changes nothing.
+      if (place.before?.id === target.id || place.after?.id === target.id || (destination === origin && to === from)) {
+        return state;
       }
-      const deletion = doc.deletion(target, false);
-      const insertion = doc.insertion(place, textOf(source, target.span), target);
-      if (insertion.start > deletion.start && insertion.start < deletion.end) {
-        // Moving next to itself: nothing changes.
-        break;
-      }
-      plan.changes.push(deletion);
-      const change = plan.changes.push(insertion) - 1;
-      const placed = insertion.placed!;
-      plan.anchors.push({ id: target.id, change, offset: placed.start, length: placed.end - placed.start });
+      tree.splice(destination, to, 0, [moved]);
+      changes.push(doc.deletion(target, false), doc.insertion(place, textOf(source, target.span), target));
       break;
     }
     case "rename":
@@ -438,62 +618,77 @@ function applyOp(state: DocumentState, operation: EditOp, context: OpContext): D
     case "extract":
       return extract(state, operation.target, operation.name, context);
   }
-  return commit(state, plan);
+  return commit(state, tree, changes);
 }
 
-/** Apply a plan's changes and carry ids through them. */
-function commit(state: DocumentState, plan: Plan): DocumentState {
-  const ordered = plan.changes
-    .map((change, position) => ({ change, position }))
-    .sort((left, right) => left.change.start - right.change.start || left.change.end - right.change.end);
+/**
+ * Apply text changes and check that the result reads as the intended tree.
+ * The new identity gives every node the id the operation gave it.
+ */
+function commit(state: DocumentState, tree: Tree, changes: readonly TextChange[]): DocumentState {
+  tree.checkGrammar();
+  const ordered = [...changes].sort((left, right) => left.start - right.start || left.end - right.end);
   for (let i = 1; i < ordered.length; i++) {
-    if (ordered[i]!.change.start < ordered[i - 1]!.change.end) {
+    if (ordered[i]!.start < ordered[i - 1]!.end) {
       throw new EditFailure("edit/overlap", "The edit's changes overlap");
     }
   }
-  let source = "";
+  // Every seam goes through the builder, so no piece reads differently next
+  // to its neighbors: a comment cannot swallow code and atoms cannot fuse.
+  const builder = new SourceBuilder();
   let cursor = 0;
-  const newStart = new Map<number, number>();
-  for (const { change, position } of ordered) {
-    source += state.source.slice(cursor, change.start);
-    newStart.set(position, source.length);
-    source += change.text;
+  for (const change of ordered) {
+    builder.append(state.source.slice(cursor, change.start));
+    builder.append(change.text);
     cursor = change.end;
   }
-  source += state.source.slice(cursor);
-  const anchors: SyntaxAnchor[] = plan.anchors.map((anchor) => {
-    const start = newStart.get(anchor.change)! + anchor.offset;
-    return { id: anchor.id, span: { start, end: start + anchor.length } };
-  });
-  // Nodes inside replaced text are gone, unless an anchor carries them (with
-  // their subtrees) to their new place. Their ids must not reach other nodes.
-  const index = indexSyntax(state.identity);
-  const carried = new Set(plan.anchors.flatMap((anchor) => index.subtree(anchor.id).map((node) => node.id)));
-  const retired = state.identity.nodes
-    .filter(
-      (node) =>
-        !carried.has(node.id) &&
-        plan.changes.some(
-          (change) =>
-            change.end > change.start && change.start <= node.span.start && node.span.end <= change.end,
-        ),
-    )
-    .map((node) => node.id);
-  const before = state.identity.errors.length;
-  const identity = reconcileSyntax(state, source, {
-    changes: ordered.map(({ change }) => change),
-    anchors,
-    retired,
-  });
-  if (identity.errors.length > before) {
+  builder.append(state.source.slice(cursor));
+  const source = builder.text;
+
+  const parsed = identifySyntax(source, { idPrefix: state.identity.idPrefix });
+  if (parsed.errors.length > state.identity.errors.length) {
     throw new EditFailure(
       "edit/unreadable",
-      `The edit would make the source unreadable: ${identity.errors[0]!.message}`,
+      `The edit would make the source unreadable: ${parsed.errors[parsed.errors.length - 1]!.message}`,
     );
   }
+  const intended = tree.flatten();
+  const mismatch = (): string | undefined => {
+    if (parsed.nodes.length !== intended.length) {
+      return `${parsed.nodes.length} nodes instead of ${intended.length}`;
+    }
+    const positions = new Map(parsed.nodes.map((node, position) => [node.id, position]));
+    for (const [position, node] of parsed.nodes.entries()) {
+      const want = intended[position]!;
+      const parent = node.parent === null ? -1 : positions.get(node.parent)!;
+      if (node.kind !== want.node.kind) return `a ${node.kind} where the edit intends a ${want.node.kind}`;
+      if (parent !== want.parent || node.index !== want.index) {
+        return `a ${node.kind} in a different place than the edit intends`;
+      }
+      if (nodeText(source, node) !== want.node.text) {
+        return `${JSON.stringify(nodeText(source, node))} where the edit intends ${JSON.stringify(want.node.text)}`;
+      }
+    }
+    return undefined;
+  };
+  const difference = mismatch();
+  if (difference !== undefined) {
+    throw new EditFailure("edit/structure", `The edited source would read differently: ${difference}`);
+  }
+  const ids = intended.map((entry) => entry.node.id);
+  const positions = new Map(parsed.nodes.map((node, position) => [node.id, position]));
+  const identity: SyntaxIdentity = {
+    ...parsed,
+    idPrefix: state.identity.idPrefix,
+    nextId: Math.max(tree.nextId, state.identity.nextId),
+    nodes: parsed.nodes.map((node, position) => ({
+      ...node,
+      id: ids[position]!,
+      parent: node.parent === null ? null : ids[positions.get(node.parent)!]!,
+    })),
+  };
   return { source, identity };
 }
-
 // =============================================================================
 // Rename and extract
 // =============================================================================
@@ -544,12 +739,13 @@ function rename(state: DocumentState, targetId: string, to: string, context: OpC
       `${found.definition.name} is also used in ${external[0]!.sourceId}, which this edit cannot change`,
     );
   }
-  const plan: Plan = { changes: [], anchors: [] };
-  for (const occurrence of occurrences) {
-    const change = plan.changes.push({ ...occurrence.span, text: to }) - 1;
-    plan.anchors.push({ id: occurrence.nodeId, change, offset: 0, length: to.length });
-  }
-  const next = commit(state, plan);
+  const tree = new Tree(state.source, state.identity);
+  for (const occurrence of occurrences) tree.node(occurrence.nodeId).text = to;
+  const next = commit(
+    state,
+    tree,
+    occurrences.map((occurrence) => ({ ...occurrence.span, text: to })),
+  );
   // Renaming must not change what any other name refers to.
   const after = symbolIndexFor(next, context);
   const renamed = new Set(occurrences.map((occurrence) => occurrence.nodeId));
@@ -637,17 +833,17 @@ function extract(state: DocumentState, targetId: string, name: string, context: 
   const previous = index.children(null)[top.index - 1];
   const separator =
     previous && /\n[ \t]*\n/.test(state.source.slice(previous.span.end, top.span.start)) ? "\n\n" : "\n";
-  const plan: Plan = { changes: [], anchors: [] };
-  const change =
-    plan.changes.push({
-      start: top.span.start,
-      end: top.span.start,
-      text: `${definitionText}${separator}${spaces(topColumn)}`,
-    }) - 1;
-  const bodyStart = definitionText.indexOf("\n  ") + 3;
-  plan.anchors.push({ id: target.id, change, offset: bodyStart, length: body.text.length });
-  plan.changes.push({ ...target.span, text: call });
-  return commit(state, plan);
+  const tree = new Tree(state.source, state.identity);
+  const extracted = tree.node(target.id);
+  const parent = tree.parentOf(target.id);
+  tree.splice(parent, tree.childrenOf(parent).indexOf(extracted), 1, tree.forms(call));
+  const [definition] = tree.forms(`(define (${signature}))`);
+  definition!.children.push(extracted);
+  tree.splice(null, tree.roots.indexOf(tree.node(top.id)), 0, [definition!]);
+  return commit(state, tree, [
+    { start: top.span.start, end: top.span.start, text: `${definitionText}${separator}${spaces(topColumn)}` },
+    { ...target.span, text: call },
+  ]);
 }
 
 // =============================================================================
@@ -656,12 +852,19 @@ function extract(state: DocumentState, targetId: string, name: string, context: 
 
 interface ResolvedPlace {
   readonly parent: string | null;
+  /** Position among the parent's children. */
+  readonly index: number;
   /** The sibling the text goes before, or `undefined` for the end. */
   readonly before?: SyntaxNode | undefined;
-  /** The sibling the text goes after, when it goes at the end. */
+  /** The sibling the text goes after. */
   readonly after?: SyntaxNode | undefined;
 }
 
+/**
+ * Layout choices for operations: where text goes and how it is indented. It
+ * decides only whitespace. Whether the result reads as intended is checked by
+ * `commit`, and every seam is made safe by `SourceBuilder`.
+ */
 class Layout {
   constructor(
     readonly source: string,
@@ -671,18 +874,6 @@ class Layout {
   node(id: string): SyntaxNode {
     const node = this.index.node(id);
     if (!node) throw new EditFailure("edit/unknown-node", `No node with id ${id}`);
-    return node;
-  }
-
-  /** A node that can leave its place: not the operand of a reader macro such as `'x`. */
-  detachable(id: string): SyntaxNode {
-    const node = this.node(id);
-    if (node.parent !== null && this.node(node.parent).kind === "ReaderMacro") {
-      throw new EditFailure(
-        "edit/reader-macro-operand",
-        "The form after a reader macro cannot be removed on its own; edit the reader-macro form",
-      );
-    }
     return node;
   }
 
@@ -699,10 +890,12 @@ class Layout {
     return this.source.slice(this.lineStart(offset), offset).trim() === "";
   }
 
-  /** Where a trailing same-line comment after `offset` ends, if there is one. */
-  trailingCommentEnd(offset: number): number | undefined {
-    const rest = /^[ \t]*(;[^\n]*)/.exec(this.source.slice(offset));
-    return rest ? offset + rest[0].length : undefined;
+  /** A comment that follows `node` on the same line, if there is one. */
+  trailingComment(node: SyntaxNode): SyntaxNode | undefined {
+    const next = this.index.children(node.parent)[node.index + 1];
+    return next?.kind === "Comment" && /^[ \t]*$/.test(this.source.slice(node.span.end, next.span.start))
+      ? next
+      : undefined;
   }
 
   /** Whether the line containing `offset` ends in a comment. */
@@ -710,7 +903,11 @@ class Layout {
     const lineEnd = this.source.indexOf("\n", offset);
     const end = lineEnd < 0 ? this.source.length : lineEnd;
     return this.index.identity.nodes.some(
-      (node) => node.kind === "Comment" && node.span.end === end && node.span.start >= this.lineStart(offset),
+      (node) =>
+        node.kind === "Comment" &&
+        node.span.start >= this.lineStart(offset) &&
+        node.span.end <= end &&
+        /^\r?$/.test(this.source.slice(node.span.end, end)),
     );
   }
 
@@ -734,24 +931,17 @@ class Layout {
   }
 
   resolvePlace(place: EditPlace): ResolvedPlace {
-    const besideOperand = (node: SyntaxNode) => {
-      if (node.parent !== null && this.node(node.parent).kind === "ReaderMacro") {
-        throw new EditFailure(
-          "edit/reader-macro-operand",
-          "Nothing can be placed beside the form after a reader macro",
-        );
-      }
-    };
     if ("before" in place) {
       const node = this.node(place.before);
-      besideOperand(node);
-      return { parent: node.parent, before: node };
+      const after = this.index.children(node.parent)[node.index - 1];
+      return { parent: node.parent, index: node.index, before: node, ...(after ? { after } : {}) };
     }
     if ("after" in place) {
+      // A comment trailing the node on its line goes with it.
       const node = this.node(place.after);
-      besideOperand(node);
-      const next = this.index.children(node.parent)[node.index + 1];
-      return next ? { parent: node.parent, before: next, after: node } : { parent: node.parent, after: node };
+      const after = this.trailingComment(node) ?? node;
+      const next = this.index.children(node.parent)[after.index + 1];
+      return { parent: node.parent, index: after.index + 1, after, ...(next ? { before: next } : {}) };
     }
     if (place.parent !== null) {
       const parent = this.node(place.parent);
@@ -766,126 +956,101 @@ class Layout {
     }
     const before = children[position];
     const after = position > 0 ? children[position - 1] : undefined;
-    return { parent: place.parent, ...(before ? { before } : {}), ...(after ? { after } : {}) };
+    return {
+      parent: place.parent,
+      index: position,
+      ...(before ? { before } : {}),
+      ...(after ? { after } : {}),
+    };
   }
 
   /** Text with continuation lines shifted by `delta` columns, never inside strings. */
-  reindent(span: SyntaxSpan, delta: number): { text: string; map: (offset: number) => number } {
+  reindent(span: SyntaxSpan, delta: number): { text: string } {
     const text = textOf(this.source, span);
     const protectedSpans = this.index.identity.nodes
       .filter((node) => node.kind === "String" || node.kind === "Error")
       .filter((node) => node.span.start < span.end && span.start < node.span.end)
       .map((node) => ({ start: node.span.start - span.start, end: node.span.end - span.start }));
-    return shiftLines(text, delta, protectedSpans);
+    return { text: shiftLines(text, delta, protectedSpans) };
   }
 
   /** New text laid out at `column`: continuation lines shift with it. */
-  place(text: string, column: number): { text: string; map: (offset: number) => number } {
-    return shiftLines(text, column, stringSpans(text));
+  place(text: string, column: number): { text: string } {
+    return { text: shiftLines(text, column, stringSpans(text)) };
   }
 
-  insertion(place: ResolvedPlace, text: string, moving?: SyntaxNode): TextChange & { placed?: SyntaxSpan } {
-    const parentColumn =
-      place.parent === null ? -2 : this.column(this.node(place.parent).span.start);
-    const columnOf = (node: SyntaxNode) => this.column(node.span.start);
+  insertion(place: ResolvedPlace, text: string, moving?: SyntaxNode): TextChange {
+    const parentColumn = place.parent === null ? -2 : this.column(this.node(place.parent).span.start);
     // Text taken from the document keeps its layout relative to its first line.
-    const shifted = (column: number) =>
+    const laid = (column: number) =>
       moving
-        ? this.reindent(moving.span, column - this.column(moving.span.start))
-        : this.place(text, column);
+        ? this.reindent(moving.span, column - this.column(moving.span.start)).text
+        : this.place(text, column).text;
+    const endsInComment = topElements(text).at(-1)?.kind === "Comment";
     if (place.before) {
       const anchor = place.before;
-      const column = columnOf(anchor);
-      const laid = shifted(column);
-      if (this.startsLine(anchor.span.start) || topElements(text).at(-1)?.kind === "Comment") {
-        const inserted = `${laid.text}\n${spaces(column)}`;
-        return { start: anchor.span.start, end: anchor.span.start, text: inserted, placed: { start: 0, end: laid.text.length } };
-      }
-      return {
-        start: anchor.span.start,
-        end: anchor.span.start,
-        text: `${laid.text} `,
-        placed: { start: 0, end: laid.text.length },
-      };
+      const column = this.column(anchor.span.start);
+      const separator = this.startsLine(anchor.span.start) || endsInComment ? `\n${spaces(column)}` : " ";
+      return { start: anchor.span.start, end: anchor.span.start, text: `${laid(column)}${separator}` };
     }
     if (place.after) {
       const anchor = place.after;
       const ownLine = this.startsLine(anchor.span.start);
-      const column = ownLine ? columnOf(anchor) : parentColumn + 2;
-      const afterComment = anchor.kind === "Comment";
-      const laid = shifted(column);
-      const commentEnd = this.trailingCommentEnd(anchor.span.end);
-      const at = commentEnd ?? anchor.span.end;
-      const after = this.breakAfter(text, at, Math.max(parentColumn, 0));
-      if (ownLine || afterComment || commentEnd !== undefined || place.parent === null) {
-        const prefix = `\n${spaces(Math.max(column, 0))}`;
-        return { start: at, end: at, text: `${prefix}${laid.text}${after}`, placed: { start: prefix.length, end: prefix.length + laid.text.length } };
+      const column = ownLine ? this.column(anchor.span.start) : parentColumn + 2;
+      const comment = anchor.kind === "Comment" ? anchor : this.trailingComment(anchor);
+      const at = comment?.span.end ?? anchor.span.end;
+      if (ownLine || comment || place.parent === null) {
+        return { start: at, end: at, text: `\n${spaces(Math.max(column, 0))}${laid(column)}` };
       }
-      return { start: at, end: at, text: ` ${laid.text}${after}`, placed: { start: 1, end: 1 + laid.text.length } };
+      return { start: at, end: at, text: ` ${laid(column)}` };
     }
     // An empty parent, or an empty document.
     if (place.parent === null) {
       const at = this.source.length;
       const prefix = this.source.trim() === "" ? "" : "\n";
-      const laid = shifted(0);
-      return { start: at, end: at, text: `${prefix}${laid.text}`, placed: { start: prefix.length, end: prefix.length + laid.text.length } };
+      return { start: at, end: at, text: `${prefix}${laid(0)}` };
     }
     const parent = this.node(place.parent);
     const at = parent.span.end - 1;
-    const laid = shifted(this.column(at));
     const opener = this.source[at - 1];
     const prefix = opener === "(" || opener === "[" || opener === "{" ? "" : " ";
-    const after = this.breakAfter(text, at, this.column(parent.span.start));
-    return { start: at, end: at, text: `${prefix}${laid.text}${after}`, placed: { start: prefix.length, end: prefix.length + laid.text.length } };
+    return { start: at, end: at, text: `${prefix}${laid(this.column(at))}` };
   }
 
-  /** Remove a node and the whitespace that separated it; with `withComment`, a trailing comment too. */
-  deletion(node: SyntaxNode, withComment = true): TextChange {
-    const commentEnd = withComment ? this.trailingCommentEnd(node.span.end) : undefined;
-    const end = commentEnd ?? node.span.end;
-    const restOfLine = /^[ \t]*/.exec(this.source.slice(end))![0];
+  /**
+   * Remove a node and the whitespace that separated it, and with
+   * `withComment` a comment trailing it on the same line.
+   */
+  deletion(node: SyntaxNode, withComment = true): TextChange & { comment?: SyntaxNode } {
+    const comment = withComment ? this.trailingComment(node) : undefined;
+    const end = comment?.span.end ?? node.span.end;
+    const removed = (change: TextChange) => (comment ? { ...change, comment } : change);
+    const restOfLine = /^[ \t\r]*/.exec(this.source.slice(end))![0];
     const lineEnds = this.source[end + restOfLine.length] === "\n" || end + restOfLine.length === this.source.length;
     if (this.startsLine(node.span.start) && lineEnds) {
-      // Remove the whole line, and the newline before it.
+      // Remove the whole line, and the line break before it.
       const start = this.lineStart(node.span.start);
       const from = start > 0 ? start - 1 : start;
       const to = start > 0 ? end + restOfLine.length : Math.min(this.source.length, end + restOfLine.length + 1);
-      return { start: from, end: to, text: "" };
+      if (start > 0 && this.source[from - 1] === "\r") return removed({ start: from - 1, end: to, text: "" });
+      return removed({ start: from, end: to, text: "" });
     }
     const following = /^\s*/.exec(this.source.slice(end))![0];
     const next = this.source[end + following.length];
     if (next !== undefined && next !== ")" && next !== "]" && next !== "}") {
-      return { start: node.span.start, end: end + following.length, text: "" };
+      return removed({ start: node.span.start, end: end + following.length, text: "" });
     }
     const preceding = /\s*$/.exec(this.source.slice(0, node.span.start))![0];
-    const joined = this.source.slice(0, node.span.start - preceding.length);
-    if (preceding.includes("\n") && this.lineEndsInComment(joined.length)) {
-      // Joining onto a line that ends in a comment would comment out what follows.
-      return { start: node.span.start, end, text: "" };
+    if (preceding.includes("\n") && this.lineEndsInComment(node.span.start - preceding.length)) {
+      // Keep the line break that ends a comment.
+      return removed({ start: node.span.start, end, text: "" });
     }
-    return { start: node.span.start - preceding.length, end, text: "" };
-  }
-
-  /** A line break to add after inserted text that ends in a comment, unless one follows. */
-  breakAfter(text: string, at: number, column: number): string {
-    return topElements(text).at(-1)?.kind === "Comment" ? this.lineBreakAt(at, column) : "";
-  }
-
-  /** A line break to put at `at`, unless the line already ends there. */
-  lineBreakAt(at: number, column: number): string {
-    const following = /^[ \t]*/.exec(this.source.slice(at))![0];
-    const next = this.source[at + following.length];
-    return next === undefined || next === "\n" ? "" : `\n${spaces(column)}`;
+    return removed({ start: node.span.start - preceding.length, end, text: "" });
   }
 }
 
 /** Shift continuation lines of `text` by `delta` columns, skipping lines that start inside protected spans. */
-function shiftLines(
-  text: string,
-  delta: number,
-  protectedSpans: readonly SyntaxSpan[],
-): { text: string; map: (offset: number) => number } {
-  const shifts: { at: number; by: number }[] = [];
+function shiftLines(text: string, delta: number, protectedSpans: readonly SyntaxSpan[]): string {
   let result = "";
   let cursor = 0;
   for (let position = text.indexOf("\n"); position >= 0; position = text.indexOf("\n", position + 1)) {
@@ -902,20 +1067,8 @@ function shiftLines(
     } else {
       cursor = lineStart - by;
     }
-    shifts.push({ at: lineStart, by });
   }
-  result += text.slice(cursor);
-  return {
-    text: result,
-    map: (offset) => {
-      let moved = offset;
-      for (const shift of shifts) {
-        if (shift.at > offset) break;
-        moved += shift.at === offset && shift.by < 0 ? 0 : shift.by;
-      }
-      return moved;
-    },
-  };
+  return result + text.slice(cursor);
 }
 
 function stringSpans(text: string): readonly SyntaxSpan[] {

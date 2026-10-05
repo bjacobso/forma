@@ -246,7 +246,7 @@ const violation = (source: string, op: Op): string | undefined => {
   const expected = model(source, op);
   const after = treeOf(result.source, reparsed);
   const atoms = (tree: Tree): string[] =>
-    tree.children.length === 0 && tree.kind !== "Comment" && tree.kind !== "ReaderMacro" ? [tree.text] : tree.children.flatMap(atoms);
+    ["Symbol", "String", "Number", "Boolean"].includes(tree.kind) ? [tree.text] : tree.children.flatMap(atoms);
   const extra = "text" in op ? op.text : "head" in op ? op.head : "";
   const allowed = new Set([...atoms(treeOf(source)), ...atoms(treeOf(extra.trim()))]);
   const fused = atoms(after).find((a) => !allowed.has(a));
@@ -403,7 +403,7 @@ describe("review A: pinned edit-script behavior", () => {
   });
 
   test("issue 2: a splice ending in a comment keeps what follows on its own line", () => {
-    expect(applied("(f (a ; c\n) d\n)", (id) => [{ op: "splice", target: id("(a ; c\n)") }])).toBe("(f a ; c\n    d\n)");
+    expect(applied("(f (a ; c\n) d\n)", (id) => [{ op: "splice", target: id("(a ; c\n)") }])).toBe("(f a ; c\n   d\n)");
   });
 
   test("issue 4: a reader-macro operand can be spliced down to one form, and wrapped", () => {
@@ -415,8 +415,9 @@ describe("review A: pinned edit-script behavior", () => {
     expect(applied("(f a b)", (id) => [{ op: "insert", at: { after: id("a") }, text: "; c\rx" }])).toBe(
       "(f a ; c\rx\n     b)",
     );
-    expect(refusal("(f a b)", (id) => [{ op: "wrap", targets: [id("a")], head: "h ; c\r x" }])).toBe(
-      "edit/trailing-comment",
+    // A head that ends in a comment is followed by a line break.
+    expect(applied("(f a b)", (id) => [{ op: "wrap", targets: [id("a")], head: "h ; c\r x" }])).toBe(
+      "(f (h ; c\r x\n   a) b)",
     );
     expect(applied("(f a\r b)", (id) => [{ op: "delete", target: id("b") }])).toBe("(f a)");
   });
@@ -428,7 +429,7 @@ describe("review A: pinned edit-script behavior", () => {
 
   test("comments move as nodes", () => {
     expect(applied("(f a ; c\n b)\n(g)", (id) => [{ op: "move", target: id("; c"), to: { parent: id("(g)") } }])).toBe(
-      "(f a b)\n(g ; c\n)",
+      "(f a b)\n(g ; c\n )",
     );
     expect(applied("(f a ; c\n b)\n(g x)", (id) => [{ op: "move", target: id("; c"), to: { before: id("x") } }])).toBe(
       "(f a b)\n(g ; c\n   x)",
@@ -469,14 +470,16 @@ describe("review A: pinned edit-script behavior", () => {
     ).toBe("(define-macro m [] `(h2 1))\n(define (h2 x) x)\n(define (k) (m))");
   });
 
-  test("rename refuses names a macro binds around the reference, and names that would fuse", () => {
+  test("rename refuses names a macro binds around the reference, and keeps renamed atoms apart", () => {
     expect(
       refusal("(define-macro with-y [body] `(let [y 1] ~body))\n(define (f x) (with-y (+ x 0)))", (id) => [
         { op: "rename", target: id("x"), to: "y" },
       ]),
     ).toBe("edit/capture");
-    // `1x` reads as 1 and x; renaming x to e5 would read as the number 1e5.
-    expect(refusal("(define (f x) (+ 1x))", (id) => [{ op: "rename", target: id("x"), to: "e5" }])).toBe("edit/capture");
+    // `1x` reads as 1 and x; a renamed e5 is kept apart from the 1 so it does not read as 1e5.
+    expect(applied("(define (f x) (+ 1x))", (id) => [{ op: "rename", target: id("x"), to: "e5" }])).toBe(
+      "(define (f e5) (+ 1 e5))",
+    );
     // Conservative: an unused builtin name is refused too.
     expect(refusal("(define (f x) x)", (id) => [{ op: "rename", target: id("x"), to: "list" }])).toBe("edit/name-taken");
   });
@@ -509,43 +512,43 @@ describe("review A: pinned edit-script behavior", () => {
 describe("review A: sibling bugs", () => {
   // Hazard: text is spliced without checking that neighbours stay separated,
   // so two atoms that were apart (or apart by a delimiter) read as one.
-  test.fails("delete joins the atoms on either side", () => {
+  test("delete joins the atoms on either side", () => {
     expect(atomsOf(applied("(a(b)c)", (id) => [{ op: "delete", target: id("(b)") }]))).toEqual(["a", "c"]);
   });
-  test.fails("deleting a comment that separates two atoms joins them", () => {
+  test("deleting a comment that separates two atoms joins them", () => {
     expect(atomsOf(applied("(a; c\nb)", (id) => [{ op: "delete", target: id("; c") }]))).toEqual(["a", "b"]);
   });
-  test.fails("splice joins an element to its neighbours", () => {
+  test("splice joins an element to its neighbours", () => {
     expect(atomsOf(applied("(f x(a)y)", (id) => [{ op: "splice", target: id("(a)") }]))).toEqual(["f", "x", "a", "y"]);
     expect(atomsOf(applied("(f 1(e5))", (id) => [{ op: "splice", target: id("(e5)") }]))).toEqual(["f", "1", "e5"]);
   });
-  test.fails("unwrap joins elements to its neighbours", () => {
+  test("unwrap joins elements to its neighbours", () => {
     expect(atomsOf(applied("(f x(g a)y)", (id) => [{ op: "unwrap", target: id("(g a)") }]))).toEqual(["f", "x", "a", "y"]);
   });
-  test.fails("raise joins the target to the parent's neighbours", () => {
+  test("raise joins the target to the parent's neighbours", () => {
     expect(atomsOf(applied("(f a(b c)d)", (id) => [{ op: "raise", target: id("b") }]))).toEqual(["f", "a", "b", "d"]);
   });
-  test.fails("insert before a node joins the text to its left neighbour", () => {
+  test("insert before a node joins the text to its left neighbour", () => {
     expect(atomsOf(applied("(f a(b))", (id) => [{ op: "insert", at: { before: id("(b)") }, text: "c" }]))).toEqual([
       "f", "a", "c", "b",
     ]);
   });
-  test.fails("insert after a node joins the text to that node", () => {
+  test("insert after a node joins the text to that node", () => {
     // {after: a} resolves to {before: "s"}, which pads only on the right.
     expect(atomsOf(applied('(f a"s")', (id) => [{ op: "insert", at: { after: id("a") }, text: "c" }]))).toEqual([
       "f", "a", "c", '"s"',
     ]);
   });
-  test.fails("replace joins the new text to its neighbours", () => {
+  test("replace joins the new text to its neighbours", () => {
     expect(atomsOf(applied("(f a(b))", (id) => [{ op: "replace", target: id("(b)"), text: "c" }]))).toEqual(["f", "a", "c"]);
     expect(atomsOf(applied("(f (a)b)", (id) => [{ op: "replace", target: id("(a)"), text: "c" }]))).toEqual(["f", "c", "b"]);
   });
-  test.fails("replacing a comment joins the new text to the atom before it", () => {
+  test("replacing a comment joins the new text to the atom before it", () => {
     expect(atomsOf(applied("[-; note\n1]", (id) => [{ op: "replace", target: id("; note"), text: "x" }]))).toEqual([
       "-", "x", "1",
     ]);
   });
-  test.fails("move joins the atoms it leaves behind", () => {
+  test("move joins the atoms it leaves behind", () => {
     expect(atomsOf(applied("(f a(b)c)\n(g)", (id) => [{ op: "move", target: id("(b)"), to: { parent: id("(g)") } }]))).toEqual(
       ["f", "a", "c", "g", "b"],
     );
@@ -553,39 +556,38 @@ describe("review A: sibling bugs", () => {
 
   // Hazard: `{…}` is a Set when every element is a non-keyword symbol and a
   // Map otherwise, so the reader's parity error does not guard edits.
-  test.fails("deleting a map value turns the map into a set", () => {
+  test("deleting a map value turns the map into a set", () => {
     expect(refusal("{a 1}", (id) => [{ op: "delete", target: id("1") }])).not.toMatch(/^applied/);
   });
-  test.fails("replacing a map value with a symbol turns the map into a set", () => {
+  test("replacing a map value with a symbol turns the map into a set", () => {
     expect(refusal("{a 1}", (id) => [{ op: "replace", target: id("1"), text: "b" }])).not.toMatch(/^applied/);
   });
-  test.fails("moving a map value out turns the map into a set", () => {
+  test("moving a map value out turns the map into a set", () => {
     expect(refusal("{a 1}\n(g)", (id) => [{ op: "move", target: id("1"), to: { parent: id("(g)") } }])).not.toMatch(
       /^applied/,
     );
   });
-  test.fails("raising out of a map value turns the map into a set", () => {
+  test("raising out of a map value turns the map into a set", () => {
     expect(refusal("{k [a]}", (id) => [{ op: "raise", target: id("a") }])).not.toMatch(/^applied/);
   });
-  test.fails("unwrapping a head-only list in a map turns the map into a set", () => {
+  test("unwrapping a head-only list in a map turns the map into a set", () => {
     expect(refusal("{(g) b}", (id) => [{ op: "unwrap", target: id("(g)") }])).not.toMatch(/^applied/);
   });
-  test.fails("wrapping set elements turns the set into a map", () => {
+  test("wrapping set elements turns the set into a map", () => {
     expect(refusal("{a b c}", (id) => [{ op: "wrap", targets: [id("a"), id("b")], head: "g" }])).not.toMatch(/^applied/);
   });
-  test.fails("inserting a keyword entry turns the set into a map", () => {
-    const source = applied("{a b}", (id) => [{ op: "insert", at: { after: id("b") }, text: ":k 1" }]);
-    expect(Syntax.identifySyntax(source).nodes[0]!.kind).toBe("Set");
+  test("inserting a keyword entry into a set is refused", () => {
+    expect(refusal("{a b}", (id) => [{ op: "insert", at: { after: id("b") }, text: ":k 1" }])).toBe("edit/brace-kind");
   });
 
   // Hazard: a comment between a reader macro and its operand is a child of
   // the reader macro; replace and wrap only guard the operand itself.
-  test.fails("replacing the comment inside a reader macro detaches the operand", () => {
+  test("replacing the comment inside a reader macro detaches the operand", () => {
     expect(refusal("(f ' ; c\n x)", (id) => [{ op: "replace", target: id("; c"), text: "y" }])).toBe(
       "edit/reader-macro-operand",
     );
   });
-  test.fails("wrapping the comment inside a reader macro detaches the operand", () => {
+  test("wrapping the comment inside a reader macro detaches the operand", () => {
     expect(refusal("(f ' ; c\n x)", (id) => [{ op: "wrap", targets: [id("; c")], head: "h" }])).toBe(
       "edit/reader-macro-operand",
     );
@@ -593,10 +595,10 @@ describe("review A: sibling bugs", () => {
 
   // Hazard: splice and unwrap of a list with nothing to keep reuse `delete`,
   // which also removes the comment trailing the list.
-  test.fails("splicing an empty list deletes the comment after it", () => {
+  test("splicing an empty list deletes the comment after it", () => {
     expect(applied("(f () ; keep\n b)", (id) => [{ op: "splice", target: id("()") }])).toContain("; keep");
   });
-  test.fails("unwrapping a head-only list deletes the comment after it", () => {
+  test("unwrapping a head-only list deletes the comment after it", () => {
     expect(applied("(f (g) ; keep\n b)", (id) => [{ op: "unwrap", target: id("(g)") }])).toContain("; keep");
   });
 
@@ -651,7 +653,7 @@ describe("review A: sibling bugs", () => {
 
   // Hazard: commit carries the whole old subtree of an anchored node, so a
   // replaced node's old children lend their ids to the new children.
-  test.fails("a later op can address a child that an earlier replace removed", () => {
+  test("a later op can address a child that an earlier replace removed", () => {
     expect(
       refusal("(k (f a) c)", (id) => [
         { op: "replace", target: id("(f a)"), text: "(g b)" },
@@ -660,11 +662,94 @@ describe("review A: sibling bugs", () => {
     ).toBe("edit/unknown-node");
   });
 
-  test.fails("scratch property: single operations keep tokens, comments, and tree shape", () => {
+  test("scratch property: single operations keep tokens, comments, and tree shape", () => {
     fc.assert(
       fc.property(withOp, ([text, op]) => {
         const problem = violation(text, op);
         if (problem !== undefined) expect.fail(`${JSON.stringify(text)} ${JSON.stringify(op)}: ${problem}`);
+      }),
+      { numRuns: runs(300) },
+    );
+  });
+});
+
+// =============================================================================
+// The edit contract over random scripts
+// =============================================================================
+
+describe("edit scripts preserve their intended tree", () => {
+  const ops = (text: string) => {
+    const nodes = Syntax.identifySyntax(text).nodes;
+    const ids = nodes.map((n) => n.id);
+    const id = fc.constantFrom(...ids);
+    const containers = nodes.filter((n) => ["List", "Vector", "Map", "Set"].includes(n.kind)).map((n) => n.id);
+    const place: fc.Arbitrary<Place> = fc.oneof(
+      id.map((before) => ({ before })),
+      id.map((after) => ({ after })),
+      fc.tuple(fc.constantFrom<string | null>(null, ...containers), fc.option(fc.nat(5), { nil: undefined })).map(
+        ([parent, index]) => (index === undefined ? { parent } : { parent, index }),
+      ),
+    );
+    return fc.oneof(
+      fc.record({ op: fc.constant("replace" as const), target: id, text: texts }),
+      fc.record({ op: fc.constant("insert" as const), at: place, text: texts }),
+      fc.record({ op: fc.constant("delete" as const), target: id }),
+      fc.record({ op: fc.constant("wrap" as const), targets: id.map((target) => [target]), head: heads }),
+      fc.record({ op: fc.constant("splice" as const), target: id }),
+      fc.record({ op: fc.constant("unwrap" as const), target: id }),
+      fc.record({ op: fc.constant("raise" as const), target: id }),
+      fc.record({ op: fc.constant("move" as const), target: id, to: place }),
+    );
+  };
+  const scripts = program.chain((text) => fc.tuple(fc.constant(text), fc.array(ops(text), { minLength: 1, maxLength: 4 })));
+
+  test("a script never fails its own structure check and keeps ids unique and fresh", () => {
+    fc.assert(
+      fc.property(scripts, ([text, script]) => {
+        const identity = Syntax.identifySyntax(text);
+        const result = Editor.applyEditScript({ source: text, identity, script: { version: 1, ops: script } });
+        if (!result.ok) {
+          // A refusal names a rule; the structure check is a safety net that never fires.
+          expect(result.errors[0]!.code).not.toBe("edit/structure");
+          return;
+        }
+        expect(Syntax.identifySyntax(result.source).errors).toEqual([]);
+        const ids = result.identity.nodes.map((node) => node.id);
+        expect(new Set(ids).size).toBe(ids.length);
+        expect(result.identity.nextId).toBeGreaterThanOrEqual(identity.nextId);
+        const before = new Set(identity.nodes.map((node) => node.id));
+        for (const node of result.identity.nodes) {
+          if (!before.has(node.id)) expect(Number(node.id.slice(1))).toBeGreaterThanOrEqual(identity.nextId);
+        }
+        // The identity describes the result: same spans and kinds as a fresh read.
+        const fresh = Syntax.identifySyntax(result.source);
+        expect(result.identity.nodes.map((node) => [node.kind, node.span])).toEqual(
+          fresh.nodes.map((node) => [node.kind, node.span]),
+        );
+      }),
+      { numRuns: runs(300) },
+    );
+  });
+
+  test("a script is its operations applied one after another", () => {
+    fc.assert(
+      fc.property(scripts, ([text, script]) => {
+        const identity = Syntax.identifySyntax(text);
+        const whole = Editor.applyEditScript({ source: text, identity, script: { version: 1, ops: script } });
+        let state: { source: string; identity: Syntax.SyntaxIdentity } = { source: text, identity };
+        for (const op of script) {
+          const step = Editor.applyEditScript({ ...state, script: { version: 1, ops: [op] } });
+          if (!step.ok) {
+            expect(whole.ok).toBe(false);
+            return;
+          }
+          state = { source: step.source, identity: step.identity };
+        }
+        expect(whole.ok).toBe(true);
+        if (whole.ok) {
+          expect(whole.source).toBe(state.source);
+          expect(whole.identity).toEqual(state.identity);
+        }
       }),
       { numRuns: runs(300) },
     );

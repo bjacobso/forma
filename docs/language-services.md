@@ -215,17 +215,25 @@ type EditOp =
   anything changes. A script either applies completely or not at all, with
   errors that name the failing operation.
 - **New text is source.** `text` and `head` are Forma source, parsed before
-  use. Malformed text is an error, not a guess. Text that ends in a comment
-  is followed by a line break so it cannot comment out what comes after it.
+  use. Malformed text is an error, not a guess.
+- **The result reads as the intended tree.** Each operation states the tree
+  it intends, and `commit` checks that the new source reads as exactly that
+  tree (7.1). Grammar rules are checked on the intended tree: a reader macro
+  keeps one form, which comes last; braces keep their kind, so a map is not
+  turned into a set or back (`edit/brace-kind`); a map holds pairs
+  (`edit/map-entry`). Text is joined so that a comment never runs into code
+  and atoms never fuse.
 - **Splice and unwrap differ.** `splice` is paredit's splice and keeps every
   element; `unwrap` also drops the head, which is what removing a
   `(sequence a b)` wrapper means.
 - **Layout is kept.** Edits splice text. Moved and wrapped subtrees keep their
   internal formatting and are re-indented by the column shift, never inside
   string literals.
-- **Ids are carried.** The result has the new source and a reconciled
-  identity in which moved, wrapped, raised, and renamed nodes keep their ids,
-  and a change list (`added`, `removed`, `moved`, `edited`) for previews.
+- **Ids come from the intended tree.** Moved, wrapped, raised, spliced, and
+  renamed nodes keep their ids; a replacement of the same kind keeps the
+  replaced node's id, and its contents get fresh ones. The result has the new
+  source, its identity, and a change list (`added`, `removed`, `moved`,
+  `edited`) for previews.
 - **Context for a preview.** `describeNodes(source, identity, ids)` returns
   the kind, text, parent, head, and enclosing top-level form for each id, so
   a model receives the same handles it must return. The result includes

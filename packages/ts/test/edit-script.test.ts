@@ -3,6 +3,7 @@ import fc from "fast-check";
 
 import { Editor, Syntax } from "../src/index.js";
 import { program } from "./support/programs.js";
+import { runs } from "./support/runs.js";
 
 const source = `(define tax-rate 0.08)
 (define (invoice-total revenue)
@@ -247,13 +248,14 @@ describe("edit script properties", () => {
       fc.property(withNode, ([text, choice]) => {
         const identity = Syntax.identifySyntax(text);
         const target = nonTopLevel(text)[choice]!;
-        const wrapped = ok(
-          Editor.applyEditScript({
-            source: text,
-            identity,
-            script: { version: 1, ops: [{ op: "wrap", targets: [target.id], head: "h" }] },
-          }),
-        );
+        const attempt = Editor.applyEditScript({
+          source: text,
+          identity,
+          script: { version: 1, ops: [{ op: "wrap", targets: [target.id], head: "h" }] },
+        });
+        // Wrapping an element of a set would make it a map.
+        if (!attempt.ok && attempt.errors[0]!.code === "edit/brace-kind") return;
+        const wrapped = ok(attempt);
         const wrapper = wrapped.identity.nodes.find((node) =>
           wrapped.identity.nodes.some(
             (child) => child.parent === node.id && child.id === target.id,
@@ -271,7 +273,7 @@ describe("edit script properties", () => {
           identity.nodes.map((node) => node.id),
         );
       }),
-      { numRuns: 300 },
+      { numRuns: runs(300) },
     );
   });
 
@@ -292,7 +294,7 @@ describe("edit script properties", () => {
         const ids = moved.identity.nodes.map((node) => node.id);
         expect(new Set(ids).size).toBe(ids.length);
       }),
-      { numRuns: 300 },
+      { numRuns: runs(300) },
     );
   });
 
@@ -308,8 +310,9 @@ describe("edit script properties", () => {
         });
         const parent = identity.nodes.find((node) => node.id === target.parent)!;
         if (!applied.ok) {
-          // Removing half of a map entry or a reader macro's operand is refused.
-          expect(["Map", "ReaderMacro"]).toContain(parent.kind);
+          // Removing half of a map entry, a reader macro's operand, or the
+          // last element of a set (`{}` reads as a map) is refused.
+          expect(["Map", "Set", "ReaderMacro"]).toContain(parent.kind);
           return;
         }
         const result = applied;
@@ -321,7 +324,7 @@ describe("edit script properties", () => {
           }
         }
       }),
-      { numRuns: 300 },
+      { numRuns: runs(300) },
     );
   });
 });
@@ -374,6 +377,14 @@ describe("edit script safety around comments and reader macros", () => {
     expect(ok(run("(f 'x)", (id) => [{ op: "replace", target: id("x"), text: "(y z)" }]) as Editor.ApplyEditScriptResult).source).toBe(
       "(f '(y z))",
     );
+  });
+
+  test("compares comments consistently across carriage returns before a newline", () => {
+    for (const ending of ["\r\n", "\r\r\n", "\r\r\r\n"]) {
+      const result = ok(run(`(f ; keep${ending}  x\n)`, (id) => [{ op: "delete", target: id("x") }]) as Editor.ApplyEditScriptResult);
+      expect(Syntax.identifySyntax(result.source).errors).toEqual([]);
+      expect(result.source).toContain("; keep");
+    }
   });
 
   test("extracts only expressions, under free names", () => {
