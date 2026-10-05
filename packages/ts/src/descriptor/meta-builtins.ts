@@ -642,21 +642,10 @@ export function createMetaBuiltins(
     // construct/* — IR constructors
     // =========================================================================
 
-    "construct/object": (args) =>
-      Effect.succeed(
-        (() => {
-          const obj = new Map<string, KValue>();
-          for (let i = 0; i < args.length; i += 2) {
-            const key = args[i] as string;
-            const val = args[i + 1] as KValue;
-            if (typeof key === "string") {
-              if (key.startsWith(":")) obj.set(key.slice(1), val);
-              else obj.set(key, val);
-            }
-          }
-          return normalizeRuntimeExprObject(obj);
-        })(),
-      ),
+    "construct/object": (args) => Effect.succeed(constructObject(args)),
+    // Aliases kept for parity with the OCaml engine; both build the same keyword map.
+    "construct/query": (args) => Effect.succeed(constructObject(args)),
+    "construct/declaration": (args) => Effect.succeed(constructObject(args)),
 
     "construct/summary": (args) =>
       Effect.succeed(
@@ -1228,6 +1217,16 @@ function isMetaBuiltinsOptions(
   value: MetaBuiltinsOptions | Record<string, BuiltinFn>,
 ): value is MetaBuiltinsOptions {
   return "hostedBuiltins" in value || "hostedDsls" in value;
+}
+
+/** Build a construct object from alternating keyword/value arguments. */
+function constructObject(args: readonly KValue[]): KValue {
+  const obj = new Map<string, KValue>();
+  for (let i = 0; i < args.length; i += 2) {
+    const key = args[i];
+    if (typeof key === "string") obj.set(key.startsWith(":") ? key.slice(1) : key, args[i + 1]!);
+  }
+  return normalizeRuntimeExprObject(obj);
 }
 
 function diagnosticKValue(severity: "error" | "warning", message: string): KValue {

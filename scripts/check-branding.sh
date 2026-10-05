@@ -3,7 +3,7 @@ set -euo pipefail
 
 patterns=(
   "meta""crdt"
-  "open[ -]""ontology"
+  "open[ -]?""ontology"
   "open[_-]""ontology"
   "on""lang"
   "oo[_-]""lang"

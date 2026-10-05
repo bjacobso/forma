@@ -74,6 +74,13 @@ export {
 export type { MetaFnDecl } from "./descriptor/meta-fn-decl.js";
 export { parseMetaFnDecl, parsePrelude } from "./descriptor/meta-fn-decl.js";
 
+// Runtime expressions embedded in construct output
+export {
+  RUNTIME_STRING_LITERAL_KEY,
+  RUNTIME_STRING_LITERAL_KIND,
+  isRuntimeStringLiteral,
+} from "./descriptor/runtime-expr.js";
+
 // Meta-fn execution
 export { createMetaFnHook } from "./descriptor/meta-fn-executor.js";
 export {

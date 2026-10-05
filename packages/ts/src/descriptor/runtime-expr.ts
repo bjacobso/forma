@@ -1,7 +1,20 @@
 import type { KValue } from "../evaluator/types.js";
 
-const STRING_LITERAL_KEY = "$openOntology.runtimeExpr";
-const STRING_LITERAL_KIND = "string-literal";
+/**
+ * Runtime expressions lower symbols to plain strings, so string literals are
+ * wrapped in a marker map to stay distinguishable: `{ [key]: kind, value }`.
+ */
+export const RUNTIME_STRING_LITERAL_KEY = "$forma.runtimeExpr";
+export const RUNTIME_STRING_LITERAL_KIND = "string-literal";
+
+/** True when a construct value is a string literal from a runtime expression. */
+export function isRuntimeStringLiteral(value: unknown): value is ReadonlyMap<string, unknown> {
+  return (
+    value instanceof Map &&
+    value.get(RUNTIME_STRING_LITERAL_KEY) === RUNTIME_STRING_LITERAL_KIND &&
+    typeof value.get("value") === "string"
+  );
+}
 
 type SExprLike = {
   readonly _tag: string;
@@ -36,7 +49,7 @@ function canonicalExprValue(value: unknown): KValue {
         return String(value.name ?? "");
       case "Str":
         return new Map<string, KValue>([
-          [STRING_LITERAL_KEY, STRING_LITERAL_KIND],
+          [RUNTIME_STRING_LITERAL_KEY, RUNTIME_STRING_LITERAL_KIND],
           ["value", String(value.value ?? "")],
         ]) as KValue;
       case "Num":
