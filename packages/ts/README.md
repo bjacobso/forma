@@ -13,6 +13,23 @@ import { inferSourceStr } from "@formalang/ts/type";
 The package is runtime-neutral. Domain forms and target-specific behavior are
 registered by consumers through descriptors, preludes, and host services.
 
+## Bundled preludes
+
+The repository's Lisp preludes ship as strings from `@formalang/ts/preludes`,
+so hosts do not need to vendor them or read them from disk:
+
+```ts
+import { bootstrapOntologyPreludes, preludeSource } from "@formalang/ts/preludes";
+
+const ontology = bootstrapOntologyPreludes(); // define-entity, define-action, ...
+const kernel = preludeSource("kernel.lisp");
+```
+
+`bootstrapPreludes(names, options)` bootstraps any stack in order (compiler
+vocabulary first, domain forms second). After editing `preludes/*.lisp`, run
+`pnpm --filter @formalang/ts preludes:generate`; a test fails if the embedded
+copies drift.
+
 ```sh
 pnpm --filter @formalang/ts build
 pnpm --filter @formalang/ts test

@@ -1,26 +1,25 @@
 import { describe, expect, test } from "vitest";
 import { Effect } from "effect";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   RUNTIME_STRING_LITERAL_KEY,
   SimpleSemanticEnvironment,
-  bootstrapFromSources,
   isRuntimeStringLiteral,
   normalizeForm,
   recognizeForms,
 } from "../src/Descriptor.js";
+import {
+  bootstrapOntologyPreludes,
+  bootstrapPreludes,
+  ontologyPreludeStack,
+  preludeSources,
+} from "../src/Preludes.js";
 import { parse, toSExprMany } from "../src/Reader.js";
 
 const preludesDir = resolve(import.meta.dirname, "../../../preludes");
-const prelude = (name: string) => readFileSync(resolve(preludesDir, name), "utf8");
 
-const ontology = bootstrapFromSources(
-  prelude("compiler.lisp"),
-  prelude("ontology.lisp"),
-  prelude("ontology-compiler.lisp"),
-  prelude("viewspec-compiler.lisp"),
-);
+const ontology = bootstrapOntologyPreludes();
 
 const construct = (source: string): unknown[] => {
   const semanticEnv = new SimpleSemanticEnvironment();
@@ -41,6 +40,25 @@ const construct = (source: string): unknown[] => {
     );
   });
 };
+
+describe("bundled preludes", () => {
+  test("embed every repository prelude verbatim", () => {
+    const files = readdirSync(preludesDir).filter((name) => name.endsWith(".lisp")).sort();
+    expect(Object.keys(preludeSources), "run `pnpm preludes:generate`").toEqual(files);
+    for (const name of files) {
+      expect(preludeSources[name as keyof typeof preludeSources], name).toBe(
+        readFileSync(resolve(preludesDir, name), "utf8"),
+      );
+    }
+  });
+
+  test("bootstrap fresh registries for a named stack", () => {
+    const first = bootstrapPreludes(ontologyPreludeStack);
+    expect(first.descriptions.get("define-entity")).toBeDefined();
+    expect(bootstrapOntologyPreludes().descriptions).not.toBe(first.descriptions);
+    expect(() => bootstrapPreludes(["compiler.lisp"])).toThrow(/domain prelude/);
+  });
+});
 
 describe("ontology preludes on the TypeScript engine", () => {
   test("constructs Datalog queries with construct/query", () => {
