@@ -426,6 +426,78 @@ export interface CloseSessionResult {
   readonly closed: boolean;
 }
 
+// =============================================================================
+// Structural editor services. See docs/language-services.md.
+// =============================================================================
+
+export type SyntaxNodeKind =
+  | "List"
+  | "Vector"
+  | "Map"
+  | "Set"
+  | "Symbol"
+  | "String"
+  | "Number"
+  | "Boolean"
+  | "ReaderMacro"
+  | "Error"
+  | "Comment";
+
+/** Offsets into one source text. */
+export interface OffsetSpan {
+  readonly start: number;
+  readonly end: number;
+}
+
+export interface SyntaxNode {
+  readonly id: string;
+  readonly kind: SyntaxNodeKind;
+  readonly span: OffsetSpan;
+  readonly parent: string | null;
+  /** Position among the parent's identified children, comments included. */
+  readonly index: number;
+}
+
+/** Ids for every node and comment of one source text. JSON-safe; pass it back to reconcile. */
+export interface SyntaxIdentity {
+  readonly version: 1;
+  readonly idPrefix: string;
+  readonly nextId: number;
+  readonly nodes: readonly SyntaxNode[];
+  readonly errors: readonly { readonly message: string; readonly span: OffsetSpan }[];
+}
+
+export interface TextChange {
+  readonly start: number;
+  readonly end: number;
+  readonly text: string;
+}
+
+export interface SyntaxAnchor {
+  readonly id: string;
+  readonly span: OffsetSpan;
+}
+
+export interface SyntaxIdentityRequest {
+  readonly sourceId?: string | undefined;
+  readonly source: string;
+  /** The previous version of the document; ids carry over from it. */
+  readonly previous?:
+    | { readonly source: string; readonly identity: SyntaxIdentity }
+    | undefined;
+  /** Edits from `previous.source` to `source`, when the caller knows them. */
+  readonly changes?: readonly TextChange[] | undefined;
+  readonly anchors?: readonly SyntaxAnchor[] | undefined;
+  /** Prefix for generated ids when there is no previous identity. */
+  readonly idPrefix?: string | undefined;
+}
+
+export interface SyntaxIdentityResult {
+  readonly sourceId: string;
+  readonly identity: SyntaxIdentity;
+  readonly diagnostics: readonly Diagnostic[];
+}
+
 export interface LanguageHost {
   readonly name: string;
   version(): Promise<VersionResult>;
@@ -447,4 +519,5 @@ export interface LanguageHost {
   resetSession(request: ResetSessionRequest): Promise<ResetSessionResult>;
   closeSession(request: CloseSessionRequest): Promise<CloseSessionResult>;
   analyzeEditor?(request: EditorAnalysisRequest): Promise<EditorAnalysisResult>;
+  identifySyntax?(request: SyntaxIdentityRequest): Promise<SyntaxIdentityResult>;
 }

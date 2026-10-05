@@ -13,6 +13,11 @@ const host = createDefaultLanguageHost();
 const result = host.parseSync({ sourceId: "example", source: "(+ 1 2)" });
 ```
 
+The TypeScript host also implements the optional structural editor services
+(`identifySyntax` and the methods listed in `version().capabilities`). Check a
+host's capabilities before calling them; the OCaml adapters do not implement
+them yet.
+
 The default host uses the included TypeScript engine. Optional OCaml adapters
 require a separately built artifact: set `FORMA_OCAML_CLI` for the native CLI,
 or `FORMA_OCAML_JS` for the portable JavaScript engine.

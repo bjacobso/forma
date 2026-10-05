@@ -90,6 +90,10 @@
       "types": "./dist/Editor.d.mts",
       "import": "./dist/Editor.mjs"
     },
+    "./syntax": {
+      "types": "./dist/Syntax.d.mts",
+      "import": "./dist/Syntax.mjs"
+    },
     "./lsp": {
       "types": "./dist/LSP.d.mts",
       "import": "./dist/LSP.mjs"
@@ -131,6 +135,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
+    "fast-check": "^4.9.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.8"
   }
