@@ -231,7 +231,7 @@ function strayForms(exprs: readonly SExpr[]): readonly { readonly expr: SExpr; r
     }
     stray.push({
       expr,
-      message: head
+      message: head?.startsWith("define")
         ? `${head} is not an Effect program form; expected define-schema, define-error, define-class, define-service, define-operation, define-layer, define, or a (: name Type) signature.`
         : "Top-level expressions are not part of an Effect program; put them in a define or define-operation.",
     });

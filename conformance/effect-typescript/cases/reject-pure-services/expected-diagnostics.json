@@ -1,0 +1,25 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/pure-service",
+      "message": "Function readings cannot call Sensors.read: functions and constants have no services in scope. Write it with define-operation.",
+      "line": 9,
+      "column": 69,
+      "endLine": 9,
+      "endColumn": 90
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/effect-in-value",
+      "message": "succeed builds an effect, so it belongs in an effect body (an operation, a layer method, or an effect (fn ...) argument). In a value, call an operation instead.",
+      "line": 12,
+      "column": 25,
+      "endLine": 12,
+      "endColumn": 42
+    }
+  ]
+}

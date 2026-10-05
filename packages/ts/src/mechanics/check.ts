@@ -1629,8 +1629,12 @@ class Checker {
       case "Literal": {
         const value = node["value"];
         if (value === null) return tUnit;
-        if (typeof value === "number" && (!Number.isFinite(value) || (Number.isInteger(value) && !Number.isSafeInteger(value)))) {
-          this.error(span, "mechanics/number", `${String(value)} cannot be represented exactly as a JavaScript number.`);
+        if (typeof value === "number" && !Number.isFinite(value)) {
+          this.error(span, "mechanics/number", "This number is too large for a JavaScript number.");
+          return tUnknown;
+        }
+        if (typeof value === "number" && Number.isInteger(value) && !Number.isSafeInteger(value)) {
+          this.error(span, "mechanics/number", "This integer is outside JavaScript's safe range (±9007199254740991) and would lose precision.");
           return tUnknown;
         }
         if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {

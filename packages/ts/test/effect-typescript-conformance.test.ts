@@ -101,7 +101,13 @@ function typescriptVerdicts(): ReadonlyMap<string, TypeScriptVerdict> {
   const result = new Map<string, TypeScriptVerdict>();
   const files = new Map<string, string>();
   for (const item of negative) {
-    const parsed = parse(item.source);
+    let parsed: ReturnType<typeof parse>;
+    try {
+      parsed = parse(item.source);
+    } catch {
+      result.set(item.name, "not-projected");
+      continue;
+    }
     const projected = Mechanics.mechanicsPackageableDeclarations(toSExprMany(parsed.redTree), sourceId(item));
     if (parsed.errors.length > 0 || !projected.ok) {
       result.set(item.name, "not-projected");

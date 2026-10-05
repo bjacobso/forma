@@ -1,0 +1,15 @@
+{
+  "typescript": "not-projected",
+  "diagnostics": [
+    {
+      "phase": "read",
+      "severity": "error",
+      "code": "read/syntax",
+      "message": "Unexpected character: 'ñ'",
+      "line": 5,
+      "column": 6,
+      "endLine": 5,
+      "endColumn": 6
+    }
+  ]
+}

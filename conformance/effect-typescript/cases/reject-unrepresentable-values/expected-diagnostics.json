@@ -1,0 +1,75 @@
+{
+  "typescript": "rejects",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/number",
+      "message": "This number is too large for a JavaScript number.",
+      "line": 3,
+      "column": 14,
+      "endLine": 3,
+      "endColumn": 19
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/number",
+      "message": "This integer is outside JavaScript's safe range (±9007199254740991) and would lose precision.",
+      "line": 6,
+      "column": 16,
+      "endLine": 6,
+      "endColumn": 32
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/record-key",
+      "message": "__proto__ cannot be a map key: JavaScript treats it as the prototype.",
+      "line": 9,
+      "column": 18,
+      "endLine": 9,
+      "endColumn": 29
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/duplicate-key",
+      "message": "The map has the key \"a\" twice.",
+      "line": 9,
+      "column": 38,
+      "endLine": 9,
+      "endColumn": 41
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/unit-collection",
+      "message": "(Map Unit) cannot tell a stored nil from a missing value; use Bool or an Option.",
+      "line": 12,
+      "column": 1,
+      "endLine": 12,
+      "endColumn": 24
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/error-tag",
+      "message": "Errors get their _tag from their name; a field cannot be called _tag.",
+      "line": 14,
+      "column": 31,
+      "endLine": 14,
+      "endColumn": 50
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/discriminator-field",
+      "message": "Variant circle has a field named kind, which is the union's tag.",
+      "line": 18,
+      "column": 5,
+      "endLine": 18,
+      "endColumn": 64
+    }
+  ]
+}

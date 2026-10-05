@@ -1,0 +1,55 @@
+{
+  "typescript": "rejects",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/name-collision",
+      "message": "foo-bar and fooBar both become the TypeScript name fooBar; rename one.",
+      "line": 7,
+      "column": 1,
+      "endLine": 7,
+      "endColumn": 27
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/reserved-name",
+      "message": "Effect becomes the TypeScript name Effect, which the generated module needs for Effect or JavaScript; rename it.",
+      "line": 9,
+      "column": 1,
+      "endLine": 9,
+      "endColumn": 50
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/reserved-name",
+      "message": "Math becomes the TypeScript name Math, which the generated module needs for Effect or JavaScript; rename it.",
+      "line": 12,
+      "column": 1,
+      "endLine": 12,
+      "endColumn": 16
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/name-collision",
+      "message": "Service Inventory has methods get-count and getCount, which both become getCount.",
+      "line": 14,
+      "column": 1,
+      "endLine": 18,
+      "endColumn": 66
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/name-collision",
+      "message": "Inventory.move has parameters from-bin and fromBin, which both become fromBin in TypeScript.",
+      "line": 14,
+      "column": 1,
+      "endLine": 18,
+      "endColumn": 66
+    }
+  ]
+}
