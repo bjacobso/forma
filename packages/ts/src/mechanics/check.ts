@@ -16,7 +16,9 @@
  */
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
 import { arithmeticOperators, builtins, type BuiltinOverload } from "./builtins.js";
-import { schemaReferences } from "./effect-schema.js";
+import { isEffectFormName } from "./artifact.js";
+import { inlineBrands, schemaReferences } from "./effect-schema.js";
+import { camelIdentifier, effectModules, generatedGlobals, typeName } from "./naming.js";
 import {
   applySubstitution,
   arrayItems,
@@ -177,6 +179,8 @@ class Checker {
   private readonly layersInProgress = new Set<string>();
   private readonly info: CheckInfo;
   private layerContext: LayerContext | undefined;
+  /** Set while checking a function or constant, which cannot reach services. */
+  private pureOwner: string | undefined;
 
   constructor(private readonly declarations: readonly PackageableDeclaration[]) {
     this.info = {
@@ -204,11 +208,10 @@ class Checker {
       const span = declarationSpan(declaration);
       switch (payload["kind"]) {
         case "SchemaDef":
-          this.checkTypeReferences(payload["schema"], span);
-          break;
         case "ErrorDef":
         case "ClassDef":
           this.checkTypeReferences(payload["schema"], span);
+          this.checkSchemaShape(payload["schema"], String(payload["kind"]), span);
           break;
         case "ServiceDef":
           this.checkService(payload, span);
@@ -222,7 +225,9 @@ class Checker {
         case "ValueDef": {
           this.checkTypeReferences(payload["type"], span);
           const type = this.constants.get(String(payload["name"]));
+          this.pureOwner = `Constant ${String(payload["name"])}`;
           if (type) this.value(payload["value"], new Map(), type);
+          this.pureOwner = undefined;
           break;
         }
         case "LayerDef":
@@ -316,6 +321,7 @@ class Checker {
     }
 
     this.checkSchemaCycles();
+    this.checkGeneratedNames();
 
     for (const declaration of this.declarations) {
       const payload = declaration.payload;
@@ -360,6 +366,120 @@ class Checker {
           break;
       }
     }
+  }
+
+  /** Parameters whose TypeScript names coincide (`a-b` and `aB`) cannot share a signature. */
+  private checkParamNames(params: JsonValue | undefined, owner: string, span: JsonValue | undefined): void {
+    const seen = new Map<string, string>();
+    for (const param of arrayItems(params)) {
+      const name = isRecord(param) ? param["name"] : param;
+      if (typeof name !== "string") continue;
+      const identifier = camelIdentifier(name);
+      const previous = seen.get(identifier);
+      if (previous !== undefined) {
+        this.error(
+          span,
+          "mechanics/name-collision",
+          previous === name
+            ? `${owner} has two parameters named ${name}.`
+            : `${owner} has parameters ${previous} and ${name}, which both become ${identifier} in TypeScript.`,
+        );
+      }
+      seen.set(identifier, name);
+    }
+  }
+
+  /**
+   * Distinct Forma names can map to the same TypeScript identifier
+   * (`foo-bar` and `fooBar`), and some identifiers are taken by the Effect
+   * modules and globals the generated module uses.
+   */
+  private checkGeneratedNames(): void {
+    const reserved = new Set([...effectModules, ...generatedGlobals]);
+    const taken = new Map<string, string>();
+    const claim = (formaName: string, identifier: string, span: JsonValue | undefined): void => {
+      if (reserved.has(identifier)) {
+        this.error(
+          span,
+          "mechanics/reserved-name",
+          `${formaName} becomes the TypeScript name ${identifier}, which the generated module needs for Effect or JavaScript; rename it.`,
+        );
+        return;
+      }
+      const previous = taken.get(identifier);
+      if (previous !== undefined && previous !== formaName) {
+        this.error(span, "mechanics/name-collision", `${previous} and ${formaName} both become the TypeScript name ${identifier}; rename one.`);
+      }
+      taken.set(identifier, formaName);
+    };
+    const declared = new Set<string>();
+    for (const declaration of this.declarations) {
+      const payload = declaration.payload;
+      if (!isRecord(payload) || typeof payload["name"] !== "string") continue;
+      const name = payload["name"];
+      const span = declarationSpan(declaration);
+      declared.add(name);
+      const pascal = ["SchemaDef", "ErrorDef", "ClassDef", "ServiceDef", "LayerDef"].includes(String(payload["kind"]));
+      claim(name, pascal ? typeName(name) : camelIdentifier(name), span);
+      if (payload["kind"] === "ServiceDef") {
+        const methods = new Map<string, string>();
+        for (const method of arrayItems(payload["methods"])) {
+          if (!isRecord(method) || typeof method["name"] !== "string") continue;
+          const identifier = camelIdentifier(method["name"]);
+          const previous = methods.get(identifier);
+          if (previous !== undefined) {
+            this.error(span, "mechanics/name-collision", `Service ${name} has methods ${previous} and ${method["name"]}, which both become ${identifier}.`);
+          }
+          methods.set(identifier, method["name"]);
+          this.checkParamNames(method["params"], `${name}.${method["name"]}`, span);
+        }
+      }
+    }
+    for (const brand of inlineBrands(this.declarations.map((declaration) => declaration.payload))) {
+      if (!declared.has(brand.name)) claim(brand.name, typeName(brand.name), spanOf(brand.schema));
+    }
+  }
+
+  /** Field lists that TypeScript or Effect cannot represent faithfully. */
+  private checkSchemaShape(schema: JsonValue | undefined, kind: string, span: JsonValue | undefined): void {
+    const visit = (node: JsonValue | undefined, top: boolean): void => {
+      if (Array.isArray(node)) {
+        node.forEach((item) => visit(item, false));
+        return;
+      }
+      if (!isRecord(node)) return;
+      const location = node["span"] ?? span;
+      if (node["kind"] === "Struct") {
+        const names = new Set<string>();
+        for (const field of arrayItems(node["fields"])) {
+          if (!isRecord(field) || typeof field["name"] !== "string") continue;
+          const name = field["name"];
+          const fieldSpan = field["span"] ?? location;
+          if (names.has(name)) this.error(fieldSpan, "mechanics/duplicate-key", `The schema has the field ${name} twice.`);
+          names.add(name);
+          if (name === "__proto__") this.error(fieldSpan, "mechanics/record-key", "__proto__ cannot be a field: JavaScript treats it as the prototype.");
+          if (top && kind === "ErrorDef" && name === "_tag") {
+            this.error(fieldSpan, "mechanics/error-tag", "Errors get their _tag from their name; a field cannot be called _tag.");
+          }
+        }
+      }
+      if (node["kind"] === "TaggedUnion" && typeof node["discriminator"] === "string") {
+        for (const variant of arrayItems(node["variants"])) {
+          const body = isRecord(variant) ? variant["schema"] : undefined;
+          if (isRecord(body) && body["kind"] === "Struct" && arrayItems(body["fields"]).some((field) => isRecord(field) && field["name"] === node["discriminator"])) {
+            this.error(
+              isRecord(variant) ? variant["span"] ?? location : location,
+              "mechanics/discriminator-field",
+              `Variant ${String(isRecord(variant) ? variant["tag"] : "")} has a field named ${node["discriminator"]}, which is the union's tag.`,
+            );
+          }
+        }
+      }
+      for (const [key, value] of Object.entries(node)) {
+        if (key !== "span") visit(value, false);
+      }
+    };
+    visit(schema, true);
   }
 
   /** Generated schema constants refer to each other eagerly, so cycles are rejected. */
@@ -418,6 +538,12 @@ class Checker {
     }
     if (!isRecord(value)) return;
     const location = value["span"] ?? span;
+    if (["Array", "Map", "Option", "RefCell"].includes(String(value["kind"]))) {
+      const item = value["kind"] === "Map" ? value["value"] : value["item"];
+      if (isRecord(item) && item["kind"] === "Primitive" && item["name"] === "Unit") {
+        this.error(location, "mechanics/unit-collection", `(${value["kind"] === "RefCell" ? "Ref" : String(value["kind"])} Unit) cannot tell a stored nil from a missing value; use Bool or an Option.`);
+      }
+    }
     if (value["kind"] === "Ref" && typeof value["name"] === "string") {
       const name = value["name"];
       if (!this.schemas.has(name) && !this.errorNames.has(name) && !this.classes.has(name) && name !== "Duration") {
@@ -477,6 +603,7 @@ class Checker {
     const signature = this.operations.get(name);
     if (!signature) return;
     const scope: Scope = new Map(signature.params.map((param) => [param.name, param.type]));
+    this.checkParamNames(payload["params"], `Operation ${name}`, span);
     const body = this.effect(payload["body"], scope, signature.result.success);
     this.checkEffectAgainst(body, signature.result, `operation ${name}`, payload["body"], span);
   }
@@ -516,7 +643,10 @@ class Checker {
     const signature = this.functions.get(name);
     if (!signature) return;
     const scope: Scope = new Map(signature.params.map((param) => [param.name, param.type]));
+    this.checkParamNames(payload["params"], `Function ${name}`, span);
+    this.pureOwner = `Function ${name}`;
     const type = this.value(payload["body"], scope, signature.result);
+    this.pureOwner = undefined;
     if (type.kind === "effect") {
       this.error(spanOf(payload["body"]) ?? span, "mechanics/function-effect", `Function ${name} returns an effect; write it with define-operation.`);
     }
@@ -916,9 +1046,12 @@ class Checker {
     const clauses = arrayItems(node["clauses"]).filter(isRecord);
     const effects: EffectType[] = [];
     let exhaustive = false;
-    clauses.forEach((clause) => {
+    clauses.forEach((clause, index) => {
       if (isElse(clause["condition"])) {
         exhaustive = true;
+        if (index !== clauses.length - 1) {
+          this.error(clause["span"] ?? node["span"], "mechanics/cond-else", "An always-true cond clause (:else or true) must be the last clause.");
+        }
       } else {
         this.condition(clause["condition"], scope);
       }
@@ -959,6 +1092,13 @@ class Checker {
     scope: Scope,
     span: JsonValue | undefined,
   ): EffectType {
+    if (this.pureOwner) {
+      this.error(
+        span,
+        "mechanics/pure-service",
+        `${this.pureOwner} cannot call ${service}.${method}: functions and constants have no services in scope. Write it with define-operation.`,
+      );
+    }
     const methods = this.services.get(service);
     const signature = methods?.get(method);
     if (!methods) {
@@ -1014,7 +1154,7 @@ class Checker {
     const arms = arrayItems(node["arms"]).filter(isRecord);
     const plan = this.matchPlan(scrutinee, node, arms.map((arm) => arm["pattern"] ?? null));
     if (!plan) {
-      arms.forEach((arm) => this.effect(arm["body"], scope, expected));
+      arms.forEach((arm) => this.effect(arm["body"], bindPatternsUnknown(scope, arm["pattern"]), expected));
       return effectOf(tUnknown);
     }
     this.info.matches.set(node, plan.shape);
@@ -1043,6 +1183,7 @@ class Checker {
     if (resolved.kind === "unknown") return undefined;
     let cases: readonly { readonly tag: string; readonly payload: MType | undefined }[];
     let shape: MatchShape;
+    let open: MType | undefined;
     if (resolved.kind === "option") {
       shape = { kind: "option" };
       cases = [
@@ -1055,11 +1196,20 @@ class Checker {
         { tag: "success", payload: resolved.success },
         { tag: "failure", payload: resolved.failure },
       ];
+    } else if (resolved.kind === "prim" && ["String", "Int", "Number", "Bool"].includes(resolved.name)) {
+      // Primitive values match literal patterns; only Bool has finitely many cases.
+      shape = { kind: "literal" };
+      open = resolved.name === "Bool" ? undefined : resolved;
+      cases = resolved.name === "Bool" ? [{ tag: "true", payload: undefined }, { tag: "false", payload: undefined }] : [];
     } else {
       const members = resolved.kind === "union" ? resolved.members.map((member) => resolve(member, this.env)) : [resolved];
-      if (members.every((member) => member.kind === "literal" && typeof member.value === "string")) {
+      if (members.every((member) => member.kind === "literal")) {
         shape = { kind: "literal" };
-        cases = members.map((member) => ({ tag: String((member as { readonly value: string }).value), payload: undefined }));
+        cases = members.map((member) => ({ tag: String((member as { readonly value: string | number | boolean }).value), payload: undefined }));
+      } else if (members.every((member) => member.kind === "error")) {
+        // Tagged errors are matched by their _tag, as in a catch-all handler.
+        shape = { kind: "tagged", discriminator: "_tag" };
+        cases = members.map((member) => ({ tag: (member as { readonly name: string }).name, payload: member }));
       } else {
         const discriminator = taggedDiscriminator(members);
         if (!discriminator) {
@@ -1094,6 +1244,15 @@ class Checker {
         wildcard = true;
         return [];
       }
+      if (open) {
+        if (parsed.binding !== undefined || parsed.value === undefined || !isAssignable({ kind: "literal", value: parsed.value }, open, this.env)) {
+          this.error(patternSpan, "mechanics/match-pattern", `Patterns for ${showType(scrutinee)} are ${showType(scrutinee)} literals or _.`);
+          return [];
+        }
+        if (covered.has(parsed.tag)) this.error(patternSpan, "mechanics/unreachable-pattern", `${parsed.tag} is already matched above.`);
+        covered.add(parsed.tag);
+        return [];
+      }
       const found = cases.find((candidate) => candidate.tag === parsed.tag);
       if (!found) {
         this.error(
@@ -1114,6 +1273,9 @@ class Checker {
       }
       return parsed.binding === "_" ? [] : [[parsed.binding, found.payload] as const];
     });
+    if (open && !wildcard) {
+      this.error(span, "mechanics/non-exhaustive-match", `match on ${showType(scrutinee)} needs a final _ arm.`);
+    }
     const missing = cases.filter((candidate) => !covered.has(candidate.tag)).map((candidate) => candidate.tag);
     if (!wildcard && missing.length > 0) {
       this.error(span, "mechanics/non-exhaustive-match", `match does not handle ${missing.join(", ")}.`);
@@ -1321,7 +1483,12 @@ class Checker {
         return effectOf({ kind: "result", success: body.success, failure }, emptySet, body.requirements);
       }
       case "provide": {
+        // The provided effect resolves its services inside the provided
+        // layer, so calls within it never use a layer method's captured context.
+        const layerContext = this.layerContext;
+        this.layerContext = undefined;
         const body = this.effect(args[0], scope, expected);
+        this.layerContext = layerContext;
         const layerNode = args[1];
         const layerName = isRecord(layerNode) && layerNode["kind"] === "Var" ? String(layerNode["name"]) : undefined;
         if (!layerName) {
@@ -1331,7 +1498,7 @@ class Checker {
         const layer = this.layerInfo(layerName, spanOf(layerNode) ?? span);
         if (!layer) return body;
         if (isRecord(layerNode)) this.info.valueTypes.set(layerNode, { kind: "layer", layer: layer.type });
-        return effectOf(
+        const provided = effectOf(
           body.success,
           unionSets(body.errors, reprovenance(layer.type.errors, spanOf(layerNode))),
           unionSets(
@@ -1339,6 +1506,8 @@ class Checker {
             reprovenance(layer.type.requirements, spanOf(layerNode)),
           ),
         );
+        if (this.layerContext && provided.requirements.size > 0) this.layerContext.contextCalls.add(node);
+        return provided;
       }
       case "log":
         for (const arg of args) this.value(arg, scope);
@@ -1397,6 +1566,7 @@ class Checker {
   private lambda(node: JsonValue | undefined, params: readonly MType[], scope: Scope, expected?: MType): EffectType | undefined {
     if (!isRecord(node) || node["kind"] !== "Lambda") return undefined;
     const names = stringItems(node["params"]);
+    this.checkParamNames(node["params"], "This fn", node["span"]);
     if (names.length !== params.length) {
       this.error(node["span"], "mechanics/arity", `This fn should take ${params.length} parameter(s), but takes ${names.length}.`);
     }
@@ -1459,13 +1629,17 @@ class Checker {
       case "Literal": {
         const value = node["value"];
         if (value === null) return tUnit;
+        if (typeof value === "number" && (!Number.isFinite(value) || (Number.isInteger(value) && !Number.isSafeInteger(value)))) {
+          this.error(span, "mechanics/number", `${String(value)} cannot be represented exactly as a JavaScript number.`);
+          return tUnknown;
+        }
         if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
           return { kind: "literal", value };
         }
         return tUnknown;
       }
       case "Var":
-        return this.variable(String(node["name"]), scope, expected, span);
+        return this.variable(String(node["name"]), scope, expected, span, node);
       case "Expr": {
         const keyword = keywordName(node);
         if (keyword !== undefined) return { kind: "literal", value: keyword };
@@ -1486,7 +1660,7 @@ class Checker {
     }
   }
 
-  private variable(name: string, scope: Scope, expected: MType | undefined, span: JsonValue | undefined): MType {
+  private variable(name: string, scope: Scope, expected: MType | undefined, span: JsonValue | undefined, node?: JsonRecord): MType {
     const local = scope.get(name);
     if (local) return local;
     switch (name) {
@@ -1512,6 +1686,27 @@ class Checker {
       const layer = this.layerInfo(name, span);
       return layer ? { kind: "layer", layer: layer.type } : tUnknown;
     }
+    const overloads = builtins.get(name);
+    if (overloads) {
+      // A builtin passed as a value, as in (map upcase names): it needs one monomorphic signature.
+      const [overload] = overloads;
+      if (overloads.length === 1 && overload && !overload.params.some(hasVariables) && !hasVariables(overload.result)) {
+        if (node) this.info.calls.set(node, { kind: "builtin", name, overload });
+        return { kind: "function", params: overload.params, result: overload.result };
+      }
+      this.error(span, "mechanics/builtin-value", `${name} is generic or overloaded; wrap it in (fn [x] (${name} x)) to pass it as a function.`);
+      return tUnknown;
+    }
+    const callableOnly =
+      arithmeticOperators.has(name) ||
+      this.schemas.has(name) ||
+      this.errorNames.has(name) ||
+      this.classes.has(name) ||
+      ["str", "some", "and", "or", "=", "!=", "get", "assoc", "if", "cond", "let", "match", "fn"].includes(name);
+    if (callableOnly) {
+      this.error(span, "mechanics/builtin-value", `${name} can only be called, not passed as a value; wrap it in (fn [x] (${name} x)).`);
+      return tUnknown;
+    }
     this.error(span, "mechanics/unbound-name", `Unknown name ${name}.`);
     return tUnknown;
   }
@@ -1520,18 +1715,35 @@ class Checker {
     const entries = arrayItems(node["entries"]).filter(isRecord);
     const target = expected ? resolve(expected, this.env) : undefined;
     if (target?.kind === "map") {
+      const seen = new Set<string>();
       for (const entry of entries) {
+        const key = recordKey(entry["key"]);
+        if (key !== undefined && seen.has(key)) {
+          this.error(spanOf(entry["key"]) ?? node["span"], "mechanics/duplicate-key", `The map has the key ${JSON.stringify(key)} twice.`);
+        }
+        if (key === "__proto__") {
+          this.error(spanOf(entry["key"]) ?? node["span"], "mechanics/record-key", "__proto__ cannot be a map key: JavaScript treats it as the prototype.");
+        }
+        if (key !== undefined) seen.add(key);
         this.value(entry["value"], scope, target.value);
       }
       return expected!;
     }
     const struct = target?.kind === "struct" ? target : target?.kind === "union" ? structMemberFor(target, entries, this.env) : undefined;
     const fields: MField[] = [];
+    const seenKeys = new Set<string>();
     for (const entry of entries) {
       const key = recordKey(entry["key"]);
       if (key === undefined) {
         this.error(spanOf(entry["key"]) ?? node["span"], "mechanics/record-key", "Record keys must be keywords or strings.");
         continue;
+      }
+      if (seenKeys.has(key)) {
+        this.error(spanOf(entry["key"]) ?? node["span"], "mechanics/duplicate-key", `The record has :${key} twice.`);
+      }
+      seenKeys.add(key);
+      if (key === "__proto__") {
+        this.error(spanOf(entry["key"]) ?? node["span"], "mechanics/record-key", "__proto__ cannot be a record key: JavaScript treats it as the prototype.");
       }
       const field = struct?.fields.find((candidate) => candidate.name === key);
       if (struct && !field) {
@@ -1577,6 +1789,9 @@ class Checker {
     for (const element of items) {
       // Like TypeScript, an uncontextual array literal widens its elements.
       item = join(item, widenDeep(this.value(element, scope, itemExpected)), this.env);
+    }
+    if (isUnitType(item, this.env)) {
+      this.error(node["span"], "mechanics/unit-collection", "An Array cannot hold Unit values (nil); use Bool or an Option.");
     }
     return { kind: "array", item: itemExpected ?? item };
   }
@@ -1624,8 +1839,12 @@ class Checker {
         let exhaustive = false;
         if (args.length % 2 !== 0) this.error(span, "mechanics/arity", "cond expects condition/value pairs.");
         for (let index = 0; index + 1 < args.length; index += 2) {
-          if (isElse(args[index])) exhaustive = true;
-          else this.condition(args[index], scope);
+          if (isElse(args[index])) {
+            exhaustive = true;
+            if (index + 2 < args.length) {
+              this.error(spanOf(args[index]) ?? span, "mechanics/cond-else", "An always-true cond clause (:else or true) must be the last clause.");
+            }
+          } else this.condition(args[index], scope);
           result = join(result, this.value(args[index + 1], scope, expected), this.env);
         }
         if (!exhaustive) this.error(span, "mechanics/cond-fallthrough", "cond can fall through without a value; add a final :else clause.");
@@ -1696,7 +1915,7 @@ class Checker {
         const bodies = args.filter((_, index) => index > 0 && index % 2 === 0);
         const plan = this.matchPlan(scrutinee, { span: span ?? null, value: args[0] ?? null }, patterns);
         if (!plan) {
-          bodies.forEach((body) => this.value(body, scope, expected));
+          bodies.forEach((body, index) => this.value(body, bindPatternsUnknown(scope, patterns[index]), expected));
           return tUnknown;
         }
         this.info.matches.set(node, plan.shape);
@@ -1789,6 +2008,14 @@ class Checker {
     const overloads = builtins.get(name);
     if (overloads) return this.builtin(node, name, overloads, args, scope, span);
 
+    if (isEffectFormName(name)) {
+      this.error(
+        span,
+        "mechanics/effect-in-value",
+        `${name} builds an effect, so it belongs in an effect body (an operation, a layer method, or an effect (fn ...) argument). In a value, call an operation instead.`,
+      );
+      return tUnknown;
+    }
     this.error(span, "mechanics/unbound-name", `Unknown function ${name}.`);
     for (const arg of args) this.value(arg, scope);
     return tUnknown;
@@ -1918,6 +2145,7 @@ class Checker {
       this.error(node["span"], "mechanics/fn", "fn expects a parameter vector and one body value.");
       return tUnknown;
     }
+    this.checkParamNames(names.filter((name) => name !== "_"), "This fn", node["span"]);
     const target = expected ? resolve(expected, this.env) : undefined;
     if (target?.kind !== "function") {
       this.error(
@@ -1977,6 +2205,7 @@ class Checker {
       });
       if (!shapes) continue;
       this.info.calls.set(node, { kind: "builtin", name, overload });
+      this.builtinRestrictions(name, argTypes, args, span);
       args.forEach((arg, index) => {
         if (argTypes[index] !== undefined) return;
         const expectedParam = applySubstitution(params[index]!, subst);
@@ -1998,6 +2227,26 @@ class Checker {
       `${name} does not accept (${argTypes.map((type, index) => (type ? showType(type) : describeLiteral(args[index]))).join(" ")}).`,
     );
     return tUnknown;
+  }
+
+  /** Builtins whose TypeScript translation compares by reference or stringifies objects. */
+  private builtinRestrictions(
+    name: string,
+    argTypes: readonly (MType | undefined)[],
+    args: readonly JsonValue[],
+    span: JsonValue | undefined,
+  ): void {
+    const [first, second] = argTypes;
+    if (name === "includes?" && first && resolve(first, this.env).kind === "array" && second && !isPrimitiveLike(second, this.env)) {
+      this.error(
+        spanOf(args[1]) ?? span,
+        "mechanics/equality",
+        `includes? compares strings, numbers, booleans, and enums; ${showType(second)} would be compared by reference in TypeScript.`,
+      );
+    }
+    if (name === "to-string" && first && !isPrintable(first, this.env)) {
+      this.error(spanOf(args[0]) ?? span, "mechanics/str", `to-string converts strings, numbers, and booleans, not ${showType(first)}.`);
+    }
   }
 
   private equality(name: string, args: readonly JsonValue[], scope: Scope, span: JsonValue | undefined): MType {
@@ -2137,6 +2386,17 @@ class Checker {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/** Pattern variables of a match that could not be planned are bound to Unknown to avoid cascades. */
+function bindPatternsUnknown(scope: Scope, pattern: JsonValue | undefined): Scope {
+  const binding = parsePattern(pattern)?.binding;
+  return binding && binding !== "_" ? extend(scope, binding, tUnknown) : scope;
+}
+
+function isUnitType(type: MType, env: TypeEnvironment): boolean {
+  const resolved = resolve(type, env);
+  return resolved.kind === "prim" && resolved.name === "Unit";
+}
 
 function describeLiteral(node: JsonValue | undefined): string {
   if (!isRecord(node)) return "?";
@@ -2304,16 +2564,31 @@ function literalField(member: MType, name: string): string | number | boolean | 
   return field?.type.kind === "literal" ? field.type.value : undefined;
 }
 
-export function parsePattern(pattern: JsonValue | undefined): { readonly tag: string; readonly binding?: string } | undefined {
+export interface Pattern {
+  /** The case it names, as text (`"some"`, `"admin"`, `"1"`, `"true"`). */
+  readonly tag: string;
+  /** For literal patterns, the literal itself. */
+  readonly value?: string | number | boolean;
+  readonly binding?: string;
+}
+
+export function parsePattern(pattern: JsonValue | undefined): Pattern | undefined {
   if (!isRecord(pattern)) return undefined;
   switch (pattern["kind"]) {
-    case "Var":
-      return { tag: String(pattern["name"]) };
-    case "Literal":
-      return typeof pattern["value"] === "string" ? { tag: pattern["value"] } : undefined;
+    case "Var": {
+      const name = String(pattern["name"]);
+      if (name === "true" || name === "false") return { tag: name, value: name === "true" };
+      return { tag: name, value: name };
+    }
+    case "Literal": {
+      const value = pattern["value"];
+      return typeof value === "string" || typeof value === "number" || typeof value === "boolean"
+        ? { tag: String(value), value }
+        : undefined;
+    }
     case "Expr": {
       const keyword = keywordName(pattern);
-      return keyword === undefined ? undefined : { tag: keyword };
+      return keyword === undefined ? undefined : { tag: keyword, value: keyword };
     }
     case "List": {
       const items = arrayItems(pattern["items"]);

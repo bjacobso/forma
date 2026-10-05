@@ -957,6 +957,11 @@ const combinators: ReadonlyMap<string, CombinatorSpec> = new Map<string, Combina
   ["decode", { args: ["type", "value"] }],
 ]);
 
+/** Names that build effects and so only make sense in an effect body. */
+export function isEffectFormName(name: string): boolean {
+  return combinators.has(name) || ["succeed", "fail", "catch", "do!", "do", "<-", "when", "unless"].includes(name);
+}
+
 function effectBodyFormsToJson(context: BodyContext, bodyForms: readonly SExpr[]): JsonValue {
   if (bodyForms.length === 1) return effectCoreExprToJson(context, bodyForms[0]!);
   if (bodyForms.length === 0) {

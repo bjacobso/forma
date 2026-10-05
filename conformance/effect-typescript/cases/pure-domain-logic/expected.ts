@@ -27,12 +27,6 @@ export class EmptyCart extends Schema.TaggedError<EmptyCart>()("EmptyCart", {
   customer: Schema.String,
 }) {}
 
-export const tierDiscounts: { readonly [key: string]: Discount } = {
-  free: { type: "none" },
-  pro: { type: "percent", rate: 10 },
-  enterprise: { type: "fixed", cents: 500 },
-};
-
 export const subtotal = (items: ReadonlyArray<LineItem>): number =>
   items.reduce<number>((total, item) => total + item.quantity * item["unit-cents"], 0);
 
@@ -95,3 +89,9 @@ export const outcomeLabel = (
       onSuccess: (text) => text,
     });
   });
+
+export const tierDiscounts: { readonly [key: string]: Discount } = {
+  free: { type: "none" },
+  pro: { type: "percent", rate: 10 },
+  enterprise: { type: "fixed", cents: 500 },
+};

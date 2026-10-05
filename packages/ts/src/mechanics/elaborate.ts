@@ -9,7 +9,8 @@
 import type { PackageableDeclaration } from "../artifact/artifact.js";
 import { parse } from "../reader/parser.js";
 import { toSExprMany } from "../reader/to-sexpr.js";
-import { mechanicsPackageableDeclarations, type MechanicsArtifactDiagnostic } from "./artifact.js";
+import type { SExpr } from "../reader/types.js";
+import { isMechanicsArtifactForm, mechanicsPackageableDeclarations, type MechanicsArtifactDiagnostic } from "./artifact.js";
 import { checkMechanicsDeclarations, type CheckInfo, type MechanicsCheckDiagnostic } from "./check.js";
 import { generateMechanicsEffectTypeScriptModule } from "./effect-typescript.js";
 
@@ -70,7 +71,27 @@ export function elaborateEffectProgram(
     };
   };
 
-  const { redTree, errors } = parse(source);
+  let parsed: ReturnType<typeof parse>;
+  try {
+    parsed = parse(source);
+  } catch (error) {
+    // The lexer throws on characters it cannot read; report them like parse errors.
+    const loc = isParseError(error) ? error.loc : undefined;
+    return {
+      ok: false,
+      declarations: [],
+      diagnostics: [
+        {
+          phase: "read",
+          severity: "error",
+          code: "read/syntax",
+          message: (isParseError(error) ? error.message : String(error)).replace(/ at line \d+, column \d+$/, ""),
+          ...(loc ? { span: locate(loc.start, loc.end) } : {}),
+        },
+      ],
+    };
+  }
+  const { redTree, errors } = parsed;
   if (errors.length > 0) {
     return {
       ok: false,
@@ -85,7 +106,22 @@ export function elaborateEffectProgram(
     };
   }
 
-  const projected = mechanicsPackageableDeclarations(toSExprMany(redTree), sourceId);
+  const exprs = toSExprMany(redTree);
+  const stray = strayForms(exprs);
+  if (stray.length > 0) {
+    return {
+      ok: false,
+      declarations: [],
+      diagnostics: stray.map(({ expr, message }) => ({
+        phase: "project",
+        severity: "error",
+        code: "mechanics/top-level-form",
+        message,
+        span: locate(expr.loc.start, expr.loc.end),
+      })),
+    };
+  }
+  const projected = mechanicsPackageableDeclarations(exprs, sourceId);
   if (!projected.ok) {
     return {
       ok: false,
@@ -138,6 +174,69 @@ function checkDiagnostic(
     message: diagnostic.message,
     ...(diagnostic.span ? { span: locate(diagnostic.span.startOffset, diagnostic.span.endOffset) } : {}),
   };
+}
+
+const formUsage: ReadonlyMap<string, string> = new Map([
+  ["define-schema", "(define-schema Name SchemaExpr)"],
+  ["define-error", "(define-error Name (:fields (field name Type) ...))"],
+  ["define-class", "(define-class Name (:fields (field name Type) ...))"],
+  ["define-service", "(define-service Name (:methods (method [param Type ...] (Effect A [E...] [R...])) ...))"],
+]);
+
+function isParseError(error: unknown): error is { readonly message: string; readonly loc?: { readonly start: number; readonly end: number } } {
+  return typeof error === "object" && error !== null && "message" in error;
+}
+
+/**
+ * Top-level forms an Effect program cannot use. Projection skips anything
+ * that is not a mechanics form, which would silently drop a typo'd
+ * `define-servce` or a `define` without a signature.
+ */
+function strayForms(exprs: readonly SExpr[]): readonly { readonly expr: SExpr; readonly message: string }[] {
+  const signatures = new Map<string, SExpr>();
+  const defined = new Set<string>();
+  for (const expr of exprs) {
+    if (expr._tag !== "List") continue;
+    const head = expr.items[0]?._tag === "Sym" ? expr.items[0].name : undefined;
+    const name = expr.items[1]?._tag === "Sym" ? expr.items[1].name : undefined;
+    if (head === ":" && name && expr.items.length === 3) signatures.set(name, expr);
+    if ((head === "define" || head === "define-operation" || head === "define-layer") && name) defined.add(name);
+  }
+  const stray: { readonly expr: SExpr; readonly message: string }[] = [];
+  for (const expr of exprs) {
+    const head = expr._tag === "List" && expr.items[0]?._tag === "Sym" ? expr.items[0].name : undefined;
+    const name = expr._tag === "List" && expr.items[1]?._tag === "Sym" ? expr.items[1].name : undefined;
+    if (head === ":") {
+      if (!name || expr._tag !== "List" || expr.items.length !== 3) {
+        stray.push({ expr, message: "A signature is (: name Type)." });
+      } else if (!defined.has(name)) {
+        stray.push({ expr, message: `The signature for ${name} has no matching define, define-operation, or define-layer.` });
+      }
+      continue;
+    }
+    if (head === "define") {
+      if (!name || !signatures.has(name)) {
+        const subject = name ? `define ${name}` : "define";
+        stray.push({ expr, message: `${subject} needs a (: ${name ?? "name"} Type) signature in an Effect program.` });
+      } else if (expr._tag === "List" && expr.items.length !== 3) {
+        stray.push({ expr, message: `define ${name} expects exactly a name and one value.` });
+      }
+      continue;
+    }
+    if (isMechanicsArtifactForm(expr)) continue;
+    const usage = head ? formUsage.get(head) : undefined;
+    if (usage) {
+      stray.push({ expr, message: `${head} is malformed; expected ${usage}.` });
+      continue;
+    }
+    stray.push({
+      expr,
+      message: head
+        ? `${head} is not an Effect program form; expected define-schema, define-error, define-class, define-service, define-operation, define-layer, define, or a (: name Type) signature.`
+        : "Top-level expressions are not part of an Effect program; put them in a define or define-operation.",
+    });
+  }
+  return stray;
 }
 
 function lineStarts(source: string): readonly number[] {

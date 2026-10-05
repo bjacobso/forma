@@ -13,7 +13,7 @@
  * @module
  */
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
-import { arrowBody, Precedence, type EmitContext, type ImportName } from "./builtins.js";
+import { arrowBody, Precedence, type BuiltinOverload, type EmitContext, type ImportName } from "./builtins.js";
 import {
   builtinErrors,
   checkMechanicsDeclarations,
@@ -25,7 +25,15 @@ import {
   type LayerInfo,
 } from "./check.js";
 import { inlineBrands, orderSchemaDeclarations, schemaExpressionTs, type SchemaNaming } from "./effect-schema.js";
-import { camelIdentifier, isIdentifierName, propertyAccess, propertyName, typeName } from "./naming.js";
+import {
+  camelIdentifier,
+  effectModules,
+  generatedGlobals,
+  isIdentifierName,
+  propertyAccess,
+  propertyName,
+  typeName,
+} from "./naming.js";
 import {
   arrayItems,
   containsLiterals,
@@ -65,11 +73,6 @@ type Module =
   | "Result"
   | "Schema"
   | "Scope";
-
-const modules: readonly Module[] = ["Cause", "Config", "Context", "Duration", "Effect", "Fiber", "Layer", "Option", "Ref", "Record", "Result", "Schedule", "Schema", "Scope", "Stream"];
-
-/** Globals generated code relies on or that readers expect to mean the global. */
-const globals = ["Array", "Boolean", "Date", "Error", "JSON", "Map", "Math", "Number", "Object", "Promise", "Set", "String", "Symbol", "console", "globalThis"];
 
 const schemaNaming: SchemaNaming = { schemaConst: typeName };
 
@@ -152,7 +155,7 @@ type Mode = "return" | "discard";
 
 class Generator {
   private readonly imports = new Set<Module>();
-  private readonly reserved = new Set<string>([...modules, ...globals]);
+  private readonly reserved = new Set<string>([...effectModules, ...generatedGlobals]);
   private serviceVars = new Map<string, string>();
   private contextVar: string | undefined;
   /**
@@ -200,9 +203,11 @@ class Generator {
       );
     }
     for (const service of services) sections.push(this.serviceLines(service));
-    for (const constant of orderConstants(constants)) sections.push(this.constantLines(constant));
+    // Functions and operations are arrow functions that only run when called,
+    // so constants (which may call them while the module loads) come after.
     for (const fn of functions) sections.push(this.functionLines(fn));
     for (const operation of operations) sections.push(this.operationLines(operation));
+    for (const constant of orderConstants(constants)) sections.push(this.constantLines(constant));
     for (const layer of orderLayers(layers)) sections.push(this.layerLines(layer));
 
     const imports = [...this.imports].sort();
@@ -790,8 +795,11 @@ class Generator {
         return call("Effect.option", [effect(0)]);
       case "result":
         return call("Effect.result", [effect(0)]);
-      case "provide":
-        return call("Effect.provide", [(inner) => this.serviceScope(args[0], names, inner), value(1)]);
+      case "provide": {
+        // Inside a layer method, what the provided layer leaves unsatisfied comes from the captured context.
+        const provided = call("Effect.provide", [(inner) => this.serviceScope(args[0], names, inner), value(1)]);
+        return this.withContext(node, provided);
+      }
       case "log":
         return call("Effect.log", args.map((_, index) => value(index)));
       case "ref-make": {
@@ -872,7 +880,7 @@ class Generator {
     for (const arm of arms) {
       const tag = arm.pattern?.tag;
       if (tag === undefined) continue;
-      lines.push(tag === "_" ? `${indent}  default: {` : `${indent}  case ${JSON.stringify(tag)}: {`);
+      lines.push(tag === "_" ? `${indent}  default: {` : `${indent}  case ${JSON.stringify(shape.kind === "literal" ? (arm.pattern?.value ?? tag) : tag)}: {`);
       lines.push(...armLines(arm, subject, `${indent}    `));
       if (mode === "discard") lines.push(`${indent}    break;`);
       lines.push(`${indent}  }`);
@@ -949,8 +957,11 @@ class Generator {
         if (typeof value === "number" && value < 0) return { code: JSON.stringify(value), prec: Prec.Unary };
         return atom(JSON.stringify(value));
       }
-      case "Var":
+      case "Var": {
+        const call = this.info.calls.get(node);
+        if (call?.kind === "builtin") return this.builtinFunction(call.name, call.overload, names, indent);
         return atom(this.variable(String(node["name"]), names));
+      }
       case "Expr": {
         const keyword = keywordName(node);
         if (keyword !== undefined) return atom(JSON.stringify(keyword));
@@ -976,6 +987,20 @@ class Generator {
       default:
         throw new Error(`Effect TypeScript: unsupported value kind ${String(node["kind"])}`);
     }
+  }
+
+  /** A builtin used as a function value becomes an arrow function around its translation. */
+  private builtinFunction(name: string, overload: BuiltinOverload, names: Names, indent: string): Expr {
+    void indent;
+    const scope = names.child();
+    const params = overload.params.map((_, index) => scope.bind(`builtin-param:${name}:${index}`, overload.params.length === 1 ? "value" : `arg${index}`));
+    const emit: EmitContext = {
+      use: (module: ImportName) => this.use(module),
+      resultType: () => this.typeTs(overload.result),
+      fresh: (preferred) => scope.bind(`builtin:${preferred}`, preferred),
+    };
+    const body = overload.emit(params.map((param) => atom(param)), emit);
+    return { code: `(${params.join(", ")}) => ${arrowBody(body)}`, prec: Prec.Arrow };
   }
 
   private variable(name: string, names: Names): string {
@@ -1274,7 +1299,8 @@ class Generator {
         if (binding && binding !== "_") armScope.alias(binding, subjectCode);
         this.contextual = contextual;
         const value = wrap(this.value(arm.body, armScope, indent), Prec.Conditional);
-        branches.push({ test: tag === "_" ? undefined : `${discriminant} === ${JSON.stringify(tag)}`, value });
+        const literal = shape.kind === "literal" ? (arm.pattern?.value ?? tag) : tag;
+        branches.push({ test: tag === "_" ? undefined : `${discriminant} === ${JSON.stringify(literal)}`, value });
         if (tag === "_") break;
       }
       // The last case needs no test: the checker proved the match exhaustive.

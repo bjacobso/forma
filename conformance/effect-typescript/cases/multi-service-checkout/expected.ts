@@ -77,8 +77,6 @@ export class Checkout extends Context.Service<
   }
 >()("Checkout") {}
 
-export const priceList: { readonly [key: string]: number } = { apple: 120, pear: 90, fig: 300 };
-
 export const lineTotal = (line: OrderLine, unitCents: number): number => line.quantity * unitCents;
 
 export const priceLines = (
@@ -128,6 +126,8 @@ export const placeOrder = (
       AppLive,
     );
   });
+
+export const priceList: { readonly [key: string]: number } = { apple: 120, pear: 90, fig: 300 };
 
 export const CatalogStatic: Layer.Layer<Catalog> = Layer.succeed(
   Catalog,

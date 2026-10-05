@@ -99,3 +99,41 @@ export function propertyName(name: string): string {
 export function propertyAccess(target: string, name: string): string {
   return isIdentifierName(name) ? `${target}.${name}` : `${target}[${JSON.stringify(name)}]`;
 }
+
+/** Effect modules the generated module may import; declarations cannot take these names. */
+export const effectModules: readonly string[] = [
+  "Cause",
+  "Config",
+  "Context",
+  "Duration",
+  "Effect",
+  "Fiber",
+  "Layer",
+  "Option",
+  "Record",
+  "Ref",
+  "Result",
+  "Schedule",
+  "Schema",
+  "Scope",
+  "Stream",
+];
+
+/** Globals generated code relies on or that readers expect to mean the global. */
+export const generatedGlobals: readonly string[] = [
+  "Array",
+  "Boolean",
+  "Date",
+  "Error",
+  "JSON",
+  "Map",
+  "Math",
+  "Number",
+  "Object",
+  "Promise",
+  "Set",
+  "String",
+  "Symbol",
+  "console",
+  "globalThis",
+];
