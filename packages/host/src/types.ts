@@ -12,7 +12,14 @@ export interface Diagnostic {
   readonly code: string;
   readonly severity: "error" | "warning" | "info";
   readonly message: string;
-  readonly phase?: "parse" | "expand" | "typecheck" | "evaluate" | "host-effect" | "emit";
+  readonly phase?:
+    | "parse"
+    | "expand"
+    | "typecheck"
+    | "evaluate"
+    | "elaborate"
+    | "host-effect"
+    | "emit";
   readonly span?: Span | undefined;
   readonly details?: Record<string, unknown> | undefined;
 }

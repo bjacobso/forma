@@ -74,6 +74,13 @@ export {
 export type { MetaFnDecl } from "./descriptor/meta-fn-decl.js";
 export { parseMetaFnDecl, parsePrelude } from "./descriptor/meta-fn-decl.js";
 
+// Runtime expressions embedded in construct output
+export {
+  RUNTIME_STRING_LITERAL_KEY,
+  RUNTIME_STRING_LITERAL_KIND,
+  isRuntimeStringLiteral,
+} from "./descriptor/runtime-expr.js";
+
 // Meta-fn execution
 export { createMetaFnHook } from "./descriptor/meta-fn-executor.js";
 export {
@@ -199,6 +206,23 @@ export { bootstrapFromSources, bootstrapFromFiles } from "./descriptor/bootstrap
 // Form recognition and normalization
 export { recognizeForm, recognizeForms, type RecognizedForm } from "./descriptor/recognize.js";
 export { normalizeForm, type NormalizedForm } from "./descriptor/normalize.js";
+
+// One-call elaboration with located diagnostics
+export {
+  ElaborationFailure,
+  declarationDiagnostic,
+  elaborateProgram,
+  elaborateProgramOrThrow,
+  elaborateSources,
+  formatDiagnostic,
+  isJsonRuntimeStringLiteral,
+  sourceLocator,
+  toJsonValue,
+  type ElaborateProgramOptions,
+  type ElaborateProgramResult,
+  type ElaboratedDeclaration,
+  type ProgramSource,
+} from "./descriptor/elaborate.js";
 
 // Descriptor codegen
 export type {

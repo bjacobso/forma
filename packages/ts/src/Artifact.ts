@@ -11,11 +11,13 @@ export {
   type ArtifactPackage,
   type ArtifactResult,
   type ArtifactSourceSummary,
+  type DeclarationOrigin,
   type DeclarationSummary,
   type JsonValue,
   type PackageableDeclaration,
   type PackageArtifactOptions,
   type PackagedDeclaration,
+  type SourceMapEntry,
 } from "./artifact/artifact.js";
 export {
   isMechanicsArtifactForm,

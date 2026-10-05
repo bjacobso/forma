@@ -105,6 +105,14 @@
     "./descriptor": {
       "types": "./dist/Descriptor.d.mts",
       "import": "./dist/Descriptor.mjs"
+    },
+    "./preludes": {
+      "types": "./dist/Preludes.d.mts",
+      "import": "./dist/Preludes.mjs"
+    },
+    "./ontology": {
+      "types": "./dist/Ontology.d.mts",
+      "import": "./dist/Ontology.mjs"
     }
   },
   "files": [
@@ -115,7 +123,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "pack:check": "node ../../scripts/pnpm-pack-check.mjs"
+    "pack:check": "node ../../scripts/pnpm-pack-check.mjs",
+    "preludes:generate": "node scripts/generate-preludes.mjs"
   },
   "dependencies": {
     "effect": "4.0.0-rc.112"

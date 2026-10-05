@@ -10,5 +10,8 @@ The OCaml conformance suite loads these files in a fixed order from
 domain vocabulary: hosts and the language server accept their own prelude
 paths, and the language server loads none by default.
 
+`@formalang/ts/preludes` embeds every file here as a string. Regenerate it with
+`pnpm --filter @formalang/ts preludes:generate` after changing a prelude.
+
 All executable examples keep the `.lisp` extension. Protocol preludes are also
 inputs to generation and snapshot tests.

@@ -1,7 +1,20 @@
 import type { KValue } from "../evaluator/types.js";
 
-const STRING_LITERAL_KEY = "$openOntology.runtimeExpr";
-const STRING_LITERAL_KIND = "string-literal";
+/**
+ * Runtime expressions lower symbols to plain strings, so string literals are
+ * wrapped in a marker map to stay distinguishable: `{ [key]: kind, value }`.
+ */
+export const RUNTIME_STRING_LITERAL_KEY = "$forma.runtimeExpr";
+export const RUNTIME_STRING_LITERAL_KIND = "string-literal";
+
+/** True when a construct value is a string literal from a runtime expression. */
+export function isRuntimeStringLiteral(value: unknown): value is ReadonlyMap<string, unknown> {
+  return (
+    value instanceof Map &&
+    value.get(RUNTIME_STRING_LITERAL_KEY) === RUNTIME_STRING_LITERAL_KIND &&
+    typeof value.get("value") === "string"
+  );
+}
 
 type SExprLike = {
   readonly _tag: string;
@@ -12,11 +25,15 @@ type SExprLike = {
   readonly message?: string;
 };
 
-function isSExprLike(value: unknown): value is SExprLike {
+export function isSExprLike(value: unknown): value is SExprLike {
   return value !== null && typeof value === "object" && "_tag" in value;
 }
 
-function canonicalExprValue(value: unknown): KValue {
+/**
+ * Lower reader nodes to canonical runtime values: lists and vectors become
+ * arrays, symbols become strings, and string literals become marker maps.
+ */
+export function canonicalExprValue(value: unknown): KValue {
   if (isSExprLike(value)) {
     switch (value._tag) {
       case "List":
@@ -36,7 +53,7 @@ function canonicalExprValue(value: unknown): KValue {
         return String(value.name ?? "");
       case "Str":
         return new Map<string, KValue>([
-          [STRING_LITERAL_KEY, STRING_LITERAL_KIND],
+          [RUNTIME_STRING_LITERAL_KEY, RUNTIME_STRING_LITERAL_KIND],
           ["value", String(value.value ?? "")],
         ]) as KValue;
       case "Num":
