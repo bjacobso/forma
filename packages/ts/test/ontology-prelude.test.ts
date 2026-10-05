@@ -83,4 +83,13 @@ describe("ontology preludes on the TypeScript engine", () => {
     expect(isRuntimeStringLiteral(literal)).toBe(true);
     expect((literal as Map<string, unknown>).get("value")).toBe("closed");
   });
+
+  test("constructs typed queries with select fields", () => {
+    const [, query] = construct(`
+      (define-entity Order (:field [order/title String {:required true}]))
+      (define-query titles (:from Order) (:select [order/title]))`) as Map<string, unknown>[];
+    expect(query!.get("kind")).toBe("Query");
+    expect(query!.get("from")).toBe("Order");
+    expect(query!.get("select")).toEqual(["order/title"]);
+  });
 });

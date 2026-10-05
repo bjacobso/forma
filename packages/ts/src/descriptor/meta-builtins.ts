@@ -755,6 +755,34 @@ export function createMetaBuiltins(
         })(),
       ),
 
+    // The OCaml engine defers select-field validation to inference; mirror it.
+    "meta/validate-query-select-fields": () => Effect.succeed([] as KValue),
+
+    "meta/query-select-fields": (args) =>
+      Effect.succeed(
+        (() => {
+          const input = args[0] as ReadonlyMap<string, KValue> | null;
+          if (!(input instanceof Map)) return [];
+          const slots = input.get("slots") as ReadonlyMap<string, KValue> | undefined;
+          const select = slots instanceof Map ? slots.get("select") : undefined;
+          const items = Array.isArray(select)
+            ? select
+            : select && typeof select === "object" && "items" in select
+              ? ((select as { readonly items: readonly KValue[] }).items as readonly KValue[])
+              : select === undefined || select === null
+                ? []
+                : [select];
+          return items.map((item) =>
+            item && typeof item === "object" && "name" in item
+              ? String((item as { readonly name: unknown }).name)
+              : item,
+          ) as KValue;
+        })(),
+      ),
+
+    // Expression records are carried through unchanged, as in the OCaml engine.
+    "view/compile-expr-record": (args) => Effect.succeed(args[0] ?? null),
+
     "meta/descriptor": (args) =>
       Effect.succeed(
         (() => {
