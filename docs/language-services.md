@@ -313,6 +313,218 @@ template text such as `(:trigger )`. An editor can then render placeholders
 such as `+ trigger` and fill one with an `insert` edit. Descriptors come
 from the same sources as the symbol index.
 
+## 7. Invariants and where they are enforced
+
+An adversarial review of the first versions found seventeen bugs in five
+groups, and each was patched where it appeared. A second review looked for the
+cases those patches missed and found more than fifty, pinned in
+`packages/ts/test/review-*.test.ts`. This section records, for each group, the
+invariant the bugs broke, the root cause, the design that replaces the
+case-by-case patches, and what the design guarantees. Property tests over
+random programs are the evidence. CI runs them at moderate counts;
+`FORMA_PROPERTY_SCALE=20 pnpm --filter @formalang/ts test` runs them twenty
+times longer.
+
+### 7.1 Edit scripts produce the tree they intend
+
+**Invariant.** An operation is a transformation of the syntax tree: the forms
+and comments of the identity, with atoms and comments compared by their text.
+Applying it yields source whose parse is exactly the intended tree. The
+operation chooses only whitespace. So no token moves into or out of a comment,
+no two atoms fuse, a reader macro keeps exactly one operand, braces stay a map
+or a set, and every comment keeps its text, parent, and position.
+
+**Root cause.** Operations built text by concatenating slices, and each had to
+know every lexical hazard at each of its seams: a line comment runs to the end
+of its line, adjacent atoms read as one, a prefix binds the next form, and the
+reader decides between a map and a set by looking at the contents. The check
+for new parse errors could not see a violation, because commented-out code,
+fused atoms, and a set where a map was all still parse.
+
+**Design.**
+
+- *Seams are safe by construction.* Every piece of text is appended through
+  `SourceBuilder` (`syntax/lexical.ts`), whose law is
+  `lex(a ⧺ b) = lex(a) ++ lex(b)`, comments included. At a seam that would
+  break the law it inserts the smallest separator that keeps it: a line break
+  after an open comment, otherwise a space.
+- *Operations compute an intended tree.* Each operation edits a copy of the
+  tree whose nodes carry ids, and states its preconditions there. Grammar
+  rules are checked once, on the intended tree, for every operation: a reader
+  macro holds one form, braces hold an even number of forms unless they read
+  as a set, and new text reads on its own. Semantic rules stay with the
+  operation that has them: `raise` and `extract` take forms, and `extract`
+  takes an expression (7.4 says which positions are expressions).
+- *One choke point.* `commit` reparses the assembled text and compares it
+  with the intended tree, node by node. A difference fails the operation with
+  `edit/structure`. Property tests check that this never happens, so it is a
+  safety net, not a behavior.
+- *Ids come from the intended tree.* A node keeps the id the operation gave
+  it. New nodes get fresh ids, and removed ids are gone. Edit scripts no
+  longer reconcile, so ids cannot move to look-alike nodes, and no anchors or
+  retired lists are needed.
+- *Rename and extract check the expanded program.* Macros are unhygienic, so
+  a rename can change what a macro's expansion refers to without touching any
+  author-written reference. Capture is checked over every reference in the
+  expanded program, author-written and macro-introduced, keyed by provenance
+  (7.3). Names the kernel provides stay reserved for new definitions.
+
+**Guarantees.** A successful operation's result parses as its intended tree.
+A failed one names the rule it broke. Text outside the edited forms is
+byte-identical. Ids are never reused within a script or across scripts.
+
+### 7.2 The outline codec is a pair of functions with laws
+
+**Laws.**
+
+1. `read(print(o)) = o` for every well-formed outline `o`, ids included.
+2. `print(read(s), base: s) = s` for every string `s`, including text that
+   does not parse.
+3. Printing loses no text: every token of every row appears in the output,
+   in order.
+
+**Root cause.** Reading and printing were two sets of heuristics written
+separately. Exactness with a base came from reusing pieces of layout one at a
+time (separators, closings, row texts), and the printer trimmed the texts it
+then compared with the base, so every odd layout needed its own case.
+
+**Design.**
+
+- *A grammar.* Reading is a total case analysis over the syntax tree. Printing
+  is its inverse on well-formed outlines, which are exactly the outlines
+  reading produces. The rules and the well-formedness conditions are in
+  section 5.
+- *Verbatim reuse.* With a base, a row whose text and children are unchanged
+  prints as the exact base text of its node. Text between two rows is reused
+  when they were neighbors in the base. So law 2 holds by construction: an
+  unchanged outline reuses every byte. Texts are compared as written, never
+  trimmed.
+- *Seams go through `SourceBuilder`.*
+- *Generators cover the grammar.* The program generator in
+  `test/support/programs.ts` covers every token type, CRLF, lone carriage
+  returns, tabs, missing and extra whitespace, broken input, and reader macros
+  in every position. A second generator builds outlines directly, so law 1 is
+  tested on outlines that no source in the first generator produces.
+
+**The prefix stays in the text.** A row with children whose text starts with
+a reader-macro prefix followed by a space, or by nothing, is a prefixed list.
+The reader never writes that text for anything else. A structured `prefix`
+field was considered. It would give the wire format two encodings that can
+disagree, and an outline's text is what a person types.
+
+### 7.3 Provenance is data, written once
+
+**Invariant.** Every node of an expanded program has one origin, fixed when
+the node is created. No node object appears twice in an expansion or is
+shared with the parse, a macro definition, or another expansion.
+
+**Root cause.** Origins and source traces lived in `WeakMap`s keyed by object
+identity and were added to over time. Macros returned the same template
+objects from every expansion, and `tagExpandedExpr` rewrote the traces of
+argument nodes. So the last expansion's facts won, and a diagnostic inside a
+macro argument pointed at the call, or into the prelude. Separately, "the
+origin is in the author's parse" stood in for "this is author code", which is
+false for a template written in the same file.
+
+**Design.** The expander copies everything it emits and gives each copy one
+origin with a role:
+
+- `source`: author-written code at this position, including an argument a
+  macro passed through;
+- `expansion`: the root of a macro expansion, which stands for the call;
+- `introduced`: built by a macro, from its template or by computation;
+- `desugared`: written by the expander for an author form, such as a
+  destructuring temporary.
+
+A `source` node keeps its own location; the chain of macro calls it passed
+through is context, not a replacement. Diagnostics locate at the innermost
+`source` or `expansion` origin, which is always in the author's document.
+
+**Evaluable is decided by evaluation.** A record exists for a node exactly
+when the engine evaluated it as an expression and its origin is `source` or
+`expansion`. Quoted data, templates, macro bodies, binders, patterns, and type
+positions are never evaluated as expressions, so they never get records, and
+no list of exclusions is needed. The evaluator fallback leaves tail position
+for observed calls, as the VM does, so self tail calls are observed. A failure
+goes to the innermost expression being evaluated when it was raised. A failure
+during expansion, such as a macro's arity, goes to the macro call.
+
+**Guarantees.** Observation never changes a result or a message. Every record
+names an author node, and two expansions never share a record. An invariant
+test expands every program in the corpus (examples, preludes, conformance
+cases) and checks that every node has exactly one origin and is fresh.
+
+### 7.4 Scope is described once
+
+**Invariant.** A reference resolves to the binding the language gives it.
+
+**Root cause.** The index re-described the language's binding forms in its own
+walker, over a program the expander had already partly lowered without
+origins. Every place where the walker and the evaluator described a form
+differently was a bug.
+
+**Design.**
+
+- The index resolves the expanded program. Destructuring and other sugar are
+  lowered by the evaluator's own expander, with origins (7.3), so the walker
+  sees only core binding forms.
+- The core binding forms are described once, as data
+  (`language/binding-forms.ts`): which positions bind, into which scope, and
+  which are expressions, patterns, types, quoted data, or templates. The index
+  walks it; `extract` asks it whether a position is an expression.
+- Special forms and macros are recognized by name before locals, as in the
+  evaluator. Locals shadow globals and builtins.
+- A differential property checks the description against the evaluator:
+  renaming a binding and the references the index reports to a fresh name
+  never changes a program's result.
+
+**Globals.** A global is one mutable cell per name in one environment, into
+which sources are loaded in order. Every `define` of the name, at any depth
+and in any file, is a definition site of the same global, so find-references
+on any of them finds all of them and every reference. A reference's primary
+definition is the last site before it in load order, or else the first after
+it; that is the value it reads in straight-line code. The language server
+indexes open documents and preludes in one fixed order, whichever document
+asks, and caches the index per set of document versions.
+
+**Patterns.** Where the evaluator and the typechecker read a pattern
+differently, the index follows the typechecker: the head of a list pattern is
+a constructor reference, and other symbols bind.
+
+### 7.5 Reconciliation is tree matching with a stated objective
+
+**Objective.** Find a one-to-one, kind-compatible matching between old and new
+nodes that respects anchors and retired ids and, in order of priority,
+maximizes (1) the nodes in matched identical subtrees, (2) containers whose
+matched descendants correspond, and (3) nodes the text change left in place.
+
+**Root cause.** Ids were assigned by passes over one prefix/suffix diff. The
+order of the passes decided between a node and its wrapper, tied signatures
+fell through to a same-slot guess that crossed lineages, and an anchored
+parent's structural follow could claim ids that other anchors named.
+
+**Design.** A deterministic matcher in the style of GumTree:
+
+1. *Anchors* are hard constraints, placed before anything else. An anchor
+   cannot bring back an id the caller retired, or an id the previous identity
+   generated and no longer has.
+2. *Supplied changes* map positions exactly; nodes whose boundaries map
+   through them match first.
+3. *Top-down*: identical subtrees, largest first. Tied candidates pair in
+   document order, preferring pairs whose positions map through the change
+   and whose parents matched.
+4. *Bottom-up*: containers by the share of their matched descendants.
+5. *In place*: nodes whose boundaries map through a computed diff.
+6. *Recovery*: the same kind in the same slot of matched parents, only
+   between atoms of equal text or containers, so lineages do not cross.
+
+**Guarantees,** as properties over random sequences of edits: ids are unique,
+never reused, and `nextId` never decreases; nodes outside every change keep
+their ids; a wrap, raise, or splice written as a whole-text replacement keeps
+the inner nodes' ids and gives a new wrapper a fresh one; a move keeps the
+moved subtree's ids when its text is unique, and duplicates keep theirs in
+order; anchors are honored.
+
 ## Deferred
 
 - OCaml implementations of these host methods (tracked in the parity
