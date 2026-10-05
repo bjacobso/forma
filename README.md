@@ -324,8 +324,9 @@ mise run forma:ocaml:test
   the current architecture.
 - [Language services](docs/language-services.md) describes node identity,
   observation, edit scripts, and the outline codec for structural editors.
-- [Workbench](docs/workbench.md) designs a structural Forma IDE in which the
-  outline is the program, built on those services and Foldworks.
+- [The outline is the program](docs/workbench-vision.md) describes a
+  structural Forma IDE, and [Workbench](docs/workbench.md) designs it on those
+  services and Foldworks.
 - [Roadmap](docs/roadmap.md) tracks the path from the research implementation
   toward a stable language platform.
 - [Examples](examples/README.md) contains reviewable domain programs embedded

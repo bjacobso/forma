@@ -6,13 +6,18 @@ shows its own value, type, and errors. Rows are edited by keyboard, by
 refactorings, and by an assistant that proposes structural edits, never text
 patches. A source pane shows the same program as Forma text.
 
-The workbench replaces each toy piece of Foldworks's
-[structural Lisp prototype](https://github.com/bjacobso/foldworks/blob/bjacobso/outliner-lisp-ide/docs/structural-lisp.md)
-with the real language service from [Language services](./language-services.md),
-and it codes against the contract in Foldworks's
-[language workbench note](https://github.com/bjacobso/foldworks/blob/bjacobso/outliner-lisp-ide/docs/language-workbench.md#what-a-workbench-host-codes-against).
+[The outline is the program](./workbench-vision.md) states what the workbench
+is for. It codes against the contract in Foldworks's
+[language workbench note](https://github.com/bjacobso/foldworks/blob/80c107756157a925227a5b0c898e78369f0f60ac/docs/language-workbench.md#what-a-workbench-host-codes-against)
+(Foldworks pull request 56)
+and is built from the services in [Language services](./language-services.md).
 
-| Prototype (`apps/demo/src/lisp`)        | Workbench                                                               |
+Foldworks first explored the experience with a toy Lisp, preserved at
+[`80c1077`](https://github.com/bjacobso/foldworks/tree/80c107756157a925227a5b0c898e78369f0f60ac/apps/demo/src/lisp).
+The workbench is not a port of it. It is rebuilt against real Forma, and each
+toy piece has a real counterpart:
+
+| Prototype                               | Workbench                                                               |
 | --------------------------------------- | ----------------------------------------------------------------------- |
 | `codec.ts`, rows ⇄ source               | `sourceToOutline` and `outlineToSource`, keeping comments and layout    |
 | row ids                                 | syntax node ids, reconciled across reparses                             |
@@ -222,8 +227,8 @@ follow-up work.
 
 ## Language service changes
 
-Two gaps in the TypeScript engine block the first release, and land before the
-workbench:
+Three gaps in the TypeScript engine block the first release, and land before
+the workbench:
 
 - **Macro arguments keep their own locations.** The expander gives every node
   of an expansion the macro call's location, including the arguments the
@@ -238,6 +243,9 @@ workbench:
   every typed span. Its request gains the optional `hostBuiltins`,
   `typePolicy`, and `sessionId` that `typecheck` already accepts, and a failed
   analysis returns the types inferred before the error.
+- **Browsers can import the descriptor module.** `@formalang/ts/descriptor`
+  imported `node:fs` for `bootstrapFromFiles`, so a browser bundle that only
+  bootstraps from sources failed.
 
 A workflow prelude's checks that need more than one declaration, such as a
 step that reads data before another step writes it, run in the application
@@ -247,7 +255,7 @@ running them is follow-up work for elaboration.
 
 ## Notation
 
-The prototype's Outline and Brackets dial carries over. In Brackets notation
+The Outline and Brackets dial from the vision is a view over the same rows. In Brackets notation
 a list row's bullet becomes `(` and its `)` is painted after the last row it
 contains. Hoisting and folding work as in the outliner.
 
@@ -280,11 +288,12 @@ Each step is its own pull request:
 1. This note.
 2. Macro arguments keep their own source locations.
 3. Editor analysis types capabilities and keeps partial results.
-4. The package, the demo app, and read-only rows from the codec.
-5. Live editing with identity, analysis, and diagnostics.
-6. Values in rows and the inspector, with handles.
-7. Hover, completion, and slot placeholders.
-8. The source pane.
-9. Refactorings and previews.
-10. Effects and host calls through the permission checkpoint.
-11. The assistant seam.
+4. Browsers can import the descriptor module.
+5. The package, the demo app, and read-only rows from the codec.
+6. Live editing with identity, analysis, and diagnostics.
+7. Values in rows and the inspector, with handles.
+8. Hover, completion, and slot placeholders.
+9. The source pane.
+10. Refactorings and previews.
+11. Effects and host calls through the permission checkpoint.
+12. The assistant seam.
