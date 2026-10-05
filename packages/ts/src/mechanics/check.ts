@@ -2029,7 +2029,10 @@ function fieldsOf(
 ): ReadonlyMap<string, MField> | undefined {
   const resolved = resolve(type, env);
   if (resolved.kind === "struct") return new Map(resolved.fields.map((field) => [field.name, field]));
-  if (resolved.kind === "error") return new Map((errorFields.get(resolved.name) ?? []).map((field) => [field.name, field]));
+  if (resolved.kind === "error") {
+    const tag: MField = { name: "_tag", optional: false, type: { kind: "literal", value: resolved.name } };
+    return new Map([tag, ...(errorFields.get(resolved.name) ?? [])].map((field) => [field.name, field]));
+  }
   if (resolved.kind === "union") {
     const members = resolved.members.map((member) => fieldsOf(member, env, errorFields));
     if (members.some((member) => member === undefined)) return undefined;
