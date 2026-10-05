@@ -91,3 +91,46 @@
   (:provides Greeter)
   (:methods
     (greet [name] (provide (stamp name) ClockFixed))))
+
+;; Second adversarial pass: literals in positions TypeScript does not type
+;; from context, constants that reach other constants through functions,
+;; and builtins used as values.
+
+(define-schema Shape
+  (TaggedUnion kind
+    [circle (Struct (field radius Number))]
+    [square (Struct (field side Number))]))
+
+(: default-role (-> (Effect Role [] [])))
+(define-operation default-role []
+  (succeed "admin"))
+
+(: circles (-> (Array Number) (Effect (Array Shape) [] [])))
+(define-operation circles [radii]
+  (for-each radii (fn [r] (if (> r 1) (succeed {:kind "circle" :radius r}) (succeed {:kind "square" :side r})))))
+
+(: pair (-> (Effect (Tuple Shape Role) [] [])))
+(define-operation pair []
+  (all [(succeed {:kind "circle" :radius 1}) (succeed "member")]))
+
+(: roles (-> (Array Role)))
+(define roles (fn [] (let [rs (: ["admin" "member"] (Array Role))] rs)))
+
+(: by-name (-> (Map Member) (Map Member)))
+(define by-name (fn [members] (let [next (assoc members "b" {:name "b" :role "member"})] next)))
+
+(: largest (-> (Array Number) (Effect Shape [] [])))
+(define-operation largest [sizes]
+  (stream-run-fold (stream-of sizes) (Shape {:kind "square" :side 0}) (fn [acc size] {:kind "circle" :radius size})))
+
+(: lower-all (-> (Array String) (Array String)))
+(define lower-all (fn [names] (let [f downcase] (map f names))))
+
+(: scaled Int)
+(define scaled (scale 3))
+
+(: scale (-> Int Int))
+(define scale (fn [x] (* x factor)))
+
+(: factor Int)
+(define factor 2)

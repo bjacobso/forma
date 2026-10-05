@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Option, Record, Schema } from "effect";
+import { Context, Effect, Layer, Option, Record, Schema, Stream } from "effect";
 
 export const Role = Schema.Literals(["admin", "member"]);
 export type Role = typeof Role.Type;
@@ -8,6 +8,12 @@ export const Member = Schema.Struct({
   role: Role,
 });
 export type Member = typeof Member.Type;
+
+export const Shape = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("circle"), radius: Schema.Number }),
+  Schema.Struct({ kind: Schema.Literal("square"), side: Schema.Number }),
+]);
+export type Shape = typeof Shape.Type;
 
 export class NotFound extends Schema.TaggedError<NotFound>()("NotFound", {
   key: Schema.String,
@@ -67,7 +73,26 @@ export const shoutAll = (names: ReadonlyArray<string>): ReadonlyArray<string> =>
 export const statusText = (code: number): string =>
   code === 200 ? "ok" : code === 404 ? "missing" : "other";
 
-export const yesNo = (flag: boolean): string => flag === true ? "yes" : "no";
+export const yesNo = (flag: boolean): string => flag ? "yes" : "no";
+
+export const roles = (): ReadonlyArray<Role> => {
+  const rs = ["admin", "member"] as const;
+  return rs;
+};
+
+export const byName = (
+  members: { readonly [key: string]: Member },
+): { readonly [key: string]: Member } => {
+  const next = { ...members, ["b"]: { name: "b", role: "member" } satisfies Member };
+  return next;
+};
+
+export const lowerAll = (names: ReadonlyArray<string>): ReadonlyArray<string> => {
+  const f = (value: string) => value.toLowerCase();
+  return names.map(f);
+};
+
+export const scale = (x: number): number => x * factor;
 
 export const invite = (name: string): Effect.Effect<Member, never, Store> =>
   Effect.gen(function* () {
@@ -101,9 +126,46 @@ export const stamp = (name: string): Effect.Effect<string, never, Clock> =>
     return `${name}@${time}`;
   });
 
+export const defaultRole = (): Effect.Effect<Role> =>
+  Effect.gen(function* () {
+    return "admin" as const;
+  });
+
+export const circles = (radii: ReadonlyArray<number>): Effect.Effect<ReadonlyArray<Shape>> =>
+  Effect.gen(function* () {
+    return yield* Effect.forEach(radii, (r) => Effect.gen(function* () {
+      if (r > 1) {
+        return { kind: "circle", radius: r } satisfies Shape;
+      } else {
+        return { kind: "square", side: r } satisfies Shape;
+      }
+    }));
+  });
+
+export const pair = (): Effect.Effect<readonly [Shape, Role]> =>
+  Effect.gen(function* () {
+    return yield* Effect.all([
+      Effect.succeed({ kind: "circle", radius: 1 } satisfies Shape),
+      Effect.succeed("member" as const),
+    ]);
+  });
+
+export const largest = (sizes: ReadonlyArray<number>): Effect.Effect<Shape> =>
+  Effect.gen(function* () {
+    return yield* Stream.runFold(
+      Stream.fromIterable(sizes),
+      (): Shape => ({ kind: "square", side: 0 }),
+      (_acc, size) => ({ kind: "circle", radius: size } satisfies Shape),
+    );
+  });
+
 export const negLiteral: number = -(-1);
 
 export const answer: number = negNeg(42);
+
+export const factor: number = 2;
+
+export const scaled: number = scale(3);
 
 export const ClockFixed: Layer.Layer<Clock> = Layer.succeed(
   Clock,

@@ -17,6 +17,7 @@ import { arrowBody, Precedence, type BuiltinOverload, type EmitContext, type Imp
 import {
   builtinErrors,
   checkMechanicsDeclarations,
+  constantDependencies,
   keywordName,
   parsePattern,
   recordKey,
@@ -207,7 +208,7 @@ class Generator {
     // so constants (which may call them while the module loads) come after.
     for (const fn of functions) sections.push(this.functionLines(fn));
     for (const operation of operations) sections.push(this.operationLines(operation));
-    for (const constant of orderConstants(constants)) sections.push(this.constantLines(constant));
+    for (const constant of orderConstants(constants, constantDependencies(this.declarations))) sections.push(this.constantLines(constant));
     for (const layer of orderLayers(layers)) sections.push(this.layerLines(layer));
 
     const imports = [...this.imports].sort();
@@ -699,6 +700,11 @@ class Generator {
     return arrayItems(args).map((arg) => (inner: string) => this.contextualValue(arg, names, inner).code);
   }
 
+  /** A `(fn ...)` literal or a builtin passed as a function. */
+  private isCallback(node: JsonValue | undefined): boolean {
+    return isFnLiteral(node) || (isRecord(node) && node["kind"] === "Var" && this.info.calls.get(node)?.kind === "builtin");
+  }
+
   private contextualValue(node: JsonValue | undefined, names: Names, indent: string): Expr {
     this.contextual = true;
     return this.value(node, names, indent);
@@ -709,7 +715,9 @@ class Generator {
     const name = String(node["name"]);
     const args = arrayItems(node["args"]);
     const effect = (index: number): Render => (inner) => this.effectExpression(args[index], names, inner);
-    const value = (index: number): Render => (inner) => this.value(args[index], names, inner).code;
+    // Callbacks passed to Effect functions are contextually typed by them.
+    const value = (index: number): Render => (inner) =>
+      (this.isCallback(args[index]) ? this.contextualValue(args[index], names, inner) : this.value(args[index], names, inner)).code;
     const lambda = (index: number): Render => (inner) => this.lambda(args[index], names, inner);
     const option = (key: string): JsonValue | undefined => {
       for (const entry of arrayItems(node["options"])) {
@@ -955,32 +963,38 @@ class Generator {
         const value = node["value"];
         if (value === null) return atom("undefined");
         if (typeof value === "number" && value < 0) return { code: JSON.stringify(value), prec: Prec.Unary };
-        return atom(JSON.stringify(value));
+        return this.preserveLiteral(node, contextual, atom(JSON.stringify(value)));
       }
       case "Var": {
         const call = this.info.calls.get(node);
-        if (call?.kind === "builtin") return this.builtinFunction(call.name, call.overload, names, indent);
+        if (call?.kind === "builtin") return this.builtinFunction(call.name, call.overload, names, contextual);
         return atom(this.variable(String(node["name"]), names));
       }
       case "Expr": {
         const keyword = keywordName(node);
-        if (keyword !== undefined) return atom(JSON.stringify(keyword));
+        if (keyword !== undefined) return this.preserveLiteral(node, contextual, atom(JSON.stringify(keyword)));
         const source = node["source"];
         if (isRecord(source) && source["kind"] === "Nil") return atom("undefined");
         throw new Error(`Effect TypeScript: unsupported expression value ${JSON.stringify(source)}`);
       }
       case "Record":
-        return this.typedLiteral(node, this.info.recordTargets.get(node), contextual, this.recordLiteral(node, names, indent));
+        return this.preserveLiteral(node, contextual, atom(this.recordLiteral(node, names, indent)));
       case "Vector": {
         const items = arrayItems(node["items"]);
+        // `as const` on the array covers its elements.
+        const constArray = !contextual && this.info.literalTargets.has(node) && this.hasLiteralValue(node);
         const item = (element: JsonValue, inner: string): string => {
-          this.contextual = contextual;
+          this.contextual = contextual || constArray;
           return this.value(element, names, inner).code;
         };
         const inline = `[${items.map((element) => item(element, indent)).join(", ")}]`;
-        if (!inline.includes("\n") && indent.length + inline.length <= maxWidth) return atom(inline);
+        if (!inline.includes("\n") && indent.length + inline.length <= maxWidth) return this.preserveLiteral(node, contextual, atom(inline));
         const deeper = `${indent}  `;
-        return atom(`[\n${items.map((element) => `${deeper}${item(element, deeper)},`).join("\n")}\n${indent}]`);
+        return this.preserveLiteral(
+          node,
+          contextual,
+          atom(`[\n${items.map((element) => `${deeper}${item(element, deeper)},`).join("\n")}\n${indent}]`),
+        );
       }
       case "List":
         return this.application(node, names, indent, contextual);
@@ -990,17 +1004,17 @@ class Generator {
   }
 
   /** A builtin used as a function value becomes an arrow function around its translation. */
-  private builtinFunction(name: string, overload: BuiltinOverload, names: Names, indent: string): Expr {
-    void indent;
+  private builtinFunction(name: string, overload: BuiltinOverload, names: Names, contextual: boolean): Expr {
     const scope = names.child();
     const params = overload.params.map((_, index) => scope.bind(`builtin-param:${name}:${index}`, overload.params.length === 1 ? "value" : `arg${index}`));
+    const typed = contextual ? params : params.map((param, index) => `${param}: ${this.typeTs(overload.params[index]!)}`);
     const emit: EmitContext = {
       use: (module: ImportName) => this.use(module),
       resultType: () => this.typeTs(overload.result),
       fresh: (preferred) => scope.bind(`builtin:${preferred}`, preferred),
     };
     const body = overload.emit(params.map((param) => atom(param)), emit);
-    return { code: `(${params.join(", ")}) => ${arrowBody(body)}`, prec: Prec.Arrow };
+    return { code: `(${typed.join(", ")}) => ${arrowBody(body)}`, prec: Prec.Arrow };
   }
 
   private variable(name: string, names: Names): string {
@@ -1046,6 +1060,22 @@ class Generator {
     return { code: `${code} satisfies ${typeName(target.name)}`, prec: Prec.Relational };
   }
 
+  /**
+   * Literal syntax the checker typed against a type with literal types keeps
+   * those literals in TypeScript too. Outside a contextually typed position
+   * TypeScript would widen `"admin"` to string, so records of a named schema
+   * get `satisfies Schema` and other literals get `as const`.
+   */
+  private preserveLiteral(node: JsonRecord, contextual: boolean, expr: Expr): Expr {
+    const target = this.info.literalTargets.get(node);
+    if (contextual || !target) return expr;
+    if ((node["kind"] === "Record" || node["kind"] === "Vector") && !this.hasLiteralValue(node)) return expr;
+    if (node["kind"] === "Record" && target.kind === "named") {
+      return { code: `${expr.code} satisfies ${typeName(target.name)}`, prec: Prec.Relational };
+    }
+    return { code: `${expr.code} as const`, prec: Prec.Relational };
+  }
+
   /** Whether a record (or the new value of an assoc) holds a value whose type is a literal. */
   private hasLiteralValue(node: JsonValue | undefined): boolean {
     if (!isRecord(node)) return false;
@@ -1081,7 +1111,10 @@ class Generator {
         };
         const contextualArgs = call.overload.contextualArgs ?? [];
         const code = call.overload.emit(
-          args.map((item, index) => (contextualArgs.includes(index) ? this.contextualValue(item, names, indent) : this.value(item, names, indent))),
+          args.map((item, index) =>
+            // Callbacks are contextually typed by the method they are passed to.
+            contextualArgs.includes(index) || this.isCallback(item) ? this.contextualValue(item, names, indent) : this.value(item, names, indent),
+          ),
           emit,
         );
         return { code, prec: call.overload.prec ?? Prec.Postfix };
@@ -1124,7 +1157,7 @@ class Generator {
         const spread: Render = (inner) => `...${this.value(args[0], names, inner).code}`;
         const replacement: Render =
           call.access === "map"
-            ? (inner) => `[${this.value(args[1], names, inner).code}]: ${this.contextualValue(args[2], names, inner).code}`
+            ? (inner) => `[${this.value(args[1], names, inner).code}]: ${this.value(args[2], names, inner).code}`
             : (inner) => objectEntry(recordKey(args[1]) ?? "", this.contextualValue(args[2], names, inner).code);
         const updated = objectLiteral([spread, replacement], call.access === "class" ? `${indent}  ` : indent);
         const type = this.info.valueTypes.get(node);
@@ -1136,7 +1169,7 @@ class Generator {
       case "class":
         return atom(`new ${typeName(call.name)}(${this.contextualValue(args[0], names, indent).code})`);
       case "stream":
-        return atom(this.streamCall(call.name, args, names, indent));
+        return atom(this.streamCall(node, call.name, args, names, indent));
       case "brand":
         return atom(`${typeName(call.name)}.make(${this.value(args[0], names, indent).code})`);
       case "construct":
@@ -1163,9 +1196,13 @@ class Generator {
       case "fn": {
         const params = isRecord(args[0]) ? arrayItems(args[0]["items"]) : [];
         const scope = names.child();
-        const identifiers = params.map((param) => {
+        // Without a contextual type TypeScript cannot infer the parameters, so state them.
+        const type = this.info.valueTypes.get(node);
+        const identifiers = params.map((param, index) => {
           const paramName = isRecord(param) ? String(param["name"]) : "_";
-          return scope.bind(paramName, unusedPrefix(paramName, args[1]));
+          const identifier = scope.bind(paramName, unusedPrefix(paramName, args[1]));
+          const paramType = type?.kind === "function" ? type.params[index] : undefined;
+          return !contextual && paramType ? `${identifier}: ${this.typeTs(paramType)}` : identifier;
         });
         const body = this.value(args[1], scope, indent);
         return { code: `(${identifiers.join(", ")}) => ${arrowBody(body.code)}`, prec: Prec.Arrow };
@@ -1223,9 +1260,10 @@ class Generator {
     }
   }
 
-  private streamCall(name: string, args: readonly JsonValue[], names: Names, indent: string): string {
+  private streamCall(node: JsonRecord, name: string, args: readonly JsonValue[], names: Names, indent: string): string {
     this.use("Stream");
-    const arg = (index: number): Render => (inner) => this.value(args[index], names, inner).code;
+    const arg = (index: number): Render => (inner) =>
+      (this.isCallback(args[index]) ? this.contextualValue(args[index], names, inner) : this.value(args[index], names, inner)).code;
     switch (name) {
       case "stream-of":
         return layout("Stream.fromIterable", [arg(0)], indent);
@@ -1245,8 +1283,12 @@ class Generator {
         );
       case "stream-run-collect":
         return layout("Stream.runCollect", [arg(0)], indent);
-      case "stream-run-fold":
-        return layout("Stream.runFold", [arg(0), (inner) => `() => ${arrowBody(this.value(args[1], names, inner).code)}`, arg(2)], indent);
+      case "stream-run-fold": {
+        // The accumulator's type is stated so the first value does not narrow it.
+        const success = this.info.valueTypes.get(node);
+        const returns = success?.kind === "effect" ? `: ${this.typeTs(success.success)}` : "";
+        return layout("Stream.runFold", [arg(0), (inner) => `()${returns} => ${arrowBody(this.contextualValue(args[1], names, inner).code)}`, arg(2)], indent);
+      }
       case "stream-run-for-each":
         return layout("Stream.runForEach", [arg(0), arg(1)], indent);
       default:
@@ -1300,7 +1342,8 @@ class Generator {
         this.contextual = contextual;
         const value = wrap(this.value(arm.body, armScope, indent), Prec.Conditional);
         const literal = shape.kind === "literal" ? (arm.pattern?.value ?? tag) : tag;
-        branches.push({ test: tag === "_" ? undefined : `${discriminant} === ${JSON.stringify(literal)}`, value });
+        const test = literal === true ? discriminant : literal === false ? `!${discriminant}` : `${discriminant} === ${JSON.stringify(literal)}`;
+        branches.push({ test: tag === "_" ? undefined : test, value });
         if (tag === "_") break;
       }
       // The last case needs no test: the checker proved the match exhaustive.
@@ -1566,6 +1609,12 @@ function isElseCondition(node: JsonValue | undefined): boolean {
   return keywordName(node) === "else" || (isRecord(node) && node["kind"] === "Literal" && node["value"] === true);
 }
 
+function isFnLiteral(node: JsonValue | undefined): boolean {
+  if (!isRecord(node) || node["kind"] !== "List") return false;
+  const head = arrayItems(node["items"])[0];
+  return isRecord(head) && head["kind"] === "Var" && head["name"] === "fn";
+}
+
 function isUnitLiteral(value: JsonValue | undefined): boolean {
   if (!isRecord(value)) return false;
   if (value["kind"] === "Var" && value["name"] === "nil") return true;
@@ -1678,8 +1727,8 @@ function unusedPrefix(name: string, body: JsonValue | undefined): string {
   return freeIn(body, name) ? camelIdentifier(name) : `_${camelIdentifier(name)}`;
 }
 
-/** Constants may refer to each other, so each is emitted after the ones it uses. */
-function orderConstants(constants: readonly JsonRecord[]): readonly JsonRecord[] {
+/** Each constant is emitted after the constants it needs while the module loads. */
+function orderConstants(constants: readonly JsonRecord[], dependencies: ReadonlyMap<string, ReadonlySet<string>>): readonly JsonRecord[] {
   const byName = new Map(constants.map((constant) => [String(constant["name"]), constant]));
   const ordered: JsonRecord[] = [];
   const seen = new Set<string>();
@@ -1687,9 +1736,8 @@ function orderConstants(constants: readonly JsonRecord[]): readonly JsonRecord[]
     const name = String(constant["name"]);
     if (seen.has(name)) return;
     seen.add(name);
-    for (const reference of byName.keys()) {
-      if (!freeIn(constant["value"], reference)) continue;
-      const target = byName.get(reference);
+    for (const dependency of dependencies.get(name) ?? []) {
+      const target = byName.get(dependency);
       if (target) visit(target);
     }
     ordered.push(constant);

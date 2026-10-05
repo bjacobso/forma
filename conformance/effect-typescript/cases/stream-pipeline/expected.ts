@@ -47,7 +47,7 @@ export const sumOfSquares = (n: number): Effect.Effect<number> =>
   Effect.gen(function* () {
     return yield* Stream.runFold(
       Stream.map(Stream.range(1, n), (i) => i * i),
-      () => 0,
+      (): number => 0,
       (total, square) => total + square,
     );
   });
@@ -70,6 +70,6 @@ export const exportFirst = (
 
 export const average = (readings: ReadonlyArray<Reading>): Effect.Effect<number> =>
   Effect.gen(function* () {
-    const total = yield* Stream.runFold(celsiusValues(readings), () => 0, (sum, value) => sum + value);
+    const total = yield* Stream.runFold(celsiusValues(readings), (): number => 0, (sum, value) => sum + value);
     return readings.length === 0 ? 0 : total / readings.length;
   });

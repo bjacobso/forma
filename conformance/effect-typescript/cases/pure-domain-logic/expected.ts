@@ -94,4 +94,4 @@ export const tierDiscounts: { readonly [key: string]: Discount } = {
   free: { type: "none" },
   pro: { type: "percent", rate: 10 },
   enterprise: { type: "fixed", cents: 500 },
-};
+} as const;

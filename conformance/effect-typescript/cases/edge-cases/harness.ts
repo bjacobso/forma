@@ -59,4 +59,18 @@ export default async function check(): Promise<void> {
 
   const greeting = await Effect.runPromise(Effect.provide(Greeter.use((greeter) => greeter.greet("ada")), GreeterLive));
   assert.equal(greeting, "ada@7");
+  await secondPass();
+}
+
+export async function secondPass(): Promise<void> {
+  const { byName, circles, defaultRole, largest, lowerAll, pair, roles, scaled } = await import("./expected.js");
+  assert.equal(await Effect.runPromise(defaultRole()), "admin");
+  assert.deepEqual(await Effect.runPromise(circles([0.5, 2])), [{ kind: "square", side: 0.5 }, { kind: "circle", radius: 2 }]);
+  assert.deepEqual(await Effect.runPromise(pair()), [{ kind: "circle", radius: 1 }, "member"]);
+  assert.deepEqual(roles(), ["admin", "member"]);
+  assert.deepEqual(byName({}), { b: { name: "b", role: "member" } });
+  assert.deepEqual(await Effect.runPromise(largest([1, 3])), { kind: "circle", radius: 3 });
+  assert.deepEqual(lowerAll(["A"]), ["a"]);
+  // scaled is defined before scale and factor in the source.
+  assert.equal(scaled, 6);
 }

@@ -45,6 +45,7 @@ import {
   unionSets,
   widenDeep,
   widenLiteral,
+  containsLiterals,
   type LayerType,
   type MField,
   type MType,
@@ -123,6 +124,8 @@ export interface CheckInfo {
   readonly matches: WeakMap<object, MatchShape>;
   /** Record literals checked against a named schema type. */
   readonly recordTargets: WeakMap<object, MType>;
+  /** Literal syntax (strings, numbers, booleans, keywords, records, vectors) checked against a type with literal types. */
+  readonly literalTargets: WeakMap<object, MType>;
   /** Operation calls inside layer methods that must be given the layer's captured context. */
   readonly contextCalls: WeakSet<object>;
 }
@@ -196,6 +199,7 @@ class Checker {
       calls: new WeakMap(),
       matches: new WeakMap(),
       recordTargets: new WeakMap(),
+      literalTargets: new WeakMap(),
       contextCalls: new WeakSet(),
     };
   }
@@ -322,6 +326,7 @@ class Checker {
 
     this.checkSchemaCycles();
     this.checkGeneratedNames();
+    this.checkConstantCycles();
 
     for (const declaration of this.declarations) {
       const payload = declaration.payload;
@@ -480,6 +485,31 @@ class Checker {
       }
     };
     visit(schema, true);
+  }
+
+  /** A constant cannot need itself while the module loads, even through functions. */
+  private checkConstantCycles(): void {
+    const dependencies = constantDependencies(this.declarations);
+    const spans = new Map(
+      this.declarations.flatMap((declaration) =>
+        isRecord(declaration.payload) && declaration.payload["kind"] === "ValueDef"
+          ? [[String(declaration.payload["name"]), declarationSpan(declaration)] as const]
+          : [],
+      ),
+    );
+    const state = new Map<string, "visiting" | "done">();
+    const visit = (name: string, path: readonly string[]): void => {
+      if (state.get(name) === "done") return;
+      if (state.get(name) === "visiting") {
+        const cycle = [...path.slice(path.indexOf(name)), name];
+        this.error(spans.get(name), "mechanics/constant-cycle", `Constant ${name} needs itself while the module loads (${cycle.join(" -> ")}).`);
+        return;
+      }
+      state.set(name, "visiting");
+      for (const dependency of dependencies.get(name) ?? []) visit(dependency, [...path, name]);
+      state.set(name, "done");
+    };
+    for (const name of dependencies.keys()) visit(name, []);
   }
 
   /** Generated schema constants refer to each other eagerly, so cycles are rejected. */
@@ -1241,6 +1271,9 @@ class Checker {
         this.error(patternSpan, "mechanics/unreachable-pattern", "This pattern is unreachable after _.");
       }
       if (parsed.tag === "_") {
+        if (!open && cases.length > 0 && cases.every((candidate) => covered.has(candidate.tag))) {
+          this.error(patternSpan, "mechanics/unreachable-pattern", "This _ is unreachable: every case is already matched.");
+        }
         wildcard = true;
         return [];
       }
@@ -1333,6 +1366,13 @@ class Checker {
   // -------------------------------------------------------------------------
 
   private combinator(node: JsonRecord, scope: Scope, expected: MType | undefined): EffectType {
+    const type = this.combinatorInner(node, scope, expected);
+    // Combinators build their success type from their parts; check it like a call's.
+    this.expectSuccess(type, expected, node);
+    return type;
+  }
+
+  private combinatorInner(node: JsonRecord, scope: Scope, expected: MType | undefined): EffectType {
     const name = String(node["name"]);
     const args = arrayItems(node["args"]);
     const span = node["span"];
@@ -1351,7 +1391,7 @@ class Checker {
         return effectOf(body.success, body.errors, without(body.requirements, "Scope"));
       }
       case "acquire-release": {
-        const acquire = this.effect(args[0], scope);
+        const acquire = this.effect(args[0], scope, expected);
         const release = this.lambda(args[1], [acquire.success], scope);
         this.noFailure(release, "The release action of acquire-release", args[1]);
         return effectOf(
@@ -1387,7 +1427,14 @@ class Checker {
             unionSets(...effects.map((effect) => effect.requirements)),
           );
         }
-        const effects = arrayItems(collection["items"]).map((item) => this.effect(item, scope));
+        const expectedItems = expected ? resolve(expected, this.env) : undefined;
+        const effects = arrayItems(collection["items"]).map((item, index) =>
+          this.effect(
+            item,
+            scope,
+            expectedItems?.kind === "tuple" ? expectedItems.items[index] : expectedItems?.kind === "array" ? expectedItems.item : undefined,
+          ),
+        );
         return effectOf(
           { kind: "tuple", items: effects.map((effect) => effect.success) },
           unionSets(...effects.map((effect) => effect.errors)),
@@ -1402,7 +1449,8 @@ class Checker {
         if (item === undefined) {
           this.error(spanOf(args[0]) ?? span, "mechanics/type-mismatch", `for-each expects an Array, but this is ${showType(items)}.`);
         }
-        const body = this.lambda(args[1], [item ?? tUnknown], scope);
+        const expectedArray = expected ? resolve(expected, this.env) : undefined;
+        const body = this.lambda(args[1], [item ?? tUnknown], scope, expectedArray?.kind === "array" ? expectedArray.item : undefined);
         return effectOf({ kind: "array", item: body?.success ?? tUnknown }, body?.errors, body?.requirements);
       }
       case "race": {
@@ -1411,7 +1459,8 @@ class Checker {
         return this.joinEffects([left, right]);
       }
       case "fork": {
-        const body = this.effect(args[0], scope);
+        const expectedFiber = expected ? resolve(expected, this.env) : undefined;
+        const body = this.effect(args[0], scope, expectedFiber?.kind === "fiber" ? expectedFiber.success : undefined);
         return effectOf({ kind: "fiber", success: body.success, errors: body.errors }, emptySet, body.requirements);
       }
       case "join":
@@ -1614,6 +1663,10 @@ class Checker {
   private value(node: JsonValue | undefined, scope: Scope, expected?: MType, options: ValueOptions = {}): MType {
     const type = this.valueInner(node, scope, expected);
     if (isRecord(node)) this.info.valueTypes.set(node, type);
+    // Literal syntax checked against a type with literals: TypeScript must not widen it.
+    if (expected && isRecord(node) && isLiteralSyntax(node) && containsLiterals(expected, this.env)) {
+      this.info.literalTargets.set(node, expected);
+    }
     if (expected && !(options.allowEffect && type.kind === "effect") && !isAssignable(type, expected, this.env)) {
       this.error(spanOf(node), "mechanics/type-mismatch", `Expected ${showType(expected)}, but this is ${showType(type)}.`);
       // Reported here; enclosing expressions should not report it again.
@@ -2010,7 +2063,7 @@ class Checker {
       return allInt ? tInt : tNumber;
     }
     const overloads = builtins.get(name);
-    if (overloads) return this.builtin(node, name, overloads, args, scope, span);
+    if (overloads) return this.builtin(node, name, overloads, args, scope, span, expected);
 
     if (isEffectFormName(name)) {
       this.error(
@@ -2179,6 +2232,7 @@ class Checker {
     args: readonly JsonValue[],
     scope: Scope,
     span: JsonValue | undefined,
+    expected?: MType,
   ): MType {
     // Lambdas and record/vector literals take their types from the other
     // arguments, the way TypeScript contextually types them.
@@ -2208,6 +2262,12 @@ class Checker {
         return param.kind === "function" || param.kind === "var";
       });
       if (!shapes) continue;
+      // Like TypeScript, an expected result type is an inference site: (map f xs)
+      // returned as (Array Shape) types f's result as Shape.
+      if (expected && hasVariables(applySubstitution(result, subst))) {
+        const trial: Substitution = new Map(subst);
+        if (isAssignable(result, expected, this.env, trial)) for (const [id, type] of trial) subst.set(id, type);
+      }
       this.info.calls.set(node, { kind: "builtin", name, overload });
       this.builtinRestrictions(name, argTypes, args, span);
       args.forEach((arg, index) => {
@@ -2391,10 +2451,64 @@ class Checker {
 // Helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * The constants each constant needs while the module loads: those it names
+ * directly and those named by any function it can reach (functions run when
+ * called, so a constant that calls `scale` needs what `scale` reads).
+ */
+export function constantDependencies(declarations: readonly PackageableDeclaration[]): ReadonlyMap<string, ReadonlySet<string>> {
+  const constants = new Map<string, JsonValue | undefined>();
+  const functions = new Map<string, JsonValue | undefined>();
+  for (const declaration of declarations) {
+    const payload = declaration.payload;
+    if (!isRecord(payload) || typeof payload["name"] !== "string") continue;
+    if (payload["kind"] === "ValueDef") constants.set(payload["name"], payload["value"]);
+    if (payload["kind"] === "FunctionDef") functions.set(payload["name"], payload["body"]);
+  }
+  const mentioned = (node: JsonValue | undefined, names = new Set<string>()): Set<string> => {
+    if (Array.isArray(node)) node.forEach((item) => mentioned(item, names));
+    else if (isRecord(node)) {
+      if (node["kind"] === "Var" && typeof node["name"] === "string") names.add(node["name"]);
+      for (const [key, value] of Object.entries(node)) if (key !== "span" && key !== "effect") mentioned(value, names);
+    }
+    return names;
+  };
+  const result = new Map<string, ReadonlySet<string>>();
+  for (const [name, value] of constants) {
+    const needed = new Set<string>();
+    const visitedFunctions = new Set<string>();
+    const queue = [...mentioned(value)];
+    while (queue.length > 0) {
+      const next = queue.pop()!;
+      if (constants.has(next)) needed.add(next);
+      if (functions.has(next) && !visitedFunctions.has(next)) {
+        visitedFunctions.add(next);
+        queue.push(...mentioned(functions.get(next)));
+      }
+    }
+    result.set(name, needed);
+  }
+  return result;
+}
+
 /** Pattern variables of a match that could not be planned are bound to Unknown to avoid cascades. */
 function bindPatternsUnknown(scope: Scope, pattern: JsonValue | undefined): Scope {
   const binding = parsePattern(pattern)?.binding;
   return binding && binding !== "_" ? extend(scope, binding, tUnknown) : scope;
+}
+
+function isLiteralSyntax(node: JsonRecord): boolean {
+  switch (node["kind"]) {
+    case "Literal":
+      return typeof node["value"] === "string" || typeof node["value"] === "number" || typeof node["value"] === "boolean";
+    case "Expr":
+      return keywordName(node) !== undefined;
+    case "Record":
+    case "Vector":
+      return true;
+    default:
+      return false;
+  }
 }
 
 function isUnitType(type: MType, env: TypeEnvironment): boolean {
@@ -2738,11 +2852,13 @@ export function typeFromValueSyntax(node: JsonValue | undefined, env: TypeEnviro
   if (node["kind"] !== "List") return undefined;
   const items = arrayItems(node["items"]);
   const head = items[0];
-  const headName = isRecord(head) && head["kind"] === "Var" ? String(head["name"]) : undefined;
+  const headName = calleeName(head);
   const parts = items.slice(1).map((item) => typeFromValueSyntax(item, env));
   if (parts.some((part) => part === undefined)) return undefined;
   const [first, second] = parts as MType[];
   switch (headName) {
+    case "->":
+      return parts.length > 0 ? { kind: "function", params: (parts as MType[]).slice(0, -1), result: (parts as MType[]).at(-1)! } : undefined;
     case "Array":
     case "List":
       return first ? { kind: "array", item: first } : undefined;
