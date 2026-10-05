@@ -1609,6 +1609,21 @@ function typeExprToJson(sourceId: string, expr: SExpr): MechanicsJsonResult {
         if (!errors.ok) return errors;
         return { ok: true, value: { kind: "Fiber", success: success.value, errors: errors.value } };
       }
+      case "Stream": {
+        if (expr.items.length !== 4) {
+          return failed(sourceId, expr, "artifact/type", "Stream type expects (Stream Item [Errors...] [Requirements...]).");
+        }
+        const item = typeExprToJson(sourceId, expr.items[1]!);
+        if (!item.ok) return item;
+        const errors = symbolicSetToJson(sourceId, expr.items[2]!, "errors");
+        if (!errors.ok) return errors;
+        const requirements = symbolicSetToJson(sourceId, expr.items[3]!, "requirements");
+        if (!requirements.ok) return requirements;
+        return {
+          ok: true,
+          value: { kind: "Stream", item: item.value, errors: errors.value, requirements: requirements.value, span: spanJson(sourceId, expr) },
+        };
+      }
       case "Result": {
         if (expr.items.length !== 3) {
           return failed(sourceId, expr, "artifact/type", "Result type expects (Result Success Failure).");

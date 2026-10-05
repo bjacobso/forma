@@ -49,6 +49,7 @@ export interface MechanicsEffectTypeScriptOptions {
 type JsonRecord = Readonly<Record<string, JsonValue>>;
 
 type Module =
+  | "Stream"
   | "Cause"
   | "Config"
   | "Context"
@@ -62,7 +63,7 @@ type Module =
   | "Schema"
   | "Scope";
 
-const modules: readonly Module[] = ["Cause", "Config", "Context", "Duration", "Effect", "Fiber", "Layer", "Option", "Ref", "Result", "Schema", "Scope"];
+const modules: readonly Module[] = ["Cause", "Config", "Context", "Duration", "Effect", "Fiber", "Layer", "Option", "Ref", "Result", "Schema", "Scope", "Stream"];
 
 /** Globals generated code relies on or that readers expect to mean the global. */
 const globals = ["Array", "Boolean", "Date", "Error", "JSON", "Map", "Math", "Number", "Object", "Promise", "Set", "String", "Symbol", "console", "globalThis"];
@@ -306,11 +307,12 @@ class Generator {
     const body = operation["body"];
     const names = new Names(undefined, this.reserved);
     const services = this.servicesUsed(body);
-    this.serviceVars = new Map();
-    for (const service of services) this.serviceVars.set(service, bindService(names, service));
+    // Parameters keep their names; a colliding service variable becomes `fooService`.
     const params = (signature?.params ?? []).map(
       (param) => `${names.bind(param.name, unusedPrefix(param.name, body))}: ${this.typeTs(param.type)}`,
     );
+    this.serviceVars = new Map();
+    for (const service of services) this.serviceVars.set(service, bindService(names, service));
     const returns = signature ? this.effectTypeTs(signature.result) : "Effect.Effect<unknown>";
     const lines = [signatureHead(camelIdentifier(name), params, returns), "  Effect.gen(function* () {"];
     for (const service of services) lines.push(`    const ${this.serviceVars.get(service)!} = yield* ${typeName(service)};`);
@@ -1024,6 +1026,8 @@ class Generator {
         return atom(this.newError(call.name, args[0], names, indent));
       case "class":
         return atom(`new ${typeName(call.name)}(${this.value(args[0], names, indent).code})`);
+      case "stream":
+        return atom(this.streamCall(call.name, args, names, indent));
       case "brand":
         return atom(`${typeName(call.name)}.make(${this.value(args[0], names, indent).code})`);
       case "construct":
@@ -1104,6 +1108,37 @@ class Generator {
         return this.valueMatch(node, args, names, indent);
       default:
         throw new Error(`Effect TypeScript: unsupported form ${name} (${JSON.stringify(node["span"])})`);
+    }
+  }
+
+  private streamCall(name: string, args: readonly JsonValue[], names: Names, indent: string): string {
+    this.use("Stream");
+    const arg = (index: number): Render => (inner) => this.value(args[index], names, inner).code;
+    switch (name) {
+      case "stream-of":
+        return layout("Stream.fromIterable", [arg(0)], indent);
+      case "stream-range":
+        return layout("Stream.range", [arg(0), arg(1)], indent);
+      case "stream-map":
+        return layout("Stream.map", [arg(0), arg(1)], indent);
+      case "stream-filter":
+        return layout("Stream.filter", [arg(0), arg(1)], indent);
+      case "stream-take":
+        return layout("Stream.take", [arg(0), arg(1)], indent);
+      case "stream-map-effect":
+        return layout(
+          "Stream.mapEffect",
+          [arg(0), arg(1), ...(args[2] === undefined ? [] : [(inner: string) => `{ concurrency: ${this.value(args[2], names, inner).code} }`])],
+          indent,
+        );
+      case "stream-run-collect":
+        return layout("Stream.runCollect", [arg(0)], indent);
+      case "stream-run-fold":
+        return layout("Stream.runFold", [arg(0), (inner) => `() => ${arrowBody(this.value(args[1], names, inner).code)}`, arg(2)], indent);
+      case "stream-run-for-each":
+        return layout("Stream.runForEach", [arg(0), arg(1)], indent);
+      default:
+        throw new Error(`Effect TypeScript: unsupported stream function ${name}`);
     }
   }
 
@@ -1273,6 +1308,9 @@ class Generator {
       case "fiber":
         this.use("Fiber");
         return generic("Fiber.Fiber", this.typeTs(type.success), this.errorUnion(type.errors));
+      case "stream":
+        this.use("Stream");
+        return generic("Stream.Stream", this.typeTs(type.item), this.errorUnion(type.errors), this.requirementUnion(type.requirements));
       case "layer":
         return this.layerTypeTs({ type: type.layer, contextServices: [] });
       case "var":

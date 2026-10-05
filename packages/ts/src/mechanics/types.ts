@@ -59,6 +59,12 @@ export type MType =
   | { readonly kind: "function"; readonly params: readonly MType[]; readonly result: MType }
   | { readonly kind: "ref"; readonly item: MType }
   | { readonly kind: "fiber"; readonly success: MType; readonly errors: Provenance }
+  | {
+      readonly kind: "stream";
+      readonly item: MType;
+      readonly errors: Provenance;
+      readonly requirements: Provenance;
+    }
   | { readonly kind: "layer"; readonly layer: LayerType }
   | { readonly kind: "var"; readonly id: number };
 
@@ -198,6 +204,13 @@ export function typeFromJson(json: JsonValue | undefined, env: TypeEnvironment):
       };
     case "RefCell":
       return { kind: "ref", item: typeFromJson(json["item"], env) };
+    case "Stream":
+      return {
+        kind: "stream",
+        item: typeFromJson(json["item"], env),
+        errors: setOf(stringItems(json["errors"])),
+        requirements: setOf(stringItems(json["requirements"])),
+      };
     case "Fiber":
       return {
         kind: "fiber",
@@ -315,6 +328,8 @@ export function applySubstitution(type: MType, subst: Substitution): MType {
       return { ...type, success: applySubstitution(type.success, subst) };
     case "fiber":
       return { ...type, success: applySubstitution(type.success, subst) };
+    case "stream":
+      return { ...type, item: applySubstitution(type.item, subst) };
     case "struct":
       return {
         kind: "struct",
@@ -415,6 +430,13 @@ export function isAssignable(
         [...s.errors.keys()].every((error) => t.errors.has(error)) &&
         [...s.requirements.keys()].every((requirement) => coversRequirement(t.requirements, requirement))
       );
+    case "stream":
+      return (
+        s.kind === "stream" &&
+        isAssignable(s.item, t.item, env, subst) &&
+        [...s.errors.keys()].every((error) => t.errors.has(error)) &&
+        [...s.requirements.keys()].every((requirement) => coversRequirement(t.requirements, requirement))
+      );
     case "fiber":
       return (
         s.kind === "fiber" &&
@@ -501,6 +523,8 @@ export function showType(type: MType): string {
       return `(Ref ${showType(type.item)})`;
     case "fiber":
       return `(Fiber ${showType(type.success)} [${[...type.errors.keys()].join(" ")}])`;
+    case "stream":
+      return `(Stream ${showType(type.item)} [${[...type.errors.keys()].join(" ")}] [${[...type.requirements.keys()].join(" ")}])`;
     case "layer":
       return `(Layer [${type.layer.provides.join(" ")}] [${[...type.layer.errors.keys()].join(" ")}] [${[...type.layer.requirements.keys()].join(" ")}])`;
     case "var":

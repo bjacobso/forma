@@ -74,6 +74,7 @@ export type ResolvedCall =
   | { readonly kind: "get"; readonly access: "field" | "optional-field" | "map" }
   | { readonly kind: "assoc"; readonly access: "field" | "map" | "class" }
   | { readonly kind: "class"; readonly name: string }
+  | { readonly kind: "stream"; readonly name: string }
   | { readonly kind: "error"; readonly name: string }
   | { readonly kind: "brand"; readonly name: string }
   | { readonly kind: "construct"; readonly name: string }
@@ -1757,6 +1758,10 @@ class Checker {
       this.info.effectTypes.set(node, type);
       return type;
     }
+    if (name.startsWith("stream-")) {
+      resolveAs({ kind: "stream", name });
+      return this.stream(name, args, scope, span);
+    }
     const operator = arithmeticOperators.get(name);
     if (operator) {
       resolveAs({ kind: "arithmetic", operator });
@@ -1776,6 +1781,104 @@ class Checker {
     this.error(span, "mechanics/unbound-name", `Unknown function ${name}.`);
     for (const arg of args) this.value(arg, scope);
     return tUnknown;
+  }
+
+  /**
+   * Stream constructors, transformers, and runners. Streams are lazy
+   * descriptions whose type carries the errors and requirements of every
+   * effect folded into them; runners turn them into effects.
+   */
+  private stream(name: string, args: readonly JsonValue[], scope: Scope, span: JsonValue | undefined): MType {
+    const arity: Readonly<Record<string, readonly number[]>> = {
+      "stream-of": [1],
+      "stream-range": [2],
+      "stream-map": [2],
+      "stream-filter": [2],
+      "stream-take": [2],
+      "stream-map-effect": [2, 3],
+      "stream-run-collect": [1],
+      "stream-run-fold": [3],
+      "stream-run-for-each": [2],
+    };
+    const expectedArity = arity[name];
+    if (!expectedArity) {
+      this.error(span, "mechanics/unbound-name", `Unknown stream function ${name}.`);
+      return tUnknown;
+    }
+    if (!expectedArity.includes(args.length)) {
+      this.error(span, "mechanics/arity", `${name} expects ${expectedArity.join(" or ")} argument(s), received ${args.length}.`);
+      return tUnknown;
+    }
+    if (name === "stream-of") {
+      const items = resolve(this.value(args[0], scope), this.env);
+      if (items.kind === "unknown") return tUnknown;
+      if (items.kind !== "array") {
+        this.error(spanOf(args[0]) ?? span, "mechanics/type-mismatch", `stream-of expects an Array, but this is ${showType(items)}.`);
+        return tUnknown;
+      }
+      return { kind: "stream", item: items.item, errors: emptySet, requirements: emptySet };
+    }
+    if (name === "stream-range") {
+      this.value(args[0], scope, tInt);
+      this.value(args[1], scope, tInt);
+      return { kind: "stream", item: tInt, errors: emptySet, requirements: emptySet };
+    }
+    const source = this.value(args[0], scope);
+    if (source.kind !== "stream") {
+      if (source.kind !== "unknown") {
+        this.error(spanOf(args[0]) ?? span, "mechanics/type-mismatch", `${name} expects a Stream, but this is ${showType(source)}.`);
+      }
+      args.slice(1).forEach((arg) => this.value(arg, scope));
+      return tUnknown;
+    }
+    const effectful = (fn: JsonValue | undefined, params: readonly MType[]): EffectType | undefined => {
+      const type = this.value(fn, scope, { kind: "function", params, result: tUnknown });
+      if (type.kind !== "function") return undefined;
+      if (type.result.kind !== "effect") {
+        if (type.result.kind !== "unknown") {
+          this.error(spanOf(fn) ?? span, "mechanics/type-mismatch", `${name} expects a function returning an effect, but it returns ${showType(type.result)}.`);
+        }
+        return undefined;
+      }
+      return type.result;
+    };
+    switch (name) {
+      case "stream-map": {
+        const fn = this.value(args[1], scope, { kind: "function", params: [source.item], result: tUnknown });
+        return { ...source, item: fn.kind === "function" ? fn.result : tUnknown };
+      }
+      case "stream-filter":
+        this.value(args[1], scope, { kind: "function", params: [source.item], result: tBool });
+        return source;
+      case "stream-take":
+        this.value(args[1], scope, tInt);
+        return source;
+      case "stream-map-effect": {
+        if (args[2] !== undefined) this.value(args[2], scope, tInt);
+        const effect = effectful(args[1], [source.item]);
+        return {
+          kind: "stream",
+          item: effect?.success ?? tUnknown,
+          errors: unionSets(source.errors, effect?.errors ?? emptySet),
+          requirements: unionSets(source.requirements, effect?.requirements ?? emptySet),
+        };
+      }
+      case "stream-run-collect":
+        return effectOf({ kind: "array", item: source.item }, reprovenance(source.errors, span), reprovenance(source.requirements, span));
+      case "stream-run-fold": {
+        const initial = widenLiteral(this.value(args[1], scope));
+        this.value(args[2], scope, { kind: "function", params: [initial, source.item], result: initial });
+        return effectOf(initial, reprovenance(source.errors, span), reprovenance(source.requirements, span));
+      }
+      default: {
+        const effect = effectful(args[1], [source.item]);
+        return effectOf(
+          tUnit,
+          unionSets(reprovenance(source.errors, span), effect?.errors ?? emptySet),
+          unionSets(reprovenance(source.requirements, span), effect?.requirements ?? emptySet),
+        );
+      }
+    }
   }
 
   private callFunction(
