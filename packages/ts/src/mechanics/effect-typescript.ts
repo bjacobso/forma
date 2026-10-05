@@ -13,7 +13,7 @@
  * @module
  */
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
-import { Precedence, type EmitContext, type ImportName } from "./builtins.js";
+import { arrowBody, Precedence, type EmitContext, type ImportName } from "./builtins.js";
 import {
   builtinErrors,
   checkMechanicsDeclarations,
@@ -124,6 +124,11 @@ class Names {
     return this.bindings.get(name);
   }
 
+  /** Makes a Forma name refer to an existing TypeScript expression. */
+  alias(name: string, identifier: string): void {
+    this.bindings.set(name, identifier);
+  }
+
   isTaken(identifier: string): boolean {
     return this.taken.has(identifier);
   }
@@ -147,25 +152,31 @@ class Generator {
     const of = (kind: string): readonly JsonRecord[] => payloads.filter((payload) => payload["kind"] === kind);
     const schemas = of("SchemaDef");
     const errors = of("ErrorDef");
+    const classes = of("ClassDef");
     const services = of("ServiceDef");
     const functions = of("FunctionDef");
     const constants = of("ValueDef");
     const operations = of("EffectDef");
     const layers = of("LayerDef");
     for (const payload of [...functions, ...constants, ...operations]) this.reserved.add(camelIdentifier(String(payload["name"])));
-    for (const payload of [...schemas, ...errors, ...services, ...layers]) this.reserved.add(typeName(String(payload["name"])));
+    for (const payload of [...schemas, ...errors, ...classes, ...services, ...layers]) this.reserved.add(typeName(String(payload["name"])));
 
     const sections: string[][] = [];
-    const declared = new Set([...schemas, ...errors].map((payload) => String(payload["name"])));
+    const declared = new Set([...schemas, ...errors, ...classes].map((payload) => String(payload["name"])));
     const brands = inlineBrands(payloads).filter((brand) => !declared.has(brand.name));
     for (const brand of brands) this.reserved.add(typeName(brand.name));
     const data = orderSchemaDeclarations([
-      ...brands.map((brand) => ({ name: brand.name, schema: brand.schema, error: false })),
-      ...schemas.map((payload) => ({ name: String(payload["name"]), schema: payload["schema"] ?? null, error: false })),
-      ...errors.map((payload) => ({ name: String(payload["name"]), schema: payload["schema"] ?? null, error: true })),
+      ...brands.map((brand) => ({ name: brand.name, schema: brand.schema, kind: "SchemaDef" })),
+      ...schemas.map((payload) => ({ name: String(payload["name"]), schema: payload["schema"] ?? null, kind: "SchemaDef" })),
+      ...classes.map((payload) => ({ name: String(payload["name"]), schema: payload["schema"] ?? null, kind: "ClassDef" })),
+      ...errors.map((payload) => ({ name: String(payload["name"]), schema: payload["schema"] ?? null, kind: "ErrorDef" })),
     ]);
     for (const declaration of data) {
-      sections.push(declaration.error ? this.errorLines(declaration.name, declaration.schema) : this.schemaLines(declaration.name, declaration.schema));
+      sections.push(
+        declaration.kind === "SchemaDef"
+          ? this.schemaLines(declaration.name, declaration.schema)
+          : this.classLines(declaration.name, declaration.schema, declaration.kind === "ErrorDef"),
+      );
     }
     for (const service of services) sections.push(this.serviceLines(service));
     for (const constant of orderConstants(constants)) sections.push(this.constantLines(constant));
@@ -209,11 +220,14 @@ class Generator {
     );
   }
 
-  private errorLines(name: string, schema: JsonValue): string[] {
+  /** `Schema.TaggedError` classes for errors and `Schema.Class` classes for data. */
+  private classLines(name: string, schema: JsonValue, error: boolean): string[] {
     this.use("Schema");
     const className = typeName(name);
     const fields = isRecord(schema) ? arrayItems(schema["fields"]).filter(isRecord) : [];
-    const head = `export class ${className} extends Schema.TaggedError<${className}>()(${JSON.stringify(name)}, {`;
+    const head = error
+      ? `export class ${className} extends Schema.TaggedError<${className}>()(${JSON.stringify(name)}, {`
+      : `export class ${className} extends Schema.Class<${className}>(${JSON.stringify(name)})({`;
     if (fields.length === 0) return [`${head}}) {}`];
     return [head, ...this.fieldLines(fields, "  "), "}) {}"];
   }
@@ -253,6 +267,8 @@ class Generator {
     );
     const returns = signature ? this.typeTs(signature.result) : "unknown";
     const head = signatureHead(camelIdentifier(name), params, returns);
+    const block = this.letBlock(body, names, "  ");
+    if (block) return [`${head} {`, ...block, "};"].map((line, index) => (index === 0 ? line.replace(/ =>$/, " =>") : line));
     const rendered = this.value(body, names, "  ").code;
     const value = rendered.startsWith("{") ? `(${rendered})` : rendered;
     const inline = `${head} ${value};`;
@@ -263,6 +279,24 @@ class Generator {
       return [`${head} (${objectLines[0]}`, ...objectLines.slice(1, -1), `${objectLines.at(-1)!});`];
     }
     return [head, `  ${value};`];
+  }
+
+  /** A function body that starts with `let` becomes statements and a return. */
+  private letBlock(body: JsonValue | undefined, names: Names, indent: string): string[] | undefined {
+    if (!isRecord(body) || body["kind"] !== "List") return undefined;
+    const call = this.info.calls.get(body);
+    if (call?.kind !== "special" || call.name !== "let") return undefined;
+    const [bindingsNode, result] = arrayItems(body["items"]).slice(1);
+    const bindings = isRecord(bindingsNode) ? arrayItems(bindingsNode["items"]) : [];
+    const scope = names.child();
+    const lines: string[] = [];
+    for (let index = 0; index + 1 < bindings.length; index += 2) {
+      const binding = bindings[index];
+      const value = this.value(bindings[index + 1], scope, indent).code;
+      lines.push(`${indent}const ${scope.bind(isRecord(binding) ? String(binding["name"]) : "_")} = ${value};`);
+    }
+    lines.push(...(this.letBlock(result, scope, indent) ?? [`${indent}return ${this.value(result, scope, indent).code};`]));
+    return lines;
   }
 
   private operationLines(operation: JsonRecord): string[] {
@@ -701,7 +735,7 @@ class Generator {
       case "map-error":
         return call("Effect.mapError", [effect(0), value(1)]);
       case "or-else-succeed":
-        return call("Effect.orElseSucceed", [effect(0), (inner) => `() => ${this.value(args[1], names, inner).code}`]);
+        return call("Effect.orElseSucceed", [effect(0), (inner) => `() => ${arrowBody(this.value(args[1], names, inner).code)}`]);
       case "or-die":
         return call("Effect.orDie", [effect(0)]);
       case "option":
@@ -979,10 +1013,17 @@ class Generator {
         const replacement = this.value(args[2], names, indent).code;
         if (call.access === "map") return atom(`{ ...${target}, [${this.value(args[1], names, indent).code}]: ${replacement} }`);
         const key = recordKey(args[1]) ?? "";
-        return atom(`{ ...${target}, ${replacement === key && isIdentifierName(key) ? key : `${propertyName(key)}: ${replacement}`} }`);
+        const updated = `{ ...${target}, ${replacement === key && isIdentifierName(key) ? key : `${propertyName(key)}: ${replacement}`} }`;
+        if (call.access === "class") {
+          const type = this.info.valueTypes.get(node);
+          return atom(`new ${type?.kind === "class" ? typeName(type.name) : "Object"}(${updated})`);
+        }
+        return atom(updated);
       }
       case "error":
         return atom(this.newError(call.name, args[0], names, indent));
+      case "class":
+        return atom(`new ${typeName(call.name)}(${this.value(args[0], names, indent).code})`);
       case "brand":
         return atom(`${typeName(call.name)}.make(${this.value(args[0], names, indent).code})`);
       case "construct":
@@ -1008,8 +1049,7 @@ class Generator {
           return scope.bind(paramName, unusedPrefix(paramName, args[1]));
         });
         const body = this.value(args[1], scope, indent);
-        const bodyCode = body.code.startsWith("{") ? `(${body.code})` : body.code;
-        return { code: `(${identifiers.join(", ")}) => ${bodyCode}`, prec: Prec.Arrow };
+        return { code: `(${identifiers.join(", ")}) => ${arrowBody(body.code)}`, prec: Prec.Arrow };
       }
       case "if":
         return {
@@ -1060,9 +1100,68 @@ class Generator {
       case "some":
         this.use("Option");
         return atom(`Option.some(${this.value(args[0], names, indent).code})`);
+      case "match":
+        return this.valueMatch(node, args, names, indent);
       default:
         throw new Error(`Effect TypeScript: unsupported form ${name} (${JSON.stringify(node["span"])})`);
     }
+  }
+
+  /**
+   * `match` in value position: `Option.match` / `Result.match` for those
+   * types, and a conditional chain on the tag (which TypeScript narrows) for
+   * enums and tagged unions.
+   */
+  private valueMatch(node: JsonRecord, args: readonly JsonValue[], names: Names, indent: string): Expr {
+    const shape = this.info.matches.get(node);
+    if (!shape) throw new Error("Effect TypeScript: match was not checked");
+    const arms: { readonly pattern: ReturnType<typeof parsePattern>; readonly body: JsonValue | undefined }[] = [];
+    for (let index = 1; index + 1 < args.length; index += 2) {
+      arms.push({ pattern: parsePattern(args[index]), body: args[index + 1] });
+    }
+    const subject = this.value(args[0], names, indent);
+    const armFor = (tag: string) => arms.find((arm) => arm.pattern?.tag === tag) ?? arms.find((arm) => arm.pattern?.tag === "_");
+    const handler = (tag: string): string => {
+      const arm = armFor(tag);
+      if (!arm) throw new Error(`Effect TypeScript: match has no arm for ${tag}`);
+      const scope = names.child();
+      const binding = arm.pattern?.binding;
+      const param = binding && binding !== "_" && usesName(arm.body, binding) ? scope.bind(binding) : "";
+      return `(${param}) => ${arrowBody(this.value(arm.body, scope, `${indent}  `).code)}`;
+    };
+    if (shape.kind === "option" || shape.kind === "result") {
+      const isOption = shape.kind === "option";
+      this.use(isOption ? "Option" : "Result");
+      const entries = isOption
+        ? [`onNone: ${handler("none")}`, `onSome: ${handler("some")}`]
+        : [`onFailure: ${handler("failure")}`, `onSuccess: ${handler("success")}`];
+      const inline = `${isOption ? "Option" : "Result"}.match(${subject.code}, { ${entries.join(", ")} })`;
+      if (!inline.includes("\n") && indent.length + inline.length <= maxWidth) return atom(inline);
+      return atom(`${isOption ? "Option" : "Result"}.match(${subject.code}, {\n${entries.map((entry) => `${indent}  ${entry},`).join("\n")}\n${indent}})`);
+    }
+
+    // Enums and tagged unions: test the tag in arm order; the last arm needs no test.
+    const render = (subjectCode: string, scope: Names): string => {
+      const discriminant = shape.kind === "tagged" ? propertyAccess(subjectCode, shape.discriminator) : subjectCode;
+      const branches: { readonly test: string | undefined; readonly value: string }[] = [];
+      for (const arm of arms) {
+        const tag = arm.pattern?.tag;
+        const armScope = scope.child();
+        const binding = arm.pattern?.binding;
+        if (binding && binding !== "_") armScope.alias(binding, subjectCode);
+        const value = wrap(this.value(arm.body, armScope, indent), Prec.Conditional);
+        branches.push({ test: tag === "_" ? undefined : `${discriminant} === ${JSON.stringify(tag)}`, value });
+        if (tag === "_") break;
+      }
+      // The last case needs no test: the checker proved the match exhaustive.
+      const last = branches.at(-1);
+      if (last) branches[branches.length - 1] = { test: undefined, value: last.value };
+      return conditionalChain(branches, indent);
+    };
+    if (isIdentifierName(subject.code)) return { code: render(subject.code, names), prec: Prec.Conditional };
+    const scope = names.child();
+    const parameter = scope.bind("match:subject", "matched");
+    return atom(`((${parameter}) => ${render(parameter, scope)})(${subject.code})`);
   }
 
   // -------------------------------------------------------------------------
@@ -1140,6 +1239,7 @@ class Generator {
         return JSON.stringify(type.value);
       case "named":
       case "brand":
+      case "class":
         return typeName(type.name);
       case "error":
         return this.errorTypeName(type.name);
@@ -1241,6 +1341,23 @@ function breakUnion(expression: string): string {
   }
   members.push(inner.slice(start).trim());
   return `Schema.Union([\n${members.map((member) => `  ${member},`).join("\n")}\n])`;
+}
+
+/** `a ? x : b ? y : z`, broken one branch per line when it is too long. */
+function conditionalChain(branches: readonly { readonly test: string | undefined; readonly value: string }[], indent: string): string {
+  const inline = branches.map((branch) => (branch.test === undefined ? branch.value : `${branch.test} ? ${branch.value} : `)).join("");
+  if (!inline.includes("\n") && indent.length + inline.length <= maxWidth) return inline;
+  let code = "";
+  let depth = `${indent}  `;
+  branches.forEach((branch, index) => {
+    if (branch.test === undefined) {
+      code += index === 0 ? branch.value : branch.value;
+      return;
+    }
+    code += `${branch.test}\n${depth}? ${branch.value}\n${depth}: `;
+    depth = `${depth}  `;
+  });
+  return code;
 }
 
 function wrap(expr: Expr, prec: Prec): string {

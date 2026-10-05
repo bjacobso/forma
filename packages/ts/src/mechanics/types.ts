@@ -49,6 +49,7 @@ export type MType =
   | { readonly kind: "option"; readonly item: MType }
   | { readonly kind: "result"; readonly success: MType; readonly failure: MType }
   | { readonly kind: "error"; readonly name: string }
+  | { readonly kind: "class"; readonly name: string }
   | {
       readonly kind: "effect";
       readonly success: MType;
@@ -102,6 +103,8 @@ export function setOf(names: readonly string[], span?: JsonValue): Provenance {
 export interface TypeEnvironment {
   readonly schemas: ReadonlyMap<string, MType>;
   readonly errors: ReadonlySet<string>;
+  /** `define-class` names: nominal types whose fields live in `classFields`. */
+  readonly classes: ReadonlyMap<string, readonly MField[]>;
 }
 
 /** Converts an IR type or schema node into a checker type. */
@@ -113,6 +116,7 @@ export function typeFromJson(json: JsonValue | undefined, env: TypeEnvironment):
     case "Ref": {
       const name = typeof json["name"] === "string" ? json["name"] : "";
       if (env.errors.has(name)) return { kind: "error", name };
+      if (env.classes.has(name)) return { kind: "class", name };
       if (env.schemas.has(name)) return { kind: "named", name };
       if (name === "Duration") return prim("Duration");
       return { kind: "named", name };
@@ -257,11 +261,14 @@ export function union(members: readonly MType[]): MType {
   return { kind: "union", members: flat };
 }
 
-/** Least upper bound used to join branch results. */
+/**
+ * Least upper bound used to join branch results. Literal types are kept, so
+ * branches producing `"pro"` and `"enterprise"` still fit an enum.
+ */
 export function join(left: MType, right: MType, env: TypeEnvironment): MType {
-  if (isAssignable(left, right, env)) return widenLiteral(right);
-  if (isAssignable(right, left, env)) return widenLiteral(left);
-  return union([widenLiteral(left), widenLiteral(right)]);
+  if (isAssignable(left, right, env)) return right;
+  if (isAssignable(right, left, env)) return left;
+  return union([left, right]);
 }
 
 /** Widens a literal produced by inference to its primitive (`"a"` → String). */
@@ -399,6 +406,8 @@ export function isAssignable(
       );
     case "error":
       return s.kind === "error" && s.name === t.name;
+    case "class":
+      return s.kind === "class" && s.name === t.name;
     case "effect":
       return (
         s.kind === "effect" &&
@@ -464,6 +473,7 @@ export function showType(type: MType): string {
       return JSON.stringify(type.value);
     case "named":
     case "error":
+    case "class":
       return type.name;
     case "brand":
       return type.name;

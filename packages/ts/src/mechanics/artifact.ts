@@ -51,6 +51,7 @@ export function isMechanicsArtifactForm(expr: SExpr): boolean {
   return (
     isDefineSchemaForm(expr) ||
     isDefineErrorForm(expr) ||
+    isDefineClassForm(expr) ||
     isDefineServiceForm(expr) ||
     isDefineOperationForm(expr) ||
     isDefineLayerForm(expr)
@@ -80,6 +81,15 @@ function isDefineSchemaForm(expr: SExpr): boolean {
     symName(expr.items[0]) === "define-schema" &&
     expr.items.length === 3 &&
     isSchemaProjectionExpr(expr.items[2]!)
+  );
+}
+
+function isDefineClassForm(expr: SExpr): boolean {
+  return (
+    expr._tag === "List" &&
+    symName(expr.items[0]) === "define-class" &&
+    expr.items.length === 3 &&
+    isFieldsBlock(expr.items[2]!)
   );
 }
 
@@ -158,6 +168,8 @@ function declaration(
       return schemaDeclaration(expr, sourceId, formIndex);
     case "define-error":
       return errorDeclaration(expr, sourceId, formIndex);
+    case "define-class":
+      return errorDeclaration(expr, sourceId, formIndex, "ClassDef");
     case "define-service":
       return serviceDeclaration(expr, sourceId, formIndex);
     case "define-operation":
@@ -303,10 +315,12 @@ function schemaDeclaration(
   };
 }
 
+/** `define-error` and `define-class` share the `(Name (:fields ...))` shape. */
 function errorDeclaration(
   expr: SExpr,
   sourceId: string,
   formIndex: number,
+  kind: "ErrorDef" | "ClassDef" = "ErrorDef",
 ):
   | { readonly ok: true; readonly declaration: PackageableDeclaration }
   | { readonly ok: false; readonly diagnostics: readonly MechanicsArtifactDiagnostic[] } {
@@ -364,13 +378,13 @@ function errorDeclaration(
   return {
     ok: true,
     declaration: {
-      summary: { kind: "ErrorDef", name, resultType: "ErrorDef" },
+      summary: { kind, name, resultType: kind },
       payload: {
-        kind: "ErrorDef",
+        kind,
         name,
         schema: { kind: "Struct", fields },
       },
-      payloadContract: "mechanics/error-def/v0",
+      payloadContract: kind === "ErrorDef" ? "mechanics/error-def/v0" : "mechanics/class-def/v0",
       validators: ["payload-contract"],
       sourceId,
       formIndex,

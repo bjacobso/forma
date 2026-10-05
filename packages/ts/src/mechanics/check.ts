@@ -16,6 +16,7 @@
  */
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
 import { arithmeticOperators, builtins, type BuiltinOverload } from "./builtins.js";
+import { schemaReferences } from "./effect-schema.js";
 import {
   applySubstitution,
   arrayItems,
@@ -71,7 +72,8 @@ export type ResolvedCall =
   | { readonly kind: "equality"; readonly operator: "=" | "!=" }
   | { readonly kind: "special"; readonly name: string }
   | { readonly kind: "get"; readonly access: "field" | "optional-field" | "map" }
-  | { readonly kind: "assoc"; readonly access: "field" | "map" }
+  | { readonly kind: "assoc"; readonly access: "field" | "map" | "class" }
+  | { readonly kind: "class"; readonly name: string }
   | { readonly kind: "error"; readonly name: string }
   | { readonly kind: "brand"; readonly name: string }
   | { readonly kind: "construct"; readonly name: string }
@@ -159,7 +161,8 @@ class Checker {
   private readonly diagnostics: MechanicsCheckDiagnostic[] = [];
   private readonly schemas = new Map<string, MType>();
   private readonly errorNames = new Set<string>(builtinErrors.keys());
-  private readonly env: TypeEnvironment = { schemas: this.schemas, errors: this.errorNames };
+  private readonly classes = new Map<string, readonly MField[]>();
+  private readonly env: TypeEnvironment = { schemas: this.schemas, errors: this.errorNames, classes: this.classes };
   private readonly errorFields = new Map<string, readonly MField[]>();
   private readonly services = new Map<string, Map<string, ServiceMethodSignature>>();
   private readonly operations = new Map<string, CallableSignature & { readonly result: EffectType }>();
@@ -199,6 +202,7 @@ class Checker {
           this.checkTypeReferences(payload["schema"], span);
           break;
         case "ErrorDef":
+        case "ClassDef":
           this.checkTypeReferences(payload["schema"], span);
           break;
         case "ServiceDef":
@@ -262,6 +266,9 @@ class Checker {
         case "ErrorDef":
           if (claim(name, "error", span)) this.errorNames.add(name);
           break;
+        case "ClassDef":
+          if (claim(name, "class", span)) this.classes.set(name, []);
+          break;
         case "ServiceDef":
           claim(name, "service", span);
           break;
@@ -290,15 +297,20 @@ class Checker {
         case "SchemaDef":
           this.schemas.set(name, typeFromJson(payload["schema"], this.env));
           break;
-        case "ErrorDef": {
+        case "ErrorDef":
+        case "ClassDef": {
           const struct = typeFromJson(payload["schema"], this.env);
-          this.errorFields.set(name, struct.kind === "struct" ? struct.fields : []);
+          const fields = struct.kind === "struct" ? struct.fields : [];
+          if (payload["kind"] === "ErrorDef") this.errorFields.set(name, fields);
+          else this.classes.set(name, fields);
           break;
         }
         default:
           break;
       }
     }
+
+    this.checkSchemaCycles();
 
     for (const declaration of this.declarations) {
       const payload = declaration.payload;
@@ -345,6 +357,41 @@ class Checker {
     }
   }
 
+  /** Generated schema constants refer to each other eagerly, so cycles are rejected. */
+  private checkSchemaCycles(): void {
+    const data = new Map<string, { readonly schema: JsonValue | undefined; readonly span: JsonValue | undefined }>();
+    for (const declaration of this.declarations) {
+      const payload = declaration.payload;
+      if (!isRecord(payload) || typeof payload["name"] !== "string") continue;
+      if (["SchemaDef", "ErrorDef", "ClassDef"].includes(String(payload["kind"]))) {
+        data.set(payload["name"], { schema: payload["schema"], span: declarationSpan(declaration) });
+      }
+    }
+    const state = new Map<string, "visiting" | "done">();
+    const visit = (name: string, path: readonly string[]): void => {
+      const current = state.get(name);
+      if (current === "done") return;
+      if (current === "visiting") {
+        const cycle = [...path.slice(path.indexOf(name)), name];
+        this.error(
+          data.get(name)?.span,
+          "mechanics/recursive-schema",
+          `Recursive schemas are not supported yet (${cycle.join(" -> ")}); Effect needs Schema.suspend for them.`,
+        );
+        return;
+      }
+      state.set(name, "visiting");
+      for (const reference of schemaReferences(data.get(name)?.schema)) {
+        if (data.has(reference) && reference !== name) visit(reference, [...path, name]);
+        else if (reference === name) {
+          this.error(data.get(name)?.span, "mechanics/recursive-schema", `Recursive schemas are not supported yet (${name} -> ${name}); Effect needs Schema.suspend for them.`);
+        }
+      }
+      state.set(name, "done");
+    };
+    for (const name of data.keys()) visit(name, []);
+  }
+
   private paramsFromJson(value: JsonValue | undefined): readonly { readonly name: string; readonly type: MType }[] {
     return arrayItems(value).flatMap((param) =>
       isRecord(param) && typeof param["name"] === "string"
@@ -368,7 +415,7 @@ class Checker {
     const location = value["span"] ?? span;
     if (value["kind"] === "Ref" && typeof value["name"] === "string") {
       const name = value["name"];
-      if (!this.schemas.has(name) && !this.errorNames.has(name) && name !== "Duration") {
+      if (!this.schemas.has(name) && !this.errorNames.has(name) && !this.classes.has(name) && name !== "Duration") {
         this.error(location, "mechanics/unknown-type", `Unknown type ${name}. Define it with define-schema or define-error.`);
       }
     }
@@ -1389,6 +1436,8 @@ class Checker {
     if (isRecord(node)) this.info.valueTypes.set(node, type);
     if (expected && !(options.allowEffect && type.kind === "effect") && !isAssignable(type, expected, this.env)) {
       this.error(spanOf(node), "mechanics/type-mismatch", `Expected ${showType(expected)}, but this is ${showType(type)}.`);
+      // Reported here; enclosing expressions should not report it again.
+      return tUnknown;
     }
     return type;
   }
@@ -1514,7 +1563,8 @@ class Checker {
     const itemExpected = target?.kind === "array" ? target.item : undefined;
     let item: MType = tNever;
     for (const element of items) {
-      item = join(item, this.value(element, scope, itemExpected), this.env);
+      // Like TypeScript, an uncontextual array literal widens its elements.
+      item = join(item, widenLiteral(this.value(element, scope, itemExpected)), this.env);
     }
     return { kind: "array", item: itemExpected ?? item };
   }
@@ -1623,6 +1673,29 @@ class Checker {
         if (isRecord(args[1])) this.info.valueTypes.set(args[1], type);
         return type;
       }
+      case "match": {
+        resolveAs({ kind: "special", name });
+        if (args.length < 3 || (args.length - 1) % 2 !== 0) {
+          this.error(span, "mechanics/arity", "match expects a value and pattern/value pairs.");
+          return tUnknown;
+        }
+        const scrutinee = this.value(args[0], scope);
+        const patterns = args.filter((_, index) => index % 2 === 1);
+        const bodies = args.filter((_, index) => index > 0 && index % 2 === 0);
+        const plan = this.matchPlan(scrutinee, { span: span ?? null, value: args[0] ?? null }, patterns);
+        if (!plan) {
+          bodies.forEach((body) => this.value(body, scope, expected));
+          return tUnknown;
+        }
+        this.info.matches.set(node, plan.shape);
+        let result: MType = tNever;
+        bodies.forEach((body, index) => {
+          let armScope = scope;
+          for (const [binding, type] of plan.bindings[index] ?? []) armScope = extend(armScope, binding, type);
+          result = join(result, this.value(body, armScope, expected), this.env);
+        });
+        return result;
+      }
       case "some": {
         resolveAs({ kind: "special", name });
         if (args.length !== 1) {
@@ -1645,6 +1718,16 @@ class Checker {
     if (this.errorNames.has(name)) {
       resolveAs({ kind: "error", name });
       return this.constructError(name, args, scope, span);
+    }
+    const classFields = this.classes.get(name);
+    if (classFields) {
+      resolveAs({ kind: "class", name });
+      if (args.length !== 1) {
+        this.error(span, "mechanics/arity", `(${name} {...}) expects one record with its fields.`);
+        return tUnknown;
+      }
+      this.value(args[0], scope, { kind: "struct", fields: classFields });
+      return { kind: "class", name };
     }
     const schema = this.schemas.get(name);
     if (schema) {
@@ -1862,14 +1945,15 @@ class Checker {
       this.error(spanOf(args[1]) ?? span, "mechanics/record-key", "assoc expects a :field keyword.");
       return tUnknown;
     }
-    const field = resolved.kind === "struct" ? resolved.fields.find((candidate) => candidate.name === key) : undefined;
+    const fields = resolved.kind === "struct" ? resolved.fields : resolved.kind === "class" ? this.classes.get(resolved.name) : undefined;
+    const field = fields?.find((candidate) => candidate.name === key);
     if (!field) {
       if (resolved.kind !== "unknown") {
         this.error(spanOf(args[1]) ?? span, "mechanics/unknown-field", `${showType(target)} has no field :${key}.`);
       }
       return tUnknown;
     }
-    this.info.calls.set(node, { kind: "assoc", access: "field" });
+    this.info.calls.set(node, { kind: "assoc", access: resolved.kind === "class" ? "class" : "field" });
     this.value(args[2], scope, field.type);
     return target;
   }
@@ -2034,6 +2118,7 @@ function fieldsOf(
     const tag: MField = { name: "_tag", optional: false, type: { kind: "literal", value: resolved.name } };
     return new Map([tag, ...(errorFields.get(resolved.name) ?? [])].map((field) => [field.name, field]));
   }
+  if (resolved.kind === "class") return new Map((env.classes.get(resolved.name) ?? []).map((field) => [field.name, field]));
   if (resolved.kind === "union") {
     const members = resolved.members.map((member) => fieldsOf(member, env, errorFields));
     if (members.some((member) => member === undefined)) return undefined;

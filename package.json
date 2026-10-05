@@ -26,7 +26,7 @@
     "parity:engines": "pnpm --filter @formalang/ts build && pnpm --filter @formalang/host build && node scripts/parity-engines.mjs",
     "parity:engines:test": "node --test scripts/parity/*.test.mjs",
     "test:visual": "pnpm --filter @formalang/website test:visual",
-    "typecheck": "tsc --noEmit -p tsconfig.alchemy.json && turbo run typecheck --filter=@formalang/ts --filter=@formalang/host --filter=@formalang/editor --filter=@formalang/language-server --filter=@formalang/website",
+    "typecheck": "tsc --noEmit -p tsconfig.alchemy.json && tsc --noEmit -p conformance/effect-typescript/tsconfig.json && turbo run typecheck --filter=@formalang/ts --filter=@formalang/host --filter=@formalang/editor --filter=@formalang/language-server --filter=@formalang/website",
     "check": "pnpm check:branding && pnpm typecheck && pnpm test:js && pnpm docs:build",
     "check:branding": "bash scripts/check-branding.sh",
     "website:build": "pnpm docs:build && turbo run build --filter=@formalang/website && node scripts/assemble-website.mjs",

@@ -53,12 +53,18 @@ const optionFromUndefined = (expression: string, context: EmitContext): string =
   return `Option.fromUndefinedOr(${expression})`;
 };
 
+/** An arrow function body; object literals need parentheses. */
+export function arrowBody(code: string): string {
+  return code.startsWith("{") ? `(${code})` : code;
+}
+
 export const builtins: ReadonlyMap<string, readonly BuiltinOverload[]> = new Map<
   string,
   readonly BuiltinOverload[]
 >([
   ["mod", [{ params: [tInt, tInt], result: tInt, emit: ([a, b]) => `${a} % ${b}`, prec: Precedence.Multiplicative }]],
   ["/", [{ params: [tNumber, tNumber], result: tNumber, emit: ([a, b]) => `${a} / ${b}`, prec: Precedence.Multiplicative }]],
+  ["quot", [{ params: [tInt, tInt], result: tInt, emit: ([a, b]) => `Math.trunc(${a} / ${b})` }]],
   ...(["<", "<=", ">", ">="] as const).map(
     (op): [string, readonly BuiltinOverload[]] => [
       op,
@@ -148,7 +154,7 @@ export const builtins: ReadonlyMap<string, readonly BuiltinOverload[]> = new Map
         result: v(0),
         emit: ([o, d], context) => {
           context.use("Option");
-          return `Option.getOrElse(${o}, () => ${d})`;
+          return `Option.getOrElse(${o}, () => ${arrowBody(d ?? "undefined")})`;
         },
       },
     ],
