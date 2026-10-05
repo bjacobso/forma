@@ -8,6 +8,7 @@ import * as Lsp from "@formalang/ts/lsp";
 import * as Reader from "@formalang/ts/reader";
 import * as Engine from "@formalang/ts/engine";
 import * as LanguageSession from "@formalang/ts/session";
+import * as Syntax from "@formalang/ts/syntax";
 import * as VM from "@formalang/ts/vm";
 
 import { typeProjection } from "./abi-projections.js";
@@ -50,6 +51,8 @@ import type {
   ResumeHostCallRequest,
   SessionInfoRequest,
   SessionInfoResult,
+  SyntaxIdentityRequest,
+  SyntaxIdentityResult,
   TypePolicy,
   TypecheckRequest,
   TypecheckResult,
@@ -157,6 +160,7 @@ export class TsLanguageHost implements LanguageHost {
         "sessionInfo",
         "resetSession",
         "closeSession",
+        "identifySyntax",
       ],
     };
   }
@@ -527,6 +531,35 @@ export class TsLanguageHost implements LanguageHost {
           : {}),
       })),
       parse,
+    };
+  }
+
+  async identifySyntax(request: SyntaxIdentityRequest): Promise<SyntaxIdentityResult> {
+    return this.identifySyntaxSync(request);
+  }
+
+  identifySyntaxSync(request: SyntaxIdentityRequest): SyntaxIdentityResult {
+    const sourceId = request.sourceId ?? "source";
+    const anchors = request.anchors ?? [];
+    const identity = request.previous
+      ? Syntax.reconcileSyntax(request.previous, request.source, {
+          anchors,
+          ...(request.changes ? { changes: request.changes } : {}),
+        })
+      : Syntax.identifySyntax(request.source, {
+          anchors,
+          ...(request.idPrefix !== undefined ? { idPrefix: request.idPrefix } : {}),
+        });
+    return {
+      sourceId,
+      identity,
+      diagnostics: identity.errors.map((error) => ({
+        code: "parse/syntax",
+        severity: "error",
+        message: error.message,
+        phase: "parse",
+        span: { sourceId, startOffset: error.span.start, endOffset: error.span.end },
+      })),
     };
   }
 

@@ -25,6 +25,11 @@
       "reason": "The packages have different envelope versions; the runner compares declaration payloads and provenance."
     },
     {
+      "id": "syntax-identity",
+      "status": "gap",
+      "reason": "identifySyntax is implemented by the TypeScript host only. It depends on the shared reader grammar; the OCaml hosts do not expose it yet."
+    },
+    {
       "id": "effect-typescript-match",
       "status": "gap",
       "reason": "The Effect TypeScript generator rejects Match bodies explicitly."

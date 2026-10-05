@@ -99,6 +99,26 @@ duplicate fields are reported at the declaration that refers to them. Forms
 outside the core ontology (views, processes, documents) are returned untouched
 in `model.others`.
 
+## Structural editor services
+
+These services back outline and structural editors. Their design is in
+[Language services](https://github.com/bjacobso/forma/blob/main/docs/language-services.md).
+
+`@formalang/ts/syntax` gives every node and comment an id that survives edits.
+Pass the previous source and identity with the next source:
+
+```ts
+import { identifySyntax, reconcileSyntax } from "@formalang/ts/syntax";
+
+const identity = identifySyntax("(define total 1)");
+const next = reconcileSyntax({ source: "(define total 1)", identity }, "(define total 10)");
+next.nodes; // [{ id, kind, span, parent, index }], with the define's id unchanged
+```
+
+Nodes keep their ids when edits happen elsewhere, when they are retyped in
+place, and when they move with identical tokens. Parsing never throws:
+unterminated strings and stray characters become error nodes.
+
 ```sh
 pnpm --filter @formalang/ts build
 pnpm --filter @formalang/ts test

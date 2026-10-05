@@ -27,6 +27,8 @@ export type Token =
   | { type: "backtick"; loc: Loc }
   | { type: "tilde"; loc: Loc }
   | { type: "tilde-at"; loc: Loc }
+  /** Text the lexer could not read. Only `tokenizeWithTrivia` produces it. */
+  | { type: "error"; error: ParseError; loc: Loc }
   | { type: "eof"; loc: Loc };
 
 /**
@@ -573,8 +575,27 @@ const readToken = (state: LexerState): Token => {
 };
 
 /**
+ * Read the next token, turning a lexical error into an error token so that
+ * tokenizing never throws. An unterminated string reads to the end of the
+ * input; an unexpected character is skipped.
+ */
+const readTokenRecovering = (state: LexerState): Token => {
+  const startPos = state.pos;
+  const startLine = state.line;
+  const startCol = state.col;
+  try {
+    return readToken(state);
+  } catch (error) {
+    if (!(error instanceof ParseError)) throw error;
+    if (state.pos === startPos) advance(state);
+    return { type: "error", error, loc: makeLoc(state, startPos, startLine, startCol) };
+  }
+};
+
+/**
  * Tokenize input preserving trivia (whitespace and comments)
- * Each token is bundled with its leading trivia
+ * Each token is bundled with its leading trivia. Lexical errors become
+ * `error` tokens instead of exceptions.
  */
 export const tokenizeWithTrivia = (input: string): TokenWithTrivia[] => {
   const state = createState(input);
@@ -582,7 +603,7 @@ export const tokenizeWithTrivia = (input: string): TokenWithTrivia[] => {
 
   while (true) {
     const leadingTrivia = collectTrivia(state);
-    const token = readToken(state);
+    const token = readTokenRecovering(state);
     tokens.push({ token, leadingTrivia });
     if (token.type === "eof") break;
   }
