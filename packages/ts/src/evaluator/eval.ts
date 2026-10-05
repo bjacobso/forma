@@ -1,6 +1,7 @@
 import { Effect, Layer, Ref } from "effect";
 import type { SExpr } from "../reader/index.js";
-import { ParseError } from "../reader/index.js";
+import { ParseError, parse, toSExprMany } from "../reader/index.js";
+import { ObservationCollector, type ObservationOptions } from "./observation.js";
 import { Env } from "../Env.js";
 import { getPreludeEnvSync } from "../expander/expand.js";
 import { expandKernelExprsSync, parseAndExpandKernelSource } from "./frontend.js";
@@ -146,6 +147,7 @@ function evaluateExpandedRuntimeExprs(
           env: runtimeEnv,
           normalized: true,
           includePrelude: false,
+          ...(options.observer ? { observer: options.observer } : {}),
         }),
       catch: toKernelError,
     });
@@ -160,6 +162,7 @@ function evaluateExpandedRuntimeExprs(
       globalNames,
       strictGlobals: true,
       stepLimit: options.stepLimit,
+      ...(options.observer ? { observer: options.observer } : {}),
     });
 
     return {
@@ -192,6 +195,7 @@ export function evaluateCompileTimeExprs(
       builtins,
       counter,
       stepLimit: options.stepLimit,
+      ...(options.observer ? { observer: options.observer } : {}),
     };
 
     let result: KValue = null;
@@ -336,6 +340,37 @@ export function evaluateCompileTimeExprs(
     const steps = yield* Ref.get(counter);
     return { value: result, steps, env: currentEnv } satisfies KernelResult;
   });
+}
+
+/** An evaluation whose author-written expressions are observed. */
+export interface ObservedEvaluation {
+  readonly collector: ObservationCollector;
+  readonly evaluation: Effect.Effect<KernelResult, KernelError | ParseError>;
+}
+
+/**
+ * Prepare an observed evaluation of `source`. The collector exists before the
+ * evaluation runs, so a caller can attribute a failure and still report the
+ * values computed before it.
+ */
+export function observeEvaluation(
+  source: string,
+  options: KernelOptions,
+  observation: ObservationOptions = {},
+): ObservedEvaluation {
+  const parsed = parse(source);
+  if (parsed.errors.length > 0) {
+    return {
+      collector: new ObservationCollector(source, [], observation),
+      evaluation: Effect.fail(parsed.errors[0]!),
+    };
+  }
+  const exprs = toSExprMany(parsed.redTree);
+  const collector = new ObservationCollector(source, exprs, observation);
+  return {
+    collector,
+    evaluation: evaluateExprs(exprs, { ...options, observer: collector }),
+  };
 }
 
 export { applyKFn };

@@ -30,6 +30,7 @@ import type {
   EvaluateRequest,
   EvaluationResult,
   EvaluationState,
+  ExpressionObservation,
   HostCall,
   HostCallResumeResult,
   HostBuiltinDescriptor,
@@ -39,6 +40,8 @@ import type {
   LoadSourceRequest,
   LoadSourceResult,
   OpenSessionRequest,
+  ObservationRequest,
+  ObservationResult,
   OpenSessionResult,
   ParseRequest,
   ParseResult,
@@ -128,6 +131,72 @@ function valueProjection(value: KValue): ValueProjection {
   return { kind: "opaque", tag: "unknown", display: String(value) };
 }
 
+type ObservationLimits = ObservationResult["limits"];
+
+function observationLimits(request: ObservationRequest): ObservationLimits {
+  return {
+    maxRecords: request.maxRecords ?? Evaluator.DEFAULT_MAX_OBSERVATION_RECORDS,
+    maxItems: request.maxItems ?? 20,
+    maxDepth: request.maxDepth ?? 4,
+    maxStringLength: request.maxStringLength ?? 500,
+  };
+}
+
+function engineObservation(request: ObservationRequest): Evaluator.ObservationOptions {
+  return {
+    ...(request.identity ? { identity: request.identity } : {}),
+    ...(request.maxRecords !== undefined ? { maxRecords: request.maxRecords } : {}),
+  };
+}
+
+function truncatedMarker(display: string): ValueProjection {
+  return { kind: "opaque", tag: "truncated", display };
+}
+
+function truncateString(value: string, limits: ObservationLimits): string {
+  return value.length > limits.maxStringLength
+    ? `${value.slice(0, limits.maxStringLength)}…`
+    : value;
+}
+
+/** Project a value within observation limits. */
+function boundedValueProjection(
+  value: KValue,
+  limits: ObservationLimits,
+  depth = 0,
+): ValueProjection {
+  if (typeof value === "string") return { kind: "string", value: truncateString(value, limits) };
+  if (Array.isArray(value) || Evaluator.isKMap(value)) {
+    if (depth >= limits.maxDepth) {
+      return truncatedMarker(truncateString(Evaluator.printKValue(value), limits));
+    }
+    if (Array.isArray(value)) {
+      const items = value
+        .slice(0, limits.maxItems)
+        .map((item) => boundedValueProjection(item, limits, depth + 1));
+      if (value.length > limits.maxItems) {
+        items.push(truncatedMarker(`… ${value.length - limits.maxItems} more`));
+      }
+      return { kind: "list", items };
+    }
+    const entries = [...value.entries()];
+    const shown = entries.slice(0, limits.maxItems).map(([key, nested]) => ({
+      key: { kind: "string", value: key } as ValueProjection,
+      value: boundedValueProjection(nested, limits, depth + 1),
+    }));
+    if (entries.length > limits.maxItems) {
+      const more = entries.length - limits.maxItems;
+      shown.push({ key: truncatedMarker("…"), value: truncatedMarker(`… ${more} more`) });
+    }
+    return { kind: "map", entries: shown };
+  }
+  const projected = valueProjection(value);
+  if ("display" in projected && projected.display !== undefined) {
+    return { ...projected, display: truncateString(projected.display, limits) };
+  }
+  return projected;
+}
+
 export class TsLanguageHost implements LanguageHost {
   readonly name = "ts";
   #nextSessionId = 1;
@@ -161,6 +230,7 @@ export class TsLanguageHost implements LanguageHost {
         "resetSession",
         "closeSession",
         "identifySyntax",
+        "observe",
       ],
     };
   }
@@ -256,11 +326,14 @@ export class TsLanguageHost implements LanguageHost {
       source: request.source,
       stepLimit: request.stepLimit ?? DEFAULT_STEP_LIMIT,
       ...(request.variables ? { env: Env.from(variablesToBindings(request.variables)) } : {}),
+      ...(request.observe ? { observe: engineObservation(request.observe) } : {}),
     });
+    const observations = this.#observations(undefined, sourceId, request, result, undefined);
     if (result.diagnostics.length > 0) {
       return {
         value: { kind: "nil" },
         diagnostics: result.diagnostics,
+        ...(observations ? { observations } : {}),
       };
     }
     return {
@@ -268,6 +341,7 @@ export class TsLanguageHost implements LanguageHost {
       printed: result.printed,
       steps: result.steps,
       diagnostics: [],
+      ...(observations ? { observations } : {}),
     };
   }
 
@@ -304,11 +378,20 @@ export class TsLanguageHost implements LanguageHost {
       source,
       env,
       stepLimit: request.stepLimit ?? session.defaultStepLimit,
+      ...(request.observe ? { observe: engineObservation(request.observe) } : {}),
     });
+    const observations = this.#observations(
+      session,
+      request.sourceId ?? "session",
+      request,
+      result,
+      request.retainValues,
+    );
     if (result.diagnostics.length > 0) {
       return {
         status: "failed",
         diagnostics: result.diagnostics,
+        ...(observations ? { observations } : {}),
       };
     }
     return {
@@ -318,7 +401,51 @@ export class TsLanguageHost implements LanguageHost {
         printed: result.printed,
         steps: result.steps,
         diagnostics: [],
+        ...(observations ? { observations } : {}),
       },
+    };
+  }
+
+  #observations(
+    session: TsSession | undefined,
+    sourceId: string,
+    request: { readonly observe?: ObservationRequest | undefined },
+    result: Pick<Engine.EvaluateResult, "observations">,
+    retainValues: EvaluateInSessionRequest["retainValues"] | undefined,
+  ): ObservationResult | undefined {
+    if (!request.observe || !result.observations) return undefined;
+    const limits = observationLimits(request.observe);
+    return {
+      records: result.observations.records.map((record): ExpressionObservation => {
+        let value: ValueProjection | undefined;
+        if (record.count > 0) {
+          value = boundedValueProjection(record.value, limits);
+          const retain =
+            session !== undefined &&
+            (retainValues === "all" ||
+              (retainValues === "functions" && Evaluator.isKFn(record.value)));
+          if (retain) {
+            value = {
+              ...value,
+              valueRef: this.#retainValue(
+                session,
+                record.value,
+                undefined,
+                this.#callableValueInvoker(session, record.value),
+              ),
+            } as ValueProjection;
+          }
+        }
+        return {
+          nodeId: record.nodeId,
+          span: { sourceId, startOffset: record.span.start, endOffset: record.span.end },
+          count: record.count,
+          ...(value ? { value } : {}),
+          ...(record.failure ? { failure: record.failure } : {}),
+        };
+      }),
+      truncated: result.observations.truncated,
+      limits,
     };
   }
 
@@ -584,6 +711,45 @@ export class TsLanguageHost implements LanguageHost {
       ...Builtins.defaultBuiltins,
       ...this.#hostBuiltinFns(evaluation, session.hostBuiltins),
     };
+    if (request.observe) {
+      const observe = request.observe;
+      const completion = Engine.evaluateObserved(
+        { sourceId, source, env, stepLimit: request.stepLimit ?? session.defaultStepLimit },
+        engineObservation(observe),
+        builtins,
+      ).then((result): EvaluationState => {
+        const observations = this.#observations(
+          session,
+          sourceId,
+          request,
+          result,
+          request.retainValues,
+        );
+        if (result.diagnostics.length > 0) {
+          return {
+            status: "failed",
+            diagnostics: result.diagnostics,
+            ...(observations ? { observations } : {}),
+          };
+        }
+        if (!evaluation.aborted && result.env) {
+          session.language.env = result.env;
+        }
+        return {
+          status: "completed",
+          result: {
+            value: this.#projectValue(session, result.value, request.retainValues),
+            printed: Evaluator.printKValue(result.value),
+            steps: result.steps,
+            diagnostics: [],
+            ...(observations ? { observations } : {}),
+          },
+        };
+      });
+      Object.assign(evaluation, { completion });
+      session.evaluations.set(evaluationId, evaluation);
+      return this.#nextEvaluationState(evaluation);
+    }
     const completion = Effect.runPromise(
       Effect.provide(
         Evaluator.evaluate(source, {

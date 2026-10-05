@@ -42,5 +42,33 @@ export function copySourceTrace<T extends SExpr>(from: SExpr, to: T): T {
   if (trace) {
     sourceTraceMap.set(to, trace);
   }
+  if (to !== from) {
+    originMap.set(to, sourceOriginsOf(from));
+  }
   return to;
+}
+
+// Origins: the parsed nodes an expanded node stands for. The expander rebuilds
+// lists while expanding, so object identity alone cannot connect expanded code
+// to the author's parse. Observation and the symbol index use origins to map
+// runtime and binding facts back to author-written nodes.
+const originMap = new WeakMap<SExpr, readonly SExpr[]>();
+
+/** The parsed nodes this node was rebuilt from, or the node itself. */
+export function sourceOriginsOf(expr: SExpr): readonly SExpr[] {
+  return originMap.get(expr) ?? [expr];
+}
+
+/**
+ * Mark `expansion` as the expansion of the macro call `call`. Returns a
+ * shallow copy that carries the call as an origin: a macro can return the
+ * same template node from every expansion, and that node must not collect
+ * every call's origins.
+ */
+export function markExpansion<T extends SExpr>(call: SExpr, expansion: T): T {
+  const root = copySourceTrace(expansion, { ...expansion });
+  const origins = sourceOriginsOf(expansion);
+  const callOrigins = sourceOriginsOf(call).filter((origin) => !origins.includes(origin));
+  originMap.set(root, [...origins, ...callOrigins]);
+  return root;
 }

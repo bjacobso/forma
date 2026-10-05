@@ -63,6 +63,30 @@ export function compileSExpr(
   builtins: BuiltinRegistry,
   context: CompileContext,
   isTailPos: boolean,
+  isLast: boolean,
+): void {
+  const targets = context.observer?.targetsOf(expr);
+  if (!targets || targets.length === 0) {
+    compileUnobserved(expr, chunk, scope, globals, builtins, context, isTailPos, isLast);
+    return;
+  }
+  // An observed expression leaves tail position so its value returns here.
+  compileUnobserved(expr, chunk, scope, globals, builtins, context, false, isLast);
+  const trace = traceOf(expr);
+  for (const target of targets) {
+    emit(chunk, Op.OBSERVE, trace);
+    emitU16(chunk, target, trace);
+  }
+}
+
+function compileUnobserved(
+  expr: SExpr,
+  chunk: Chunk,
+  scope: CompileScope,
+  globals: GlobalRegistry,
+  builtins: BuiltinRegistry,
+  context: CompileContext,
+  isTailPos: boolean,
   _isLast: boolean,
 ): void {
   const trace = traceOf(expr);

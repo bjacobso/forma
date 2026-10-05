@@ -8,6 +8,7 @@
  * The VM loop itself runs inside an Effect.gen so it can yield* for async builtins.
  */
 
+import type { KernelObserver } from "../evaluator/observation.js";
 import { Effect, Ref } from "effect";
 import type { KValue, KFn, BuiltinFn } from "../evaluator/types.js";
 import {
@@ -49,6 +50,7 @@ interface VMRuntime {
   readonly globalNames?: readonly (string | undefined)[];
   readonly strictGlobals?: boolean;
   readonly stepCounter: Ref.Ref<number>;
+  readonly observer?: KernelObserver;
 }
 
 interface DispatchWrapperData {
@@ -288,6 +290,8 @@ export interface VMOptions {
   globalNames?: readonly (string | undefined)[];
   /** When true, loading an undefined global fails instead of yielding nil */
   strictGlobals?: boolean;
+  /** Receives values for `OBSERVE` instructions */
+  observer?: KernelObserver;
 }
 
 export interface VMRunResult {
@@ -315,6 +319,7 @@ export function runChunkWithStats(
       stepLimit: options.stepLimit,
       ...(options.globalNames ? { globalNames: options.globalNames } : {}),
       ...(options.strictGlobals !== undefined ? { strictGlobals: options.strictGlobals } : {}),
+      ...(options.observer ? { observer: options.observer } : {}),
       stepCounter: yield* Ref.make(0),
     };
     return yield* executeVM(topChunk, [], runtime);
@@ -1007,6 +1012,13 @@ function executeVM(
           }
 
           stack.push(null);
+          break;
+        }
+
+        case Op.OBSERVE: {
+          const target = readU16();
+          runtime.observer?.observe(target, stack[stack.length - 1] ?? null);
+          yield* Ref.update(stepCounter, (count) => count - 1);
           break;
         }
 

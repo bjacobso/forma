@@ -1,4 +1,5 @@
 import type { Effect, Ref } from "effect";
+import type { KernelObserver } from "./observation.js";
 import type { SExpr } from "../reader/index.js";
 import type { KernelError } from "../diagnostic/errors.js";
 import type { Env } from "../Env.js";
@@ -12,6 +13,7 @@ export interface EvaluatorRuntime {
   readonly builtins: Record<string, BuiltinFn>;
   readonly counter: Ref.Ref<number>;
   readonly stepLimit: number;
+  readonly observer?: KernelObserver;
 }
 
 /**

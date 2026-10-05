@@ -13,6 +13,7 @@
  *   emission.
  */
 
+import type { KernelObserver } from "../evaluator/observation.js";
 import type { SExpr } from "../reader/index.js";
 import { Env } from "../Env.js";
 import { expandKernelExprsSync } from "../evaluator/frontend.js";
@@ -64,6 +65,8 @@ export interface CompileOptions {
    * frontend and represent a runtime program.
    */
   readonly normalized?: boolean;
+  /** Observe author-written expressions. See `ObservationCollector`. */
+  readonly observer?: KernelObserver;
 }
 
 export interface CompileResult {
@@ -99,6 +102,7 @@ export function compileProgram(exprs: readonly SExpr[], options: CompileOptions)
   const scope = new CompileScope(null);
   const context: CompileContext = {
     ...(options.env ? { env: options.env } : {}),
+    ...(options.observer ? { observer: options.observer } : {}),
   };
 
   predeclareTopLevelGlobals(normalizedExprs, globals);

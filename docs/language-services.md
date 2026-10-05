@@ -125,7 +125,9 @@ are what an editor shows.
 instrumented rather than replaced. When observation is on, the compiler
 emits an `OBSERVE` instruction after each observed expression and compiles
 those expressions out of tail position so that their values return to the
-frame that observes them. The step limit still applies. Programs that need
+frame that observes them. `OBSERVE` is not counted as a step, but each call
+moved out of tail position costs one extra return step, and deep recursion
+uses frames instead of being looped. The step limit still applies. Programs that need
 the evaluator fallback get the same hook in the evaluator.
 
 **Mapping expansions back to source.** The expander rebuilds lists and
