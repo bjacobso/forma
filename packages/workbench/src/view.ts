@@ -1,4 +1,6 @@
 import type { Html } from "foldkit/html";
+import { ValueTree } from "@foldworks/ui";
+import { preview } from "./values.js";
 import { defineView } from "foldkit/submodel";
 import { Outliner, walk, type RowDecoration } from "@foldworks/outliner";
 
@@ -68,11 +70,28 @@ export const view = defineView<Model, Message>((model, h): Html => {
                   label: "Program",
                   spellcheck: false,
                   decorations: decorations(model),
+                  rowAccessory: (row) => {
+                    if (model.analysis?.rows.find((layout) => layout.id === row.id)?.text !== row.text) return null;
+                    const observed = model.analysis?.values[row.id];
+                    const type = model.analysis?.types[row.id];
+                    if (observed?.value == null && type === undefined) return null;
+                    return h.button([h.Class("wb__value"), h.Type("button"), h.OnClick(Message.Inspect({ id: row.id })), h.AriaLabel(`Inspect ${row.text}`)], [
+                      ...(observed?.value == null ? [] : [h.span([], [preview(observed.value) + (observed.count > 1 ? ` ×${observed.count}` : "")])]),
+                      ...(type === undefined ? [] : [h.small([h.Class("wb__type")], [type])]),
+                    ]);
+                  },
                 },
                 toParentMessage: outlineMessage,
               }),
             ],
           ),
+          ...(model.inspector === null ? [] : [h.aside([h.Class("wb__inspector"), h.AriaLabel("Inspector")], [
+            h.h2([], ["Inspector"]),
+            h.code([], [model.analysis?.rows.find((row) => row.id === model.inspector)?.text ?? "Form"]),
+            h.p([], [model.analysis?.types[model.inspector] ?? "Type unavailable"]),
+            h.p([], [model.analysis?.values[model.inspector]?.failure ?? `${model.analysis?.values[model.inspector]?.count ?? 0} evaluations`]),
+            ValueTree.view({ model: model.valueTree, nodes: model.valueNodes, label: "Value", toParentMessage: (message) => Message.GotValueMessage({ message }) }, h),
+          ])]),
         ],
       ),
     ],

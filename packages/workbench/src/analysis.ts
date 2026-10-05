@@ -17,6 +17,7 @@ import { builtinScheme } from "@formalang/ts/type";
 
 import { Document, SyntaxIdentitySchema } from "./document.js";
 import { FormaHost, call, required, type FormaHostService } from "./host.js";
+import { Observed, observeProgram, observationsOf, evaluationDiagnostics } from "./values.js";
 import { rowLayouts, type RowLayout } from "./rows.js";
 import type { SymbolKind } from "./tokens.js";
 
@@ -95,6 +96,8 @@ export const Analysis = S.Struct({
   symbols: S.Record(S.String, SymbolFact),
   /** Inferred types by node id. */
   types: S.Record(S.String, S.String),
+  values: S.Record(S.String, Observed),
+  valueSession: S.NullOr(S.String),
   diagnostics: S.Array(SourceDiagnostic),
   definitions: S.Array(Definition),
   /** Node ids of the references to each definition, by definition key. */
@@ -416,6 +419,10 @@ export const analyzeProgram = (input: AnalyzeInput): Effect.Effect<Analysis, str
       ...elaborated.diagnostics.flatMap((diagnostic) => fromHost(diagnostic) ?? []),
     ];
 
+    const observed = typed.errors.length > 0 || parseErrors.length > 0
+      ? undefined : yield* observeProgram({ ...document, identity: text.identity as Document["identity"] }, code);
+    const runtimeErrors = observed === undefined ? [] : evaluationDiagnostics(observed.state).flatMap((diagnostic) => fromHost(diagnostic) ?? []);
+
     return {
       revision: input.revision,
       document,
@@ -429,7 +436,9 @@ export const analyzeProgram = (input: AnalyzeInput): Effect.Effect<Analysis, str
       ),
       symbols: facts.symbols,
       types: typesByNode(typed.typedSpans, syntax),
-      diagnostics,
+      values: observed === undefined ? {} : observationsOf(observed.state),
+      valueSession: observed?.sessionId ?? null,
+      diagnostics: [...diagnostics, ...runtimeErrors],
       definitions: facts.definitions,
       references: facts.references,
     };

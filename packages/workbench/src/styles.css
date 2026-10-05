@@ -147,3 +147,8 @@
   border-radius: 3px;
   background: color-mix(in oklab, var(--wb-warning) 7%, transparent);
 }
+
+.wb__value { display: flex; align-items: baseline; gap: 12px; margin-left: auto; border: 0; background: none; color: var(--wb-code-number); font-family: var(--wb-mono); cursor: pointer; max-width: 44%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.wb__type { color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; }
+.wb__inspector { border-top: 1px solid var(--border); padding: 16px; font-size: 13px; }
+.wb__inspector h2 { margin: 0 0 12px; font-size: 14px; }

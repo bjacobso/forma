@@ -1,4 +1,5 @@
 import type { Update } from "foldkit";
+import { ValueTree } from "@foldworks/ui";
 import { Outliner } from "@foldworks/outliner";
 
 import { ReadProgram } from "./commands.js";
@@ -22,6 +23,9 @@ export const init = (config: InitConfig): Update.Return<Model, Message, FormaHos
     outline: Outliner.init({ id: domIds(config.id).outline }),
     document: null,
     analysis: null,
+    inspector: null,
+    valueTree: ValueTree.init({ id: `${config.id}-value` }),
+    valueNodes: [],
     failure: null,
   },
   commands: [ReadProgram({ source: config.source })],

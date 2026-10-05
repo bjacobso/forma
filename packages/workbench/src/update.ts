@@ -1,9 +1,11 @@
 import { Option } from "effect";
-import { Update } from "foldkit";
+import { Command, Update } from "foldkit";
 import { evo } from "foldkit/struct";
 import { Outliner, type Policy } from "@foldworks/outliner";
 
-import { AnalyzeProgram, ScheduleAnalysis } from "./commands.js";
+import { ValueTree } from "@foldworks/ui";
+import { valueRoot } from "./values.js";
+import { AnalyzeProgram, ScheduleAnalysis, LoadValue, ReleaseAnalysis } from "./commands.js";
 import { fromRows, toRows } from "./document.js";
 import type { Analysis } from "./analysis.js";
 import type { FormaHost } from "./host.js";
@@ -49,22 +51,39 @@ const followOutline = (before: Model, result: UpdateReturn): UpdateReturn =>
       };
 
 /** Keeps the newest analysis, and its document as the base for the next printing. */
-const received = (model: Model, analysis: Analysis): UpdateReturn =>
-  model.analysis !== null && analysis.revision <= model.analysis.revision
-    ? { model }
-    : {
-        model: evo(model, {
-          analysis: () => analysis,
-          document: (document) =>
-            document === null || analysis.document.revision >= document.revision
-              ? analysis.document
-              : document,
-          failure: () => null,
-        }),
-      };
+const received = (model: Model, analysis: Analysis): UpdateReturn => {
+  if (analysis.revision !== model.outline.revision) return {
+    model, commands: analysis.valueSession === null ? [] : [ReleaseAnalysis({ sessionId: analysis.valueSession })],
+  };
+  const value = model.inspector === null ? null : analysis.values[model.inspector]?.value;
+  return {
+    model: { ...model, analysis, document: analysis.document, failure: null,
+      valueNodes: value == null ? [] : [valueRoot(value)],
+      valueTree: ValueTree.init({ id: model.valueTree.id }),
+    },
+    commands: model.analysis?.valueSession == null ? [] : [ReleaseAnalysis({ sessionId: model.analysis.valueSession })],
+  };
+};
 
 export const update = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
+    Inspect: ({ id }) => {
+      const value = model.analysis?.values[id]?.value;
+      return { model: { ...model, inspector: id, valueTree: ValueTree.init({ id: model.valueTree.id }),
+        valueNodes: value == null ? [] : [valueRoot(value)] } };
+    },
+    GotValueMessage: ({ message }) => {
+      const child = ValueTree.update(model.valueTree, message, { nodes: model.valueNodes });
+      return { model: { ...model, valueTree: child.model },
+        commands: [ ...(child.commands ?? []).map((command) => Command.mapMessage(command, (event) => Message.GotValueMessage({ message: event }))),
+          ...(child.outMessage === undefined || model.analysis?.valueSession == null ? [] : [LoadValue({ sessionId: model.analysis.valueSession, id: child.outMessage.id })]),
+        ],
+      };
+    },
+    LoadedValue: ({ sessionId, id, nodes }) => ({ model: sessionId !== model.analysis?.valueSession ? model : {
+      ...model, valueNodes: model.valueNodes.map((node) => node.id === id ? { ...node, children: nodes, expandable: false } : node),
+    } }),
+    ReleasedAnalysis: () => ({ model }),
     GotOutlinerMessage: ({ message: event }) =>
       followOutline(model, foldOutliner(model, event)),
     LoadedProgram: ({ document, rows }) => {

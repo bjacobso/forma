@@ -4,6 +4,7 @@
 import { Duration, Effect, Schema as S } from "effect";
 import { Command } from "foldkit";
 
+import { valueChildren } from "./values.js";
 import { analyzeProgram } from "./analysis.js";
 import { Document, OutlineRow } from "./document.js";
 import { FormaHost, call, required } from "./host.js";
@@ -47,4 +48,24 @@ export const AnalyzeProgram = Command.define("AnalyzeFormaProgram", {
         Effect.succeed(Message.FailedAnalysis({ revision: input.revision, reason })),
       ),
     ),
+});
+
+/** Releasing an analysis releases all its retained values, including nested handles. */
+export const ReleaseAnalysis = Command.define("ReleaseFormaAnalysis", {
+  args: { sessionId: S.String }, messages: [Message.ReleasedAnalysis],
+  execute: ({ sessionId }) => Effect.gen(function* () {
+    const { host } = yield* FormaHost;
+    yield* call(() => host.closeSession({ sessionId })).pipe(Effect.ignore);
+    return Message.ReleasedAnalysis();
+  }),
+});
+
+export const LoadValue = Command.define("LoadFormaValue", {
+  args: { sessionId: S.String, id: S.String }, messages: [Message.LoadedValue, Message.FailedProgram],
+  execute: ({ sessionId, id }) => Effect.gen(function* () {
+    const { host } = yield* FormaHost;
+    const result = yield* call(() => host.projectValue({ sessionId, valueRef: id, projections: ["summary"] }));
+    if (result.diagnostics.length > 0) return Message.FailedProgram({ reason: result.diagnostics.map((d) => d.message).join("; ") });
+    return Message.LoadedValue({ sessionId, id, nodes: valueChildren(result.value, id) });
+  }).pipe(Effect.catch((reason) => Effect.succeed(Message.FailedProgram({ reason })))),
 });
