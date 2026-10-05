@@ -6,6 +6,7 @@ import * as Evaluator from "@formalang/ts/evaluator";
 import type { BuiltinFn, KFn, KValue } from "@formalang/ts/evaluator";
 import * as Lsp from "@formalang/ts/lsp";
 import * as Reader from "@formalang/ts/reader";
+import * as Editor from "@formalang/ts/editor";
 import * as Engine from "@formalang/ts/engine";
 import * as LanguageSession from "@formalang/ts/session";
 import * as Syntax from "@formalang/ts/syntax";
@@ -26,6 +27,8 @@ import type {
   EditorAnalysisResult,
   ExpandRequest,
   ExpandResult,
+  FindReferencesRequest,
+  FindReferencesResult,
   EvaluateInSessionRequest,
   EvaluateRequest,
   EvaluationResult,
@@ -54,6 +57,10 @@ import type {
   ResumeHostCallRequest,
   SessionInfoRequest,
   SessionInfoResult,
+  SymbolDefinition,
+  SymbolIndexRequest,
+  SymbolIndexResult,
+  SymbolReference,
   SyntaxIdentityRequest,
   SyntaxIdentityResult,
   TypePolicy,
@@ -231,6 +238,8 @@ export class TsLanguageHost implements LanguageHost {
         "closeSession",
         "identifySyntax",
         "observe",
+        "symbolIndex",
+        "findReferences",
       ],
     };
   }
@@ -690,6 +699,55 @@ export class TsLanguageHost implements LanguageHost {
     };
   }
 
+  async symbolIndex(request: SymbolIndexRequest): Promise<SymbolIndexResult> {
+    const sourceId = request.sourceId ?? "source";
+    const index = this.#indexSymbols(request);
+    return {
+      sourceId,
+      definitions: index.definitions.map(definitionProjection),
+      references: index.references.map(referenceProjection),
+      diagnostics: [],
+    };
+  }
+
+  async findReferences(request: FindReferencesRequest): Promise<FindReferencesResult> {
+    const sourceId = request.sourceId ?? "source";
+    const occurrences = Editor.findReferences(this.#indexSymbols(request), {
+      sourceId,
+      ...(request.offset !== undefined ? { offset: request.offset } : {}),
+      ...(request.nodeId !== undefined ? { nodeId: request.nodeId } : {}),
+    });
+    return {
+      sourceId,
+      ...(occurrences.definition ? { definition: definitionProjection(occurrences.definition) } : {}),
+      references: occurrences.references.map(referenceProjection),
+      diagnostics: [],
+    };
+  }
+
+  #indexSymbols(request: SymbolIndexRequest): Editor.SymbolIndex {
+    const sourceId = request.sourceId ?? "source";
+    const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
+    const documents: Editor.SymbolDocument[] = [
+      ...(session?.language.orderedSources() ?? [])
+        .filter((source) => source.id !== sourceId)
+        .map((source) => ({ sourceId: source.id, source: source.text })),
+      ...(request.documents ?? [])
+        .filter((document) => document.sourceId !== sourceId)
+        .map((document) => ({
+          sourceId: document.sourceId,
+          source: document.source,
+          ...(document.identity ? { identity: document.identity } : {}),
+        })),
+      {
+        sourceId,
+        source: request.source,
+        ...(request.identity ? { identity: request.identity } : {}),
+      },
+    ];
+    return Editor.indexSymbols(documents);
+  }
+
   #requireSession(sessionId: string): TsSession {
     const session = this.#sessions.get(sessionId);
     if (!session) {
@@ -1026,6 +1084,20 @@ export class TsLanguageHost implements LanguageHost {
     evaluation.session.evaluations.delete(evaluation.evaluationId);
     return state.state;
   }
+}
+
+function hostSpan(sourceId: string, span: { readonly start: number; readonly end: number }) {
+  return { sourceId, startOffset: span.start, endOffset: span.end };
+}
+
+function definitionProjection(definition: Editor.SymbolDefinition): SymbolDefinition {
+  const { sourceId, span, ...rest } = definition;
+  return { ...rest, span: hostSpan(sourceId, span) };
+}
+
+function referenceProjection(reference: Editor.SymbolReference): SymbolReference {
+  const { sourceId, span, ...rest } = reference;
+  return { ...rest, span: hostSpan(sourceId, span) };
 }
 
 function failedEvaluation(code: string, message: string): EvaluationState {

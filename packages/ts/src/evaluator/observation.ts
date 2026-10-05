@@ -10,7 +10,7 @@
 import type { Loc, SExpr } from "../reader/index.js";
 import { children } from "../reader/types.js";
 import type { SyntaxIdentity, SyntaxSpan } from "../syntax/identity.js";
-import { identifySyntax, indexSyntax } from "../syntax/identity.js";
+import { identifySyntax, indexSyntax, matchesSyntaxKind } from "../syntax/identity.js";
 import { sourceOriginsOf } from "./source-trace.js";
 import type { KValue } from "./types.js";
 
@@ -77,7 +77,7 @@ export class ObservationCollector implements KernelObserver {
         return;
       }
       const node = index.withSpan(expr.loc.start, expr.loc.end);
-      if (node && sameShape(expr, node.kind) && !this.#byExpr.has(expr)) {
+      if (node && matchesSyntaxKind(expr, node.kind) && !this.#byExpr.has(expr)) {
         this.#byExpr.set(expr, this.#targets.length);
         this.#targets.push({
           nodeId: node.id,
@@ -150,30 +150,5 @@ export class ObservationCollector implements KernelObserver {
         }),
       );
     return { records, truncated: this.#truncated, maxRecords: this.#maxRecords };
-  }
-}
-
-/** Whether a parsed node is the syntax node with this kind at the same span. */
-function sameShape(expr: SExpr, kind: string): boolean {
-  switch (expr._tag) {
-    case "List":
-      // Reader macros read as `(quote x)`-style lists spanning the whole node.
-      return kind === "List" || kind === "ReaderMacro";
-    case "Vector":
-      return kind === "Vector";
-    case "Map":
-      return kind === "Map";
-    case "Set":
-      return kind === "Set";
-    case "Sym":
-      return kind === "Symbol";
-    case "Str":
-      return kind === "String";
-    case "Num":
-      return kind === "Number";
-    case "Bool":
-      return kind === "Boolean";
-    case "Error":
-      return kind === "Error";
   }
 }

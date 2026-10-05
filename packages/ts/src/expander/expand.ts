@@ -590,7 +590,7 @@ function expandMapDestructure(
     }
 
     if (k._tag === "Sym" && k.name === ":as" && v._tag === "Sym") {
-      bindings.push(sym(v.name, v.loc));
+      bindings.push(copySourceTrace(v, sym(v.name, v.loc)));
       bindings.push(placeholder);
       continue;
     }
@@ -642,7 +642,7 @@ function bindDestructurePattern(
 ): void {
   switch (pattern._tag) {
     case "Sym":
-      bindings.push(sym(pattern.name, pattern.loc));
+      bindings.push(copySourceTrace(pattern, sym(pattern.name, pattern.loc)));
       bindings.push(valueExpr);
       return;
     case "Map": {

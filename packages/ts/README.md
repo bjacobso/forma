@@ -133,6 +133,18 @@ Values computed inside macro expansions are reported at the macro call and at
 the arguments the author wrote, never at a macro's template. A failed
 evaluation still returns the records computed before the failure.
 
+`@formalang/ts/editor` indexes definitions and references. It resolves the
+program after macro expansion, so a macro that expands to `define` defines
+the author's symbol, and it reads descriptors so `define-form` declarations
+define names too:
+
+```ts
+import { findReferences, indexSymbols } from "@formalang/ts/editor";
+
+const index = indexSymbols([{ sourceId: "model.lisp", source }], { descriptors });
+findReferences(index, { sourceId: "model.lisp", offset }); // { definition, references }
+```
+
 ```sh
 pnpm --filter @formalang/ts build
 pnpm --filter @formalang/ts test
