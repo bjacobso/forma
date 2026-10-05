@@ -5,7 +5,11 @@
     { "id": "expand", "status": "compared", "fixture": "cases.json" },
     { "id": "typecheck", "status": "compared", "fixture": "cases.json" },
     { "id": "evaluate", "status": "compared", "fixture": "cases.json and ../forma-zero" },
-    { "id": "effect-ir", "status": "compared", "fixture": "../operational-effects" },
+    {
+      "id": "effect-ir",
+      "status": "compared",
+      "fixture": "../operational-effects and ../effect-typescript/cases (positive cases)"
+    },
     {
       "id": "loadSource",
       "status": "intentional-difference",
@@ -55,9 +59,16 @@
       "reason": "formSlots is implemented by the TypeScript host only; it reads descriptors with the TypeScript descriptor parser."
     },
     {
-      "id": "effect-typescript-match",
+      "id": "parse-nil",
       "status": "gap",
-      "reason": "The Effect TypeScript generator rejects Match bodies explicitly."
+      "fixture": "cases.json (operational-effects, effect-typescript/operational-effects, multi-service-checkout, resource-scope)",
+      "reason": "The TypeScript reader reads nil as a symbol named nil; the OCaml reader produces a distinct nil node. The effect-ir projections agree (both emit Var nil)."
+    },
+    {
+      "id": "effect-typescript-typecheck",
+      "status": "gap",
+      "fixture": "cases.json (effect-typescript/*)",
+      "reason": "Neither HM typechecker accepts the Effect program forms (define-layer, define-class, combinators, typed defines); both reject them with different diagnostics. Effect programs are checked by the mechanics checker, so only effect-typescript/operational-effects compares typecheck."
     }
   ]
 }

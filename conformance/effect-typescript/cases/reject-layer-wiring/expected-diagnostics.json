@@ -1,0 +1,25 @@
+{
+  "typescript": "rejects",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/undeclared-requirement",
+      "message": "Layer AppLive requires Clock, but its signature does not declare it.",
+      "line": 10,
+      "column": 18,
+      "endLine": 10,
+      "endColumn": 29
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/undeclared-requirement",
+      "message": "Operation greet-everyone requires Clock, but its signature declares no requirements.",
+      "line": 18,
+      "column": 33,
+      "endLine": 18,
+      "endColumn": 44
+    }
+  ]
+}

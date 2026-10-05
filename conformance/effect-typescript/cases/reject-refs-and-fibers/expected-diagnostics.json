@@ -1,0 +1,45 @@
+{
+  "typescript": "rejects",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected Int, but this is \"one\".",
+      "line": 5,
+      "column": 28,
+      "endLine": 5,
+      "endColumn": 33
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected Int, but this is String.",
+      "line": 6,
+      "column": 39,
+      "endLine": 6,
+      "endColumn": 50
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "join expects a Fiber from fork, but this is Int.",
+      "line": 12,
+      "column": 22,
+      "endLine": 12,
+      "endColumn": 23
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "for-each expects an Array, but this is String.",
+      "line": 17,
+      "column": 13,
+      "endLine": 17,
+      "endColumn": 17
+    }
+  ]
+}

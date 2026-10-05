@@ -1,0 +1,25 @@
+{
+  "typescript": "accepts",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/constant-cycle",
+      "message": "Constant base needs itself while the module loads (base -> base).",
+      "line": 4,
+      "column": 1,
+      "endLine": 4,
+      "endColumn": 23
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/unreachable-pattern",
+      "message": "This _ is unreachable: every case is already matched.",
+      "line": 10,
+      "column": 63,
+      "endLine": 10,
+      "endColumn": 64
+    }
+  ]
+}

@@ -192,13 +192,13 @@ describe("pipeline registry", () => {
 
     expect(pipeline.source).toContain("(define-service CartRepo");
     expect(pipeline.source).toContain("(define-operation checkout [request]");
-    expect(pipeline.preview?.output).toContain('import { Context, Effect } from "effect";');
-    expect(pipeline.preview?.output).toContain('export type CartId = Brand<"CartId", string>;');
-    expect(pipeline.preview?.output).toContain('export type CustomerId = Brand<"CustomerId", string>;');
-    expect(pipeline.preview?.output).toContain("export interface CheckoutRequest");
-    expect(pipeline.preview?.output).toContain('readonly "cart-id": CartId;');
-    expect(pipeline.preview?.output).toContain("readonly coupon?: string;");
-    expect(pipeline.preview?.output).toContain("export interface CheckoutRejected");
+    expect(pipeline.preview?.output).toContain('import { Context, Effect, Schema } from "effect";');
+    expect(pipeline.preview?.output).toContain('export const CartId = Schema.String.pipe(Schema.brand("CartId"));');
+    expect(pipeline.preview?.output).toContain("export type CustomerId = typeof CustomerId.Type;");
+    expect(pipeline.preview?.output).toContain("export const CheckoutRequest = Schema.Struct({");
+    expect(pipeline.preview?.output).toContain('"cart-id": CartId,');
+    expect(pipeline.preview?.output).toContain("coupon: Schema.optionalKey(Schema.String),");
+    expect(pipeline.preview?.output).toContain("export class CheckoutRejected extends Schema.TaggedError<CheckoutRejected>()");
     expect(pipeline.preview?.output).toContain("export class CartRepo extends Context.Service<");
     expect(pipeline.preview?.output).toContain("const cart = yield* cartRepo.load(request);");
     expect(pipeline.preview?.output).toContain("Effect.gen(function* ()");

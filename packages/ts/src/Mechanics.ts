@@ -12,6 +12,24 @@ export {
 } from "./mechanics/artifact.js";
 
 export {
+  checkMechanicsDeclarations,
+  type CheckInfo as MechanicsCheckInfo,
+  type MechanicsCheckDiagnostic,
+  type MechanicsCheckResult,
+  type MechanicsSourceSpan,
+} from "./mechanics/check.js";
+
+export {
+  elaborateEffectProgram,
+  generateEffectProgram,
+  type EffectProgramDiagnostic,
+  type EffectProgramElaboration,
+  type EffectProgramOptions,
+  type EffectProgramSpan,
+  type EffectProgramTypeScript,
+} from "./mechanics/elaborate.js";
+
+export {
   generateMechanicsEffectSchemaModule,
   type MechanicsEffectSchemaModule,
 } from "./mechanics/effect-schema.js";
@@ -19,6 +37,7 @@ export {
 export {
   generateMechanicsEffectTypeScriptModule,
   type MechanicsEffectTypeScriptModule,
+  type MechanicsEffectTypeScriptOptions,
 } from "./mechanics/effect-typescript.js";
 
 export {

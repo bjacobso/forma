@@ -1,0 +1,25 @@
+{
+  "typescript": "rejects",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected Int, but this is \"three\".",
+      "line": 14,
+      "column": 47,
+      "endLine": 14,
+      "endColumn": 54
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected String, but this is Int.",
+      "line": 15,
+      "column": 20,
+      "endLine": 15,
+      "endColumn": 28
+    }
+  ]
+}

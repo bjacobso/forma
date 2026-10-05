@@ -1,0 +1,25 @@
+{
+  "typescript": "rejects",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/undeclared-error",
+      "message": "Cache.read can fail with Corrupt here, but the service declares only [Unavailable] for it.",
+      "line": 15,
+      "column": 15,
+      "endLine": 15,
+      "endColumn": 35
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/missing-method",
+      "message": "Layer CacheBroken does not implement Cache.write.",
+      "line": 10,
+      "column": 1,
+      "endLine": 16,
+      "endColumn": 27
+    }
+  ]
+}

@@ -129,6 +129,53 @@ const payloadContracts: ReadonlyMap<string, PayloadContract> = new Map([
     },
   ],
   [
+    "mechanics/class-def/v0",
+    {
+      requiredFields: ["kind", "name", "schema"],
+      fieldConstraints: [
+        { field: "kind", kind: "string", literal: "ClassDef" },
+        { field: "name", kind: "string" },
+        { field: "schema", kind: "object" },
+      ],
+    },
+  ],
+  [
+    "mechanics/function-def/v0",
+    {
+      requiredFields: ["kind", "name", "params", "returns", "body"],
+      fieldConstraints: [
+        { field: "kind", kind: "string", literal: "FunctionDef" },
+        { field: "name", kind: "string" },
+        { field: "params", kind: "array" },
+        { field: "returns", kind: "object" },
+        { field: "body", kind: "object" },
+      ],
+    },
+  ],
+  [
+    "mechanics/value-def/v0",
+    {
+      requiredFields: ["kind", "name", "type", "value"],
+      fieldConstraints: [
+        { field: "kind", kind: "string", literal: "ValueDef" },
+        { field: "name", kind: "string" },
+        { field: "type", kind: "object" },
+        { field: "value", kind: "object" },
+      ],
+    },
+  ],
+  [
+    "mechanics/layer-def/v0",
+    {
+      requiredFields: ["kind", "name", "implementation"],
+      fieldConstraints: [
+        { field: "kind", kind: "string", literal: "LayerDef" },
+        { field: "name", kind: "string" },
+        { field: "implementation", kind: "object" },
+      ],
+    },
+  ],
+  [
     "mechanics/effect-def/v0",
     {
       requiredFields: ["kind", "name", "params", "effect", "body"],
@@ -343,6 +390,7 @@ function validateMechanicsContractPayload(
       );
       break;
     case "mechanics/error-def/v0":
+    case "mechanics/class-def/v0":
       validateSchemaNode(
         payload["schema"],
         "$.payload.schema",
@@ -351,6 +399,18 @@ function validateMechanicsContractPayload(
         index,
         diagnostics,
       );
+      break;
+    case "mechanics/function-def/v0":
+      validateParamArray(payload["params"], "$.payload.params", contractName, declaration, index, diagnostics);
+      validateTypeNode(payload["returns"], "$.payload.returns", contractName, declaration, index, diagnostics);
+      validateValueNode(payload["body"], "$.payload.body", contractName, declaration, index, diagnostics);
+      break;
+    case "mechanics/value-def/v0":
+      validateTypeNode(payload["type"], "$.payload.type", contractName, declaration, index, diagnostics);
+      validateValueNode(payload["value"], "$.payload.value", contractName, declaration, index, diagnostics);
+      break;
+    case "mechanics/layer-def/v0":
+      validateLayerPayload(payload, contractName, declaration, index, diagnostics);
       break;
     case "mechanics/service-def/v0":
       validateMethodArray(
@@ -503,6 +563,31 @@ function validateSchemaNode(
         diagnostics,
       );
       break;
+    case "Option":
+    case "RefCell":
+      validateTypeNode(node["item"], `${path}.item`, contractName, declaration, index, diagnostics);
+      break;
+    case "Result":
+      validateTypeNode(node["success"], `${path}.success`, contractName, declaration, index, diagnostics);
+      validateTypeNode(node["failure"], `${path}.failure`, contractName, declaration, index, diagnostics);
+      break;
+    case "Fiber":
+      validateTypeNode(node["success"], `${path}.success`, contractName, declaration, index, diagnostics);
+      validateStringArray(node["errors"], `${path}.errors`, contractName, declaration, index, diagnostics);
+      break;
+    case "Stream":
+      validateTypeNode(node["item"], `${path}.item`, contractName, declaration, index, diagnostics);
+      validateStringArray(node["errors"], `${path}.errors`, contractName, declaration, index, diagnostics);
+      validateStringArray(node["requirements"], `${path}.requirements`, contractName, declaration, index, diagnostics);
+      break;
+    case "Function": {
+      const params = expectArray(node["params"], `${path}.params`, contractName, declaration, index, diagnostics);
+      params?.forEach((param, paramIndex) =>
+        validateTypeNode(param, `${path}.params[${paramIndex}]`, contractName, declaration, index, diagnostics),
+      );
+      validateTypeNode(node["result"], `${path}.result`, contractName, declaration, index, diagnostics);
+      break;
+    }
     case "Annotated":
       validateSchemaNode(
         node["schema"],
@@ -839,11 +924,167 @@ function validateBodyNode(
         diagnostics,
       );
       break;
+    case "CatchTags": {
+      validateBodyNode(node["body"], `${path}.body`, contractName, declaration, index, diagnostics);
+      const handlers = expectArray(node["handlers"], `${path}.handlers`, contractName, declaration, index, diagnostics);
+      handlers?.forEach((handler, handlerIndex) => {
+        const handlerPath = `${path}.handlers[${handlerIndex}]`;
+        const record = expectRecord(handler, handlerPath, contractName, declaration, index, diagnostics);
+        if (!record) return;
+        expectString(record["errorType"], `${handlerPath}.errorType`, contractName, declaration, index, diagnostics);
+        expectString(record["binding"], `${handlerPath}.binding`, contractName, declaration, index, diagnostics);
+        validateBodyNode(record["handler"], `${handlerPath}.handler`, contractName, declaration, index, diagnostics);
+      });
+      break;
+    }
+    case "CatchAll":
+      validateBodyNode(node["body"], `${path}.body`, contractName, declaration, index, diagnostics);
+      expectString(node["binding"], `${path}.binding`, contractName, declaration, index, diagnostics);
+      validateBodyNode(node["handler"], `${path}.handler`, contractName, declaration, index, diagnostics);
+      break;
+    case "Combinator": {
+      expectString(node["name"], `${path}.name`, contractName, declaration, index, diagnostics);
+      const args = expectArray(node["args"], `${path}.args`, contractName, declaration, index, diagnostics);
+      args?.forEach((arg, argIndex) =>
+        validateCombinatorArg(arg, `${path}.args[${argIndex}]`, contractName, declaration, index, diagnostics),
+      );
+      if (node["options"] !== undefined) {
+        const options = expectArray(node["options"], `${path}.options`, contractName, declaration, index, diagnostics);
+        options?.forEach((option, optionIndex) => {
+          const optionPath = `${path}.options[${optionIndex}]`;
+          const record = expectRecord(option, optionPath, contractName, declaration, index, diagnostics);
+          if (!record) return;
+          expectString(record["key"], `${optionPath}.key`, contractName, declaration, index, diagnostics);
+          validateValueNode(record["value"], `${optionPath}.value`, contractName, declaration, index, diagnostics);
+        });
+      }
+      break;
+    }
     default:
       diagnostics.push(
         contractDiagnostic(contractName, path, "known body kind", kind, index, declaration),
       );
       break;
+  }
+}
+
+const valueNodeKinds = new Set(["Var", "Literal", "List", "Vector", "Record", "Error", "Expr"]);
+
+/** A combinator argument is an effect body, a value, or an effect lambda/collection/type. */
+function validateCombinatorArg(
+  value: JsonValue | undefined,
+  path: string,
+  contractName: string,
+  declaration: PackageableDeclaration,
+  index: number,
+  diagnostics: Diagnostic[],
+): void {
+  const node = expectRecord(value, path, contractName, declaration, index, diagnostics);
+  if (!node) return;
+  const kind = node["kind"];
+  if (typeof kind === "string" && valueNodeKinds.has(kind)) {
+    validateValueNode(value, path, contractName, declaration, index, diagnostics);
+    return;
+  }
+  switch (kind) {
+    case "Lambda":
+      validateStringArray(node["params"], `${path}.params`, contractName, declaration, index, diagnostics);
+      validateBodyNode(node["body"], `${path}.body`, contractName, declaration, index, diagnostics);
+      return;
+    case "EffectVector":
+      validateBodyArray(node["items"], `${path}.items`, contractName, declaration, index, diagnostics);
+      return;
+    case "EffectRecord": {
+      const entries = expectArray(node["entries"], `${path}.entries`, contractName, declaration, index, diagnostics);
+      entries?.forEach((entry, entryIndex) => {
+        const entryPath = `${path}.entries[${entryIndex}]`;
+        const record = expectRecord(entry, entryPath, contractName, declaration, index, diagnostics);
+        if (!record) return;
+        expectString(record["key"], `${entryPath}.key`, contractName, declaration, index, diagnostics);
+        validateBodyNode(record["value"], `${entryPath}.value`, contractName, declaration, index, diagnostics);
+      });
+      return;
+    }
+    case "TypeArg":
+      validateTypeNode(node["type"], `${path}.type`, contractName, declaration, index, diagnostics);
+      return;
+    default:
+      validateBodyNode(value, path, contractName, declaration, index, diagnostics);
+  }
+}
+
+function validateLayerPayload(
+  payload: Record<string, JsonValue>,
+  contractName: string,
+  declaration: PackageableDeclaration,
+  index: number,
+  diagnostics: Diagnostic[],
+): void {
+  const signature = payload["signature"];
+  if (signature !== undefined) {
+    const record = expectRecord(signature, "$.payload.signature", contractName, declaration, index, diagnostics);
+    if (record) {
+      for (const field of ["provides", "errors", "requirements"]) {
+        validateStringArray(record[field], `$.payload.signature.${field}`, contractName, declaration, index, diagnostics);
+      }
+    }
+  }
+  const implementation = expectRecord(payload["implementation"], "$.payload.implementation", contractName, declaration, index, diagnostics);
+  if (!implementation) return;
+  const path = "$.payload.implementation";
+  if (implementation["kind"] === "Compose") {
+    validateLayerExpression(implementation["layer"], `${path}.layer`, contractName, declaration, index, diagnostics);
+    return;
+  }
+  if (implementation["kind"] !== "Service") {
+    diagnostics.push(contractDiagnostic(contractName, `${path}.kind`, "Service or Compose", String(implementation["kind"]), index, declaration));
+    return;
+  }
+  expectString(implementation["service"], `${path}.service`, contractName, declaration, index, diagnostics);
+  validateBindingArray(implementation["setup"], `${path}.setup`, contractName, declaration, index, diagnostics);
+  const methods = expectArray(implementation["methods"], `${path}.methods`, contractName, declaration, index, diagnostics);
+  methods?.forEach((method, methodIndex) => {
+    const methodPath = `${path}.methods[${methodIndex}]`;
+    const record = expectRecord(method, methodPath, contractName, declaration, index, diagnostics);
+    if (!record) return;
+    expectString(record["name"], `${methodPath}.name`, contractName, declaration, index, diagnostics);
+    validateStringArray(record["params"], `${methodPath}.params`, contractName, declaration, index, diagnostics);
+    validateBodyNode(record["body"], `${methodPath}.body`, contractName, declaration, index, diagnostics);
+  });
+}
+
+function validateLayerExpression(
+  value: JsonValue | undefined,
+  path: string,
+  contractName: string,
+  declaration: PackageableDeclaration,
+  index: number,
+  diagnostics: Diagnostic[],
+): void {
+  const node = expectRecord(value, path, contractName, declaration, index, diagnostics);
+  if (!node) return;
+  switch (node["kind"]) {
+    case "LayerRef":
+      expectString(node["name"], `${path}.name`, contractName, declaration, index, diagnostics);
+      return;
+    case "LayerMerge": {
+      const layers = expectArray(node["layers"], `${path}.layers`, contractName, declaration, index, diagnostics);
+      layers?.forEach((layer, layerIndex) =>
+        validateLayerExpression(layer, `${path}.layers[${layerIndex}]`, contractName, declaration, index, diagnostics),
+      );
+      return;
+    }
+    case "LayerProvide":
+    case "LayerProvideMerge": {
+      validateLayerExpression(node["layer"], `${path}.layer`, contractName, declaration, index, diagnostics);
+      const dependencies = expectArray(node["dependencies"], `${path}.dependencies`, contractName, declaration, index, diagnostics);
+      dependencies?.forEach((layer, layerIndex) =>
+        validateLayerExpression(layer, `${path}.dependencies[${layerIndex}]`, contractName, declaration, index, diagnostics),
+      );
+      return;
+    }
+    default:
+      diagnostics.push(contractDiagnostic(contractName, path, "known layer expression kind", String(node["kind"]), index, declaration));
   }
 }
 

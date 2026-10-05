@@ -250,48 +250,46 @@ service declaration.
     (succeed order)))
 ```
 
-The generator is available through the workspace package's public API:
+The generator is available through the workspace package's public API.
+`generateEffectProgram` reads, projects, checks, and generates in one call, and
+returns located diagnostics instead of code when the program does not check:
 
 ```ts
-import { Effect } from "effect";
-import {
-  generateMechanicsEffectTypeScriptModule,
-  mechanicsPackageableDeclarations,
-} from "@formalang/ts/mechanics";
-import { parseManyToSExpr } from "@formalang/ts/reader";
+import { generateEffectProgram } from "@formalang/ts/mechanics";
 
-const forms = Effect.runSync(parseManyToSExpr(source));
-const projected = mechanicsPackageableDeclarations(forms, "checkout.forma");
+const result = generateEffectProgram(source, { sourceId: "checkout.forma" });
 
-if (!projected.ok) {
-  throw new Error(projected.diagnostics.map(({ message }) => message).join("\n"));
+if (!result.ok) {
+  throw new Error(
+    result.diagnostics
+      .map(({ span, message }) => `${span?.startLine}:${span?.startColumn} ${message}`)
+      .join("\n"),
+  );
 }
 
-const { code, operationNames } =
-  generateMechanicsEffectTypeScriptModule(projected.declarations);
+const { code, operationNames } = result;
 ```
 
 Selected lines from the generated preview (abridged, with declarations between
 the excerpts omitted) are:
 
 ```ts
-import { Context, Effect } from "effect";
+import { Context, Effect, Schema } from "effect";
 
-type Brand<Name extends string, Type> = Type & { readonly "__brand": Name };
-export type CartId = Brand<"CartId", string>;
-export type CustomerId = Brand<"CustomerId", string>;
+export const CartId = Schema.String.pipe(Schema.brand("CartId"));
+export type CartId = typeof CartId.Type;
 
-export interface CheckoutRequest {
-  readonly "cart-id": CartId;
-  readonly "customer-id": CustomerId;
-  readonly coupon?: string;
-  readonly lines: ReadonlyArray<CheckoutLine>;
-}
+export const CheckoutRequest = Schema.Struct({
+  "cart-id": CartId,
+  "customer-id": CustomerId,
+  coupon: Schema.optionalKey(Schema.String),
+  lines: Schema.Array(CheckoutLine),
+});
+export type CheckoutRequest = typeof CheckoutRequest.Type;
 
-export interface CheckoutRejected {
-  readonly _tag: "CheckoutRejected";
-  readonly reason: string;
-}
+export class CheckoutRejected extends Schema.TaggedError<CheckoutRejected>()("CheckoutRejected", {
+  reason: Schema.String,
+}) {}
 
 export class CartRepo extends Context.Service<
   CartRepo,
@@ -300,6 +298,9 @@ export class CartRepo extends Context.Service<
   }
 >()("CartRepo") {}
 
+export const checkout = (
+  request: CheckoutRequest,
+): Effect.Effect<CheckoutResult, CheckoutRejected, CartRepo | Orders | Pricing> =>
   Effect.gen(function* () {
     const cartRepo = yield* CartRepo;
     const orders = yield* Orders;
@@ -310,6 +311,13 @@ export class CartRepo extends Context.Service<
     return order;
   });
 ```
+
+Layers, resources, concurrency, typed error recovery, configuration, and
+streams are covered as well. [Forma for Effect](docs/effect.md) explains the
+benefits and the costs, and the [Effect reference](docs/effect/reference.md) lists
+the whole surface. The [Effect TypeScript conformance suite](conformance/effect-typescript)
+generates, typechecks, and runs a set of complete programs and records how
+Forma rejects incorrect ones.
 
 Run `pnpm dev` and open `/playground/demo/effect-ts` to edit this program and inspect its
 generated target. The sibling `/playground/demo/effect-schema` pipeline uses

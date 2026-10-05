@@ -14,6 +14,12 @@ A suite is a directory containing:
   depends on either engine's collection encoding;
 - `expected.json` — `name → { kind: "string" | "int" | "bool", value }`.
 
+`effect-typescript/` is a TypeScript-target suite. It elaborates Effect
+programs written in Forma, compares the generated Effect 4 modules with
+goldens, typechecks them strictly, runs them, and checks the located
+diagnostics for programs Forma must reject. See its README for how to add a
+case.
+
 `fixtures/` contains the larger reader, typechecker, and canonical-artifact
 corpora used by the native implementation. The Markdown programs in
 `../examples` and the language definitions in `../preludes` complete the

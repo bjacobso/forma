@@ -1,0 +1,15 @@
+{
+  "typescript": "rejects",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/impossible-catch",
+      "message": "Impossible catch: this effect cannot fail with Timeout (it can fail with [NotFound]).",
+      "line": 11,
+      "column": 3,
+      "endLine": 12,
+      "endColumn": 38
+    }
+  ]
+}
