@@ -41,8 +41,10 @@ export class ReportStore extends Context.Service<
 export const addRow = (
   totals: { readonly [key: string]: number },
   row: Row,
-): { readonly [key: string]: number } =>
-  ({ ...totals, [row.region]: Option.getOrElse(Option.fromUndefinedOr(totals[row.region]), () => 0) + row.amount });
+): { readonly [key: string]: number } => ({
+  ...totals,
+  [row.region]: Option.getOrElse(Option.fromUndefinedOr(totals[row.region]), () => 0) + row.amount,
+});
 
 export const connection = (name: string): Effect.Effect<Connection, never, Pool | Scope.Scope> =>
   Effect.gen(function* () {

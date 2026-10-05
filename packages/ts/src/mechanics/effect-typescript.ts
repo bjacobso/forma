@@ -952,18 +952,14 @@ class Generator {
 
   private recordLiteral(node: JsonRecord, names: Names, indent: string): string {
     const entries = arrayItems(node["entries"]).filter(isRecord);
-    if (entries.length === 0) return "{}";
-    const render = (inner: string): string[] =>
-      entries.map((entry) => {
+    return objectLiteral(
+      entries.map((entry) => (inner: string) => {
         const key = recordKey(entry["key"]);
         if (key === undefined) throw new Error("Effect TypeScript: unsupported record key");
-        const value = this.value(entry["value"], names, inner).code;
-        return value === key && isIdentifierName(key) ? key : `${propertyName(key)}: ${value}`;
-      });
-    const inline = `{ ${render(indent).join(", ")} }`;
-    if (!inline.includes("\n") && indent.length + inline.length <= maxWidth - 20) return inline;
-    const deeper = `${indent}  `;
-    return `{\n${render(deeper).map((entry) => `${deeper}${entry},`).join("\n")}\n${indent}}`;
+        return objectEntry(key, this.value(entry["value"], names, inner).code);
+      }),
+      indent,
+    );
   }
 
   private application(node: JsonRecord, names: Names, indent: string): Expr {
@@ -1021,11 +1017,12 @@ class Generator {
         return atom(propertyAccess(target, key));
       }
       case "assoc": {
-        const target = this.value(args[0], names, indent).code;
-        const replacement = this.value(args[2], names, indent).code;
-        if (call.access === "map") return atom(`{ ...${target}, [${this.value(args[1], names, indent).code}]: ${replacement} }`);
-        const key = recordKey(args[1]) ?? "";
-        const updated = `{ ...${target}, ${replacement === key && isIdentifierName(key) ? key : `${propertyName(key)}: ${replacement}`} }`;
+        const spread: Render = (inner) => `...${this.value(args[0], names, inner).code}`;
+        const replacement: Render =
+          call.access === "map"
+            ? (inner) => `[${this.value(args[1], names, inner).code}]: ${this.value(args[2], names, inner).code}`
+            : (inner) => objectEntry(recordKey(args[1]) ?? "", this.value(args[2], names, inner).code);
+        const updated = objectLiteral([spread, replacement], call.access === "class" ? `${indent}  ` : indent);
         if (call.access === "class") {
           const type = this.info.valueTypes.get(node);
           return atom(`new ${type?.kind === "class" ? typeName(type.name) : "Object"}(${updated})`);
@@ -1389,6 +1386,20 @@ function breakUnion(expression: string): string {
   }
   members.push(inner.slice(start).trim());
   return `Schema.Union([\n${members.map((member) => `  ${member},`).join("\n")}\n])`;
+}
+
+/** `{ a, b: c }` on one line when it fits, otherwise one entry per line. */
+function objectLiteral(entries: readonly Render[], indent: string): string {
+  if (entries.length === 0) return "{}";
+  const inline = `{ ${entries.map((entry) => entry(indent)).join(", ")} }`;
+  if (!inline.includes("\n") && indent.length + inline.length <= maxWidth - 20) return inline;
+  const deeper = `${indent}  `;
+  return `{\n${entries.map((entry) => `${deeper}${entry(deeper)},`).join("\n")}\n${indent}}`;
+}
+
+/** `key: value`, or the shorthand `key` when the value is the same identifier. */
+function objectEntry(key: string, value: string): string {
+  return value === key && isIdentifierName(key) ? key : `${propertyName(key)}: ${value}`;
 }
 
 /** `a ? x : b ? y : z`, broken one branch per line when it is too long. */
