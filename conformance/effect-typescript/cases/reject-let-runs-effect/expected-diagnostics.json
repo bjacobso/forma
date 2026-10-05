@@ -1,0 +1,12 @@
+[
+  {
+    "phase": "check",
+    "severity": "error",
+    "code": "mechanics/let-effect",
+    "message": "let binds values; use do! to run Clock.now and bind its result.",
+    "line": 8,
+    "column": 13,
+    "endLine": 8,
+    "endColumn": 24
+  }
+]

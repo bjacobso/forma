@@ -1,9 +1,8 @@
-import { Context, Effect } from "effect";
+import { Context, Effect, Schema } from "effect";
 
-export interface ConsoleUnavailable {
-  readonly _tag: "ConsoleUnavailable";
-  readonly message: string;
-}
+export class ConsoleUnavailable extends Schema.TaggedError<ConsoleUnavailable>()("ConsoleUnavailable", {
+  message: Schema.String,
+}) {}
 
 export class Console extends Context.Service<
   Console,
@@ -14,7 +13,7 @@ export class Console extends Context.Service<
 
 export const log = (message: string): Effect.Effect<void, ConsoleUnavailable, Console> =>
   Effect.gen(function* () {
-    const console = yield* Console;
-    yield* console.print(message);
-    return null;
+    const consoleService = yield* Console;
+    yield* consoleService.print(message);
+    return;
   });

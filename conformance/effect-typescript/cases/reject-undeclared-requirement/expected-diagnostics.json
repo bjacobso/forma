@@ -1,0 +1,12 @@
+[
+  {
+    "phase": "check",
+    "severity": "error",
+    "code": "mechanics/undeclared-requirement",
+    "message": "Operation welcome requires Mailer.send, but its signature declares only [Users.find].",
+    "line": 13,
+    "column": 5,
+    "endLine": 13,
+    "endColumn": 35
+  }
+]

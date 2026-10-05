@@ -48,16 +48,16 @@ describe("Effect TypeScript projection", () => {
     const exports: Record<string, unknown> = {};
     const require = createRequire(import.meta.url);
     new Function("require", "exports", js)(require, exports);
-    const alwaysFail = exports["always_fail"] as (message: string) => Effect.Effect<never, { _tag: "ConsoleUnavailable"; message: string }>;
+    const alwaysFail = exports["alwaysFail"] as (message: string) => Effect.Effect<never, { _tag: "ConsoleUnavailable"; message: string }>;
     const recover = exports["recover"] as (message: string) => Effect.Effect<unknown>;
     const log = exports["log"] as (message: string) => Effect.Effect<unknown, unknown, unknown>;
     const Console = exports["Console"] as never;
     expect(await Effect.runPromise(Effect.catchTag(alwaysFail("offline"), "ConsoleUnavailable", (error) => Effect.succeed(error.message)))).toBe("offline");
-    expect(await Effect.runPromise(recover("offline"))).toBeNull();
+    expect(await Effect.runPromise(recover("offline"))).toBeUndefined();
     const messages: string[] = [];
     expect(await Effect.runPromise(Effect.provideService(log("hello"), Console, {
-      print: (message: string) => Effect.sync(() => { messages.push(message); return null; }),
-    }))).toBeNull();
+      print: (message: string) => Effect.sync(() => { messages.push(message); }),
+    }))).toBeUndefined();
     expect(messages).toEqual(["hello"]);
   });
 
@@ -89,8 +89,8 @@ describe("Effect TypeScript projection", () => {
             kind: "If",
             condition: { kind: "Var", name: "enabled" },
             then: { kind: "Cond", clauses: [
-              { condition: literal(""), body: succeed(literal("empty string is truthy")) },
-              { condition: literal(true), body: succeed(literal("wrong")) },
+              { condition: literal(false), body: succeed(literal("wrong")) },
+              { condition: literal(true), body: succeed(literal("second clause")) },
             ] },
             else: succeed(literal("no")),
           } }],
@@ -108,7 +108,7 @@ describe("Effect TypeScript projection", () => {
     const exports: Record<string, unknown> = {};
     new Function("require", "exports", js)(createRequire(import.meta.url), exports);
     const choose = exports["choose"] as (enabled: boolean) => Effect.Effect<string>;
-    expect(await Effect.runPromise(choose(true))).toBe("empty string is truthy");
+    expect(await Effect.runPromise(choose(true))).toBe("second clause");
     expect(await Effect.runPromise(choose(false))).toBe("no");
   });
 
@@ -119,7 +119,7 @@ describe("Effect TypeScript projection", () => {
     const effect = declarations.declarations.find((declaration) => declaration.summary.name === "recover");
     if (!effect) throw new Error("missing recover operation");
     expect(() => Mechanics.generateMechanicsEffectTypeScriptModule([
-      { ...effect, payload: { ...effect.payload as Record<string, unknown>, body: { kind: "Match" } } },
-    ])).toThrow("unsupported effect body kind Match");
+      { ...effect, payload: { ...effect.payload as Record<string, unknown>, body: { kind: "Teleport" } } },
+    ])).toThrow("unsupported effect body kind Teleport");
   });
 });

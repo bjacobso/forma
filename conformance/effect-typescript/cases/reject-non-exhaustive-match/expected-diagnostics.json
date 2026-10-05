@@ -1,0 +1,12 @@
+[
+  {
+    "phase": "check",
+    "severity": "error",
+    "code": "mechanics/non-exhaustive-match",
+    "message": "match does not handle closed.",
+    "line": 13,
+    "column": 9,
+    "endLine": 15,
+    "endColumn": 43
+  }
+]
