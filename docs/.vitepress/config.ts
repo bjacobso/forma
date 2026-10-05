@@ -39,6 +39,7 @@ export default defineConfig({
         items: [
           { text: "Vision", link: "/vision" },
           { text: "Language", link: "/language" },
+          { text: "Effect programs", link: "/effect" },
         ],
       },
       {

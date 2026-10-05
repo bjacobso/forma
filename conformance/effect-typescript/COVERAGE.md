@@ -1,17 +1,122 @@
 # Effect TypeScript coverage matrix
 
 This matrix records which Effect 4 (`effect@4.0.0-rc.112`) constructs a Forma
-program can express through the mechanics path today. The path is
-`mechanicsPackageableDeclarations` → `generateMechanicsEffectTypeScriptModule`
-(and `generateMechanicsEffectSchemaModule`).
+program can express. The pipeline is `elaborateEffectProgram` /
+`generateEffectProgram`: read, then `mechanicsPackageableDeclarations`, then
+`checkMechanicsDeclarations`, then `generateMechanicsEffectTypeScriptModule`.
 
 Status key:
 
-- **supported**: the form elaborates, generates idiomatic Effect TypeScript
-  that typechecks under the strict package `tsconfig`, and runs.
-- **partial**: some of the construct works, but generation is lossy, does not
-  typecheck, or does not cover common uses.
+- **supported**: the form elaborates and is checked. It generates idiomatic
+  Effect TypeScript that typechecks under the strict suite `tsconfig`, and a
+  conformance case runs it.
+- **partial**: some of the construct works, or it works with a documented
+  restriction.
 - **missing**: Forma has no way to write it.
+
+"Case" names the conformance case under `cases/` that exercises a row.
+
+## Current status
+
+### Data and schemas
+
+| Effect construct | Forma surface | Status | Case |
+| --- | --- | --- | --- |
+| `Schema.Struct` + `typeof X.Type` | `(define-schema N (Struct (field f T) ...))` | supported | crud-users |
+| Optional fields (`Schema.optionalKey`) | `(Optional T)` in a field; `get` returns `(Option T)` | supported | crud-users |
+| `Schema.Array`, `Schema.Record` | `(Array T)`, `(Map T)`; `get`/`assoc`/`dissoc`/`keys`/`vals` on maps | supported | crud-users, pure-domain-logic |
+| `Schema.Literal(s)` | `(Enum a b)`, `(Literal ...)` | supported | crud-users |
+| `Schema.Union`, `Schema.Tuple` | `(Union A B)`, `(Tuple A B)` | supported | schemas-and-decoding |
+| Tagged unions | `(TaggedUnion tag [t (Struct ...)] ...)`, matched by tag | supported | schemas-and-decoding, pure-domain-logic |
+| Brands (`Schema.brand`, `.make`) | `(Brand Name T)`, `(Name value)` | supported | crud-users, schemas-and-decoding |
+| Annotations | `(T :doc "...")`, `:identifier`, `:title`, `:pattern` | supported | schemas-and-decoding |
+| `Schema.Class` | `(define-class N (:fields ...))`, `(N {...})` | supported | pure-domain-logic |
+| `Schema.decodeUnknownEffect` | `(decode Schema value)`, fails with `SchemaError` | supported | schemas-and-decoding |
+| `Option` | `(Option T)`, `some`, `none`, `match`, `get-or-else`, `is-some` | supported | crud-users, pure-domain-logic |
+| `Result` | `(Result A E)`, `(result eff)`, `match` on `success`/`failure` | supported | typed-errors, pure-domain-logic |
+| Recursive schemas (`Schema.suspend`) | none | missing | rejected with a diagnostic (reject-recursive-schema) |
+| `Schema.TaggedClass`, transformations, filters beyond `:pattern` | none | missing | |
+
+### Errors
+
+| Effect construct | Forma surface | Status | Case |
+| --- | --- | --- | --- |
+| `Schema.TaggedError` classes | `(define-error E (:fields ...))` | supported | all |
+| `Effect.fail` | `(fail (E {...}))`, `(fail e)` | supported | crud-users |
+| `Effect.catchTag` / `catchTags` | `(catch eff (E e) handler ...)` | supported | typed-errors |
+| `Effect.catch` | `(catch eff (_ e) handler)` | supported | typed-errors |
+| `mapError`, `orElseSucceed`, `orDie` | `map-error`, `or-else-succeed`, `or-die` | supported | typed-errors |
+| `Effect.option`, `Effect.result` | `option`, `result` | supported | typed-errors |
+| Effect's own errors | `TimeoutError`, `ConfigError`, `SchemaError` | supported | concurrent-workflow, config-and-logging, schemas-and-decoding |
+
+### Services, layers and requirements
+
+| Effect construct | Forma surface | Status | Case |
+| --- | --- | --- | --- |
+| `Context.Service` classes | `define-service` | supported | all |
+| Requirements | `[Service.method]` capabilities or `[Service]`, plus `Scope` | supported | all |
+| `Layer.succeed` / `Layer.effect` | `(define-layer L (:provides S) (:setup [...]) (:methods ...))` | supported | crud-users, multi-service-checkout |
+| Layer dependencies | services used by methods are captured; operations get `Effect.provideContext` | supported | multi-service-checkout |
+| `Layer.mergeAll`, `Layer.provide`, `Layer.provideMerge` | `layer-merge`, `layer-provide`, `layer-provide-merge` | supported | multi-service-checkout |
+| Layer types | `(: L (Layer [Provides] [Errors] [Requirements]))` | supported | multi-service-checkout |
+| `Effect.provide` | `(provide eff Layer)` | supported | multi-service-checkout |
+| Scoped layers | `acquire-release` in `:setup` | supported | resource-scope |
+
+### Effect programs
+
+| Effect construct | Forma surface | Status | Case |
+| --- | --- | --- | --- |
+| `Effect.gen` | `do!`, `let`, `<-` | supported | all |
+| Branching | `if`, `when`, `unless`, `cond`, `match` (effect and value position) | supported | crud-users, pure-domain-logic |
+| Zero-argument operations | `(-> (Effect ...))` | supported | crud-users |
+| Pure functions and constants | `(: f (-> A B)) (define f (fn ...))`, `(: c T) (define c v)` | supported | pure-domain-logic |
+| Pure value expressions | records, vectors, `get`, `assoc`, `str`, arithmetic, comparisons, collection and string functions | supported | pure-domain-logic |
+| Generic operations/functions | none | missing | |
+| `Effect.fn`, spans, tracing | none | missing | |
+
+### Resources and scope
+
+| Effect construct | Forma surface | Status | Case |
+| --- | --- | --- | --- |
+| `Effect.acquireRelease` | `(acquire-release acquire (fn [r] release))` | supported | resource-scope |
+| `Effect.scoped` | `(scoped eff)` | supported | resource-scope |
+| `Effect.ensuring`, `Effect.addFinalizer` | `ensuring`, `add-finalizer` | supported | resource-scope |
+
+### Concurrency and state
+
+| Effect construct | Forma surface | Status | Case |
+| --- | --- | --- | --- |
+| `Effect.all` (record, tuple, `concurrency`) | `(all {...} :concurrency n)`, `(all [...])` | supported | concurrent-workflow |
+| `Effect.forEach` (`concurrency`) | `(for-each xs (fn [x] eff) :concurrency n)` | supported | concurrent-workflow |
+| `Effect.race`, `forkChild`, `Fiber.join`, `Fiber.interrupt` | `race`, `fork`, `join`, `interrupt` | supported | concurrent-workflow |
+| `Effect.sleep`, `Effect.timeout` | `sleep`, `timeout`, `millis`/`seconds` | supported | concurrent-workflow |
+| `Effect.retry` | `(retry eff :times n)` | partial | concurrent-workflow. `Schedule` policies are missing. |
+| `Ref` | `ref-make`, `ref-get`, `ref-set`, `ref-update`, `(Ref T)` | supported | crud-users, concurrent-workflow |
+| `Queue`, `PubSub`, `Deferred`, `Semaphore`, `forkScoped` | none | missing | |
+
+### Configuration, observability and streams
+
+| Effect construct | Forma surface | Status | Case |
+| --- | --- | --- | --- |
+| `Config.string/int/number/boolean`, `withDefault` | `(config Type "NAME" :default v)` | supported | config-and-logging |
+| `Effect.log` | `(log ...)` | supported | config-and-logging, multi-service-checkout |
+| `Stream` | `stream-of`, `stream-range`, `stream-map`, `stream-filter`, `stream-take`, `stream-map-effect`, `stream-run-collect`, `stream-run-fold`, `stream-run-for-each`, `(Stream A [E] [R])` | partial | stream-pipeline. Sinks, chunking, merging, and Stream-specific error handling are missing. |
+
+### Checking
+
+| Property | Status | Notes |
+| --- | --- | --- |
+| Located diagnostics | supported | Read, projection, and check diagnostics all carry a line and column span (`elaborateEffectProgram`). |
+| Values match schemas | supported | Record fields, unknown and missing fields, `Int` versus `Number`, literals and enums, brands, and classes. |
+| Error and requirement sets | supported | Each undeclared error or requirement is reported at the call that introduced it. |
+| Exhaustive and reachable `match` | supported | |
+| Impossible `catch`, failing finalizers | supported | |
+| Layer completeness and signatures | supported | |
+| Stricter than TypeScript | supported | `Bool` conditions, primitive-only `=`, `str` of primitives, `Int` versus `Number`, and `let` versus `do!`. See the `typescript` field of each rejection case. |
+| Generated code typechecks without `any` | supported | Under `tsconfig.base.json`. |
+| HM checker (`Type.inferSourceStr`) and language server | missing | They do not understand the new forms. The mechanics checker is authoritative for Effect programs. |
+| Hosted runtime (`makeMechanicsRuntime`) | partial | Executes only the original body forms. |
+| OCaml engine | see `../engine-parity/matrix.json` | Projects the same IR for the cases listed in `../engine-parity/cases.json`. It has no Effect TypeScript generator. |
 
 ## Baseline: `main` at `30d7db4`
 
