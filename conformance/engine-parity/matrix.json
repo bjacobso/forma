@@ -45,6 +45,11 @@
       "reason": "applyEditScript, describeNodes, and editScriptSchema are implemented by the TypeScript host only. Scripts are engine-neutral data over the shared reader grammar."
     },
     {
+      "id": "outline-codec",
+      "status": "gap",
+      "reason": "sourceToOutline and outlineToSource are implemented by the TypeScript host only. They depend only on the shared reader grammar."
+    },
+    {
       "id": "effect-typescript-match",
       "status": "gap",
       "reason": "The Effect TypeScript generator rejects Match bodies explicitly."

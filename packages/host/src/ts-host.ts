@@ -50,6 +50,8 @@ import type {
   ObservationRequest,
   ObservationResult,
   OpenSessionResult,
+  OutlineToSourceRequest,
+  OutlineToSourceResult,
   ParseRequest,
   ParseResult,
   ProjectValueRequest,
@@ -61,6 +63,8 @@ import type {
   ResumeHostCallRequest,
   SessionInfoRequest,
   SessionInfoResult,
+  SourceToOutlineRequest,
+  SourceToOutlineResult,
   SymbolDefinition,
   SymbolIndexRequest,
   SymbolIndexResult,
@@ -247,6 +251,8 @@ export class TsLanguageHost implements LanguageHost {
         "applyEditScript",
         "describeNodes",
         "editScriptSchema",
+        "sourceToOutline",
+        "outlineToSource",
       ],
     };
   }
@@ -754,6 +760,23 @@ export class TsLanguageHost implements LanguageHost {
 
   async editScriptSchema(): Promise<unknown> {
     return Editor.editScriptJsonSchema();
+  }
+
+  async sourceToOutline(request: SourceToOutlineRequest): Promise<SourceToOutlineResult> {
+    const result = Syntax.sourceToOutline(
+      request.source,
+      request.identity ? { identity: request.identity } : {},
+    );
+    return { sourceId: request.sourceId ?? "source", ...result };
+  }
+
+  async outlineToSource(request: OutlineToSourceRequest): Promise<OutlineToSourceResult> {
+    const result = Syntax.outlineToSource(request.items, {
+      ...(request.base ? { base: request.base } : {}),
+      ...(request.brokenRows ? { brokenRows: request.brokenRows } : {}),
+      ...(request.idPrefix !== undefined ? { idPrefix: request.idPrefix } : {}),
+    });
+    return { sourceId: request.sourceId ?? "source", ...result };
   }
 
   #indexSymbols(request: SymbolIndexRequest): Editor.SymbolIndex {

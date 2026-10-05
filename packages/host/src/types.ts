@@ -704,6 +704,51 @@ export interface DescribeNodesResult {
   readonly nodes: readonly NodeDescription[];
 }
 
+/** An outline row: one form, written the way indentation-sensitive Lisp (wisp) writes it. */
+export interface OutlineItem {
+  readonly id: string;
+  readonly text: string;
+  readonly children: readonly OutlineItem[];
+}
+
+export interface OutlineRowError {
+  readonly id: string;
+  readonly message: string;
+}
+
+export interface SourceToOutlineRequest {
+  readonly sourceId?: string | undefined;
+  readonly source: string;
+  /** Ids for the source; row ids are node ids. A fresh identity is used when omitted. */
+  readonly identity?: SyntaxIdentity | undefined;
+}
+
+export interface SourceToOutlineResult {
+  readonly sourceId: string;
+  readonly items: readonly OutlineItem[];
+  readonly identity: SyntaxIdentity;
+  readonly errors: readonly OutlineRowError[];
+}
+
+export interface OutlineToSourceRequest {
+  readonly sourceId?: string | undefined;
+  readonly items: readonly OutlineItem[];
+  /** The source and identity the outline was read from; unchanged rows keep their layout. */
+  readonly base?: { readonly source: string; readonly identity: SyntaxIdentity } | undefined;
+  /** `"comment"` comments out rows whose text does not read, so the rest still reads. */
+  readonly brokenRows?: "verbatim" | "comment" | undefined;
+  readonly idPrefix?: string | undefined;
+}
+
+export interface OutlineToSourceResult {
+  readonly sourceId: string;
+  readonly source: string;
+  /** Identity of the printed source; each printed row's node has the row's id. */
+  readonly identity: SyntaxIdentity;
+  readonly rows: readonly { readonly id: string; readonly span: OffsetSpan }[];
+  readonly errors: readonly OutlineRowError[];
+}
+
 export interface LanguageHost {
   readonly name: string;
   version(): Promise<VersionResult>;
@@ -732,4 +777,6 @@ export interface LanguageHost {
   describeNodes?(request: DescribeNodesRequest): Promise<DescribeNodesResult>;
   /** The edit-script contract as a JSON Schema document, for structured model output. */
   editScriptSchema?(): Promise<unknown>;
+  sourceToOutline?(request: SourceToOutlineRequest): Promise<SourceToOutlineResult>;
+  outlineToSource?(request: OutlineToSourceRequest): Promise<OutlineToSourceResult>;
 }

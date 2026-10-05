@@ -165,6 +165,19 @@ Operations are `replace`, `insert`, `delete`, `wrap`, `splice`, `unwrap`,
 `raise`, `move`, `rename` (scope-aware, refusing captures), and `extract`
 (free locals become parameters). A script applies completely or not at all.
 
+The outline codec reads source as rows (`{ id, text, children }`) in the
+style of indentation-sensitive Lisp, where a row's text holds the leading
+elements of its list and its children hold the rest. Row ids are node ids:
+
+```ts
+import { outlineToSource, sourceToOutline } from "@formalang/ts/syntax";
+
+const { items, identity } = sourceToOutline("(defn total [x]\n  (* x 2))");
+// [{ text: "defn total [x]", children: [{ text: "* x 2" }] }]
+const printed = outlineToSource(items, { base: { source, identity } });
+printed.source; // unchanged rows keep the author's layout
+```
+
 ```sh
 pnpm --filter @formalang/ts build
 pnpm --filter @formalang/ts test

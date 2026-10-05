@@ -253,13 +253,20 @@ elements of its list, and its children hold the rest.
 - An element that fits on one line is one row. A list with two or more
   elements is written without its parentheses (`(f x)` → `f x`); anything
   else keeps its text (`(f)`, `()`, `x`, `"s"`, `[a b]`, `'(a b)`).
-- A list that spans lines becomes a row whose text is the elements that
-  start on its opening line, plus a trailing comment on that line, and whose
-  children are the remaining elements. When the first element starts on a
-  later line, the text is empty and the head is the first child.
-- A reader-macro form that spans lines (`` `(if ~test …) ``) becomes a row
-  whose text starts with the prefix followed by a space: `` ` if ~test ``.
-  The prefix marks the list, the same convention wisp uses for quote.
+- A list with two or more elements that spans lines becomes a row whose
+  text is the elements that start on its opening line, plus a trailing
+  comment on that line, and whose children are the remaining elements. A
+  multi-line list element ends the text and becomes a child row. When nothing
+  but a comment follows `(` on the opening line, the text is empty and the
+  comment is the first child, because a row whose text starts with `;` is a
+  comment.
+- Continuation lines of a row's text are stored relative to the row's
+  column, so a row's text does not change when its row moves.
+- A reader-macro form whose list spans lines and has children
+  (`` `(if ~test …) ``) becomes a row whose text starts with the prefix
+  followed by a space: `` ` if ~test ``. The prefix marks the list, the same
+  convention wisp uses for quote. A plain list whose opening line would read
+  the same way (`(' a …)`) gets an empty text instead, so the two never mix.
 - A comment on its own line is a row whose text is the comment. A comment
   run whose `;` sits deeper than the previous comment row nests under it,
   so a commented-out subtree reads back as a subtree.
@@ -285,8 +292,9 @@ elements of its list, and its children hold the rest.
 and identity the outline was read from. For each row that existed in the
 base with the same predecessor, the printer reuses the original text between
 the predecessor and the row (indentation, blank lines, a trailing comment's
-position) and the original text before the closing delimiter. Rows that
-moved or are new get the canonical layout. Reading source and printing it
+position), the original text before the closing delimiter, and the row's own
+text exactly as written when it is unchanged at the same column. Rows that
+moved or are new get the canonical layout, shifted with their parent. Reading source and printing it
 back with itself as base reproduces the source exactly. Printing an outline
 and reading it back reproduces the rows.
 

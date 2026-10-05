@@ -19,7 +19,8 @@ listed in `version().capabilities`: `identifySyntax`; `observe` on
 count, and failure; `symbolIndex` and `findReferences`, which resolve names
 across a session's sources, macros, and descriptor forms; and
 `applyEditScript`, `describeNodes`, and `editScriptSchema` for id-addressed
-structural edits. Check a host's capabilities before relying on them; the
+structural edits; and `sourceToOutline` and `outlineToSource`, the outline
+codec. Check a host's capabilities before relying on them; the
 OCaml adapters do not implement them yet and ignore `observe`.
 
 The default host uses the included TypeScript engine. Optional OCaml adapters

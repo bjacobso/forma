@@ -1,5 +1,5 @@
 /**
- * Stable node identity for editors.
+ * Stable node identity and the outline codec for editors.
  *
  * @module Syntax
  */
@@ -22,3 +22,14 @@ export {
   type SyntaxSpan,
   type TextChange,
 } from "./syntax/identity.js";
+export {
+  outlineToSource,
+  sourceToOutline,
+  type OutlineItem,
+  type OutlineRowError,
+  type OutlineRowSpan,
+  type OutlineToSourceOptions,
+  type OutlineToSourceResult,
+  type SourceToOutlineOptions,
+  type SourceToOutlineResult,
+} from "./syntax/outline.js";
