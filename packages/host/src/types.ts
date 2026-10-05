@@ -619,6 +619,91 @@ export interface FindReferencesResult {
   readonly diagnostics: readonly Diagnostic[];
 }
 
+/** Edit operations address nodes by id. The full contract is `editScriptSchema()`. */
+export type EditPlace =
+  | { readonly before: string }
+  | { readonly after: string }
+  | { readonly parent: string | null; readonly index?: number | undefined };
+
+export type EditOp =
+  | { readonly op: "replace"; readonly target: string; readonly text: string }
+  | { readonly op: "insert"; readonly at: EditPlace; readonly text: string }
+  | { readonly op: "delete"; readonly target: string }
+  | { readonly op: "wrap"; readonly targets: readonly string[]; readonly head: string }
+  | { readonly op: "splice"; readonly target: string }
+  | { readonly op: "unwrap"; readonly target: string }
+  | { readonly op: "raise"; readonly target: string }
+  | { readonly op: "move"; readonly target: string; readonly to: EditPlace }
+  | { readonly op: "rename"; readonly target: string; readonly to: string }
+  | { readonly op: "extract"; readonly target: string; readonly name: string };
+
+export interface EditScript {
+  readonly version: 1;
+  readonly description?: string | undefined;
+  readonly ops: readonly EditOp[];
+}
+
+export interface EditScriptRequest {
+  readonly sourceId?: string | undefined;
+  readonly source: string;
+  /** The identity the script's ids refer to. A fresh identity is used when omitted. */
+  readonly identity?: SyntaxIdentity | undefined;
+  /** An edit script, validated by the host. Unknown input is accepted so model output can be passed through. */
+  readonly script: EditScript | unknown;
+  /** Resolve renames and extracts against the session's sources too. */
+  readonly sessionId?: string | undefined;
+}
+
+export interface EditScriptError {
+  /** Index of the failing operation, or -1 for a malformed script. */
+  readonly op: number;
+  readonly code: string;
+  readonly message: string;
+}
+
+export type EditScriptResult =
+  | {
+      readonly ok: true;
+      readonly sourceId: string;
+      readonly source: string;
+      /** Identity of the new source; moved, wrapped, and renamed nodes keep their ids. */
+      readonly identity: SyntaxIdentity;
+      readonly changes: {
+        readonly added: readonly string[];
+        readonly removed: readonly string[];
+        readonly moved: readonly string[];
+        readonly edited: readonly string[];
+      };
+      /** Changed top-level forms, before and after, for a preview. */
+      readonly forms: readonly {
+        readonly id: string;
+        readonly before?: string | undefined;
+        readonly after?: string | undefined;
+      }[];
+    }
+  | { readonly ok: false; readonly sourceId: string; readonly errors: readonly EditScriptError[] };
+
+export interface DescribeNodesRequest {
+  readonly source: string;
+  readonly identity: SyntaxIdentity;
+  readonly ids: readonly string[];
+}
+
+export interface NodeDescription {
+  readonly id: string;
+  readonly kind: SyntaxNodeKind;
+  readonly text: string;
+  readonly parent: string | null;
+  readonly head?: string | undefined;
+  /** Ids from the top-level form down to the parent. */
+  readonly path: readonly string[];
+  readonly topLevel: { readonly id: string; readonly text: string };
+}
+
+export interface DescribeNodesResult {
+  readonly nodes: readonly NodeDescription[];
+}
+
 export interface LanguageHost {
   readonly name: string;
   version(): Promise<VersionResult>;
@@ -643,4 +728,8 @@ export interface LanguageHost {
   identifySyntax?(request: SyntaxIdentityRequest): Promise<SyntaxIdentityResult>;
   symbolIndex?(request: SymbolIndexRequest): Promise<SymbolIndexResult>;
   findReferences?(request: FindReferencesRequest): Promise<FindReferencesResult>;
+  applyEditScript?(request: EditScriptRequest): Promise<EditScriptResult>;
+  describeNodes?(request: DescribeNodesRequest): Promise<DescribeNodesResult>;
+  /** The edit-script contract as a JSON Schema document, for structured model output. */
+  editScriptSchema?(): Promise<unknown>;
 }

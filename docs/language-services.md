@@ -200,7 +200,8 @@ type EditOp =
   | { op: "insert"; at: Place; text: string }
   | { op: "delete"; target: NodeId }
   | { op: "wrap"; targets: NodeId[]; head: string } // contiguous siblings
-  | { op: "unwrap"; target: NodeId } // splice a list into its parent
+  | { op: "splice"; target: NodeId } // remove a list's delimiters
+  | { op: "unwrap"; target: NodeId } // remove its delimiters and head
   | { op: "raise"; target: NodeId } // replace the parent with the target
   | { op: "move"; target: NodeId; to: Place }
   | { op: "rename"; target: NodeId; to: string } // scope-aware
@@ -214,7 +215,11 @@ type EditOp =
   anything changes. A script either applies completely or not at all, with
   errors that name the failing operation.
 - **New text is source.** `text` and `head` are Forma source, parsed before
-  use. Malformed text is an error, not a guess.
+  use. Malformed text is an error, not a guess. Text that ends in a comment
+  is followed by a line break so it cannot comment out what comes after it.
+- **Splice and unwrap differ.** `splice` is paredit's splice and keeps every
+  element; `unwrap` also drops the head, which is what removing a
+  `(sequence a b)` wrapper means.
 - **Layout is kept.** Edits splice text. Moved and wrapped subtrees keep their
   internal formatting and are re-indented by the column shift, never inside
   string literals.
