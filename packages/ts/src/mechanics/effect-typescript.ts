@@ -194,10 +194,10 @@ class Generator {
     this.use("Schema");
     const constName = typeName(name);
     const struct = isRecord(schema) && schema["kind"] === "Struct" ? arrayItems(schema["fields"]).filter(isRecord) : [];
-    const expression =
-      struct.length > 0
-        ? `Schema.Struct({\n${this.fieldLines(struct, "  ").join("\n")}\n})`
-        : schemaExpressionTs(schema, schemaNaming, true);
+    let expression = struct.length > 0 ? `Schema.Struct({\n${this.fieldLines(struct, "  ").join("\n")}\n})` : schemaExpressionTs(schema, schemaNaming, true);
+    if (`export const ${constName} = ${expression};`.length > maxWidth && expression.startsWith("Schema.Union([")) {
+      expression = breakUnion(expression);
+    }
     return [`export const ${constName} = ${expression};`, `export type ${constName} = typeof ${constName}.Type;`];
   }
 
@@ -257,6 +257,11 @@ class Generator {
     const value = rendered.startsWith("{") ? `(${rendered})` : rendered;
     const inline = `${head} ${value};`;
     if (!inline.includes("\n") && inline.length <= maxWidth) return [inline];
+    if (value.startsWith("({\n")) {
+      // Hug a multi-line object literal: `=> ({` ... `});`
+      const objectLines = this.value(body, names, "").code.split("\n");
+      return [`${head} (${objectLines[0]}`, ...objectLines.slice(1, -1), `${objectLines.at(-1)!});`];
+    }
     return [head, `  ${value};`];
   }
 
@@ -1213,6 +1218,29 @@ function layout(callee: string, args: readonly Render[], indent: string): string
   }
   const inner = `${indent}  `;
   return `${callee}(\n${args.map((arg) => `${inner}${arg(inner)},`).join("\n")}\n${indent})`;
+}
+
+/** Puts each member of a top-level `Schema.Union([...])` on its own line. */
+function breakUnion(expression: string): string {
+  const inner = expression.slice("Schema.Union([".length, -"])".length);
+  const members: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let index = 0; index < inner.length; index++) {
+    const char = inner[index];
+    if (char === "(" || char === "[" || char === "{") depth++;
+    if (char === ")" || char === "]" || char === "}") depth--;
+    if (char === '"') {
+      index = inner.indexOf('"', index + 1);
+      continue;
+    }
+    if (char === "," && depth === 0) {
+      members.push(inner.slice(start, index).trim());
+      start = index + 1;
+    }
+  }
+  members.push(inner.slice(start).trim());
+  return `Schema.Union([\n${members.map((member) => `  ${member},`).join("\n")}\n])`;
 }
 
 function wrap(expr: Expr, prec: Prec): string {
