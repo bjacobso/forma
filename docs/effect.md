@@ -117,8 +117,11 @@ with one signature can be passed as a function, as in `(map upcase names)`.
 As in TypeScript, a record or array literal with no target type widens its
 literals: `{:role "member"}` has `:role String`. To build a value of a schema
 with enum or tag fields, construct it, as in `(Member {:name n :role
-"member"})`, or pass it where the schema is expected. Constructed records
-generate `{...} satisfies Member` when TypeScript would otherwise widen them.
+"member"})`, or pass it where the schema is expected. When a value that Forma
+types against an enum or tag ends up somewhere TypeScript has no contextual
+type (a generator `return`, `Effect.succeed`, a `forEach` body, or a `const`),
+the generator keeps the literal type: records of a schema get
+`{...} satisfies Member` and other literals get `as const`.
 
 ## Checking
 
