@@ -7,6 +7,7 @@ import {
   dashboards,
   dashboardWithin,
   fastestProfile,
+  heartbeat,
   Metrics,
   Profiles,
   trackAll,
@@ -99,4 +100,9 @@ export default async function check(): Promise<void> {
 
   assert.equal(await run(trackAll(["a", "b", "c"])), 3);
   assert.deepEqual([...tracked].sort(), ["a=1", "b=1", "c=1"]);
+
+  // repeat runs once and then repeats `beats` times on the schedule.
+  tracked.length = 0;
+  await run(heartbeat(2));
+  assert.deepEqual(tracked, ["heartbeat=1", "heartbeat=1", "heartbeat=1"]);
 }

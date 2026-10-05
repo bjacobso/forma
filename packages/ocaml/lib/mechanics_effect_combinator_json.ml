@@ -23,7 +23,8 @@ let combinators =
     ("interrupt", spec [ Value_arg ]);
     ("sleep", spec [ Value_arg ]);
     ("timeout", spec [ Effect_arg; Value_arg ]);
-    ("retry", spec ~options:[ "times" ] [ Effect_arg ]);
+    ("retry", spec ~options:[ "times"; "schedule" ] [ Effect_arg ]);
+    ("repeat", spec ~options:[ "times"; "schedule" ] [ Effect_arg ]);
     ("map-error", spec [ Effect_arg; Value_arg ]);
     ("or-else-succeed", spec [ Effect_arg; Value_arg ]);
     ("or-die", spec [ Effect_arg ]);

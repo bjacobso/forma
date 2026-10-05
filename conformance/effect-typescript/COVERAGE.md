@@ -90,7 +90,7 @@ Status key:
 | `Effect.forEach` (`concurrency`) | `(for-each xs (fn [x] eff) :concurrency n)` | supported | concurrent-workflow |
 | `Effect.race`, `forkChild`, `Fiber.join`, `Fiber.interrupt` | `race`, `fork`, `join`, `interrupt` | supported | concurrent-workflow |
 | `Effect.sleep`, `Effect.timeout` | `sleep`, `timeout`, `millis`/`seconds` | supported | concurrent-workflow |
-| `Effect.retry` | `(retry eff :times n)` | partial | concurrent-workflow. `Schedule` policies are missing. |
+| `Effect.retry`, `Effect.repeat` | `(retry eff :times n :schedule s)`, `(repeat eff ...)` with `spaced`, `exponential`, `fixed`, `recurs`, `jittered` | partial | concurrent-workflow. Schedule composition and `while`/`until` predicates are missing. |
 | `Ref` | `ref-make`, `ref-get`, `ref-set`, `ref-update`, `(Ref T)` | supported | crud-users, concurrent-workflow |
 | `Queue`, `PubSub`, `Deferred`, `Semaphore`, `forkScoped` | none | missing | |
 

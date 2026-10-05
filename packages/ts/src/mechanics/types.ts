@@ -23,7 +23,8 @@ export type PrimitiveName =
   | "Json"
   | "Bytes"
   | "DateTime"
-  | "Duration";
+  | "Duration"
+  | "Schedule";
 
 export interface MField {
   readonly name: string;

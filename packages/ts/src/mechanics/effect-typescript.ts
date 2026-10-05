@@ -49,6 +49,7 @@ export interface MechanicsEffectTypeScriptOptions {
 type JsonRecord = Readonly<Record<string, JsonValue>>;
 
 type Module =
+  | "Schedule"
   | "Stream"
   | "Cause"
   | "Config"
@@ -63,7 +64,7 @@ type Module =
   | "Schema"
   | "Scope";
 
-const modules: readonly Module[] = ["Cause", "Config", "Context", "Duration", "Effect", "Fiber", "Layer", "Option", "Ref", "Result", "Schema", "Scope", "Stream"];
+const modules: readonly Module[] = ["Cause", "Config", "Context", "Duration", "Effect", "Fiber", "Layer", "Option", "Ref", "Result", "Schedule", "Schema", "Scope", "Stream"];
 
 /** Globals generated code relies on or that readers expect to mean the global. */
 const globals = ["Array", "Boolean", "Date", "Error", "JSON", "Map", "Math", "Number", "Object", "Promise", "Set", "String", "Symbol", "console", "globalThis"];
@@ -740,9 +741,13 @@ class Generator {
         return call("Effect.sleep", [value(0)]);
       case "timeout":
         return call("Effect.timeout", [effect(0), value(1)]);
-      case "retry": {
-        const times = option("times");
-        return call("Effect.retry", [effect(0), (inner) => `{ times: ${times === undefined ? "0" : this.value(times, names, inner).code} }`]);
+      case "retry":
+      case "repeat": {
+        const policy = (["times", "schedule"] as const).flatMap((key) => {
+          const setting = option(key);
+          return setting === undefined ? [] : [(inner: string) => `${key}: ${this.value(setting, names, inner).code}`];
+        });
+        return call(name === "retry" ? "Effect.retry" : "Effect.repeat", [effect(0), (inner) => objectLiteral(policy, inner)]);
       }
       case "map-error":
         return call("Effect.mapError", [effect(0), value(1)]);
@@ -1271,6 +1276,8 @@ class Generator {
           case "Duration":
             this.use("Duration");
             return "Duration.Duration";
+          case "Schedule":
+            throw new Error("Effect TypeScript: schedules can only be passed to retry and repeat");
         }
         return "never";
       case "never":

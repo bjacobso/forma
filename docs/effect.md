@@ -81,7 +81,8 @@ Effect and function types.
 | `(all {:a e1 :b e2} :concurrency :unbounded)`, `(all [e1 e2])` | `Effect.all` over a record or tuple |
 | `(for-each xs (fn [x] eff) :concurrency 4)` | `Effect.forEach` |
 | `(race a b)`, `(fork eff)`, `(join fiber)`, `(interrupt fiber)` | `Effect.race`, `Effect.forkChild`, `Fiber.join`, `Fiber.interrupt` |
-| `(sleep 10)`, `(timeout eff 50)`, `(retry eff :times 3)` | `Effect.sleep`, `Effect.timeout` (fails with `TimeoutError`), `Effect.retry` |
+| `(sleep 10)`, `(timeout eff 50)` | `Effect.sleep`, `Effect.timeout` (fails with `TimeoutError`) |
+| `(retry eff :times 3 :schedule (exponential 10))`, `(repeat eff :schedule (spaced 100))` | `Effect.retry`, `Effect.repeat` with `Schedule.exponential`, `spaced`, `fixed`, `recurs`, `jittered` |
 | `(ref-make v)`, `(ref-get r)`, `(ref-set r v)`, `(ref-update r f)` | `Ref.make`, `Ref.get`, `Ref.set`, `Ref.update` |
 | `(config Int "PORT" :default 8080)` | `Config.withDefault(Config.int("PORT"), 8080)` (fails with `ConfigError`) |
 | `(decode User input)` | `Schema.decodeUnknownEffect(User)(input)` (fails with `SchemaError`) |
@@ -152,8 +153,8 @@ also reject the code generated with the checker bypassed.
 - Recursive schemas (`Schema.suspend`), `Schema.TaggedClass`, and schema
   transformations.
 - Generic (type-parameterised) operations and functions.
-- `Schedule`-based retry and repeat (only `:times`), `Queue`, `PubSub`,
-  `Deferred`, `Semaphore`, and scoped forks.
+- Schedule composition beyond `jittered` (`both`, `either`, `while`/`until`
+  predicates), `Queue`, `PubSub`, `Deferred`, `Semaphore`, and scoped forks.
 - JavaScript interop such as `Effect.promise`. Host code supplies that
   through services.
 - The hosted mechanics runtime (`makeMechanicsRuntime`) still executes only

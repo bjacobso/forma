@@ -35,7 +35,7 @@
 
 (: dashboard (-> String (Effect Dashboard [Unavailable] [Profiles.fetch Activities.fetch])))
 (define-operation dashboard [id]
-  (do! [parts (all {:profile (retry (Profiles.fetch id) :times 2)
+  (do! [parts (all {:profile (retry (Profiles.fetch id) :times 2 :schedule (exponential (millis 1)))
                     :activity (Activities.fetch id)}
                    :concurrency :unbounded)]
     (succeed {:profile (get parts :profile)
@@ -72,3 +72,7 @@
         _ (join worker)
         total (ref-get counter)]
     (succeed total)))
+
+(: heartbeat (-> Int (Effect Unit [] [Metrics.track])))
+(define-operation heartbeat [beats]
+  (repeat (Metrics.track "heartbeat" 1) :times beats :schedule (spaced 1)))

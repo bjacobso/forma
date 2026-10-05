@@ -1266,14 +1266,16 @@ class Checker {
         this.duration(args[1], scope);
         return effectOf(body.success, unionSets(body.errors, setOf(["TimeoutError"], span)), body.requirements);
       }
-      case "retry": {
+      case "retry":
+      case "repeat": {
         const body = this.effect(args[0], scope, expected);
         const times = option("times");
-        if (times === undefined) {
-          this.error(span, "mechanics/retry-policy", "retry needs a policy such as :times 3.");
-        } else {
-          this.value(times, scope, tInt);
+        const schedule = option("schedule");
+        if (times === undefined && schedule === undefined) {
+          this.error(span, "mechanics/retry-policy", `${name} needs a policy such as :times 3 or :schedule (spaced 100).`);
         }
+        if (times !== undefined) this.value(times, scope, tInt);
+        if (schedule !== undefined) this.value(schedule, scope, { kind: "prim", name: "Schedule" });
         return body;
       }
       case "map-error": {

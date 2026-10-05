@@ -12,7 +12,7 @@
 import type { MType } from "./types.js";
 import { tBool, tInt, tNumber, tString, prim } from "./types.js";
 
-export type ImportName = "Duration" | "Option";
+export type ImportName = "Duration" | "Option" | "Schedule";
 
 export interface EmitContext {
   readonly use: (name: ImportName) => void;
@@ -200,6 +200,45 @@ export const builtins: ReadonlyMap<string, readonly BuiltinOverload[]> = new Map
       ],
     ],
   ),
+  ...(["spaced", "exponential", "fixed"] as const).map(
+    (name): [string, readonly BuiltinOverload[]] => [
+      name,
+      [tNumber, prim("Duration")].map((param) => ({
+        params: [param],
+        result: prim("Schedule"),
+        emit: ([duration], context) => {
+          context.use("Schedule");
+          return `Schedule.${name}(${duration})`;
+        },
+      })),
+    ],
+  ),
+  [
+    "recurs",
+    [
+      {
+        params: [tInt],
+        result: prim("Schedule"),
+        emit: ([times], context) => {
+          context.use("Schedule");
+          return `Schedule.recurs(${times})`;
+        },
+      },
+    ],
+  ],
+  [
+    "jittered",
+    [
+      {
+        params: [prim("Schedule")],
+        result: prim("Schedule"),
+        emit: ([schedule], context) => {
+          context.use("Schedule");
+          return `Schedule.jittered(${schedule})`;
+        },
+      },
+    ],
+  ],
   ["to-string", [{ params: [v(0)], result: tString, emit: ([a]) => `String(${a})` }]],
   ["abs", [{ params: [tInt], result: tInt, emit: ([a]) => `Math.abs(${a})` }, { params: [tNumber], result: tNumber, emit: ([a]) => `Math.abs(${a})` }]],
   ["round", [{ params: [tNumber], result: tInt, emit: ([a]) => `Math.round(${a})` }]],

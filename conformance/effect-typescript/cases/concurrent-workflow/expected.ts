@@ -1,4 +1,4 @@
-import { Context, Duration, Effect, Fiber, Option, Ref, Schema } from "effect";
+import { Context, Duration, Effect, Fiber, Option, Ref, Schedule, Schema } from "effect";
 
 export const Profile = Schema.Struct({
   id: Schema.String,
@@ -53,7 +53,10 @@ export const dashboard = (
     const profiles = yield* Profiles;
     const parts = yield* Effect.all(
       {
-        profile: Effect.retry(profiles.fetch(id), { times: 2 }),
+        profile: Effect.retry(
+          profiles.fetch(id),
+          { times: 2, schedule: Schedule.exponential(Duration.millis(1)) },
+        ),
         activity: activities.fetch(id),
       },
       { concurrency: "unbounded" },
@@ -118,4 +121,10 @@ export const trackAll = (names: ReadonlyArray<string>): Effect.Effect<number, ne
     yield* Fiber.join(worker);
     const total = yield* Ref.get(counter);
     return total;
+  });
+
+export const heartbeat = (beats: number): Effect.Effect<void, never, Metrics> =>
+  Effect.gen(function* () {
+    const metrics = yield* Metrics;
+    return yield* Effect.repeat(metrics.track("heartbeat", 1), { times: beats, schedule: Schedule.spaced(1) });
   });
