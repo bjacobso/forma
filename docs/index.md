@@ -88,6 +88,7 @@ pageClass: forma-index
 </dl>
 <p>The contract survives code generation: the Effect TypeScript tab is generated from the same declarations, with requirements lowered to <code>Context</code> services.</p>
 <a class="fh-link" href="/playground/demo/contracts" target="_self">Edit this contract live →</a>
+<a class="fh-link" href="/effect">Building with Effect? Read what Forma adds, and what it costs →</a>
 </div>
 <div class="fh-split__demo">
 

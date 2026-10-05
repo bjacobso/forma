@@ -24,9 +24,10 @@ Calls, failure construction, and recovery remain explicit in typed core and in
 portable artifacts. This preserves useful effect information without making
 runtime continuation handling part of every backend contract.
 
-[Effect programs](./effect.md) describes how schemas, errors, services,
-operations, and layers written in Forma are checked and generated as Effect
-TypeScript.
+[Forma for Effect](./effect.md) makes the case for authoring Effect programs in
+Forma and lists what that costs. The [Effect reference](./effect/reference.md)
+describes how schemas, errors, services, operations, and layers are checked and
+generated as Effect TypeScript.
 
 ## Elaboration
 

@@ -1,0 +1,4 @@
+$ tsc --noEmit orders.ts
+orders.ts:40:3 - error TS2375: Type 'Effect<{ status: "paid"; id: string & Brand<"OrderId">; "total-cents": number; }, OrderNotFound | PaymentDeclined, Orders | Payments>' is not assignable to type 'Effect<{ readonly id: string & Brand<"OrderId">; readonly status: "pending" | "paid" | "shipped"; readonly "total-cents": number; }, OrderNotFound, Orders | Payments>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Type 'OrderNotFound | PaymentDeclined' is not assignable to type 'OrderNotFound' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Property 'id' is missing in type 'PaymentDeclined' but required in type 'OrderNotFound'.

@@ -15,8 +15,9 @@ and harness through `tsconfig.json` in this directory, which extends
 `noImplicitReturns`, `noPropertyAccessFromIndexSignature`).
 
 [`COVERAGE.md`](./COVERAGE.md) maps Effect constructs to Forma forms and
-lists what is still missing. [`docs/effect.md`](../../docs/effect.md) is the
-language guide.
+lists what is still missing. [`docs/effect/reference.md`](../../docs/effect/reference.md) is the
+language reference, and [`docs/effect.md`](../../docs/effect.md) explains the
+benefits and the costs.
 
 ## Positive cases
 
@@ -111,6 +112,9 @@ are generated anyway:
 5. Run the suite without `FORMA_UPDATE_GOLDEN` and run `pnpm typecheck`.
 6. If both engines should project the program the same way, add it to
    `../engine-parity/cases.json` with the `effect-ir` pass.
+7. Regenerate the docs snippets, because the `/effect` page reports source and
+   output sizes for every case:
+   `pnpm --filter @formalang/website snippets:home`.
 
 Harnesses should test behaviour that only a correct translation produces:
 error tags and payloads, resource release order, actual concurrency bounds,

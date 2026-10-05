@@ -31,6 +31,7 @@ export default defineConfig({
       { text: "Examples", link: "/playground/demo", target: "_self", rel: "" },
       { text: "Vision", link: "/vision" },
       { text: "Language", link: "/language" },
+      { text: "Effect", link: "/effect" },
       { text: "Architecture", link: "/architecture" },
     ],
     sidebar: [
@@ -39,7 +40,8 @@ export default defineConfig({
         items: [
           { text: "Vision", link: "/vision" },
           { text: "Language", link: "/language" },
-          { text: "Effect programs", link: "/effect" },
+          { text: "Forma for Effect", link: "/effect" },
+          { text: "Effect reference", link: "/effect/reference" },
         ],
       },
       {

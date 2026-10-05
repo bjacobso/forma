@@ -313,7 +313,8 @@ export const checkout = (
 ```
 
 Layers, resources, concurrency, typed error recovery, configuration, and
-streams are covered as well. The [Effect programs guide](docs/effect.md) lists
+streams are covered as well. [Forma for Effect](docs/effect.md) explains the
+benefits and the costs, and the [Effect reference](docs/effect/reference.md) lists
 the whole surface. The [Effect TypeScript conformance suite](conformance/effect-typescript)
 generates, typechecks, and runs a set of complete programs and records how
 Forma rejects incorrect ones.

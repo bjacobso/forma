@@ -1,0 +1,11 @@
+strict.lisp:7:34 error mechanics/equality
+  = compares strings, numbers, booleans, and enums; Money would be compared by reference in TypeScript.
+
+strict.lisp:10:42 error mechanics/str
+  str joins strings, numbers, and booleans, not Money.
+
+strict.lisp:13:22 error mechanics/type-mismatch
+  Expected Int, but this is Number.
+
+strict.lisp:16:34 error mechanics/condition
+  Conditions must be Bool, but this is Int.
