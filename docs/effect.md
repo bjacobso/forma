@@ -92,13 +92,20 @@ Streams are values: `stream-of`, `stream-range`, `stream-map`,
 `stream-filter`, `stream-take`, and `stream-map-effect` build them, and
 `stream-run-collect`, `stream-run-fold`, and `stream-run-for-each` run them.
 
-Values use ordinary Forma expressions: records `{:id id}`, vectors, `get` and
-`assoc` (fields and `Map` keys), `str`, arithmetic, comparisons, `and`/`or`/
-`not`, `fn`, `if`, `cond`, `let`, `match`, `some`/`none`, and collection and
-string functions such as `map`, `filter`, `reduce`, `find`, `count`, `concat`,
-`conj`, `first`, `keys`, `vals`, `sum`, `join`, `split`, `trim`, `upcase`,
-and `get-or-else`. Getting an `(Optional T)` field or a `Map` key produces
-`(Option T)`.
+Values use ordinary Forma expressions:
+
+- records `{:id id}` and vectors;
+- `get` and `assoc` for fields, `Map` keys, and classes;
+- `str`, `fn`, `if`, `cond`, `let`, `match`, and `some`/`none`;
+- arithmetic: `+ - * / quot mod max min abs round floor`;
+- comparisons, `and`/`or`/`not`, and `=`/`!=`;
+- collections: `map filter reduce find any? every? count empty? concat conj first sum`;
+- maps: `keys vals dissoc has-key?`;
+- strings: `join split trim upcase downcase starts-with? ends-with? includes? to-string`;
+- options: `get-or-else is-some is-none`;
+- durations: `millis seconds minutes`.
+
+Getting an `(Optional T)` field or a `Map` key produces `(Option T)`.
 
 ## Checking
 
