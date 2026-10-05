@@ -293,6 +293,57 @@ export function widenLiteral(type: MType): MType {
   return Number.isInteger(type.value) ? tInt : tNumber;
 }
 
+/**
+ * Widens literal types everywhere inside a type, the way TypeScript widens
+ * values it infers without a contextual type (`{ role: "admin" }` has
+ * `role: string`).
+ */
+export function widenDeep(type: MType): MType {
+  switch (type.kind) {
+    case "literal":
+      return widenLiteral(type);
+    case "struct":
+      return { kind: "struct", fields: type.fields.map((field) => ({ ...field, type: widenDeep(field.type) })) };
+    case "array":
+      return { kind: "array", item: widenDeep(type.item) };
+    case "option":
+      return { kind: "option", item: widenDeep(type.item) };
+    case "map":
+      return { kind: "map", value: widenDeep(type.value) };
+    case "tuple":
+      return { kind: "tuple", items: type.items.map(widenDeep) };
+    case "union":
+      return union(type.members.map(widenDeep));
+    default:
+      return type;
+  }
+}
+
+/** Whether a type mentions literal types, so values of it need a contextual type in TypeScript. */
+export function containsLiterals(type: MType, env: TypeEnvironment, seen = new Set<string>()): boolean {
+  switch (type.kind) {
+    case "literal":
+      return true;
+    case "named":
+      if (seen.has(type.name)) return false;
+      seen.add(type.name);
+      return containsLiterals(resolve(type, env), env, seen);
+    case "struct":
+      return type.fields.some((field) => containsLiterals(field.type, env, seen));
+    case "array":
+    case "option":
+      return containsLiterals(type.item, env, seen);
+    case "map":
+      return containsLiterals(type.value, env, seen);
+    case "tuple":
+      return type.items.some((item) => containsLiterals(item, env, seen));
+    case "union":
+      return type.members.some((member) => containsLiterals(member, env, seen));
+    default:
+      return false;
+  }
+}
+
 export type Substitution = Map<number, MType>;
 
 export function applySubstitution(type: MType, subst: Substitution): MType {
@@ -355,11 +406,11 @@ export function isAssignable(
   const t = subst ? applySubstitution(target, subst) : target;
   if (s.kind === "var" && subst) {
     if (t.kind === "var" && t.id === s.id) return true;
-    subst.set(s.id, widenLiteral(t));
+    subst.set(s.id, widenDeep(t));
     return true;
   }
   if (t.kind === "var" && subst) {
-    subst.set(t.id, widenLiteral(s));
+    subst.set(t.id, widenDeep(s));
     return true;
   }
   // `Unknown` only arises after a reported error, so it is compatible with

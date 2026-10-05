@@ -28,6 +28,7 @@ import { inlineBrands, orderSchemaDeclarations, schemaExpressionTs, type SchemaN
 import { camelIdentifier, isIdentifierName, propertyAccess, propertyName, typeName } from "./naming.js";
 import {
   arrayItems,
+  containsLiterals,
   isRecord,
   requirementService,
   stringItems,
@@ -154,6 +155,13 @@ class Generator {
   private readonly reserved = new Set<string>([...modules, ...globals]);
   private serviceVars = new Map<string, string>();
   private contextVar: string | undefined;
+  /**
+   * Whether the value being rendered has a contextual type in TypeScript
+   * (a typed parameter, a function's declared return, or a field of such a
+   * value). Without one TypeScript widens literals, so records of schemas
+   * with literal types get `satisfies`.
+   */
+  private contextual = false;
 
   constructor(
     private readonly declarations: readonly PackageableDeclaration[],
@@ -282,13 +290,13 @@ class Generator {
     const head = signatureHead(camelIdentifier(name), params, returns);
     const block = this.letBlock(body, names, "  ");
     if (block) return [`${head} {`, ...block, "};"].map((line, index) => (index === 0 ? line.replace(/ =>$/, " =>") : line));
-    const rendered = this.value(body, names, "  ").code;
+    const rendered = this.contextualValue(body, names, "  ").code;
     const value = rendered.startsWith("{") ? `(${rendered})` : rendered;
     const inline = `${head} ${value};`;
     if (!inline.includes("\n") && inline.length <= maxWidth) return [inline];
     if (value.startsWith("({\n")) {
       // Hug a multi-line object literal: `=> ({` ... `});`
-      const objectLines = this.value(body, names, "").code.split("\n");
+      const objectLines = this.contextualValue(body, names, "").code.split("\n");
       return [`${head} (${objectLines[0]}`, ...objectLines.slice(1, -1), `${objectLines.at(-1)!});`];
     }
     return [head, `  ${value};`];
@@ -300,15 +308,22 @@ class Generator {
     const call = this.info.calls.get(body);
     if (call?.kind !== "special" || call.name !== "let") return undefined;
     const [bindingsNode, result] = arrayItems(body["items"]).slice(1);
-    const bindings = isRecord(bindingsNode) ? arrayItems(bindingsNode["items"]) : [];
     const scope = names.child();
+    const lines = this.letBindings(bindingsNode, result, scope, indent, indent);
+    lines.push(...(this.letBlock(result, scope, indent) ?? [`${indent}return ${this.contextualValue(result, scope, indent).code};`]));
+    return lines;
+  }
+
+  /** `const` lines for a value-level `let`; bindings nothing reads are dropped (values are pure). */
+  private letBindings(bindingsNode: JsonValue | undefined, result: JsonValue | undefined, scope: Names, lineIndent: string, indent: string): string[] {
+    const pairs = isRecord(bindingsNode) ? arrayItems(bindingsNode["items"]) : [];
+    const steps = [...letSteps(pairs), { value: result ?? null }];
     const lines: string[] = [];
-    for (let index = 0; index + 1 < bindings.length; index += 2) {
-      const binding = bindings[index];
-      const value = this.value(bindings[index + 1], scope, indent).code;
-      lines.push(`${indent}const ${scope.bind(isRecord(binding) ? String(binding["name"]) : "_")} = ${value};`);
-    }
-    lines.push(...(this.letBlock(result, scope, indent) ?? [`${indent}return ${this.value(result, scope, indent).code};`]));
+    letSteps(pairs).forEach((step, index) => {
+      if (step.binds === undefined || !referencedIn(steps.slice(index + 1), step.binds)) return;
+      const value = this.value(step.value, scope, indent).code;
+      lines.push(`${lineIndent}const ${scope.bind(step.binds)} = ${value};`);
+    });
     return lines;
   }
 
@@ -392,7 +407,10 @@ class Generator {
       this.use("Effect");
       construction.push(`    const ${this.contextVar} = yield* Effect.context<${contextServices.map(typeName).join(" | ")}>();`);
     }
-    const later = [...setup.map((binding) => binding["value"] ?? null), ...methods.map((method) => method["body"] ?? null)];
+    const later: Step[] = [
+      ...bindingSteps(setup),
+      ...methods.map((method) => ({ value: { kind: "Lambda", params: method["params"] ?? [], body: method["body"] ?? null } })),
+    ];
     setup.forEach((binding, index) => {
       construction.push(...this.bindingLines(binding, names, "    ", later.slice(index + 1)));
     });
@@ -453,9 +471,9 @@ class Generator {
         const lines: string[] = [];
         const scope = names.sameBlock();
         const bindings = arrayItems(node["bindings"]).filter(isRecord);
-        const rest = [...bindings.map((binding) => binding["value"] ?? null), node["body"] ?? null, ...arrayItems(node["forms"])];
+        const steps = [...bindingSteps(bindings), { value: node["body"] ?? null }, { value: node["forms"] ?? null }];
         bindings.forEach((binding, index) => {
-          lines.push(...this.bindingLines(binding, scope, indent, rest.slice(index + 1)));
+          lines.push(...this.bindingLines(binding, scope, indent, steps.slice(index + 1)));
         });
         if (node["body"] !== undefined) {
           lines.push(...this.statements(node["body"], scope, indent, mode));
@@ -519,6 +537,8 @@ class Generator {
   private valueStatement(value: JsonValue | undefined, names: Names, indent: string, mode: Mode): string[] {
     if (mode === "discard") return [];
     if (isUnitLiteral(value)) return [`${indent}return;`];
+    const block = this.letBlock(value, names, indent);
+    if (block) return block;
     return [`${indent}return ${this.value(value, names, indent).code};`];
   }
 
@@ -526,10 +546,10 @@ class Generator {
     return [`${indent}${mode === "return" ? "return " : ""}yield* ${effect};`];
   }
 
-  private bindingLines(binding: JsonRecord, names: Names, indent: string, rest: readonly JsonValue[]): string[] {
+  private bindingLines(binding: JsonRecord, names: Names, indent: string, rest: readonly Step[]): string[] {
     const name = typeof binding["name"] === "string" ? binding["name"] : "_";
     const value = binding["value"];
-    const used = name !== "_" && rest.some((node) => usesName(node, name));
+    const used = name !== "_" && referencedIn(rest, name);
     const pure = isRecord(value) && (value["kind"] === "Pure" || value["kind"] === "Succeed") && !this.isEffectValue(value["value"]);
     if (pure) {
       if (!used) return [];
@@ -652,7 +672,7 @@ class Generator {
 
   private handler(binding: string, handler: JsonValue | undefined, names: Names, indent: string): string {
     const scope = names.child();
-    const param = binding !== "_" && usesName(handler, binding) ? scope.bind(binding) : "";
+    const param = binding !== "_" && freeIn(handler, binding) ? scope.bind(binding) : "";
     return `(${param}) => ${this.effectExpression(handler, scope, indent)}`;
   }
 
@@ -669,8 +689,14 @@ class Generator {
     return `Effect.provideContext(${call}, ${this.contextVar})`;
   }
 
+  /** Arguments to typed parameters, which give their values a contextual type. */
   private argRenders(args: JsonValue | undefined, names: Names): Render[] {
-    return arrayItems(args).map((arg) => (inner: string) => this.value(arg, names, inner).code);
+    return arrayItems(args).map((arg) => (inner: string) => this.contextualValue(arg, names, inner).code);
+  }
+
+  private contextualValue(node: JsonValue | undefined, names: Names, indent: string): Expr {
+    this.contextual = true;
+    return this.value(node, names, indent);
   }
 
   private combinator(node: JsonRecord, names: Names, indent: string): string {
@@ -752,8 +778,12 @@ class Generator {
       }
       case "map-error":
         return call("Effect.mapError", [effect(0), value(1)]);
-      case "or-else-succeed":
-        return call("Effect.orElseSucceed", [effect(0), (inner) => `() => ${arrowBody(this.value(args[1], names, inner).code)}`]);
+      case "or-else-succeed": {
+        // The fallback's return type is stated so TypeScript does not widen literals.
+        const success = this.info.effectTypes.get(node)?.success;
+        const returns = success ? `: ${this.typeTs(success)}` : "";
+        return call("Effect.orElseSucceed", [effect(0), (inner) => `()${returns} => ${arrowBody(this.contextualValue(args[1], names, inner).code)}`]);
+      }
       case "or-die":
         return call("Effect.orDie", [effect(0)]);
       case "option":
@@ -818,7 +848,7 @@ class Generator {
       const scope = names.child();
       const out: string[] = [];
       const binding = arm.pattern?.binding;
-      if (binding && binding !== "_" && payload !== undefined && usesName(arm.body, binding)) {
+      if (binding && binding !== "_" && payload !== undefined && freeIn(arm.body, binding)) {
         out.push(`${inner}const ${scope.bind(binding)} = ${payload};`);
       }
       out.push(...this.statements(arm.body, scope, inner, mode));
@@ -859,7 +889,7 @@ class Generator {
 
   private newError(name: string, payload: JsonValue | undefined, names: Names, indent: string): string {
     if (payload === undefined) return `new ${typeName(name)}({})`;
-    return `new ${typeName(name)}(${this.value(payload, names, indent).code})`;
+    return `new ${typeName(name)}(${this.contextualValue(payload, names, indent).code})`;
   }
 
   private serviceVar(service: string): string {
@@ -901,6 +931,16 @@ class Generator {
   // -------------------------------------------------------------------------
 
   private value(node: JsonValue | undefined, names: Names, indent: string): Expr {
+    const contextual = this.contextual;
+    this.contextual = false;
+    try {
+      return this.valueInner(node, names, indent, contextual);
+    } finally {
+      this.contextual = false;
+    }
+  }
+
+  private valueInner(node: JsonValue | undefined, names: Names, indent: string, contextual: boolean): Expr {
     if (!isRecord(node)) throw new Error("Effect TypeScript: missing value node");
     switch (node["kind"]) {
       case "Literal": {
@@ -919,16 +959,20 @@ class Generator {
         throw new Error(`Effect TypeScript: unsupported expression value ${JSON.stringify(source)}`);
       }
       case "Record":
-        return atom(this.recordLiteral(node, names, indent));
+        return this.typedLiteral(node, this.info.recordTargets.get(node), contextual, this.recordLiteral(node, names, indent));
       case "Vector": {
         const items = arrayItems(node["items"]);
-        const inline = `[${items.map((item) => this.value(item, names, indent).code).join(", ")}]`;
+        const item = (element: JsonValue, inner: string): string => {
+          this.contextual = contextual;
+          return this.value(element, names, inner).code;
+        };
+        const inline = `[${items.map((element) => item(element, indent)).join(", ")}]`;
         if (!inline.includes("\n") && indent.length + inline.length <= maxWidth) return atom(inline);
         const deeper = `${indent}  `;
-        return atom(`[\n${items.map((item) => `${deeper}${this.value(item, names, deeper).code},`).join("\n")}\n${indent}]`);
+        return atom(`[\n${items.map((element) => `${deeper}${item(element, deeper)},`).join("\n")}\n${indent}]`);
       }
       case "List":
-        return this.application(node, names, indent);
+        return this.application(node, names, indent, contextual);
       default:
         throw new Error(`Effect TypeScript: unsupported value kind ${String(node["kind"])}`);
     }
@@ -962,13 +1006,37 @@ class Generator {
       entries.map((entry) => (inner: string) => {
         const key = recordKey(entry["key"]);
         if (key === undefined) throw new Error("Effect TypeScript: unsupported record key");
-        return objectEntry(key, this.value(entry["value"], names, inner).code);
+        // Fields of an object literal are contextually typed by the literal's own type.
+        return objectEntry(key, this.contextualValue(entry["value"], names, inner).code);
       }),
       indent,
     );
   }
 
-  private application(node: JsonRecord, names: Names, indent: string): Expr {
+  /** `{...} satisfies T` when TypeScript would otherwise widen the literal's enum and tag fields. */
+  private typedLiteral(node: JsonRecord, target: MType | undefined, contextual: boolean, code: string): Expr {
+    if (contextual || target?.kind !== "named" || !containsLiterals(target, this.info.env) || !this.hasLiteralValue(node)) {
+      return atom(code);
+    }
+    return { code: `${code} satisfies ${typeName(target.name)}`, prec: Prec.Relational };
+  }
+
+  /** Whether a record (or the new value of an assoc) holds a value whose type is a literal. */
+  private hasLiteralValue(node: JsonValue | undefined): boolean {
+    if (!isRecord(node)) return false;
+    if (node["kind"] === "Record") return arrayItems(node["entries"]).some((entry) => isRecord(entry) && this.hasLiteralValue(entry["value"]));
+    if (node["kind"] === "Vector") return arrayItems(node["items"]).some((item) => this.hasLiteralValue(item));
+    const call = this.info.calls.get(node);
+    if (call?.kind === "assoc") return this.hasLiteralValue(arrayItems(node["items"])[3]);
+    if (call?.kind === "special" && ["if", "cond", "match", "construct", ":"].includes(call.name)) {
+      return arrayItems(node["items"]).slice(1).some((item) => this.hasLiteralValue(item));
+    }
+    if (call?.kind === "construct") return this.hasLiteralValue(arrayItems(node["items"])[1]);
+    const type = this.info.valueTypes.get(node);
+    return type !== undefined && (type.kind === "literal" || (type.kind === "union" && type.members.some((member) => member.kind === "literal")));
+  }
+
+  private application(node: JsonRecord, names: Names, indent: string, contextual: boolean): Expr {
     const call = this.info.calls.get(node);
     const items = arrayItems(node["items"]);
     const args = items.slice(1);
@@ -986,8 +1054,9 @@ class Generator {
           },
           fresh: (preferred) => scope.bind(`builtin:${preferred}`, preferred),
         };
+        const contextualArgs = call.overload.contextualArgs ?? [];
         const code = call.overload.emit(
-          args.map((item) => this.value(item, names, indent)),
+          args.map((item, index) => (contextualArgs.includes(index) ? this.contextualValue(item, names, indent) : this.value(item, names, indent))),
           emit,
         );
         return { code, prec: call.overload.prec ?? Prec.Postfix };
@@ -1011,7 +1080,7 @@ class Generator {
           prec: Prec.Equality,
         };
       case "special":
-        return this.special(call.name, node, args, names, indent);
+        return this.special(call.name, node, args, names, indent, contextual);
       case "get": {
         const target = operand(0, Prec.Postfix);
         if (call.access === "map") {
@@ -1030,24 +1099,23 @@ class Generator {
         const spread: Render = (inner) => `...${this.value(args[0], names, inner).code}`;
         const replacement: Render =
           call.access === "map"
-            ? (inner) => `[${this.value(args[1], names, inner).code}]: ${this.value(args[2], names, inner).code}`
-            : (inner) => objectEntry(recordKey(args[1]) ?? "", this.value(args[2], names, inner).code);
+            ? (inner) => `[${this.value(args[1], names, inner).code}]: ${this.contextualValue(args[2], names, inner).code}`
+            : (inner) => objectEntry(recordKey(args[1]) ?? "", this.contextualValue(args[2], names, inner).code);
         const updated = objectLiteral([spread, replacement], call.access === "class" ? `${indent}  ` : indent);
-        if (call.access === "class") {
-          const type = this.info.valueTypes.get(node);
-          return atom(`new ${type?.kind === "class" ? typeName(type.name) : "Object"}(${updated})`);
-        }
-        return atom(updated);
+        const type = this.info.valueTypes.get(node);
+        if (call.access === "class") return atom(`new ${type?.kind === "class" ? typeName(type.name) : "Object"}(${updated})`);
+        return this.typedLiteral(node, type, contextual, updated);
       }
       case "error":
         return atom(this.newError(call.name, args[0], names, indent));
       case "class":
-        return atom(`new ${typeName(call.name)}(${this.value(args[0], names, indent).code})`);
+        return atom(`new ${typeName(call.name)}(${this.contextualValue(args[0], names, indent).code})`);
       case "stream":
         return atom(this.streamCall(call.name, args, names, indent));
       case "brand":
         return atom(`${typeName(call.name)}.make(${this.value(args[0], names, indent).code})`);
       case "construct":
+        this.contextual = contextual;
         return this.value(args[0], names, indent);
       case "function":
         return atom(layout(camelIdentifier(call.name), this.argRenders(args, names), indent));
@@ -1060,7 +1128,12 @@ class Generator {
     }
   }
 
-  private special(name: string, node: JsonRecord, args: readonly JsonValue[], names: Names, indent: string): Expr {
+  private special(name: string, node: JsonRecord, args: readonly JsonValue[], names: Names, indent: string, contextual: boolean): Expr {
+    // Branches of a conditional share the conditional's contextual type.
+    const branch = (index: number, scope: Names = names): Expr => {
+      this.contextual = contextual;
+      return this.value(args[index], scope, indent);
+    };
     switch (name) {
       case "fn": {
         const params = isRecord(args[0]) ? arrayItems(args[0]["items"]) : [];
@@ -1074,13 +1147,13 @@ class Generator {
       }
       case "if":
         return {
-          code: `${wrap(this.value(args[0], names, indent), Prec.Or)} ? ${wrap(this.value(args[1], names, indent), Prec.Conditional)} : ${wrap(this.value(args[2], names, indent), Prec.Conditional)}`,
+          code: `${wrap(this.value(args[0], names, indent), Prec.Or)} ? ${wrap(branch(1), Prec.Conditional)} : ${wrap(branch(2), Prec.Conditional)}`,
           prec: Prec.Conditional,
         };
       case "cond": {
         let code: string | undefined;
         for (let index = args.length - 2; index >= 0; index -= 2) {
-          const value = wrap(this.value(args[index + 1], names, indent), Prec.Conditional);
+          const value = wrap(branch(index + 1), Prec.Conditional);
           const condition = args[index];
           if (isElseCondition(condition)) {
             code = value;
@@ -1091,14 +1164,11 @@ class Generator {
         return { code: code ?? "undefined", prec: Prec.Conditional };
       }
       case "let": {
-        const bindings = isRecord(args[0]) ? arrayItems(args[0]["items"]) : [];
         const scope = names.child();
-        const lines: string[] = [];
-        for (let index = 0; index + 1 < bindings.length; index += 2) {
-          const binding = bindings[index];
-          const bindingName = isRecord(binding) ? String(binding["name"]) : "_";
-          const value = this.value(bindings[index + 1], scope, indent).code;
-          lines.push(`const ${scope.bind(bindingName)} = ${value};`);
+        const lines = this.letBindings(args[0], args[1], scope, "", indent);
+        if (lines.length === 0) {
+          this.contextual = contextual;
+          return this.value(args[1], scope, indent);
         }
         return atom(`(() => { ${lines.join(" ")} return ${this.value(args[1], scope, indent).code}; })()`);
       }
@@ -1116,12 +1186,13 @@ class Generator {
         return atom(`\`${parts.join("")}\``);
       }
       case ":":
+        this.contextual = contextual;
         return this.value(args[0], names, indent);
       case "some":
         this.use("Option");
         return atom(`Option.some(${this.value(args[0], names, indent).code})`);
       case "match":
-        return this.valueMatch(node, args, names, indent);
+        return this.valueMatch(node, args, names, indent, contextual);
       default:
         throw new Error(`Effect TypeScript: unsupported form ${name} (${JSON.stringify(node["span"])})`);
     }
@@ -1163,7 +1234,7 @@ class Generator {
    * types, and a conditional chain on the tag (which TypeScript narrows) for
    * enums and tagged unions.
    */
-  private valueMatch(node: JsonRecord, args: readonly JsonValue[], names: Names, indent: string): Expr {
+  private valueMatch(node: JsonRecord, args: readonly JsonValue[], names: Names, indent: string, contextual: boolean): Expr {
     const shape = this.info.matches.get(node);
     if (!shape) throw new Error("Effect TypeScript: match was not checked");
     const arms: { readonly pattern: ReturnType<typeof parsePattern>; readonly body: JsonValue | undefined }[] = [];
@@ -1177,7 +1248,8 @@ class Generator {
       if (!arm) throw new Error(`Effect TypeScript: match has no arm for ${tag}`);
       const scope = names.child();
       const binding = arm.pattern?.binding;
-      const param = binding && binding !== "_" && usesName(arm.body, binding) ? scope.bind(binding) : "";
+      const param = binding && binding !== "_" && freeIn(arm.body, binding) ? scope.bind(binding) : "";
+      this.contextual = contextual;
       return `(${param}) => ${arrowBody(this.value(arm.body, scope, `${indent}  `).code)}`;
     };
     if (shape.kind === "option" || shape.kind === "result") {
@@ -1200,6 +1272,7 @@ class Generator {
         const armScope = scope.child();
         const binding = arm.pattern?.binding;
         if (binding && binding !== "_") armScope.alias(binding, subjectCode);
+        this.contextual = contextual;
         const value = wrap(this.value(arm.body, armScope, indent), Prec.Conditional);
         branches.push({ test: tag === "_" ? undefined : `${discriminant} === ${JSON.stringify(tag)}`, value });
         if (tag === "_") break;
@@ -1475,35 +1548,108 @@ function isUnitLiteral(value: JsonValue | undefined): boolean {
   return value["kind"] === "Expr" && isRecord(source) && source["kind"] === "Nil";
 }
 
-const usageCache = new WeakMap<object, ReadonlySet<string>>();
+const usageCache = new WeakMap<object, Map<string, boolean>>();
 
-/** Whether a Forma name is referenced anywhere in a subtree. */
-function usesName(node: JsonValue | undefined, name: string): boolean {
-  return namesIn(node).has(name);
+/** A step in a binding sequence: a value, then (optionally) a name it binds. */
+interface Step {
+  readonly value: JsonValue | undefined;
+  readonly binds?: string;
 }
 
-function namesIn(node: JsonValue | undefined): ReadonlySet<string> {
-  if (Array.isArray(node)) {
-    const names = new Set<string>();
-    for (const item of node) for (const found of namesIn(item)) names.add(found);
-    return names;
+/** Whether `name` is referenced by a sequence of bindings before something rebinds it. */
+function referencedIn(steps: readonly Step[], name: string): boolean {
+  for (const step of steps) {
+    if (freeIn(step.value, name)) return true;
+    if (step.binds === name) return false;
   }
-  if (!isRecord(node)) return new Set();
-  const cached = usageCache.get(node);
-  if (cached) return cached;
-  const names = new Set<string>();
-  if (node["kind"] === "Var" && typeof node["name"] === "string") names.add(node["name"]);
-  for (const [key, value] of Object.entries(node)) {
-    if (key === "span" || key === "effect") continue;
-    for (const found of namesIn(value)) names.add(found);
+  return false;
+}
+
+function bindingSteps(bindings: readonly JsonValue[]): Step[] {
+  return bindings.flatMap((binding) =>
+    isRecord(binding) ? [{ value: binding["value"], ...(typeof binding["name"] === "string" ? { binds: binding["name"] } : {}) }] : [],
+  );
+}
+
+/** `[name value ...]` pairs of a value-level `let`. */
+function letSteps(pairs: readonly JsonValue[]): Step[] {
+  const steps: Step[] = [];
+  for (let index = 0; index + 1 < pairs.length; index += 2) {
+    const binding = pairs[index];
+    steps.push({ value: pairs[index + 1], ...(isRecord(binding) && binding["kind"] === "Var" ? { binds: String(binding["name"]) } : {}) });
   }
-  usageCache.set(node, names);
-  return names;
+  return steps;
+}
+
+/**
+ * Whether a Forma name occurs free in a subtree: references under a binder
+ * that shadows it (do!/let bindings, fn and layer parameters, catch and
+ * match bindings) do not count.
+ */
+function freeIn(node: JsonValue | undefined, name: string): boolean {
+  if (Array.isArray(node)) return node.some((item) => freeIn(item, name));
+  if (!isRecord(node)) return false;
+  let cached = usageCache.get(node);
+  const hit = cached?.get(name);
+  if (hit !== undefined) return hit;
+  const result = computeFreeIn(node, name);
+  if (!cached) usageCache.set(node, (cached = new Map()));
+  cached.set(name, result);
+  return result;
+}
+
+function computeFreeIn(node: JsonRecord, name: string): boolean {
+  const patternBinds = (pattern: JsonValue | undefined): boolean => parsePattern(pattern)?.binding === name;
+  switch (node["kind"]) {
+    case "Var":
+      return node["name"] === name;
+    case "Do":
+    case "Let":
+      return referencedIn([...bindingSteps(arrayItems(node["bindings"])), { value: node["body"] ?? null }, { value: node["forms"] ?? null }], name);
+    case "Lambda":
+      return !stringItems(node["params"]).includes(name) && freeIn(node["body"], name);
+    case "Catch":
+    case "CatchAll":
+      return freeIn(node["body"], name) || (node["binding"] !== name && freeIn(node["handler"], name));
+    case "CatchTags":
+      return (
+        freeIn(node["body"], name) ||
+        arrayItems(node["handlers"]).some((handler) => isRecord(handler) && handler["binding"] !== name && freeIn(handler["handler"], name))
+      );
+    case "Match":
+      return (
+        freeIn(node["value"], name) ||
+        arrayItems(node["arms"]).some((arm) => isRecord(arm) && !patternBinds(arm["pattern"]) && freeIn(arm["body"], name))
+      );
+    case "List": {
+      const items = arrayItems(node["items"]);
+      const head = items[0];
+      const headName = isRecord(head) && head["kind"] === "Var" ? head["name"] : undefined;
+      if (headName === "fn") {
+        const params = isRecord(items[1]) ? arrayItems(items[1]["items"]) : [];
+        return !params.some((param) => isRecord(param) && param["name"] === name) && freeIn(items[2], name);
+      }
+      if (headName === "let") {
+        const pairs = isRecord(items[1]) ? arrayItems(items[1]["items"]) : [];
+        return referencedIn([...letSteps(pairs), { value: items[2] ?? null }], name);
+      }
+      if (headName === "match") {
+        if (freeIn(items[1], name)) return true;
+        for (let index = 2; index + 1 < items.length; index += 2) {
+          if (!patternBinds(items[index]) && freeIn(items[index + 1], name)) return true;
+        }
+        return false;
+      }
+      return items.some((item) => freeIn(item, name));
+    }
+    default:
+      return Object.entries(node).some(([key, value]) => key !== "span" && key !== "effect" && freeIn(value, name));
+  }
 }
 
 /** Unused parameters get a leading underscore so `noUnusedParameters` accepts them. */
 function unusedPrefix(name: string, body: JsonValue | undefined): string {
-  return usesName(body, name) ? camelIdentifier(name) : `_${camelIdentifier(name)}`;
+  return freeIn(body, name) ? camelIdentifier(name) : `_${camelIdentifier(name)}`;
 }
 
 /** Constants may refer to each other, so each is emitted after the ones it uses. */
@@ -1515,7 +1661,8 @@ function orderConstants(constants: readonly JsonRecord[]): readonly JsonRecord[]
     const name = String(constant["name"]);
     if (seen.has(name)) return;
     seen.add(name);
-    for (const reference of namesIn(constant["value"])) {
+    for (const reference of byName.keys()) {
+      if (!freeIn(constant["value"], reference)) continue;
       const target = byName.get(reference);
       if (target) visit(target);
     }

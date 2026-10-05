@@ -41,6 +41,7 @@ import {
   typeFromJson,
   union,
   unionSets,
+  widenDeep,
   widenLiteral,
   type LayerType,
   type MField,
@@ -118,6 +119,8 @@ export interface CheckInfo {
   readonly effectTypes: WeakMap<object, EffectType>;
   readonly calls: WeakMap<object, ResolvedCall>;
   readonly matches: WeakMap<object, MatchShape>;
+  /** Record literals checked against a named schema type. */
+  readonly recordTargets: WeakMap<object, MType>;
   /** Operation calls inside layer methods that must be given the layer's captured context. */
   readonly contextCalls: WeakSet<object>;
 }
@@ -188,6 +191,7 @@ class Checker {
       effectTypes: new WeakMap(),
       calls: new WeakMap(),
       matches: new WeakMap(),
+      recordTargets: new WeakMap(),
       contextCalls: new WeakSet(),
     };
   }
@@ -767,15 +771,18 @@ class Checker {
     if (!isRecord(node)) return effectOf(tUnknown);
     const span = node["span"];
     switch (node["kind"]) {
-      case "Succeed":
-        return effectOf(this.value(node["value"], scope, expected));
+      case "Succeed": {
+        // Without an expected type TypeScript infers the value and widens its literals.
+        const type = this.value(node["value"], scope, expected);
+        return effectOf(expected ? type : widenDeep(type));
+      }
       case "Pure": {
         const type = this.value(node["value"], scope, expected, { allowEffect: true });
         if (type.kind === "effect") {
           this.expectSuccess(type, expected, node["value"]);
           return type;
         }
-        return effectOf(type);
+        return effectOf(expected ? type : widenDeep(type));
       }
       case "Fail":
         return this.fail(node["error"], scope, span);
@@ -1339,7 +1346,7 @@ class Checker {
       case "ref-make": {
         const expectedRef = expected ? resolve(expected, this.env) : undefined;
         const value = this.value(args[0], scope, expectedRef?.kind === "ref" ? expectedRef.item : undefined);
-        return effectOf({ kind: "ref", item: expectedRef?.kind === "ref" ? expectedRef.item : widenLiteral(value) });
+        return effectOf({ kind: "ref", item: expectedRef?.kind === "ref" ? expectedRef.item : widenDeep(value) });
       }
       case "ref-get":
       case "ref-set":
@@ -1549,9 +1556,11 @@ class Checker {
       }
       if (fields.some((field) => !struct.fields.some((candidate) => candidate.name === field.name))) return tUnknown;
       // Field values were checked against the schema above; report nothing twice.
+      if (expected!.kind === "named") this.info.recordTargets.set(node, expected!);
       return expected!;
     }
-    return { kind: "struct", fields };
+    // Like TypeScript, a record literal without a target type widens its fields.
+    return { kind: "struct", fields: fields.map((field) => ({ ...field, type: widenDeep(field.type) })) };
   }
 
   private vector(node: JsonRecord, scope: Scope, expected: MType | undefined): MType {
@@ -1567,7 +1576,7 @@ class Checker {
     let item: MType = tNever;
     for (const element of items) {
       // Like TypeScript, an uncontextual array literal widens its elements.
-      item = join(item, widenLiteral(this.value(element, scope, itemExpected)), this.env);
+      item = join(item, widenDeep(this.value(element, scope, itemExpected)), this.env);
     }
     return { kind: "array", item: itemExpected ?? item };
   }
@@ -1707,7 +1716,7 @@ class Checker {
         }
         const target = expected ? resolve(expected, this.env) : undefined;
         const item = this.value(args[0], scope, target?.kind === "option" ? target.item : undefined);
-        return { kind: "option", item: target?.kind === "option" ? target.item : widenLiteral(item) };
+        return { kind: "option", item: target?.kind === "option" ? target.item : widenDeep(item) };
       }
       default:
         break;
@@ -1868,7 +1877,7 @@ class Checker {
       case "stream-run-collect":
         return effectOf({ kind: "array", item: source.item }, reprovenance(source.errors, span), reprovenance(source.requirements, span));
       case "stream-run-fold": {
-        const initial = widenLiteral(this.value(args[1], scope));
+        const initial = widenDeep(this.value(args[1], scope));
         this.value(args[2], scope, { kind: "function", params: [initial, source.item], result: initial });
         return effectOf(initial, reprovenance(source.errors, span), reprovenance(source.requirements, span));
       }
@@ -1939,14 +1948,17 @@ class Checker {
     scope: Scope,
     span: JsonValue | undefined,
   ): MType {
-    const isLambda = (arg: JsonValue | undefined): boolean =>
-      isRecord(arg) && arg["kind"] === "List" && (() => {
-        const first = arrayItems(arg["items"])[0];
-        return isRecord(first) && first["kind"] === "Var" && first["name"] === "fn";
-      })();
-    const argTypes = args.map((arg) => (isLambda(arg) ? undefined : this.value(arg, scope)));
+    // Lambdas and record/vector literals take their types from the other
+    // arguments, the way TypeScript contextually types them.
+    const isContextual = (arg: JsonValue | undefined): boolean => {
+      if (!isRecord(arg)) return false;
+      if (arg["kind"] === "Record" || arg["kind"] === "Vector") return true;
+      const first = arg["kind"] === "List" ? arrayItems(arg["items"])[0] : undefined;
+      return isRecord(first) && first["kind"] === "Var" && first["name"] === "fn";
+    };
+    const argTypes = args.map((arg) => (isContextual(arg) ? undefined : this.value(arg, scope)));
     if (argTypes.some((type) => type?.kind === "unknown")) {
-      for (const arg of args) if (isLambda(arg)) this.value(arg, scope);
+      for (const arg of args) if (isContextual(arg)) this.value(arg, scope);
       return tUnknown;
     }
     for (const overload of overloads) {
@@ -1955,13 +1967,26 @@ class Checker {
       const { params, result } = instantiate(overload);
       const matches = argTypes.every((type, index) => type === undefined || isAssignable(type, params[index]!, this.env, subst));
       if (!matches) continue;
+      // A deferred literal must still fit this overload's shape (a record cannot be a String).
+      const shapes = args.every((arg, index) => {
+        if (argTypes[index] !== undefined || !isRecord(arg)) return true;
+        const param = resolve(applySubstitution(params[index]!, subst), this.env);
+        if (arg["kind"] === "Record") return ["struct", "map", "union", "var", "named"].includes(param.kind);
+        if (arg["kind"] === "Vector") return ["array", "tuple", "var"].includes(param.kind);
+        return param.kind === "function" || param.kind === "var";
+      });
+      if (!shapes) continue;
       this.info.calls.set(node, { kind: "builtin", name, overload });
       args.forEach((arg, index) => {
         if (argTypes[index] !== undefined) return;
-        const expectedFn = applySubstitution(params[index]!, subst);
-        const lambdaType = this.value(arg, scope, expectedFn.kind === "function" ? { ...expectedFn, result: hasVariables(expectedFn.result) ? tUnknown : expectedFn.result } : expectedFn);
-        if (lambdaType.kind === "function" && expectedFn.kind === "function") {
-          isAssignable(lambdaType.result, expectedFn.result, this.env, subst);
+        const expectedParam = applySubstitution(params[index]!, subst);
+        if (expectedParam.kind === "function") {
+          const lambdaType = this.value(arg, scope, { ...expectedParam, result: hasVariables(expectedParam.result) ? tUnknown : expectedParam.result });
+          if (lambdaType.kind === "function") isAssignable(lambdaType.result, expectedParam.result, this.env, subst);
+        } else if (hasVariables(expectedParam)) {
+          isAssignable(this.value(arg, scope), expectedParam, this.env, subst);
+        } else {
+          this.value(arg, scope, expectedParam);
         }
       });
       const resolved = applySubstitution(result, subst);
@@ -1970,7 +1995,7 @@ class Checker {
     this.error(
       span,
       "mechanics/no-overload",
-      `${name} does not accept (${argTypes.map((type) => (type ? showType(type) : "fn")).join(" ")}).`,
+      `${name} does not accept (${argTypes.map((type, index) => (type ? showType(type) : describeLiteral(args[index]))).join(" ")}).`,
     );
     return tUnknown;
   }
@@ -2112,6 +2137,13 @@ class Checker {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+function describeLiteral(node: JsonValue | undefined): string {
+  if (!isRecord(node)) return "?";
+  if (node["kind"] === "Record") return "{...}";
+  if (node["kind"] === "Vector") return "[...]";
+  return "fn";
+}
 
 function extend(scope: Scope, name: string, type: MType): Scope {
   const next = new Map(scope);

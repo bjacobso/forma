@@ -48,6 +48,8 @@ export interface BuiltinOverload {
   readonly emit: (args: readonly EmitArg[], context: EmitContext) => string;
   /** Precedence of the emitted expression; calls and member access by default. */
   readonly prec?: number;
+  /** Arguments the translation gives a contextual type (for example through an annotated thunk). */
+  readonly contextualArgs?: readonly number[];
 }
 
 /** An argument used as a call argument or array element: no parentheses needed. */
@@ -170,6 +172,7 @@ export const builtins: ReadonlyMap<string, readonly BuiltinOverload[]> = new Map
       {
         params: [option(v(0)), v(0)],
         result: v(0),
+        contextualArgs: [1],
         emit: ([o, d], context) => {
           context.use("Option");
           // The fallback's return type is stated so TypeScript does not widen literals.

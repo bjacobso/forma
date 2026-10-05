@@ -56,7 +56,7 @@ export const readWrapped = (
 export const readWithDefault = (user: string, key: string): Effect.Effect<string, never, Storage> =>
   Effect.gen(function* () {
     const storage = yield* Storage;
-    return yield* Effect.orElseSucceed(storage.read(user, key), () => "default");
+    return yield* Effect.orElseSucceed(storage.read(user, key), (): string => "default");
   });
 
 export const readOption = (
