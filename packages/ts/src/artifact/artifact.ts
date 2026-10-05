@@ -16,6 +16,22 @@ export interface DeclarationSummary {
   readonly resultType: string;
 }
 
+/** Maps a location inside a declaration payload back to authored source. */
+export interface SourceMapEntry {
+  /** RFC 6901 JSON pointer into the payload; `""` is the whole payload. */
+  readonly path: string;
+  readonly span: Span;
+}
+
+/** Whether a declaration was written directly or produced by macro expansion. */
+export type DeclarationOrigin =
+  | { readonly kind: "authored" }
+  | {
+      readonly kind: "expanded";
+      /** Macro calls that produced the form, outermost first, at their call sites. */
+      readonly macros: readonly { readonly macroName: string; readonly span: Span }[];
+    };
+
 export interface PackageableDeclaration {
   readonly summary: DeclarationSummary;
   readonly payload: JsonValue;
@@ -24,6 +40,8 @@ export interface PackageableDeclaration {
   readonly span?: Span | undefined;
   readonly payloadContract?: string | undefined;
   readonly validators?: readonly string[] | undefined;
+  readonly origin?: DeclarationOrigin | undefined;
+  readonly sourceMap?: readonly SourceMapEntry[] | undefined;
 }
 
 export interface ArtifactSourceSummary extends SessionSourceSummary {

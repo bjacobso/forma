@@ -47,7 +47,9 @@ describe("elaborateOntology", () => {
       doc: "An organisation that raises tickets.",
       span: { sourceId: "desk.lisp", startLine: 1, endLine: 3 },
     });
-    expect(ticket!.fields).toEqual([
+    expect(ticket!.origin).toEqual({ kind: "authored" });
+    expect(ticket!.fields.map((f) => f.span?.startLine)).toEqual([6, 7, 8, 9]);
+    expect(ticket!.fields.map(({ span: _span, ...f }) => f)).toEqual([
       { name: "ticket/title", type: { kind: "scalar", name: "String" }, required: true, indexed: true },
       { name: "ticket/customer", type: { kind: "ref", target: "Customer" }, required: true, indexed: false },
       { name: "ticket/owner", type: { kind: "ref", target: "Customer" }, required: false, indexed: false },
@@ -64,7 +66,8 @@ describe("elaborateOntology", () => {
     ]);
 
     const [action] = model.actions;
-    expect(action!.inputs).toEqual([
+    expect(action!.inputs.map((i) => i.span?.startLine)).toEqual([15, 16]);
+    expect(action!.inputs.map(({ span: _span, ...i }) => i)).toEqual([
       { name: "ticket", type: { kind: "scalar", name: "String" }, required: true },
       {
         name: "watchers",

@@ -10,7 +10,9 @@ import {
   isJsonRuntimeStringLiteral,
   toJsonValue,
 } from "../src/Descriptor.js";
+import { packageArtifact } from "../src/Artifact.js";
 import { bootstrapOntologyPreludes } from "../src/Preludes.js";
+import { openSession } from "../src/Session.js";
 
 const prelude = bootstrapOntologyPreludes();
 
@@ -141,6 +143,70 @@ describe("elaborateProgram", () => {
       details: { form: "define-entity", declaration: "Technician" },
     });
     expect(formatDiagnostic(diagnostic)).toBe("m.lisp:1:1: Unknown ref");
+  });
+
+  test("maps payload paths back to authored child forms", () => {
+    const [entity] = elaborateProgramOrThrow(fieldService, { prelude });
+    expect(entity!.origin).toEqual({ kind: "authored" });
+    expect(entity!.payloadContract).toBe("EntityPayload");
+    expect(entity!.sourceMap.map((entry) => [entry.path, entry.span.startLine, entry.span.startColumn])).toEqual([
+      ["", 1, 1],
+      ["/fields/0", 2, 3],
+    ]);
+  });
+
+  test("expands top-level macros defined in the source and records their origin", () => {
+    const source = [
+      "(define-macro named [name field]",
+      "  `(define-entity ~name (:field [~field String {:required true}])))",
+      "(define-macro pair [a b]",
+      "  `(do (define-entity ~a (:field [a/x String])) (define-entity ~b (:field [b/x String]))))",
+      "(named Person person/name)",
+      "(pair Left Right)",
+    ].join("\n");
+    const result = elaborateProgram(source, { prelude, sourceId: "m.lisp" });
+    expect(result.diagnostics).toEqual([]);
+    expect(result.declarations.map((d) => [d.summary.name, d.span.startLine, d.formIndex])).toEqual([
+      ["Person", 5, 2],
+      ["Left", 6, 3],
+      ["Right", 6, 3],
+    ]);
+    const [person] = result.declarations;
+    expect(person!.payload).toMatchObject({ fields: [{ name: "person/name", required: true }] });
+    expect(person!.origin).toEqual({
+      kind: "expanded",
+      macros: [{ macroName: "named", span: person!.span }],
+    });
+    expect(person!.sourceMap.every((entry) => entry.span.startLine === 5)).toBe(true);
+  });
+
+  test("reports macro expansion failures at the call", () => {
+    const result = elaborateProgram(
+      "(define-macro broken [x] (car-of-nothing x))\n(broken 1)",
+      { prelude, sourceId: "m.lisp" },
+    );
+    expect(result.diagnostics.map((d) => [d.code, d.span?.startLine])).toEqual([
+      ["elaborate/expansion-failed", 2],
+    ]);
+  });
+
+  test("packages elaborated declarations with their source maps", () => {
+    const session = openSession({ id: "elaborate-test" });
+    session.rememberSource({ id: "field-service.lisp", text: fieldService });
+    const declarations = elaborateProgramOrThrow(fieldService, {
+      prelude,
+      sourceId: "field-service.lisp",
+    });
+    const result = packageArtifact({ engineName: "test", engineVersion: "0", session, declarations });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const [entity] = result.artifact.declarations;
+    expect(entity).toMatchObject({
+      declarationId: "Entity:Technician",
+      origin: { kind: "authored" },
+      sourceMap: [{ path: "" }, { path: "/fields/0" }],
+    });
+    expect(entity!.sourceHash).not.toBe("");
   });
 
   test("converts construct values to plain JSON", () => {

@@ -56,7 +56,18 @@ result.diagnostics.map(formatDiagnostic); // ["model.lisp:4:1: Unknown form 'fro
 ```
 
 Declarations have the `PackageableDeclaration` shape accepted by
-`@formalang/ts/artifact`. Runtime string literals inside payloads stay tagged
+`@formalang/ts/artifact`, and packaged artifacts keep two pieces of
+provenance per declaration:
+
+- `origin` is `{ kind: "authored" }`, or `{ kind: "expanded", macros }` when a
+  top-level call to a `define-macro` in the same source produced the form. The
+  declaration's `span` is then the macro call an author wrote.
+- `sourceMap` maps JSON pointers into the payload to authored spans: `""` for
+  the declaration and `/fields/0`, `/inputs/1`, ... for items built from child
+  forms.
+
+`elaborateSources` elaborates several files as one program, so declarations
+may refer across files. Runtime string literals inside payloads stay tagged
 (`isJsonRuntimeStringLiteral`) so they remain distinct from symbols. Use
 `declarationDiagnostic` to report host-side checks at a declaration's span, and
 `elaborateProgramOrThrow` when a single `ElaborationFailure` is preferable.
@@ -76,7 +87,7 @@ const { ok, model, diagnostics } = elaborateOntology([
   { sourceId: "system.lisp", source: preludeSource("system.lisp") }, // optional built-in entities
   { sourceId: "model.lisp", source },
 ]);
-model.entities; // [{ kind: "Entity", name, fields: [{ name, type, required, indexed }], span }]
+model.entities; // [{ kind: "Entity", name, fields: [{ name, type, required, indexed, span }], span, origin }]
 model.relations; // source and target entity names
 model.actions; // typed inputs and the :do body as a canonical runtime expression
 model.queries; // :from/:select/:where, or plain Datalog data

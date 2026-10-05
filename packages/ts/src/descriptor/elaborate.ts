@@ -6,15 +6,24 @@
  * declare every named form, apply the descriptor's static checks, run its
  * construct hook, and return JSON payloads with located diagnostics. Failures
  * are reported per form, so one bad declaration does not hide the others.
+ *
+ * Top-level calls to macros defined in the same source with `define-macro` are
+ * expanded first. Each declaration records whether it was authored or
+ * expanded, and carries a source map from payload paths to authored spans.
  */
 
 import { Effect, Exit } from "effect";
 import type {
+  DeclarationOrigin,
   DeclarationSummary,
   JsonValue,
   PackageableDeclaration,
+  SourceMapEntry,
 } from "../artifact/artifact.js";
+import { defaultBuiltins } from "../builtins/index.js";
 import type { Diagnostic, Span } from "../engine/operations.js";
+import { sourceTraceOf } from "../evaluator/source-trace.js";
+import { expandProgramSync } from "../expander/expand.js";
 import { parse } from "../reader/parser.js";
 import { toSExprMany } from "../reader/to-sexpr.js";
 import type { Loc, SExpr } from "../reader/types.js";
@@ -39,7 +48,10 @@ export interface ElaborateProgramOptions {
 /** One top-level form elaborated to a JSON payload. */
 export interface ElaboratedDeclaration extends PackageableDeclaration {
   readonly formName: string;
+  /** The authored span: the form itself, or the macro call that produced it. */
   readonly span: Span;
+  readonly origin: DeclarationOrigin;
+  readonly sourceMap: readonly SourceMapEntry[];
 }
 
 export interface ElaborateProgramResult {
@@ -98,6 +110,8 @@ export function elaborateSources(
     readonly form: NormalizedForm;
     readonly sourceId: string;
     readonly formIndex: number;
+    readonly loc: Loc;
+    readonly origin: DeclarationOrigin;
     readonly locate: (loc: Loc) => Span;
     readonly name?: string;
   }[] = [];
@@ -109,26 +123,23 @@ export function elaborateSources(
     for (const error of parsed.errors) at("parse/syntax", error.message, error.loc);
     if (parsed.errors.length > 0) continue;
 
-    toSExprMany(parsed.redTree).forEach((expr, formIndex) => {
+    for (const { expr, formIndex, loc, origin } of expandTopLevel(toSExprMany(parsed.redTree), locate, at)) {
       const recognized = recognizeForm(expr, descriptions);
       if (!recognized) {
         const head = headName(expr);
         at(
           "elaborate/unknown-form",
           head ? `Unknown form '${head}'` : "Top-level expression is not a recognized form",
-          expr.loc,
+          loc,
           head ? { form: head } : undefined,
         );
-        return;
+        continue;
       }
       if (accepted && !accepted.has(recognized.formName)) {
-        at(
-          "elaborate/unsupported-form",
-          `Form '${recognized.formName}' is not supported here`,
-          expr.loc,
-          { form: recognized.formName },
-        );
-        return;
+        at("elaborate/unsupported-form", `Form '${recognized.formName}' is not supported here`, loc, {
+          form: recognized.formName,
+        });
+        continue;
       }
       try {
         const form = normalizeForm(recognized, descriptions);
@@ -136,24 +147,32 @@ export function elaborateSources(
         if (name !== undefined) {
           const previous = declared.get(name);
           if (previous) {
-            at("elaborate/duplicate-declaration", `'${name}' is already declared by ${previous}`, expr.loc, {
+            at("elaborate/duplicate-declaration", `'${name}' is already declared by ${previous}`, loc, {
               form: recognized.formName,
               declaration: name,
             });
-            return;
+            continue;
           }
           declared.set(name, form.formName);
           semanticEnv.declareGlobal(name, form.formName);
         }
-        forms.push({ form, sourceId, formIndex, locate, ...(name !== undefined ? { name } : {}) });
+        forms.push({
+          form,
+          sourceId,
+          formIndex,
+          loc,
+          origin,
+          locate,
+          ...(name !== undefined ? { name } : {}),
+        });
       } catch (error) {
-        at("elaborate/malformed-form", errorMessage(error), expr.loc, { form: recognized.formName });
+        at("elaborate/malformed-form", errorMessage(error), loc, { form: recognized.formName });
       }
-    });
+    }
   }
 
   const declarations: ElaboratedDeclaration[] = [];
-  for (const { form, sourceId, formIndex, locate, name } of forms) {
+  for (const { form, sourceId, formIndex, loc, origin, locate, name } of forms) {
     const at = report.bind(undefined, locate);
     const details = { form: form.formName, ...(name !== undefined ? { declaration: name } : {}) };
     const input: HookInput = {
@@ -167,22 +186,23 @@ export function elaborateSources(
     };
 
     const problems = staticProblems(form);
-    for (const problem of problems) at(problem.code, problem.message, form.loc, details);
+    for (const problem of problems) at(problem.code, problem.message, loc, details);
     if (problems.length > 0) continue;
 
     const strategy = form.descriptor.elaboration;
     if (strategy.kind !== "hook" && strategy.kind !== "composite") {
-      at("elaborate/no-construct-hook", `Form '${form.formName}' has no construct hook`, form.loc, details);
+      at("elaborate/no-construct-hook", `Form '${form.formName}' has no construct hook`, loc, details);
       continue;
     }
     const exit = Effect.runSyncExit(elaboration.construct(strategy.fn, input));
     if (Exit.isFailure(exit)) {
-      at("elaborate/construct-failed", failureMessage(exit), form.loc, details);
+      at("elaborate/construct-failed", failureMessage(exit), loc, details);
       continue;
     }
 
     const payload = toJsonValue(exit.value);
-    const span = locate(form.loc);
+    const span = locate(loc);
+    const contract = payloadContract(form);
     declarations.push({
       formName: form.formName,
       summary: summaryOf(payload, form, name),
@@ -190,7 +210,9 @@ export function elaborateSources(
       sourceId,
       formIndex,
       span,
-      ...(form.descriptor.produces ? { payloadContract: form.descriptor.produces } : {}),
+      origin,
+      sourceMap: sourceMapOf(form, payload, span, locate),
+      ...(contract ? { payloadContract: contract } : {}),
     });
   }
 
@@ -328,6 +350,110 @@ export function isJsonRuntimeStringLiteral(
     typeof (value as Record<string, JsonValue>)["value"] === "string"
   );
 }
+
+interface TopLevelForm {
+  readonly expr: SExpr;
+  readonly formIndex: number;
+  /** Authored location: the form itself, or the macro call that produced it. */
+  readonly loc: Loc;
+  readonly origin: DeclarationOrigin;
+}
+
+const authored: DeclarationOrigin = { kind: "authored" };
+
+/**
+ * Drop `define-macro` forms and expand top-level calls to those macros, so a
+ * source may abbreviate its own declarations. A `(do ...)` expansion yields
+ * several forms. Other forms pass through untouched.
+ */
+const expandTopLevel = (
+  exprs: readonly SExpr[],
+  locate: (loc: Loc) => Span,
+  at: (code: string, message: string, loc: Loc | undefined, details?: Record<string, unknown>) => void,
+): readonly TopLevelForm[] => {
+  const macroDefs = exprs.filter((expr) => headName(expr) === "define-macro");
+  const macroNames = new Set(
+    macroDefs.flatMap((expr) => (expr._tag === "List" && expr.items[1]?._tag === "Sym" ? [expr.items[1].name] : [])),
+  );
+  return exprs.flatMap((expr, formIndex): readonly TopLevelForm[] => {
+    const head = headName(expr);
+    if (head === "define-macro") return [];
+    if (head === undefined || !macroNames.has(head)) return [{ expr, formIndex, loc: expr.loc, origin: authored }];
+    try {
+      const [expanded] = expandProgramSync([...macroDefs, expr], { builtins: defaultBuiltins }).exprs;
+      if (!expanded) return [];
+      const produced =
+        headName(expanded) === "do" && expanded._tag === "List" ? expanded.items.slice(1) : [expanded];
+      return produced.map((node) => {
+        const trace = sourceTraceOf(node);
+        const macros = (trace.macroOrigins ?? []).map((origin) => ({
+          macroName: origin.macroName,
+          span: locate(origin.loc),
+        }));
+        return {
+          expr: node,
+          formIndex,
+          loc: trace.macroOrigins?.length ? trace.loc : expr.loc,
+          origin: macros.length > 0 ? { kind: "expanded", macros } : authored,
+        };
+      });
+    } catch (error) {
+      at("elaborate/expansion-failed", `Expanding '${head}' failed: ${errorMessage(error)}`, expr.loc, {
+        form: head,
+      });
+      return [];
+    }
+  });
+};
+
+/**
+ * Map the payload root to the declaration, and each array item built from a
+ * child form (`(:field ...)` → `/fields/0`) to that child's authored span.
+ * A slot maps to the payload key with its name or plural that has one item
+ * per child form.
+ */
+const sourceMapOf = (
+  form: NormalizedForm,
+  payload: JsonValue,
+  span: Span,
+  locate: (loc: Loc) => Span,
+): readonly SourceMapEntry[] => {
+  const entries: SourceMapEntry[] = [{ path: "", span }];
+  const record = jsonObject(payload);
+  if (!record) return entries;
+  for (const slot of form.descriptor.slots) {
+    const children = form.slots.getChildForms(slot.name);
+    if (children.length === 0) continue;
+    const key = [slot.name, `${slot.name}s`, `${slot.name}es`].find((candidate) => {
+      const value = record[candidate];
+      return Array.isArray(value) && value.length === children.length;
+    });
+    if (key === undefined) continue;
+    children.forEach((child, index) => {
+      entries.push({
+        path: `/${jsonPointerToken(key)}/${index}`,
+        span: locate(sourceTraceOf(child.rawExpr).loc),
+      });
+    });
+  }
+  return entries;
+};
+
+const jsonPointerToken = (key: string): string => key.replaceAll("~", "~0").replaceAll("/", "~1");
+
+/** The descriptor's `(:artifact (:payload (:contract ...)))` extension, if any. */
+const payloadContract = (form: NormalizedForm): string | undefined => {
+  const artifact = form.descriptor.extensions?.["artifact"];
+  const payload =
+    artifact && typeof artifact === "object" && !Array.isArray(artifact)
+      ? (artifact as Record<string, unknown>)["payload"]
+      : undefined;
+  const contract =
+    payload && typeof payload === "object" && !Array.isArray(payload)
+      ? (payload as Record<string, unknown>)["contract"]
+      : undefined;
+  return typeof contract === "string" ? contract : form.descriptor.produces;
+};
 
 const headName = (expr: SExpr): string | undefined => {
   if (expr._tag !== "List") return undefined;

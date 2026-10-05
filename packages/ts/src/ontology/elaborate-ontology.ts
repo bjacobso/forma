@@ -9,7 +9,7 @@
  * declarations are checked and reported at the referring declaration.
  */
 
-import type { JsonValue } from "../artifact/artifact.js";
+import type { DeclarationOrigin, JsonValue } from "../artifact/artifact.js";
 import type { BootstrappedPrelude } from "../descriptor/bootstrap.js";
 import {
   declarationDiagnostic,
@@ -33,19 +33,23 @@ export interface OntologyField {
   readonly type: OntologyType;
   readonly required: boolean;
   readonly indexed: boolean;
+  /** Where the field was written, when the source map locates it. */
+  readonly span?: Span;
 }
 
 export interface OntologyInput {
   readonly name: string;
   readonly type: OntologyType;
   readonly required: boolean;
+  readonly span?: Span;
 }
 
 interface DeclarationBase {
   readonly name: string;
   readonly doc?: string;
-  /** Where the declaration was written. */
+  /** Where the declaration was written, or the macro call that produced it. */
   readonly span: Span;
+  readonly origin: DeclarationOrigin;
 }
 
 export interface EntityDeclaration extends DeclarationBase {
@@ -167,7 +171,12 @@ export function elaborateOntology(
       name: string(payload["name"]) ?? declaration.summary.name ?? "anonymous",
       ...optional("doc", string(payload["doc"])),
       span: declaration.span,
+      origin: declaration.origin,
     };
+    const spanAt = (key: string, index: number): Span | undefined =>
+      declaration.sourceMap.find((entry) => entry.path === `/${key}/${index}`)?.span;
+    const fields = () =>
+      array(payload["fields"]).map((value, index) => ({ ...field(value), ...optional("span", spanAt("fields", index)) }));
     switch (payload["kind"]) {
       case "Entity":
         entities.push({
@@ -175,7 +184,7 @@ export function elaborateOntology(
           ...base,
           ...optional("role", string(payload["role"])),
           ...optional("idPattern", string(payload["idPattern"])),
-          fields: array(payload["fields"]).map(field),
+          fields: fields(),
         });
         break;
       case "Relation":
@@ -184,7 +193,7 @@ export function elaborateOntology(
           ...base,
           source: string(payload["source"]) ?? "",
           target: string(payload["target"]) ?? "",
-          fields: array(payload["fields"]).map(field),
+          fields: fields(),
         });
         break;
       case "Action":
@@ -192,7 +201,10 @@ export function elaborateOntology(
         actions.push({
           kind: payload["kind"],
           ...base,
-          inputs: array(payload["inputs"]).map(input),
+          inputs: array(payload["inputs"]).map((value, index) => ({
+            ...input(value),
+            ...optional("span", spanAt("inputs", index)),
+          })),
           ...optional("returns", string(payload["returns"])),
           ...optional("body", runtimeExprBody(payload["do"])),
         });
