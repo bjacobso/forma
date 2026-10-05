@@ -116,7 +116,7 @@ Status key:
 | Generated code typechecks without `any` | supported | Under `tsconfig.base.json`. |
 | HM checker (`Type.inferSourceStr`) and language server | missing | They do not understand the new forms. The mechanics checker is authoritative for Effect programs. |
 | Hosted runtime (`makeMechanicsRuntime`) | partial | Executes only the original body forms. |
-| OCaml engine | see `../engine-parity/matrix.json` | Projects the same IR for the cases listed in `../engine-parity/cases.json`. It has no Effect TypeScript generator. |
+| OCaml engine | partial | It projects identical mechanics IR for every positive case: `pnpm parity:engines` reports zero `effect-ir` differences. It has no checker or Effect TypeScript generator of its own; the TypeScript checker accepts its IR. Gaps are listed in `../engine-parity/matrix.json`. |
 
 ## Baseline: `main` at `30d7db4`
 
