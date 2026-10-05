@@ -321,15 +321,6 @@ describe("sibling bugs (expected behavior, currently failing)", () => {
     expect(observed.diagnostics[0]?.message).toBe(plain.diagnostics[0]?.message); // "Cannot call" vs "Cannot tail-call"
   });
 
-  // Out of group (found by the property above): the VM's compileLet stores a
-  // let local at scope.locals.length, ignoring operands already on the stack,
-  // so a `let` in argument position overwrites the callee. Not observation-specific.
-  test.fails("VM: a let in argument position does not clobber the callee", async () => {
-    const result = await Engine.evaluate({ source: "((fn [w] w) (let [u 7] u))" });
-    expect(result.diagnostics).toEqual([]); // actually "Cannot call number as function"
-    expect(result.printed).toBe("7");
-  });
-
   // Root cause (reader, not provenance): a reader-macro list's loc covers only
   // the prefix token, so the collector's span lookup never matches it.
   test.fails("a quasiquote expression records its value", async () => {

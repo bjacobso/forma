@@ -190,6 +190,9 @@ export function compileLet(
       const slot = scope.addLocal(letBindName);
       emit(chunk, Op.STORE_LOCAL, trace);
       emitU8(chunk, slot, trace);
+      // STORE_LOCAL leaves the value on the stack; an operand left below the
+      // body's value would shift the operands of an enclosing call.
+      emit(chunk, Op.POP, trace);
     } else {
       // Unsupported destructuring in bytecode — emit store to a dummy slot
       emit(chunk, Op.POP, trace);

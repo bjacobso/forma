@@ -63,6 +63,13 @@ describe("@formalang/ts evaluator fixtures", () => {
   test("cond branching fixture", async () => {
     expect(await runFixture("cond-grades.lisp")).toEqual(["A", "B", "C", "D", "F"]);
   });
+
+  test("a let among a call's operands leaves the other operands in place", async () => {
+    expect(await run("[1 (let [x 2] x) 3]")).toEqual([1, 2, 3]);
+    expect(await run("((fn [w] w) (let [u 7] u))")).toBe(7);
+    expect(await run("(define (h a b) (+ a b))\n(h (let [x 1 y 2] (+ x y)) 10)")).toBe(13);
+    expect(await run("(define (g) [1 (let [x 2] x) 3])\n(g)")).toEqual([1, 2, 3]);
+  });
 });
 
 describe("@formalang/ts elaboration", () => {

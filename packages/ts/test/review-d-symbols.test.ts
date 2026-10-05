@@ -275,12 +275,6 @@ describe("index and evaluator disagree", () => {
     expect(await run("(define (f [a b]) (+ a b))\n(f [1 2])")).toBe("3"); // ArityError: f compiles with zero parameters
   });
 
-  test.fails("VM: a let in argument position does not clobber the call's operands (found by the property; not an index bug)", async () => {
-    // Root cause: compileLet stores binders in frame slots (scope.addLocal) that alias operand-stack entries already pushed for the enclosing call or vector.
-    expect(await run("[1 (let [x 2] x) 3]")).toBe("[1 2 3]"); // evaluates to [2 2 3]
-    expect(await run("(define (h a) a)\n(h (let [x 1] x))")).toBe("1"); // Cannot call number as function
-  });
-
   test.fails("property: renaming survives global redefinition", async () => {
     // Counterexample of the redefinition sibling above, found by generation.
     await fc.assert(
