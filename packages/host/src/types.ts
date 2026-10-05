@@ -124,10 +124,19 @@ export interface EditorParseProjection {
 export interface EditorAnalysisRequest {
   readonly sourceId?: string | undefined;
   readonly source: string;
+  /** Host builtins the source may call, typed by their `typeScheme`. */
+  readonly hostBuiltins?: readonly HostBuiltinDescriptor[] | undefined;
+  readonly typePolicy?: TypePolicy | undefined;
+  /** Use the session's host builtins and type policy when the request gives none. */
+  readonly sessionId?: string | undefined;
 }
 
 export interface EditorAnalysisResult {
   readonly sourceId: string;
+  /**
+   * False when any top-level form does not type. Every such form has an
+   * error, and the other forms are still typed in `typedSpans`.
+   */
   readonly success: boolean;
   readonly resultType?: TypeProjection | undefined;
   readonly resultTypeDisplay?: string | undefined;

@@ -15,7 +15,12 @@ import type { CoreExpr, Span } from "../type/core-expr.js";
 import { resetNodeIds } from "../type/core-expr.js";
 import { lowerProgram } from "../type/lower.js";
 import { inferProgram } from "../type/infer.js";
-import { InferContext, makeInferContext } from "../type/context.js";
+import {
+  InferContext,
+  makeInferContext,
+  type MakeInferContextOptions,
+} from "../type/context.js";
+import { applyType } from "../type/substitution.js";
 import { InferenceError } from "../type/errors.js";
 import type { DSLTypeProvider } from "../type/dsl-provider.js";
 
@@ -132,6 +137,12 @@ export interface AnalyzeLspOptions {
    * and their sub-expressions are type-checked via HM inference.
    */
   readonly dslProvider?: DSLTypeProvider;
+  /**
+   * Types for names the program does not define, such as host builtins, and
+   * the scheme provider for built-ins. See `TypecheckRequest.hostBuiltins`
+   * and `typePolicy`.
+   */
+  readonly inferOptions?: MakeInferContextOptions;
 }
 
 /**
@@ -196,34 +207,34 @@ export function analyzeLsp(
       };
     }
 
-    // Infer (passing DSL provider for result types and type bindings)
-    const ctxService = yield* makeInferContext();
+    // Infer (passing DSL provider for result types and type bindings). A
+    // top-level form that does not type is reported, and the forms around it
+    // are still typed.
+    const ctxService = yield* makeInferContext(options?.inferOptions);
     const layer = Layer.succeed(InferContext, ctxService);
+    const formErrors: InferenceError[] = [];
 
     const inferResult = yield* Effect.result(
-      Effect.provide(inferProgram(coreExprs, undefined, dslProvider, sexprs), layer),
+      Effect.provide(
+        inferProgram(coreExprs, undefined, dslProvider, sexprs, {
+          onFormError: (error) => Effect.sync(() => void formErrors.push(error)),
+        }),
+        layer,
+      ),
     );
 
     // Collect diagnostics regardless of success/failure
     const collectedDiagnostics = yield* Ref.get(ctxService.diagnostics);
+    const failures = inferResult._tag === "Failure" ? [...formErrors, inferResult.failure] : formErrors;
+    const errors = failures.map((err) => ({
+      message: err.message,
+      span: err.origin?.span,
+      code: err.origin?.span ? extractCode(source, err.origin.span) : undefined,
+    }));
 
-    if (inferResult._tag === "Failure") {
-      const err = inferResult.failure;
-      return {
-        success: false,
-        typedSpans: [],
-        errors: [
-          {
-            message: err.message,
-            span: err.origin?.span,
-            code: err.origin?.span ? extractCode(source, err.origin.span) : undefined,
-          },
-        ],
-        diagnostics: collectedDiagnostics,
-      };
-    }
-
-    const resultType = inferResult.success;
+    const resultType = inferResult._tag === "Success" ? inferResult.success : undefined;
+    // Types recorded early in inference are resolved with everything learned since.
+    const finalSubst = yield* Ref.get(ctxService.subst);
     const nodeTypes = yield* Ref.get(ctxService.nodeTypes);
 
     // Collect all nodes and build typed spans
@@ -234,8 +245,9 @@ export function analyzeLsp(
 
     const typedSpans: TypedSpan[] = [];
     for (const node of allNodes) {
-      const type = nodeTypes.get(node.id);
-      if (type) {
+      const recorded = nodeTypes.get(node.id);
+      if (recorded) {
+        const type = applyType(finalSubst, recorded);
         typedSpans.push({
           id: node.id,
           span: node.span,
@@ -251,11 +263,12 @@ export function analyzeLsp(
     typedSpans.sort((a, b) => a.span.start - b.span.start);
 
     return {
-      success: true,
-      resultType,
-      resultTypeString: showType(resultType),
+      success: errors.length === 0,
+      ...(resultType !== undefined && errors.length === 0
+        ? { resultType, resultTypeString: showType(resultType) }
+        : {}),
       typedSpans,
-      errors: [],
+      errors,
       diagnostics: collectedDiagnostics,
     };
   });
