@@ -1,3 +1,4 @@
+import type { KernelObserver } from "./observation.js";
 import type { Effect } from "effect";
 import type { SExpr } from "../reader/index.js";
 import type { Env } from "../Env.js";
@@ -90,6 +91,8 @@ export interface KernelOptions {
   readonly stepLimit: number;
   readonly builtins?: Record<string, BuiltinFn>;
   readonly env?: Env;
+  /** Receives the value of every observed expression. */
+  readonly observer?: KernelObserver;
 }
 
 /**

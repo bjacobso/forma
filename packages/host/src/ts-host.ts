@@ -6,8 +6,10 @@ import * as Evaluator from "@formalang/ts/evaluator";
 import type { BuiltinFn, KFn, KValue } from "@formalang/ts/evaluator";
 import * as Lsp from "@formalang/ts/lsp";
 import * as Reader from "@formalang/ts/reader";
+import * as Editor from "@formalang/ts/editor";
 import * as Engine from "@formalang/ts/engine";
 import * as LanguageSession from "@formalang/ts/session";
+import * as Syntax from "@formalang/ts/syntax";
 import * as VM from "@formalang/ts/vm";
 
 import { typeProjection } from "./abi-projections.js";
@@ -20,15 +22,24 @@ import type {
   CloseSessionResult,
   ConfigureSessionRequest,
   ConfigureSessionResult,
+  DescribeNodesRequest,
+  DescribeNodesResult,
   Diagnostic,
   EditorAnalysisRequest,
   EditorAnalysisResult,
+  EditScriptRequest,
+  EditScriptResult,
   ExpandRequest,
   ExpandResult,
+  FindReferencesRequest,
+  FindReferencesResult,
+  FormSlotsRequest,
+  FormSlotsResult,
   EvaluateInSessionRequest,
   EvaluateRequest,
   EvaluationResult,
   EvaluationState,
+  ExpressionObservation,
   HostCall,
   HostCallResumeResult,
   HostBuiltinDescriptor,
@@ -38,7 +49,11 @@ import type {
   LoadSourceRequest,
   LoadSourceResult,
   OpenSessionRequest,
+  ObservationRequest,
+  ObservationResult,
   OpenSessionResult,
+  OutlineToSourceRequest,
+  OutlineToSourceResult,
   ParseRequest,
   ParseResult,
   ProjectValueRequest,
@@ -50,6 +65,14 @@ import type {
   ResumeHostCallRequest,
   SessionInfoRequest,
   SessionInfoResult,
+  SourceToOutlineRequest,
+  SourceToOutlineResult,
+  SymbolDefinition,
+  SymbolIndexRequest,
+  SymbolIndexResult,
+  SymbolReference,
+  SyntaxIdentityRequest,
+  SyntaxIdentityResult,
   TypePolicy,
   TypecheckRequest,
   TypecheckResult,
@@ -125,6 +148,72 @@ function valueProjection(value: KValue): ValueProjection {
   return { kind: "opaque", tag: "unknown", display: String(value) };
 }
 
+type ObservationLimits = ObservationResult["limits"];
+
+function observationLimits(request: ObservationRequest): ObservationLimits {
+  return {
+    maxRecords: request.maxRecords ?? Evaluator.DEFAULT_MAX_OBSERVATION_RECORDS,
+    maxItems: request.maxItems ?? 20,
+    maxDepth: request.maxDepth ?? 4,
+    maxStringLength: request.maxStringLength ?? 500,
+  };
+}
+
+function engineObservation(request: ObservationRequest): Evaluator.ObservationOptions {
+  return {
+    ...(request.identity ? { identity: request.identity } : {}),
+    ...(request.maxRecords !== undefined ? { maxRecords: request.maxRecords } : {}),
+  };
+}
+
+function truncatedMarker(display: string): ValueProjection {
+  return { kind: "opaque", tag: "truncated", display };
+}
+
+function truncateString(value: string, limits: ObservationLimits): string {
+  return value.length > limits.maxStringLength
+    ? `${value.slice(0, limits.maxStringLength)}…`
+    : value;
+}
+
+/** Project a value within observation limits. */
+function boundedValueProjection(
+  value: KValue,
+  limits: ObservationLimits,
+  depth = 0,
+): ValueProjection {
+  if (typeof value === "string") return { kind: "string", value: truncateString(value, limits) };
+  if (Array.isArray(value) || Evaluator.isKMap(value)) {
+    if (depth >= limits.maxDepth) {
+      return truncatedMarker(truncateString(Evaluator.printKValue(value), limits));
+    }
+    if (Array.isArray(value)) {
+      const items = value
+        .slice(0, limits.maxItems)
+        .map((item) => boundedValueProjection(item, limits, depth + 1));
+      if (value.length > limits.maxItems) {
+        items.push(truncatedMarker(`… ${value.length - limits.maxItems} more`));
+      }
+      return { kind: "list", items };
+    }
+    const entries = [...value.entries()];
+    const shown = entries.slice(0, limits.maxItems).map(([key, nested]) => ({
+      key: { kind: "string", value: key } as ValueProjection,
+      value: boundedValueProjection(nested, limits, depth + 1),
+    }));
+    if (entries.length > limits.maxItems) {
+      const more = entries.length - limits.maxItems;
+      shown.push({ key: truncatedMarker("…"), value: truncatedMarker(`… ${more} more`) });
+    }
+    return { kind: "map", entries: shown };
+  }
+  const projected = valueProjection(value);
+  if ("display" in projected && projected.display !== undefined) {
+    return { ...projected, display: truncateString(projected.display, limits) };
+  }
+  return projected;
+}
+
 export class TsLanguageHost implements LanguageHost {
   readonly name = "ts";
   #nextSessionId = 1;
@@ -157,6 +246,16 @@ export class TsLanguageHost implements LanguageHost {
         "sessionInfo",
         "resetSession",
         "closeSession",
+        "identifySyntax",
+        "observe",
+        "symbolIndex",
+        "findReferences",
+        "applyEditScript",
+        "describeNodes",
+        "editScriptSchema",
+        "sourceToOutline",
+        "outlineToSource",
+        "formSlots",
       ],
     };
   }
@@ -252,11 +351,14 @@ export class TsLanguageHost implements LanguageHost {
       source: request.source,
       stepLimit: request.stepLimit ?? DEFAULT_STEP_LIMIT,
       ...(request.variables ? { env: Env.from(variablesToBindings(request.variables)) } : {}),
+      ...(request.observe ? { observe: engineObservation(request.observe) } : {}),
     });
+    const observations = this.#observations(undefined, sourceId, request, result, undefined);
     if (result.diagnostics.length > 0) {
       return {
         value: { kind: "nil" },
         diagnostics: result.diagnostics,
+        ...(observations ? { observations } : {}),
       };
     }
     return {
@@ -264,6 +366,7 @@ export class TsLanguageHost implements LanguageHost {
       printed: result.printed,
       steps: result.steps,
       diagnostics: [],
+      ...(observations ? { observations } : {}),
     };
   }
 
@@ -300,11 +403,20 @@ export class TsLanguageHost implements LanguageHost {
       source,
       env,
       stepLimit: request.stepLimit ?? session.defaultStepLimit,
+      ...(request.observe ? { observe: engineObservation(request.observe) } : {}),
     });
+    const observations = this.#observations(
+      session,
+      request.sourceId ?? "session",
+      request,
+      result,
+      request.retainValues,
+    );
     if (result.diagnostics.length > 0) {
       return {
         status: "failed",
         diagnostics: result.diagnostics,
+        ...(observations ? { observations } : {}),
       };
     }
     return {
@@ -314,7 +426,51 @@ export class TsLanguageHost implements LanguageHost {
         printed: result.printed,
         steps: result.steps,
         diagnostics: [],
+        ...(observations ? { observations } : {}),
       },
+    };
+  }
+
+  #observations(
+    session: TsSession | undefined,
+    sourceId: string,
+    request: { readonly observe?: ObservationRequest | undefined },
+    result: Pick<Engine.EvaluateResult, "observations">,
+    retainValues: EvaluateInSessionRequest["retainValues"] | undefined,
+  ): ObservationResult | undefined {
+    if (!request.observe || !result.observations) return undefined;
+    const limits = observationLimits(request.observe);
+    return {
+      records: result.observations.records.map((record): ExpressionObservation => {
+        let value: ValueProjection | undefined;
+        if (record.count > 0) {
+          value = boundedValueProjection(record.value, limits);
+          const retain =
+            session !== undefined &&
+            (retainValues === "all" ||
+              (retainValues === "functions" && Evaluator.isKFn(record.value)));
+          if (retain) {
+            value = {
+              ...value,
+              valueRef: this.#retainValue(
+                session,
+                record.value,
+                undefined,
+                this.#callableValueInvoker(session, record.value),
+              ),
+            } as ValueProjection;
+          }
+        }
+        return {
+          nodeId: record.nodeId,
+          span: { sourceId, startOffset: record.span.start, endOffset: record.span.end },
+          count: record.count,
+          ...(value ? { value } : {}),
+          ...(record.failure ? { failure: record.failure } : {}),
+        };
+      }),
+      truncated: result.observations.truncated,
+      limits,
     };
   }
 
@@ -530,6 +686,159 @@ export class TsLanguageHost implements LanguageHost {
     };
   }
 
+  async identifySyntax(request: SyntaxIdentityRequest): Promise<SyntaxIdentityResult> {
+    return this.identifySyntaxSync(request);
+  }
+
+  identifySyntaxSync(request: SyntaxIdentityRequest): SyntaxIdentityResult {
+    const sourceId = request.sourceId ?? "source";
+    const anchors = request.anchors ?? [];
+    const identity = request.previous
+      ? Syntax.reconcileSyntax(request.previous, request.source, {
+          anchors,
+          ...(request.changes ? { changes: request.changes } : {}),
+        })
+      : Syntax.identifySyntax(request.source, {
+          anchors,
+          ...(request.idPrefix !== undefined ? { idPrefix: request.idPrefix } : {}),
+        });
+    return {
+      sourceId,
+      identity,
+      diagnostics: identity.errors.map((error) => ({
+        code: "parse/syntax",
+        severity: "error",
+        message: error.message,
+        phase: "parse",
+        span: { sourceId, startOffset: error.span.start, endOffset: error.span.end },
+      })),
+    };
+  }
+
+  async symbolIndex(request: SymbolIndexRequest): Promise<SymbolIndexResult> {
+    const sourceId = request.sourceId ?? "source";
+    const index = this.#indexSymbols(request);
+    return {
+      sourceId,
+      definitions: index.definitions.map(definitionProjection),
+      references: index.references.map(referenceProjection),
+      diagnostics: [],
+    };
+  }
+
+  async findReferences(request: FindReferencesRequest): Promise<FindReferencesResult> {
+    const sourceId = request.sourceId ?? "source";
+    const occurrences = Editor.findReferences(this.#indexSymbols(request), {
+      sourceId,
+      ...(request.offset !== undefined ? { offset: request.offset } : {}),
+      ...(request.nodeId !== undefined ? { nodeId: request.nodeId } : {}),
+    });
+    return {
+      sourceId,
+      ...(occurrences.definition ? { definition: definitionProjection(occurrences.definition) } : {}),
+      references: occurrences.references.map(referenceProjection),
+      diagnostics: [],
+    };
+  }
+
+  async applyEditScript(request: EditScriptRequest): Promise<EditScriptResult> {
+    const sourceId = request.sourceId ?? "source";
+    const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
+    const result = Editor.applyEditScript({
+      sourceId,
+      source: request.source,
+      script: request.script,
+      ...(request.identity ? { identity: request.identity } : {}),
+      documents: (session?.language.orderedSources() ?? []).map((source) => ({
+        sourceId: source.id,
+        source: source.text,
+      })),
+    });
+    return { ...result, sourceId };
+  }
+
+  async describeNodes(request: DescribeNodesRequest): Promise<DescribeNodesResult> {
+    return { nodes: Editor.describeNodes(request.source, request.identity, request.ids) };
+  }
+
+  async editScriptSchema(): Promise<unknown> {
+    return Editor.editScriptJsonSchema();
+  }
+
+  async sourceToOutline(request: SourceToOutlineRequest): Promise<SourceToOutlineResult> {
+    const result = Syntax.sourceToOutline(
+      request.source,
+      request.identity ? { identity: request.identity } : {},
+    );
+    return { sourceId: request.sourceId ?? "source", ...result };
+  }
+
+  async outlineToSource(request: OutlineToSourceRequest): Promise<OutlineToSourceResult> {
+    const result = Syntax.outlineToSource(request.items, {
+      ...(request.base ? { base: request.base } : {}),
+      ...(request.brokenRows ? { brokenRows: request.brokenRows } : {}),
+      ...(request.idPrefix !== undefined ? { idPrefix: request.idPrefix } : {}),
+    });
+    return { sourceId: request.sourceId ?? "source", ...result };
+  }
+
+  async formSlots(request: FormSlotsRequest): Promise<FormSlotsResult> {
+    const sourceId = request.sourceId ?? "source";
+    const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
+    const slots = Editor.formSlots({
+      source: request.source,
+      ...(request.identity ? { identity: request.identity } : {}),
+      ...(request.offset !== undefined ? { offset: request.offset } : {}),
+      ...(request.nodeId !== undefined ? { nodeId: request.nodeId } : {}),
+      descriptorSources: [
+        ...(session?.language.orderedSources() ?? []).map((source) => source.text),
+        ...(request.descriptorSources ?? []).map((document) => document.source),
+      ],
+    });
+    if (!slots) return { sourceId, identifiers: [], slots: [], unknownSlots: [] };
+    const span = (value: { readonly start: number; readonly end: number }) => hostSpan(sourceId, value);
+    return {
+      sourceId,
+      form: { ...slots.form, span: span(slots.form.span) },
+      identifiers: slots.identifiers.map((identifier) =>
+        identifier.span ? { ...identifier, span: span(identifier.span) } : identifier,
+      ) as FormSlotsResult["identifiers"],
+      slots: slots.slots.map((slot) => ({
+        ...slot,
+        occurrences: slot.occurrences.map((occurrence) => ({
+          nodeId: occurrence.nodeId,
+          span: span(occurrence.span),
+          values: occurrence.values.map((value) => ({ nodeId: value.nodeId, span: span(value.span) })),
+        })),
+      })),
+      ...(slots.activeSlot ? { activeSlot: slots.activeSlot } : {}),
+      unknownSlots: slots.unknownSlots,
+    };
+  }
+
+  #indexSymbols(request: SymbolIndexRequest): Editor.SymbolIndex {
+    const sourceId = request.sourceId ?? "source";
+    const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
+    const documents: Editor.SymbolDocument[] = [
+      ...(session?.language.orderedSources() ?? [])
+        .filter((source) => source.id !== sourceId)
+        .map((source) => ({ sourceId: source.id, source: source.text })),
+      ...(request.documents ?? [])
+        .filter((document) => document.sourceId !== sourceId)
+        .map((document) => ({
+          sourceId: document.sourceId,
+          source: document.source,
+          ...(document.identity ? { identity: document.identity } : {}),
+        })),
+      {
+        sourceId,
+        source: request.source,
+        ...(request.identity ? { identity: request.identity } : {}),
+      },
+    ];
+    return Editor.indexSymbols(documents);
+  }
+
   #requireSession(sessionId: string): TsSession {
     const session = this.#sessions.get(sessionId);
     if (!session) {
@@ -551,6 +860,45 @@ export class TsLanguageHost implements LanguageHost {
       ...Builtins.defaultBuiltins,
       ...this.#hostBuiltinFns(evaluation, session.hostBuiltins),
     };
+    if (request.observe) {
+      const observe = request.observe;
+      const completion = Engine.evaluateObserved(
+        { sourceId, source, env, stepLimit: request.stepLimit ?? session.defaultStepLimit },
+        engineObservation(observe),
+        builtins,
+      ).then((result): EvaluationState => {
+        const observations = this.#observations(
+          session,
+          sourceId,
+          request,
+          result,
+          request.retainValues,
+        );
+        if (result.diagnostics.length > 0) {
+          return {
+            status: "failed",
+            diagnostics: result.diagnostics,
+            ...(observations ? { observations } : {}),
+          };
+        }
+        if (!evaluation.aborted && result.env) {
+          session.language.env = result.env;
+        }
+        return {
+          status: "completed",
+          result: {
+            value: this.#projectValue(session, result.value, request.retainValues),
+            printed: Evaluator.printKValue(result.value),
+            steps: result.steps,
+            diagnostics: [],
+            ...(observations ? { observations } : {}),
+          },
+        };
+      });
+      Object.assign(evaluation, { completion });
+      session.evaluations.set(evaluationId, evaluation);
+      return this.#nextEvaluationState(evaluation);
+    }
     const completion = Effect.runPromise(
       Effect.provide(
         Evaluator.evaluate(source, {
@@ -827,6 +1175,20 @@ export class TsLanguageHost implements LanguageHost {
     evaluation.session.evaluations.delete(evaluation.evaluationId);
     return state.state;
   }
+}
+
+function hostSpan(sourceId: string, span: { readonly start: number; readonly end: number }) {
+  return { sourceId, startOffset: span.start, endOffset: span.end };
+}
+
+function definitionProjection(definition: Editor.SymbolDefinition): SymbolDefinition {
+  const { sourceId, span, ...rest } = definition;
+  return { ...rest, span: hostSpan(sourceId, span) };
+}
+
+function referenceProjection(reference: Editor.SymbolReference): SymbolReference {
+  const { sourceId, span, ...rest } = reference;
+  return { ...rest, span: hostSpan(sourceId, span) };
 }
 
 function failedEvaluation(code: string, message: string): EvaluationState {

@@ -357,6 +357,8 @@ mise run forma:ocaml:test
   elaboration.
 - [Design decisions](docs/design-decisions.md) records the constraints behind
   the current architecture.
+- [Language services](docs/language-services.md) describes node identity,
+  observation, edit scripts, and the outline codec for structural editors.
 - [Roadmap](docs/roadmap.md) tracks the path from the research implementation
   toward a stable language platform.
 - [Examples](examples/README.md) contains reviewable domain programs embedded

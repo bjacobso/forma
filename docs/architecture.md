@@ -67,6 +67,11 @@ React bindings. `@formalang/language-server` projects the OCaml editor ABI into
 standard Language Server Protocol requests. It starts domain-neutral and loads
 only preludes explicitly supplied by its consumer.
 
+Structural editors build on a further set of host services: stable node ids,
+per-expression observation, a symbol index, id-addressed edit scripts, an
+outline codec, and slot affordances. [Language services](./language-services.md)
+records their design.
+
 The website executes the TypeScript compiler in a Web Worker. Every displayed
 stage is computed from the editable source in the tab; preview-only target
 artifacts are visibly distinguished from live compiler output.

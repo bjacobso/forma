@@ -152,6 +152,8 @@ function parseForm(state: BuilderState): FormResult {
       return parseReaderMacro(state, "unquote");
     case "tilde-at":
       return parseReaderMacro(state, "unquote-splicing");
+    case "error":
+      return { node: GreenNode("Error", [consumeToken(state)]), errors: [token.error] };
     default:
       // Error: unexpected token
       return {

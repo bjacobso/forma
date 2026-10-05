@@ -119,6 +119,13 @@ export enum Op {
    * dispatch wrappers into the referenced globals, and pushes nil.
    */
   REGISTER_INSTANCE = 83,
+
+  // ── Tooling ─────────────────────────────────────────────
+  /**
+   * OBSERVE u16 — report the top of the stack to the observer as target u16.
+   * Emitted only when an evaluation is observed. Does not count as a step.
+   */
+  OBSERVE = 90,
 }
 
 // ---------------------------------------------------------------------------

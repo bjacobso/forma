@@ -29,6 +29,36 @@
       "reason": "The packages have different envelope versions; the runner compares declaration payloads and provenance."
     },
     {
+      "id": "syntax-identity",
+      "status": "gap",
+      "reason": "identifySyntax is implemented by the TypeScript host only. It depends on the shared reader grammar; the OCaml hosts do not expose it yet."
+    },
+    {
+      "id": "observation",
+      "status": "gap",
+      "reason": "Per-expression observation (evaluate observe) is implemented by the TypeScript VM and evaluator only. The OCaml hosts ignore the observe field."
+    },
+    {
+      "id": "symbol-index",
+      "status": "gap",
+      "reason": "symbolIndex and findReferences are implemented by the TypeScript host only; they use the TypeScript expander and descriptor parser."
+    },
+    {
+      "id": "edit-script",
+      "status": "gap",
+      "reason": "applyEditScript, describeNodes, and editScriptSchema are implemented by the TypeScript host only. Scripts are engine-neutral data over the shared reader grammar."
+    },
+    {
+      "id": "outline-codec",
+      "status": "gap",
+      "reason": "sourceToOutline and outlineToSource are implemented by the TypeScript host only. They depend only on the shared reader grammar."
+    },
+    {
+      "id": "form-slots",
+      "status": "gap",
+      "reason": "formSlots is implemented by the TypeScript host only; it reads descriptors with the TypeScript descriptor parser."
+    },
+    {
       "id": "parse-nil",
       "status": "gap",
       "fixture": "cases.json (operational-effects, effect-typescript/operational-effects, multi-service-checkout, resource-scope)",

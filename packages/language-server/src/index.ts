@@ -10,3 +10,4 @@ export { getCompletions } from "./handlers/completion.js";
 export { getDefinition } from "./handlers/definition.js";
 export { getDiagnostics } from "./handlers/diagnostics.js";
 export { getHover } from "./handlers/hover.js";
+export { getReferences } from "./handlers/references.js";

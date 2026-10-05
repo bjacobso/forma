@@ -37,6 +37,20 @@ export function evalExpr(
   env: Env,
   runtime: EvaluatorRuntime,
 ): Effect.Effect<KValue, KernelError> {
+  const observer = runtime.observer;
+  const targets = observer?.targetsOf(expr);
+  if (!observer || !targets || targets.length === 0) return evalUnobserved(expr, env, runtime);
+  return Effect.map(evalUnobserved(expr, env, runtime), (value) => {
+    if (!isKTailCall(value)) for (const target of targets) observer.observe(target, value);
+    return value;
+  });
+}
+
+function evalUnobserved(
+  expr: SExpr,
+  env: Env,
+  runtime: EvaluatorRuntime,
+): Effect.Effect<KValue, KernelError> {
   const trace = sourceTraceOf(expr);
   return Effect.gen(function* () {
     const steps = yield* Ref.updateAndGet(runtime.counter, (n) => n + 1);

@@ -99,6 +99,96 @@ duplicate fields are reported at the declaration that refers to them. Forms
 outside the core ontology (views, processes, documents) are returned untouched
 in `model.others`.
 
+## Structural editor services
+
+These services back outline and structural editors. Their design is in
+[Language services](https://github.com/bjacobso/forma/blob/main/docs/language-services.md).
+
+`@formalang/ts/syntax` gives every node and comment an id that survives edits.
+Pass the previous source and identity with the next source:
+
+```ts
+import { identifySyntax, reconcileSyntax } from "@formalang/ts/syntax";
+
+const identity = identifySyntax("(define total 1)");
+const next = reconcileSyntax({ source: "(define total 1)", identity }, "(define total 10)");
+next.nodes; // [{ id, kind, span, parent, index }], with the define's id unchanged
+```
+
+Nodes keep their ids when edits happen elsewhere, when they are retyped in
+place, and when they move with identical tokens. Parsing never throws:
+unterminated strings and stray characters become error nodes.
+
+Observed evaluation records the last value, evaluation count, and failure of
+every author-written expression, keyed by those ids:
+
+```ts
+import { evaluate } from "@formalang/ts/engine";
+
+const result = await evaluate({ source, observe: { identity } });
+result.observations?.records; // [{ nodeId, span, count, value, failure? }]
+```
+
+Values computed inside macro expansions are reported at the macro call and at
+the arguments the author wrote, never at a macro's template. A failed
+evaluation still returns the records computed before the failure.
+
+`@formalang/ts/editor` indexes definitions and references. It resolves the
+program after macro expansion, so a macro that expands to `define` defines
+the author's symbol, and it reads descriptors so `define-form` declarations
+define names too:
+
+```ts
+import { findReferences, indexSymbols } from "@formalang/ts/editor";
+
+const index = indexSymbols([{ sourceId: "model.lisp", source }], { descriptors });
+findReferences(index, { sourceId: "model.lisp", offset }); // { definition, references }
+```
+
+Edit scripts describe structural changes by node id instead of by offset.
+They are Effect Schema data, and `editScriptJsonSchema()` is the same contract
+as JSON Schema for a model's structured output:
+
+```ts
+import { applyEditScript, describeNodes } from "@formalang/ts/editor";
+
+describeNodes(source, identity, [stepId]); // kind, text, head, path, top-level form
+const result = applyEditScript({
+  source,
+  identity,
+  script: { version: 1, ops: [{ op: "wrap", targets: [aId, bId], head: "parallel" }] },
+});
+if (result.ok) result.source; // layout kept; result.identity keeps the wrapped nodes' ids
+```
+
+Operations are `replace`, `insert`, `delete`, `wrap`, `splice`, `unwrap`,
+`raise`, `move`, `rename` (scope-aware, refusing captures), and `extract`
+(free locals become parameters). A script applies completely or not at all.
+
+The outline codec reads source as rows (`{ id, text, children }`) in the
+style of indentation-sensitive Lisp, where a row's text holds the leading
+elements of its list and its children hold the rest. Row ids are node ids:
+
+```ts
+import { outlineToSource, sourceToOutline } from "@formalang/ts/syntax";
+
+const { items, identity } = sourceToOutline("(defn total [x]\n  (* x 2))");
+// [{ text: "defn total [x]", children: [{ text: "* x 2" }] }]
+const printed = outlineToSource(items, { base: { source, identity } });
+printed.source; // unchanged rows keep the author's layout
+```
+
+`formSlots` reports which identifiers and slots a descriptor form accepts,
+which are present or still empty, and an edit-script insertion for each, so
+an editor can offer placeholders such as `+ trigger`:
+
+```ts
+import { formSlots } from "@formalang/ts/editor";
+
+const slots = formSlots({ source, offset, descriptors });
+slots?.slots; // [{ name: "from", required: true, missing: false, placeholder: "+ from", insertion }]
+```
+
 ```sh
 pnpm --filter @formalang/ts build
 pnpm --filter @formalang/ts test

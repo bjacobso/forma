@@ -1,8 +1,11 @@
 # `@formalang/language-server`
 
 Language Server Protocol support for Forma, backed by the OCaml JavaScript
-engine. It provides diagnostics, hover, completion, definitions, and optional
-document formatting.
+engine. It provides diagnostics, hover, completion, definitions, references,
+and optional document formatting. References, and definitions the OCaml
+engine cannot resolve (names introduced by macros or descriptor forms), come
+from the symbol index in `@formalang/host` across open documents and
+preludes.
 
 ```sh
 npm install -g @formalang/language-server

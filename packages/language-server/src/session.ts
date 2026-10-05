@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { basename, isAbsolute, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
-import type { TextDocument } from "vscode-languageserver-textdocument";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
 import { OcamlAbiClient } from "./abi.js";
 import type { AbiDiagnostic, AbiResponse, CstExpr, SymbolDefinition } from "./protocol.js";
@@ -161,6 +162,25 @@ export class OcamlWorkspaceSession {
       sessionId: this.currentSessionId(),
       sourceId: sourceIdForUri(document.uri),
     });
+  }
+
+  /**
+   * The consumer-supplied preludes as documents, for name resolution across
+   * files. They are read on each request so edits on disk are seen; an open
+   * document with the same URI takes precedence over its file.
+   */
+  async preludeDocuments(): Promise<readonly TextDocument[]> {
+    const documents = await Promise.all(
+      this.preludePaths.map(async (path) => {
+        const sourcePath = isAbsolute(path) ? path : resolve(this.workspaceRoot, path);
+        const uri = pathToFileURL(sourcePath).href;
+        const open = this.documents.get(uri);
+        if (open) return open;
+        const text = await readFile(sourcePath, "utf8").catch(() => undefined);
+        return text === undefined ? undefined : TextDocument.create(uri, "lisp", 0, text);
+      }),
+    );
+    return documents.filter((document): document is TextDocument => document !== undefined);
   }
 
   allDefinitions(): readonly SymbolDefinition[] {

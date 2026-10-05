@@ -23,6 +23,7 @@
  * - `@formalang/ts/diagnostic`   — Errors and diagnostics
  * - `@formalang/ts/formatter`    — Code formatter
  * - `@formalang/ts/editor`       — Structural editing
+ * - `@formalang/ts/syntax`       — Stable node identity across edits
  * - `@formalang/ts/lsp`          — Language server support
  * - `@formalang/ts/codegen`      — S-expression builder for code gen
  * - `@formalang/ts/descriptor-codegen` — FormDescriptor → Effect Schema source generation
@@ -50,6 +51,7 @@ export * as Env from "./Env.js";
 export * as Diagnostic from "./Diagnostic.js";
 export * as Formatter from "./Formatter.js";
 export * as Editor from "./Editor.js";
+export * as Syntax from "./Syntax.js";
 export * as LSP from "./LSP.js";
 export * as CodeGen from "./CodeGen.js";
 export * as DescriptorCodegen from "./DescriptorCodegen.js";
