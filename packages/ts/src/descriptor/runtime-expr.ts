@@ -25,11 +25,15 @@ type SExprLike = {
   readonly message?: string;
 };
 
-function isSExprLike(value: unknown): value is SExprLike {
+export function isSExprLike(value: unknown): value is SExprLike {
   return value !== null && typeof value === "object" && "_tag" in value;
 }
 
-function canonicalExprValue(value: unknown): KValue {
+/**
+ * Lower reader nodes to canonical runtime values: lists and vectors become
+ * arrays, symbols become strings, and string literals become marker maps.
+ */
+export function canonicalExprValue(value: unknown): KValue {
   if (isSExprLike(value)) {
     switch (value._tag) {
       case "List":

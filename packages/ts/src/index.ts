@@ -28,6 +28,7 @@
  * - `@formalang/ts/descriptor-codegen` — FormDescriptor → Effect Schema source generation
  * - `@formalang/ts/descriptor`   — Self-describing form system + bootstrap
  * - `@formalang/ts/preludes`     — Bundled Lisp preludes (not re-exported here)
+ * - `@formalang/ts/ontology`     — Typed ontology DSL elaboration (not re-exported here)
  */
 
 export * as SExpr from "./SExpr.js";

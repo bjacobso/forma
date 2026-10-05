@@ -109,6 +109,10 @@
     "./preludes": {
       "types": "./dist/Preludes.d.mts",
       "import": "./dist/Preludes.mjs"
+    },
+    "./ontology": {
+      "types": "./dist/Ontology.d.mts",
+      "import": "./dist/Ontology.mjs"
     }
   },
   "files": [

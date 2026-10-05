@@ -213,6 +213,7 @@ export {
   declarationDiagnostic,
   elaborateProgram,
   elaborateProgramOrThrow,
+  elaborateSources,
   formatDiagnostic,
   isJsonRuntimeStringLiteral,
   sourceLocator,
@@ -220,6 +221,7 @@ export {
   type ElaborateProgramOptions,
   type ElaborateProgramResult,
   type ElaboratedDeclaration,
+  type ProgramSource,
 } from "./descriptor/elaborate.js";
 
 // Descriptor codegen

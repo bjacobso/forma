@@ -63,6 +63,31 @@ Declarations have the `PackageableDeclaration` shape accepted by
 Typed validate and infer hooks are not run here; they belong to the type
 checker.
 
+## Ontology DSL
+
+`@formalang/ts/ontology` elaborates the bundled ontology DSL into typed
+declarations that mirror `preludes/ontology-ir.lisp`:
+
+```ts
+import { elaborateOntology } from "@formalang/ts/ontology";
+import { preludeSource } from "@formalang/ts/preludes";
+
+const { ok, model, diagnostics } = elaborateOntology([
+  { sourceId: "system.lisp", source: preludeSource("system.lisp") }, // optional built-in entities
+  { sourceId: "model.lisp", source },
+]);
+model.entities; // [{ kind: "Entity", name, fields: [{ name, type, required, indexed }], span }]
+model.relations; // source and target entity names
+model.actions; // typed inputs and the :do body as a canonical runtime expression
+model.queries; // :from/:select/:where, or plain Datalog data
+```
+
+Field types are parsed into `{ kind: "scalar" | "ref" | "list" | "set" | "apply" }`,
+and bare entity names become refs. Unknown entities, unknown field types, and
+duplicate fields are reported at the declaration that refers to them. Forms
+outside the core ontology (views, processes, documents) are returned untouched
+in `model.others`.
+
 ```sh
 pnpm --filter @formalang/ts build
 pnpm --filter @formalang/ts test

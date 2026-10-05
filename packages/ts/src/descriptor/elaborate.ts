@@ -22,7 +22,7 @@ import type { BootstrappedPrelude } from "./bootstrap.js";
 import type { HookInput } from "./ElaborationHook.js";
 import { normalizeForm, type NormalizedForm } from "./normalize.js";
 import { recognizeForm } from "./recognize.js";
-import { RUNTIME_STRING_LITERAL_KEY } from "./runtime-expr.js";
+import { RUNTIME_STRING_LITERAL_KEY, canonicalExprValue, isSExprLike } from "./runtime-expr.js";
 import { SimpleSemanticEnvironment } from "./SemanticEnvironment.js";
 
 export interface ElaborateProgramOptions {
@@ -50,15 +50,31 @@ export interface ElaborateProgramResult {
   readonly diagnostics: readonly Diagnostic[];
 }
 
+/** One named source text in a multi-file program. */
+export interface ProgramSource {
+  readonly sourceId: string;
+  readonly source: string;
+}
+
 /** Elaborate every top-level form of `source` against a bootstrapped prelude. */
 export function elaborateProgram(
   source: string,
   options: ElaborateProgramOptions,
 ): ElaborateProgramResult {
-  const sourceId = options.sourceId ?? "source.forma";
-  const locate = sourceLocator(source, sourceId);
+  return elaborateSources([{ sourceId: options.sourceId ?? "source.forma", source }], options);
+}
+
+/**
+ * Elaborate several sources as one program. Every source's names are declared
+ * before any form is constructed, so forms may refer across files.
+ */
+export function elaborateSources(
+  sources: readonly ProgramSource[],
+  options: Omit<ElaborateProgramOptions, "sourceId">,
+): ElaborateProgramResult {
   const diagnostics: Diagnostic[] = [];
-  const at = (
+  const report = (
+    locate: (loc: Loc) => Span,
     code: string,
     message: string,
     loc: Loc | undefined,
@@ -74,58 +90,71 @@ export function elaborateProgram(
     });
   };
 
-  const parsed = parse(source);
-  for (const error of parsed.errors) at("parse/syntax", error.message, error.loc);
-  if (parsed.errors.length > 0) return { ok: false, declarations: [], diagnostics };
-
   const { descriptions, elaboration } = options.prelude;
   const accepted = options.forms ? new Set(options.forms) : undefined;
   const semanticEnv = options.semanticEnv ?? new SimpleSemanticEnvironment();
   const declared = new Map<string, string>();
-  const forms: { readonly form: NormalizedForm; readonly formIndex: number; readonly name?: string }[] =
-    [];
+  const forms: {
+    readonly form: NormalizedForm;
+    readonly sourceId: string;
+    readonly formIndex: number;
+    readonly locate: (loc: Loc) => Span;
+    readonly name?: string;
+  }[] = [];
 
-  toSExprMany(parsed.redTree).forEach((expr, formIndex) => {
-    const recognized = recognizeForm(expr, descriptions);
-    if (!recognized) {
-      const head = headName(expr);
-      at(
-        "elaborate/unknown-form",
-        head ? `Unknown form '${head}'` : "Top-level expression is not a recognized form",
-        expr.loc,
-        head ? { form: head } : undefined,
-      );
-      return;
-    }
-    if (accepted && !accepted.has(recognized.formName)) {
-      at("elaborate/unsupported-form", `Form '${recognized.formName}' is not supported here`, expr.loc, {
-        form: recognized.formName,
-      });
-      return;
-    }
-    try {
-      const form = normalizeForm(recognized, descriptions);
-      const name = declaredName(form);
-      if (name !== undefined) {
-        const previous = declared.get(name);
-        if (previous) {
-          at("elaborate/duplicate-declaration", `'${name}' is already declared by ${previous}`, expr.loc, {
-            form: recognized.formName,
-            declaration: name,
-          });
-          return;
-        }
-        declared.set(name, form.formName);
-        semanticEnv.declareGlobal(name, form.formName);
+  for (const { sourceId, source } of sources) {
+    const locate = sourceLocator(source, sourceId);
+    const at = report.bind(undefined, locate);
+    const parsed = parse(source);
+    for (const error of parsed.errors) at("parse/syntax", error.message, error.loc);
+    if (parsed.errors.length > 0) continue;
+
+    toSExprMany(parsed.redTree).forEach((expr, formIndex) => {
+      const recognized = recognizeForm(expr, descriptions);
+      if (!recognized) {
+        const head = headName(expr);
+        at(
+          "elaborate/unknown-form",
+          head ? `Unknown form '${head}'` : "Top-level expression is not a recognized form",
+          expr.loc,
+          head ? { form: head } : undefined,
+        );
+        return;
       }
-      forms.push({ form, formIndex, ...(name !== undefined ? { name } : {}) });
-    } catch (error) {
-      at("elaborate/malformed-form", errorMessage(error), expr.loc, { form: recognized.formName });
-    }
-  });
+      if (accepted && !accepted.has(recognized.formName)) {
+        at(
+          "elaborate/unsupported-form",
+          `Form '${recognized.formName}' is not supported here`,
+          expr.loc,
+          { form: recognized.formName },
+        );
+        return;
+      }
+      try {
+        const form = normalizeForm(recognized, descriptions);
+        const name = declaredName(form);
+        if (name !== undefined) {
+          const previous = declared.get(name);
+          if (previous) {
+            at("elaborate/duplicate-declaration", `'${name}' is already declared by ${previous}`, expr.loc, {
+              form: recognized.formName,
+              declaration: name,
+            });
+            return;
+          }
+          declared.set(name, form.formName);
+          semanticEnv.declareGlobal(name, form.formName);
+        }
+        forms.push({ form, sourceId, formIndex, locate, ...(name !== undefined ? { name } : {}) });
+      } catch (error) {
+        at("elaborate/malformed-form", errorMessage(error), expr.loc, { form: recognized.formName });
+      }
+    });
+  }
 
   const declarations: ElaboratedDeclaration[] = [];
-  for (const { form, formIndex, name } of forms) {
+  for (const { form, sourceId, formIndex, locate, name } of forms) {
+    const at = report.bind(undefined, locate);
     const details = { form: form.formName, ...(name !== undefined ? { declaration: name } : {}) };
     const input: HookInput = {
       formName: form.formName,
@@ -262,8 +291,10 @@ export function sourceLocator(source: string, sourceId: string): (loc: Loc) => S
 
 /**
  * Convert construct output (maps, sets, vectors) to plain JSON. Map keys
- * become object keys; runtime string literals keep their marker object so
- * they remain distinguishable from symbols.
+ * become object keys. Reader nodes that hooks pass through unchanged, such as
+ * a `(Ref Customer)` field type, are lowered like runtime expressions: lists
+ * become arrays and symbols strings, while string literals keep their marker
+ * object so they remain distinguishable from symbols.
  */
 export function toJsonValue(value: unknown): JsonValue {
   if (value === null || value === undefined) return null;
@@ -273,6 +304,9 @@ export function toJsonValue(value: unknown): JsonValue {
   if (Array.isArray(value) || value instanceof Set) return [...value].map(toJsonValue);
   if (value instanceof Map) {
     return Object.fromEntries([...value].map(([key, item]) => [String(key), toJsonValue(item)]));
+  }
+  if (isSExprLike(value) && "loc" in value) {
+    return toJsonValue(canonicalExprValue(value));
   }
   if (typeof value === "object") {
     return Object.fromEntries(
