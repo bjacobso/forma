@@ -30,6 +30,39 @@ vocabulary first, domain forms second). After editing `preludes/*.lisp`, run
 `pnpm --filter @formalang/ts preludes:generate`; a test fails if the embedded
 copies drift.
 
+## Elaborating a DSL program
+
+`elaborateProgram` runs a source file through a bootstrapped prelude in one
+call. Every top-level form is recognized, checked against its descriptor
+(identifiers, required slots, allowed values), and constructed into a plain
+JSON payload. Problems come back as located diagnostics rather than
+exceptions, one per failing form:
+
+```ts
+import { elaborateProgram, formatDiagnostic } from "@formalang/ts/descriptor";
+import { bootstrapOntologyPreludes } from "@formalang/ts/preludes";
+
+const result = elaborateProgram(source, {
+  prelude: bootstrapOntologyPreludes(),
+  sourceId: "model.lisp",
+  forms: ["define-entity", "define-relation", "define-action"],
+});
+for (const declaration of result.declarations) {
+  declaration.summary; // { kind: "Entity", name: "WorkOrder", resultType: "SchemaDecl" }
+  declaration.payload; // JSON
+  declaration.span; // sourceId, offsets, start/end line and column
+}
+result.diagnostics.map(formatDiagnostic); // ["model.lisp:4:1: Unknown form 'frobnicate'"]
+```
+
+Declarations have the `PackageableDeclaration` shape accepted by
+`@formalang/ts/artifact`. Runtime string literals inside payloads stay tagged
+(`isJsonRuntimeStringLiteral`) so they remain distinct from symbols. Use
+`declarationDiagnostic` to report host-side checks at a declaration's span, and
+`elaborateProgramOrThrow` when a single `ElaborationFailure` is preferable.
+Typed validate and infer hooks are not run here; they belong to the type
+checker.
+
 ```sh
 pnpm --filter @formalang/ts build
 pnpm --filter @formalang/ts test

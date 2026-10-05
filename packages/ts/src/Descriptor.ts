@@ -207,6 +207,21 @@ export { bootstrapFromSources, bootstrapFromFiles } from "./descriptor/bootstrap
 export { recognizeForm, recognizeForms, type RecognizedForm } from "./descriptor/recognize.js";
 export { normalizeForm, type NormalizedForm } from "./descriptor/normalize.js";
 
+// One-call elaboration with located diagnostics
+export {
+  ElaborationFailure,
+  declarationDiagnostic,
+  elaborateProgram,
+  elaborateProgramOrThrow,
+  formatDiagnostic,
+  isJsonRuntimeStringLiteral,
+  sourceLocator,
+  toJsonValue,
+  type ElaborateProgramOptions,
+  type ElaborateProgramResult,
+  type ElaboratedDeclaration,
+} from "./descriptor/elaborate.js";
+
 // Descriptor codegen
 export type {
   GeneratedSchemaModule,
