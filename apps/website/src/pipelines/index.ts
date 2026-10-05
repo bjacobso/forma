@@ -1,8 +1,8 @@
 import { Effect } from "effect";
 import { PRELUDE_SOURCE } from "@formalang/ts/expander";
 import {
+  generateEffectProgram,
   generateMechanicsEffectSchemaModule,
-  generateMechanicsEffectTypeScriptModule,
   mechanicsPackageableDeclarations,
 } from "@formalang/ts/mechanics";
 import { parseManyToSExpr } from "@formalang/ts/reader";
@@ -397,10 +397,9 @@ function effectSchemaTarget(source: string): string {
 }
 
 function effectTypeScriptTarget(source: string): string {
-  const exprs = Effect.runSync(parseManyToSExpr(source));
-  const result = mechanicsPackageableDeclarations(exprs, "effect-ts");
-  if (!result.ok) {
+  const result = generateEffectProgram(source, { sourceId: "effect-ts" });
+  if (!result.ok || result.code === undefined) {
     return JSON.stringify({ diagnostics: result.diagnostics }, null, 2);
   }
-  return generateMechanicsEffectTypeScriptModule(result.declarations).code;
+  return result.code;
 }
