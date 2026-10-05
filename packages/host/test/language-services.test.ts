@@ -16,6 +16,8 @@ describe("structural editor services on the TypeScript host", () => {
         "applyEditScript",
         "describeNodes",
         "editScriptSchema",
+        "sourceToOutline",
+        "outlineToSource",
       ]));
   });
 
@@ -220,5 +222,28 @@ describe("structural editor services on the TypeScript host", () => {
 
     const schema = (await host.editScriptSchema()) as { definitions: Record<string, unknown> };
     expect(Object.keys(schema.definitions)).toEqual(expect.arrayContaining(["EditScript", "EditOp"]));
+  });
+
+  it("reads source as an outline and prints it back", async () => {
+    const source = "(defn total [x]\n  ; doubles\n  (* x 2))\n(total 21)\n";
+    const read = await host.sourceToOutline({ sourceId: "doc", source });
+    expect(read.items.map((item) => [item.text, item.children.map((child) => child.text)])).toEqual([
+      ["defn total [x]", ["; doubles", "* x 2"]],
+      ["total 21", []],
+    ]);
+    const unchanged = await host.outlineToSource({
+      items: read.items,
+      base: { source, identity: read.identity },
+    });
+    expect(unchanged.source).toBe(source);
+
+    const [definition, call] = read.items;
+    const edited = await host.outlineToSource({
+      items: [definition!, { ...call!, text: "total 2" }, { id: "new-row", text: "(now)", children: [] }],
+      base: { source, identity: read.identity },
+    });
+    expect(edited.source).toBe("(defn total [x]\n  ; doubles\n  (* x 2))\n(total 2)\n(now)\n");
+    expect(edited.rows.map((row) => row.id)).toContain("new-row");
+    expect(edited.identity.nodes.some((node) => node.id === call!.id)).toBe(true);
   });
 });
