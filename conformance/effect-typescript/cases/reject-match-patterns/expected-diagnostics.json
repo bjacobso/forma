@@ -35,11 +35,21 @@
       "phase": "check",
       "severity": "error",
       "code": "mechanics/match-type",
-      "message": "match works on Option, Result, enums, and tagged unions, but this is Int.",
-      "line": 23,
+      "message": "match works on Option, Result, enums, tagged unions, tagged errors, strings, numbers, and booleans, but this is Point.",
+      "line": 25,
       "column": 10,
-      "endLine": 23,
-      "endColumn": 11
+      "endLine": 25,
+      "endColumn": 15
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/non-exhaustive-match",
+      "message": "match on Int needs a final _ arm.",
+      "line": 31,
+      "column": 3,
+      "endLine": 33,
+      "endColumn": 23
     }
   ]
 }

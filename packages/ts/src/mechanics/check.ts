@@ -1216,7 +1216,7 @@ class Checker {
           this.error(
             spanOf(node["value"]) ?? span,
             "mechanics/match-type",
-            `match works on Option, Result, enums, and tagged unions, but this is ${showType(scrutinee)}.`,
+            `match works on Option, Result, enums, tagged unions, tagged errors, strings, numbers, and booleans, but this is ${showType(scrutinee)}.`,
           );
           return undefined;
         }
