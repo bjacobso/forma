@@ -749,6 +749,76 @@ export interface OutlineToSourceResult {
   readonly errors: readonly OutlineRowError[];
 }
 
+export interface FormSlotsRequest {
+  readonly sourceId?: string | undefined;
+  readonly source: string;
+  readonly identity?: SyntaxIdentity | undefined;
+  /** A position inside the form, or inside one of its slots. */
+  readonly offset?: number | undefined;
+  /** Or the id of the form, or of a node inside it. */
+  readonly nodeId?: string | undefined;
+  /** Use `define-form`s from the session's loaded sources. */
+  readonly sessionId?: string | undefined;
+  /** Further sources whose `define-form`s describe forms. */
+  readonly descriptorSources?: readonly SourceDocument[] | undefined;
+}
+
+/** An edit-script `insert` that fills an identifier or slot. */
+export interface SlotInsertion {
+  readonly at: EditPlace;
+  readonly text: string;
+  /** Offset in `text` where the value goes. */
+  readonly cursor: number;
+}
+
+export interface FormSlotAffordance {
+  readonly name: string;
+  readonly mode: "value" | "expr" | "form";
+  readonly required: boolean;
+  readonly many: boolean;
+  readonly type?: string | undefined;
+  readonly doc?: string | undefined;
+  readonly aliases: readonly string[];
+  readonly childForm?: string | undefined;
+  readonly occurrences: readonly {
+    readonly nodeId: string;
+    readonly span: Span;
+    readonly values: readonly { readonly nodeId: string; readonly span: Span }[];
+  }[];
+  readonly empty: boolean;
+  readonly missing: boolean;
+  readonly available: boolean;
+  /** Label for an editor placeholder, such as `+ trigger`. */
+  readonly placeholder: string;
+  readonly insertion: SlotInsertion;
+}
+
+export interface FormSlotsResult {
+  readonly sourceId: string;
+  /** Absent when no descriptor form encloses the position. */
+  readonly form?:
+    | {
+        readonly name: string;
+        readonly nodeId: string;
+        readonly span: Span;
+        readonly phase: "meta" | "domain";
+        readonly doc?: string | undefined;
+      }
+    | undefined;
+  readonly identifiers: readonly {
+    readonly name: string;
+    readonly kind: "Symbol" | "String" | "Value";
+    readonly declaration: boolean;
+    readonly doc?: string | undefined;
+    readonly nodeId?: string | undefined;
+    readonly span?: Span | undefined;
+    readonly insertion?: SlotInsertion | undefined;
+  }[];
+  readonly slots: readonly FormSlotAffordance[];
+  readonly activeSlot?: string | undefined;
+  readonly unknownSlots: readonly { readonly name: string; readonly nodeId: string }[];
+}
+
 export interface LanguageHost {
   readonly name: string;
   version(): Promise<VersionResult>;
@@ -779,4 +849,5 @@ export interface LanguageHost {
   editScriptSchema?(): Promise<unknown>;
   sourceToOutline?(request: SourceToOutlineRequest): Promise<SourceToOutlineResult>;
   outlineToSource?(request: OutlineToSourceRequest): Promise<OutlineToSourceResult>;
+  formSlots?(request: FormSlotsRequest): Promise<FormSlotsResult>;
 }

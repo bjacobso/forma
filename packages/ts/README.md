@@ -178,6 +178,17 @@ const printed = outlineToSource(items, { base: { source, identity } });
 printed.source; // unchanged rows keep the author's layout
 ```
 
+`formSlots` reports which identifiers and slots a descriptor form accepts,
+which are present or still empty, and an edit-script insertion for each, so
+an editor can offer placeholders such as `+ trigger`:
+
+```ts
+import { formSlots } from "@formalang/ts/editor";
+
+const slots = formSlots({ source, offset, descriptors });
+slots?.slots; // [{ name: "from", required: true, missing: false, placeholder: "+ from", insertion }]
+```
+
 ```sh
 pnpm --filter @formalang/ts build
 pnpm --filter @formalang/ts test

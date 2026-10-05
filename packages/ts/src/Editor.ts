@@ -53,3 +53,12 @@ export {
   type EditScriptError,
   type NodeDescription,
 } from "./editor/edit-script.js";
+export {
+  formSlots,
+  type FormSlots,
+  type FormSlotsRequest,
+  type IdentifierAffordance,
+  type SlotAffordance,
+  type SlotInsertion,
+  type SlotOccurrence,
+} from "./editor/slots.js";

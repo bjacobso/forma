@@ -50,6 +50,11 @@
       "reason": "sourceToOutline and outlineToSource are implemented by the TypeScript host only. They depend only on the shared reader grammar."
     },
     {
+      "id": "form-slots",
+      "status": "gap",
+      "reason": "formSlots is implemented by the TypeScript host only; it reads descriptors with the TypeScript descriptor parser."
+    },
+    {
       "id": "effect-typescript-match",
       "status": "gap",
       "reason": "The Effect TypeScript generator rejects Match bodies explicitly."
