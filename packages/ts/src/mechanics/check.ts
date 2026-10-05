@@ -602,7 +602,9 @@ class Checker {
     }
     const context: LayerContext = { name, contextCalls: new Set() };
     const previous = this.layerContext;
-    this.layerContext = context;
+    // Setup runs inside the layer's own effect, so its requirements flow into
+    // the layer; only method bodies run later and need the captured context.
+    this.layerContext = undefined;
 
     let scope: Scope = new Map();
     let setupErrors: Provenance = emptySet;
@@ -617,6 +619,7 @@ class Checker {
       }
     }
 
+    this.layerContext = context;
     let methodRequirements: Provenance = emptySet;
     const implemented = new Set<string>();
     for (const method of arrayItems(implementation["methods"])) {

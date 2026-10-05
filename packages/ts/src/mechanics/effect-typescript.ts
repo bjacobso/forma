@@ -133,7 +133,6 @@ type Mode = "return" | "discard";
 
 class Generator {
   private readonly imports = new Set<Module>();
-  private readonly emit: EmitContext = { use: (name: ImportName) => this.imports.add(name) };
   private readonly reserved = new Set<string>([...modules, ...globals]);
   private serviceVars = new Map<string, string>();
   private contextVar: string | undefined;
@@ -254,7 +253,8 @@ class Generator {
     );
     const returns = signature ? this.typeTs(signature.result) : "unknown";
     const head = signatureHead(camelIdentifier(name), params, returns);
-    const value = this.value(body, names, "  ").code;
+    const rendered = this.value(body, names, "  ").code;
+    const value = rendered.startsWith("{") ? `(${rendered})` : rendered;
     const inline = `${head} ${value};`;
     if (!inline.includes("\n") && inline.length <= maxWidth) return [inline];
     return [head, `  ${value};`];
@@ -923,12 +923,20 @@ class Generator {
     const operand = (index: number, prec: Prec): string => wrap(this.value(args[index], names, indent), prec);
     switch (call.kind) {
       case "builtin": {
+        const emit: EmitContext = {
+          use: (module: ImportName) => this.use(module),
+          resultType: () => {
+            const type = this.info.valueTypes.get(node);
+            if (!type) throw new Error(`Effect TypeScript: ${call.name} has no checked type`);
+            return this.typeTs(type);
+          },
+        };
         const code = call.overload.emit(
           args.map((item) => {
             const expr = this.value(item, names, indent);
             return expr.prec === Prec.Arrow ? expr.code : wrap(expr, Prec.Postfix);
           }),
-          this.emit,
+          emit,
         );
         return { code, prec: call.overload.prec ?? Prec.Postfix };
       }

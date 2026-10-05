@@ -16,6 +16,8 @@ export type ImportName = "Duration" | "Option";
 
 export interface EmitContext {
   readonly use: (name: ImportName) => void;
+  /** The TypeScript type of the call's result, for translations that need an explicit type argument. */
+  readonly resultType: () => string;
 }
 
 export interface BuiltinOverload {
@@ -80,7 +82,7 @@ export const builtins: ReadonlyMap<string, readonly BuiltinOverload[]> = new Map
       {
         params: [fn([v(1), v(0)], v(1)), v(1), array(v(0))],
         result: v(1),
-        emit: ([f, init, xs]) => `${xs}.reduce(${f}, ${init})`,
+        emit: ([f, init, xs], context) => `${xs}.reduce<${context.resultType()}>(${f}, ${init})`,
       },
     ],
   ],
