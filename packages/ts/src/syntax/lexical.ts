@@ -27,15 +27,15 @@ export interface Lexeme {
 }
 
 /**
- * The tokens and comments of a text, in order. A comment's text excludes a
- * carriage return before its line break: `\r\n` ends a line.
+ * The tokens and comments of a text, in order. A comment's text excludes the
+ * carriage returns before its line break: `\r\n` ends a line.
  */
 export function lexemes(text: string): Lexeme[] {
   const result: Lexeme[] = [];
   for (const { token, leadingTrivia } of tokenizeWithTrivia(text)) {
     for (const trivia of leadingTrivia) {
       if (trivia.kind === "line-comment") {
-        const text = trivia.text.endsWith("\r") ? trivia.text.slice(0, -1) : trivia.text;
+        const text = trivia.text.replace(/\r+$/, "");
         result.push({ kind: "comment", text, start: trivia.loc.start, end: trivia.loc.start + text.length });
       }
     }
@@ -74,6 +74,18 @@ export class SourceBuilder {
     return this.#text;
   }
 
+  /** The builder's state, to return to with `rewind`. */
+  mark(): { readonly text: string; readonly tailStart: number; readonly tailKind: string | undefined } {
+    return { text: this.#text, tailStart: this.#tailStart, tailKind: this.#tailKind };
+  }
+
+  /** Return to a state from `mark`, dropping what was appended since. */
+  rewind(mark: ReturnType<SourceBuilder["mark"]>): void {
+    this.#text = mark.text;
+    this.#tailStart = mark.tailStart;
+    this.#tailKind = mark.tailKind;
+  }
+
   get length(): number {
     return this.#text.length;
   }
@@ -85,7 +97,7 @@ export class SourceBuilder {
 
   /** Whether the text built so far ends inside a line comment. */
   get inComment(): boolean {
-    return this.#tailKind === "comment" && !this.#text.slice(this.#tailStart).includes("\n");
+    return this.#tailKind === "comment" && this.#tailStart >= 0 && !this.#text.slice(this.#tailStart).includes("\n");
   }
 
   /**

@@ -11,7 +11,9 @@ import { describe, expect, test } from "vitest";
 import fc from "fast-check";
 
 import { Syntax } from "../src/index.js";
-import { form, program } from "./support/programs.js";
+// The richer generator accompanies the tree-matching rewrite. Until that
+// layer, keep these baseline properties on the corpus they originally pinned.
+import { form, smallProgram as program } from "./support/programs.js";
 import { runs } from "./support/runs.js";
 
 const { identifySyntax, reconcileSyntax, indexSyntax } = Syntax;

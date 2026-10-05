@@ -16,6 +16,8 @@ import {
   type SyntaxNode,
   type SyntaxSpan,
 } from "./identity.js";
+import { tokenizeWithTrivia } from "../reader/lexer.js";
+import { SourceBuilder } from "./lexical.js";
 
 export interface OutlineItem {
   readonly id: string;
@@ -84,6 +86,8 @@ interface ReadRow {
   readonly raw: string;
   /** The row's whole node exactly as it appears in the source. */
   readonly full: string;
+  /** For a row with children and a text: the text between `(` and the text. */
+  readonly lead?: string | undefined;
 }
 
 interface Reading {
@@ -147,8 +151,8 @@ function read(source: string, identity: SyntaxIdentity): Reading {
         const column = element.span.start - (source.lastIndexOf("\n", element.span.start - 1) + 1);
         const ownLine = source.slice(source.lastIndexOf("\n", element.span.start - 1) + 1, element.span.start).trim() === "";
         while (comments.length > 0 && comments.at(-1)!.column >= column) comments.pop();
-        const item = { id: element.id, text: text(element.span), children: [] as OutlineItem[] };
-        rows.set(element.id, { item, header: [], raw: item.text, full: item.text });
+        const item = { id: element.id, text: lineText(text(element.span)), children: [] as OutlineItem[] };
+        rows.set(element.id, { item, header: [], raw: text(element.span), full: text(element.span) });
         const holder = ownLine ? comments.at(-1) : undefined;
         if (holder) {
           holder.item.children.push(item);
@@ -214,9 +218,10 @@ function read(source: string, identity: SyntaxIdentity): Reading {
         : dedent(source, { start: header[0]!.span.start, end: header.at(-1)!.span.end }, index, node.span.start);
     const rowText = prefix === "" ? headerText : headerText === "" ? prefix : `${prefix} ${headerText}`;
     const children = rowsOf(rest, node.id);
-    const item = { id: node.id, text: rowText, children };
+    const item = { id: node.id, text: lineText(rowText), children };
     const raw = header.length === 0 ? "" : text({ start: header[0]!.span.start, end: header.at(-1)!.span.end });
-    rows.set(node.id, { item, container, header: header.map((element) => element.id), raw, full: text(node.span) });
+    const lead = header.length === 0 ? undefined : source.slice(container.span.start + 1, header[0]!.span.start);
+    rows.set(node.id, { item, container, header: header.map((element) => element.id), raw, full: text(node.span), lead });
     return item;
   };
 
@@ -246,6 +251,9 @@ interface BaseLayout {
   >;
   readonly trailing: string;
   readonly columns: ReadonlyMap<string, number>;
+  /** Where each row's node starts in the base, and its length. */
+  readonly offsets: ReadonlyMap<string, number>;
+  readonly lengths: ReadonlyMap<string, number>;
 }
 
 /** Print an outline as source, one row per line unless a base layout says otherwise. */
@@ -255,22 +263,28 @@ export function outlineToSource(
 ): OutlineToSourceResult {
   const base = options.base ? baseLayout(options.base.source, options.base.identity) : undefined;
   const commentBroken = options.brokenRows === "comment";
-  let out = "";
+  // Every piece goes through the builder, so a comment never runs into what
+  // follows it and atoms never fuse, whatever the rows' texts are.
+  const out = new SourceBuilder();
   const spans: OutlineRowSpan[] = [];
   const errors: OutlineRowError[] = [];
   let last: Predecessor = { kind: "open", row: null };
-  const column = () => out.length - (out.lastIndexOf("\n") + 1);
-  // Whether the text written last ends in a line comment.
-  let trailingComment = false;
-  const lastLineEndsInComment = () => trailingComment;
+  // Rows whose text was re-laid out. The reader tells a row's text from its
+  // children by line, so whether a child may share the opening line depends
+  // on the text being unchanged.
+  const relaid = new Set<string>();
 
   const separator = (item: OutlineItem, parent: string | null, childColumn: number, parentColumn: number) => {
     const reused = base?.before.get(item.id);
+    // The first child of a row stays off the row's opening line unless both
+    // it and the row's text read exactly as in the base.
+    const opened = last.kind === "row" ? null : last.row;
+    const mayShareLine = opened === null || !relaid.has(opened);
     if (
       reused &&
       base!.reading.rowParent.get(item.id) === parent &&
       samePredecessor(reused.predecessor, last) &&
-      !(reused.text.indexOf("\n") < 0 && lastLineEndsInComment())
+      (mayShareLine || reused.text.includes("\n"))
     ) {
       const baseParentColumn = parent === null ? 0 : (base!.columns.get(parent) ?? 0);
       return shiftIndent(reused.text, parentColumn - baseParentColumn);
@@ -279,30 +293,55 @@ export function outlineToSource(
     return `\n${" ".repeat(childColumn)}`;
   };
 
-  /** Text for a row at `column`: the base's own text when the row is unchanged there. */
-  const layoutText = (id: string, text: string, header: string, column: number) => {
-    const original = base?.reading.rows.get(id);
-    if (original && original.item.text === text && base!.columns.get(id) === column) return original.raw;
+  /** Whether a row and everything under it reads exactly as in the base. */
+  const unchanged = (item: OutlineItem): boolean => {
+    const original = base?.reading.rows.get(item.id);
+    return (
+      original !== undefined &&
+      original.item.text === item.text &&
+      original.item.children.length === item.children.length &&
+      original.item.children.every((child, position) => child.id === item.children[position]!.id) &&
+      item.children.every(unchanged)
+    );
+  };
+
+  /**
+   * Text for a row at `column`: the base's own text when the row's text is
+   * unchanged there and it still has children exactly when it had them (the
+   * base's text of a prefixed row leaves out the prefix).
+   */
+  const layoutText = (item: OutlineItem, text: string, header: string, column: number) => {
+    const original = base?.reading.rows.get(item.id);
+    if (
+      original &&
+      original.item.text === text &&
+      original.item.children.length > 0 === item.children.length > 0 &&
+      base!.columns.get(item.id) === column
+    ) {
+      return original.raw;
+    }
     return indentContinuation(header, column);
   };
 
   const printComment = (item: OutlineItem, parent: string | null, childColumn: number, parentColumn: number, forced: boolean) => {
-    out += separator(item, parent, childColumn, parentColumn);
-    const text = item.text.trimStart();
-    const commented = forced && !text.startsWith(";") ? commentOut(text.trim()) : text;
-    const own = column();
-    const start = out.length;
-    out += indentContinuation(commented, own);
-    spans.push({ id: item.id, span: { start, end: start + firstLine(commented).trimEnd().length } });
+    out.append(separator(item, parent, childColumn, parentColumn));
+    const original = base?.reading.rows.get(item.id);
+    const text =
+      original && original.item.text === item.text && original.item.children.length === 0
+        ? original.raw
+        : content(item.text);
+    const commented = forced && !text.startsWith(";") ? commentOut(text) : text;
+    const own = out.column;
+    const start = out.append(indentContinuation(commented, own));
+    spans.push({ id: item.id, span: { start, end: start + firstLine(commented).length } });
     last = { kind: "row", id: item.id };
-    trailingComment = true;
     for (const child of item.children) {
       printComment(child, item.id, own + 2, own, true);
     }
   };
 
   const printRow = (item: OutlineItem, parent: string | null, childColumn: number, parentColumn: number): void => {
-    const text = item.text.trim();
+    const text = content(item.text);
     if (text.startsWith(";")) {
       printComment(item, parent, childColumn, parentColumn, false);
       return;
@@ -320,58 +359,122 @@ export function outlineToSource(
     const elements = identifySyntax(header).nodes.filter((node) => node.parent === null);
     const code = elements.filter((node) => node.kind !== "Comment").length;
     if (item.children.length === 0 && elements.length === 0) return;
-    out += separator(item, parent, childColumn, parentColumn);
-    const rowColumn = column();
-    const start = out.length;
+    out.append(separator(item, parent, childColumn, parentColumn));
+    const rowColumn = out.column;
     const original = base?.reading.rows.get(item.id);
-    const unchanged =
-      original !== undefined &&
-      original.item.text === text &&
-      original.item.children.length === 0 &&
-      item.children.length === 0 &&
-      base!.columns.get(item.id) === rowColumn;
-    if (item.children.length === 0 && (code < 2 || unchanged)) {
-      // One element is that element; an unchanged row keeps its exact text.
-      out += unchanged ? original!.full : layoutText(item.id, text, text, rowColumn);
-      spans.push({ id: item.id, span: { start, end: out.length } });
+    if (original && unchanged(item) && base!.columns.get(item.id) === rowColumn) {
+      // An unchanged row prints as its exact base text, children and all.
+      const start = out.append(original.full);
+      spans.push({ id: item.id, span: { start, end: start + original.full.length } });
+      for (const id of descendantRows(item)) {
+        const offset = base!.offsets.get(id)! - base!.offsets.get(item.id)!;
+        spans.push({ id, span: { start: start + offset, end: start + offset + base!.lengths.get(id)! } });
+      }
       last = { kind: "row", id: item.id };
-      trailingComment = elements.at(-1)?.kind === "Comment" && code < 2;
       return;
     }
-    out += `${marker ? marker[1] : ""}(${layoutText(item.id, text, header, rowColumn)}`;
+    if (item.children.length === 0 && code < 2) {
+      // One element is that element.
+      const written = layoutText(item, text, text, rowColumn);
+      const start = out.append(written);
+      spans.push({ id: item.id, span: { start, end: start + written.length } });
+      last = { kind: "row", id: item.id };
+      return;
+    }
+    const mark = { builder: out.mark(), spans: spans.length, errors: errors.length, last };
+    printList(item, marker?.[1] ?? "", text, header, rowColumn, false);
+    if (!base) return;
+    // The reader tells a row's text from its children by line, and reused
+    // layout can change that (a list whose children moved onto its opening
+    // line reads as one row). Check that the row reads back as itself, and
+    // otherwise print its own seams the canonical way, which always does.
+    const printed = out.text.slice(spans.at(-1)!.span.start);
+    const [again, ...more] = sourceToOutline(printed).items;
+    const same =
+      again !== undefined &&
+      more.length === 0 &&
+      again.text === lineText(text) &&
+      again.children.length === item.children.length &&
+      again.children.every((child, position) => child.text === lineText(content(item.children[position]!.text)));
+    if (same) return;
+    out.rewind(mark.builder);
+    spans.length = mark.spans;
+    errors.length = mark.errors;
+    last = mark.last;
+    printList(item, marker?.[1] ?? "", text, header, rowColumn, true);
+  };
+
+  /** A row with children, as a list. `canonical` puts its children on their own lines. */
+  const printList = (item: OutlineItem, prefix: string, text: string, header: string, rowColumn: number, canonical: boolean) => {
+    const original = base?.reading.rows.get(item.id);
+    const start = out.append(`${prefix}(`);
+    const sameText =
+      !canonical && original !== undefined && original.item.text === text && original.item.children.length > 0;
+    if (!sameText) relaid.add(item.id);
+    else relaid.delete(item.id);
+    if (header !== "") {
+      out.append(sameText && original.lead !== undefined ? original.lead : "");
+      out.append(layoutText(item, text, header, rowColumn));
+    }
     last = header === "" ? { kind: "open", row: item.id } : { kind: "header", row: item.id };
-    trailingComment = elements.at(-1)?.kind === "Comment";
-    const ownColumn = rowColumn;
     for (const child of item.children) {
-      printRow(child, item.id, ownColumn + 2, ownColumn);
+      printRow(child, item.id, rowColumn + 2, rowColumn);
     }
     const lastChild = item.children.at(-1)?.id ?? null;
-    const closing = base?.closing.get(item.id);
-    const reuseClosing =
-      closing && closing.last === lastChild && !(closing.text.indexOf("\n") < 0 && lastLineEndsInComment());
+    const closing = canonical ? undefined : base?.closing.get(item.id);
+    const reuseClosing = closing !== undefined && closing.last === lastChild;
     if (reuseClosing) {
-      out += shiftIndent(closing.text, ownColumn - (base!.columns.get(item.id) ?? ownColumn));
-    } else if (lastLineEndsInComment()) {
-      out += `\n${" ".repeat(ownColumn)}`;
+      out.append(shiftIndent(closing.text, rowColumn - (base!.columns.get(item.id) ?? rowColumn)));
+    } else if (out.inComment) {
+      // A row whose text ends in a comment closes its list on a new line.
+      out.append(`\n${" ".repeat(rowColumn)}`);
     }
     // A list the base left unclosed stays unclosed while its end is unchanged.
-    if (!(reuseClosing && !closing.closed)) out += ")";
-    trailingComment = false;
+    if (!(reuseClosing && !closing.closed)) out.append(")");
     spans.push({ id: item.id, span: { start, end: out.length } });
     last = { kind: "row", id: item.id };
   };
 
   for (const item of items) printRow(item, null, 0, 0);
-  if (base) out += base.trailing;
+  if (base) out.append(base.trailing);
 
+  const source = out.text;
   const anchors = spans.map((row) => ({ id: row.id, span: row.span }));
   const identity = options.base
-    ? reconcileSyntax(options.base, out, { anchors })
-    : identifySyntax(out, {
+    ? reconcileSyntax(options.base, source, { anchors })
+    : identifySyntax(source, {
         anchors,
         ...(options.idPrefix !== undefined ? { idPrefix: options.idPrefix } : {}),
       });
-  return { source: out, identity, rows: spans, errors };
+  return { source, identity, rows: spans, errors };
+}
+
+/** A row's text: a carriage return before the line break belongs to the line break. */
+function lineText(text: string): string {
+  return text.replace(/\r+$/, "");
+}
+
+/** Rows under a row, in document order. */
+function descendantRows(item: OutlineItem): string[] {
+  return item.children.flatMap((child) => [child.id, ...descendantRows(child)]);
+}
+
+/** A row's text without the whitespace around its tokens and comments. */
+function content(text: string): string {
+  const lexemes = tokenizeWithTrivia(text);
+  let start: number | undefined;
+  let end = 0;
+  for (const { token, leadingTrivia } of lexemes) {
+    for (const trivia of leadingTrivia) {
+      if (trivia.kind !== "line-comment") continue;
+      start ??= trivia.loc.start;
+      end = trivia.loc.end;
+    }
+    if (token.type === "eof") break;
+    start ??= token.loc.start;
+    end = token.loc.end;
+  }
+  return start === undefined ? "" : text.slice(start, end);
 }
 
 function baseLayout(source: string, identity: SyntaxIdentity): BaseLayout {
@@ -380,10 +483,14 @@ function baseLayout(source: string, identity: SyntaxIdentity): BaseLayout {
   const before = new Map<string, { predecessor: Predecessor; text: string }>();
   const closing = new Map<string, { last: string | null; text: string; closed: boolean }>();
   const columns = new Map<string, number>();
+  const offsets = new Map<string, number>();
+  const lengths = new Map<string, number>();
   const columnOf = (offset: number) => offset - (source.lastIndexOf("\n", offset - 1) + 1);
   for (const [id] of reading.rows) {
     const node = index.node(id)!;
     columns.set(id, columnOf(node.span.start));
+    offsets.set(id, node.span.start);
+    lengths.set(id, node.span.end - node.span.start);
     const siblings = index.children(node.parent);
     const previous = siblings[node.index - 1];
     const parentRow = reading.rowParent.get(id) ?? null;
@@ -425,6 +532,8 @@ function baseLayout(source: string, identity: SyntaxIdentity): BaseLayout {
     closing,
     trailing: lastTop ? source.slice(lastTop.span.end) : source,
     columns,
+    offsets,
+    lengths,
   };
 }
 

@@ -283,6 +283,9 @@ elements of its list, and its children hold the rest.
 - A parse error does not stop reading. Error nodes become rows that carry
   their errors, and an unclosed list reads to the end of the document,
   because that is what the text means.
+- A row's text is exactly the source of its elements. A carriage return
+  before a line break belongs to the line break, so it is not part of a
+  text that ends in a comment.
 
 **Printing rows as source.**
 
@@ -295,16 +298,51 @@ elements of its list, and its children hold the rest.
 - Children of a comment row print as comments.
 - Each row starts on its own line, indented two spaces deeper than its
   parent, unless a base document says otherwise.
+- Whitespace around a text's tokens and comments is not part of it; the
+  spaces at the end of a comment are.
+
+**Well-formed outlines** are the normal forms reading produces from readable
+source, and law 1 of 7.2 holds for them. Broken rows remain printable and law 2
+still applies to their source, but they are outside law 1. Concretely, every
+row satisfies these conditions:
+
+- its text reads without errors, has no whitespace around its tokens and
+  comments, and every element of it starts on its first line;
+- no element of its text is a multi-line list that reading would make a
+  row of its own;
+- a comment row is one line, and its children are comment rows;
+- with children, a text that starts with a prefix marker does not continue
+  with a comment;
+- without children, its text is not empty, and a single element has no
+  trailing comment and is not a list of two or more elements (that is
+  written without parentheses);
+- with children, it has at least two elements counting text and children,
+  or a child that has children.
 
 **Layout survives in both directions.** Printing accepts a base: the source
-and identity the outline was read from. For each row that existed in the
-base with the same predecessor, the printer reuses the original text between
-the predecessor and the row (indentation, blank lines, a trailing comment's
-position), the original text before the closing delimiter, and the row's own
-text exactly as written when it is unchanged at the same column. Rows that
-moved or are new get the canonical layout, shifted with their parent. Reading source and printing it
-back with itself as base reproduces the source exactly. Printing an outline
-and reading it back reproduces the rows.
+and identity the outline was read from.
+
+- A row whose text and children are unchanged, at the same column, prints
+  as the exact base text of its node, children and all.
+- For other rows that existed in the base with the same predecessor, the
+  printer reuses the original text between the predecessor and the row
+  (indentation, blank lines, a trailing comment's position), the text
+  between `(` and the row's text, the text before the closing delimiter,
+  and the row's text exactly as written when it is unchanged at the same
+  column. Rows that moved or are new get the canonical layout, shifted with
+  their parent.
+- The reader tells a row's text from its children by line, and reused layout
+  can change that: a list whose children end up on its opening line reads as
+  one row. So the printer reads each printed row with children back, and if
+  it does not read as the same row, prints that row's own seams the
+  canonical way, which always does. This is the one place law 1 is checked
+  while printing.
+- Pieces are joined with `SourceBuilder`, so a comment never runs into what
+  follows it.
+
+Reading source and printing it back with itself as base reproduces the
+source exactly, for any text. Printing a well-formed outline, with or without
+a base, and reading it back reproduces the rows and their ids.
 
 **Row errors stay local.** Each row's text is parsed on its own. A row that
 does not parse is reported with its errors. By default it prints verbatim;
@@ -399,8 +437,8 @@ then compared with the base, so every odd layout needed its own case.
 **Design.**
 
 - *A grammar.* Reading is a total case analysis over the syntax tree. Printing
-  is its inverse on well-formed outlines, which are exactly the outlines
-  reading produces. The rules and the well-formedness conditions are in
+  is its inverse on well-formed outlines, which are the normal forms reading
+  produces from readable source. The rules and the well-formedness conditions are in
   section 5.
 - *Verbatim reuse.* With a base, a row whose text and children are unchanged
   prints as the exact base text of its node. Text between two rows is reused
