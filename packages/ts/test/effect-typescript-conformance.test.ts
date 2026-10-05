@@ -5,7 +5,9 @@
  * with no diagnostics, generate exactly expected.ts, typecheck under the
  * repository's strict tsconfig with no `any` escapes, and pass its runtime
  * harness. A negative case (program.lisp + expected-diagnostics.json) must be
- * rejected with exactly those located diagnostics.
+ * rejected with exactly those located diagnostics; the file also records
+ * whether TypeScript would reject the code generated with the checker
+ * bypassed.
  *
  * Set FORMA_UPDATE_GOLDEN=1 to rewrite expected.ts and expected-diagnostics.json.
  */
@@ -15,6 +17,8 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import ts from "typescript";
 import { Mechanics } from "../src/index.js";
+import { parse } from "../src/reader/parser.js";
+import { toSExprMany } from "../src/reader/to-sexpr.js";
 
 const packageDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const suiteDir = resolve(packageDir, "../../conformance/effect-typescript");
@@ -78,6 +82,52 @@ function diagnosticRecords(source: string, item: ConformanceCase): readonly Diag
         }
       : {}),
   }));
+}
+
+/**
+ * What TypeScript says about a rejected program when the checker is
+ * bypassed: generation is forced from the projected declarations and the
+ * output is typechecked with the suite tsconfig. "accepts" marks checks
+ * where Forma is stricter than TypeScript.
+ */
+type TypeScriptVerdict = "rejects" | "accepts" | "not-generated" | "not-projected";
+
+let verdicts: ReadonlyMap<string, TypeScriptVerdict> | undefined;
+
+function typescriptVerdicts(): ReadonlyMap<string, TypeScriptVerdict> {
+  if (verdicts) return verdicts;
+  const result = new Map<string, TypeScriptVerdict>();
+  const files = new Map<string, string>();
+  for (const item of negative) {
+    const parsed = parse(item.source);
+    const projected = Mechanics.mechanicsPackageableDeclarations(toSExprMany(parsed.redTree), sourceId(item));
+    if (parsed.errors.length > 0 || !projected.ok) {
+      result.set(item.name, "not-projected");
+      continue;
+    }
+    try {
+      files.set(resolve(item.dir, "__unchecked__.ts"), Mechanics.generateMechanicsEffectTypeScriptModule(projected.declarations).code);
+    } catch {
+      result.set(item.name, "not-generated");
+    }
+  }
+  const config = ts.readConfigFile(resolve(suiteDir, "tsconfig.json"), ts.sys.readFile);
+  const options = ts.parseJsonConfigFileContent(config.config, ts.sys, suiteDir).options;
+  const host = ts.createCompilerHost(options);
+  const getSourceFile = host.getSourceFile.bind(host);
+  const fileExists = host.fileExists.bind(host);
+  host.getSourceFile = (fileName, languageVersion, onError, shouldCreate) => {
+    const code = files.get(fileName);
+    return code === undefined ? getSourceFile(fileName, languageVersion, onError, shouldCreate) : ts.createSourceFile(fileName, code, languageVersion, true);
+  };
+  host.fileExists = (fileName) => files.has(fileName) || fileExists(fileName);
+  const unchecked = ts.createProgram([...files.keys()], options, host);
+  for (const [file] of files) {
+    const name = file.slice(casesDir.length + 1).split("/")[0]!;
+    result.set(name, ts.getPreEmitDiagnostics(unchecked, unchecked.getSourceFile(file)).length > 0 ? "rejects" : "accepts");
+  }
+  verdicts = result;
+  return result;
 }
 
 let program: ts.Program | undefined;
@@ -193,13 +243,16 @@ describe("Effect TypeScript conformance", () => {
     const expectedPath = resolve(item.dir, "expected-diagnostics.json");
 
     test("is rejected with located diagnostics", () => {
-      const actual = diagnosticRecords(item.source, item);
+      const actual = {
+        typescript: typescriptVerdicts().get(item.name),
+        diagnostics: diagnosticRecords(item.source, item),
+      };
       if (update) writeFileSync(expectedPath, `${JSON.stringify(actual, null, 2)}\n`);
-      const expected = JSON.parse(readFileSync(expectedPath, "utf8")) as readonly DiagnosticRecord[];
-      expect(actual.some((diagnostic) => diagnostic.severity === "error")).toBe(true);
-      expect(actual.every((diagnostic) => diagnostic.line !== undefined)).toBe(true);
+      const expected = JSON.parse(readFileSync(expectedPath, "utf8")) as typeof actual;
+      expect(actual.diagnostics.some((diagnostic) => diagnostic.severity === "error")).toBe(true);
+      expect(actual.diagnostics.every((diagnostic) => diagnostic.line !== undefined)).toBe(true);
       expect(actual).toEqual(expected);
       expect(Mechanics.generateEffectProgram(item.source, { sourceId: sourceId(item) }).code).toBeUndefined();
-    });
+    }, 60_000);
   });
 });

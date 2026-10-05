@@ -1,12 +1,15 @@
-[
-  {
-    "phase": "check",
-    "severity": "error",
-    "code": "mechanics/undeclared-error",
-    "message": "Operation lookup can fail with UserNotFound, but its signature declares no errors.",
-    "line": 8,
-    "column": 11,
-    "endLine": 8,
-    "endColumn": 34
-  }
-]
+{
+  "typescript": "rejects",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/undeclared-error",
+      "message": "Operation lookup can fail with UserNotFound, but its signature declares no errors.",
+      "line": 8,
+      "column": 11,
+      "endLine": 8,
+      "endColumn": 34
+    }
+  ]
+}

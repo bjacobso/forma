@@ -1,12 +1,15 @@
-[
-  {
-    "phase": "check",
-    "severity": "error",
-    "code": "mechanics/condition",
-    "message": "Conditions must be Bool, but this is Int.",
-    "line": 4,
-    "column": 7,
-    "endLine": 4,
-    "endColumn": 12
-  }
-]
+{
+  "typescript": "accepts",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/condition",
+      "message": "Conditions must be Bool, but this is Int.",
+      "line": 4,
+      "column": 7,
+      "endLine": 4,
+      "endColumn": 12
+    }
+  ]
+}

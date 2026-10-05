@@ -410,7 +410,7 @@ class Checker {
       for (const requirement of effect.requirements.keys()) {
         if (requirement === own) continue;
         this.error(
-          span,
+          spanOf(method["effect"]) ?? span,
           "mechanics/service-method-requirement",
           `Service method ${own} cannot require ${requirement}. Service methods are requirement-free in Effect; give the implementing layer the dependency instead.`,
         );
@@ -438,7 +438,7 @@ class Checker {
     fallbackSpan: JsonValue | undefined,
   ): void {
     for (const [error, span] of actual.errors) {
-      if (declared.errors.has(error)) continue;
+      if (declared.errors.has(error) || !this.errorNames.has(error)) continue;
       const declaredErrors = [...declared.errors.keys()];
       this.error(
         span ?? spanOf(body) ?? fallbackSpan,
@@ -1739,7 +1739,8 @@ class Checker {
     });
     const resultExpected = target.result.kind === "var" || target.result.kind === "unknown" ? undefined : target.result;
     const result = this.value(body, lambdaScope, resultExpected, { allowEffect: resultExpected === undefined });
-    return { kind: "function", params: target.params, result };
+    // A body that missed its expected result was reported above; don't report the fn too.
+    return { kind: "function", params: target.params, result: resultExpected ?? result };
   }
 
   private builtin(

@@ -1,12 +1,15 @@
-[
-  {
-    "phase": "project",
-    "severity": "error",
-    "code": "artifact/effect-body",
-    "message": "if expects a condition, a then branch, and an else branch; use when or unless for one branch.",
-    "line": 6,
-    "column": 3,
-    "endLine": 7,
-    "endColumn": 31
-  }
-]
+{
+  "typescript": "not-projected",
+  "diagnostics": [
+    {
+      "phase": "project",
+      "severity": "error",
+      "code": "artifact/effect-body",
+      "message": "if expects a condition, a then branch, and an else branch; use when or unless for one branch.",
+      "line": 6,
+      "column": 3,
+      "endLine": 7,
+      "endColumn": 31
+    }
+  ]
+}

@@ -1,42 +1,45 @@
-[
-  {
-    "phase": "check",
-    "severity": "error",
-    "code": "mechanics/unbound-name",
-    "message": "Unknown function summ.",
-    "line": 4,
-    "column": 12,
-    "endLine": 4,
-    "endColumn": 24
-  },
-  {
-    "phase": "check",
-    "severity": "error",
-    "code": "mechanics/unknown-requirement",
-    "message": "Unknown requirement Customers.find. Requirements name a service, a Service.method capability, or Scope.",
-    "line": 6,
-    "column": 22,
-    "endLine": 6,
-    "endColumn": 59
-  },
-  {
-    "phase": "check",
-    "severity": "error",
-    "code": "mechanics/unknown-type",
-    "message": "Unknown type Customer. Define it with define-schema or define-error.",
-    "line": 6,
-    "column": 30,
-    "endLine": 6,
-    "endColumn": 38
-  },
-  {
-    "phase": "check",
-    "severity": "error",
-    "code": "mechanics/unknown-service",
-    "message": "Unknown service Customers. Define it with define-service.",
-    "line": 8,
-    "column": 3,
-    "endLine": 8,
-    "endColumn": 22
-  }
-]
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/unbound-name",
+      "message": "Unknown function summ.",
+      "line": 4,
+      "column": 12,
+      "endLine": 4,
+      "endColumn": 24
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/unknown-requirement",
+      "message": "Unknown requirement Customers.find. Requirements name a service, a Service.method capability, or Scope.",
+      "line": 6,
+      "column": 22,
+      "endLine": 6,
+      "endColumn": 59
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/unknown-type",
+      "message": "Unknown type Customer. Define it with define-schema or define-error.",
+      "line": 6,
+      "column": 30,
+      "endLine": 6,
+      "endColumn": 38
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/unknown-service",
+      "message": "Unknown service Customers. Define it with define-service.",
+      "line": 8,
+      "column": 3,
+      "endLine": 8,
+      "endColumn": 22
+    }
+  ]
+}

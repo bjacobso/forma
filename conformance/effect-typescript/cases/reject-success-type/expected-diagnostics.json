@@ -1,0 +1,25 @@
+{
+  "typescript": "rejects",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected Int, but this is \"free\".",
+      "line": 16,
+      "column": 16,
+      "endLine": 16,
+      "endColumn": 22
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected Int, but this is String.",
+      "line": 21,
+      "column": 14,
+      "endLine": 21,
+      "endColumn": 31
+    }
+  ]
+}

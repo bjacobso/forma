@@ -1,0 +1,45 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/match-pattern",
+      "message": "triangle is not a case of Shape; expected one of circle, square.",
+      "line": 11,
+      "column": 5,
+      "endLine": 11,
+      "endColumn": 17
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/unreachable-pattern",
+      "message": "This pattern is unreachable after _.",
+      "line": 13,
+      "column": 5,
+      "endLine": 13,
+      "endColumn": 15
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/match-pattern",
+      "message": "none carries no value to bind.",
+      "line": 19,
+      "column": 5,
+      "endLine": 19,
+      "endColumn": 19
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/match-type",
+      "message": "match works on Option, Result, enums, and tagged unions, but this is Int.",
+      "line": 23,
+      "column": 10,
+      "endLine": 23,
+      "endColumn": 11
+    }
+  ]
+}
