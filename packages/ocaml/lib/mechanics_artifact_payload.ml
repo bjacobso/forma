@@ -3,6 +3,7 @@ let scalar_name = function
   | Ast.Symbol (_, name) | Ast.Keyword (_, name) | Ast.String (_, name) ->
       let prefixed = String.length name > 0 && Char.equal name.[0] ':' in
   Some (if prefixed then String.sub name 1 (String.length name - 1) else name)
+  | Ast.Nil _ -> Some "nil"
   | _ -> None
 let primitive_name name =
   match String.lowercase_ascii name with
@@ -48,7 +49,7 @@ let split_trailing_metadata values =
   loop [] values
 
 let scalar_json = function
-  | Ast.Nil _ -> Some Ir_json.Null
+  | Ast.Nil _ -> Some (Ir_json.String "nil")
   | Ast.Bool (_, value) -> Some (Ir_json.Bool value)
   | Ast.Int (_, value) -> Some (Ir_json.Int value)
   | Ast.Float (_, value) -> Some (Ir_json.Float value)
@@ -263,7 +264,8 @@ let rec schema_expr_to_json expr =
     match (primitive_name name, metadata_pairs metadata) with
     | Some name, Some metadata ->
         Ok (apply_metadata ~span (primitive ~span name) metadata)
-    | _, Some _ -> Ok (ref_schema ~span name)
+    | None, Some metadata ->
+        Ok (apply_metadata ~span (ref_schema ~span name) metadata)
     | _, None ->
         Error
           [
@@ -325,36 +327,74 @@ and schemas_to_json schemas =
   loop [] schemas
 
 let rec type_expr_to_json expr =
+  let one kind item =
+    Result.map (fun item -> kinded kind [ ("item", item) ]) (type_expr_to_json item)
+  in
+  let arity_error head =
+    Error [ diagnostic ~span:(Ast.expr_span expr) "artifact/type"
+              (head ^ " type expects one argument.") ]
+  in
   match expr with
   | Ast.List (_, Ast.Symbol (_, "Effect") :: _) -> effect_type_to_json expr None
-  | Ast.List (_, Ast.Symbol (_, ("Option" | "Optional")) :: [ item ]) -> (
-    match type_expr_to_json item with
-    | Error _ as error -> error
-    | Ok item -> Ok (kinded "Optional" [ ("item", item) ]))
-  | Ast.List (_, Ast.Symbol (_, ("Array" | "List")) :: [ item ]) -> (
-    match type_expr_to_json item with
-    | Error _ as error -> error
-    | Ok item -> Ok (kinded "Array" [ ("item", item) ]))
-  | Ast.List (_, Ast.Symbol (_, "Map") :: [ value ]) -> (
-    match type_expr_to_json value with
-    | Error _ as error -> error
-    | Ok value -> Ok (kinded "Map" [ ("value", value) ]))
+  | Ast.List (_, Ast.Symbol (_, (("Option" | "Optional") as head)) :: [ item ]) ->
+      one head item
+  | Ast.List (_, Ast.Symbol (_, "Ref") :: [ item ]) -> one "RefCell" item
+  | Ast.List (_, Ast.Symbol (_, ("Array" | "List")) :: [ item ]) -> one "Array" item
+  | Ast.List (_, Ast.Symbol (_, "Map") :: [ value ]) ->
+      Result.map (fun value -> kinded "Map" [ ("value", value) ]) (type_expr_to_json value)
   | Ast.List (_, Ast.Symbol (_, "Tuple") :: items) ->
       Mechanics_schema_json.tuple_type_to_json ~type_expr_to_json expr items
-  | Ast.List
-      ( _,
-        Ast.Symbol
-          (_, (("Option" | "Optional" | "Array" | "List" | "Map") as head))
-        :: _ )
-    ->
+  | Ast.List (_, [ Ast.Symbol (_, "Fiber"); success; errors ]) -> (
+      match (type_expr_to_json success, name_set_json "errors" errors) with
+      | (Error _ as error), _ | _, (Error _ as error) -> error
+      | Ok success, Ok errors ->
+          Ok (kinded "Fiber" [ ("success", success); ("errors", errors) ]))
+  | Ast.List (span, [ Ast.Symbol (_, "Stream"); item; errors; requirements ]) -> (
+      match
+        ( type_expr_to_json item,
+          name_set_json "errors" errors,
+          name_set_json "requirements" requirements )
+      with
+      | (Error _ as error), _, _ | _, (Error _ as error), _ | _, _, (Error _ as error) ->
+          error
+      | Ok item, Ok errors, Ok requirements ->
+          Ok
+            (kinded ~span "Stream"
+               [ ("item", item); ("errors", errors); ("requirements", requirements) ]))
+  | Ast.List (_, [ Ast.Symbol (_, "Result"); success; failure ]) -> (
+      match (type_expr_to_json success, type_expr_to_json failure) with
+      | (Error _ as error), _ | _, (Error _ as error) -> error
+      | Ok success, Ok failure ->
+          Ok (kinded "Result" [ ("success", success); ("failure", failure) ]))
+  | Ast.List (_, Ast.Symbol (_, "->") :: (_ :: _ as items)) -> (
+      let inputs = List.rev (List.tl (List.rev items)) in
+      match
+        ( Mechanics_schema_json.to_json_list type_expr_to_json [] inputs,
+          type_expr_to_json (List.hd (List.rev items)) )
+      with
+      | (Error _ as error), _ | _, (Error _ as error) -> error
+      | Ok params, Ok result ->
+          Ok (kinded "Function" [ ("params", Ir_json.Array params); ("result", result) ]))
+  | Ast.List (_, Ast.Symbol (_, (("Option" | "Optional" | "Ref" | "Array" | "List" | "Map") as head)) :: _) ->
+      arity_error head
+  | Ast.List (_, Ast.Symbol (_, "Fiber") :: _) ->
       Error [ diagnostic ~span:(Ast.expr_span expr) "artifact/type"
-                (head ^ " type expects one argument.") ]
+                "Fiber type expects (Fiber Success [Errors...])." ]
+  | Ast.List (_, Ast.Symbol (_, "Stream") :: _) ->
+      Error [ diagnostic ~span:(Ast.expr_span expr) "artifact/type"
+                "Stream type expects (Stream Item [Errors...] [Requirements...])." ]
+  | Ast.List (_, Ast.Symbol (_, "Result") :: _) ->
+      Error [ diagnostic ~span:(Ast.expr_span expr) "artifact/type"
+                "Result type expects (Result Success Failure)." ]
+  | Ast.List (_, [ Ast.Symbol (_, "->") ]) ->
+      Error [ diagnostic ~span:(Ast.expr_span expr) "artifact/type"
+                "Function type expects (-> Input... Output)." ]
   | _ -> schema_expr_to_json expr
 
 and effect_type_to_json expr operation_requirement =
   match expr with
   | Ast.List
-      ( _,
+      ( span,
         [
           Ast.Symbol (_, "Effect");
           success_expr;
@@ -379,7 +419,7 @@ and effect_type_to_json expr operation_requirement =
             | _ -> requirements
           in
           Ok
-            (kinded "Effect"
+            (kinded ~span "Effect"
                [
                  ("success", success);
                  ( "errors",
@@ -396,6 +436,15 @@ and effect_type_to_json expr operation_requirement =
             "Effect type expects (Effect Success [Errors...] [Requirements...]).";
         ]
 
+and name_set_json label = function
+  | Ast.Vector (_, names) ->
+      Result.map
+        (fun names -> Ir_json.Array (List.map (fun name -> Ir_json.String name) names))
+        (symbolic_set_to_json label names)
+  | bad ->
+      Error [ diagnostic ~span:(Ast.expr_span bad) "artifact/effect-type"
+                ("Effect " ^ label ^ " must be a vector.") ]
+
 and symbolic_set_to_json label exprs =
   let rec loop acc = function
     | [] -> Ok (List.rev acc)
@@ -411,147 +460,3 @@ and symbolic_set_to_json label exprs =
             ])
   in
   loop [] exprs
-
-let method_params_to_json = function
-  | Ast.Vector (_, params) ->
-      let rec loop acc = function
-        | [] -> Ok (List.rev acc)
-        | name :: type_expr :: rest -> (
-          match (scalar_name name, type_expr_to_json type_expr) with
-          | Some name, Ok type_json ->
-              loop
-                (Ir_json.Object
-                   [ ("name", Ir_json.String name); ("type", type_json) ]
-                :: acc)
-                rest
-          | None, _ ->
-              Error
-                [
-                  diagnostic ~span:(Ast.expr_span name) "artifact/service-method"
-                    "service method params require symbolic names.";
-                ]
-          | _, (Error _ as error) -> error)
-        | bad :: [] ->
-            Error
-              [
-                diagnostic ~span:(Ast.expr_span bad) "artifact/service-method"
-                  "service method params must be [name Type ...] pairs.";
-              ]
-      in
-      loop [] params
-  | bad ->
-      Error
-        [
-          diagnostic ~span:(Ast.expr_span bad) "artifact/service-method"
-            "service method params must be [name Type ...] pairs.";
-        ]
-
-let method_to_json service_name = function
-  | Ast.List (_, [ Ast.Symbol (_, method_name); params_expr; return_expr ]) -> (
-    match method_params_to_json params_expr with
-    | Error _ as error -> error
-    | Ok params -> (
-      let operation_requirement = service_name ^ "." ^ method_name in
-      match effect_type_to_json return_expr (Some operation_requirement) with
-      | Error _ as error -> error
-      | Ok effect_json ->
-          Ok
-            (Ir_json.Object
-               [
-                 ("name", Ir_json.String method_name);
-                 ("params", Ir_json.Array params);
-                 ("effect", effect_json);
-               ])))
-  | bad ->
-      Error
-        [
-          diagnostic ~span:(Ast.expr_span bad) "artifact/service-method"
-            "service methods must be (name [param Type ...] ReturnEffect).";
-        ]
-let methods_to_json service_name methods =
-  let rec loop acc = function
-    | [] -> Ok (List.rev acc)
-    | method_expr :: rest -> (
-      match method_to_json service_name method_expr with
-      | Error _ as error -> error
-      | Ok method_json -> loop (method_json :: acc) rest)
-  in
-  loop [] methods
-let rec expr_to_payload_json expr =
-  let obj kind entries = Ir_json.Object (("kind", Ir_json.String kind) :: entries) in
-  match expr with
-  | Ast.Nil _ -> obj "Nil" []
-  | Ast.Bool (_, value) -> obj "Bool" [ ("value", Ir_json.Bool value) ]
-  | Ast.Int (_, value) -> obj "Number" [ ("value", Ir_json.Int value) ]
-  | Ast.Float (_, value) -> obj "Number" [ ("value", Ir_json.Float value) ]
-  | Ast.String (_, value) -> obj "String" [ ("value", Ir_json.String value) ]
-  | Ast.Symbol (_, name) | Ast.Keyword (_, name) ->
-      obj "Symbol" [ ("name", Ir_json.String name) ]
-  | Ast.List (_, items) | Ast.Vector (_, items) ->
-      let kind = match expr with Ast.List _ -> "List" | _ -> "Vector" in
-      obj kind [ ("items", Ir_json.Array (List.map expr_to_payload_json items)) ]
-  | Ast.Map (_, entries) ->
-      let entry (key, value) =
-        Ir_json.Object
-          [ ("key", expr_to_payload_json key); ("value", expr_to_payload_json value) ]
-      in
-      obj "Map" [ ("entries", Ir_json.Array (List.map entry entries)) ]
-let operation_signatures exprs =
-  List.fold_left
-    (fun acc -> function
-      | Ast.List
-          ( _,
-            [
-              (Ast.Symbol (_, ":") | Ast.Keyword (_, ":"));
-              Ast.Symbol (_, name);
-              signature_expr;
-            ] )
-        ->
-          (name, signature_expr) :: acc
-      | _ -> acc)
-    [] exprs
-
-let operation_signature_to_json signature params_expr =
-  match (signature, params_expr) with
-  | Ast.List (_, Ast.Symbol (_, "->") :: signature_items), Ast.Vector (_, params)
-    when List.length signature_items >= 2 ->
-      let input_types = List.rev (List.tl (List.rev signature_items)) in
-      let effect_expr = List.hd (List.rev signature_items) in
-      if List.length input_types <> List.length params then
-        Error
-          [
-            diagnostic ~span:(Ast.expr_span params_expr) "artifact/effect"
-              "operation signature arity must match define-operation parameters.";
-          ]
-      else
-        let rec params_loop acc params input_types =
-          match (params, input_types) with
-          | [], [] -> Ok (List.rev acc)
-          | param :: params_rest, input :: inputs_rest -> (
-            match (scalar_name param, type_expr_to_json input) with
-            | Some name, Ok type_json ->
-                params_loop
-                  (Ir_json.Object
-                     [ ("name", Ir_json.String name); ("type", type_json) ]
-                  :: acc)
-                  params_rest inputs_rest
-            | None, _ ->
-                Error
-                  [
-                    diagnostic ~span:(Ast.expr_span param) "artifact/effect"
-                      "operation parameters must be symbolic names.";
-                  ]
-            | _, (Error _ as error) -> error)
-          | _ -> assert false
-        in
-        (match
-           (params_loop [] params input_types, effect_type_to_json effect_expr None)
-         with
-        | (Error diagnostics, _) | (_, Error diagnostics) -> Error diagnostics
-        | (Ok params, Ok effect_json) -> Ok (params, effect_json))
-  | _ ->
-      Error
-        [
-          diagnostic ~span:(Ast.expr_span signature) "artifact/effect"
-            "operation signature must be (-> Input... (Effect ...)).";
-        ]

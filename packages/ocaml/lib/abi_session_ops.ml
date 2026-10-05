@@ -287,7 +287,11 @@ let load_runtime_input ~kind (session : Session.t) source_id source =
         let timings = { timings with Load_phase.store_ms } in
         Ok (id, List.length exprs, timings)
       in
-      if not (List.exists (expr_updates_session evaluation_env) exprs) then
+      let projected = Mechanics_artifact.projected_form_predicate exprs in
+      let updates expr =
+        (not (projected expr)) && expr_updates_session evaluation_env expr
+      in
+      if not (List.exists updates exprs) then
         stores_source ~env:evaluation_env ~type_env:source_type_env
           ~binding_names:(source_binding_names evaluation_env exprs)
           ~timings ()

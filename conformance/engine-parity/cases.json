@@ -26,6 +26,57 @@
       "sourceFile": "../operational-effects/program.lisp",
       "passes": ["parse", "typecheck", "effect-ir"],
       "typeAliases": { "Str": "String" }
+    },
+    {
+      "id": "effect-typescript/crud-users",
+      "sourceFile": "../effect-typescript/cases/crud-users/program.lisp",
+      "passes": ["parse", "effect-ir"]
+    },
+    {
+      "id": "effect-typescript/multi-service-checkout",
+      "sourceFile": "../effect-typescript/cases/multi-service-checkout/program.lisp",
+      "passes": ["parse", "effect-ir"]
+    },
+    {
+      "id": "effect-typescript/resource-scope",
+      "sourceFile": "../effect-typescript/cases/resource-scope/program.lisp",
+      "passes": ["parse", "effect-ir"]
+    },
+    {
+      "id": "effect-typescript/concurrent-workflow",
+      "sourceFile": "../effect-typescript/cases/concurrent-workflow/program.lisp",
+      "passes": ["parse", "effect-ir"]
+    },
+    {
+      "id": "effect-typescript/typed-errors",
+      "sourceFile": "../effect-typescript/cases/typed-errors/program.lisp",
+      "passes": ["parse", "effect-ir"]
+    },
+    {
+      "id": "effect-typescript/schemas-and-decoding",
+      "sourceFile": "../effect-typescript/cases/schemas-and-decoding/program.lisp",
+      "passes": ["parse", "effect-ir"]
+    },
+    {
+      "id": "effect-typescript/config-and-logging",
+      "sourceFile": "../effect-typescript/cases/config-and-logging/program.lisp",
+      "passes": ["parse", "effect-ir"]
+    },
+    {
+      "id": "effect-typescript/operational-effects",
+      "sourceFile": "../effect-typescript/cases/operational-effects/program.lisp",
+      "passes": ["parse", "typecheck", "effect-ir"],
+      "typeAliases": { "Str": "String" }
+    },
+    {
+      "id": "effect-typescript/pure-domain-logic",
+      "sourceFile": "../effect-typescript/cases/pure-domain-logic/program.lisp",
+      "passes": ["parse", "effect-ir"]
+    },
+    {
+      "id": "effect-typescript/stream-pipeline",
+      "sourceFile": "../effect-typescript/cases/stream-pipeline/program.lisp",
+      "passes": ["parse", "effect-ir"]
     }
   ]
 }

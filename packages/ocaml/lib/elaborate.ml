@@ -107,11 +107,12 @@ let expr_span = function
       span
 
 let collect_declarations_with_timings env exprs =
+  let is_projected = Mechanics_artifact.projected_form_predicate exprs in
   let rec loop timings form_index env declarations = function
     | [] -> Ok ((List.rev declarations, env), timings)
     | expr :: rest when ignored_toplevel_form expr ->
         loop timings (form_index + 1) env declarations rest
-    | expr :: rest when Mechanics_artifact.is_mechanics_form expr ->
+    | expr :: rest when is_projected expr ->
         loop timings (form_index + 1) env declarations rest
     | expr :: rest -> (
         let evaluated, collect_ms =

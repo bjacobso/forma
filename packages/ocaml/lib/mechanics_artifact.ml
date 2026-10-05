@@ -1,4 +1,5 @@
 open Mechanics_artifact_payload
+open Mechanics_signature_json
 
 let diagnostic = Mechanics_artifact_payload.diagnostic
 
@@ -82,7 +83,7 @@ let is_error_form = function
   | Ast.List
       ( _,
         [
-          Ast.Symbol (_, "define-error");
+          Ast.Symbol (_, ("define-error" | "define-class"));
           Ast.Symbol (_, _);
           fields_expr;
         ] ) ->
@@ -104,9 +105,27 @@ let is_operation_form = function
   | Ast.List (_, Ast.Symbol (_, "define-operation") :: _) -> true
   | _ -> false
 
+let is_layer_form = function
+  | Ast.List (_, Ast.Symbol (_, "define-layer") :: _) -> true
+  | _ -> false
+
 let is_mechanics_form expr =
   is_schema_form expr || is_error_form expr || is_service_form expr
-  || is_operation_form expr
+  || is_operation_form expr || is_layer_form expr
+
+(* `(define name value)` with a `(: name Type)` signature is a typed constant
+   or helper function. It is projected only from sources that already contain
+   mechanics forms, so ordinary typed Forma code keeps its existing meaning. *)
+let is_typed_define signatures = function
+  | Ast.List (_, [ Ast.Symbol (_, "define"); Ast.Symbol (_, name); _ ]) ->
+      List.mem_assoc name signatures
+  | _ -> false
+
+let projected_form_predicate exprs =
+  let signatures =
+    if List.exists is_mechanics_form exprs then operation_signatures exprs else []
+  in
+  fun expr -> is_mechanics_form expr || is_typed_define signatures expr
 
 let schema_payload name schema =
   Ir_json.Object
@@ -116,10 +135,10 @@ let schema_payload name schema =
       ("schema", schema);
     ]
 
-let error_payload name fields =
+let error_payload ?(kind = "ErrorDef") name fields =
   Ir_json.Object
     [
-      ("kind", Ir_json.String "ErrorDef");
+      ("kind", Ir_json.String kind);
       ("name", Ir_json.String name);
       ( "schema",
         kinded "Struct" [ ("fields", Ir_json.Array fields) ] );
@@ -182,18 +201,21 @@ let service_method_effects exprs =
       | _ -> acc)
     [] exprs
 
-let operation_effects signatures =
+let operation_effects signatures exprs =
   List.filter_map
-    (fun (name, signature) ->
-      match signature with
-      | Ast.List (_, Ast.Symbol (_, "->") :: signature_items)
-        when List.length signature_items >= 2 ->
-          let effect_expr = List.hd (List.rev signature_items) in
-          (match effect_type_to_json effect_expr None with
-          | Ok effect_json -> Some (name, effect_json)
-          | Error _ -> None)
+    (function
+      | Ast.List
+          ( _,
+            Ast.Symbol (_, "define-operation") :: Ast.Symbol (_, name)
+            :: (Ast.Vector _ as params_expr) :: _ ) -> (
+          match List.assoc_opt name signatures with
+          | None -> None
+          | Some signature -> (
+              match operation_signature_to_json signature params_expr with
+              | Ok (_, effect_json) -> Some (name, effect_json)
+              | Error _ -> None))
       | _ -> None)
-    signatures
+    exprs
 
 let packageable ~source_id ~form_index ~span kind name payload =
   let declaration =
@@ -220,15 +242,15 @@ let schema_declaration ~source_id ~form_index span name schema_expr =
         (packageable ~source_id ~form_index ~span "SchemaDef" name
            (schema_payload name schema))
 
-let error_declaration ~source_id ~form_index span name fields_expr =
+let error_declaration ?(kind = "ErrorDef") ~source_id ~form_index span name fields_expr =
   match fields_expr with
   | Ast.List (_, (Ast.Keyword (_, ":fields") | Ast.Symbol (_, ":fields")) :: fields) -> (
     match fields_to_json fields with
     | Error _ as error -> error
     | Ok fields ->
         Ok
-          (packageable ~source_id ~form_index ~span "ErrorDef" name
-             (error_payload name fields)))
+          (packageable ~source_id ~form_index ~span kind name
+             (error_payload ~kind name fields)))
   | bad ->
       Error
         [
@@ -253,8 +275,8 @@ let service_declaration ~source_id ~form_index span name methods_expr =
             "define-service expects a (:methods ...) block.";
         ]
 
-let operation_declaration ~source_id ~form_index span signatures service_effects name
-    params_expr body_exprs =
+let operation_declaration ~source_id ~form_index span signatures service_effects
+    operation_effects name params_expr body_exprs =
   match List.assoc_opt name signatures with
   | None ->
       Error
@@ -266,15 +288,24 @@ let operation_declaration ~source_id ~form_index span signatures service_effects
     match operation_signature_to_json signature params_expr with
     | Error _ as error -> error
     | Ok (params, effect_json) ->
-        let body =
-          Mechanics_effect_body_json.operation_body_json source_id service_effects
-            effect_json body_exprs
+        let context =
+          Mechanics_value_json.make_context ~source_id ~service_effects
+            ~operation_effects effect_json
         in
-        Ok
-          (packageable ~source_id ~form_index ~span "EffectDef" name
-             (effect_payload name params effect_json body)))
+        let body = Mechanics_effect_body_json.body_forms_json context body_exprs in
+        match Mechanics_value_json.context_diagnostics context with
+        | _ :: _ as diagnostics -> Error diagnostics
+        | [] ->
+            Ok
+              (packageable ~source_id ~form_index ~span "EffectDef" name
+                 (effect_payload name params effect_json body)))
 
-let declaration ~source_id ~form_index signatures service_effects = function
+let packaged ~source_id ~form_index ~span name = function
+  | Error _ as error -> error
+  | Ok (kind, payload) -> Ok (packageable ~source_id ~form_index ~span kind name payload)
+
+let declaration ~source_id ~form_index signatures service_effects operation_effects =
+  function
   | Ast.List
       ( span,
         [ Ast.Symbol (_, "define-schema"); Ast.Symbol (_, name); schema_expr ] )
@@ -288,10 +319,14 @@ let declaration ~source_id ~form_index signatures service_effects = function
         ]
   | Ast.List
       ( span,
-        [ Ast.Symbol (_, "define-error"); Ast.Symbol (_, name); fields_expr ] )
-    ->
-      error_declaration ~source_id ~form_index span name fields_expr
-  | Ast.List (span, Ast.Symbol (_, "define-error") :: _) ->
+        [
+          Ast.Symbol (_, (("define-error" | "define-class") as head));
+          Ast.Symbol (_, name);
+          fields_expr;
+        ] ) ->
+      let kind = if head = "define-class" then "ClassDef" else "ErrorDef" in
+      error_declaration ~kind ~source_id ~form_index span name fields_expr
+  | Ast.List (span, Ast.Symbol (_, ("define-error" | "define-class")) :: _) ->
       Error
         [
           diagnostic ~span "artifact/error"
@@ -315,24 +350,54 @@ let declaration ~source_id ~form_index signatures service_effects = function
   | Ast.List
       ( span,
         Ast.Symbol (_, "define-operation") :: Ast.Symbol (_, name)
-        :: (Ast.Vector (_, _) as params_expr) :: body_exprs ) ->
+        :: (Ast.Vector (_, _) as params_expr) :: (_ :: _ as body_exprs) ) ->
       operation_declaration ~source_id ~form_index span signatures
-        service_effects name params_expr body_exprs
+        service_effects operation_effects name params_expr body_exprs
   | Ast.List (span, Ast.Symbol (_, "define-operation") :: _) ->
       Error
         [
           diagnostic ~span "artifact/effect"
             "define-operation expects a name, parameter vector, and body.";
         ]
+  | Ast.List (span, [ Ast.Symbol (_, "define"); Ast.Symbol (_, name); value_expr ])
+    as expr ->
+      Mechanics_declaration_json.function_payload ~source_id expr name
+        (List.assoc name signatures) value_expr
+      |> packaged ~source_id ~form_index ~span name
+  | Ast.List (span, Ast.Symbol (_, "define-layer") :: name_expr :: (_ :: _ as sections))
+    as expr -> (
+      match Mechanics_value_json.sym_name name_expr with
+      | None ->
+          Error
+            [
+              diagnostic ~span:(Ast.expr_span name_expr) "artifact/layer"
+                "define-layer expects a layer name.";
+            ]
+      | Some name ->
+          Mechanics_declaration_json.layer_payload ~source_id ~service_effects
+            ~operation_effects expr name (List.assoc_opt name signatures) sections
+          |> Result.map (fun payload -> ("LayerDef", payload))
+          |> packaged ~source_id ~form_index ~span name)
+  | Ast.List (span, Ast.Symbol (_, "define-layer") :: _) ->
+      Error
+        [
+          diagnostic ~span "artifact/layer"
+            "define-layer expects a name and a layer body.";
+        ]
   | _ -> Error []
 
 let declarations ~source_id exprs =
   let signatures = operation_signatures exprs in
-  let service_effects = service_method_effects exprs @ operation_effects signatures in
+  let service_effects = service_method_effects exprs in
+  let operation_effects = operation_effects signatures exprs in
+  let is_projected = projected_form_predicate exprs in
   let rec loop acc form_index = function
     | [] -> Ok (List.rev acc)
-    | expr :: rest when is_mechanics_form expr -> (
-      match declaration ~source_id ~form_index signatures service_effects expr with
+    | expr :: rest when is_projected expr -> (
+      match
+        declaration ~source_id ~form_index signatures service_effects
+          operation_effects expr
+      with
       | Error [] -> loop acc (form_index + 1) rest
       | Error _ as error -> error
       | Ok declaration -> loop (declaration :: acc) (form_index + 1) rest)

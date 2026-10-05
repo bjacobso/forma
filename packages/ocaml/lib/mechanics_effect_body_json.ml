@@ -1,426 +1,224 @@
 open Mechanics_artifact_payload
+open Mechanics_value_json
 
-let source_span_json source_id span =
-  Ir_json.Object
-    [
-      ("sourceId", Ir_json.String source_id);
-      ("startOffset", Ir_json.Int span.Ast.start_offset);
-      ("endOffset", Ir_json.Int span.Ast.end_offset);
-    ]
+(* Mirrors effectCoreExprToJson and friends in
+   packages/ts/src/mechanics/artifact.ts. *)
 
-let source_json source_id expr = source_span_json source_id (Ast.expr_span expr)
-
-let rec var_or_literal_json source_id expr =
-  let span = source_json source_id expr in
-  match expr with
-  | Ast.Symbol (_, name) ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Var");
-          ("name", Ir_json.String name);
-          ("span", span);
-        ]
-  | Ast.Keyword _ as expr ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Expr");
-          ("source", expr_to_payload_json expr);
-          ("span", span);
-        ]
-  | Ast.String (_, value) ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Literal");
-          ("value", Ir_json.String value);
-          ("span", span);
-        ]
-  | Ast.Int (_, value) ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Literal");
-          ("value", Ir_json.Int value);
-          ("span", span);
-        ]
-  | Ast.Float (_, value) ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Literal");
-          ("value", Ir_json.Float value);
-          ("span", span);
-        ]
-  | Ast.Bool (_, value) ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Literal");
-          ("value", Ir_json.Bool value);
-          ("span", span);
-        ]
-  | Ast.List (_, items) ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "List");
-          ("items", Ir_json.Array (List.map (var_or_literal_json source_id) items));
-          ("span", span);
-        ]
-  | Ast.Vector (_, items) ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Vector");
-          ("items", Ir_json.Array (List.map (var_or_literal_json source_id) items));
-          ("span", span);
-        ]
-  | Ast.Map (_, entries) ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Record");
-          ( "entries",
-            Ir_json.Array
-              (List.map
-                 (fun (key, value) ->
-                   Ir_json.Object
-                     [
-                       ("key", var_or_literal_json source_id key);
-                       ("value", var_or_literal_json source_id value);
-                     ])
-                 entries) );
-          ("span", span);
-        ]
-  | expr ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Expr");
-          ("source", expr_to_payload_json expr);
-          ("span", span);
-        ]
-
-let service_and_method name =
-  match String.split_on_char '.' name with
-  | [ service; method_name ] when service <> "" && method_name <> "" ->
-      Some (service, method_name)
+(* TypeScript: head.includes(".") && !head.startsWith("."), then
+   head.split(".", 2). *)
+let service_and_method head =
+  match String.index_opt head '.' with
+  | Some index when index > 0 ->
+      let rest = String.sub head (index + 1) (String.length head - index - 1) in
+      let method_name =
+        match String.index_opt rest '.' with
+        | Some next -> String.sub rest 0 next
+        | None -> rest
+      in
+      if method_name = "" then None
+      else Some (String.sub head 0 index, method_name)
   | _ -> None
 
-let error_value_json source_id expr =
-  match expr with
-  | Ast.List (_, [ Ast.Symbol (_, error_type); payload ]) ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Error");
-          ("errorType", Ir_json.String error_type);
-          ("payload", var_or_literal_json source_id payload);
-          ("span", source_json source_id expr);
-        ]
-  | expr -> var_or_literal_json source_id expr
+let unwrap_arrow_bind = function
+  | Ast.List (_, Ast.Symbol (_, "<-") :: inner :: _) -> inner
+  | expr -> expr
 
-let rec effect_core_json source_id service_effects effect_json expr =
+let rec effect_json context expr =
+  let source_id = context.source_id in
+  let node kind entries =
+    obj kind (entries @ [ ("effect", context.effect); ("span", source_json source_id expr) ])
+  in
+  let values args = Ir_json.Array (List.map (value_json source_id) args) in
   match expr with
-  | Ast.List (_, Ast.Symbol (_, head) :: args) -> (
-    match service_and_method head with
-    | Some (service, method_name) ->
-        let call_effect =
-          Option.value (List.assoc_opt head service_effects) ~default:effect_json
-        in
-        Ir_json.Object
-          [
-            ("kind", Ir_json.String "ServiceCall");
-            ("service", Ir_json.String service);
-            ("method", Ir_json.String method_name);
-            ("args", Ir_json.Array (List.map (var_or_literal_json source_id) args));
-            ("effect", call_effect);
-            ("span", source_json source_id expr);
-          ]
-    | None -> (
-      match List.assoc_opt head service_effects with
-      | Some call_effect ->
-          Ir_json.Object
+  | Ast.List (_, (head_expr :: args as items)) -> (
+      let head = sym_name head_expr in
+      let count = List.length items in
+      match (head, Option.bind head service_and_method) with
+      | Some head, Some (service, method_name) ->
+          obj "ServiceCall"
             [
-              ("kind", Ir_json.String "OperationCall");
+              ("service", Ir_json.String service);
+              ("method", Ir_json.String method_name);
+              ("args", values args);
+              ( "effect",
+                Option.value (List.assoc_opt head context.service_effects)
+                  ~default:context.effect );
+              ("span", source_json source_id expr);
+            ]
+      | Some head, None when List.mem_assoc head context.operation_effects ->
+          obj "OperationCall"
+            [
               ("operation", Ir_json.String head);
-              ("args", Ir_json.Array (List.map (var_or_literal_json source_id) args));
-              ("effect", call_effect);
+              ("args", values args);
+              ("effect", List.assoc head context.operation_effects);
               ("span", source_json source_id expr);
             ]
-      | None -> (
-      match head with
-      | "succeed" ->
-          let value =
-            match args with
-            | value :: _ -> var_or_literal_json source_id value
-            | [] -> Ir_json.Null
-          in
-          Ir_json.Object
-            [
-              ("kind", Ir_json.String "Succeed");
-              ("value", value);
-              ("effect", effect_json);
-              ("span", source_json source_id expr);
-            ]
-      | "fail" ->
-          let error =
-            match args with
-            | value :: _ -> error_value_json source_id value
-            | [] -> Ir_json.Null
-          in
-          Ir_json.Object
-            [
-              ("kind", Ir_json.String "Fail");
-              ("error", error);
-              ("effect", effect_json);
-              ("span", source_json source_id expr);
-            ]
-      | "<-" ->
-          let value =
-            match args with
-            | value :: _ -> effect_core_json source_id service_effects effect_json value
-            | [] -> Ir_json.Null
-          in
-          Ir_json.Object
-            [
-              ("kind", Ir_json.String "Bind");
-              ("value", value);
-              ("effect", effect_json);
-              ("span", source_json source_id expr);
-            ]
-      | "do" ->
-          Ir_json.Object
-            [
-              ("kind", Ir_json.String "Do");
-              ( "forms",
-                Ir_json.Array
-                  (List.map
-                     (effect_core_json source_id service_effects effect_json)
-                     args) );
-              ("effect", effect_json);
-              ("span", source_json source_id expr);
-            ]
-      | "if" -> effect_if_json source_id service_effects effect_json expr args
-      | "when" -> effect_when_json source_id service_effects effect_json expr args
-      | "unless" -> effect_unless_json source_id service_effects effect_json expr args
-      | "cond" -> effect_cond_json source_id service_effects effect_json expr args
-      | "catch" ->
-          effect_catch_json source_id service_effects effect_json expr args
-      | "do!" -> effect_do_json source_id service_effects effect_json expr args
-      | "let" -> effect_let_json source_id service_effects effect_json expr args
-      | "match" -> effect_match_json source_id service_effects effect_json expr args
-      | _ -> pure_effect_json source_id effect_json expr)))
-  | _ -> pure_effect_json source_id effect_json expr
+      | Some head, None when Option.is_some (Mechanics_effect_combinator_json.find head) ->
+          Mechanics_effect_combinator_json.combinator_json ~core:effect_json
+            ~body_forms:body_forms_json context expr head
+            (Option.get (Mechanics_effect_combinator_json.find head))
+            args
+      | Some "succeed", None ->
+          if count <> 2 then report context expr "succeed expects exactly one value."
+          else node "Succeed" [ ("value", value_json source_id (List.hd args)) ]
+      | Some "fail", None ->
+          if count <> 2 then report context expr "fail expects exactly one error value."
+          else node "Fail" [ ("error", error_value_json source_id (List.hd args)) ]
+      | Some "catch", None ->
+          Mechanics_effect_combinator_json.catch_json ~core:effect_json context expr args
+      | Some "<-", None ->
+          if count <> 2 then report context expr "<- expects exactly one effect."
+          else node "Bind" [ ("value", effect_json context (List.hd args)) ]
+      | Some "do", None ->
+          node "Do" [ ("forms", Ir_json.Array (List.map (effect_json context) args)) ]
+      | Some "if", None -> (
+          match args with
+          | [ condition; then_expr; else_expr ] ->
+              node "If"
+                [
+                  ("condition", value_json source_id condition);
+                  ("then", effect_json context then_expr);
+                  ("else", effect_json context else_expr);
+                ]
+          | _ ->
+              report context expr
+                "if expects a condition, a then branch, and an else branch; use when or \
+                 unless for one branch.")
+      | Some (("when" | "unless") as head), None -> (
+          match args with
+          | condition :: (_ :: _ as body) ->
+              node
+                (if head = "when" then "When" else "Unless")
+                [
+                  ("condition", value_json source_id condition);
+                  ("body", body_forms_json context body);
+                ]
+          | _ -> report context expr (head ^ " expects a condition and a body."))
+      | Some "cond", None -> cond_json context expr args
+      | Some (("do!" | "let") as head), None ->
+          bindings_form_json context expr head args
+      | Some "match", None -> match_json context expr args
+      | _ -> pure_json context expr)
+  | _ -> pure_json context expr
 
-and pure_effect_json source_id effect_json expr =
-  Ir_json.Object
+and pure_json context expr =
+  obj "Pure"
     [
-      ("kind", Ir_json.String "Pure");
-      ("value", var_or_literal_json source_id expr);
-      ("effect", effect_json);
-      ("span", source_json source_id expr);
+      ("value", value_json context.source_id expr);
+      ("effect", context.effect);
+      ("span", source_json context.source_id expr);
     ]
 
-and effect_catch_json source_id service_effects effect_json expr = function
-  | body
-    :: Ast.List
-         (_, [ Ast.Symbol (_, error_type); Ast.Symbol (_, binding) ])
-    :: handler :: _ ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Catch");
-          ("body", effect_core_json source_id service_effects effect_json body);
-          ("errorType", Ir_json.String error_type);
-          ("binding", Ir_json.String binding);
-          ( "handler",
-            effect_core_json source_id service_effects effect_json handler );
-          ("effect", effect_json);
-          ("span", source_json source_id expr);
-        ]
-  | _ ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Catch");
-          ("effect", effect_json);
-          ("span", source_json source_id expr);
-        ]
-
-and effect_if_json source_id service_effects effect_json expr = function
-  | condition :: then_expr :: else_expr :: _ ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "If");
-          ("condition", var_or_literal_json source_id condition);
-          ("then", effect_core_json source_id service_effects effect_json then_expr);
-          ("else", effect_core_json source_id service_effects effect_json else_expr);
-          ("effect", effect_json);
-          ("span", source_json source_id expr);
-        ]
-  | _ ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "If");
-          ("effect", effect_json);
-          ("span", source_json source_id expr);
-        ]
-
-and effect_when_json source_id service_effects effect_json expr = function
-  | condition :: body ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "When");
-          ("condition", var_or_literal_json source_id condition);
-          ("body", operation_body_json source_id service_effects effect_json body);
-          ("effect", effect_json);
-          ("span", source_json source_id expr);
-        ]
-  | [] ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "When");
-          ("effect", effect_json);
-          ("span", source_json source_id expr);
-        ]
-
-and effect_unless_json source_id service_effects effect_json expr = function
-  | condition :: body ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Unless");
-          ("condition", var_or_literal_json source_id condition);
-          ("body", operation_body_json source_id service_effects effect_json body);
-          ("effect", effect_json);
-          ("span", source_json source_id expr);
-        ]
-  | [] ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Unless");
-          ("effect", effect_json);
-          ("span", source_json source_id expr);
-        ]
-
-and effect_cond_json source_id service_effects effect_json expr args =
-  let rec loop acc = function
+and cond_json context expr args =
+  let rec clauses acc = function
     | condition :: body :: rest ->
         let clause =
           Ir_json.Object
             [
-              ("condition", var_or_literal_json source_id condition);
-              ("body", effect_core_json source_id service_effects effect_json body);
-              ("span", source_json source_id condition);
+              ("condition", value_json context.source_id condition);
+              ("body", effect_json context body);
+              ("span", source_json context.source_id condition);
             ]
         in
-        loop (clause :: acc) rest
+        clauses (clause :: acc) rest
     | _ -> List.rev acc
   in
-  Ir_json.Object
-    [
-      ("kind", Ir_json.String "Cond");
-      ("clauses", Ir_json.Array (loop [] args));
-      ("effect", effect_json);
-      ("span", source_json source_id expr);
-    ]
+  if args = [] || List.length args mod 2 <> 0 then
+    report context expr "cond expects condition/body pairs."
+  else
+    obj "Cond"
+      [
+        ("clauses", Ir_json.Array (clauses [] args));
+        ("effect", context.effect);
+        ("span", source_json context.source_id expr);
+      ]
 
-and effect_bindings_json source_id service_effects effect_json items =
-  let rec loop acc = function
-    | name :: value :: rest -> (
-      match scalar_name name with
-      | Some name ->
-          let value =
-            match value with
-            | Ast.List (_, [ Ast.Symbol (_, "<-"); inner ]) -> inner
-            | _ -> value
-          in
-          let binding =
-            Ir_json.Object
-              [
-                ("name", Ir_json.String name);
-                ("value", effect_core_json source_id service_effects effect_json value);
-                ("span", source_json source_id value);
-              ]
-          in
-          loop (binding :: acc) rest
-      | None -> loop acc rest)
-    | _ -> List.rev acc
-  in
-  loop [] items
+and bindings_form_json context expr head args =
+  match args with
+  | Ast.Vector (_, items) :: _ when List.length items mod 2 <> 0 ->
+      report context expr (head ^ " expects a [name value ...] binding vector.")
+  | (Ast.Vector _ as bindings) :: (_ :: _ as body) ->
+      obj
+        (if head = "do!" then "Do" else "Let")
+        [
+          ("bindings", Ir_json.Array (bindings_json context bindings));
+          ("body", body_forms_json context body);
+          ("effect", context.effect);
+          ("span", source_json context.source_id expr);
+        ]
+  | [ Ast.Vector _ ] -> report context expr (head ^ " expects a body after its bindings.")
+  | _ -> report context expr (head ^ " expects a [name value ...] binding vector.")
 
-and effect_do_json source_id service_effects effect_json expr = function
-  | Ast.Vector (_, bindings) :: body ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Do");
-          ( "bindings",
-            Ir_json.Array
-              (effect_bindings_json source_id service_effects effect_json bindings) );
-          ("body", operation_body_json source_id service_effects effect_json body);
-          ("effect", effect_json);
-          ("span", source_json source_id expr);
-        ]
-  | _ ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Do");
-          ("effect", effect_json);
-          ("span", source_json source_id expr);
-        ]
+and bindings_json context = function
+  | Ast.Vector (_, items) as bindings_expr ->
+      if List.length items mod 2 <> 0 then (
+        ignore (report context bindings_expr "bindings must be [name value ...] pairs.");
+        [])
+      else
+        let rec loop acc = function
+          | name :: value :: rest -> (
+              let binding_name =
+                match name with
+                | Ast.Symbol _ | Ast.Keyword _ | Ast.Nil _ -> scalar_name name
+                | _ -> None
+              in
+              match binding_name with
+              | None ->
+                  ignore (report context name "binding names must be symbols.");
+                  loop acc rest
+              | Some binding_name ->
+                  let value = unwrap_arrow_bind value in
+                  let binding =
+                    Ir_json.Object
+                      [
+                        ("name", Ir_json.String binding_name);
+                        ("value", effect_json context value);
+                        ("span", source_json context.source_id value);
+                      ]
+                  in
+                  loop (binding :: acc) rest)
+          | _ -> List.rev acc
+        in
+        loop [] items
+  | _ -> []
 
-and effect_let_json source_id service_effects effect_json expr = function
-  | Ast.Vector (_, bindings) :: body ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Let");
-          ( "bindings",
-            Ir_json.Array
-              (effect_bindings_json source_id service_effects effect_json bindings) );
-          ("body", operation_body_json source_id service_effects effect_json body);
-          ("effect", effect_json);
-          ("span", source_json source_id expr);
-        ]
-  | _ ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Let");
-          ("effect", effect_json);
-          ("span", source_json source_id expr);
-        ]
-
-and effect_match_json source_id service_effects effect_json expr = function
-  | value :: arms ->
+and match_json context expr args =
+  match args with
+  | value :: (_ :: _ :: _ as arms) when List.length arms mod 2 = 0 ->
       let rec loop acc = function
         | pattern :: body :: rest ->
             let arm =
               Ir_json.Object
                 [
-                  ("pattern", var_or_literal_json source_id pattern);
-                  ("body", effect_core_json source_id service_effects effect_json body);
-                  ("span", source_json source_id pattern);
+                  ("pattern", value_json context.source_id pattern);
+                  ("body", effect_json context body);
+                  ("span", source_json context.source_id pattern);
                 ]
             in
             loop (arm :: acc) rest
         | _ -> List.rev acc
       in
-      Ir_json.Object
+      obj "Match"
         [
-          ("kind", Ir_json.String "Match");
-          ("value", var_or_literal_json source_id value);
+          ("value", value_json context.source_id value);
           ("arms", Ir_json.Array (loop [] arms));
-          ("effect", effect_json);
-          ("span", source_json source_id expr);
+          ("effect", context.effect);
+          ("span", source_json context.source_id expr);
         ]
-  | [] ->
-      Ir_json.Object
-        [
-          ("kind", Ir_json.String "Match");
-          ("effect", effect_json);
-          ("span", source_json source_id expr);
-        ]
+  | _ -> report context expr "match expects a value and pattern/body pairs."
 
-and operation_body_json source_id service_effects effect_json = function
-  | [ body ] -> effect_core_json source_id service_effects effect_json body
-  | bodies ->
-      Ir_json.Object
+and body_forms_json context = function
+  | [ body ] -> effect_json context body
+  | [] ->
+      obj "Pure"
         [
-          ("kind", Ir_json.String "Do");
-          ( "forms",
-            Ir_json.Array
-              (List.map (effect_core_json source_id service_effects effect_json) bodies) );
-          ("effect", effect_json);
-          ( "span",
-            (match bodies with
-            | first :: _ -> source_json source_id first
-            | [] -> Ir_json.Null) );
+          ("value", obj "Var" [ ("name", Ir_json.String "nil") ]);
+          ("effect", context.effect);
+        ]
+  | first :: _ as bodies ->
+      obj "Do"
+        [
+          ("forms", Ir_json.Array (List.map (effect_json context) bodies));
+          ("effect", context.effect);
+          ("span", source_json context.source_id first);
         ]
