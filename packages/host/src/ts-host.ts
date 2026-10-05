@@ -33,6 +33,8 @@ import type {
   ExpandResult,
   FindReferencesRequest,
   FindReferencesResult,
+  FormSlotsRequest,
+  FormSlotsResult,
   EvaluateInSessionRequest,
   EvaluateRequest,
   EvaluationResult,
@@ -253,6 +255,7 @@ export class TsLanguageHost implements LanguageHost {
         "editScriptSchema",
         "sourceToOutline",
         "outlineToSource",
+        "formSlots",
       ],
     };
   }
@@ -777,6 +780,40 @@ export class TsLanguageHost implements LanguageHost {
       ...(request.idPrefix !== undefined ? { idPrefix: request.idPrefix } : {}),
     });
     return { sourceId: request.sourceId ?? "source", ...result };
+  }
+
+  async formSlots(request: FormSlotsRequest): Promise<FormSlotsResult> {
+    const sourceId = request.sourceId ?? "source";
+    const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
+    const slots = Editor.formSlots({
+      source: request.source,
+      ...(request.identity ? { identity: request.identity } : {}),
+      ...(request.offset !== undefined ? { offset: request.offset } : {}),
+      ...(request.nodeId !== undefined ? { nodeId: request.nodeId } : {}),
+      descriptorSources: [
+        ...(session?.language.orderedSources() ?? []).map((source) => source.text),
+        ...(request.descriptorSources ?? []).map((document) => document.source),
+      ],
+    });
+    if (!slots) return { sourceId, identifiers: [], slots: [], unknownSlots: [] };
+    const span = (value: { readonly start: number; readonly end: number }) => hostSpan(sourceId, value);
+    return {
+      sourceId,
+      form: { ...slots.form, span: span(slots.form.span) },
+      identifiers: slots.identifiers.map((identifier) =>
+        identifier.span ? { ...identifier, span: span(identifier.span) } : identifier,
+      ) as FormSlotsResult["identifiers"],
+      slots: slots.slots.map((slot) => ({
+        ...slot,
+        occurrences: slot.occurrences.map((occurrence) => ({
+          nodeId: occurrence.nodeId,
+          span: span(occurrence.span),
+          values: occurrence.values.map((value) => ({ nodeId: value.nodeId, span: span(value.span) })),
+        })),
+      })),
+      ...(slots.activeSlot ? { activeSlot: slots.activeSlot } : {}),
+      unknownSlots: slots.unknownSlots,
+    };
   }
 
   #indexSymbols(request: SymbolIndexRequest): Editor.SymbolIndex {

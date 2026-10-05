@@ -18,6 +18,7 @@ describe("structural editor services on the TypeScript host", () => {
         "editScriptSchema",
         "sourceToOutline",
         "outlineToSource",
+        "formSlots",
       ]));
   });
 
@@ -245,5 +246,30 @@ describe("structural editor services on the TypeScript host", () => {
     expect(edited.source).toBe("(defn total [x]\n  ; doubles\n  (* x 2))\n(total 2)\n(now)\n");
     expect(edited.rows.map((row) => row.id)).toContain("new-row");
     expect(edited.identity.nodes.some((node) => node.id === call!.id)).toBe(true);
+  });
+
+  it("offers slot placeholders for descriptor forms loaded in a session", async () => {
+    const { sessionId } = await host.openSession();
+    await host.loadSource({
+      sessionId,
+      sourceId: "workflow.lisp",
+      kind: "prelude",
+      source: `(define-form workflow
+  (:phase domain)
+  (:identifiers (identifier name Symbol (:declaration true)))
+  (:slots (slot trigger value (:required true)) (slot steps value (:many true))))`,
+    });
+    const source = "(workflow onboarding\n  (:steps verify))";
+    const result = await host.formSlots({ sessionId, sourceId: "main", source, offset: source.indexOf("verify") });
+    expect(result.form).toMatchObject({ name: "workflow", span: { sourceId: "main", startOffset: 0 } });
+    expect(result.activeSlot).toBe("steps");
+    expect(result.slots.map((slot) => [slot.placeholder, slot.missing, slot.available])).toEqual([
+      ["+ trigger", true, true],
+      ["+ steps", false, true],
+    ]);
+    expect(result.slots[1]!.occurrences[0]!.values[0]!.span).toMatchObject({ sourceId: "main" });
+    const none = await host.formSlots({ source: "(+ 1 2)", offset: 1 });
+    expect(none.form).toBeUndefined();
+    await host.closeSession({ sessionId });
   });
 });
