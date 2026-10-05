@@ -14,9 +14,10 @@ const result = host.parseSync({ sourceId: "example", source: "(+ 1 2)" });
 ```
 
 The TypeScript host also implements the optional structural editor services
-(`identifySyntax` and the methods listed in `version().capabilities`). Check a
-host's capabilities before calling them; the OCaml adapters do not implement
-them yet.
+listed in `version().capabilities`: `identifySyntax`, and `observe` on
+`evaluate` and `evaluateInSession`, which returns each expression's last value,
+count, and failure. Check a host's capabilities before relying on them; the
+OCaml adapters do not implement them yet and ignore `observe`.
 
 The default host uses the included TypeScript engine. Optional OCaml adapters
 require a separately built artifact: set `FORMA_OCAML_CLI` for the native CLI,

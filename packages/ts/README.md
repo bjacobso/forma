@@ -119,6 +119,20 @@ Nodes keep their ids when edits happen elsewhere, when they are retyped in
 place, and when they move with identical tokens. Parsing never throws:
 unterminated strings and stray characters become error nodes.
 
+Observed evaluation records the last value, evaluation count, and failure of
+every author-written expression, keyed by those ids:
+
+```ts
+import { evaluate } from "@formalang/ts/engine";
+
+const result = await evaluate({ source, observe: { identity } });
+result.observations?.records; // [{ nodeId, span, count, value, failure? }]
+```
+
+Values computed inside macro expansions are reported at the macro call and at
+the arguments the author wrote, never at a macro's template. A failed
+evaluation still returns the records computed before the failure.
+
 ```sh
 pnpm --filter @formalang/ts build
 pnpm --filter @formalang/ts test

@@ -153,6 +153,19 @@ export interface EvaluateRequest {
   readonly source: string;
   readonly env?: Env | undefined;
   readonly stepLimit?: number | undefined;
+  /** Record the last value, count, and failure of each author-written expression. */
+  readonly observe?: Evaluator.ObservationOptions | undefined;
+}
+
+/** Observations with failures projected to diagnostics. */
+export interface ObservationReport {
+  readonly records: readonly ExpressionObservation[];
+  readonly truncated: boolean;
+  readonly maxRecords: number;
+}
+
+export interface ExpressionObservation extends Omit<Evaluator.ExpressionObservation, "failure"> {
+  readonly failure?: Diagnostic | undefined;
 }
 
 export interface EvaluateResult extends PassResult {
@@ -161,6 +174,8 @@ export interface EvaluateResult extends PassResult {
   readonly printed?: string | undefined;
   readonly steps?: number | undefined;
   readonly env?: Env | undefined;
+  /** Present when the request asked to observe, including after a failure. */
+  readonly observations?: ObservationReport | undefined;
 }
 
 export interface EvaluateInSessionRequest {
@@ -169,6 +184,7 @@ export interface EvaluateInSessionRequest {
   readonly source?: string | undefined;
   readonly env?: Env | undefined;
   readonly stepLimit?: number | undefined;
+  readonly observe?: Evaluator.ObservationOptions | undefined;
 }
 
 type DiagnosticPhase = NonNullable<Diagnostic["phase"]>;
@@ -321,6 +337,9 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
 
 export async function evaluate(request: EvaluateRequest): Promise<EvaluateResult> {
   const sourceId = request.sourceId ?? "source";
+  if (request.observe) {
+    return evaluateObserved(request, request.observe, Builtins.defaultBuiltins);
+  }
   try {
     const result = await Effect.runPromise(
       Effect.provide(
@@ -377,11 +396,72 @@ export async function evaluateInSession(
     source,
     env: request.env ?? request.session.env,
     stepLimit: request.stepLimit,
+    observe: request.observe,
   });
   if (result.diagnostics.length === 0 && result.env) {
     request.session.env = result.env;
   }
   return result;
+}
+
+/**
+ * Evaluate with observation. Failures are attributed to the innermost
+ * author-written expression that contains their span, and the records
+ * computed before a failure are returned with it.
+ */
+export async function evaluateObserved(
+  request: EvaluateRequest,
+  observe: Evaluator.ObservationOptions,
+  builtins: Record<string, Evaluator.BuiltinFn>,
+): Promise<EvaluateResult> {
+  const sourceId = request.sourceId ?? "source";
+  const { collector, evaluation } = Evaluator.observeEvaluation(
+    request.source,
+    {
+      stepLimit: request.stepLimit ?? 50_000,
+      builtins,
+      ...(request.env ? { env: request.env } : {}),
+    },
+    observe,
+  );
+  try {
+    const result = await Effect.runPromise(evaluation);
+    return {
+      sourceId,
+      pass: "evaluate",
+      value: result.value,
+      printed: Evaluator.printKValue(result.value),
+      steps: result.steps,
+      env: result.env,
+      diagnostics: [],
+      observations: observationReport(collector),
+    };
+  } catch (error) {
+    const diagnostic = diagnosticFromUnknown(error, "evaluate", sourceId);
+    if (diagnostic.span) {
+      collector.fail(diagnostic, {
+        start: diagnostic.span.startOffset,
+        end: diagnostic.span.endOffset,
+      });
+    }
+    return {
+      sourceId,
+      pass: "evaluate",
+      value: null,
+      diagnostics: [diagnostic],
+      observations: observationReport(collector),
+    };
+  }
+}
+
+function observationReport(collector: Evaluator.ObservationCollector): ObservationReport {
+  const report = collector.report();
+  return {
+    ...report,
+    records: report.records.map(({ failure, ...record }) =>
+      failure === undefined ? record : { ...record, failure: failure as Diagnostic },
+    ),
+  };
 }
 
 function expressionTypesFromSource(

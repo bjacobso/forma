@@ -2,6 +2,7 @@
  * Compile scope — tracks locals and upvalue captures, registries, and context.
  */
 
+import type { KernelObserver } from "../evaluator/observation.js";
 import type { Env } from "../Env.js";
 import type { BuiltinFn } from "../evaluator/types.js";
 
@@ -153,4 +154,6 @@ export class BuiltinRegistry {
 
 export interface CompileContext {
   readonly env?: Env;
+  /** When present, observed expressions are followed by `OBSERVE`. */
+  readonly observer?: KernelObserver;
 }

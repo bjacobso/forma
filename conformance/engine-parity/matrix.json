@@ -30,6 +30,11 @@
       "reason": "identifySyntax is implemented by the TypeScript host only. It depends on the shared reader grammar; the OCaml hosts do not expose it yet."
     },
     {
+      "id": "observation",
+      "status": "gap",
+      "reason": "Per-expression observation (evaluate observe) is implemented by the TypeScript VM and evaluator only. The OCaml hosts ignore the observe field."
+    },
+    {
       "id": "effect-typescript-match",
       "status": "gap",
       "reason": "The Effect TypeScript generator rejects Match bodies explicitly."

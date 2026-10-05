@@ -181,18 +181,65 @@ export interface HostCall {
 
 export type ValueProjectionName = "printed" | "plain-json" | "triple-value" | "truthy" | "summary";
 
+/** Opt-in per-expression observation. See docs/language-services.md. */
+export interface ObservationRequest {
+  /** Ids for records; pass the identity of the evaluated source. Fresh ids otherwise. */
+  readonly identity?: SyntaxIdentity | undefined;
+  /** Maximum number of expressions with records. Default 5,000. */
+  readonly maxRecords?: number | undefined;
+  /** Maximum items shown per list, vector, or map. Default 20. */
+  readonly maxItems?: number | undefined;
+  /** Maximum nesting depth of a projected value. Default 4. */
+  readonly maxDepth?: number | undefined;
+  /** Maximum length of a projected string. Default 500. */
+  readonly maxStringLength?: number | undefined;
+}
+
+export interface ExpressionObservation {
+  readonly nodeId: string;
+  readonly span: Span;
+  /** Times the expression finished evaluating. */
+  readonly count: number;
+  /**
+   * The last value, bounded by the request's limits. Truncated collections
+   * end with an opaque item tagged `truncated`. Absent when `count` is 0.
+   */
+  readonly value?: ValueProjection | undefined;
+  /** A failure raised while evaluating this expression. */
+  readonly failure?: Diagnostic | undefined;
+}
+
+export interface ObservationResult {
+  /** Records in document order, for expressions that ran or failed. */
+  readonly records: readonly ExpressionObservation[];
+  /** True when `maxRecords` dropped records. */
+  readonly truncated: boolean;
+  readonly limits: {
+    readonly maxRecords: number;
+    readonly maxItems: number;
+    readonly maxDepth: number;
+    readonly maxStringLength: number;
+  };
+}
+
 export interface EvaluationResult {
   readonly value: ValueProjection;
   readonly printed?: string | undefined;
   readonly projected?: Record<string, unknown> | undefined;
   readonly steps?: number | undefined;
   readonly diagnostics: readonly Diagnostic[];
+  /** Present when the request set `observe`, including when evaluation failed. */
+  readonly observations?: ObservationResult | undefined;
 }
 
 export type EvaluationState =
   | { readonly status: "completed"; readonly result: EvaluationResult }
   | { readonly status: "host-call"; readonly call: HostCall }
-  | { readonly status: "failed"; readonly diagnostics: readonly Diagnostic[] };
+  | {
+      readonly status: "failed";
+      readonly diagnostics: readonly Diagnostic[];
+      readonly observations?: ObservationResult | undefined;
+    };
 
 export interface VersionResult {
   readonly engine: string;
@@ -307,6 +354,7 @@ export interface EvaluateRequest {
   readonly typePolicy?: TypePolicy | undefined;
   readonly stepLimit?: number | undefined;
   readonly resultProjection?: readonly ValueProjectionName[] | undefined;
+  readonly observe?: ObservationRequest | undefined;
 }
 
 export interface EvaluateInSessionRequest {
@@ -317,7 +365,9 @@ export interface EvaluateInSessionRequest {
   readonly variables?: readonly SessionVariable[] | undefined;
   readonly stepLimit?: number | undefined;
   readonly resultProjection?: readonly ValueProjectionName[] | undefined;
+  /** Also applies to observed values: each record's value gets a `valueRef`. */
   readonly retainValues?: "none" | "functions" | "all" | undefined;
+  readonly observe?: ObservationRequest | undefined;
 }
 
 export interface CallValueRequest {

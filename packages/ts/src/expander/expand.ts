@@ -6,7 +6,7 @@ import { ArityError } from "../diagnostic/errors.js";
 import { evaluateCompileTimeExprs } from "../evaluator/eval.js";
 import { PRELUDE_SOURCE } from "./prelude.js";
 import { kValueToSExpr } from "../evaluator/quasiquote.js";
-import { copySourceTrace, tagExpandedExpr } from "../evaluator/source-trace.js";
+import { copySourceTrace, markExpansion, tagExpandedExpr } from "../evaluator/source-trace.js";
 import type { BuiltinFn, KMacro, KValue } from "../evaluator/types.js";
 import { isKMacro, isKSExpr } from "../evaluator/types.js";
 
@@ -163,8 +163,9 @@ function expandExpr(
     if (head._tag === "Sym") {
       const binding = macroEnv.lookup(head.name);
       if (binding !== undefined && isKMacro(binding)) {
-        const expanded = evaluateMacro(binding, expr.items.slice(1), builtins, macroStepLimit);
-        tagExpandedExpr(expanded, { macroName: binding.name, loc: expr.loc });
+        const result = evaluateMacro(binding, expr.items.slice(1), builtins, macroStepLimit);
+        tagExpandedExpr(result, { macroName: binding.name, loc: expr.loc });
+        const expanded = markExpansion(expr, result);
         return expandExpr(
           expanded,
           macroEnv,
@@ -322,20 +323,23 @@ function expandInstance(
       item.items[0].name === "define"
     ) {
       items.push(
-        list(
-          [
-            item.items[0]!,
-            item.items[1]!,
-            expandExpr(
-              item.items[2]!,
-              macroEnv,
-              builtins,
-              macroStepLimit,
-              state,
-              inlineCompileTimeCalls,
-            ),
-          ],
-          item.loc,
+        copySourceTrace(
+          item,
+          list(
+            [
+              item.items[0]!,
+              item.items[1]!,
+              expandExpr(
+                item.items[2]!,
+                macroEnv,
+                builtins,
+                macroStepLimit,
+                state,
+                inlineCompileTimeCalls,
+              ),
+            ],
+            item.loc,
+          ),
         ),
       );
       continue;
