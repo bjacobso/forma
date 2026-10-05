@@ -1,13 +1,22 @@
 import { describe, expect, it } from "vitest";
 
 import { TsLanguageHost } from "../src/index.js";
+import type { EditScript } from "../src/index.js";
 
 describe("structural editor services on the TypeScript host", () => {
   const host = new TsLanguageHost();
 
   it("advertises the services it implements", async () => {
     const version = await host.version();
-    expect(version.capabilities).toEqual(expect.arrayContaining(["identifySyntax", "observe", "symbolIndex", "findReferences"]));
+    expect(version.capabilities).toEqual(expect.arrayContaining([
+        "identifySyntax",
+        "observe",
+        "symbolIndex",
+        "findReferences",
+        "applyEditScript",
+        "describeNodes",
+        "editScriptSchema",
+      ]));
   });
 
   it("identifies syntax and carries ids across an edit", async () => {
@@ -179,5 +188,37 @@ describe("structural editor services on the TypeScript host", () => {
       { sourceId: "main.lisp", startOffset: 11, endOffset: 16 },
     ]);
     await host.closeSession({ sessionId });
+  });
+
+  it("applies edit scripts addressed by node ids", async () => {
+    const source = "(workflow onboarding\n  (step a)\n  (step b))";
+    const { identity } = await host.identifySyntax({ source });
+    const idOf = (text: string) =>
+      identity.nodes.find((node) => source.slice(node.span.start, node.span.end) === text)!.id;
+    const described = await host.describeNodes({ source, identity, ids: [idOf("(step b)")] });
+    expect(described.nodes[0]).toMatchObject({ kind: "List", head: "step", text: "(step b)" });
+
+    const script: EditScript = {
+      version: 1,
+      description: "Run the steps in parallel",
+      ops: [{ op: "wrap", targets: [idOf("(step a)"), idOf("(step b)")], head: "parallel" }],
+    };
+    const result = await host.applyEditScript({ sourceId: "doc", source, identity, script });
+    expect(result).toMatchObject({
+      ok: true,
+      sourceId: "doc",
+      source: "(workflow onboarding\n  (parallel\n    (step a)\n    (step b)))",
+      changes: { moved: [idOf("(step a)"), idOf("(step b)")] },
+    });
+
+    const rejected = await host.applyEditScript({
+      source,
+      identity,
+      script: { version: 1, ops: [{ op: "delete", target: "missing" }] },
+    });
+    expect(rejected).toMatchObject({ ok: false, errors: [{ op: 0, code: "edit/unknown-node" }] });
+
+    const schema = (await host.editScriptSchema()) as { definitions: Record<string, unknown> };
+    expect(Object.keys(schema.definitions)).toEqual(expect.arrayContaining(["EditScript", "EditOp"]));
   });
 });

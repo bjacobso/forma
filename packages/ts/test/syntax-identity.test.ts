@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import fc from "fast-check";
 
 import { Reader, Syntax } from "../src/index.js";
+import { program } from "./support/programs.js";
 
 const { identifySyntax, reconcileSyntax, indexSyntax } = Syntax;
 
@@ -244,22 +245,6 @@ describe("reconcileSyntax", () => {
 // Properties
 // =============================================================================
 
-const atom = fc.constantFrom("a", "b", "foo", "bar-baz", "1", "42", '"s"', ":k", "true");
-const form: fc.Arbitrary<string> = fc.letrec<{ form: string }>((tie) => ({
-  form: fc.oneof(
-    { depthSize: "small", withCrossShrink: true },
-    atom,
-    fc
-      .tuple(fc.constantFrom("(", "["), fc.array(tie("form"), { maxLength: 4 }), fc.boolean())
-      .map(([open, items, multiline]) => {
-        const close = open === "(" ? ")" : "]";
-        return `${open}${items.join(multiline ? "\n  " : " ")}${close}`;
-      }),
-    fc.tuple(atom, fc.constant("; note\n")).map(([text, comment]) => `${comment}${text}`),
-  ),
-})).form;
-const program = fc.array(form, { minLength: 1, maxLength: 5 }).map((forms) => forms.join("\n"));
-
 const edit = (source: string) =>
   fc
     .tuple(
@@ -292,7 +277,7 @@ describe("reconcileSyntax properties", () => {
           expect(reconcileSyntax({ source, identity }, after)).toEqual(next);
         },
       ),
-      { numRuns: 300 },
+      { numRuns: 500 },
     );
   });
 
@@ -325,7 +310,7 @@ describe("reconcileSyntax properties", () => {
           }
         },
       ),
-      { numRuns: 300 },
+      { numRuns: 500 },
     );
   });
 

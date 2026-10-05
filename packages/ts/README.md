@@ -145,6 +145,26 @@ const index = indexSymbols([{ sourceId: "model.lisp", source }], { descriptors }
 findReferences(index, { sourceId: "model.lisp", offset }); // { definition, references }
 ```
 
+Edit scripts describe structural changes by node id instead of by offset.
+They are Effect Schema data, and `editScriptJsonSchema()` is the same contract
+as JSON Schema for a model's structured output:
+
+```ts
+import { applyEditScript, describeNodes } from "@formalang/ts/editor";
+
+describeNodes(source, identity, [stepId]); // kind, text, head, path, top-level form
+const result = applyEditScript({
+  source,
+  identity,
+  script: { version: 1, ops: [{ op: "wrap", targets: [aId, bId], head: "parallel" }] },
+});
+if (result.ok) result.source; // layout kept; result.identity keeps the wrapped nodes' ids
+```
+
+Operations are `replace`, `insert`, `delete`, `wrap`, `splice`, `unwrap`,
+`raise`, `move`, `rename` (scope-aware, refusing captures), and `extract`
+(free locals become parameters). A script applies completely or not at all.
+
 ```sh
 pnpm --filter @formalang/ts build
 pnpm --filter @formalang/ts test

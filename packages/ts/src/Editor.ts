@@ -37,3 +37,19 @@ export {
   type DescriptorLookup,
   type DescriptorSource,
 } from "./editor/descriptors.js";
+export {
+  EditOp,
+  EditPlace,
+  EditScript,
+  applyEditScript,
+  decodeEditScript,
+  describeNodes,
+  editScriptJsonSchema,
+  type AffectedForm,
+  type ApplyEditScriptRequest,
+  type ApplyEditScriptResult,
+  type DecodedEditScript,
+  type EditChanges,
+  type EditScriptError,
+  type NodeDescription,
+} from "./editor/edit-script.js";

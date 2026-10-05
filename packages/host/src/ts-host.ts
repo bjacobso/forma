@@ -22,9 +22,13 @@ import type {
   CloseSessionResult,
   ConfigureSessionRequest,
   ConfigureSessionResult,
+  DescribeNodesRequest,
+  DescribeNodesResult,
   Diagnostic,
   EditorAnalysisRequest,
   EditorAnalysisResult,
+  EditScriptRequest,
+  EditScriptResult,
   ExpandRequest,
   ExpandResult,
   FindReferencesRequest,
@@ -240,6 +244,9 @@ export class TsLanguageHost implements LanguageHost {
         "observe",
         "symbolIndex",
         "findReferences",
+        "applyEditScript",
+        "describeNodes",
+        "editScriptSchema",
       ],
     };
   }
@@ -723,6 +730,30 @@ export class TsLanguageHost implements LanguageHost {
       references: occurrences.references.map(referenceProjection),
       diagnostics: [],
     };
+  }
+
+  async applyEditScript(request: EditScriptRequest): Promise<EditScriptResult> {
+    const sourceId = request.sourceId ?? "source";
+    const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
+    const result = Editor.applyEditScript({
+      sourceId,
+      source: request.source,
+      script: request.script,
+      ...(request.identity ? { identity: request.identity } : {}),
+      documents: (session?.language.orderedSources() ?? []).map((source) => ({
+        sourceId: source.id,
+        source: source.text,
+      })),
+    });
+    return { ...result, sourceId };
+  }
+
+  async describeNodes(request: DescribeNodesRequest): Promise<DescribeNodesResult> {
+    return { nodes: Editor.describeNodes(request.source, request.identity, request.ids) };
+  }
+
+  async editScriptSchema(): Promise<unknown> {
+    return Editor.editScriptJsonSchema();
   }
 
   #indexSymbols(request: SymbolIndexRequest): Editor.SymbolIndex {
