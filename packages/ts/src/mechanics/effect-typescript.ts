@@ -49,6 +49,7 @@ export interface MechanicsEffectTypeScriptOptions {
 type JsonRecord = Readonly<Record<string, JsonValue>>;
 
 type Module =
+  | "Record"
   | "Schedule"
   | "Stream"
   | "Cause"
@@ -64,7 +65,7 @@ type Module =
   | "Schema"
   | "Scope";
 
-const modules: readonly Module[] = ["Cause", "Config", "Context", "Duration", "Effect", "Fiber", "Layer", "Option", "Ref", "Result", "Schedule", "Schema", "Scope", "Stream"];
+const modules: readonly Module[] = ["Cause", "Config", "Context", "Duration", "Effect", "Fiber", "Layer", "Option", "Ref", "Record", "Result", "Schedule", "Schema", "Scope", "Stream"];
 
 /** Globals generated code relies on or that readers expect to mean the global. */
 const globals = ["Array", "Boolean", "Date", "Error", "JSON", "Map", "Math", "Number", "Object", "Promise", "Set", "String", "Symbol", "console", "globalThis"];
@@ -975,6 +976,7 @@ class Generator {
     const operand = (index: number, prec: Prec): string => wrap(this.value(args[index], names, indent), prec);
     switch (call.kind) {
       case "builtin": {
+        const scope = names.child();
         const emit: EmitContext = {
           use: (module: ImportName) => this.use(module),
           resultType: () => {
@@ -982,12 +984,10 @@ class Generator {
             if (!type) throw new Error(`Effect TypeScript: ${call.name} has no checked type`);
             return this.typeTs(type);
           },
+          fresh: (preferred) => scope.bind(`builtin:${preferred}`, preferred),
         };
         const code = call.overload.emit(
-          args.map((item) => {
-            const expr = this.value(item, names, indent);
-            return expr.prec === Prec.Arrow ? expr.code : wrap(expr, Prec.Postfix);
-          }),
+          args.map((item) => this.value(item, names, indent)),
           emit,
         );
         return { code, prec: call.overload.prec ?? Prec.Postfix };
@@ -996,7 +996,11 @@ class Generator {
         if (call.operator === "max" || call.operator === "min") {
           return atom(`Math.${call.operator}(${args.map((_, index) => this.value(args[index], names, indent).code).join(", ")})`);
         }
-        if (args.length === 1 && call.operator === "-") return { code: `-${operand(0, Prec.Unary)}`, prec: Prec.Unary };
+        if (args.length === 1 && call.operator === "-") {
+          // `- -x` must not become the decrement operator `--x`.
+          const negated = operand(0, Prec.Unary);
+          return { code: negated.startsWith("-") ? `-(${negated})` : `-${negated}`, prec: Prec.Unary };
+        }
         const prec = call.operator === "*" ? Prec.Multiplicative : Prec.Additive;
         const parts = args.map((_, index) => operand(index, index === 0 ? prec : prec + 1));
         return { code: parts.join(` ${call.operator} `), prec };
@@ -1011,8 +1015,9 @@ class Generator {
       case "get": {
         const target = operand(0, Prec.Postfix);
         if (call.access === "map") {
-          this.use("Option");
-          return atom(`Option.fromUndefinedOr(${target}[${this.value(args[1], names, indent).code}])`);
+          // Record.get only sees own keys, so `constructor` is not found on the prototype.
+          this.use("Record");
+          return atom(`Record.get(${this.value(args[0], names, indent).code}, ${this.value(args[1], names, indent).code})`);
         }
         const key = recordKey(args[1]) ?? "";
         if (call.access === "optional-field") {
@@ -1104,9 +1109,8 @@ class Generator {
       }
       case "str": {
         const parts = args.map((item) => {
-          if (isRecord(item) && item["kind"] === "Literal" && typeof item["value"] === "string") {
-            return item["value"].replace(/[`\\]/g, (match) => `\\${match}`).replace(/\$\{/g, "\\${");
-          }
+          const text = isRecord(item) && item["kind"] === "Literal" && typeof item["value"] === "string" ? item["value"] : keywordName(item);
+          if (text !== undefined) return templateText(text);
           return `\${${this.value(item, names, indent).code}}`;
         });
         return atom(`\`${parts.join("")}\``);
@@ -1393,6 +1397,15 @@ function breakUnion(expression: string): string {
   }
   members.push(inner.slice(start).trim());
   return `Schema.Union([\n${members.map((member) => `  ${member},`).join("\n")}\n])`;
+}
+
+/**
+ * Text inside a template literal. Every `$` is escaped so adjacent pieces can
+ * never form `${`, and carriage returns are escaped because template
+ * literals normalize them to newlines.
+ */
+function templateText(text: string): string {
+  return text.replace(/[\\`$\r]/g, (match) => (match === "\r" ? "\\r" : `\\${match}`));
 }
 
 /** `{ a, b: c }` on one line when it fits, otherwise one entry per line. */

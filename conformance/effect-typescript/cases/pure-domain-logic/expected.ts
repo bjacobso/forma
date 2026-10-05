@@ -1,4 +1,4 @@
-import { Effect, Option, Result, Schema } from "effect";
+import { Effect, Option, Record, Result, Schema } from "effect";
 
 export const Tier = Schema.Literals(["free", "pro", "enterprise"]);
 export type Tier = typeof Tier.Type;
@@ -37,11 +37,11 @@ export const subtotal = (items: ReadonlyArray<LineItem>): number =>
   items.reduce<number>((total, item) => total + item.quantity * item["unit-cents"], 0);
 
 export const discountFor = (customer: Customer): Discount =>
-  Option.getOrElse(Option.fromUndefinedOr(tierDiscounts[customer.tier]), () => ({ type: "none" }));
+  Option.getOrElse(Record.get(tierDiscounts, customer.tier), (): Discount => ({ type: "none" }));
 
 export const applyDiscount = (discount: Discount, cents: number): number =>
   discount.type === "percent"
-    ? cents - Math.trunc((cents * discount.rate) / 100)
+    ? cents - Math.trunc(cents * discount.rate / 100)
     : discount.type === "fixed"
       ? Math.max(0, cents - discount.cents)
       : cents;

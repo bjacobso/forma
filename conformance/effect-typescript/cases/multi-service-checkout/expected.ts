@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Option, Schema } from "effect";
+import { Context, Effect, Layer, Option, Record, Schema } from "effect";
 
 export const Sku = Schema.String.pipe(Schema.brand("Sku"));
 export type Sku = typeof Sku.Type;
@@ -132,7 +132,7 @@ export const placeOrder = (
 export const CatalogStatic: Layer.Layer<Catalog> = Layer.succeed(
   Catalog,
   Catalog.of({
-    price: (sku) => Effect.succeed(Option.fromUndefinedOr(priceList[sku])),
+    price: (sku) => Effect.succeed(Record.get(priceList, sku)),
   }),
 );
 

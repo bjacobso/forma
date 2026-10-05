@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Option, Ref, Schema } from "effect";
+import { Context, Effect, Layer, Option, Record, Ref, Schema } from "effect";
 
 export const UserId = Schema.String.pipe(Schema.brand("UserId"));
 export type UserId = typeof UserId.Type;
@@ -53,7 +53,7 @@ export class Ids extends Context.Service<
 >()("Ids") {}
 
 export const displayName = (user: User): string =>
-  `${Option.getOrElse(Option.fromUndefinedOr(user.nickname), () => user.name)} <${user.email}>`;
+  `${Option.getOrElse(Option.fromUndefinedOr(user.nickname), (): string => user.name)} <${user.email}>`;
 
 export const validate = (input: NewUser): Effect.Effect<NewUser, InvalidUser> =>
   Effect.gen(function* () {
@@ -152,24 +152,24 @@ export const UserRepoMemory: Layer.Layer<UserRepo> = Layer.effect(
       find: (id) =>
         Effect.gen(function* () {
           const users = yield* Ref.get(store);
-          return Option.fromUndefinedOr(users[id]);
+          return Record.get(users, id);
         }),
       findByEmail: (email) =>
         Effect.gen(function* () {
           const users = yield* Ref.get(store);
-          return Option.fromUndefinedOr(Object.values(users).find((user) => user.email === email));
+          return Option.fromUndefinedOr(Record.values(users).find((user) => user.email === email));
         }),
       save: (user) => Ref.update(store, (users) => ({ ...users, [user.id]: user })),
       remove: (id) =>
         Effect.gen(function* () {
           const users = yield* Ref.get(store);
-          yield* Ref.set(store, Object.fromEntries(Object.entries(users).filter(([key]) => key !== id)));
-          return Object.hasOwn(users, id);
+          yield* Ref.set(store, Record.remove(users, id));
+          return Record.has(users, id);
         }),
       all: () =>
         Effect.gen(function* () {
           const users = yield* Ref.get(store);
-          return Object.values(users);
+          return Record.values(users);
         }),
     });
   }),

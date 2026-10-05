@@ -86,5 +86,5 @@ export const describeDrawing = (input: Schema.Json): Effect.Effect<string, Inval
     const size = yield* area(drawing.shape);
     const tone = yield* warmth(drawing.color);
     const label = Option.fromUndefinedOr(drawing.label);
-    return `${drawing.title}: ${tone} ${drawing.shape.kind} of area ${size} [${Option.getOrElse(label, () => "unlabelled")}]`;
+    return `${drawing.title}: ${tone} ${drawing.shape.kind} of area ${size} [${Option.getOrElse(label, (): Label => "unlabelled")}]`;
   });
