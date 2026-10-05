@@ -3,8 +3,8 @@
  *
  * A positive case (program.lisp + expected.ts + harness.ts) must elaborate
  * with no diagnostics, generate exactly expected.ts, typecheck under the
- * repository's strict tsconfig with no `any` escapes, and pass its runtime
- * harness. A negative case (program.lisp + expected-diagnostics.json) must be
+ * repository's strict tsconfig with no `any` escapes, package as a validated
+ * artifact, and pass its runtime harness. A negative case (program.lisp + expected-diagnostics.json) must be
  * rejected with exactly those located diagnostics; the file also records
  * whether TypeScript would reject the code generated with the checker
  * bypassed.
@@ -19,6 +19,8 @@ import ts from "typescript";
 import { Mechanics } from "../src/index.js";
 import { parse } from "../src/reader/parser.js";
 import { toSExprMany } from "../src/reader/to-sexpr.js";
+import { packageArtifact } from "../src/Artifact.js";
+import { openSession } from "../src/Session.js";
 
 const packageDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const suiteDir = resolve(packageDir, "../../conformance/effect-typescript");
@@ -230,6 +232,14 @@ describe("Effect TypeScript conformance", () => {
       const golden = tsProgram.getSourceFile(goldenPath)!;
       expect(anyEscapes(golden, tsProgram.getTypeChecker())).toEqual([]);
     }, 60_000);
+
+    test("packages as a validated artifact", () => {
+      const result = Mechanics.elaborateEffectProgram(item.source, { sourceId: sourceId(item) });
+      const session = openSession({ id: `conformance-${item.name}` });
+      session.rememberSource({ id: sourceId(item), text: item.source });
+      const artifact = packageArtifact({ engineName: "conformance", engineVersion: "0", session, declarations: result.declarations });
+      expect(artifact.ok ? [] : artifact.diagnostics).toEqual([]);
+    });
 
     test("runs the harness", async () => {
       const harness = (await import(pathToFileURL(resolve(item.dir, "harness.ts")).href)) as {

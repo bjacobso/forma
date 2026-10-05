@@ -39,7 +39,9 @@ For each positive case the runner checks that:
    contain explicit `any` or `unknown`, type assertions other than
    `as const`, non-null assertions, `@ts-` directives, or any value
    expression whose inferred type is `any`;
-4. the harness passes.
+4. the projected declarations package as a validated artifact
+   (`packageArtifact`), so every IR node satisfies its payload contract;
+5. the harness passes.
 
 | Case | Covers |
 | --- | --- |
