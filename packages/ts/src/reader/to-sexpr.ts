@@ -302,7 +302,8 @@ function toBoolean(node: RedNode): T.Bool {
  * ~expr → (unquote expr), ~@expr → (unquote-splicing expr)
  */
 function toReaderMacro(node: RedNode): T.List {
-  const loc = getNodeLoc(node);
+  // The prefix token is the node's only token; the list spans the operand too.
+  const prefixLoc = getNodeLoc(node);
 
   // Find the macro token to determine which reader macro
   let symbolName = "quote"; // default
@@ -317,7 +318,7 @@ function toReaderMacro(node: RedNode): T.List {
   }
 
   // Find the inner form (the first RedNode child)
-  let innerExpr: SExpr = T.ErrorNode("Missing reader macro form", loc);
+  let innerExpr: SExpr = T.ErrorNode("Missing reader macro form", prefixLoc);
   for (const child of node.children()) {
     if (isRedNode(child)) {
       innerExpr = toSExpr(child);
@@ -325,7 +326,8 @@ function toReaderMacro(node: RedNode): T.List {
     }
   }
 
-  return T.List([T.Sym(symbolName, loc), innerExpr], loc);
+  const loc: Loc = { ...prefixLoc, end: Math.max(prefixLoc.end, innerExpr.loc.end) };
+  return T.List([T.Sym(symbolName, prefixLoc), innerExpr], loc);
 }
 
 /**

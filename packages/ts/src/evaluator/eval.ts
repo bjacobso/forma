@@ -109,6 +109,9 @@ export function evaluateExprs(
         expandKernelExprsSync(exprs, {
           builtins: options.builtins ?? {},
           ...(options.env ? { env: options.env } : {}),
+          ...(options.observer?.expansionFailed
+            ? { onExpansionFailure: options.observer.expansionFailed.bind(options.observer) }
+            : {}),
         }),
       catch: toKernelError,
     });
@@ -198,6 +201,16 @@ export function evaluateCompileTimeExprs(
       ...(options.observer ? { observer: options.observer } : {}),
     };
 
+    // Top-level forms evaluated here rather than by evalExpr are observed as
+    // the VM observes them, with the value the form leaves.
+    const observer = runtime.observer;
+    const observed = (form: SExpr): ((value: KValue) => void) => {
+      const targets = observer?.targetsOf(form) ?? [];
+      return (value) => {
+        for (const target of targets) observer!.observe(target, value);
+      };
+    };
+
     let result: KValue = null;
     let currentEnv = baseEnv;
     for (let exprIndex = 0; exprIndex < exprs.length; exprIndex++) {
@@ -207,6 +220,7 @@ export function evaluateCompileTimeExprs(
         const head = expr.items[0];
         if (head?._tag === "Sym" && head.name === "define") {
           const defGroup: Array<{
+            form: SExpr;
             expr: SExpr;
             set: (value: KValue) => void;
           }> = [];
@@ -258,6 +272,7 @@ export function evaluateCompileTimeExprs(
               break;
             }
             defGroup.push({
+              form: candidate,
               expr: valueExpr,
               set: slot.set,
             });
@@ -265,8 +280,10 @@ export function evaluateCompileTimeExprs(
           }
 
           for (const def of defGroup) {
+            const observe = observed(def.form);
             const val = yield* evalExpr(def.expr, defEnv, runtime);
             def.set(val);
+            observe(val);
             result = val;
           }
           currentEnv = defEnv;
@@ -275,11 +292,13 @@ export function evaluateCompileTimeExprs(
         }
         // define-typeclass: no-op at runtime (type system handles it)
         if (head?._tag === "Sym" && head.name === "define-typeclass") {
+          observed(expr)(null);
           result = null;
           continue;
         }
         // instance: register methods in dispatch table + bind dispatch wrappers
         if (head?._tag === "Sym" && head.name === "instance") {
+          const observe = observed(expr);
           const instanceResult = yield* evalInstance(
             expr.items,
             expr.loc,
@@ -288,6 +307,7 @@ export function evaluateCompileTimeExprs(
             evalExpr,
           ).pipe(Effect.mapError((error) => withKernelSourceTrace(error, sourceTraceOf(expr))));
           currentEnv = instanceResult.env;
+          observe(null);
           result = null;
           continue;
         }

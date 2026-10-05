@@ -406,8 +406,9 @@ export async function evaluateInSession(
 
 /**
  * Evaluate with observation. Failures are attributed to the innermost
- * author-written expression that contains their span, and the records
- * computed before a failure are returned with it.
+ * evaluated author expression that contains their span, or to the macro call
+ * whose expansion failed, and the records computed before a failure are
+ * returned with it.
  */
 export async function evaluateObserved(
   request: EvaluateRequest,
@@ -438,12 +439,12 @@ export async function evaluateObserved(
     };
   } catch (error) {
     const diagnostic = diagnosticFromUnknown(error, "evaluate", sourceId);
-    if (diagnostic.span) {
-      collector.fail(diagnostic, {
-        start: diagnostic.span.startOffset,
-        end: diagnostic.span.endOffset,
-      });
-    }
+    collector.fail(
+      diagnostic,
+      diagnostic.span
+        ? { start: diagnostic.span.startOffset, end: diagnostic.span.endOffset }
+        : undefined,
+    );
     return {
       sourceId,
       pass: "evaluate",

@@ -178,9 +178,6 @@ export function indexSymbols(
     options.descriptors,
   );
   const authors = new Map<SExpr, AuthorNode>();
-  // Nodes inside macro definitions. Their templates are copied into every
-  // expansion, so they count only while the definition itself is walked.
-  const macroNodes = new Set<SExpr>();
   // A later document with the same source id replaces an earlier one.
   const unique = [...new Map(documents.map((document) => [document.sourceId, document])).values()];
   const indexed: IndexedDocument[] = unique.map((document, order) => {
@@ -194,24 +191,21 @@ export function indexSymbols(
       index,
       exprs,
     };
-    const visit = (expr: SExpr, inMacro: boolean): void => {
+    const visit = (expr: SExpr): void => {
       const node = index.withSpan(expr.loc.start, expr.loc.end);
       if (node && matchesSyntaxKind(expr, node.kind) && !authors.has(expr)) {
         authors.set(expr, { document: result, node, expr });
-        if (inMacro) macroNodes.add(expr);
       }
-      // A macro's name and parameters are ordinary; its body is template.
-      const definesMacro = headName(expr) === "define-macro";
-      children(expr).forEach((child, position) => visit(child, inMacro || (definesMacro && position > 2)));
+      children(expr).forEach(visit);
     };
-    exprs.forEach((expr) => visit(expr, false));
+    exprs.forEach(visit);
     return result;
   });
 
   const expanded = expandDocuments(indexed);
   const builtinNames = kernelNames();
   const orders = new Map(indexed.map((document) => [document.sourceId, document.order]));
-  const walker = new SymbolWalker(authors, macroNodes, descriptors, builtinNames, orders);
+  const walker = new SymbolWalker(authors, descriptors, builtinNames, orders);
   for (const { document, expr } of expanded.forms) walker.collectGlobals(expr, document);
   for (const { document, expr } of expanded.forms) walker.walk(expr, walker.root, document, null);
 
@@ -319,21 +313,20 @@ class SymbolWalker {
 
   constructor(
     private readonly authors: ReadonlyMap<SExpr, AuthorNode>,
-    private readonly macroNodes: ReadonlySet<SExpr>,
     private readonly descriptors: DescriptorLookup,
     private readonly builtins: ReadonlySet<string>,
     private readonly orders: ReadonlyMap<string, number>,
   ) {}
 
-  /** True while a `define-macro` form itself is walked. */
-  #inMacroDefinition = false;
-
+  /**
+   * The author node for a node of the expanded program. Template code a macro
+   * introduced stands for no author node, so only the definition itself
+   * reports its template's symbols.
+   */
   author(expr: SExpr): AuthorNode | undefined {
     for (const origin of sourceOriginsOf(expr)) {
       const author = this.authors.get(origin);
-      if (!author || !matchesSyntaxKind(expr, author.node.kind)) continue;
-      if (this.macroNodes.has(origin) && !this.#inMacroDefinition) continue;
-      return author;
+      if (author && matchesSyntaxKind(expr, author.node.kind)) return author;
     }
     return undefined;
   }
@@ -635,16 +628,7 @@ class SymbolWalker {
         this.walkAll(items.slice(2), scope, document, form);
         return;
       }
-      case "define-macro": {
-        const outer = this.#inMacroDefinition;
-        this.#inMacroDefinition = true;
-        try {
-          this.walkFunction(items, false, scope, document, form, local);
-        } finally {
-          this.#inMacroDefinition = outer;
-        }
-        return;
-      }
+      case "define-macro":
       case "define-operation":
       case "fn": {
         this.walkFunction(items, head === "fn", scope, document, form, local);

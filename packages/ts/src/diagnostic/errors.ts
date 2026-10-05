@@ -47,10 +47,47 @@ export class FailError extends Data.TaggedError("FailError")<{
 
 export type KernelError = StepLimitExceeded | KernelTypeError | ArityError | FailError;
 
-export function withKernelSourceTrace(error: KernelError, trace: SourceTrace): KernelError {
-  const loc = trace.macroOrigins ? trace.loc : (error.loc ?? trace.loc);
-  const macroOrigins = error.macroOrigins ?? trace.macroOrigins;
+const KERNEL_ERROR_TAGS: ReadonlySet<unknown> = new Set([
+  "StepLimitExceeded",
+  "KernelTypeError",
+  "ArityError",
+  "FailError",
+]);
 
+export function isKernelError(error: unknown): error is KernelError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    KERNEL_ERROR_TAGS.has((error as { _tag?: unknown })._tag)
+  );
+}
+
+/**
+ * Locate an error raised while evaluating a node with `trace`. The innermost
+ * location wins: an error that already has one keeps it, and takes the
+ * trace's macro calls only when it was raised at the trace's own location.
+ */
+export function withKernelSourceTrace(error: KernelError, trace: SourceTrace): KernelError {
+  if (error.loc && (error.macroOrigins || !trace.macroOrigins || !sameLoc(error.loc, trace.loc))) {
+    return error;
+  }
+  return relocateKernelError(
+    error,
+    error.loc ?? trace.loc,
+    error.macroOrigins ?? trace.macroOrigins,
+  );
+}
+
+function sameLoc(left: Loc, right: Loc): boolean {
+  return left.start === right.start && left.end === right.end;
+}
+
+/** The error with its location and macro calls replaced. */
+export function relocateKernelError(
+  error: KernelError,
+  loc: Loc | undefined,
+  macroOrigins: readonly MacroOrigin[] | undefined,
+): KernelError {
   switch (error._tag) {
     case "StepLimitExceeded":
       return new StepLimitExceeded({

@@ -1,15 +1,17 @@
 /**
  * Review C: observation provenance.
  *
- * Provenance lives in identity-keyed WeakMaps (source traces and origins), and
- * expanded trees share node objects with the author's parse and with macro
- * templates. These tests pin the behavior that is right and record, as
- * `test.fails`, the sibling bugs of that root cause.
+ * The review found that expanded trees shared node objects with the author's
+ * parse and with macro templates, and that traces and origins were rewritten
+ * per expansion. The expander now emits a fresh tree with one origin per node
+ * (docs/language-services.md, 7.3). These tests pin the behavior that was
+ * right, and the sibling bugs of that root cause as the behavior that is now
+ * required.
  */
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
-import { Engine, Evaluator, Syntax } from "../src/index.js";
+import { Builtins, Engine, Evaluator, Expander, Syntax } from "../src/index.js";
 import { parse, toSExprMany } from "../src/reader/index.js";
 import { requiresEvaluatorRuntime } from "../src/evaluator/vm-bridge.js";
 import { runs } from "./support/runs.js";
@@ -99,6 +101,22 @@ describe("expansion provenance (pinned)", () => {
       expect(printed(at("(+ 1 2)"))).toBe("3");
       expect(at("(+ 1 2)")).toMatchObject({ count: 1 });
     }
+  });
+
+  test("a macro supplied as a runtime value records its call once", async () => {
+    const source = "(let [m (define-macro m [x] `(do ~x ~x))] (m (+ 1 2)))" + FALLBACK;
+    const { result, at } = await observe(source);
+    expect(result.diagnostics).toEqual([]);
+    expect(at("(m (+ 1 2))")).toMatchObject({ count: 1 });
+    expect(at("(+ 1 2)")).toMatchObject({ count: 2 });
+
+    const passed = await observe("(let [m (define-macro m [x] x)] (m (+ 1 2)))" + FALLBACK);
+    expect(passed.at("(m (+ 1 2))")).toMatchObject({ count: 1 });
+    expect(passed.at("(+ 1 2)")).toMatchObject({ count: 1 });
+
+    const failed = await observe('(let [m (define-macro m [x] (+ 1 "x"))] (m 1))' + FALLBACK);
+    expect(failed.at("(m 1)")?.failure).toBeDefined();
+    expect(failed.at('(+ 1 "x")')).toBeUndefined();
   });
 
   test("prelude macros: nested, threaded, multi-clause", async () => {
@@ -204,10 +222,22 @@ const programArb = (() => {
       tie("expr").map((a) => `(sh ${a})`),
       tie("expr").map((a) => `(f ${a})`),
       tie("expr").map((a) => `\`(q ~${a})`),
+      fc.tuple(tie("expr"), tie("expr"), tie("expr"), tie("expr")).map(([a, b, c, d]) => `(cond ${a} ${b} ${c} ${d})`),
+      fc.tuple(fc.constantFrom("and", "or"), tie("expr"), tie("expr"), tie("expr")).map(([op, a, b, c]) => `(${op} ${a} ${b} ${c})`),
+      fc.tuple(tie("expr"), tie("expr")).map(([a, b]) => `(let [[v w] [${a} ${b}]] w)`),
+      tie("expr").map((a) => `(g ${a})`),
+      tie("expr").map((a) => `(bad ${a})`),
+      // Expansion failures: a macro's arity.
+      fc.tuple(tie("expr"), tie("expr")).map(([a, b]) => `(not ${a} ${b})`),
+      fc.constant("(tw)"),
+      // Runtime arity failures, including calls made from tail position.
+      fc.constantFrom("(f)", "(g)", "(g 1 2)"),
     ),
   }));
   const prelude =
-    "(define-macro tw [x] `(do ~x ~x))\n(define-macro sh [x] `(do ~x (+ 1 1)))\n(define v 1)\n";
+    "(define-macro tw [x] `(do ~x ~x))\n(define-macro sh [x] `(do ~x (+ 1 1)))\n" +
+    "(define-macro bad [x] `(do ~x (undefined-fn 1)))\n(define v 1)\n(define w 2)\n" +
+    "(define (g n) (if (< n 1) 0 (g (- n 1))))\n";
   return fc
     .tuple(expr, expr, expr, fc.boolean())
     .map(
@@ -216,19 +246,18 @@ const programArb = (() => {
     );
 })();
 
-// Observed calls leave tail position. That renames the VM's "Cannot
-// tail-call" failure (pinned separately below) and, as documented, adds return
-// steps, so a step-limit failure may stop at a different expression.
+// Observed calls leave tail position, which, as documented, changes the steps
+// a program takes, so a step-limit failure may stop at a different expression.
 const summary = (result: Engine.EvaluateResult) => ({
   printed: result.printed,
   diagnostics: result.diagnostics.map((d) => ({
     code: d.code,
-    message: d.message.replace("Cannot tail-call", "Cannot call"),
+    message: d.message,
     span: d.code === "StepLimitExceeded" ? undefined : d.span,
   })),
 });
 
-test("observation never changes the printed result or diagnostics", async () => {
+test("observation never changes the printed result or diagnostics, on the VM or the fallback", async () => {
   await fc.assert(
     fc.asyncProperty(programArb, async (source) => {
       const plain = await Engine.evaluate({ source, stepLimit: 5_000 });
@@ -238,93 +267,139 @@ test("observation never changes the printed result or diagnostics", async () => 
     }),
     { numRuns: runs(200) },
   );
-}, 60_000);
+}, Math.max(60_000, runs(60_000)));
 
 // ---------------------------------------------------------------------------
-// Confirmed sibling bugs.
+// The sibling bugs, fixed by fresh expansions with one origin per node.
 // ---------------------------------------------------------------------------
 
-describe("sibling bugs (expected behavior, currently failing)", () => {
-  // Root cause: tagExpandedExpr overwrites the source trace of author argument
-  // nodes passed through a macro with the call's loc, so the argument's failure
-  // locates at (and is attributed to) the whole call.
-  test.fails("a failure inside a macro argument is attributed to the argument", async () => {
+describe("failures and records follow provenance", () => {
+  // Was: the trace of an argument passed through a macro was overwritten with
+  // the call's loc. A `source` node now keeps its own location.
+  test("a failure inside a macro argument is attributed to the argument", async () => {
     const { result, at, startOf } = await observe('(when true (+ 1 "x"))');
     expect(result.diagnostics[0]?.span?.startOffset).toBe(startOf('(+ 1 "x")'));
     expect(at('(+ 1 "x")')?.failure).toBeDefined();
     expect(at('(when true (+ 1 "x"))')?.failure).toBeUndefined();
   });
 
-  // Root cause: expandExpr tags a nested expansion with `expr.loc` of the inner
-  // macro call, which is a prelude template node, so author arguments inherit
-  // offsets into the prelude source.
-  test.fails("a failure inside an argument of a recursive prelude macro stays in the source", async () => {
+  // Was: a nested expansion was tagged with the inner call's loc, a prelude
+  // template node, so author arguments located into the prelude source.
+  test("a failure inside an argument of a recursive prelude macro stays in the source", async () => {
     const source = '(cond false 1 (+ 1 "x") 2)';
     const { result, records } = await observe(source);
     const span = result.diagnostics[0]!.span!;
-    expect(span.endOffset).toBeLessThanOrEqual(source.length); // actually 532..553
-    expect(records.some((record) => record.failure !== undefined)).toBe(true); // actually none
+    expect(span.endOffset).toBeLessThanOrEqual(source.length);
+    expect(records.some((record) => record.failure !== undefined)).toBe(true);
   });
 
-  // Root cause: quasiquote reuses template atoms in every expansion and
-  // tagExpandedExpr overwrites their trace, so all calls share the last call's loc.
-  test.fails("a failure in a template atom is attributed to the call that ran it", async () => {
+  // Was: every expansion shared the template's atoms, and the last expansion's
+  // trace won. Introduced nodes are now copies located at their own call.
+  test("a failure in a template atom is attributed to the call that ran it", async () => {
     const source = "(define-macro m [x] `(do ~x (undefined-fn 1)))\n(m 1)\n(m 2)";
     const { result, at, startOf } = await observe(source);
-    expect(result.diagnostics[0]?.span?.startOffset).toBe(startOf("(m 1)")); // actually (m 2)
+    expect(result.diagnostics[0]?.span?.startOffset).toBe(startOf("(m 1)"));
     expect(at("(m 1)")?.failure).toBeDefined();
     expect(at("(m 2)")).toBeUndefined();
   });
 
-  // Root cause: the prelude's template atoms are cached for the process and
-  // tagExpandedExpr prepends an origin to their trace on every expansion.
-  test.fails("a template atom's trace carries only the current expansion's origin", () => {
+  // Was: the prelude's cached template atoms collected an origin per expansion.
+  test("a template atom's trace carries only the current expansion's origin", () => {
     const lengths = [0, 1, 2].map(() => {
       const ifForm = expand("(not 1)")[0]!;
       if (ifForm._tag !== "List") throw new Error("expected (if 1 false true)");
       return Evaluator.sourceTraceOf(ifForm.items[2]!).macroOrigins?.length;
     });
-    expect(lengths).toEqual([1, 1, 1]); // actually grows by one per expansion, ever
+    expect(lengths).toEqual([1, 1, 1]);
   });
 
-  // Root cause: withKernelSourceTrace lets every enclosing frame whose trace has
-  // macroOrigins replace the loc, and argument traces were tagged with the call,
-  // so on the evaluator the outermost macro call wins over the real site.
-  test.fails("the fallback attributes a failure in a function called from a macro argument to its site", async () => {
+  // Was: on the evaluator, the outermost frame with macro origins replaced the
+  // location. The innermost location now wins; macro calls are context.
+  test("the fallback attributes a failure in a function called from a macro argument to its site", async () => {
     const { at } = await observe('(define (f) (+ 1 "x"))\n(when true (f))' + FALLBACK);
-    expect(at('(+ 1 "x")')?.failure).toBeDefined(); // the VM does; the fallback blames (when true (f))
+    expect(at('(+ 1 "x")')?.failure).toBeDefined();
   });
 
-  // Root cause: evalExpr skips observe for KTailCall sentinels, and the
-  // trampoline in applyKFn never reports the value back to the call or its `if`.
-  test.fails("the fallback observes self tail calls like the VM", async () => {
+  // Was: observed self tail calls became trampoline sentinels and were skipped.
+  // Observed expressions now leave tail position on the fallback too.
+  test("the fallback observes self tail calls like the VM", async () => {
     const source = "(define (loop n) (if (= n 0) 0 (loop (- n 1))))\n(loop 3)" + FALLBACK;
     const { at } = await observe(source);
-    expect(at("(if (= n 0) 0 (loop (- n 1)))")).toMatchObject({ count: 4 }); // actually 1
-    expect(at("(loop (- n 1))")).toMatchObject({ count: 3 }); // actually no record
+    expect(at("(if (= n 0) 0 (loop (- n 1)))")).toMatchObject({ count: 4 });
+    expect(at("(loop (- n 1))")).toMatchObject({ count: 3 });
   });
 
-  // Root cause: expand.ts evaluateMacro raises ArityError without a loc, and
-  // ObservationCollector.fail drops failures that have no location.
-  test.fails("a macro arity failure is attributed to the call", async () => {
+  // Was: the arity failure had no location and no record took it. An
+  // expansion failure now belongs to the macro call.
+  test("a macro arity failure is attributed to the call", async () => {
     const { result, at } = await observe("(define a 1)\n(not 1 2)");
     expect(result.diagnostics[0]?.span).toBeDefined();
     expect(at("(not 1 2)")?.failure).toBeDefined();
   });
 
-  // Root cause: OBSERVE compiles an observed call out of tail position, and the
-  // VM names the failing opcode, so observation changes the diagnostic text.
-  test.fails("observation does not change a failure's message", async () => {
+  // Was: the VM named the failing opcode, and an observed call leaves tail
+  // position, so observation changed the message.
+  test("observation does not change a failure's message", async () => {
     const source = "(define (f) (1 2))\n(f)";
     const plain = await Engine.evaluate({ source });
     const observed = await Engine.evaluate({ source, observe: {} });
-    expect(observed.diagnostics[0]?.message).toBe(plain.diagnostics[0]?.message); // "Cannot call" vs "Cannot tail-call"
+    expect(observed.diagnostics[0]?.message).toBe(plain.diagnostics[0]?.message);
   });
 
-  // Root cause (reader, not provenance): a reader-macro list's loc covers only
-  // the prefix token, so the collector's span lookup never matches it.
-  test.fails("a quasiquote expression records its value", async () => {
+  test.each(["", FALLBACK])("observation preserves the location of a failed self tail call%s", async (suffix) => {
+    for (const [params, call] of [["x", "(f)"], ["x", "(f x x)"], ["x & xs", "(f)"]]) {
+      const source = `(define (f ${params}) (if x ${call} 0))\n(f true)` + suffix;
+      const plain = await Engine.evaluate({ source });
+      const observed = await Engine.evaluate({ source, observe: {} });
+      expect(summary(observed)).toEqual(summary(plain));
+      expect(observed.diagnostics[0]?.span?.startOffset).toBe(source.indexOf(call!));
+    }
+  });
+
+  // Was (reader, not provenance): a reader-macro list's loc covered only the
+  // prefix token. It now spans the prefix and its operand.
+  test("a quasiquote expression records its value", async () => {
     const { at } = await observe("(define x 5)\n`[a ~x]");
     expect(printed(at("`[a ~x]"))).toBe("[a 5]");
+  });
+
+  test.each(["", FALLBACK])("a top-level define records its value%s", async (suffix) => {
+    const { at } = await observe("(define x (+ 2 3))\nx" + suffix);
+    expect(printed(at("(define x (+ 2 3))"))).toBe("5");
+  });
+
+  test("a nested expansion of an introduced call is observed once, as its author call", async () => {
+    const source = "(cond (> 1 2) :a (< 1 2) :b :else :c)";
+    const { at } = await observe(source);
+    expect(at(source)).toMatchObject({ count: 1 });
+  });
+
+  test("a failure in a macro defined in another source is located at the call", () => {
+    const builtins = Builtins.defaultBuiltins;
+    const library = toSExprMany(parse('(define-macro m [x] (+ 1 "x"))').redTree);
+    const { env } = Expander.expandProgramSync(library, { builtins });
+    const source = "(define a 1)\n(m 1)";
+    let failure: unknown;
+    try {
+      Expander.expandProgramSync(toSExprMany(parse(source).redTree), { builtins, env });
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure).toMatchObject({ _tag: "KernelTypeError", loc: { start: source.indexOf("(m 1)") } });
+  });
+
+  test("a failure in a macro's body is located there and belongs to the call", async () => {
+    const source = '(define-macro m [x] (+ 1 "x"))\n(m 1)';
+    const { result, records, at, startOf } = await observe(source);
+    expect(result.diagnostics[0]?.span?.startOffset).toBe(startOf('(+ 1 "x")'));
+    expect(at("(m 1)")?.failure).toBeDefined();
+    expectAuthorRecords(source, records);
+  });
+
+  test("code a macro introduces through another macro is located at the author's call", async () => {
+    const source = "(define-macro m [] `(when true (undefined-fn 1)))\n(m)";
+    const { result, at, startOf } = await observe(source);
+    expect(result.diagnostics[0]?.span?.startOffset).toBe(startOf("(m)"));
+    expect(at("(m)")?.failure).toBeDefined();
   });
 });

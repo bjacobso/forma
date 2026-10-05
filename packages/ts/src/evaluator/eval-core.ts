@@ -40,9 +40,18 @@ export function evalExpr(
   const observer = runtime.observer;
   const targets = observer?.targetsOf(expr);
   if (!observer || !targets || targets.length === 0) return evalUnobserved(expr, env, runtime);
-  return Effect.map(evalUnobserved(expr, env, runtime), (value) => {
-    if (!isKTailCall(value)) for (const target of targets) observer.observe(target, value);
-    return value;
+  // An observed expression leaves tail position, as on the VM, so its value
+  // returns here instead of becoming a self tail call's trampoline sentinel.
+  return Effect.suspend(() => {
+    const prevTail = getTcoTail();
+    setTcoTail(false);
+    return evalUnobserved(expr, env, runtime).pipe(
+      Effect.ensuring(Effect.sync(() => setTcoTail(prevTail))),
+      Effect.map((value) => {
+        for (const target of targets) observer.observe(target, value);
+        return value;
+      }),
+    );
   });
 }
 
@@ -73,7 +82,7 @@ function evalUnobserved(
         case "Map":
           return yield* evalMap(expr.pairs, env, runtime);
         case "List":
-          return yield* evalList(expr.items, expr.loc, env, runtime);
+          return yield* evalList(expr, env, runtime);
         case "Set":
           return yield* new KernelTypeError({
             message: "Set literals are not supported as runtime values",
@@ -162,10 +171,14 @@ export function evalVector(
   runtime: EvaluatorRuntime,
 ): Effect.Effect<readonly KValue[], KernelError> {
   return Effect.gen(function* () {
+    // Items are never in tail position.
+    const prevTail = getTcoTail();
+    setTcoTail(false);
     const result: KValue[] = [];
     for (const item of items) {
       result.push(yield* evalExpr(item, env, runtime));
     }
+    setTcoTail(prevTail);
     return result;
   });
 }
@@ -176,6 +189,9 @@ export function evalMap(
   runtime: EvaluatorRuntime,
 ): Effect.Effect<ReadonlyMap<string, KValue>, KernelError> {
   return Effect.gen(function* () {
+    // Keys and values are never in tail position.
+    const prevTail = getTcoTail();
+    setTcoTail(false);
     const result = new Map<string, KValue>();
     for (const [kExpr, vExpr] of pairs) {
       const k = yield* evalExpr(kExpr, env, runtime);
@@ -190,16 +206,17 @@ export function evalMap(
       const v = yield* evalExpr(vExpr, env, runtime);
       result.set(k, v);
     }
+    setTcoTail(prevTail);
     return result as ReadonlyMap<string, KValue>;
   });
 }
 
 export function evalList(
-  items: readonly SExpr[],
-  loc: Loc,
+  expr: SExpr & { readonly _tag: "List" },
   env: Env,
   runtime: EvaluatorRuntime,
 ): Effect.Effect<KValue, KernelError> {
+  const { items, loc } = expr;
   return Effect.gen(function* () {
     if (items.length === 0) {
       return [] as readonly KValue[];
@@ -284,7 +301,7 @@ export function evalList(
 
     // Macro invocation: pass unevaluated args as KSExpr, evaluate result
     if (isKMacro(fn)) {
-      return yield* applyMacro(fn, items.slice(1), env, runtime, loc, evalExpr);
+      return yield* applyMacro(fn, expr, env, runtime, evalExpr);
     }
 
     if (isKFn(fn)) {
@@ -299,6 +316,10 @@ export function evalList(
 
       // TCO: if this is a self-call in tail position, return a trampoline sentinel
       if (getTcoTail() && getTcoSelf() !== null && fn === getTcoSelf()) {
+        // Validate at the call site: checking only on the next trampoline
+        // iteration would attribute an arity failure to the outer invocation.
+        const error = callArityError(fn, args);
+        if (error) return yield* error;
         return { _tag: "KTailCall" as const, args } as unknown as KValue;
       }
 
@@ -332,6 +353,17 @@ export function evalList(
 // Function application (TCO trampoline)
 // ---------------------------------------------------------------------------
 
+function callArityError(fn: KFn, args: readonly KValue[]): ArityError | undefined {
+  if (fn.restParam ? args.length >= fn.params.length : args.length === fn.params.length) {
+    return undefined;
+  }
+  return new ArityError({
+    name: "lambda",
+    expected: fn.restParam ? `${fn.params.length}+` : fn.params.length,
+    got: args.length,
+  });
+}
+
 export function applyKFn(
   fn: KFn,
   args: readonly KValue[],
@@ -346,25 +378,8 @@ export function applyKFn(
     let currentArgs = args;
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      if (fn.restParam) {
-        if (currentArgs.length < fn.params.length) {
-          return yield* Effect.fail(
-            new ArityError({
-              name: "lambda",
-              expected: `${fn.params.length}+`,
-              got: currentArgs.length,
-            }),
-          );
-        }
-      } else if (currentArgs.length !== fn.params.length) {
-        return yield* Effect.fail(
-          new ArityError({
-            name: "lambda",
-            expected: fn.params.length,
-            got: currentArgs.length,
-          }),
-        );
-      }
+      const error = callArityError(fn, currentArgs);
+      if (error) return yield* error;
 
       const bindings: Record<string, KValue> = {};
       for (let i = 0; i < fn.params.length; i++) {

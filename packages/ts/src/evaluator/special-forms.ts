@@ -318,7 +318,11 @@ export function evalDef(
         return yield* new ArityError({ name: "define", expected: 2, got: items.length - 1, loc });
       }
       const { env: defEnv, set } = env.bindMutable(defSymName, null);
+      // The value is stored, so it is never in tail position.
+      const prevTail = getTcoTail();
+      setTcoTail(false);
       const val = yield* evalExpr(items[2]!, defEnv, runtime);
+      setTcoTail(prevTail);
       set(val);
       return val;
     }

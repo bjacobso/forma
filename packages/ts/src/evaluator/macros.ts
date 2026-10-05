@@ -5,10 +5,11 @@ import { KernelTypeError, ArityError } from "../diagnostic/errors.js";
 import type { KernelError } from "../diagnostic/errors.js";
 import { Env } from "../Env.js";
 import { evalQuasiquote } from "./quasiquote.js";
-import { tagExpandedExpr } from "./source-trace.js";
+import { emitExpansion } from "../expander/provenance.js";
 import type { KValue, KMacro } from "./types.js";
 import { isKSExpr } from "./types.js";
 import type { EvaluatorRuntime, EvalFn } from "./eval-types.js";
+import { getTcoTail, setTcoTail } from "./eval-types.js";
 
 // ---------------------------------------------------------------------------
 // Macros
@@ -103,21 +104,27 @@ export function evalDefMacro(
 // Macro application
 // ---------------------------------------------------------------------------
 
+/**
+ * Expand and evaluate a macro call the expander did not see. The expansion is
+ * a fresh tree with provenance, as the expander's are, and the macro body
+ * runs unobserved: it is expansion-time code, not the author's expression.
+ */
 export function applyMacro(
   macro: KMacro,
-  argExprs: readonly SExpr[],
+  call: SExpr & { readonly _tag: "List" },
   callerEnv: Env,
   runtime: EvaluatorRuntime,
-  callLoc: Loc,
   evalExpr: EvalFn,
 ): Effect.Effect<KValue, KernelError> {
   return Effect.gen(function* () {
+    const argExprs = call.items.slice(1);
     if (macro.restParam) {
       if (argExprs.length < macro.params.length) {
         return yield* new ArityError({
           name: macro.name,
           expected: `${macro.params.length}+`,
           got: argExprs.length,
+          loc: call.loc,
         });
       }
     } else {
@@ -126,6 +133,7 @@ export function applyMacro(
           name: macro.name,
           expected: macro.params.length,
           got: argExprs.length,
+          loc: call.loc,
         });
       }
     }
@@ -143,11 +151,35 @@ export function applyMacro(
     }
     const macroEnv = macro.closure.extend(bindings);
 
-    const result = yield* evalExpr(macro.body, macroEnv, runtime);
+    const { observer: _observer, ...expansionRuntime } = runtime;
+    const prevTail = getTcoTail();
+    setTcoTail(false);
+    const result = yield* evalExpr(macro.body, macroEnv, expansionRuntime).pipe(
+      Effect.ensuring(Effect.sync(() => setTcoTail(prevTail))),
+      Effect.mapError((error) => {
+        runtime.observer?.expansionFailed?.(call);
+        return error;
+      }),
+    );
 
     if (isKSExpr(result)) {
-      tagExpandedExpr(result.expr, { macroName: macro.name, loc: callLoc });
-      return yield* evalExpr(result.expr, callerEnv, runtime);
+      const expansion = emitExpansion(call, macro.name, argExprs, result.expr);
+      const observer = runtime.observer;
+      if (!observer) return yield* evalExpr(expansion, callerEnv, runtime);
+      // The surrounding evalExpr already observes this runtime call. Its
+      // expansion still carries the call's provenance, but only arguments
+      // and nested author expressions should be counted while evaluating it.
+      const handled = new Set(observer.targetsOf(call));
+      return yield* evalExpr(expansion, callerEnv, {
+        ...runtime,
+        observer: {
+          targetsOf: (expr) => observer.targetsOf(expr).filter((target) => !handled.has(target)),
+          observe: observer.observe.bind(observer),
+          ...(observer.expansionFailed
+            ? { expansionFailed: observer.expansionFailed.bind(observer) }
+            : {}),
+        },
+      });
     }
 
     return result;
@@ -169,6 +201,10 @@ export function evalQuasiquoteForm(
     if (items.length !== 2) {
       return yield* new ArityError({ name: "quasiquote", expected: 1, got: items.length - 1, loc });
     }
+    // An unquoted expression is never in tail position: its value is embedded
+    // in the template, so a self call there must not become a tail call.
+    const prevTail = getTcoTail();
+    setTcoTail(false);
     const expanded = yield* evalQuasiquote(
       items[1]!,
       env,
@@ -183,6 +219,7 @@ export function evalQuasiquoteForm(
           stepLimit,
         }),
     );
+    setTcoTail(prevTail);
     return { _tag: "KSExpr" as const, expr: expanded };
   });
 }

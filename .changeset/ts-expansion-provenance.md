@@ -1,0 +1,5 @@
+---
+"@formalang/ts": minor
+---
+
+Macro expansion now emits a fresh tree in which every node has exactly one origin, written once: `source`, `expansion`, `introduced`, or `desugared`, exported from `@formalang/ts/expander` as `originOf`. Diagnostics inside a macro argument now point at the argument instead of the whole call, never into the prelude, and a failure in code a macro introduced points at the call that ran it. A macro's arity failure is located at the call. Observation records exactly the author expressions the engine evaluated, attributes expansion failures to the macro call, observes self tail calls and top-level definitions on the evaluator fallback as the VM does, and records quoted expressions. A reader-macro form such as `` `[a ~x] `` now spans its prefix and operand. Observation no longer changes failure messages: the VM reports "Cannot call" in and out of tail position. The evaluator fallback no longer turns a self call inside a vector, map, `define` value, or unquote into a tail call.

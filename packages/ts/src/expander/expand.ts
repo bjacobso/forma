@@ -2,11 +2,11 @@ import { Effect } from "effect";
 import type { SExpr, Loc } from "../reader/index.js";
 import { parseManyToSExpr } from "../reader/index.js";
 import { Env } from "../Env.js";
-import { ArityError } from "../diagnostic/errors.js";
+import { ArityError, isKernelError, relocateKernelError } from "../diagnostic/errors.js";
 import { evaluateCompileTimeExprs } from "../evaluator/eval.js";
 import { PRELUDE_SOURCE } from "./prelude.js";
+import { copyTree, derive, desugar, emitExpansion, macroOriginsOf } from "./provenance.js";
 import { kValueToSExpr } from "../evaluator/quasiquote.js";
-import { copySourceTrace, markExpansion, tagExpandedExpr } from "../evaluator/source-trace.js";
 import type { BuiltinFn, KMacro, KValue } from "../evaluator/types.js";
 import { isKMacro, isKSExpr } from "../evaluator/types.js";
 
@@ -16,6 +16,9 @@ const preludeEnvCache = new WeakMap<Record<string, BuiltinFn>, Env>();
 
 interface ExpandState {
   bindingCounter: number;
+  /** Macros defined by the program being expanded. */
+  readonly ownMacros: Set<KMacro>;
+  readonly onExpansionFailure?: ((call: SExpr) => void) | undefined;
 }
 
 export interface ExpandProgramOptions {
@@ -42,6 +45,11 @@ export interface ExpandProgramOptions {
    */
   readonly keepMacroDefs?: boolean;
   readonly macroStepLimit?: number;
+  /**
+   * Called with the macro call whose expansion failed, before the failure is
+   * thrown. Observation attributes the failure to that call.
+   */
+  readonly onExpansionFailure?: ((call: SExpr) => void) | undefined;
 }
 
 export interface ExpandProgramResult {
@@ -58,6 +66,10 @@ export interface ExpandProgramResult {
  * - expands user and prelude macros recursively
  * - normalizes destructuring in `fn` / `let`
  *
+ * The result is a fresh tree whose every node has one origin (see
+ * `provenance.ts`): it shares no node with the input, a macro definition,
+ * or another expansion.
+ *
  * It does not lower every surface form to the VM subset. Forms such as
  * `match`, `define-type`, and type ascriptions may still remain for non-VM
  * consumers after expansion.
@@ -66,7 +78,11 @@ export function expandProgramSync(
   exprs: readonly SExpr[],
   options: ExpandProgramOptions,
 ): ExpandProgramResult {
-  const state: ExpandState = { bindingCounter: 0 };
+  const state: ExpandState = {
+    bindingCounter: 0,
+    ownMacros: new Set(),
+    onExpansionFailure: options.onExpansionFailure,
+  };
   const macroStepLimit = options.macroStepLimit ?? DEFAULT_MACRO_STEP_LIMIT;
   let macroEnv = makeMacroEnv(options);
   const inlineCompileTimeCalls = options.inlineCompileTimeCalls === true;
@@ -75,8 +91,10 @@ export function expandProgramSync(
   for (const expr of exprs) {
     if (isTopLevelDefMacro(expr)) {
       macroEnv = evalTopLevel(expr, macroEnv, options.builtins, macroStepLimit);
+      const macro = expr.items[1]?._tag === "Sym" ? macroEnv.lookup(expr.items[1].name) : undefined;
+      if (macro !== undefined && isKMacro(macro)) state.ownMacros.add(macro);
       if (options.keepMacroDefs === true) {
-        expanded.push(expr);
+        expanded.push(copyTree(expr));
       }
       continue;
     }
@@ -134,8 +152,8 @@ function evalTopLevel(
   ).env;
 }
 
-function freshBinding(prefix: string, loc: Loc, state: ExpandState): SExpr {
-  return { _tag: "Sym", name: `@${prefix}_${state.bindingCounter++}`, loc };
+function freshBinding(prefix: string, state: ExpandState): string {
+  return `@${prefix}_${state.bindingCounter++}`;
 }
 
 function sym(name: string, loc: Loc): SExpr {
@@ -163,11 +181,15 @@ function expandExpr(
     if (head._tag === "Sym") {
       const binding = macroEnv.lookup(head.name);
       if (binding !== undefined && isKMacro(binding)) {
-        const result = evaluateMacro(binding, expr.items.slice(1), builtins, macroStepLimit);
-        tagExpandedExpr(result, { macroName: binding.name, loc: expr.loc });
-        const expanded = markExpansion(expr, result);
+        const args = expr.items.slice(1);
+        let result: SExpr;
+        try {
+          result = evaluateMacro(binding, args, builtins, macroStepLimit);
+        } catch (error) {
+          throw expansionFailure(error, expr, binding, state);
+        }
         return expandExpr(
-          expanded,
+          emitExpansion(expr, binding.name, args, result),
           macroEnv,
           builtins,
           macroStepLimit,
@@ -182,7 +204,7 @@ function expandExpr(
         case "::":
         case "define-type":
         case "define-typeclass":
-          return expr;
+          return copyTree(expr);
         case ":":
           return expandAscribe(
             expr,
@@ -220,7 +242,7 @@ function expandExpr(
         const inlined = tryInlineCompileTimeCall(expr, macroEnv, builtins, macroStepLimit);
         if (inlined) {
           return expandExpr(
-            inlined,
+            emitExpansion(expr, head.name, expr.items.slice(1), inlined),
             macroEnv,
             builtins,
             macroStepLimit,
@@ -239,9 +261,9 @@ function expandExpr(
     case "Sym":
     case "Set":
     case "Error":
-      return expr;
+      return copyTree(expr);
     case "Vector":
-      return copySourceTrace(
+      return derive(
         expr,
         vector(
           expr.items.map((item) =>
@@ -251,7 +273,7 @@ function expandExpr(
         ),
       );
     case "Map":
-      return copySourceTrace(expr, {
+      return derive(expr, {
         _tag: "Map",
         pairs: expr.pairs.map(([k, v]) => [
           expandExpr(k, macroEnv, builtins, macroStepLimit, state, inlineCompileTimeCalls),
@@ -260,7 +282,7 @@ function expandExpr(
         loc: expr.loc,
       });
     case "List":
-      return copySourceTrace(
+      return derive(
         expr,
         list(
           expr.items.map((item) =>
@@ -281,14 +303,14 @@ function expandAscribe(
   inlineCompileTimeCalls: boolean,
 ): SExpr {
   if (expr.items.length !== 3) {
-    return expr;
+    return copyTree(expr);
   }
 
-  return copySourceTrace(
+  return derive(
     expr,
     list(
       [
-        expr.items[0]!,
+        copyTree(expr.items[0]!),
         expandExpr(
           expr.items[1]!,
           macroEnv,
@@ -297,7 +319,7 @@ function expandAscribe(
           state,
           inlineCompileTimeCalls,
         ),
-        expr.items[2]!,
+        copyTree(expr.items[2]!),
       ],
       expr.loc,
     ),
@@ -323,12 +345,12 @@ function expandInstance(
       item.items[0].name === "define"
     ) {
       items.push(
-        copySourceTrace(
+        derive(
           item,
           list(
             [
-              item.items[0]!,
-              item.items[1]!,
+              copyTree(item.items[0]!),
+              copyTree(item.items[1]!),
               expandExpr(
                 item.items[2]!,
                 macroEnv,
@@ -345,10 +367,10 @@ function expandInstance(
       continue;
     }
 
-    items.push(item);
+    items.push(copyTree(item));
   }
 
-  return copySourceTrace(expr, list(items, expr.loc));
+  return derive(expr, list(items, expr.loc));
 }
 
 function expandMatch(
@@ -360,16 +382,16 @@ function expandMatch(
   inlineCompileTimeCalls: boolean,
 ): SExpr {
   if (expr.items.length < 4) {
-    return expr;
+    return copyTree(expr);
   }
 
   const items: SExpr[] = [
-    expr.items[0]!,
+    copyTree(expr.items[0]!),
     expandExpr(expr.items[1]!, macroEnv, builtins, macroStepLimit, state, inlineCompileTimeCalls),
   ];
 
   for (let i = 2; i < expr.items.length; i += 2) {
-    items.push(expr.items[i]!);
+    items.push(copyTree(expr.items[i]!));
     if (i + 1 < expr.items.length) {
       items.push(
         expandExpr(
@@ -384,7 +406,7 @@ function expandMatch(
     }
   }
 
-  return copySourceTrace(expr, list(items, expr.loc));
+  return derive(expr, list(items, expr.loc));
 }
 
 function expandFn(
@@ -396,12 +418,12 @@ function expandFn(
   inlineCompileTimeCalls: boolean,
 ): SExpr {
   if (expr.items.length < 3) {
-    return expr;
+    return copyTree(expr);
   }
 
   const paramsExpr = expr.items[1]!;
   if (paramsExpr._tag !== "Vector") {
-    return expr;
+    return copyTree(expr);
   }
 
   const params: SExpr[] = [];
@@ -410,33 +432,22 @@ function expandFn(
   for (let i = 0; i < paramsExpr.items.length; i++) {
     const param = paramsExpr.items[i]!;
     if (param._tag === "Sym" && param.name === "&") {
-      params.push(param);
-      if (i + 1 < paramsExpr.items.length) {
-        params.push(paramsExpr.items[i + 1]!);
-      }
-      for (let j = i + 2; j < paramsExpr.items.length; j++) {
-        params.push(paramsExpr.items[j]!);
-      }
+      params.push(...paramsExpr.items.slice(i).map(copyTree));
       break;
     }
 
-    if (param._tag === "Sym") {
-      params.push(param);
-      continue;
-    }
-
     if (param._tag === "Map" || param._tag === "Vector") {
-      const placeholder = freshBinding("destructure", param.loc, state);
-      params.push(placeholder);
+      const placeholder = freshBinding("destructure", state);
+      params.push(desugar(param, sym(placeholder, param.loc)));
       if (param._tag === "Map") {
-        expandMapDestructure(param, placeholder, expr.loc, destructureBindings, state);
+        expandMapDestructure(param, placeholder, expr, destructureBindings, state);
       } else {
-        expandSeqDestructure(param, placeholder, expr.loc, destructureBindings, state);
+        expandSeqDestructure(param, placeholder, expr, destructureBindings, state);
       }
       continue;
     }
 
-    params.push(param);
+    params.push(copyTree(param));
   }
 
   const bodyForms = expr.items
@@ -446,15 +457,30 @@ function expandFn(
     );
 
   let body =
-    bodyForms.length === 1 ? bodyForms[0]! : list([sym("do", expr.loc), ...bodyForms], expr.loc);
+    bodyForms.length === 1
+      ? bodyForms[0]!
+      : desugar(expr, list([desugar(expr, sym("do", expr.loc)), ...bodyForms], expr.loc));
 
   if (destructureBindings.length > 0) {
-    body = list([sym("let", expr.loc), vector(destructureBindings, expr.loc), body], expr.loc);
+    body = desugar(
+      expr,
+      list(
+        [
+          desugar(expr, sym("let", expr.loc)),
+          desugar(expr, vector(destructureBindings, expr.loc)),
+          body,
+        ],
+        expr.loc,
+      ),
+    );
   }
 
-  return copySourceTrace(
+  return derive(
     expr,
-    list([sym("fn", expr.loc), vector(params, paramsExpr.loc), body], expr.loc),
+    list(
+      [copyTree(expr.items[0]!), derive(paramsExpr, vector(params, paramsExpr.loc)), body],
+      expr.loc,
+    ),
   );
 }
 
@@ -467,12 +493,12 @@ function expandLet(
   inlineCompileTimeCalls: boolean,
 ): SExpr {
   if (expr.items.length < 3) {
-    return expr;
+    return copyTree(expr);
   }
 
   const bindingsExpr = expr.items[1]!;
   if (bindingsExpr._tag !== "Vector") {
-    return expr;
+    return copyTree(expr);
   }
 
   const normalizedBindings: SExpr[] = [];
@@ -493,31 +519,26 @@ function expandLet(
       inlineCompileTimeCalls,
     );
 
-    if (binding._tag === "Sym") {
-      normalizedBindings.push(binding, expandedValue);
-      continue;
-    }
-
     if (binding._tag === "Map" || binding._tag === "Vector") {
-      const placeholder = freshBinding("destructure_let", binding.loc, state);
-      normalizedBindings.push(placeholder, expandedValue);
+      const placeholder = freshBinding("destructure_let", state);
+      normalizedBindings.push(desugar(binding, sym(placeholder, binding.loc)), expandedValue);
       if (binding._tag === "Map") {
-        expandMapDestructure(binding, placeholder, expr.loc, normalizedBindings, state);
+        expandMapDestructure(binding, placeholder, expr, normalizedBindings, state);
       } else {
-        expandSeqDestructure(binding, placeholder, expr.loc, normalizedBindings, state);
+        expandSeqDestructure(binding, placeholder, expr, normalizedBindings, state);
       }
       continue;
     }
 
-    normalizedBindings.push(binding, expandedValue);
+    normalizedBindings.push(copyTree(binding), expandedValue);
   }
 
-  return copySourceTrace(
+  return derive(
     expr,
     list(
       [
-        sym("let", expr.loc),
-        vector(normalizedBindings, bindingsExpr.loc),
+        copyTree(expr.items[0]!),
+        derive(bindingsExpr, vector(normalizedBindings, bindingsExpr.loc)),
         ...expr.items
           .slice(2)
           .map((item) =>
@@ -564,13 +585,17 @@ function tryInlineCompileTimeCall(
   }
 }
 
+// Destructuring lowers to bindings of desugared temporaries. Each use of a
+// temporary is its own node, and keys are copied as part of the pattern.
+
 function expandMapDestructure(
   mapExpr: SExpr & { _tag: "Map" },
-  placeholder: SExpr,
-  loc: Loc,
+  placeholder: string,
+  form: SExpr,
   bindings: SExpr[],
   state: ExpandState,
 ): void {
+  const use = () => desugar(mapExpr, sym(placeholder, mapExpr.loc));
   for (const [k, v] of mapExpr.pairs) {
     if (k._tag === "Sym" && k.name === ":keys" && v._tag === "Vector") {
       for (const key of v.items) {
@@ -580,8 +605,8 @@ function expandMapDestructure(
 
         bindDestructurePattern(
           key,
-          list([sym("get", loc), placeholder, sym(`:${key.name}`, key.loc)], loc),
-          loc,
+          desugarCall(form, "get", [use(), desugar(key, sym(`:${key.name}`, key.loc))]),
+          form,
           bindings,
           state,
         );
@@ -590,22 +615,24 @@ function expandMapDestructure(
     }
 
     if (k._tag === "Sym" && k.name === ":as" && v._tag === "Sym") {
-      bindings.push(copySourceTrace(v, sym(v.name, v.loc)));
-      bindings.push(placeholder);
+      bindings.push(copyTree(v));
+      bindings.push(use());
       continue;
     }
 
-    bindDestructurePattern(v, list([sym("get", loc), placeholder, k], loc), loc, bindings, state);
+    const valueExpr = desugarCall(form, "get", [use(), desugarTree(k)]);
+    bindDestructurePattern(v, valueExpr, form, bindings, state);
   }
 }
 
 function expandSeqDestructure(
   vecExpr: SExpr & { _tag: "Vector" },
-  placeholder: SExpr,
-  loc: Loc,
+  placeholder: string,
+  form: SExpr,
   bindings: SExpr[],
   state: ExpandState,
 ): void {
+  const use = () => desugar(vecExpr, sym(placeholder, vecExpr.loc));
   let restIndex = -1;
 
   for (let i = 0; i < vecExpr.items.length; i++) {
@@ -617,49 +644,88 @@ function expandSeqDestructure(
 
     bindDestructurePattern(
       item,
-      list([sym("nth", loc), placeholder, { _tag: "Num", value: i, loc }], loc),
-      loc,
+      desugarCall(form, "nth", [use(), desugar(form, { _tag: "Num", value: i, loc: form.loc })]),
+      form,
       bindings,
       state,
     );
   }
 
   if (restIndex >= 0 && restIndex + 1 < vecExpr.items.length) {
-    let restExpr: SExpr = placeholder;
+    let restExpr: SExpr = use();
     for (let i = 0; i < restIndex; i++) {
-      restExpr = list([sym("rest", loc), restExpr], loc);
+      restExpr = desugarCall(form, "rest", [restExpr]);
     }
-    bindDestructurePattern(vecExpr.items[restIndex + 1]!, restExpr, loc, bindings, state);
+    bindDestructurePattern(vecExpr.items[restIndex + 1]!, restExpr, form, bindings, state);
   }
 }
 
 function bindDestructurePattern(
   pattern: SExpr,
   valueExpr: SExpr,
-  loc: Loc,
+  form: SExpr,
   bindings: SExpr[],
   state: ExpandState,
 ): void {
   switch (pattern._tag) {
     case "Sym":
-      bindings.push(copySourceTrace(pattern, sym(pattern.name, pattern.loc)));
+      bindings.push(copyTree(pattern));
       bindings.push(valueExpr);
       return;
     case "Map": {
-      const placeholder = freshBinding("destructure_map", pattern.loc, state);
-      bindings.push(placeholder, valueExpr);
-      expandMapDestructure(pattern, placeholder, loc, bindings, state);
+      const placeholder = freshBinding("destructure_map", state);
+      bindings.push(desugar(pattern, sym(placeholder, pattern.loc)), valueExpr);
+      expandMapDestructure(pattern, placeholder, form, bindings, state);
       return;
     }
     case "Vector": {
-      const placeholder = freshBinding("destructure_seq", pattern.loc, state);
-      bindings.push(placeholder, valueExpr);
-      expandSeqDestructure(pattern, placeholder, loc, bindings, state);
+      const placeholder = freshBinding("destructure_seq", state);
+      bindings.push(desugar(pattern, sym(placeholder, pattern.loc)), valueExpr);
+      expandSeqDestructure(pattern, placeholder, form, bindings, state);
       return;
     }
     default:
       return;
   }
+}
+
+/** `(name args...)`, written by the expander for the author form `form`. */
+function desugarCall(form: SExpr, name: string, args: readonly SExpr[]): SExpr {
+  return desugar(form, list([desugar(form, sym(name, form.loc)), ...args], form.loc));
+}
+
+/** A copy of part of a pattern, used as an expression the expander wrote. */
+function desugarTree(node: SExpr): SExpr {
+  switch (node._tag) {
+    case "List":
+    case "Vector":
+    case "Set":
+      return desugar(node, { _tag: node._tag, items: node.items.map(desugarTree), loc: node.loc });
+    case "Map":
+      return desugar(node, {
+        _tag: "Map",
+        pairs: node.pairs.map(([k, v]) => [desugarTree(k), desugarTree(v)] as const),
+        loc: node.loc,
+      });
+    default:
+      return desugar(node, { ...node });
+  }
+}
+
+/**
+ * Locate a failure raised while expanding `call`. An arity failure has no
+ * location, and a failure inside a macro the program did not define (a
+ * prelude macro) is located in another source: both belong to the call.
+ */
+function expansionFailure(error: unknown, call: SExpr, macro: KMacro, state: ExpandState): unknown {
+  state.onExpansionFailure?.(call);
+  if (!isKernelError(error) || (error.loc && state.ownMacros.has(macro))) {
+    return error;
+  }
+  return relocateKernelError(error, call.loc, [
+    { macroName: macro.name, loc: call.loc },
+    ...(macroOriginsOf(call) ?? []),
+  ]);
 }
 
 function evaluateMacro(

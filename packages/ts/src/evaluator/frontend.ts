@@ -56,6 +56,7 @@ export function expandKernelExprsSync(
     ...(options.inlineCompileTimeCalls === true ? { inlineCompileTimeCalls: true } : {}),
     ...(options.keepMacroDefs === true ? { keepMacroDefs: true } : {}),
     ...(options.macroStepLimit !== undefined ? { macroStepLimit: options.macroStepLimit } : {}),
+    ...(options.onExpansionFailure ? { onExpansionFailure: options.onExpansionFailure } : {}),
   });
 
   return {

@@ -717,7 +717,7 @@ function executeVM(
           } else {
             return yield* withStackTrace(
               new KernelTypeError({
-                message: `Cannot tail-call ${typeof callee} as function`,
+                message: `Cannot call ${typeof callee} as function`,
                 expected: "function",
                 got: typeof callee,
                 ...errorContext(),

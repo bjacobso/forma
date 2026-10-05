@@ -130,17 +130,20 @@ moved out of tail position costs one extra return step, and deep recursion
 uses frames instead of being looped. The step limit still applies. Programs that need
 the evaluator fallback get the same hook in the evaluator.
 
-**Mapping expansions back to source.** The expander rebuilds lists and
-copies source traces. It now also records each rebuilt node's *origin*: the
-author-written node it came from. A macro call's expansion root takes the
-call as its origin. A record is kept only for nodes whose origin is in the
-author's parse, so template nodes from a macro definition, including
-prelude macros whose offsets point into another file, never produce records.
-Arguments passed through a macro keep their own records, and the call
-records the expansion's value.
+**Mapping expansions back to source.** The expander emits a fresh tree and
+gives each node one origin (7.3). The engine asks the observer about every
+expression it compiles or evaluates, and a record exists exactly for the
+author nodes behind a `source` node or an `expansion` root. Template nodes of
+a macro definition, including prelude macros whose offsets point into another
+file, are copied as `introduced` and never produce records. Arguments passed
+through a macro keep their own records, and the call records the expansion's
+value.
 
-**Failures** are attributed to the innermost observed expression whose span
-contains the failure's source trace.
+**Failures** are located at author code: a `source` node's own position, or,
+for code a macro introduced, the innermost macro call the author wrote. A
+failure is attributed to the innermost expression the engine evaluated or
+compiled whose span contains that location. A failure during expansion, such
+as a macro's arity, belongs to the macro call.
 
 **Limits.** `maxRecords` (default 5,000 expressions), `maxItems` per
 collection (default 20), `maxDepth` (default 4), and `maxStringLength`
@@ -483,22 +486,53 @@ origin with a role:
   destructuring temporary.
 
 A `source` node keeps its own location; the chain of macro calls it passed
-through is context, not a replacement. Diagnostics locate at the innermost
-`source` or `expansion` origin, which is always in the author's document.
+through is context, not a replacement. Every origin names its *site*, the
+author node it is located at: itself for `source`, the innermost author call
+for `introduced`, the author form for `desugared`. An emitted node's `loc` is
+its site's, so traces are never rewritten and diagnostics always point into
+the author's document.
+
+*Storage.* Origins live in a registry keyed by the fresh nodes
+(`expander/provenance.ts`), not in a field, because expanded nodes flow into
+runtime values that are compared structurally. Recording a second origin for
+a node throws, so sharing fails where it happens. Public origins, their author
+arrays, and their macro context entries and arrays are frozen, so a caller
+cannot rewrite recorded facts through `originOf`. Arguments are recognized by
+identity with the nodes handed to the macro, before copying.
+
+*Nested expansions.* A root whose call is itself a root stands for what that
+call stands for, so a macro that expands to another macro call records its
+author's call. A root whose call a macro introduced (the recursive `cond`) is
+located at the author's call but stands for no author node: the outer root
+already records that call, and recording it again would count one evaluation
+twice.
 
 **Evaluable is decided by evaluation.** A record exists for a node exactly
 when the engine evaluated it as an expression and its origin is `source` or
 `expansion`. Quoted data, templates, macro bodies, binders, patterns, and type
 positions are never evaluated as expressions, so they never get records, and
-no list of exclusions is needed. The evaluator fallback leaves tail position
-for observed calls, as the VM does, so self tail calls are observed. A failure
-goes to the innermost expression being evaluated when it was raised. A failure
-during expansion, such as a macro's arity, goes to the macro call.
+no list of exclusions is needed. A macro body that runs during evaluation
+runs unobserved. A macro supplied as a runtime value records its call through
+the surrounding evaluation; its expansion observes arguments and nested
+author expressions without counting that call again. The evaluator fallback
+leaves tail position for observed
+calls, as the VM does, so self tail calls are observed; the VM names a failed
+call the same way in and out of tail position. The fallback validates a self
+call's arity before making a tail-call sentinel, so the trampoline cannot lose
+the failed call's location. A failure goes to the innermost
+expression the engine evaluated or compiled whose span contains its location.
+A failure during expansion, such as a macro's arity, goes to the macro call.
+It is also located there when it has no location or was raised inside a macro
+the program did not define, such as a prelude macro, whose location is in
+another source.
 
-**Guarantees.** Observation never changes a result or a message. Every record
-names an author node, and two expansions never share a record. An invariant
-test expands every program in the corpus (examples, preludes, conformance
-cases) and checks that every node has exactly one origin and is fresh.
+**Guarantees.** Observation never changes a result or a message, on the VM or
+the fallback; only step counts differ, as section 2 says. Every record names
+an author node, and two expansions never share a record. An invariant test
+expands every program in the corpus (examples, preludes, conformance cases,
+test fixtures) and checks that every node has exactly one origin, is fresh,
+and is located in the parsed document. Random nested expansions also check
+that repeating an expansion emits disjoint trees with frozen origins.
 
 ### 7.4 Scope is described once
 

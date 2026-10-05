@@ -44,6 +44,11 @@
       "reason": "symbolIndex and findReferences are implemented by the TypeScript host only; they use the TypeScript expander and descriptor parser."
     },
     {
+      "id": "expansion-provenance",
+      "status": "gap",
+      "reason": "The TypeScript expander emits fresh nodes with immutable source, expansion, introduced, or desugared origins and exposes originOf. OCaml does not expose node provenance or the corresponding observation and macro diagnostic attribution."
+    },
+    {
       "id": "edit-script",
       "status": "gap",
       "reason": "applyEditScript, describeNodes, and editScriptSchema are implemented by the TypeScript host only. Scripts are engine-neutral data over the shared reader grammar."
