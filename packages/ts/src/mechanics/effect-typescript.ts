@@ -150,9 +150,10 @@ class Generator {
     const errors = of("ErrorDef");
     const services = of("ServiceDef");
     const functions = of("FunctionDef");
+    const constants = of("ValueDef");
     const operations = of("EffectDef");
     const layers = of("LayerDef");
-    for (const payload of [...functions, ...operations]) this.reserved.add(camelIdentifier(String(payload["name"])));
+    for (const payload of [...functions, ...constants, ...operations]) this.reserved.add(camelIdentifier(String(payload["name"])));
     for (const payload of [...schemas, ...errors, ...services, ...layers]) this.reserved.add(typeName(String(payload["name"])));
 
     const sections: string[][] = [];
@@ -168,6 +169,7 @@ class Generator {
       sections.push(declaration.error ? this.errorLines(declaration.name, declaration.schema) : this.schemaLines(declaration.name, declaration.schema));
     }
     for (const service of services) sections.push(this.serviceLines(service));
+    for (const constant of orderConstants(constants)) sections.push(this.constantLines(constant));
     for (const fn of functions) sections.push(this.functionLines(fn));
     for (const operation of operations) sections.push(this.operationLines(operation));
     for (const layer of orderLayers(layers)) sections.push(this.layerLines(layer));
@@ -229,6 +231,16 @@ class Generator {
     }
     lines.push("  }", `>()(${JSON.stringify(name)}) {}`);
     return lines;
+  }
+
+  private constantLines(constant: JsonRecord): string[] {
+    const name = String(constant["name"]);
+    const type = this.info.constants.get(name);
+    const head = `export const ${camelIdentifier(name)}${type ? `: ${this.typeTs(type)}` : ""} =`;
+    this.serviceVars = new Map();
+    const inline = `${head} ${this.value(constant["value"], new Names(undefined, this.reserved), "").code};`;
+    if (!inline.includes("\n") && inline.length <= maxWidth) return [inline];
+    return [`${head} ${this.value(constant["value"], new Names(undefined, this.reserved), "").code};`];
   }
 
   private functionLines(fn: JsonRecord): string[] {
@@ -315,7 +327,7 @@ class Generator {
     const setup = arrayItems(implementation["setup"]).filter(isRecord);
     const methods = arrayItems(implementation["methods"]).filter(isRecord);
     const names = new Names(undefined, this.reserved);
-    const captured = info?.capturedServices ?? [];
+    const captured = this.servicesUsed([...setup.map((binding) => binding["value"] ?? null), ...methods.map((method) => method["body"] ?? null)]);
     this.serviceVars = new Map();
     for (const dependency of captured) this.serviceVars.set(dependency, bindService(names, dependency));
     const contextServices = info?.contextServices ?? [];
@@ -471,6 +483,9 @@ class Generator {
       const code = this.value(isRecord(value) ? value["value"] : undefined, names, indent).code;
       return [`${indent}const ${names.bind(name)} = ${code};`];
     }
+    if (!used && isRecord(value) && ["If", "When", "Unless", "Cond", "Match"].includes(String(value["kind"]))) {
+      return this.statements(value, names, indent, "discard");
+    }
     const effect = this.effectExpression(value, names, indent);
     if (!used) return [`${indent}yield* ${effect};`];
     return [`${indent}const ${names.bind(name)} = yield* ${effect};`];
@@ -552,6 +567,28 @@ class Generator {
       default:
         throw new Error(`Effect TypeScript: unsupported effect body kind ${String(node["kind"])}`);
     }
+  }
+
+  /**
+   * An effect that resolves its own services, used where they come from a
+   * layer provided around it rather than from the enclosing function.
+   */
+  private serviceScope(node: JsonValue | undefined, names: Names, indent: string): string {
+    const services = this.servicesUsed(node);
+    if (services.length === 0) return this.effectExpression(node, names, indent);
+    const saved = this.serviceVars;
+    this.serviceVars = new Map(saved);
+    const scope = names.child();
+    const inner = `${indent}  `;
+    const lines = services.map((service) => {
+      const variable = bindService(scope, service);
+      this.serviceVars.set(service, variable);
+      return `${inner}const ${variable} = yield* ${typeName(service)};`;
+    });
+    lines.push(...this.statements(node, scope, inner, "return"));
+    this.serviceVars = saved;
+    this.use("Effect");
+    return `Effect.gen(function* () {\n${lines.join("\n")}\n${indent}})`;
   }
 
   private gen(node: JsonValue | undefined, names: Names, indent: string): string {
@@ -667,7 +704,7 @@ class Generator {
       case "result":
         return call("Effect.result", [effect(0)]);
       case "provide":
-        return call("Effect.provide", [effect(0), value(1)]);
+        return call("Effect.provide", [(inner) => this.serviceScope(args[0], names, inner), value(1)]);
       case "log":
         return call("Effect.log", args.map((_, index) => value(index)));
       case "ref-make": {
@@ -785,6 +822,11 @@ class Generator {
       if (item["kind"] === "ServiceCall" && typeof item["service"] === "string") services.add(item["service"]);
       const call = this.info.calls.get(item);
       if (call?.kind === "service") services.add(call.service);
+      if (item["kind"] === "Combinator" && item["name"] === "provide") {
+        // The provided effect gets its services from the layer, inside its own scope.
+        arrayItems(item["args"]).slice(1).forEach(visit);
+        return;
+      }
       for (const [key, value] of Object.entries(item)) {
         if (key !== "span" && key !== "effect") visit(value);
       }
@@ -851,7 +893,9 @@ class Generator {
         break;
     }
     if (this.info.layers.has(name)) return typeName(name);
-    if (this.info.functions.has(name) || this.info.operations.has(name)) return camelIdentifier(name);
+    if (this.info.functions.has(name) || this.info.operations.has(name) || this.info.constants.has(name)) {
+      return camelIdentifier(name);
+    }
     throw new Error(`Effect TypeScript: unbound name ${name}`);
   }
 
@@ -1117,7 +1161,7 @@ class Generator {
         this.use("Fiber");
         return generic("Fiber.Fiber", this.typeTs(type.success), this.errorUnion(type.errors));
       case "layer":
-        return this.layerTypeTs({ type: type.layer, capturedServices: [], contextServices: [] });
+        return this.layerTypeTs({ type: type.layer, contextServices: [] });
       case "var":
         return "never";
     }
@@ -1228,6 +1272,25 @@ function namesIn(node: JsonValue | undefined): ReadonlySet<string> {
 /** Unused parameters get a leading underscore so `noUnusedParameters` accepts them. */
 function unusedPrefix(name: string, body: JsonValue | undefined): string {
   return usesName(body, name) ? camelIdentifier(name) : `_${camelIdentifier(name)}`;
+}
+
+/** Constants may refer to each other, so each is emitted after the ones it uses. */
+function orderConstants(constants: readonly JsonRecord[]): readonly JsonRecord[] {
+  const byName = new Map(constants.map((constant) => [String(constant["name"]), constant]));
+  const ordered: JsonRecord[] = [];
+  const seen = new Set<string>();
+  const visit = (constant: JsonRecord): void => {
+    const name = String(constant["name"]);
+    if (seen.has(name)) return;
+    seen.add(name);
+    for (const reference of namesIn(constant["value"])) {
+      const target = byName.get(reference);
+      if (target) visit(target);
+    }
+    ordered.push(constant);
+  };
+  constants.forEach(visit);
+  return ordered;
 }
 
 function orderLayers(layers: readonly JsonRecord[]): readonly JsonRecord[] {

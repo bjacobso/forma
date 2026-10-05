@@ -99,8 +99,6 @@ export interface CallableSignature {
 
 export interface LayerInfo {
   readonly type: LayerType;
-  /** Services the layer's construction yields directly. */
-  readonly capturedServices: readonly string[];
   /** Services that operation calls inside methods need from the captured context. */
   readonly contextServices: readonly string[];
 }
@@ -111,6 +109,7 @@ export interface CheckInfo {
   readonly services: ReadonlyMap<string, ReadonlyMap<string, ServiceMethodSignature>>;
   readonly operations: ReadonlyMap<string, CallableSignature & { readonly result: EffectType }>;
   readonly functions: ReadonlyMap<string, CallableSignature>;
+  readonly constants: ReadonlyMap<string, MType>;
   readonly layers: ReadonlyMap<string, LayerInfo>;
   readonly valueTypes: WeakMap<object, MType>;
   readonly effectTypes: WeakMap<object, EffectType>;
@@ -165,6 +164,7 @@ class Checker {
   private readonly services = new Map<string, Map<string, ServiceMethodSignature>>();
   private readonly operations = new Map<string, CallableSignature & { readonly result: EffectType }>();
   private readonly functions = new Map<string, CallableSignature>();
+  private readonly constants = new Map<string, MType>();
   private readonly layerPayloads = new Map<string, { readonly payload: JsonRecord; readonly span: JsonValue | undefined }>();
   private readonly layers = new Map<string, LayerInfo>();
   private readonly layersInProgress = new Set<string>();
@@ -178,6 +178,7 @@ class Checker {
       services: this.services,
       operations: this.operations,
       functions: this.functions,
+      constants: this.constants,
       layers: this.layers,
       valueTypes: new WeakMap(),
       effectTypes: new WeakMap(),
@@ -209,6 +210,12 @@ class Checker {
         case "FunctionDef":
           this.checkFunction(payload, span);
           break;
+        case "ValueDef": {
+          this.checkTypeReferences(payload["type"], span);
+          const type = this.constants.get(String(payload["name"]));
+          if (type) this.value(payload["value"], new Map(), type);
+          break;
+        }
         case "LayerDef":
           this.layerInfo(String(payload["name"]), span);
           break;
@@ -263,6 +270,9 @@ class Checker {
           break;
         case "FunctionDef":
           claim(name, "function", span);
+          break;
+        case "ValueDef":
+          claim(name, "constant", span);
           break;
         case "LayerDef":
           if (claim(name, "layer", span)) this.layerPayloads.set(name, { payload, span });
@@ -325,6 +335,9 @@ class Checker {
             params: this.paramsFromJson(payload["params"]),
             result: typeFromJson(payload["returns"], this.env),
           });
+          break;
+        case "ValueDef":
+          this.constants.set(name, typeFromJson(payload["type"], this.env));
           break;
         default:
           break;
@@ -480,7 +493,7 @@ class Checker {
       info = this.checkServiceLayer(name, implementation, entry.span);
     } else if (isRecord(implementation) && implementation["kind"] === "Compose") {
       const type = this.layerExprType(implementation["layer"], entry.span);
-      info = type ? { type, capturedServices: [], contextServices: [] } : undefined;
+      info = type ? { type, contextServices: [] } : undefined;
     }
     this.layersInProgress.delete(name);
     if (!info) return undefined;
@@ -670,12 +683,7 @@ class Checker {
     this.layerContext = previous;
     for (const call of context.contextCalls) this.info.contextCalls.add(call);
 
-    const directServices = new Set<string>();
     const contextServices = new Set<string>();
-    for (const requirement of [...setupRequirements.keys(), ...methodRequirements.keys()]) {
-      if (requirement === "Scope") continue;
-      directServices.add(requirementService(requirement));
-    }
     for (const call of context.contextCalls) {
       const type = this.info.effectTypes.get(call);
       for (const requirement of type?.requirements.keys() ?? []) {
@@ -690,7 +698,6 @@ class Checker {
     }
     return {
       type: { provides: [service], errors: setupErrors, requirements },
-      capturedServices: [...directServices].filter((item) => item !== service).sort(),
       contextServices: [...contextServices].filter((item) => item !== service).sort(),
     };
   }
@@ -1433,6 +1440,8 @@ class Checker {
       default:
         break;
     }
+    const constant = this.constants.get(name);
+    if (constant) return constant;
     const fn = this.functions.get(name);
     if (fn) return { kind: "function", params: fn.params.map((param) => param.type), result: fn.result };
     const operation = this.operations.get(name);

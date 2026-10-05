@@ -62,22 +62,16 @@ function isDefineLayerForm(expr: SExpr): boolean {
 }
 
 /**
- * A `(define name (fn [...] ...))` whose name has a `(: name (-> ...))`
- * signature is a pure helper function. Untyped defines stay ordinary Forma
- * code and are not packaged.
+ * A `(define name value)` whose name has a `(: name Type)` signature is a
+ * typed constant, or a pure helper function when the value is `(fn ...)`.
+ * Untyped defines stay ordinary Forma code and are not packaged.
  */
 function isTypedFunctionForm(expr: SExpr, signatures: ReadonlyMap<string, SExpr>): boolean {
   if (expr._tag !== "List" || symName(expr.items[0]) !== "define" || expr.items.length !== 3) {
     return false;
   }
   const name = symName(expr.items[1]);
-  const value = expr.items[2]!;
-  return (
-    name !== undefined &&
-    signatures.has(name) &&
-    value._tag === "List" &&
-    symName(value.items[0]) === "fn"
-  );
+  return name !== undefined && signatures.has(name);
 }
 
 function isDefineSchemaForm(expr: SExpr): boolean {
@@ -593,7 +587,23 @@ function functionDeclaration(
   const name = symName(expr.items[1])!;
   const fnExpr = expr.items[2]!;
   const signature = signatures.get(name)!;
-  if (fnExpr._tag !== "List" || fnExpr.items[1]?._tag !== "Vector" || fnExpr.items.length < 3) {
+  if (fnExpr._tag !== "List" || symName(fnExpr.items[0]) !== "fn") {
+    const type = typeExprToJson(sourceId, signature);
+    if (!type.ok) return type;
+    return {
+      ok: true,
+      declaration: {
+        summary: { kind: "ValueDef", name, resultType: "ValueDef" },
+        payload: { kind: "ValueDef", name, type: type.value, value: valueExprToCoreJson(sourceId, fnExpr) },
+        payloadContract: "mechanics/value-def/v0",
+        validators: ["payload-contract"],
+        sourceId,
+        formIndex,
+        span: spanOf(sourceId, expr),
+      },
+    };
+  }
+  if (fnExpr.items[1]?._tag !== "Vector" || fnExpr.items.length < 3) {
     return failed(sourceId, fnExpr, "artifact/function", "typed define expects (fn [params...] body).");
   }
   const paramsExpr = fnExpr.items[1];
