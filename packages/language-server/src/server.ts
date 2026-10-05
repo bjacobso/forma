@@ -15,6 +15,7 @@ import { getDefinition } from "./handlers/definition.js";
 import { getDiagnostics } from "./handlers/diagnostics.js";
 import { formatDocument } from "./handlers/formatting.js";
 import { getHover } from "./handlers/hover.js";
+import { getReferences } from "./handlers/references.js";
 import { OcamlWorkspaceSession } from "./session.js";
 
 const connection = createConnection(ProposedFeatures.all);
@@ -49,6 +50,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
         },
       },
       definitionProvider: true,
+      referencesProvider: true,
       documentFormattingProvider: formattingEnabled,
     },
   };
@@ -96,6 +98,13 @@ connection.onDefinition(async (params) => {
   const document = documents.get(params.textDocument.uri);
   if (!session || !document) return null;
   return await getDefinition(session, document, params);
+});
+
+connection.onReferences(async (params) => {
+  const session = workspaceSession;
+  const document = documents.get(params.textDocument.uri);
+  if (!session || !document) return [];
+  return await getReferences(session, document, params);
 });
 
 connection.onDocumentFormatting(async (params) => {

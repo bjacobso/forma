@@ -3,6 +3,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 
 import { getCompletions } from "../src/handlers/completion.js";
 import { getDefinition } from "../src/handlers/definition.js";
+import { getReferences } from "../src/handlers/references.js";
 import { formatDocument } from "../src/handlers/formatting.js";
 import type { OcamlWorkspaceSession } from "../src/session.js";
 
@@ -11,6 +12,7 @@ const uri = "file:///workspace/source.lisp";
 function fakeSession(document: TextDocument): OcamlWorkspaceSession {
   return {
     documents: new Map([[document.uri, document]]),
+    preludeDocuments: async () => [],
     editorCompletion: async () => ({
       ok: true,
       value: {
@@ -77,5 +79,44 @@ describe("OCaml LSP handlers", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]?.newText).toBe("(define x 1)\nx\n");
+  });
+
+  test("references cover open documents and resolve macro-made names", async () => {
+    const library = TextDocument.create(
+      "file:///workspace/steps.lisp",
+      "lisp",
+      1,
+      "(define-macro defstep [name] `(define ~name {:step true}))\n(defstep verify)",
+    );
+    const document = TextDocument.create(uri, "lisp", 1, "(run verify)\n(log verify)");
+    const session = {
+      documents: new Map([
+        [library.uri, library],
+        [document.uri, document],
+      ]),
+      preludeDocuments: async () => [],
+      editorDefinition: async () => ({ ok: true, value: {} }),
+    } as unknown as OcamlWorkspaceSession;
+
+    const references = await getReferences(session, document, {
+      textDocument: { uri },
+      position: { line: 0, character: 6 },
+      context: { includeDeclaration: true },
+    });
+    expect(references).toEqual([
+      {
+        uri: library.uri,
+        range: { start: { line: 1, character: 9 }, end: { line: 1, character: 15 } },
+      },
+      { uri, range: { start: { line: 0, character: 5 }, end: { line: 0, character: 11 } } },
+      { uri, range: { start: { line: 1, character: 5 }, end: { line: 1, character: 11 } } },
+    ]);
+
+    // The OCaml engine knows nothing about the macro, so the index answers.
+    const definition = await getDefinition(session, document, {
+      textDocument: { uri },
+      position: { line: 1, character: 6 },
+    });
+    expect(definition).toEqual(references[0]);
   });
 });

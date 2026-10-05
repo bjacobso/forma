@@ -5,6 +5,7 @@ import { positionToOffset, spanToRange } from "../document.js";
 import { isRecord, type CstSpan } from "../protocol.js";
 import type { OcamlWorkspaceSession } from "../session.js";
 import { editorValue, sourceIdForUri } from "../session.js";
+import { findIndexedDefinition } from "./references.js";
 
 export async function getDefinition(
   session: OcamlWorkspaceSession,
@@ -14,7 +15,10 @@ export async function getDefinition(
   const offset = positionToOffset(document, params.position);
   const response = await session.editorDefinition(document, offset);
   const definition = editorValue(response)["definition"];
-  if (!isRecord(definition) || !isSpan(definition["span"])) return null;
+  if (!isRecord(definition) || !isSpan(definition["span"])) {
+    // Names introduced by macros and descriptor forms are found by the symbol index.
+    return await findIndexedDefinition(session, document, offset);
+  }
 
   const location: Location = {
     uri:
