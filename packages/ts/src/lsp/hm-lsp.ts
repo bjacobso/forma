@@ -15,7 +15,7 @@ import type { CoreExpr, Span } from "../type/core-expr.js";
 import { resetNodeIds } from "../type/core-expr.js";
 import { lowerProgram } from "../type/lower.js";
 import { inferProgram } from "../type/infer.js";
-import { InferContext, makeInferContext } from "../type/context.js";
+import { InferContext, makeOwnedInferContext } from "../type/context.js";
 import { InferenceError } from "../type/errors.js";
 import type { DSLTypeProvider } from "../type/dsl-provider.js";
 
@@ -197,7 +197,8 @@ export function analyzeLsp(
     }
 
     // Infer (passing DSL provider for result types and type bindings)
-    const ctxService = yield* makeInferContext();
+    // The builder stays private; only projected typed spans escape this call.
+    const ctxService = yield* makeOwnedInferContext();
     const layer = Layer.succeed(InferContext, ctxService);
 
     const inferResult = yield* Effect.result(
