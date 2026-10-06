@@ -29,6 +29,7 @@ export default defineConfig({
     nav: [
       { text: "Playground", link: "/playground", target: "_self", rel: "" },
       { text: "Examples", link: "/playground/demo", target: "_self", rel: "" },
+      { text: "Workbench", link: "/workbench/demo/", target: "_self", rel: "" },
       { text: "Vision", link: "/vision" },
       { text: "Language", link: "/language" },
       { text: "Effect", link: "/effect" },
@@ -52,6 +53,8 @@ export default defineConfig({
           { text: "Design decisions", link: "/design-decisions" },
           { text: "Language services", link: "/language-services" },
           { text: "File modules", link: "/modules" },
+          { text: "Workbench vision", link: "/workbench-vision" },
+          { text: "Workbench", link: "/workbench" },
         ],
       },
       {

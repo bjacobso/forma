@@ -24,6 +24,10 @@ codec; and `formSlots`, which reports a descriptor form's present and empty
 slots with insertions for editor placeholders. Check a host's capabilities before relying on them; the
 OCaml adapters do not implement them yet and ignore `observe`.
 
+`analyzeEditor` accepts the `hostBuiltins` and `typePolicy` that `typecheck`
+does, or takes them from a session, so calls to host builtins are typed. A top-level form that does not type
+is reported and the forms around it are still typed.
+
 The default host uses the included TypeScript engine. Optional OCaml adapters
 require a separately built artifact: set `FORMA_OCAML_CLI` for the native CLI,
 or `FORMA_OCAML_JS` for the portable JavaScript engine.

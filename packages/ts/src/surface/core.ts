@@ -1,3 +1,4 @@
+import { copySourceTrace } from "../evaluator/source-trace.js";
 import { typeSyntaxErrors, schemaMetadata } from "./type-syntax.js";
 import { resolveConstructors } from "./constructor-scope.js";
 import { coerceProgram } from "./coerce.js";
@@ -5,7 +6,7 @@ import { lowerMembers, moduleBindings } from "./members.js";
 import type { SExpr } from "../reader/types.js";
 import { head, name, sym, list, vector } from "./effect.js";
 
-const call = (e: SExpr, h: string, ...args: SExpr[]) => list(e, [sym(e, h), ...args]);
+const call = (e: SExpr, h: string, ...args: SExpr[]) => copySourceTrace(e, list(e, [sym(e, h), ...args]));
 
 /** Surface sugar common to expansion, inference and evaluation. */
 export function normalizeCoreProgram(exprs: readonly SExpr[], coerce = true): readonly SExpr[] {
@@ -17,6 +18,10 @@ export function normalizeCoreProgram(exprs: readonly SExpr[], coerce = true): re
 }
 
 function normalizeCore(e: SExpr, top = false): SExpr {
+  return copySourceTrace(e, normalizeCoreInner(e, top));
+}
+
+function normalizeCoreInner(e: SExpr, top = false): SExpr {
   if (e._tag === "Sym") {
     return e;
   }

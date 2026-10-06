@@ -11,6 +11,7 @@
     "test": "vitest run",
     "snippets:home": "UPDATE_HOME_SNIPPETS=1 vitest run src/docsSnippets.test.ts",
     "test:visual": "playwright test",
+    "test:site": "playwright test --config playwright.site.config.ts",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },

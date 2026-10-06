@@ -224,6 +224,7 @@ pageClass: forma-index
 <a href="/playground/demo/entities" target="_self"><span>Domain languages · 01</span><strong>Keywords are library code</strong><small>A prelude defines <code>entity</code>; the source elaborates into typed IR.</small><b>Open example →</b></a>
 <a href="/playground/demo/contracts" target="_self"><span>Domain languages · 02</span><strong>The type says what code can do</strong><small>Drop a capability from the signature and watch the typechecker reject it.</small><b>Open example →</b></a>
 <a href="/playground/demo/full-pipeline" target="_self"><span>The core language</span><strong>The complete pipeline</strong><small>Read, expand, typecheck, eval, and a live JSON target for one program.</small><b>Open example →</b></a>
+<a href="/workbench/demo/" target="_self"><span>Structural editing</span><strong>The outline is the program</strong><small>Edit an onboarding workflow with live values and types, a source pane, and assistant proposals you can review.</small><b>Open the workbench →</b></a>
 </div>
 <a class="fh-link" href="/playground/demo" target="_self">All examples →</a>
 </section>

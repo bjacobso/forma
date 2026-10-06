@@ -21,9 +21,19 @@ export function sourceLocOf(expr: SExpr): Loc {
   return sourceTraceOf(expr).loc;
 }
 
-/** Tag every node in the tree with a macro expansion origin. */
-export function tagExpandedExpr(expr: SExpr, macroOrigin: MacroOrigin): void {
+/**
+ * Tag the nodes a macro expansion built with the call's location. The call's
+ * arguments are written by the author and keep their own source traces, so
+ * a diagnostic inside an argument is reported where the author wrote it.
+ */
+export function tagExpandedExpr(
+  expr: SExpr,
+  macroOrigin: MacroOrigin,
+  args: readonly SExpr[] = [],
+): void {
+  const authored = new Set(args);
   const visit = (node: SExpr): void => {
+    if (authored.has(node)) return;
     const existing = sourceTraceMap.get(node);
     const macroOrigins = existing?.macroOrigins ?? [];
     sourceTraceMap.set(node, {

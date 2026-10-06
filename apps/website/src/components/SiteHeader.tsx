@@ -11,6 +11,7 @@ export function SiteHeader() {
       <nav aria-label="Main navigation" className="site-nav">
         <a href="/">Home</a>
         <NavLink to="/demo">Examples</NavLink>
+        <a href="/workbench/demo/">Workbench</a>
         <a href="/vision">Vision</a>
         <a href="/language">Language</a>
       </nav>

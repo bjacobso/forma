@@ -708,6 +708,8 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--forma-blue); ou
 .pipeline-group-heading { display: grid; gap: 8px; margin-bottom: 18px; }
 .pipeline-group-heading h3 { font-size: 1.5rem; }
 .pipeline-group-heading p { max-width: 680px; font-size: 15px; }
+.workbench-demo { margin-bottom: 48px; }
+.workbench-demo .pipeline-grid { grid-template-columns: minmax(0, 1fr); }
 .pipeline-card p { color: var(--forma-muted); font-size: 14px; }
 .badge { border-color: var(--forma-line); color: var(--forma-blue); font-family: "IBM Plex Mono", monospace; }
 .mini-stages code { border-color: var(--forma-line); background: transparent; color: var(--forma-muted); font-size: 10px; }
