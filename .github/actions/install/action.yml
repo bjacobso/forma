@@ -1,5 +1,5 @@
 name: Install Forma dependencies
-description: Validate the registry lockfile and link pinned, unpublished Foldworks primitives for workbench PRs.
+description: Validate the registry lockfile and link pinned, unpublished Foldworks primitives.
 
 runs:
   using: composite
@@ -7,15 +7,12 @@ runs:
     - id: mode
       name: Select dependency source
       shell: bash
-      env:
-        PULL_REQUEST: ${{ github.event_name == 'pull_request' }}
       run: |
         node --input-type=module <<'NODE'
         import { appendFileSync, existsSync, readFileSync } from 'node:fs';
         const manifest = 'packages/workbench/package.json';
         const unpublished = existsSync(manifest) && JSON.parse(readFileSync(manifest, 'utf8')).private === true;
-        const linked = process.env.PULL_REQUEST === 'true' && unpublished;
-        appendFileSync(process.env.GITHUB_OUTPUT, `linked=${linked}\n`);
+        appendFileSync(process.env.GITHUB_OUTPUT, `linked=${unpublished}\n`);
         NODE
 
     - name: Install published dependencies

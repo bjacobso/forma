@@ -27,7 +27,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: pnpm install --frozen-lockfile
+      - run: node scripts/ci-install-registry.mjs
       - id: changesets
         uses: changesets/action/select-mode@v2
 
@@ -47,7 +47,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: pnpm install --frozen-lockfile
+      - run: node scripts/ci-install-registry.mjs
       - uses: changesets/action/version@v2
         with:
           script: pnpm release:version
@@ -74,7 +74,7 @@ jobs:
       - uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: "5.2"
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/install
       - run: opam install -y dune.3.20.2 js_of_ocaml.6.2.0 js_of_ocaml-compiler.6.2.0 wasm_of_ocaml-compiler.6.2.0
       - run: opam exec -- pnpm release:check
       - id: pack
@@ -100,7 +100,7 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
       - run: npm install --global npm@^11.5.1
-      - run: pnpm install --frozen-lockfile
+      - run: node scripts/ci-install-registry.mjs
       - uses: changesets/action/publish@v2
         with:
           pack-dir-artifact-id: ${{ needs.pack.outputs.pack-dir-artifact-id }}

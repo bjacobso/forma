@@ -8,7 +8,7 @@
   "packageManager": "pnpm@10.20.0",
   "scripts": {
     "changeset": "changeset",
-    "release:version": "changeset version && pnpm install --lockfile-only",
+    "release:version": "changeset version && node scripts/ci-install-registry.mjs --lockfile-only",
     "release:check": "pnpm check && pnpm build:ocaml && pnpm parity:engines && pnpm --filter @formalang/language-server build:release && pnpm pack:check",
     "release:publish": "changeset publish",
     "pack:check": "node scripts/check-packages.mjs",
