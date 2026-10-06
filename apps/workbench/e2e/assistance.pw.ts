@@ -22,6 +22,9 @@ test("shows typed keyboard hover, scoped completion, and descriptor placeholders
     .locator(`[data-outline-placeholder="doc"][data-parent="${id}"]`)
     .getByRole("button", { name: "Add doc" })
     .click();
+  const optionInput = activate.locator("textarea");
+  await expect(optionInput).toHaveValue('step activate :system "Okta" :reads [:check :i9 :payroll] :doc ');
+  await expect(optionInput).toBeFocused();
   await page.keyboard.type('"Activate the new hire"');
   await expect(activate.locator("textarea")).toHaveValue(
     'step activate :system "Okta" :reads [:check :i9 :payroll] :doc "Activate the new hire"',
