@@ -27,7 +27,7 @@ list, and its children hold the rest.
 
 | Outline                                     | Forma                                |
 | ------------------------------------------- | ------------------------------------ |
-| `define (total x)` with child `* x 2`       | `(define (total x) (* x 2))`         |
+| `define total [x]` with child `* x 2`       | `(define total [x] (* x 2))`         |
 | `total 21` with no children                 | `(total 21)`                         |
 | `total` with no children                    | `total`: one element is that element |
 | `(now)`                                     | `(now)`: a call with no arguments    |
@@ -53,7 +53,7 @@ row at a time. The source pane shows the same program as text, edited as text
 and read back into rows.
 
 Neither is the real program; the tree is. Other notations fit the same model:
-a folded `define-workflow` can draw as its flow while the rest of the program
+a folded `workflow` can draw as its flow while the rest of the program
 stays rows, and a plain-language reading for people who never see code would
 fit the same way.
 
@@ -65,7 +65,9 @@ Every edit is analyzed, and every row shows what it means now.
   many times it ran, from per-expression observation. Rows inside functions
   show their latest call. Values inside macro calls belong to the arguments the
   author wrote. A structured value is a handle whose branches load when the
-  inspector opens them.
+  inspector opens them. Domain forms show the payloads produced by real
+  elaboration. Descriptor slot clauses are inputs to that elaboration and
+  expose their evaluation state rather than an invented runtime value.
 - **Types.** Every expression has its inferred type, on hover and in the
   inspector, including inside macro calls and in programs with a type error
   elsewhere.
@@ -78,7 +80,7 @@ Every edit is analyzed, and every row shows what it means now.
   defined and every row that uses it.
 - **Slots.** A form registered by a prelude describes its parts, and a row
   offers the ones it is missing as placeholders, such as `+ system` under a
-  `define-step` without one. Filling one inserts the slot's template.
+  `step` without one. Filling one inserts the slot's template.
 - **Capabilities.** A row that reaches the outside world says which
   capabilities it needs. Running it asks first.
 
@@ -119,5 +121,5 @@ and the panel says which one answered.
 - Observation keeps each expression's last value and count, not a trace, so
   there is no step-through yet.
 - Running a program with capabilities is interactive; programs written with
-  `define-operation` are typed with their effects but not run.
+  Effect definitions are typed with their effects but not run.
 - Nothing is persisted.
