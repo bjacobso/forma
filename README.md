@@ -326,6 +326,8 @@ mise run forma:ocaml:test
   observation, edit scripts, and the outline codec for structural editors.
 - [Roadmap](docs/roadmap.md) tracks the path from the research implementation
   toward a stable language platform.
+- [WorldVM Program IR](docs/worldvm.md) is a design note on what an optional
+  WorldVM backend would require.
 - [Examples](examples/README.md) contains reviewable domain programs embedded
   in Markdown, while [conformance fixtures](conformance/) pin behavior shared
   by both engines.
@@ -351,6 +353,22 @@ mise run forma:ocaml:test
 - `FORMA_LANGUAGE_SERVER_ENABLE_FORMATTING` enables language-server formatting.
 - `FORMA_DISABLE_NATIVE_ELABORATION` selects the portable elaboration path.
 - `FORMA_DAEMON_TIMEOUT_MS` controls native daemon request timeouts.
+
+## Relationship to WorldVM
+
+Forma is an optional language in the [WorldVM](https://worldvm.com) family.
+WorldVM is a TypeScript runtime and standard library for software that models
+the world, reasons about it, and acts on it. Forma is not a WorldVM component,
+and WorldVM never requires Forma: the planned `@worldvm/*` standard library is
+a TypeScript API, and Forma is not the main way to use it.
+
+The relationship runs one way. If a textual, homoiconic authoring language
+proves worth having, Forma compiles to WorldVM Program IR. That backend does
+not exist yet; [WorldVM Program IR](docs/worldvm.md) records what it would
+require from the current elaboration and artifact pipeline. The `ontology`,
+`action-protocol`, and related preludes in this repository are example domain
+vocabularies for exercising elaboration. They are not WorldVM's world model or
+its Program IR.
 
 ## Project status
 

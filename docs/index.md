@@ -208,6 +208,7 @@ pageClass: forma-index
 <li>The TypeScript engine does not elaborate ontology forms yet; the playground shows the OCaml engine's pinned output.</li>
 <li>A consumer-prelude SDK and a stable host ABI are next on the roadmap.</li>
 <li>Rust and OCaml code generation are research directions, not built.</li>
+<li>A <a href="/worldvm">WorldVM Program IR</a> backend is a design note, not built. WorldVM never requires Forma.</li>
 </ul>
 </div>
 </div>

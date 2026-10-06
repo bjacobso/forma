@@ -70,6 +70,14 @@ export function About() {
           pipelines say where their target output comes from, so pinned output never passes for
           something the browser computed.
         </p>
+        <p>
+          Forma is an optional language in the{" "}
+          <a href="https://worldvm.com" rel="noreferrer" target="_blank">
+            WorldVM
+          </a>{" "}
+          family. A WorldVM Program IR backend is a{" "}
+          <a href="/worldvm">design note</a>, not built, and WorldVM never requires Forma.
+        </p>
       </section>
 
       <footer className="site-footer">
