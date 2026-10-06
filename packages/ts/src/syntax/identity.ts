@@ -230,6 +230,14 @@ export function reconcileSyntax(
   const after = skeletonOf(source);
   const oldIds = idsForSkeleton(before, identity);
   const ids: (string | undefined)[] = Array.from({ length: after.elements.length });
+  const retired = new Set(options.retired ?? []);
+  const liveIds = new Set(identity.nodes.map((node) => node.id));
+  const anchors = (options.anchors ?? []).filter(({ id }) => {
+    if (retired.has(id)) return false;
+    if (liveIds.has(id)) return true;
+    const suffix = id.startsWith(identity.idPrefix) ? Number(id.slice(identity.idPrefix.length)) : NaN;
+    return !(id === `${identity.idPrefix}${suffix}` && Number.isSafeInteger(suffix) && suffix > 0 && suffix < identity.nextId);
+  });
   const taken = new Set<string>();
   const oldMatched = new Set<number>();
   const oldById = new Map<string, number>();
@@ -266,7 +274,7 @@ export function reconcileSyntax(
   // Pass 1: anchors. Every explicit anchor is placed before any anchored
   // subtree claims descendants by structure.
   const anchored: [number, number][] = [];
-  applyAnchors(after, ids, taken, options.anchors ?? [], (newIndex, id) => {
+  applyAnchors(after, ids, taken, anchors, (newIndex, id) => {
     const oldIndex = oldById.get(id);
     if (oldIndex === undefined) return;
     oldMatched.add(oldIndex);
@@ -340,7 +348,7 @@ export function reconcileSyntax(
     if (oldIndex !== undefined) match(oldIndex, newIndex);
   });
 
-  return finish(after, ids, identity.idPrefix, identity.nextId, options.anchors ?? []);
+  return finish(after, ids, identity.idPrefix, identity.nextId, anchors);
 }
 
 /** Braces read as a set or a map depending on their contents; edits can flip one into the other. */

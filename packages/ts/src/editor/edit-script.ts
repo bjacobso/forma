@@ -10,7 +10,7 @@
 
 import { Result, Schema } from "effect";
 
-import { parse } from "../reader/index.js";
+import { parse, tokenizeWithTrivia } from "../reader/index.js";
 import {
   identifySyntax,
   indexSyntax,
@@ -298,7 +298,7 @@ interface OpContext {
 interface Plan {
   readonly changes: TextChange[];
   /** Pins a node id to the text at `offset` (relative to change `change`) with `length`. */
-  readonly anchors: { id: string; change: number; offset: number; length: number }[];
+  readonly anchors: { id: string; change: number; offset: number; length: number; subtree?: boolean }[];
 }
 
 function applyOp(state: DocumentState, operation: EditOp, context: OpContext): DocumentState {
@@ -312,7 +312,11 @@ function applyOp(state: DocumentState, operation: EditOp, context: OpContext): D
       const text = checkedText(operation.text, "replace");
       const forms = topElements(text);
       if (forms.length === 0) throw new EditFailure("edit/empty-text", "Replacement text is empty");
-      if (target.parent !== null && doc.node(target.parent).kind === "ReaderMacro" && (forms.length !== 1 || forms[0]!.kind === "Comment")) {
+      if (
+        target.parent !== null && doc.node(target.parent).kind === "ReaderMacro" &&
+        (forms.length !== 1 || (target.kind === "Comment"
+          ? forms[0]!.kind !== "Comment" : forms[0]!.kind === "Comment"))
+      ) {
         throw new EditFailure(
           "edit/reader-macro-operand",
           "The form after a reader macro can only be replaced by one form",
@@ -327,6 +331,7 @@ function applyOp(state: DocumentState, operation: EditOp, context: OpContext): D
           change,
           offset: replaced.map(forms[0]!.span.start),
           length: replaced.map(forms[0]!.span.end) - replaced.map(forms[0]!.span.start),
+          subtree: false,
         });
       }
       break;
@@ -384,7 +389,7 @@ function applyOp(state: DocumentState, operation: EditOp, context: OpContext): D
         );
       }
       if (kept.length === 0) {
-        plan.changes.push(doc.deletion(target));
+        plan.changes.push(doc.deletion(target, false));
         break;
       }
       const region = { start: kept[0]!.span.start, end: kept.at(-1)!.span.end };
@@ -441,15 +446,39 @@ function applyOp(state: DocumentState, operation: EditOp, context: OpContext): D
   return commit(state, plan);
 }
 
+/** Separate text only when a token or comment would cross the new boundary. */
+function seamSeparator(left: string, right: string): string {
+  if (left === "" || right === "") return "";
+  const boundary = left.length;
+  for (const { token, leadingTrivia } of tokenizeWithTrivia(left + right)) {
+    for (const trivia of leadingTrivia) {
+      if (trivia.kind === "line-comment" && trivia.loc.start < boundary && boundary < trivia.loc.end) return "\n";
+    }
+    if (token.loc.start < boundary && boundary < token.loc.end) return " ";
+  }
+  return "";
+}
+
 /** Apply a plan's changes and carry ids through them. */
 function commit(state: DocumentState, plan: Plan): DocumentState {
   const ordered = plan.changes
-    .map((change, position) => ({ change, position }))
+    .map((change, position) => ({ change: { ...change }, position }))
     .sort((left, right) => left.change.start - right.change.start || left.change.end - right.change.end);
   for (let i = 1; i < ordered.length; i++) {
     if (ordered[i]!.change.start < ordered[i - 1]!.change.end) {
       throw new EditFailure("edit/overlap", "The edit's changes overlap");
     }
+  }
+  // Repair lexical boundaries for every operation, including deletion. Parsing
+  // alone cannot detect a valid but unintended token such as `a` + `b` → `ab`.
+  const prefixes = new Map<number, number>();
+  for (const { change, position } of ordered) {
+    const left = state.source.slice(0, change.start);
+    const right = state.source.slice(change.end);
+    const prefix = change.text === "" ? "" : seamSeparator(left, change.text);
+    const suffix = seamSeparator(left + prefix + change.text, right);
+    prefixes.set(position, prefix.length);
+    change.text = prefix + change.text + suffix;
   }
   let source = "";
   let cursor = 0;
@@ -462,13 +491,15 @@ function commit(state: DocumentState, plan: Plan): DocumentState {
   }
   source += state.source.slice(cursor);
   const anchors: SyntaxAnchor[] = plan.anchors.map((anchor) => {
-    const start = newStart.get(anchor.change)! + anchor.offset;
+    const start = newStart.get(anchor.change)! + prefixes.get(anchor.change)! + anchor.offset;
     return { id: anchor.id, span: { start, end: start + anchor.length } };
   });
   // Nodes inside replaced text are gone, unless an anchor carries them (with
   // their subtrees) to their new place. Their ids must not reach other nodes.
   const index = indexSyntax(state.identity);
-  const carried = new Set(plan.anchors.flatMap((anchor) => index.subtree(anchor.id).map((node) => node.id)));
+  const carried = new Set(plan.anchors.flatMap((anchor) =>
+    anchor.subtree === false ? [anchor.id] : index.subtree(anchor.id).map((node) => node.id),
+  ));
   const retired = state.identity.nodes
     .filter(
       (node) =>
@@ -716,6 +747,9 @@ class Layout {
 
   siblings(ids: readonly string[]): readonly SyntaxNode[] {
     const nodes = ids.map((id) => this.node(id));
+    if (nodes.some((node) => node.kind === "Comment" && node.parent !== null && this.node(node.parent).kind === "ReaderMacro")) {
+      throw new EditFailure("edit/reader-macro-operand", "Cannot wrap a comment between a reader macro and its operand");
+    }
     const parent = nodes[0]!.parent;
     if (nodes.some((node) => node.parent !== parent)) {
       throw new EditFailure("edit/not-siblings", "Targets must share a parent");

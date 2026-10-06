@@ -5,7 +5,7 @@ import { KernelTypeError, ArityError } from "../diagnostic/errors.js";
 import type { KernelError } from "../diagnostic/errors.js";
 import { Env } from "../Env.js";
 import { evalQuasiquote } from "./quasiquote.js";
-import { tagExpandedExpr } from "./source-trace.js";
+import { copyExpansion, tagExpandedExpr } from "./source-trace.js";
 import type { KValue, KMacro } from "./types.js";
 import { isKSExpr } from "./types.js";
 import type { EvaluatorRuntime, EvalFn } from "./eval-types.js";
@@ -146,8 +146,9 @@ export function applyMacro(
     const result = yield* evalExpr(macro.body, macroEnv, runtime);
 
     if (isKSExpr(result)) {
-      tagExpandedExpr(result.expr, { macroName: macro.name, loc: callLoc }, argExprs);
-      return yield* evalExpr(result.expr, callerEnv, runtime);
+      const expanded = copyExpansion(result.expr, argExprs);
+      tagExpandedExpr(expanded, { macroName: macro.name, loc: callLoc }, argExprs);
+      return yield* evalExpr(expanded, callerEnv, runtime);
     }
 
     return result;

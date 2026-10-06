@@ -33,7 +33,7 @@ export function tagExpandedExpr(
 ): void {
   const authored = new Set(args);
   const visit = (node: SExpr): void => {
-    if (authored.has(node)) return;
+    if (authored.has(node) || sourceOriginsOf(node).some((origin) => authored.has(origin))) return;
     const existing = sourceTraceMap.get(node);
     const macroOrigins = existing?.macroOrigins ?? [];
     sourceTraceMap.set(node, {
@@ -69,14 +69,36 @@ export function sourceOriginsOf(expr: SExpr): readonly SExpr[] {
   return originMap.get(expr) ?? [expr];
 }
 
+/** Copy template nodes before tagging them; author arguments retain identity. */
+export function copyExpansion<T extends SExpr>(expr: T, args: readonly SExpr[] = []): T {
+  const authored = new Set(args);
+  const copy = (node: SExpr): SExpr => {
+    if (authored.has(node)) return node;
+    switch (node._tag) {
+      case "List":
+      case "Vector":
+      case "Set":
+        return copySourceTrace(node, { ...node, items: node.items.map(copy) });
+      case "Map":
+        return copySourceTrace(node, {
+          ...node,
+          pairs: node.pairs.map(([key, value]) => [copy(key), copy(value)] as const),
+        });
+      default:
+        return copySourceTrace(node, { ...node });
+    }
+  };
+  return (authored.has(expr) ? copySourceTrace(expr, { ...expr }) : copy(expr)) as T;
+}
+
 /**
  * Mark `expansion` as the expansion of the macro call `call`. Returns a
- * shallow copy that carries the call as an origin: a macro can return the
+ * fresh tree that carries the call as an origin: a macro can return the
  * same template node from every expansion, and that node must not collect
  * every call's origins.
  */
-export function markExpansion<T extends SExpr>(call: SExpr, expansion: T): T {
-  const root = copySourceTrace(expansion, { ...expansion });
+export function markExpansion<T extends SExpr>(call: SExpr, expansion: T, args: readonly SExpr[] = []): T {
+  const root = copyExpansion(expansion, args);
   const origins = sourceOriginsOf(expansion);
   const callOrigins = sourceOriginsOf(call).filter((origin) => !origins.includes(origin));
   originMap.set(root, [...origins, ...callOrigins]);

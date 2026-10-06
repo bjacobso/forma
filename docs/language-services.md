@@ -320,3 +320,28 @@ from the same sources as the symbol index.
 - Evaluating top-level forms independently after a failure.
 - Incremental reparsing with green-node reuse.
 - Cross-file references in the language server beyond open documents.
+
+## Focused follow-up fixes
+
+Structural edits still use span-based plans. The commit step separates text
+when the reader's lexer finds a token or line comment crossing a new boundary;
+this prevents otherwise readable edits from fusing atoms or swallowing code.
+Replacing a container retains only its root ID, retiring its old descendants.
+Comments between a reader prefix and its operand remain comments.
+
+An unchanged outline with its own base prints the original source and identity
+exactly, including broken input. Canonical printing retains trailing whitespace
+inside comments and uses their full spans for row anchors. Edited children keep
+padding after their parent's opening delimiter.
+
+Macro expansion copies template trees before tagging them with a call's trace.
+Author arguments keep their origins; cached templates cannot acquire later
+calls' locations. Symbol indexing follows the current `type` and `class`
+forms and distinguishes runtime quasiquoted data from active unquotes.
+Reconciliation rejects anchors naming retired or previously dropped generated IDs.
+
+The broader tree matcher, explicit provenance model, shared scope walker,
+VM global-cell changes, and macro-aware refactoring redesign are deferred.
+These fixes preserve the host ABI and existing cross-document resolution rules.
+The regressions and properties live in `language-service-regressions.test.ts`;
+`FORMA_PROPERTY_SCALE` raises the local property counts.
