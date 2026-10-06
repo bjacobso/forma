@@ -55,7 +55,10 @@ export default defineConfig({
       },
       {
         text: "RFCs",
-        items: [{ text: "0001: One language, one syntax", link: "/rfcs/0001-unified-syntax" }],
+        items: [
+          { text: "0001: One language, one syntax", link: "/rfcs/0001-unified-syntax" },
+          { text: "0002: Modules and packages", link: "/rfcs/0002-modules-and-packages" },
+        ],
       },
       {
         text: "Project",
