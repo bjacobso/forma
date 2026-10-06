@@ -130,11 +130,13 @@ checkout currently has older version numbers. Foldkit and @foldkit/ui are
 local Foldworks patches. Once the primitives are released, unlink, generate
 a registry lockfile, recheck, and remove `private` before publication.
 
-PR CI first validates the existing registry dependencies with a frozen install,
-then builds the pinned Foldworks commit and links its packages for that job.
-The temporary tarballs, hook, and lockfile changes are never committed. Main
-and release workflows continue to require a frozen registry install. CI switches
-to that same install once the workbench is public and its release lockfile exists.
+CI, deployment, and release build jobs first validate the existing registry
+dependencies with a frozen install, then build the pinned Foldworks commit and
+link its packages for that job. Release metadata jobs install only the registry
+dependencies, and release versioning regenerates only their lockfile. The
+temporary tarballs, hook, and linked lockfile changes are never committed.
+Once the workbench is public and its release lockfile exists, all jobs use the
+full frozen registry install.
 
 Known first-release limits: evaluation stops at the first failure, observation
 has no step trace, host calls have no exact dynamic source span, operational
