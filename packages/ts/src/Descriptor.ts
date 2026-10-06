@@ -201,7 +201,7 @@ export type {
   HostedDsl,
   BootstrappedHostedDsl,
 } from "./descriptor/bootstrap.js";
-export { bootstrapFromSources, bootstrapFromFiles } from "./descriptor/bootstrap.js";
+export { bootstrapFromSources } from "./descriptor/bootstrap.js";
 
 // Form recognition and normalization
 export { recognizeForm, recognizeForms, type RecognizedForm } from "./descriptor/recognize.js";

@@ -15,7 +15,6 @@ import type { SExpr } from "../reader/types.js";
 import { reachableHelpers } from "../surface/helpers.js";
 import { patternBindings } from "../surface/members.js";
 import { unifiedFormHooks } from "../surface/form.js";
-import { readFileSync } from "node:fs";
 import { parsePrelude, type MetaFnDecl, type MetaFnKind } from "./meta-fn-decl.js";
 import { FormDescriptorRegistry } from "./FormDescriptorRegistry.js";
 import { ElaborationRegistry } from "./ElaborationRegistry.js";
@@ -217,29 +216,6 @@ function isExecutableHookKind(kind: MetaFnKind): kind is HookKind {
   );
 }
 
-// =============================================================================
-// Bootstrap from file paths
-// =============================================================================
-
-/**
- * Bootstrap from prelude file paths. Reads files synchronously.
- *
- * @param compilerPath - path to descriptor compiler prelude
- * @param domainPath - path to domain declaration prelude
- * @param additionalPaths - paths to additional prelude files
- */
-export function bootstrapFromFiles(
-  compilerPath: string,
-  domainPath: string,
-  ...additionalPathsAndOptions: readonly (string | BootstrapOptions)[]
-): BootstrappedPrelude {
-  const { additionalSources, options } = splitBootstrapInputs(additionalPathsAndOptions);
-  const compilerSource = readFileSync(compilerPath, "utf-8");
-  const domainSource = readFileSync(domainPath, "utf-8");
-  const fileSources = additionalSources.map((p) => readFileSync(p, "utf-8"));
-  return bootstrapFromSources(compilerSource, domainSource, ...fileSources, options);
-}
-
 function splitBootstrapInputs(values: readonly (string | BootstrapOptions)[]): {
   readonly additionalSources: readonly string[];
   readonly options: BootstrapOptions;
@@ -286,7 +262,7 @@ function parseHostedDsls(
 
 function nativeElaborationDisabled(): boolean {
   return ["1", "true", "TRUE", "yes", "YES"].includes(
-    process.env["FORMA_DISABLE_NATIVE_ELABORATION"] ?? "",
+    (typeof process === "undefined" ? undefined : process.env["FORMA_DISABLE_NATIVE_ELABORATION"]) ?? "",
   );
 }
 

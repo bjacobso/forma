@@ -123,6 +123,10 @@
     "./ontology": {
       "types": "./dist/Ontology.d.mts",
       "import": "./dist/Ontology.mjs"
+    },
+    "./node": {
+      "types": "./dist/Node.d.mts",
+      "import": "./dist/Node.mjs"
     }
   },
   "files": [
