@@ -9,7 +9,7 @@ test("analyzes the program and marks problems where they were written", async ({
   // The workflow runs steps before the step that writes what they read.
   const steps = tree(page).locator('[data-tone="warning"]');
   await expect(steps).toHaveCount(2);
-  await expect(steps.first()).toHaveAttribute("aria-label", /^background-check/);
+  await expect(steps.first()).toHaveAttribute("aria-label", /^use background-check/);
 });
 
 test("analyzes each edit and underlines the new type error", async ({ page }) => {
