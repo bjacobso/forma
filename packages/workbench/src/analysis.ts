@@ -49,7 +49,7 @@ export const Definition = S.Struct({
   scope: S.Literals(["global", "local"]),
   /** The defining name's node, when it is in this document. */
   nodeId: S.NullOr(S.String),
-  /** The form that introduced the name, such as `define` or `define-step`. */
+  /** The form that introduced the name, such as `define` or `step`. */
   form: S.String,
   formNodeId: S.NullOr(S.String),
   sourceId: S.String,
@@ -116,9 +116,15 @@ export type AnalyzeInput = Readonly<{
 /** Forms the evaluator and type checker handle themselves. */
 export const SPECIAL_FORMS: ReadonlySet<string> = new Set([
   "define",
-  "define-macro",
-  "define-type",
-  "define-typeclass",
+  "macro",
+  "type",
+  "typeclass",
+  "form",
+  "class",
+  "error",
+  "service",
+  "layer",
+  "do!",
   "instance",
   "fn",
   "let",

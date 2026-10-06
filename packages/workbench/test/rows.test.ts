@@ -5,7 +5,7 @@ import { nodeAt, rangeInRow, rowContaining, rowLayouts } from "../src/rows.js";
 
 const source = `; Pricing
 (define tax-rate 0.08)
-(define (total revenue)
+(define total [revenue]
   ; Revenue plus tax.
   (let [tax (* revenue tax-rate)]
     (+ revenue tax)))
@@ -30,7 +30,7 @@ describe("row layouts", () => {
     expect(texts).toEqual([
       "; Pricing",
       "define tax-rate 0.08",
-      "define (total revenue)",
+      "define total [revenue]",
       "; Revenue plus tax.",
       "let [tax (* revenue tax-rate)]",
       "+ revenue tax",

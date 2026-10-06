@@ -41,7 +41,7 @@ export const capabilities: ReadonlyArray<Capability> = [
         { kind: "type", name: "String" },
         { kind: "type", name: "String" },
       ],
-      result: { kind: "type", name: "Nil" },
+      result: { kind: "type", name: "Unit" },
     },
     perform: ([, message]) =>
       Effect.sync(() => {

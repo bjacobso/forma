@@ -6,7 +6,7 @@ describe("analyzing a program", () => {
   it("keeps the document's text and ids", async () => {
     const analysis = await analyzeSource(onboarding);
     expect(analysis.document.source).toBe(onboarding);
-    expect(analysis.rows.length).toBeGreaterThan(40);
+    expect(analysis.rows.length).toBeGreaterThan(30);
   });
 
   it("types code and elaborates descriptor forms in one document", async () => {
@@ -34,7 +34,7 @@ describe("analyzing a program", () => {
     expect([...kinds.get("special")!]).toEqual(expect.arrayContaining(["define", "let"]));
     expect([...kinds.get("macro")!]).toContain("cond");
     expect([...kinds.get("form")!]).toEqual(
-      expect.arrayContaining(["define-step", "define-workflow"]),
+      expect.arrayContaining(["step", "workflow"]),
     );
     expect([...kinds.get("declared")!]).toContain("background-check");
     expect([...kinds.get("local")!]).toEqual(expect.arrayContaining(["amount", "tax"]));
@@ -44,7 +44,7 @@ describe("analyzing a program", () => {
   });
 
   it("reports type errors and elaboration errors where the author wrote them", async () => {
-    const source = `${onboarding}\n(with-tax "ten")\n(define-step audit (:reads [:check]))\n`;
+    const source = `${onboarding}\n(with-tax "ten")\n(step audit :reads [:check])\n`;
     const analysis = await analyzeSource(source);
     const texts = analysis.diagnostics.map((diagnostic) => [
       diagnostic.phase,
@@ -52,8 +52,8 @@ describe("analyzing a program", () => {
     ]);
     expect(texts).toEqual(
       expect.arrayContaining([
-        ["typecheck", '(with-tax "ten")'],
-        ["elaborate", "(define-step audit (:reads [:check]))"],
+        ["typecheck", '"ten"'],
+        ["elaborate", "(step audit :reads [:check])"],
       ]),
     );
   });

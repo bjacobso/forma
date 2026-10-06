@@ -29,8 +29,8 @@ describe("the analysis adapter", () => {
       ["amount", "local"],
       ["tax-rate", "defined"],
     ]);
-    const steps = row("background-check");
-    expect(steps.tokens).toEqual([{ from: 0, to: 16, kind: "declared" }]);
+    const steps = row("use background-check");
+    expect(steps.tokens).toEqual([{ from: 0, to: 3, kind: "form" }, { from: 4, to: 20, kind: "declared" }]);
   });
 
   it("puts a diagnostic in the row that contains it, at its place in the text", async () => {
@@ -59,7 +59,7 @@ describe("the analysis adapter", () => {
       const start = onboarding.indexOf(text);
       return tokens.find((token) => token.from === start && token.to === start + text.length)?.kind;
     };
-    expect(at("define-workflow")).toBe("form");
+    expect(at("workflow")).toBe("form");
     expect(at("Directory.lookup")).toBe("capability");
     expect(sourceDiagnostics(analysis)).toEqual([]);
   });
@@ -80,7 +80,7 @@ describe("rows that do not read", () => {
     expect(broken.diagnostics[0]).toMatchObject({ from: 0, to: 16, code: "parse/syntax" });
     // The forms after it are still read and analyzed.
     expect(summary(analysis)).toMatchObject({ forms: 13, errors: 1 });
-    expect(row("define-step activate").tokens[0]).toMatchObject({ kind: "form" });
+    expect(row('step activate :system "Okta" :reads [:check :i9 :payroll]').tokens[0]).toMatchObject({ kind: "form" });
     expect(view.unplaced).toEqual([]);
   });
 });

@@ -5,7 +5,12 @@
 
 import type { Diagnostic } from "@formalang/host/types";
 import { declarationDiagnostic, type ElaboratedDeclaration } from "@formalang/ts/descriptor";
-import { identifySyntax, indexSyntax, type SyntaxIndex, type SyntaxNode } from "@formalang/ts/syntax";
+import {
+  identifySyntax,
+  indexSyntax,
+  type SyntaxIndex,
+  type SyntaxNode,
+} from "@formalang/ts/syntax";
 import type { DeclarationCheck } from "@formalang/workbench";
 
 type Flow =
@@ -35,19 +40,22 @@ const payloadOf = <T extends { readonly kind: string }>(
     : undefined;
 };
 
-/** The step references under a workflow's `(:steps ...)`, in source order, skipping flow heads. */
+/** References in typed `use` forms, in the same order as the projected flow. */
 const stepReferences = (syntax: SyntaxIndex, source: string, form: SyntaxNode): SyntaxNode[] => {
-  const text = (node: SyntaxNode) => source.slice(node.span.start, node.span.end);
-  const clause = syntax
-    .children(form.id)
-    .find((child) => child.kind === "List" && text(syntax.children(child.id)[0] ?? child) === ":steps");
-  if (clause === undefined) return [];
   const references: SyntaxNode[] = [];
-  const visit = (node: SyntaxNode, isHead: boolean) => {
-    if (node.kind === "Symbol" && !isHead) references.push(node);
-    syntax.children(node.id).forEach((child, index) => visit(child, node.kind === "List" && index === 0));
+  const visit = (node: SyntaxNode) => {
+    const children = syntax.children(node.id);
+    const [head, reference] = children;
+    if (
+      node.kind === "List" &&
+      head !== undefined &&
+      reference !== undefined &&
+      source.slice(head.span.start, head.span.end) === "use"
+    )
+      references.push(reference);
+    children.forEach(visit);
   };
-  syntax.children(clause.id).slice(1).forEach((child) => visit(child, false));
+  visit(form);
   return references;
 };
 
@@ -73,7 +81,8 @@ export const dataflow: DeclarationCheck = (declarations, source) => {
         occurrences.push({ step: flow.step, done });
         return new Set([...done, flow.step]);
       }
-      if (flow.kind === "sequence") return flow.items.reduce((after, item) => walk(item, after), done);
+      if (flow.kind === "sequence")
+        return flow.items.reduce((after, item) => walk(item, after), done);
       return new Set(flow.items.flatMap((item) => [...walk(item, done)]));
     };
     walk(workflow.flow, new Set());
@@ -86,9 +95,14 @@ export const dataflow: DeclarationCheck = (declarations, source) => {
         if (writers.length === 0 || writers.some((writer) => done.has(writer.name))) continue;
         const names = writers.map((writer) => writer.name).join(" or ");
         const message = writers.some((writer) => present.has(writer.name))
-          ? `${step} may read ${key} before ${names} writes it`
-          : `${step} reads ${key}, but ${names}, which writes it, is not in ${workflow.name}`;
-        const diagnostic = declarationDiagnostic(declaration, "workflow/read-before-write", message, "warning");
+          ? `${step} may read :${key} before ${names} writes it`
+          : `${step} reads :${key}, but ${names}, which writes it, is not in ${workflow.name}`;
+        const diagnostic = declarationDiagnostic(
+          declaration,
+          "workflow/read-before-write",
+          message,
+          "warning",
+        );
         const reference = references[position];
         diagnostics.push(
           reference === undefined
