@@ -34,16 +34,6 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/duplicate-key",
-      "message": "The map has the key \"a\" twice.",
-      "line": 9,
-      "column": 38,
-      "endLine": 9,
-      "endColumn": 41
-    },
-    {
-      "phase": "check",
-      "severity": "error",
       "code": "mechanics/unit-collection",
       "message": "(Map Unit) cannot tell a stored nil from a missing value; use Bool or an Option.",
       "line": 12,

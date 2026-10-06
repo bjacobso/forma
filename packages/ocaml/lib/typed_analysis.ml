@@ -105,8 +105,9 @@ and annotate_children callbacks env expr ty =
       |> List.map (fun (field : Core_ast.field) -> field.value)
       |> annotate_expr_list callbacks env
   | Core_ast.Get (_, record, _) -> annotate_expr callbacks env record
-  | Core_ast.Def (_, _, _, value) -> annotate_expr callbacks env value
-  | Core_ast.Ascribe (_, value, _) -> annotate_expr callbacks env value
+  | Core_ast.Def (_, _, Some _, value)
+  | Core_ast.Ascribe (_, value, _) -> annotate_checked_expr callbacks env value ty
+  | Core_ast.Def (_, _, None, value) -> annotate_expr callbacks env value
   | Core_ast.Match (_, scrutinee, arms) -> (
       match annotate_expr callbacks env scrutinee with
       | Error _ as error -> error
@@ -118,6 +119,16 @@ and annotate_children callbacks env expr ty =
       form.children
       |> List.map (fun (child : Core_ast.dsl_child) -> child.expr)
       |> annotate_expr_list callbacks env
+
+and annotate_checked_expr callbacks env expr expected =
+  match callbacks.check_expr env expr expected with
+  | Error _ as error -> error
+  | Ok (subst, ty) ->
+      let ty = Type_expr.apply_subst subst ty in
+      let env = Type_env.apply_subst_env subst env in
+      (match annotate_children callbacks env expr ty with
+       | Error _ as error -> error
+       | Ok children -> Ok (Typed_core.annotation expr ty :: children))
 
 and annotate_lambda_body callbacks env ty params rest_param body =
   let param_tys =

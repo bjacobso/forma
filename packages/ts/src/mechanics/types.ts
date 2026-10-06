@@ -44,7 +44,7 @@ export type MType =
   | { readonly kind: "brand"; readonly name: string; readonly base: MType }
   | { readonly kind: "struct"; readonly fields: readonly MField[] }
   | { readonly kind: "array"; readonly item: MType }
-  | { readonly kind: "map"; readonly value: MType }
+  | { readonly kind: "map"; readonly value: MType; readonly key?: MType }
   | { readonly kind: "tuple"; readonly items: readonly MType[] }
   | { readonly kind: "union"; readonly members: readonly MType[] }
   | { readonly kind: "option"; readonly item: MType }
@@ -157,7 +157,7 @@ export function typeFromJson(json: JsonValue | undefined, env: TypeEnvironment):
     case "Option":
       return { kind: "option", item: typeFromJson(json["item"], env) };
     case "Map":
-      return { kind: "map", value: typeFromJson(json["value"], env) };
+      return { kind: "map", value: typeFromJson(json["value"], env), ...(json["key"] ? {key: typeFromJson(json["key"], env)} : {}) };
     case "Literal": {
       const values = arrayItems(json["values"]).filter(
         (value): value is string | number | boolean =>
@@ -309,7 +309,7 @@ export function widenDeep(type: MType): MType {
     case "option":
       return { kind: "option", item: widenDeep(type.item) };
     case "map":
-      return { kind: "map", value: widenDeep(type.value) };
+      return { ...type, value: widenDeep(type.value) };
     case "tuple":
       return { kind: "tuple", items: type.items.map(widenDeep) };
     case "union":
@@ -355,7 +355,7 @@ export function applySubstitution(type: MType, subst: Substitution): MType {
     case "array":
       return { kind: "array", item: applySubstitution(type.item, subst) };
     case "map":
-      return { kind: "map", value: applySubstitution(type.value, subst) };
+      return { ...type, value: applySubstitution(type.value, subst), ...(type.key ? {key: applySubstitution(type.key, subst)} : {}) };
     case "option":
       return { kind: "option", item: applySubstitution(type.item, subst) };
     case "ref":
@@ -456,7 +456,7 @@ export function isAssignable(
       if (s.kind === "tuple") return s.items.every((item) => isAssignable(item, t.item, env, subst));
       return false;
     case "map":
-      return s.kind === "map" && isAssignable(s.value, t.value, env, subst);
+      return s.kind === "map" && isAssignable(s.value, t.value, env, subst) && (!t.key || isAssignable(s.key ?? tString, t.key, env, subst));
     case "tuple":
       return (
         s.kind === "tuple" &&

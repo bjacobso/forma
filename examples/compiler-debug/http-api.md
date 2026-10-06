@@ -11,19 +11,30 @@ translator is still pending.
 (error DebugDatabaseNotFound {:database String} :status 404)
 (error DebugBlobUploadError {:reason String} :status 400)
 (error InternalError {:message String} :status 500)
-
 (api debug-blobs
   :path-params {:database String :hash DebugBlobHash}
-  (endpoint upload
-    :method :post
-    :path "/db/{database}/debug-blobs"
-    :payload Bytes
-    :query {:filename (Option String)}
-    :success DebugBlobUploadResponse
-    :errors [DebugDatabaseNotFound DebugBlobUploadError InternalError])
-  (endpoint metadata
-    :method :get
-    :path "/db/{database}/debug-blobs/{hash}/metadata"
-    :success DebugBlobUploadResponse
-    :errors [DebugDatabaseNotFound InternalError]))
+  (endpoint
+    upload
+    :method
+    :post
+    :path
+    "/db/{database}/debug-blobs"
+    :payload
+    Bytes
+    :query
+    {:filename (Option String)}
+    :success
+    DebugBlobUploadResponse
+    :errors
+    [DebugDatabaseNotFound DebugBlobUploadError InternalError])
+  (endpoint
+    metadata
+    :method
+    :get
+    :path
+    "/db/{database}/debug-blobs/{hash}/metadata"
+    :success
+    DebugBlobUploadResponse
+    :errors
+    [DebugDatabaseNotFound InternalError]))
 ```

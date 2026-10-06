@@ -701,7 +701,7 @@ class Checker {
     if (existing) return existing;
     const entry = this.layerPayloads.get(name);
     if (!entry) {
-      this.error(useSpan, "mechanics/unknown-layer", `Unknown layer ${name}. Define it with __layer.`);
+      this.error(useSpan, "mechanics/unknown-layer", `Unknown layer ${name}. Define it with layer.`);
       return undefined;
     }
     if (this.layersInProgress.has(name)) {
@@ -957,7 +957,7 @@ class Checker {
       case "Fail":
         return this.fail(node["error"], scope, span);
       case "ServiceCall": {
-        const type = this.serviceCall(String(node["service"]), String(node["method"]), arrayItems(node["args"]), scope, span);
+        const type = this.serviceCall(String(node["service"]), String(node["method"]), arrayItems(node["args"]), scope, span, node["value"] === true);
         this.expectSuccess(type, expected, node);
         return type;
       }
@@ -1135,6 +1135,7 @@ class Checker {
     args: readonly JsonValue[],
     scope: Scope,
     span: JsonValue | undefined,
+    asValue = false,
   ): EffectType {
     if (this.pureOwner) {
       this.error(
@@ -1154,6 +1155,11 @@ class Checker {
       this.error(span, "mechanics/unknown-method", `Service ${service} has no method ${method}.`);
       args.forEach((arg) => this.value(arg, scope));
       return effectOf(tUnknown);
+    }
+    if (Boolean(signature.value) !== asValue) {
+      this.error(span, "mechanics/service-member-use", signature.value
+        ? `${service}.${method} is an effect value; access it without parentheses.`
+        : `${service}.${method} is a function; call it with parentheses.`);
     }
     this.arguments(`${service}.${method}`, signature.params, args, scope, span);
     return effectOf(
@@ -1344,7 +1350,18 @@ class Checker {
     const body = this.effect(node["body"], scope, expected);
     let remaining = new Map(body.errors);
     const handled: EffectType[] = [];
+    const seen = new Set<string>();
     for (const handler of handlers) {
+      if (seen.has(handler.errorType)) this.error(handler.span,"mechanics/duplicate-catch",`Duplicate catch for ${handler.errorType}.`);
+      seen.add(handler.errorType);
+      if (handler.errorType === "_") {
+        if (remaining.size === 0) this.error(handler.span,"mechanics/impossible-catch","Impossible catch: all errors are already handled.");
+        const errorType=union([...remaining.keys()].map(name=>({kind:"error" as const,name})));
+        const handlerScope=handler.binding==="_" ? scope : extend(scope,handler.binding,errorType);
+        handled.push(this.effect(handler.handler,handlerScope,expected));
+        remaining.clear();
+        continue;
+      }
       if (!this.errorNames.has(handler.errorType)) {
         this.error(handler.span, "mechanics/unknown-error", `Unknown error type ${handler.errorType}. Declare it with error.`);
       } else if (!body.errors.has(handler.errorType)) {
@@ -1555,7 +1572,7 @@ class Checker {
         const layerNode = args[1];
         const layerName = isRecord(layerNode) && layerNode["kind"] === "Var" ? String(layerNode["name"]) : undefined;
         if (!layerName) {
-          this.error(spanOf(layerNode) ?? span, "mechanics/provide", "provide expects the name of a layer defined with __layer.");
+          this.error(spanOf(layerNode) ?? span, "mechanics/provide", "provide expects the name of a layer defined with layer.");
           return body;
         }
         const layer = this.layerInfo(layerName, spanOf(layerNode) ?? span);
@@ -1609,7 +1626,7 @@ class Checker {
       case "decode": {
         const type = this.typeArg(args[0]);
         if (type.kind !== "named" || !this.schemas.has(type.name)) {
-          this.error(spanOf(args[0]) ?? span, "mechanics/decode-schema", "decode expects the name of a schema defined with __schema.");
+          this.error(spanOf(args[0]) ?? span, "mechanics/decode-schema", "decode expects the name of a schema defined with type.");
         }
         this.value(args[1], scope);
         return effectOf(type, setOf(["SchemaError"], span));
@@ -1797,6 +1814,9 @@ class Checker {
         }
         if (key === "__proto__") {
           this.error(spanOf(entry["key"]) ?? node["span"], "mechanics/record-key", "__proto__ cannot be a map key: JavaScript treats it as the prototype.");
+        }
+        if (key !== undefined && target.key && !isAssignable({kind: "literal", value: key}, target.key, this.env)) {
+          this.error(spanOf(entry["key"]) ?? node["span"], "mechanics/map-key", `Map key ${JSON.stringify(key)} is not ${showType(target.key)}.`);
         }
         if (key !== undefined) seen.add(key);
         this.value(entry["value"], scope, target.value);
@@ -2221,6 +2241,9 @@ class Checker {
     }
     this.checkParamNames(names.filter((name) => name !== "_"), "This fn", node["span"]);
     const target = expected ? resolve(expected, this.env) : undefined;
+    if (target?.kind !== "function" && names.length === 0) {
+      return {kind: "function", params: [], result: this.value(body, scope)};
+    }
     if (target?.kind !== "function") {
       this.error(
         node["span"],
@@ -2847,7 +2870,7 @@ function mapType(type: MType, f: (type: MType) => MType): MType {
     case "ref":
       return { kind: "ref", item: mapType(type.item, f) };
     case "map":
-      return { kind: "map", value: mapType(type.value, f) };
+      return { ...type, value: mapType(type.value, f), ...(type.key ? {key: mapType(type.key, f)} : {}) };
     case "tuple":
       return { kind: "tuple", items: type.items.map((item) => mapType(item, f)) };
     case "union":

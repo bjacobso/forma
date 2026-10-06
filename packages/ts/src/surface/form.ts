@@ -1,7 +1,10 @@
+import {buildDescriptorTreeLayoutAliases,rewriteDescriptorTreeLayoutAliases} from "../descriptor/descriptor-tree-aliases.js";
 import { createMetaBuiltins, type HostedMetaBuiltinsFactory } from "../descriptor/meta-builtins.js";
+import { datum } from "./datum.js";
+import { typeCheckDescriptorTree } from "../descriptor/descriptor-tree-check.js";
 import { coerceProgram } from "./coerce.js";
 import { reachableHelpers } from "./helpers.js";
-import { typeSyntaxErrors } from "./type-syntax.js";
+import { typeSyntaxErrors, unknownTypeReferences } from "./type-syntax.js";
 import { KernelTypeError } from "../diagnostic/errors.js";
 import { KKeyword, KSymbol, mapKey, mapKeyValue, isKKeyword, isKSymbol } from "../evaluator/types.js";
 import { Effect, Layer } from "effect";
@@ -95,7 +98,7 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
     const u = unwrapOption(t);
     const h = head(u);
     if (positional && (h === "Declares" || h === "Refers" || name(u) === "Symbol")) {
-      identifiers.push({ name: n, kind: "Symbol", ...(h === "Declares" ? { declaration: true } : {}) });
+      identifiers.push({ name: n, kind: h === "Declares" && u._tag === "List" && name(u.items[2]) === "String" ? "String" : "Symbol", ...(h === "Declares" ? { declaration: true } : {}) });
       if (h === "Declares") declares = name(arg(u));
     } else slots.push({ name: n, mode: h === "Expr" ? "expr" : many ? "form" : "value", required: head(t) !== "Option" && !many, ...(many ? { many: true } : {}), ...(h === "Expr" && name(arg(u)) ? { type: name(arg(u))! } : {}) });
   };
@@ -178,21 +181,17 @@ export function normalizeUnifiedForm(descriptor: FormDescriptor, expr: SExpr) {
   const slots = new Map<string, SlotValue>();
   for (const [n, v] of values) {
     if (descriptor.identifiers.some(i => i.name === n)) {
-      if (v._tag !== "Sym" || v.name.startsWith(":")) throw new Error(`${n} must be a symbol`);
-      identifiers.set(n, v.name);
+      const identifier = descriptor.identifiers.find(i => i.name === n)!;
+      if (identifier.kind === "String") {
+        if (v._tag !== "Str") throw new Error(`${n} must be a string`);
+        identifiers.set(n, v.value);
+      } else {
+        if (v._tag !== "Sym" || v.name.startsWith(":")) throw new Error(`${n} must be a symbol`);
+        identifiers.set(n, v.name);
+      }
     } else slots.set(n, { kind: "expr", value: v });
   }
   return { formName: descriptor.name, descriptor, identifiers, slots: new SimpleNormalizedSlots(slots), loc: expr.loc, rawExpr: expr };
-}
-
-function datum(e: SExpr): KValue {
-  switch (e._tag) {
-    case "Str": case "Num": case "Bool": return e.value;
-    case "Sym": return e.name === "nil" ? null : e.name.startsWith(":") ? KKeyword(e.name) : KSymbol(e.name);
-    case "List": case "Vector": return e.items.map(datum);
-    case "Map": return new Map(e.pairs.map(([k, v]) => [mapKey(datum(k))!, datum(v)]));
-    default: throw new Error(`Invalid form datum ${e._tag}`);
-  }
 }
 
 const projectionBuiltins: Record<string, BuiltinFn> = {
@@ -205,6 +204,7 @@ const projectionBuiltins: Record<string, BuiltinFn> = {
 function validLiteral(e: SExpr, type: SExpr): boolean {
   const t = unwrapOption(type);
   const h = head(t);
+  if (h === "Declares" && t._tag === "List" && name(t.items[2]) === "String") return e._tag === "Str";
   if (h === "Declares" || h === "Refers" || name(t) === "Symbol") return e._tag === "Sym" && !e.name.startsWith(":");
   if (name(t) === "String") return e._tag === "Str";
   if (name(t) === "Int") return e._tag === "Num" && Number.isInteger(e.value);
@@ -278,7 +278,22 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
           const type = (e: SExpr): SExpr => e._tag === "Vector" ? {...e,_tag:"List",items:e.items.map(type)} : e._tag === "Map" ? {...e,pairs:e.pairs.map(([k,v])=>[k,type(v)] as const)} : e;
           return type(result);
         };
-        const errors = contractErrors(args[1]!, syntax(args[0]!), spec.types, "fields");
+        const schema = syntax(args[0]!);
+        const referenceErrors = (value: KValue, type: SExpr): string[] => {
+          if (head(type) === "Id" && type._tag === "List" && typeof value === "string") {
+            const record = input.semanticEnv.getFact("declaration-hole-values", value);
+            const owner = record instanceof Map ? record.get("entity") as SExpr | undefined : undefined;
+            return owner && name(owner) === name(type.items[1]) ? [] : [`Unknown ${name(type.items[1])} ID ${value}`];
+          }
+          if (type._tag === "Map" && value instanceof Map) return type.pairs.flatMap(([key,type]) => {
+            const field = value.get(mapKey(datum(key))!);
+            return field === undefined ? [] : referenceErrors(field, type);
+          });
+          if (head(type) === "List" && type._tag === "List" && Array.isArray(value)) return value.flatMap(value => referenceErrors(value, type.items[1]!));
+          if (head(type) === "Option" && type._tag === "List" && value !== null) return referenceErrors(value, type.items[1]!);
+          return [];
+        };
+        const errors = [...contractErrors(args[1]!, schema, spec.types, "fields"), ...referenceErrors(args[1]!, schema)];
         return Effect.succeed(errors.map(message => new Map<string,KValue>([[":severity",KKeyword(":error")],[":slot",KKeyword(":fields")],[":message",message]])));
       },
       "row-of": args => {
@@ -346,8 +361,23 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         const t = spec.holes.get(n)!;
         if (!validLiteral(e, t)) diagnostics.push({ severity: "error", message: `${n} does not match its declared hole type`, loc: e.loc });
         const u = unwrapOption(t);
+        if (n === "layout" && registry) {
+          const keys = (hole: string) => new Set(values.get(hole)?._tag === "Map" ? (values.get(hole) as Extract<SExpr,{_tag:"Map"}>).pairs.flatMap(([key])=>fieldName(key) ?? []) : []);
+          const state=values.get("state");
+          const stateVars = new Map(state?._tag === "Map" ? state.pairs.map(([key,value])=>{
+            const kind=value._tag === "Map" ? value.pairs.find(([key])=>fieldName(key)==="kind")?.[1] : undefined;
+            return [fieldName(key)!,kind?._tag === "Str" ? kind.value : "any"] as const;
+          }) : []);
+          const aliases=buildDescriptorTreeLayoutAliases(registry.list(),{extensionKey:"view/layout-alias",defaultTo:"custom"});
+          const defs=values.get("defs");
+          const layouts=[e,...(defs?._tag === "Map" ? defs.pairs.map(([,layout])=>layout) : [])];
+          for (const layout of layouts) {
+            const checked=typeCheckDescriptorTree({layout:rewriteDescriptorTreeLayoutAliases(layout,aliases),descriptors:registry.list(),extensionKey:"view/component",stateVars,queryNames:keys("queries"),inputParams:keys("input"),defNames:keys("defs")});
+            for (const problem of checked.diagnostics) diagnostics.push({severity:problem.severity,message:problem.message,loc:layout.loc});
+          }
+        }
         const typeHoles = name(u) === "Type" ? [e] : head(u) === "Record" && name(arg(u)) === "Type" && e._tag === "Map" ? e.pairs.map(([,v]) => v) : [];
-        for (const syntax of typeHoles) for (const message of typeSyntaxErrors(syntax)) diagnostics.push({severity: "error", message, loc: syntax.loc});
+        for (const syntax of typeHoles) for (const message of [...typeSyntaxErrors(syntax), ...unknownTypeReferences(syntax, n => spec.types.has(n) || input.semanticEnv.getDeclaredNames().has(n) || input.semanticEnv.getFact("type-kind", n) !== undefined)]) diagnostics.push({severity: "error", message, loc: syntax.loc});
         const checkReferences = (value: SExpr, type: SExpr): void => {
           type = unwrapOption(type);
           if (head(type) === "List" && type._tag === "List" && value._tag === "Vector") {

@@ -63,6 +63,8 @@ let rec unify left right =
       (match unify_many (List.map snd shared) (List.map (fun (k,_) -> List.assoc k right) shared) with
        | Error _ as e -> e | Ok subst ->
          if extra_left=[] && extra_right=[] then unify (apply_subst subst left_tail) (apply_subst subst right_tail) |> Result.map (fun s -> compose_subst s subst)
+         else if apply_subst subst left_tail = apply_subst subst right_tail then
+           Error [diagnostic "typecheck/record-shape" "Incompatible fields on records sharing the same row tail."]
          else let common=fresh_tyvar () in
            match unify (apply_subst subst left_tail) (TOpenRecord (List.map (fun (k,t)->k,apply_subst subst t) extra_right,common)) with
            | Error _ as e -> e | Ok s -> let subst=compose_subst s subst in
@@ -180,6 +182,7 @@ let literal_base name =
 
 let rec assign actual expected =
   match actual,expected with
+  | TVar _, _ | _, TVar _ -> unify actual expected
   | TNamedApp ((("ErrorSet" | "RequirementSet") as kind),actual),TNamedApp (expected_kind,expected) when kind=expected_kind ->
       let covered = List.for_all (fun actual -> List.exists (fun expected -> actual=expected || match actual,expected with TNamed actual,TNamed expected when kind="RequirementSet" -> String.starts_with ~prefix:(expected ^ ".") actual | _ -> false) expected) actual in
       if covered then Ok [] else Error [diagnostic "typecheck/effect-set" "An effect's errors or requirements exceed its declared set."]
@@ -196,7 +199,18 @@ let rec assign actual expected =
           let remainder=TRecord (List.filter (fun (k,_) -> not (List.mem_assoc k required)) fields) in
           unify (apply_subst subst tail) (apply_subst subst remainder) |> Result.map (fun s -> compose_subst s subst))
   | TRecord a,TRecord b when List.map fst (sort_record_fields a)=List.map fst (sort_record_fields b) -> assign_many (List.map snd (sort_record_fields a)) (List.map snd (sort_record_fields b))
-  | _ -> (match application_view actual,application_view expected with Some (a,aa),Some (b,ba) when a=b -> assign_many aa ba | _ -> unify actual expected)
+  | _ ->
+      let assigned = match application_view actual, application_view expected with
+        | Some (actual_head, actual_args), Some (expected_head, expected_args) ->
+            (match unify actual_head expected_head with
+             | Error _ as error -> error
+             | Ok head_subst ->
+                 assign_many (List.map (apply_subst head_subst) actual_args)
+                   (List.map (apply_subst head_subst) expected_args)
+                 |> Result.map (fun subst -> compose_subst subst head_subst))
+        | _ -> unify actual expected in
+      assigned |> Result.map_error (List.map (fun (d:Type_diagnostic.t) ->
+        if d.code="typecheck/type-mismatch" then {d with message=Printf.sprintf "Expected %s, received %s." (ty_to_diagnostic_string expected) (ty_to_diagnostic_string actual)} else d))
 and assign_many actual expected = match actual,expected with
   | [],[] -> Ok []
   | a :: ar,b :: br -> (match assign a b with Error _ as e -> e | Ok s -> match assign_many (List.map (apply_subst s) ar) (List.map (apply_subst s) br) with Error _ as e -> e | Ok rest -> Ok (compose_subst rest s))

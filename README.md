@@ -36,16 +36,16 @@ Functions, collections, and control flow use compact Lisp syntax:
 Algebraic data types participate in inference and pattern matching:
 
 ```lisp
-(define-type (Maybe a) (Some a) (None))
+(type (Maybe a) (Tagged (Some a) None))
 (match (Some 1)
   (Some x) x
-  (None) 0)
+  None 0)
 ```
 
 Macros are Forma code that produces Forma code:
 
 ```lisp
-(define-macro when [test & body]
+(macro (when test body ...)
   `(if ~test (do ~@body) nil))
 ```
 
@@ -78,18 +78,12 @@ Type errors remain attached to author-written source:
 Operational effects make authority visible in the type:
 
 ```lisp
-(define-error ConsoleUnavailable
-  (:fields (field message String)))
-
-(define-service Console
-  (:methods
-    (print [message String]
-      (Effect Unit [ConsoleUnavailable] []))))
-
+(error ConsoleUnavailable {:message String})
+(service Console
+  (: print (-> String (Effect Unit [ConsoleUnavailable]))))
 (: log (-> String (Effect Unit [ConsoleUnavailable] [Console.print])))
-(define-operation log [message]
-  (do! [_ (Console.print message)]
-    (succeed nil)))
+(define log [message]
+  (do! [_ (Console.print message)] nil))
 ```
 
 Both engines infer the same contract (using their target-specific spelling for
@@ -129,43 +123,23 @@ Consider this real conformance fixture. It defines two entity schemas and a
 query over one of them:
 
 ```lisp
-(define-entity Department
-  (:field [department/name String {:required true}]))
-
-(define-entity Employee
-  (:field [employee/name String {:required true}])
-  (:field [employee/department (Ref Department)])
-  (:field [employee/active Bool]))
-
-(define-query employee-directory
-  (:from Employee)
-  (:where employee/active)
-  (:select [employee/name employee/department]))
+(entity Department {:name String})
+(entity Employee {:name String
+                  :department (Option (Id Department))
+                  :active (Option Bool)})
+(query employee-directory :from Employee
+  :where active :select [name department])
 ```
 
-`define-entity` is not a compiler special case. The ontology prelude describes
-it with `define-form`; this is an abridged excerpt of the registered descriptor:
+`entity` is not a compiler special case. The ontology prelude describes
+it with `form`; this is an abridged excerpt of the registered descriptor:
 
 ```lisp
-(define-form define-entity
-  (:phase domain)
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot field value
-      (:many true)
-      (:required true)
-      (:child-form field)
-      (:child-identifier name Value)
-      (:child-slot type expr (:positional true))))
-  (:bindings-fn entity/bindings)
-  (:construct-fn entity/construct)
-  (:construct
-    [kind "Entity"]
-    [name (or declaration-name "anonymous-entity")]
-    [fields (entity-fields field)])
-  (:declaration-type (row))
-  (:result-type (constant SchemaDecl)))
+(type EntityIR {:kind "Entity" :name Symbol :fields (List EntityFieldIR)})
+(form (entity name fields)
+  :types {:name (Declares SchemaDecl) :fields (Record Type)}
+  :ir EntityIR
+  {:kind "Entity" :name name :fields (fields->ir name fields)})
 ```
 
 The descriptor registry supplies compile-time hooks for bindings, validation,
@@ -221,33 +195,24 @@ operation-granular requirements. This excerpt is abridged; the
 service declaration.
 
 ```lisp
-(define-schema CheckoutRequest
-  (Struct
-    (field cart-id (Brand CartId String))
-    (field customer-id (Brand CustomerId String))
-    (field coupon (Optional String))
-    (field lines (Array CheckoutLine))))
-
-(define-error CheckoutRejected
-  (:fields
-    (field reason String)))
-
-(define-service CartRepo
-  (:methods
-    (load [request CheckoutRequest]
-      (Effect Cart [CheckoutRejected] []))))
-
+(type CartId (Brand String))
+(type CustomerId (Brand String))
+(type CheckoutRequest {:cart-id CartId
+                       :customer-id CustomerId
+                       :coupon (Option String)
+                       :lines (List CheckoutLine)})
+(error CheckoutRejected {:reason String})
+(service CartRepo
+  (: load (-> CheckoutRequest (Effect Cart [CheckoutRejected]))))
 (: checkout
   (-> CheckoutRequest
-      (Effect CheckoutResult
-        [CheckoutRejected]
+      (Effect CheckoutResult [CheckoutRejected]
         [CartRepo.load Pricing.price Orders.create])))
-(define-operation checkout [request]
-  (do!
-    [cart (<- (CartRepo.load request))
-     priced (<- (Pricing.price cart request))
-     order (<- (Orders.create priced))]
-    (succeed order)))
+(define checkout [request]
+  (do! [cart (CartRepo.load request)
+        priced (Pricing.price cart request)
+        order (Orders.create priced)]
+    order))
 ```
 
 The generator is available through the workspace package's public API.

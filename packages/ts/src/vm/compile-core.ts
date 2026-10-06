@@ -346,7 +346,10 @@ function compileList(
     }
   }
 
-  if (items.length === 1 && head._tag === "Sym" && /^[A-Z]/.test(head.name)) {
+  if (items.length === 1 && head._tag === "Sym"
+    && (head.name === "None" || head.name === "Option.None"
+      || (context.env?.lookup(`__constructor/${head.name}`) instanceof Map
+        && (context.env.lookup(`__constructor/${head.name}`) as Map<string, unknown>).get(":arity") === 0))) {
     compileSymbol(head.name, chunk, scope, globals, builtins, context, trace);
     return;
   }

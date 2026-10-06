@@ -6,10 +6,7 @@ let value_keyword key = function
           | _ -> None)
         entries
   | _ -> None
-let value_text = function
-  | Value.VString value | Value.VSymbol value | Value.VKeyword value ->
-      Some value
-  | _ -> None
+let value_text = Descriptor_extension.value_text
 let kind value =
   match value_keyword ":kind" value with
   | Some (Value.VString kind) -> Some kind
@@ -33,6 +30,7 @@ type slot_mode = Value | Expr | Form
 type typed_slot = {
   name : string;
   mode : slot_mode;
+  many : bool;
   typ : Value.t option;
   aliases : string list;
   child_identifiers : identifier_spec list;
@@ -346,6 +344,7 @@ let typed_slot = function
             {
               name;
               mode;
+              many = List.exists (function Value.VList [Value.VKeyword ":many"; Value.VBool true] | Value.VVector [Value.VKeyword ":many"; Value.VBool true] -> true | _ -> false) options;
               typ = List.find_map slot_type options;
               aliases = List.filter_map slot_alias options;
               child_identifiers = child_identifiers options;

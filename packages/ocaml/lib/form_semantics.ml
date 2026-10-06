@@ -98,14 +98,15 @@ let rec validate ?syntax ?(scope=[]) ~span env declaration =
                 (match scoped,value with
                 | Error _ as e,_ -> e
                 | Ok (Value.VMap bindings),(Value.VList children | Value.VVector children) ->
-                    let rec children_ = function [] -> check rest | value :: remaining ->
+                    let authored_children=match syntax with Some (Ast.List (_,Ast.Symbol (_,parent) :: args)) -> Surface_form.normalize_application env parent args |> List.filter_map (function Ast.List (_,(Ast.Symbol (_,n) | Ast.Keyword (_,n)) :: [value]) when n=":" ^ name hole || n=name hole -> Some value | _ -> None) | _ -> [] in
+                    let rec children_ index = function [] -> check rest | value :: remaining ->
                       (match Quote.syntax_of_value value with
                       | Error _ -> Error [diagnostic "elaborate/child-form" "Invalid child form syntax."]
-                      | Ok expr -> (match Surface_form.resolve_child env child expr with
+                      | Ok generated -> let expr=Option.value ~default:generated (List.nth_opt authored_children index) in (match Surface_form.resolve_child env child expr with
                           | None -> Error [diagnostic "elaborate/child-form" ("Expected child form " ^ child)]
                           | Some expr -> match Eval.evaluate_program_with_env env [expr] with
                             | Error _ as e -> e
-                            | Ok (declaration,_) -> match validate ~syntax:expr ~scope:(bindings @ scope) ~span env declaration with Error _ as e -> e | Ok diagnostics -> notices := List.rev_append diagnostics !notices; children_ remaining)) in children_ children
+                            | Ok (declaration,_) -> match validate ~syntax:expr ~scope:(bindings @ scope) ~span:(Ast.expr_span expr) env declaration with Error _ as e -> e | Ok diagnostics -> notices := List.rev_append diagnostics !notices; children_ (index+1) remaining)) in children_ 0 children
                 | _ -> Error [diagnostic "elaborate/child-form" "Child forms require a list and a record scope."])
             | Value.VList [Value.VSymbol "Refers";expected] -> (match check_reference expected value with Error _ as e -> e | Ok () -> check rest)
             | Value.VList [Value.VSymbol "List";Value.VList [Value.VSymbol "Refers";expected]] ->
@@ -132,5 +133,16 @@ let rec validate ?syntax ?(scope=[]) ~span env declaration =
                       | Error ds -> Error ds
                       | Ok (types,_,_) -> let actual=match List.rev types with t :: _ -> t.Typecheck.typ | [] -> Type_expr.TNil in (match Type_unify.assign actual expected with Ok _ -> check rest | Error ds -> Error (List.map (fun (d:Type_diagnostic.t)->diagnostic ~span:(Option.value ~default:(Ast.expr_span expr) d.span) d.code d.message) ds)))
                 | Ok _,_,_ -> Error [diagnostic "elaborate/scope" ":scope must return a record of bindings"])
-            | _ -> check rest in
-      check types
+            | Value.VList (Value.VSymbol "Declares" :: _) -> check rest
+            | _ ->
+                match Quote.syntax_of_value t with
+                | Error _ -> Error [diagnostic "elaborate/hole-type" "Invalid hole type"]
+                | Ok schema ->
+                    let problems=Surface_contract.errors env ~path:(name hole) value schema in
+                    if problems=[] then check rest else
+                    let span=Option.fold ~none:span ~some:Ast.expr_span (authored hole) in
+                    Error (List.map (diagnostic ~span "elaborate/hole-type") problems) in
+      check types |> Result.map_error (List.map (fun (d:Eval_common.diagnostic) ->
+        match d.span with
+        | Some source_span when source_span.source_id=span.Ast.source_id -> d
+        | _ -> {d with span=Some span}))

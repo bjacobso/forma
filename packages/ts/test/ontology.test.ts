@@ -92,7 +92,7 @@ describe("elaborateOntology", () => {
   test("reports unknown references and duplicate fields at the declaration", () => {
     const { ok, diagnostics } = elaborateOntology(
       [
-        "(entity A {:x String :x Int :b (Id Missing)})",
+        "(entity A {:x String :b (Id Missing)})",
         "(relation r A Ghost {})",
         "(query q :from Nowhere)",
       ].join("\n"),
@@ -100,11 +100,17 @@ describe("elaborateOntology", () => {
     );
     expect(ok).toBe(false);
     expect(diagnostics.map((d) => [d.code, formatDiagnostic(d)])).toEqual([
+      ["elaborate/hole-type", "m.lisp:1:25: Unknown type Missing"],
       ["elaborate/hole-type", "m.lisp:2:15: Unknown reference Ghost"],
       ["elaborate/hole-type", "m.lisp:3:16: Unknown reference Nowhere"],
-      ["ontology/duplicate-field", "m.lisp:1:1: A declares a/x twice"],
-      ["ontology/unknown-type", "m.lisp:1:1: a/b refers to unknown type Missing"],
     ]);
+  });
+
+  test("duplicate fields are rejected by the reader", () => {
+    const result = elaborateOntology("(entity A {:x String :x Int})", {sourceId:"duplicate.lisp"});
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics[0]?.code).toBe("parse/syntax");
+    expect(result.diagnostics[0]?.message).toContain("Duplicate map key");
   });
 
   test("resolves references across sources", () => {

@@ -123,7 +123,7 @@ let rec schema_expr_to_json expr =
                (kinded ~span "Array" [ ("item", item) ])
                metadata)))
   | Ast.List
-      (span, Ast.Symbol (_, ("Optional" | "optional")) :: item :: metadata)
+      (span, Ast.Symbol (_, (("Option" | "Optional" | "optional") as optional_kind)) :: item :: metadata)
     -> (
     match metadata_pairs metadata with
     | None ->
@@ -138,7 +138,7 @@ let rec schema_expr_to_json expr =
       | Ok item ->
           Ok
             (apply_metadata ~span
-               (kinded ~span "Optional" [ ("item", item) ])
+               (kinded ~span (if optional_kind="Option" then "Option" else "Optional") [ ("item", item) ])
                metadata)))
   | Ast.List (span, Ast.Symbol (_, ("Map" | "map")) :: value :: metadata) -> (
     match metadata_pairs metadata with

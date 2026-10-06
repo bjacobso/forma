@@ -2,10 +2,10 @@
 
 | | |
 | --- | --- |
-| Status | Implemented |
+| Status | Implemented grammar; remaining design proposals are identified below |
 | Created | 2026-10-05 |
 | Scope | Reader, core language, Effect surface, descriptor/meta layer, domain preludes, tooling |
-| Compatibility | Breaking. The project is pre-alpha with no published packages, so canonical authoring syntax replaces the previous grammar directly; an automated migration handles older source. |
+| Compatibility | Breaking. The project is pre-alpha with no published packages, so canonical authoring syntax replaces the previous grammar directly. Older source must be rewritten against the canonical grammar. |
 
 ## Summary
 
@@ -636,8 +636,8 @@ One pattern language for `match`, `catch`, `let` and `fn`:
 | `{:k p ...}`, `{:keys [a b]}` | record / map |
 | `[p ... & rest]` | sequence |
 
-`Option` and `Result` use their constructors: `(Some x)`, `None`, `(Success v)`,
-`(Failure e)`. A catch-all handler is a binder: `(catch eff (NotFound e) h1 err h2)`.
+`Option` and `Result` use their constructors: `(Some x)`, `None`, `(Ok v)`,
+`(Err e)`. A catch-all handler is a binder: `(catch eff (NotFound e) h1 err h2)`.
 `match` on strings or numbers still needs a final `_` or binder.
 
 ### 4.8 Effects, services and layers
@@ -1139,7 +1139,7 @@ in one place, with no registration lists.
 | `(do! [x (succeed v)] ...)` | `(do! [:let [x v]] ...)` |
 | `(do! [x (<- e)])`, `(let [x (<- e)])` | `(do! [x e])` |
 | `(get (get x :a) :b)` | `x.a.b` |
-| `(some x)` / `none` / `(success v)` / `(failure e)` | `(Some x)` / `None` / `(Success v)` / `(Failure e)` |
+| `(some x)` / `none` / `(success v)` / `(failure e)` | `(Some x)` / `None` / `(Ok v)` / `(Err e)` |
 | `(catch e (_ err) h)` | `(catch e err h)` |
 | `(define-typeclass (C a) (m T))` | `(typeclass (C a) (: m T))` |
 | `(Functor (f : (-> * *)))` | `(Functor f)` (kind inferred) |
@@ -1202,13 +1202,12 @@ would be ambiguous between a nullary constructor and a type reference
 - **Clean grammar boundary.** The canonical forms replace the old authoring grammar.
   Migration moves existing source; compiler projections remain private implementation
   details. This greenfield project has no compatibility window.
-- **Golden equivalence.** For every conformance program, the migrated source must produce
-  the same artifacts, generated TypeScript and diagnostics as the original, except for
-  differences listed in the PR. A small harness compares old and new outputs per case.
-- **Automated migration.** A `forma migrate` command applies rewrite rules over the
-  lossless tree using the outline codec and id-addressed edit scripts (PRs #19, #20), so
-  comments and formatting survive. The rule table is [§6](#_6-old-to-new-reference-table).
-  This also dogfoods the structural editing services.
+- **Reviewed semantic changes.** Generated code and artifacts are checked against
+  canonical fixtures. This is a greenfield grammar change, so old wire shapes are
+  not a compatibility contract.
+- **Source rewrite.** Repository programs use the canonical grammar. There is no
+  `forma migrate` command: a scope-blind source rewriter cannot preserve program
+  meaning safely.
 - **New spans point at new source.** Every desugaring reuses child nodes so diagnostics
   keep pointing at what the author wrote.
 
@@ -1250,7 +1249,7 @@ TypeScript-only.
    `mechanics/check.ts` (`match`/`catch` rules at `:1271`, `:2711`).
 4. **Migrate** `conformance/effect-typescript`, `conformance/operational-effects`,
    `docs/snippets/effect`, `apps/website/src/pipelines`, `apps/website/src/effectPageSources.ts`,
-   `docs/effect.md`, `docs/effect/reference.md`, and the README with `forma migrate`.
+   `docs/effect.md`, `docs/effect/reference.md`, and the README against the canonical grammar.
    Regenerate expected outputs; generated TypeScript should be unchanged except for
    intended differences (zero-argument effects become consts; `Literals` keep their values).
 5. **Remove** the old Effect forms.
@@ -1339,10 +1338,10 @@ and pattern work. Roughly 40–45 PRs in total.
 
 - Every new rule gets positive and negative fixtures (`expected-diagnostics.json`), with
   diagnostics pointing at author spans.
-- Golden-equivalence runs on every migration PR.
+- Reviewed artifact goldens document the resulting canonical IR.
 - Engine parity for every Phase 0, 2 and 3 change.
 - The Effect suite keeps typechecking and executing generated programs.
-- `forma migrate` is idempotent and is itself tested on the full corpus.
+- Canonical programs are checked, formatted, and tested in both engines.
 
 ## 9. Risks
 
@@ -1351,10 +1350,10 @@ and pattern work. Roughly 40–45 PRs in total.
 | **Noun heads collide** with expression vocabulary (`(query todos)` inside view layouts, a runtime `error` function). | Declaration heads are recognised only at top level; nested vocabulary is scoped by the enclosing form's hole types. Fallback: keep `define-` heads derived from the form name. |
 | **Dot access is ambiguous** between field paths, service members and attribute refs. | Resolution by scope at lowering, with a diagnostic on shadowing (a local named like a service). Keywords are never split. |
 | **`Option` coercion in record literals** adds an implicit rule. | Limited to record literals checked against a known type; documented; covered by fixtures. Alternative in [§10](#_10-open-questions). |
-| **Keyword semantics change** breaks stored data that contains `":todo/title"` strings. | Wire projection of keywords is defined explicitly; the ontology runtime keeps accepting the string form during migration. |
+| **Keyword semantics change** breaks stored data that contains `":todo/title"` strings. | Wire projection of keywords is defined explicitly; the new artifact contracts define the canonical representation. |
 | **Native projection bodies** diverge between engines. | Projection subset is small and fixed; parity suite compares native and interpreted results for every form. |
-| **Span loss** during desugaring or migration. | Desugarings reuse child nodes; migration operates on the lossless tree; span fixtures per rule. |
-| **Scale of migration** (268 `(:fields` across 45 files, 348 `define-form`s). | Automated `forma migrate`, one family per PR, golden equivalence. |
+| **Span loss** during desugaring or migration. | Desugarings reuse child nodes; formatting preserves parsed syntax; span fixtures cover desugaring. |
+| **Scale of migration** (268 `(:fields` across 45 files, 348 `define-form`s). | Reviewed source rewrites, one family at a time, with canonical fixtures. |
 
 ## 10. Open questions
 
@@ -1377,3 +1376,26 @@ and pattern work. Roughly 40–45 PRs in total.
 8. **Kind annotations** if inference is insufficient for some typeclasses.
 9. **Seed data naming.** `seed`, `fact`, or `data` for today's `define-record`.
 10. **Whether to keep `define-*` heads as permanent aliases** for users who prefer them.
+
+## Implementation boundary and artifact changes
+
+The reader, core grammar, typed `form` declarations, and Effect generator use
+this syntax. Child categories are lowercase aliases of IR unions and are an
+exception to the PascalCase convention for value types. Result constructors
+are `Ok` and `Err`. Modules and direct-style effects remain proposals in RFCs
+0002 and 0003. The old-to-new table describes design intent; string action
+references in hosted UI configuration have not become lexical references.
+
+Canonical artifacts intentionally change shape: view state, query bindings and
+task scopes use records; link fields use a map; record and link declarations
+carry identities. Schema contracts and source maps carry type and location
+information instead of duplicate `fieldTypes` and `loc` payload fields. Query
+and resolution references use their canonical declaration fields. Generated
+service parameters use `arg0`, `arg1`, and so on because arrow types do not
+name parameters. Tagged wire values use the exact constructor name (`Circle`),
+with `:tag` selecting the discriminator field. No stored-data compatibility
+layer or automated migration is provided.
+
+Record operations that add, remove, or select unknown fields require a closed
+record annotation or a typed `Map`. An open row does not describe the type of
+an overwritten hidden field, so those operations cannot infer a sound result.

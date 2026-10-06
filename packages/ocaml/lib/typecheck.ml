@@ -86,7 +86,7 @@ and infer_typeclass_named_application env span op args =
       Typed_builtin.infer_named_application
         Typed_builtin.
           {
-            infer_expr;
+            infer_expr; check_expr;
             infer_apply = Typed_apply.infer_apply Typed_apply.{ infer_expr; check_expr };
           }
         env op args
@@ -113,7 +113,7 @@ and infer_typeclass_named_application env span op args =
       Typed_builtin.infer_named_application
         Typed_builtin.
           {
-            infer_expr;
+            infer_expr; check_expr;
             infer_apply = Typed_apply.infer_apply Typed_apply.{ infer_expr; check_expr };
           }
         env op args
@@ -422,7 +422,7 @@ and infer_lambda ?expected env params rest_param body =
 
 and check_expr env value expected =
   let finish (subst,actual) = match assign (apply_subst subst actual) (apply_subst subst expected) with Error _ as e -> e | Ok s -> let subst=compose_subst s subst in Ok (subst,apply_subst subst expected) in
-  match value,expected with
+  let result = match value,expected with
   | _,TVar _ -> (match infer_expr env value with Error _ as e -> e | Ok result -> finish result)
   | Core_ast.Lit (_,lit),expected ->
       let precise=match lit with Core_ast.LInt n -> TNamed (string_of_int n) | Core_ast.LFloat n -> TNamed (string_of_float n) | Core_ast.LString s -> TNamed (Value.string_json s) | Core_ast.LQuoted _ -> TSyntax | Core_ast.LSymbol _ -> TSymbol | Core_ast.LKeyword s -> TNamed s | Core_ast.LBool b -> TNamed (string_of_bool b) | Core_ast.LNil -> TNil in
@@ -444,6 +444,8 @@ and check_expr env value expected =
         match inferred with Error _ as e -> e | Ok (s,t) -> loop (compose_subst s subst) ((field.label,t) :: acc) rest in loop [] [] fields
   | Core_ast.If (_,condition,yes,no),expected -> (match check_expr env condition TBool with Error _ as e -> e | Ok (s,_) -> match check_expr (apply_subst_env s env) yes expected with Error _ as e -> e | Ok (ys,_) -> let subst=compose_subst ys s in match check_expr (apply_subst_env subst env) no (apply_subst subst expected) with Error _ as e -> e | Ok (ns,t) -> Ok (compose_subst ns subst,t))
   | _ -> (match infer_expr env value with Error _ as e -> e | Ok result -> finish result)
+
+  in Result.map_error (Type_diagnostic.with_span (Core_ast.expr_span value)) result
 
 and infer_definition env _name signature value =
   match signature with None -> infer_expr env value | Some signature -> (match Type_resolve.resolve_polymorphic env signature with Error _ as e -> e | Ok (env,expected) -> check_expr env value expected)

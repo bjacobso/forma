@@ -109,8 +109,20 @@ export function elaborateEffectProgram(
   }
 
   let exprs: readonly SExpr[];
-  try { exprs = normalizeEffectProgram(lowerOntologyOperations(toSExprMany(redTree))); }
-  catch (error) { return {ok:false, declarations:[], diagnostics:[{phase:"project",severity:"error",code:"mechanics/ontology-operation",message: error instanceof Error ? error.message : String(error)}]}; }
+  const authored = toSExprMany(redTree);
+  const surfaceDiagnostic = (error: unknown, expression?: SExpr): EffectProgramDiagnostic => {
+    const loc = error instanceof Error && "loc" in error ? error.loc as SExpr["loc"] : expression?.loc;
+    return {phase:"project",severity:"error",code:"mechanics/ontology-operation",message:error instanceof Error ? error.message : String(error), ...(loc ? {span:locate(loc.start,loc.end)} : {})};
+  };
+  const surfaceErrors: EffectProgramDiagnostic[] = [];
+  for (const expression of authored) {
+    if (expression._tag !== "List" || expression.items[0]?._tag !== "Sym" || !["type", "class", "error", "service"].includes(expression.items[0].name)) continue;
+    try { normalizeEffectProgram([expression]); }
+    catch (error) { surfaceErrors.push(surfaceDiagnostic(error, expression)); }
+  }
+  if (surfaceErrors.length) return {ok:false,declarations:[],diagnostics:surfaceErrors};
+  try { exprs = normalizeEffectProgram(lowerOntologyOperations(authored)); }
+  catch (error) { return {ok:false, declarations:[], diagnostics:[surfaceDiagnostic(error, authored[0])]}; }
   const stray = strayForms(exprs);
   if (stray.length > 0) {
     return {
@@ -230,7 +242,7 @@ function strayForms(exprs: readonly SExpr[]): readonly { readonly expr: SExpr; r
     if (isMechanicsArtifactForm(expr)) continue;
     const usage = head ? formUsage.get(head) : undefined;
     if (usage) {
-      stray.push({ expr, message: `${head} is malformed; expected ${usage}.` });
+      stray.push({ expr, message: `${({__schema:"type",__service:"service",__error:"error",__class:"class"} as Record<string,string>)[head!] ?? head} is malformed; expected ${usage}.` });
       continue;
     }
     stray.push({

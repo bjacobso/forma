@@ -20,7 +20,9 @@
 import { normalizeEffectProgram,head,name,list,sym } from "../surface/effect.js";
 import type { SExpr } from "../reader/index.js";
 import type { CoreExpr } from "./core-expr.js";
-import { CDef } from "./core-expr.js";
+import { CDef, CTypeDef } from "./core-expr.js";
+import { parseUnifiedForm } from "../surface/form.js";
+import { typeDefinition } from "../surface/type-alias.js";
 import { InferenceError } from "./errors.js";
 import type { DSLTypeProvider } from "./dsl-provider.js";
 import { defaultBuiltins } from "../builtins/index.js";
@@ -78,6 +80,7 @@ function isDef(expr: SExpr): expr is SExpr & { _tag: "List" } {
  *   instead of CApp nodes (which would fail with "Unbound variable").
  */
 export function lowerProgram(exprs: readonly SExpr[], dslProvider?: DSLTypeProvider): CoreExpr[] {
+  const formTypes = new Map(exprs.flatMap(expr => {const entry=typeDefinition(expr);return entry ? [entry] : [];}));
   // Set the module-level provider for use by lower/lowerList/lowerDSLForm
   const prevProvider = getDslProvider();
   const prevInternalBindingCounter = getInternalBindingCounter();
@@ -108,6 +111,11 @@ export function lowerProgram(exprs: readonly SExpr[], dslProvider?: DSLTypeProvi
     const result: CoreExpr[] = [];
     for (const expr of expanded) {
       if (isTypeSig(expr)) continue;
+      if (head(expr) === "form") {
+        const descriptor = parseUnifiedForm(expr, formTypes)!;
+        result.push(CTypeDef({start:expr.loc.start,end:expr.loc.end},descriptor.name,undefined,undefined,undefined,"form"));
+        continue;
+      }
       const lowered = lower(expr);
       const annotation = lowered._tag === "Def" ? signatures.get(lowered.name) : undefined;
       result.push(lowered._tag === "Def" && annotation ? CDef(lowered.span, lowered.name, lowered.expr, annotation) : lowered);

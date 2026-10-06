@@ -174,7 +174,7 @@ describe("pipeline registry", () => {
   test("shows the actual thread-last prelude macro in the pipes demo", () => {
     const pipeline = getPipeline("pipes");
 
-    expect(pipeline.context?.code).toContain("(macro (->> x forms ...)");
+    expect(pipeline.context?.code).toMatch(/\(macro\s+\(->> x forms \.\.\.\)/);
     expect(pipeline.context?.code).toContain("threaded");
   });
 

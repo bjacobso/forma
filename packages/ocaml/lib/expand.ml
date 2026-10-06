@@ -158,7 +158,7 @@ let rec expand_expr ~eval_body env expr =
             | Error _ as error -> error
             | Ok expanded ->
                 expand_expr ~eval_body env
-                  (replace_generated_spans span expanded))
+                  (match Surface.core_program [replace_generated_spans span expanded] with [expanded] -> expanded | _ -> expanded))
         | _ ->
             map_result (expand_expr ~eval_body env) [] args
             |> Result.map (fun args ->
@@ -197,7 +197,7 @@ let expand_toplevel ~eval_body env expr =
             [
               diagnostic ~span:(Ast.expr_span macro_form)
                 "expand/define-macro-form"
-                "__macro expects a symbol name, parameter vector, and \
+                "macro expects a symbol name, parameter vector, and \
                  body forms.";
             ])
   | _ -> (

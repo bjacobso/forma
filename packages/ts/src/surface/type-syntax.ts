@@ -62,3 +62,20 @@ export function typeSyntaxErrors(expression: SExpr, allowedMetadata: ReadonlySet
   } else if (!["Sym", "Str", "Num", "Bool"].includes(type._tag)) errors.push("Expected type syntax");
   return errors;
 }
+
+/** Resolve names in an authored type against its declaration environment. */
+export function unknownTypeReferences(expression: SExpr, isKnown: (name: string) => boolean): readonly string[] {
+  const primitives = new Set(["String", "Int", "Number", "Bool", "Unit", "Json", "Any", "Unknown", "Never", "Symbol", "Keyword", "Type", "Syntax", "RuntimeExpr", "Bytes", "DateTime", "Duration", "List", "Option", "Map", "Record", "Union", "Tagged", "Id", "Brand", "Result", "->", "Effect", "Stream", "Layer", "Fiber", "Ref", "RefCell", "Scope", "OntologyRuntime"]);
+  const visit = (expr: SExpr): readonly string[] => {
+    const type = splitTypeMetadata(expr).type;
+    if (type._tag === "Sym") return type.name.startsWith(":") || /^[a-z]/.test(type.name) || primitives.has(type.name) || isKnown(type.name) ? [] : [`Unknown type ${type.name}`];
+    if (type._tag === "Map") return type.pairs.flatMap(([,value]) => visit(value));
+    if (type._tag === "List") {
+      if (head(type) === "Tagged") return type.items.slice(name(type.items[1]) === ":tag" ? 3 : 1).flatMap(arm => arm._tag === "List" && arm.items[1] ? visit(arm.items[1]) : []);
+      return type.items.flatMap(visit);
+    }
+    if (type._tag === "Vector") return type.items.flatMap(visit);
+    return [];
+  };
+  return visit(expression);
+}

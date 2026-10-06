@@ -4,7 +4,9 @@ let name = function Ast.Symbol (_,n) | Ast.Keyword (_,n) -> Some n | _ -> None
 let head = function Ast.List (_,h :: _) -> name h | _ -> None
 let sym e n = Ast.Symbol (Ast.expr_span e,n)
 let standard = ["Some","Option";"None","Option";"Ok","Result";"Err","Result"]
-let owner_of_type = function Some (Ast.List (_,(Ast.Symbol (_,n)) :: _)) | Some (Ast.Symbol (_,n)) -> Some n | _ -> None
+let rec owner_of_type = function
+  | Some (Ast.List (_,Ast.Symbol (_,"Effect") :: success :: _)) -> owner_of_type (Some success)
+  | Some (Ast.List (_,(Ast.Symbol (_,n)) :: _)) | Some (Ast.Symbol (_,n)) -> Some n | _ -> None
 let result_of_type = function Some (Ast.List (_,Ast.Symbol (_,"->") :: args)) -> (match List.rev args with last :: _ -> Some last | [] -> None) | t -> t
 let program expressions =
   let owners = Hashtbl.create 16 and payloads = Hashtbl.create 16 and aliases = Hashtbl.create 16 and signatures = Hashtbl.create 16 in

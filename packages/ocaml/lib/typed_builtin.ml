@@ -8,6 +8,7 @@ type env = Type_env.env
 
 type callbacks = {
   infer_expr : env -> Core_ast.expr -> (subst * ty, diagnostic list) result;
+  check_expr : env -> Core_ast.expr -> ty -> (subst * ty, diagnostic list) result;
   infer_apply :
     env ->
     subst ->
@@ -98,8 +99,8 @@ let infer_numeric callbacks env op args =
         | Ok (expr_subst, ty) -> (
             let subst = compose_subst expr_subst subst in
             let ty = apply_subst subst ty in
-            let numeric_ty = match ty with TFloat -> TFloat | _ -> TInt in
-            match unify ty numeric_ty with
+            let numeric_ty = if op = "mod" then TInt else match ty with TInt -> TInt | _ -> TFloat in
+            match assign ty numeric_ty with
             | Error _ as error -> error
             | Ok unify_subst ->
                 let subst = compose_subst unify_subst subst in
@@ -136,7 +137,7 @@ let infer_equality callbacks env = function
           match
             let rec keyword = function TKeyword -> true | TNamed n -> String.starts_with ~prefix:":" n | TNamedApp ("Union",members) -> List.for_all keyword members | _ -> false in
             let left=apply_subst subst left_ty and right=apply_subst subst right_ty in
-            if keyword left && keyword right then Ok [] else unify left right
+            if keyword left && keyword right then Ok [] else Result.map fst (join left right)
           with
           | Error _ as error -> error
           | Ok unify_subst -> Ok (compose_subst unify_subst subst, TBool)))
@@ -151,7 +152,7 @@ let infer_builtin_application_fallback callbacks env op args =
   | "not" -> infer_unary callbacks env TAny TBool args
   | "__vector" ->
       Typed_collection_builtin.infer_collection
-        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
+        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr; check_expr = callbacks.check_expr }
         env
         (fun ty -> TList ty)
         args
@@ -160,7 +161,7 @@ let infer_builtin_application_fallback callbacks env op args =
   | "<" | "<=" | ">" | ">=" -> infer_comparison callbacks env op args
   | "list" ->
       Typed_collection_builtin.infer_collection
-        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
+        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr; check_expr = callbacks.check_expr }
         env
         (fun ty -> TList ty)
         args
@@ -172,43 +173,43 @@ let infer_builtin_application_fallback callbacks env op args =
   | "str" | "format" -> infer_args_return callbacks env args TString
   | "count" ->
       Typed_collection_builtin.infer_count
-        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
+        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr; check_expr = callbacks.check_expr }
         env args
   | "first" ->
       Typed_collection_builtin.infer_first
-        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
+        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr; check_expr = callbacks.check_expr }
         env args
   | "nth" ->
       Typed_collection_builtin.infer_nth
-        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
+        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr; check_expr = callbacks.check_expr }
         env args
   | "rest" ->
       Typed_collection_builtin.infer_rest
-        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
+        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr; check_expr = callbacks.check_expr }
         env args
   | "map" | "list/map" ->
       Typed_collection_builtin.infer_map
-        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
+        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr; check_expr = callbacks.check_expr }
         env op args
   | "filter" | "list/filter" ->
       Typed_collection_builtin.infer_filter
-        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
+        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr; check_expr = callbacks.check_expr }
         env op args
   | "append" ->
       Typed_collection_builtin.infer_append
-        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
+        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr; check_expr = callbacks.check_expr }
         env args
   | "concat" ->
       Typed_collection_builtin.infer_concat
-        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
+        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr; check_expr = callbacks.check_expr }
         env args
   | "flat-map" | "list/flat-map" ->
       Typed_collection_builtin.infer_flat_map
-        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
+        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr; check_expr = callbacks.check_expr }
         env op args
   | "reduce" | "list/reduce" ->
       Typed_collection_builtin.infer_reduce
-        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
+        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr; check_expr = callbacks.check_expr }
         env args
   | "into" -> infer_args_return callbacks env args TMap
   | "__dictionary" -> (match args with
@@ -270,7 +271,7 @@ let infer_builtin_application_fallback callbacks env op args =
         env args
   | "conj" ->
       Typed_collection_builtin.infer_conj
-        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
+        Typed_collection_builtin.{ infer_expr = callbacks.infer_expr; check_expr = callbacks.check_expr }
         env args
   | "empty?" | "contains?" | "set/contains?" | "keyword?" | "symbol?" | "nil?" | "string?" | "number?"
   | "boolean?" | "list?" | "map?" | "fn?" ->

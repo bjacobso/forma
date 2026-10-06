@@ -212,8 +212,8 @@ try {
 
   if (
     unknownSchema?.ok !== false ||
-    unknownSchema.diagnostics?.[0]?.code !== "http/unknown-schema-ref" ||
-    !unknownSchema.diagnostics[0]?.message?.includes("MissingResponse")
+    unknownSchema.diagnostics?.[0]?.code !== "elaborate/hole-type" ||
+    unknownSchema.diagnostics[0]?.message !== "Unknown type MissingResponse"
   ) {
     throw new Error(
       `Expected unknown schema diagnostic:\n${JSON.stringify(unknownSchema, null, 2)}`,

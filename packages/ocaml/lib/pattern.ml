@@ -4,7 +4,12 @@ let rec match_value ?(constructor_spec=(fun _ -> None)) pattern value =
   let tag n = match constructor_spec n with Some (Value.VMap spec) -> (match Value.lookup_map spec (Value.VKeyword ":discriminator") with Some (Value.VString key) -> ":" ^ key | _ -> ":_tag") | _ -> ":_tag" in
   let matches_constructor name entries =
     let class_record = match constructor_spec name with Some (Value.VMap spec) -> Value.lookup_map spec (Value.VKeyword ":class") = Some (Value.VBool true) | _ -> false in
-    class_record || Value.lookup_map entries (Value.VKeyword (tag name)) = Some (Value.VString (List.hd (List.rev (String.split_on_char '.' name)))) in
+    if class_record then (match constructor_spec name with
+      | Some (Value.VMap spec) -> (match Value.lookup_map spec (Value.VKeyword ":fields") with
+          | Some (Value.VList fields | Value.VVector fields) -> List.for_all (fun field -> Value.lookup_map entries field <> None) fields
+          | _ -> false)
+      | _ -> false)
+    else Value.lookup_map entries (Value.VKeyword (tag name)) = Some (Value.VString (List.hd (List.rev (String.split_on_char '.' name)))) in
   match (pattern, value) with
   | Reader.Symbol (_, "_"), _ -> Some []
   | Reader.Symbol (_, name), Value.VMap entries when Surface.is_upper name ->

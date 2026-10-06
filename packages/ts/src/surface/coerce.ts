@@ -10,9 +10,15 @@ export function coerceProgram(exprs: readonly SExpr[], externalTypes: ReadonlyMa
   const aliases = new Map<string, SExpr>();
   const signatures = new Map<string, SExpr>(externalTypes);
   const constructors = new Map<string, readonly SExpr[]>();
+  const definitions = new Map<string, SExpr>();
+  const resolving = new Set<string>();
   for (const expr of exprs) {
     if (expr._tag !== "List") continue;
-    if (head(expr) === "__record-type" && expr.items[1]?._tag === "Sym" && expr.items[2]) constructors.set(expr.items[1].name, [expr.items[2]]);
+    if (head(expr) === "__record-type" && expr.items[1]?._tag === "Sym" && expr.items[2]) {
+      constructors.set(expr.items[1].name, [expr.items[2]]);
+      aliases.set(expr.items[1].name, expr.items[2]);
+    }
+    if (head(expr) === "define" && name(expr.items[1]) && expr.items[2]) definitions.set(name(expr.items[1])!, expr.items[2]);
     if (head(expr) === "__sum-type" && expr.items[1]?._tag === "Sym" && expr.items[2]) {
       aliases.set(expr.items[1].name, expr.items[2]);
     }
@@ -36,6 +42,8 @@ export function coerceProgram(exprs: readonly SExpr[], externalTypes: ReadonlyMa
   const call = (expr: SExpr, h: string, ...args: SExpr[]) => list(expr, [sym(expr, h), ...args]);
   const functionResult = (type?: SExpr) => type?._tag === "List" && head(type) === "->" ? type.items.at(-1) : undefined;
   const expressionType = (expr: SExpr, bindings: TypeBindings): SExpr | undefined => {
+    const h = head(expr) ?? name(expr);
+    if (["Some", "None", "Option.Some", "Option.None"].includes(h ?? "")) return call(expr, "Option", sym(expr, "Unknown"));
     const n = name(expr);
     if (n) {
       const declared=bindings.get(n) ?? signatures.get(n);
@@ -53,7 +61,41 @@ export function coerceProgram(exprs: readonly SExpr[], externalTypes: ReadonlyMa
       const owner=expressionType(expr.items[1],bindings), record=owner ? resolve(owner) : undefined;
       return record?._tag === "Map" ? record.pairs.find(([key])=>fieldName(key)===fieldName(expr.items[2]!))?.[1] : undefined;
     }
-    if (expr._tag === "List") return functionResult(bindings.get(head(expr) ?? "") ?? signatures.get(head(expr) ?? ""));
+    if (expr._tag === "List") {
+      if (h === "if" || h === "match") {
+        const branches = h === "if" ? expr.items.slice(2) : expr.items.filter((_, i) => i >= 3 && i % 2 === 1);
+        const types = branches.map(branch => expressionType(branch, bindings));
+        return types.length && types.every(type => type && head(resolve(type)) === "Option") ? types[0] : undefined;
+      }
+      if (h === "do") return expressionType(expr.items.at(-1)!, bindings);
+      if (h === "let" && expr.items[1]?._tag === "Vector") {
+        const locals = new Map(bindings);
+        const values = expr.items[1].items;
+        for (let i = 0; i < values.length; i += 2) {
+          const type = values[i + 1] && expressionType(values[i + 1]!, locals);
+          if (name(values[i]) && type) locals.set(name(values[i])!, type);
+        }
+        return expressionType(expr.items.at(-1)!, locals);
+      }
+      const declared = functionResult(bindings.get(h ?? "") ?? signatures.get(h ?? ""));
+      if (declared) return declared;
+      if (h && aliases.has(h) && constructors.has(h)) return sym(expr, h);
+      const definition = definitions.get(h ?? "");
+      if (h && definition && !resolving.has(h)) {
+        resolving.add(h);
+        try {
+          const locals = new Map(bindings);
+          if (head(definition) === "fn" && definition._tag === "List" && definition.items[1]?._tag === "Vector") {
+            definition.items[1].items.forEach((param, i) => {
+              const arg = expr.items[i + 1], type = arg && expressionType(arg, bindings);
+              if (name(param) && type) locals.set(name(param)!, type);
+            });
+            return expressionType(definition.items.at(-1)!, locals);
+          }
+          return expressionType(definition, locals);
+        } finally { resolving.delete(h); }
+      }
+    }
     return undefined;
   };
   const isOption = (expr: SExpr, bindings: TypeBindings) => {
@@ -68,13 +110,17 @@ export function coerceProgram(exprs: readonly SExpr[], externalTypes: ReadonlyMa
       return call(expr, "__dictionary", visit(expr, undefined, bindings));
     }
     const recurse = (value: SExpr, type?: SExpr) => visit(value, type, bindings);
+    if (target?._tag === "List" && head(target) === "Option" && !isOption(expr, bindings)
+      && !["if", "match", "let", "do"].includes(head(expr) ?? "")) {
+      return call(expr, "Option.Some", recurse(expr, target.items[1]));
+    }
     if (expr._tag === "Map") {
       const declared = target?._tag === "Map" ? target.pairs : [];
       const pairs = expr.pairs.map(([key, value]) => {
         const field = declared.find(([label]) => fieldName(label) === fieldName(key))?.[1];
         const fieldType = field ? resolve(field) : undefined;
         if (fieldType?._tag === "List" && head(fieldType) === "Option") {
-          return [key, isOption(value, bindings) ? recurse(value, fieldType) : call(value, "Option.Some", recurse(value, fieldType.items[1]))] as const;
+          return [key, recurse(value, fieldType)] as const;
         }
         return [key, recurse(value, field)] as const;
       });

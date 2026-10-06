@@ -608,6 +608,23 @@ class Generator {
       case "CatchTags": {
         this.use("Effect");
         const handlers = arrayItems(node["handlers"]).filter(isRecord);
+        if (handlers.at(-1)?.["errorType"] === "_") {
+          const callback=names.child();
+          const error=callback.bind("catch$error","error");
+          return layout("Effect.catch",[
+            inner=>this.effectExpression(node["body"],names,inner),
+            inner=> {
+              const branches=handlers.map(handler=> {
+                const scope=callback.child();
+                const binding=String(handler["binding"]);
+                const bound=binding!=="_" && freeIn(handler["handler"],binding) ? scope.bind(binding) : undefined;
+                const label=handler["errorType"]==="_" ? "default" : `case ${JSON.stringify(handler["errorType"])}`;
+                return `${inner}    ${label}: {\n${bound ? `${inner}      const ${bound} = ${error};\n` : ""}${inner}      return ${this.effectExpression(handler["handler"],scope,`${inner}      `)};\n${inner}    }`;
+              });
+              return `(${error}) => {\n${inner}  switch (${error}._tag) {\n${branches.join("\n")}\n${inner}  }\n${inner}}`;
+            },
+          ],indent);
+        }
         return layout(
           "Effect.catchTags",
           [
@@ -1447,7 +1464,9 @@ class Generator {
       case "array":
         return `ReadonlyArray<${this.typeTs(type.item)}>`;
       case "map":
-        return `{ readonly [key: string]: ${this.typeTs(type.value)} }`;
+        return type.key && !(type.key.kind === "prim" && type.key.name === "String")
+          ? `{ readonly [key in ${this.typeTs(type.key)}]?: ${this.typeTs(type.value)} }`
+          : `{ readonly [key: string]: ${this.typeTs(type.value)} }`;
       case "tuple":
         return `readonly [${type.items.map((item) => this.typeTs(item)).join(", ")}]`;
       case "union":

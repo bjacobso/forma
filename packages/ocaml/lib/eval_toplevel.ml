@@ -184,7 +184,7 @@ let eval ctx env = function
       Error
         [
           diagnostic "eval/define-macro-form"
-            "__macro expects a symbol name, parameter vector, and body \
+            "macro expects a symbol name, parameter vector, and body \
              forms.";
         ]
   | Reader.List
@@ -285,7 +285,7 @@ let eval ctx env = function
                 let types = match Env.lookup ("__form.types/" ^ op) env with Some (VMap fields) -> fields | _ -> [] in
                 let declares n = match Value.lookup_map types (VKeyword (":" ^ n)) with Some (VList (VSymbol "Declares" :: _)) -> true | _ -> false in
                 let positional = List.filter (fun e -> match Surface.head e with Some n -> not (String.starts_with ~prefix:":" n) | None -> true) args in
-                List.fold_left (fun env (i:Descriptor.identifier_spec) -> if declares i.name then match List.nth_opt positional i.positional_index with Some arg -> (match Surface.name arg with Some n -> Env.bind n value env | None -> env) | None -> env else env) env form.identifiers
+                List.fold_left (fun env (i:Descriptor.identifier_spec) -> if declares i.name then match List.nth_opt positional i.positional_index with Some arg -> (match arg with Ast.String (_,n) -> Env.bind n value env | _ -> match Surface.name arg with Some n -> Env.bind n value env | None -> env) | None -> env else env) env form.identifiers
             | _ -> (match Descriptor.declaration_binding_name args with Some name -> Env.bind name value env | None -> env)
           in
           Ok (value, env))

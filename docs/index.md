@@ -14,7 +14,7 @@ pageClass: forma-index
 <div class="fh-hero__copy">
 <p class="fh-eyebrow"><span class="fh-dot"></span>Pre-alpha research · MIT licensed</p>
 <h1>Build your own typed domain language.</h1>
-<p class="fh-lead">Forma is a small typed Lisp. You define domain keywords like <code>define-entity</code> or <code>define-operation</code> as library code. The compiler checks programs that use them, reports errors at the line you wrote, and emits typed artifacts that other systems consume.</p>
+<p class="fh-lead">Forma is a small typed Lisp. You define domain keywords like <code>entity</code> or <code>define</code> as library code. The compiler checks programs that use them, reports errors at the line you wrote, and emits typed artifacts that other systems consume.</p>
 <div class="fh-actions">
 <a class="fh-button fh-button--primary" href="/playground/demo/entities" target="_self">Try it in the playground</a>
 <a class="fh-button" href="#how-it-works">How it works</a>
@@ -51,7 +51,7 @@ pageClass: forma-index
 <div class="fh-section__head">
 <p class="fh-label">01 · Extension</p>
 <h2 id="library-heading">The keyword is library code.</h2>
-<p><code>define-entity</code> is not built into the compiler. A prelude describes it with <code>define-form</code>: its slots, the name it binds, its result type, and the hook that constructs its output. Swap the prelude and you have a different language on the same checked core.</p>
+<p><code>entity</code> is not built into the compiler. A prelude describes it with <code>form</code>: its slots, the name it binds, its result type, and the hook that constructs its output. Swap the prelude and you have a different language on the same checked core.</p>
 </div>
 <ol class="fh-steps">
 <li><strong>Define the form.</strong> A descriptor in a prelude teaches the compiler a new keyword.</li>
@@ -110,13 +110,13 @@ pageClass: forma-index
 <div class="fh-section__head">
 <p class="fh-label">03 · Diagnostics</p>
 <h2 id="errors-heading">Forget a capability, and it won't compile.</h2>
-<p>Here the body calls <code>Console.print</code>, but the signature declares no requirements. The typechecker rejects the operation and the diagnostic's span points at the author's <code>define-operation</code> form, not at generated code. Macro expansion keeps the same provenance.</p>
+<p>Here the body calls <code>Console.print</code>, but the signature declares no requirements. The typechecker rejects the operation and the diagnostic's span points at the author's <code>define</code> form, not at generated code. Macro expansion keeps the same provenance.</p>
 </div>
 <div class="fh-pair">
 <div>
 <p class="fh-file">log.lisp · signature missing <code>Console.print</code></p>
 
-<<< @/snippets/home/log-undeclared.lisp{7-9} [log.lisp]
+<<< @/snippets/home/log-undeclared.lisp{8-9} [log.lisp]
 
 </div>
 <div>
@@ -143,7 +143,7 @@ pageClass: forma-index
 | **Config languages** (CUE, Pkl, Dhall, Nickel) | Functions and schemas, not new forms | Strong, for data | JSON, YAML, and other data | No effect or capability tracking |
 | **Racket `#lang`** | Yes, full language construction | Whatever you build; Typed Racket is separate | Programs on the Racket runtime | Hard to embed in a TypeScript or browser stack |
 | **TypeScript builder DSLs** | Functions and objects | TypeScript's types | Runtime objects in one host | The DSL is the host program, so it's hard to review, sandbox, or port |
-| **Forma** | `define-form` descriptors in preludes | Hindley–Milner inference, descriptor validation, effect sets | Typed IR (`application/vnd.forma.ir+json`), Effect TypeScript | Pre-alpha, with one generated target so far |
+| **Forma** | `form` descriptors in preludes | Hindley–Milner inference, descriptor validation, effect sets | Typed IR (`application/vnd.forma.ir+json`), Effect TypeScript | Pre-alpha, with one generated target so far |
 
 </div>
 </section>
@@ -221,7 +221,7 @@ pageClass: forma-index
 <p>Edit the source and step through each compiler pass in your browser. Preview examples label any output pinned from the OCaml engine.</p>
 </div>
 <div class="fh-examples">
-<a href="/playground/demo/entities" target="_self"><span>Domain languages · 01</span><strong>Keywords are library code</strong><small>A prelude defines <code>define-entity</code>; the source elaborates into typed IR.</small><b>Open example →</b></a>
+<a href="/playground/demo/entities" target="_self"><span>Domain languages · 01</span><strong>Keywords are library code</strong><small>A prelude defines <code>entity</code>; the source elaborates into typed IR.</small><b>Open example →</b></a>
 <a href="/playground/demo/contracts" target="_self"><span>Domain languages · 02</span><strong>The type says what code can do</strong><small>Drop a capability from the signature and watch the typechecker reject it.</small><b>Open example →</b></a>
 <a href="/playground/demo/full-pipeline" target="_self"><span>The core language</span><strong>The complete pipeline</strong><small>Read, expand, typecheck, eval, and a live JSON target for one program.</small><b>Open example →</b></a>
 </div>

@@ -2,8 +2,5 @@
 
 ```lisp
 (export employee-directory)
-
-(query employee-directory
-  :from Employee
-  :select [name status department])
+(query employee-directory :from Employee :select [name status department])
 ```

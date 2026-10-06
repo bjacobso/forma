@@ -53,3 +53,25 @@ let rec errors ?(metadata_keys=[":indexed";":doc";":default"]) expr =
           List.concat_map (function Ast.Symbol (_,n) when String.length n > 0 && n.[0] >= 'A' && n.[0] <= 'Z' -> [] | Ast.List (_,[Ast.Symbol (_,n);payload]) when String.length n > 0 && n.[0] >= 'A' && n.[0] <= 'Z' -> errors ~metadata_keys payload | _ -> ["Tagged constructors require capitalized names and at most one payload type"]) arms
        else List.concat_map (errors ~metadata_keys) args)
   | _ -> ["Expected type syntax"])
+
+let unknown_references known expression =
+  let primitives=["String";"Int";"Number";"Bool";"Unit";"Json";"Any";"Unknown";"Never";"Symbol";"Keyword";"Type";"Syntax";"RuntimeExpr";"Bytes";"DateTime";"Duration";"List";"Option";"Map";"Record";"Union";"Tagged";"Id";"Brand";"Result";"->";"Effect";"Stream";"Layer";"Fiber";"Ref";"RefCell";"Scope";"OntologyRuntime"] in
+  let rec visit expression = match fst (split expression) with
+    | Ast.Symbol (_,n) -> if (String.length n > 0 && n.[0] >= 'a' && n.[0] <= 'z') || List.mem n primitives || known n then [] else ["Unknown type " ^ n]
+    | Ast.Map (_,fields) -> List.concat_map (fun (_,value)->visit value) fields
+    | Ast.List (_,Ast.Symbol (_,"Tagged") :: arms) ->
+        let arms=match arms with Ast.Keyword (_,":tag") :: _ :: rest -> rest | _ -> arms in
+        List.concat_map (function Ast.List (_,[_;payload]) -> visit payload | _ -> []) arms
+    | Ast.List (_,items) | Ast.Vector (_,items) -> List.concat_map visit items
+    | _ -> [] in visit expression
+
+let rec valid_literal schema value = match strip schema,value with
+  | Ast.List (_,Ast.Symbol (_,"Option") :: [_]),Value.VNil -> true
+  | Ast.List (_,Ast.Symbol (_,"Option") :: [item]),value -> valid_literal item value
+  | Ast.List (_,Ast.Symbol (_,"Union") :: members),value -> List.exists (fun member -> valid_literal member value) members
+  | Ast.String (_,expected),Value.VString actual -> expected=actual
+  | Ast.Keyword (_,expected),Value.VKeyword actual -> expected=actual
+  | Ast.Int (_,expected),Value.VInt actual -> expected=actual
+  | Ast.Bool (_,expected),Value.VBool actual -> expected=actual
+  | (Ast.String _ | Ast.Keyword _ | Ast.Int _ | Ast.Bool _),_ -> false
+  | _ -> true

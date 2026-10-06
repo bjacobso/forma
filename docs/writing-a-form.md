@@ -27,8 +27,10 @@ Use `(Refers Greeting)` for a hole that must resolve to an existing greeting.
 Use `Type` for a type expression, `Syntax` for syntax retained as data, and
 `(Expr Bool)` for an ordinary expression checked as a predicate. `(Record Type)`
 accepts a record of type expressions. A pattern ending in `child ...`, paired
-with `(List ChildIR)` in `:types`, parses and projects each child before passing
-its value to the parent.
+with `(List child)` in `:types`, parses and projects each child before passing
+its value to the parent. Here `child` is a form name or a lowercase category
+alias, such as `(type child (Union TextIR ImageIR))`. A record IR type by itself
+does not identify which child forms may appear.
 
 ## Checking and scope
 

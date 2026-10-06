@@ -23,17 +23,17 @@ Status key:
 | Effect construct | Forma surface | Status | Case |
 | --- | --- | --- | --- |
 | `Schema.Struct` + `typeof X.Type` | `(type N {:f T ...})` | supported | crud-users |
-| Optional fields (`Schema.optionalKey`) | `(Optional T)` in a field; `get` returns `(Option T)` | supported | crud-users |
-| `Schema.Array`, `Schema.Record` | `(Array T)`, `(Map T)`; `get`/`assoc`/`dissoc`/`keys`/`vals` on maps | supported | crud-users, pure-domain-logic |
-| `Schema.Literal(s)` | `(Enum a b)`, `(Literal ...)` | supported | crud-users |
+| Optional fields (`Schema.optionalKey`) | `(Option T)` in a field; `get` returns `(Option T)` | supported | crud-users |
+| `Schema.Array`, `Schema.Record` | `(List T)`, `(Map String T)`; `get`/`assoc`/`dissoc`/`keys`/`vals` on maps | supported | crud-users, pure-domain-logic |
+| `Schema.Literal(s)` | `(Union "a" "b")`, literal types | supported | crud-users |
 | `Schema.Union`, `Schema.Tuple` | `(Union A B)`, `(Tuple A B)` | supported | schemas-and-decoding |
 | Tagged unions | `(Tagged :tag tag (Ctor {...}) ...)`, matched by tag | supported | schemas-and-decoding, pure-domain-logic |
 | Brands (`Schema.brand`, `.make`) | `(type Name (Brand T))`, `(Name value)` | supported | crud-users, schemas-and-decoding |
 | Annotations | `(T :doc "...")`, `:identifier`, `:title`, `:pattern` | supported | schemas-and-decoding |
 | `Schema.Class` | `(class N {...})`, `(N {...})` | supported | pure-domain-logic |
 | `Schema.decodeUnknownEffect` | `(decode Schema value)`, fails with `SchemaError` | supported | schemas-and-decoding |
-| `Option` | `(Option T)`, `some`, `none`, `match`, `get-or-else`, `is-some` | supported | crud-users, pure-domain-logic |
-| `Result` | `(Result A E)`, `(result eff)`, `match` on `success`/`failure` | supported | typed-errors, pure-domain-logic |
+| `Option` | `(Option T)`, `Some`, `None`, `match`, `get-or-else`, `is-some` | supported | crud-users, pure-domain-logic |
+| `Result` | `(Result A E)`, `(result eff)`, `match` on `Ok`/`Err` | supported | typed-errors, pure-domain-logic |
 | Recursive schemas (`Schema.suspend`) | none | missing | rejected with a diagnostic (reject-recursive-schema) |
 | `Schema.TaggedClass`, transformations, filters beyond `:pattern` | none | missing | |
 
@@ -129,9 +129,9 @@ output with the TypeScript compiler API.
 
 | Effect construct | Forma surface | Status | Notes |
 | --- | --- | --- | --- |
-| `Schema.Struct` | `(define-schema N (Struct [f T] ...))` | partial | The Effect TS module emits a plain `interface` and no runtime schema. The separate Schema module emits `Schema.Struct`. The two modules are not linked. |
-| Optional fields | `(Optional T)` in a field | partial | The interface uses `readonly f?: T`. The Schema module uses `Schema.optional`, which is `T \| undefined` and does not match the interface under `exactOptionalPropertyTypes`. |
-| `Schema.Array`, `Schema.Record` | `(Array T)`, `(Map T)` | supported | |
+| `Schema.Struct` | `(type N {:f T ...})` | partial | The Effect TS module emits a plain `interface` and no runtime schema. The separate Schema module emits `Schema.Struct`. The two modules are not linked. |
+| Optional fields | `(Option T)` in a field | partial | The interface uses `readonly f?: T`. The Schema module uses `Schema.optional`, which is `T \| undefined` and does not match the interface under `exactOptionalPropertyTypes`. |
+| `Schema.Array`, `Schema.Record` | `(List T)`, `(Map String T)` | supported | |
 | Literal unions | `(Enum a b)`, `(Literal ...)` | partial | Types are correct. The Schema module emits Effect 3 `Schema.Literal("a", "b")`, which does not typecheck in Effect 4 (`Schema.Literals([...])`). |
 | `Schema.Union` | `(Union A B)` | partial | Types are correct. The Schema module emits `Schema.Union(a, b)`, which does not typecheck in Effect 4 (`Schema.Union([a, b])`). |
 | `Schema.Tuple` | `(Tuple A B)` | partial | Same Effect 3 call shape as `Union`. |
@@ -159,7 +159,7 @@ output with the TypeScript compiler API.
 
 | Effect construct | Forma surface | Status | Notes |
 | --- | --- | --- | --- |
-| `Context.Service` class | `(define-service S (:methods ...))` | supported | |
+| `Context.Service` class | `(service S (: m Type) ...)` | supported | |
 | Service method calls | `(S.method args)` | supported | |
 | Zero-argument methods | `(m [] (Effect ...))` | supported | |
 | Requirements in signatures | `[S.method ...]` | supported | Capability-granular. They collapse to service tags in TypeScript. |

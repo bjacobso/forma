@@ -302,7 +302,7 @@ export interface CTypeDef {
   readonly span: Span;
   readonly name: string;
   readonly typeExpr?: TypeExpr | undefined;
-  readonly source?: "type" | "schema" | "error" | "class" | undefined;
+  readonly source?: "type" | "schema" | "error" | "class" | "form" | undefined;
   /** Type parameters for ADTs (e.g., ["a"] for Option) */
   readonly typeParams?: readonly string[] | undefined;
   /** Constructor definitions for ADTs */
@@ -561,7 +561,7 @@ export const CTypeDef = (
   typeExpr?: TypeExpr,
   typeParams?: readonly string[],
   constructors?: readonly ADTConstructor[],
-  source?: "type" | "schema" | "error" | "class",
+  source?: "type" | "schema" | "error" | "class" | "form",
 ): CTypeDef => ({
   _tag: "TypeDef",
   id: freshNodeId(),

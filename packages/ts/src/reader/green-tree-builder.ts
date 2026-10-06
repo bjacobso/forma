@@ -306,6 +306,7 @@ function parseMap(state: BuilderState): FormResult {
   children.push(consumeToken(state));
 
   // Key-value pairs
+  const keys = new Set<string>();
   let elementCount = 0;
   while (state.pos < state.tokens.length) {
     const twt = current(state);
@@ -346,6 +347,14 @@ function parseMap(state: BuilderState): FormResult {
       continue;
     }
 
+    if (elementCount % 2 === 0) {
+      const token = twt.token;
+      const key = token.type === "string" ? `string:${token.value}` : token.type === "keyword" ? `keyword:${token.name}` : undefined;
+      if (key !== undefined) {
+        if (keys.has(key)) errors.push(new ParseError({message: "Duplicate map key", loc: token.loc}));
+        keys.add(key);
+      }
+    }
     const result = parseForm(state);
     children.push(result.node);
     errors.push(...result.errors);

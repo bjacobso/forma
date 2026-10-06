@@ -1,0 +1,15 @@
+{
+  "typescript": "not-projected",
+  "diagnostics": [
+    {
+      "phase": "read",
+      "severity": "error",
+      "code": "read/syntax",
+      "message": "Duplicate map key",
+      "line": 2,
+      "column": 24,
+      "endLine": 2,
+      "endColumn": 27
+    }
+  ]
+}

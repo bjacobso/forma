@@ -67,10 +67,16 @@ export function schemaExpressionTs(schema: JsonValue | undefined, naming: Schema
       return structSchema(schema["fields"], naming);
     case "Array":
       return `Schema.Array(${schemaExpressionTs(schema["item"], naming)})`;
+    case "Option":
+      return `Schema.Option(${schemaExpressionTs(schema["item"], naming)})`;
     case "Optional":
       return `Schema.optionalKey(${schemaExpressionTs(schema["item"], naming)})`;
-    case "Map":
-      return `Schema.Record(${schema["key"] ? schemaExpressionTs(schema["key"], naming) : "Schema.String"}, ${schemaExpressionTs(schema["value"], naming)})`;
+    case "Map": {
+      const key = schema["key"];
+      const value = schemaExpressionTs(schema["value"], naming);
+      const finite = isRecord(key) && ["Literal", "Union", "Ref"].includes(String(key["kind"]));
+      return `Schema.Record(${key ? schemaExpressionTs(key, naming) : "Schema.String"}, ${finite ? `Schema.optionalKey(${value})` : value})`;
+    }
     case "Ref":
       return typeof schema["name"] === "string" ? naming.schemaConst(schema["name"]) : "Schema.Unknown";
     case "Brand":

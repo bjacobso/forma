@@ -108,6 +108,7 @@ try {
 
   expectOk("load dependencies", await request({op: "loadSource", sessionId, sourceId: "elaborate/dependencies", source: `
 (entity Department {:name String})
+(seed Department "department:platform" {:name "Platform"})
 (view employee-directory-view :title "Employees" :subject session :query employee-directory)
 (view department-directory-view :title "Departments" :subject session :query employee-directory)`}));
   const loaded = await request({ op: "loadSource", sessionId, sourceId, source });

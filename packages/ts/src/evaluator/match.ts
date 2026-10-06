@@ -191,6 +191,10 @@ function matchPatternNode(
       const discriminator = spec instanceof Map ? spec.get(":discriminator") : "_tag";
       const arity = spec instanceof Map ? spec.get(":arity") : pattern.items.length;
       if (!(value instanceof Map) || (!(spec instanceof Map && spec.get(":class") === true) && value.get(`:${String(discriminator)}`) !== pattern.name.split(".").at(-1)) || arity !== pattern.items.length) return false;
+      if (spec instanceof Map && spec.get(":class") === true) {
+        const fields = spec.get(":fields");
+        if (Array.isArray(fields) && fields.some(key => !value.has(mapKey(key)!))) return false;
+      }
       const payload = spec instanceof Map && spec.get(":record") === true ? [value] : arity === 0 ? [] : arity === 1 ? [value.get(":value") ?? null] : value.get(":values");
       return Array.isArray(payload) && pattern.items.every((p,i)=>matchPatternNode(p,payload[i]!,bindings,constructorSpec));
     }

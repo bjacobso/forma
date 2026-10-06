@@ -152,6 +152,8 @@ let infer_assoc_result subst record_ty key value_ty =
       match record_ty with
       | TRecord fields | TOpenRecord (fields,_) -> (
           match record_label_of_key key with
+          | Some label when (match record_ty with TOpenRecord _ -> not (List.mem_assoc label fields) | _ -> false) ->
+              Error [diagnostic "typecheck/open-record" "Updating an unknown field requires a closed record or a typed Map."]
           | Some label ->
               Ok
                 ( subst,
@@ -192,6 +194,7 @@ let infer_merge callbacks env args =
             | Ok (subst,ty) -> let env=apply_subst_env subst env in
                 match ty with
                 | TRecord next -> loop subst env (merge_record_fields fields next) tail rest
+                | TOpenRecord _ when List.length args > 1 -> Error [diagnostic "typecheck/row-merge" "Merging records requires closed records or typed Maps."]
                 | TOpenRecord (next,next_tail) when tail=None -> loop subst env (merge_record_fields fields next) (Some next_tail) rest
                 | TOpenRecord _ -> Error [diagnostic "typecheck/row-merge" "Merging two open records requires a known shared row."]
                 | TMap | TAny -> Ok (subst,TMap)
@@ -217,6 +220,8 @@ let infer_dissoc_result subst record_ty keys =
       match record_ty with
       | TRecord fields | TOpenRecord (fields,_) -> (
           match record_labels_of_keys keys with
+          | Some _ when (match record_ty with TOpenRecord _ -> true | _ -> false) ->
+              Error [diagnostic "typecheck/open-record" "Removing fields requires a closed record or a typed Map."]
           | Some labels ->
               Ok (subst, (let fields=remove_record_fields labels fields in match record_ty with TOpenRecord (_,tail) -> TOpenRecord (fields,tail) | _ -> TRecord fields))
           | None -> Ok (subst, TMap))
@@ -244,6 +249,8 @@ let infer_select_keys_result subst record_ty keys =
       match record_ty with
       | TRecord fields | TOpenRecord (fields,_) -> (
           match record_labels_of_key_collection keys with
+          | Some labels when (match record_ty with TOpenRecord _ -> List.exists (fun key -> not (List.mem_assoc key fields)) labels | _ -> false) ->
+              Error [diagnostic "typecheck/open-record" "Selecting an unknown field requires a closed record or a typed Map."]
           | Some labels ->
               Ok (subst, TRecord (select_record_fields labels fields))
           | None -> Ok (subst, TMap))

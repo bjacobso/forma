@@ -269,6 +269,11 @@ export const unifyRows = (
     const aTail = applyRow(s1, A.tail);
     const bTail = applyRow(s1, B.tail);
 
+    if (aTail._tag === "RVar" && bTail._tag === "RVar" && aTail.id === bTail.id
+      && (onlyA.size > 0 || onlyB.size > 0)) {
+      return yield* ctx.fail(origin, { message: "Incompatible fields on records sharing the same row tail" });
+    }
+
     // Closed record missing fields => error
     if (onlyB.size > 0 && aTail._tag === "REmpty") {
       return yield* ctx.fail(origin, {

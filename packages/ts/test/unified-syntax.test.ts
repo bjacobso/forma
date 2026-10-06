@@ -447,7 +447,7 @@ describe('named record values', () => {
 
 describe('record inference and metadata defaults', () => {
   test('inferred record updates retain fields provided by callers', async () => {
-    const source='(define with-active [record] (assoc record :active true)) (get (with-active {:name "Ada"}) :name)';
+    const source='(: with-active (-> {:name String} {:name String :active Bool})) (define with-active [record] (assoc record :active true)) (get (with-active {:name "Ada"}) :name)';
     expect(await Effect.runPromise(Type.inferSourceStr(source))).toBe('String');
     expect(await evaluate(source)).toBe('Ada');
   });

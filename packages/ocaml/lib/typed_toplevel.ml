@@ -52,7 +52,7 @@ let parse_typeclass_param = function
       Error
         [
           diagnostic ~span:(Ast.expr_span bad) "typecheck/define-typeclass"
-            "__typeclass parameters must be symbols or (name : kind) \
+            "typeclass parameters must be symbols or (name : kind) \
              forms.";
         ]
 
@@ -70,7 +70,7 @@ let parse_typeclass_header = function
       Error
         [
           diagnostic ~span:(Ast.expr_span bad) "typecheck/define-typeclass"
-            "__typeclass header must be (ClassName params...).";
+            "typeclass header must be (ClassName params...).";
         ]
 
 let parse_typeclass_method_type env type_param_bindings type_param_ids =
@@ -117,7 +117,7 @@ let parse_typeclass_method_type env type_param_bindings type_param_ids =
       Error
         [
           diagnostic ~span:(Ast.expr_span bad) "typecheck/define-typeclass"
-            "__typeclass methods must be (name type) forms.";
+            "typeclass methods must be (name type) forms.";
         ]
 
 let build_class_info env name type_param_names methods =
@@ -280,7 +280,7 @@ let type_toplevel callbacks registry env expr rest =
         Error
           [
             diagnostic "typecheck/define-typeclass"
-              "__typeclass expects a header followed by method \
+              "typeclass expects a header followed by method \
                declarations.";
           ]
     | Ast.List (_, Ast.Symbol (_, "instance") :: args) -> (
@@ -338,7 +338,7 @@ let type_toplevel callbacks registry env expr rest =
                     [
                       diagnostic ~span:(Ast.expr_span bad)
                         "typecheck/define-type"
-                        "__sum-type parameters must be symbols.";
+                        "Type parameters must be symbols.";
                     ])
             type_params
         in
@@ -443,7 +443,7 @@ let type_toplevel callbacks registry env expr rest =
         Error
           [
             diagnostic "typecheck/define-macro"
-              "__macro expects a symbol name, parameter vector, and body \
+              "macro expects a symbol name, parameter vector, and body \
                forms.";
           ]
     | Ast.List

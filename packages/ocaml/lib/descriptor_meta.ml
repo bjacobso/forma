@@ -315,7 +315,11 @@ let apply_hook env hook_name mode application =
             Env.lookup name env)
     | None -> fun name -> Env.lookup name env
   in
-  Eval_meta.with_lookup_declaration lookup (fun () ->
+  let result = Eval_meta.with_lookup_declaration lookup (fun () ->
       Eval_meta.with_check_expr (check_expr application) (fun () ->
           Eval_meta.with_infer_expr (infer_expr application) (fun () ->
-              Eval.apply_named env hook_name (hook_input mode application))))
+              Eval.apply_named env hook_name (hook_input mode application)))) in
+  Result.map_error (List.map (fun (diagnostic:Eval_common.diagnostic) ->
+    match diagnostic.span with
+    | Some span when span.source_id=application.span.source_id -> diagnostic
+    | _ -> {diagnostic with span=Some application.span})) result

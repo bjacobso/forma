@@ -225,6 +225,11 @@ let load_runtime_input ~kind (session : Session.t) source_id source =
         | "prelude" -> (session.env, session.type_env)
         | _ -> Session.env_without_source_bindings session id
       in
+      let existing_bindings =
+        if kind = "prelude" then [] else
+        Hashtbl.fold (fun owner names acc ->
+          if owner = id then acc else names @ acc) session.source_bindings []
+      in
       let stores_source ~env ~type_env ~binding_names ~timings () =
         let (), store_ms =
           Load_phase.timed_ms (fun () ->
@@ -259,7 +264,7 @@ let load_runtime_input ~kind (session : Session.t) source_id source =
       in
       if not (List.exists updates exprs) then
         stores_source ~env:evaluation_env ~type_env:source_type_env
-          ~binding_names:(source_binding_names evaluation_env exprs)
+          ~binding_names:(source_binding_names ~existing:existing_bindings evaluation_env exprs)
           ~timings ()
       else
         let evaluated, eval_ms =
@@ -291,7 +296,7 @@ let load_runtime_input ~kind (session : Session.t) source_id source =
                     Error (List.map Eval.diagnostic_to_json diagnostics)
                 | Ok () ->
                     stores_source ~env ~type_env
-                      ~binding_names:(source_binding_names env exprs)
+                      ~binding_names:(source_binding_names ~existing:existing_bindings env exprs)
                       ~timings ()))
       with exn -> (
         (* Authoring errors found while lowering are located diagnostics;

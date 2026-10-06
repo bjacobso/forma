@@ -41,7 +41,7 @@ pageClass: forma-index forma-effect
 <div class="fh-scatter" aria-hidden="true">
 <span>Effect.gen</span><span>yield*</span><span>Context.Service&lt;Self, Shape&gt;()</span><span>Schema.TaggedError&lt;E&gt;()</span><span>satisfies</span><span>Layer.effect</span>
 <b>→</b>
-<strong>define-operation</strong>
+<strong>define</strong>
 </div>
 <p>Forma treats those constructs as the vocabulary, so the compiler can check them and talk about them in your terms.</p>
 </section>
@@ -126,7 +126,7 @@ pageClass: forma-index forma-effect
 <p>The generated module imports only <code>effect</code>. It contains <code>Schema</code> constants, <code>Schema.TaggedError</code> and <code>Schema.Class</code> classes, <code>Context.Service</code> classes, <code>Effect.gen</code> functions, and <code>Layer</code> values that capture their dependencies. It has no <code>any</code>, no casts other than <code>as const</code>, and no non-null assertions. You review it, check it in, and run it like any other Effect code. If you stop using Forma, you keep the TypeScript.</p>
 </div>
 <div class="fh-facts">
-<article><h3>Layers that wire themselves</h3><p>A <code>define-layer</code> captures the services its methods call and becomes <code>Layer.succeed</code> or <code>Layer.effect</code>, with its <code>Layer&lt;Out, E, In&gt;</code> type computed and checked.</p></article>
+<article><h3>Layers that wire themselves</h3><p>A <code>layer</code> captures the services its methods call and becomes <code>Layer.succeed</code> or <code>Layer.effect</code>, with its <code>Layer&lt;Out, E, In&gt;</code> type computed and checked.</p></article>
 <article><h3>Resources and concurrency</h3><p><code>acquire-release</code>, <code>scoped</code>, <code>all</code> and <code>for-each</code> with concurrency, <code>race</code>, <code>fork</code>, <code>timeout</code>, and <code>retry</code> with schedules map to the Effect functions of the same name.</p></article>
 <article><h3>Data as schemas</h3><p>Brands, enums, tagged unions, optional fields, classes, and <code>decode</code> for untrusted JSON. The runtime schema and the static type come from one declaration.</p></article>
 <article><h3>One IR, two engines</h3><p>The OCaml engine projects every passing conformance program to the same IR as the TypeScript engine. The IR is an inspectable artifact, validated against payload contracts, rather than an internal detail.</p></article>
@@ -137,7 +137,7 @@ pageClass: forma-index forma-effect
 <div class="fh-section__head">
 <p class="fh-label">05 · Size, honestly</p>
 <h2 id="size-heading">Less to write, but not ten times less.</h2>
-<p>Across the conformance programs, the generated TypeScript is about 1.9 times as many lines as the Forma source, and roughly 1.4 times as many characters. Part of that is formatting. One program is longer in Forma than in TypeScript. Brevity is a side effect. The reasons to use Forma are what it checks and how it reports problems.</p>
+<p>Across the conformance programs, the generated TypeScript is about 1.2 times as many lines as the Forma source, and roughly 1.4 times as many characters. Part of that is formatting. One program is longer in Forma than in TypeScript. Brevity is a side effect. The reasons to use Forma are what it checks and how it reports problems.</p>
 </div>
 <div class="fh-table">
 

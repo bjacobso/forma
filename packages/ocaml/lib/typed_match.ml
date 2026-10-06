@@ -117,7 +117,7 @@ and infer_pattern env scrutinee_ty = function
             match unify ty scrutinee_ty with
             | Error _ as error -> error
             | Ok subst -> Ok (subst, []))
-      | None -> Ok ([], pattern_bindings (Core_ast.PCon (name, vars))))
+      | None -> Error [diagnostic "typecheck/pattern-constructor" ("Unknown constructor: " ^ name)])
 
 and infer_data_pattern env expected syntax =
   let bind n ty = (n, Forall ([],ty,[],Plain)) in
@@ -130,18 +130,30 @@ and infer_data_pattern env expected syntax =
   match syntax with
   | Ast.Symbol (_,"_") -> Ok ([],[])
   | Ast.Symbol (_,n) when Surface.is_lower n && n <> "nil" -> Ok ([],[bind n expected])
+  | Ast.Map (_,pairs) when (match expected with TNamedApp ("Map",[_;_]) -> true | _ -> false) ->
+      let key,item = match expected with TNamedApp ("Map",[key;item]) -> key,item | _ -> assert false in
+      let rec loop subst children = function
+        | [] -> Result.map (fun (s,bindings) -> compose_subst s subst,bindings) (combine children)
+        | (Ast.Keyword (_,":as"),p)::rest -> loop subst ((p,expected)::children) rest
+        | (k,p)::rest ->
+            let actual = match k with Ast.Keyword (_,n) -> TNamed n | Ast.String (_,n) -> TNamed (Value.string_json n) | _ -> TAny in
+            (match assign actual (apply_subst subst key) with Error _ as e -> e | Ok s -> loop (compose_subst s subst) ((p,item)::children) rest) in
+      loop [] [] pairs
   | Ast.Map (_,pairs) ->
-      let pairs = List.concat_map (function
+      let as_pattern=List.find_map (function Ast.Keyword (_,":as"),p -> Some p | _ -> None) pairs in
+      let pairs=List.concat_map (function
+        | Ast.Keyword (_,":as"),_ -> []
         | Ast.Keyword (_,":keys"), Ast.Vector (_,keys) -> List.map (fun k -> match k with Ast.Symbol (s,n) -> Ast.Keyword (s,":" ^ n),k | _ -> k,k) keys
         | p -> [p]) pairs in
-      let fields = List.map (fun (k,v) -> (Option.value ~default:"" (Surface.name k),v,fresh_tyvar ())) pairs in
-      let result = match expected with
-        | TRecord actual | TOpenRecord (actual,_) ->
-          let selected = List.map (fun (n,v,ty) -> (v,Option.value ~default:ty (List.assoc_opt n actual))) fields in
-          if List.exists (fun (n,_,_) -> not (List.mem_assoc n actual)) fields then Error [diagnostic "typecheck/pattern-field" "Unknown record pattern field."] else combine selected
-        | _ -> (match unify expected (TRecord (List.map (fun (n,_,ty) -> n,ty) fields)) with
-          | Error _ as error -> error
-          | Ok subst -> Result.map (fun (next,bs) -> compose_subst next subst,bs) (combine (List.map (fun (_,v,ty) -> v,apply_subst subst ty) fields))) in result
+      let label = function Ast.String (_,s) -> if String.starts_with ~prefix:":" s || String.starts_with ~prefix:"\000" s then "\000str:" ^ s else s | k -> Option.value ~default:"" (Surface.name k) in
+      let fields=List.map (fun (k,v) -> label k,v,fresh_tyvar ()) pairs in
+      let required=TOpenRecord (List.map (fun (n,_,ty) -> n,ty) fields,fresh_tyvar ()) in
+      (match unify expected required with
+       | Error _ as error -> error
+       | Ok subst ->
+           let children=List.map (fun (_,v,ty) -> v,apply_subst subst ty) fields in
+           let children=match as_pattern with Some p -> (p,apply_subst subst expected)::children | None -> children in
+           Result.map (fun (next,bs) -> compose_subst next subst,bs) (combine children))
   | Ast.Vector (_,items) ->
       let element = fresh_tyvar () in
       let list_ty = match expected with TVector _ -> TVector element | _ -> TList element in
@@ -169,10 +181,21 @@ and infer_data_pattern env expected syntax =
         | Ast.String (_,s) -> TNamed (Value.string_json s)
         | Ast.Keyword (_,n) -> TNamed n
         | Ast.Nil _ -> TNil | _ -> TAny in
+      let ty = match expected,ty with
+        | TVar _,TNamed literal -> Option.value ~default:ty (Type_unify.literal_base literal)
+        | _ -> ty in
       Result.map (fun subst -> subst,[]) (assign ty expected)
 
 and pattern_bindings = function
-  | Core_ast.PData _ | Core_ast.PWild -> []
+  | Core_ast.PWild -> []
+  | Core_ast.PData syntax ->
+      let rec names = function
+        | Ast.Symbol (_,n) when Surface.is_lower n && n<>"nil" && n<>"_" -> [n]
+        | Ast.List (_,Ast.Symbol (_,n)::args) when Surface.is_upper n -> List.concat_map names args
+        | Ast.Map (_,pairs) -> List.concat_map (fun (_,v) -> names v) pairs
+        | Ast.Vector (_,items) -> List.concat_map names items
+        | _ -> [] in
+      List.sort_uniq String.compare (names syntax) |> List.map (fun n -> n,Forall ([],fresh_tyvar (),[],Plain))
   | Core_ast.PCon (_, vars) ->
       List.map (fun name -> (name, Forall ([], TAny, [], Plain))) vars
 

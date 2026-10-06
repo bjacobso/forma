@@ -39,7 +39,7 @@ export const checkExpr = (env: TypeEnv, expr: CoreExpr, expected: Type): Effect.
     yield* assignType(actual,target,originOf(expr,"function-check"));
     return target;
   }
-  if (expr._tag === "If") {
+  if (expr._tag === "If" && target._tag !== "TVar") {
     yield* checkExpr(env,expr.cond,TCon("Bool"));
     yield* checkExpr(env,expr.then,target);
     yield* checkExpr(env,expr.else_,target);

@@ -37,7 +37,22 @@ and infer_apply callbacks env initial_subst callee_ty args =
               (apply_subst subst arg_ty :: acc)
               rest)
   in
-  match
+  let parameters=match apply_subst initial_subst callee_ty with TFn (parameters,_) -> parameters | _ -> [] in
+  let repeated=List.filter_map (function TVar id when List.length (List.filter (fun p -> p=TVar id) parameters)>1 -> Some id | _ -> None) parameters |> List.sort_uniq Int.compare in
+  let rec solve subst = function
+    | [] -> Ok subst
+    | id::rest ->
+        let arguments=List.filter_map (fun (i,p) -> if p=TVar id then List.nth_opt args i else None) (List.mapi (fun i p -> i,p) parameters) in
+        let rec common subst previous = function
+          | [] -> (match previous with None -> Ok subst | Some ty -> unify (apply_subst subst (TVar id)) (apply_subst subst ty) |> Result.map (fun s -> compose_subst s subst))
+          | arg::args -> (match callbacks.infer_expr (apply_subst_env subst env) arg with Error _ as e -> e | Ok (s,ty) ->
+              let subst=compose_subst s subst in
+              match previous with None -> common subst (Some ty) args | Some prior ->
+                match join (apply_subst subst prior) (apply_subst subst ty) with Error _ as e -> e | Ok (s,ty) -> common (compose_subst s subst) (Some ty) args) in
+        (match common subst None arguments with Error _ as e -> e | Ok subst -> solve subst rest) in
+  match solve initial_subst repeated with
+  | Error _ as error -> error
+  | Ok initial_subst -> match
     infer_args initial_subst (apply_subst_env initial_subst env) [] args
   with
   | Error _ as error -> error

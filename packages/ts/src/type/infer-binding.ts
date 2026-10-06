@@ -98,7 +98,7 @@ export const inferDef = (
 
       // Infer the expression type
       const exprT = yield* checkExpr(defEnv,expr.expr,sigT).pipe(Effect.mapError(error =>
-        new InferenceError({message:error.message.replace(/ \(at offset \d+\)$/,""),origin:originOf(expr,"def-signature"),details:error.details})));
+        new InferenceError({message:error.message.replace(/ \(at offset \d+\)$/,""),origin:error.origin ?? originOf(expr,"def-signature"),details:error.details})));
 
       // Unify inferred type with signature type
       yield* assignType(

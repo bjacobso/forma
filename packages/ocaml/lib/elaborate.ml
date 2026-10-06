@@ -224,7 +224,7 @@ let emitted_values_with_timings env exprs =
         | (declaration : collected_declaration) :: rest -> (
             let applied, apply_hook_ms =
               timed_ms (fun () ->
-                  match Form_semantics.validate ?syntax:declaration.syntax ~span:declaration.span env declaration.declaration with Error _ as e -> e | Ok diagnostics -> Eval.apply_named env declaration.hook declaration.declaration |> Result.map (fun value -> value,diagnostics))
+                  match Form_semantics.validate ?syntax:declaration.syntax ~span:declaration.span env declaration.declaration with Error _ as e -> e | Ok diagnostics -> Eval.apply_named env declaration.hook declaration.declaration |> Result.map (fun value -> value,diagnostics) |> Result.map_error (List.map (fun (d:Eval_common.diagnostic) -> match d.span with Some span when span.source_id=declaration.span.source_id -> d | _ -> {d with span=Some declaration.span})))
             in
             let timings =
               add_hook_timing

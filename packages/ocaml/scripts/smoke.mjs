@@ -646,7 +646,7 @@ assertType("(get-in {:a {:b 3}} [:a :b])", "Int");
 assertType('(get {:status "active"} :status)', "String");
 assertType("(contains? {:a 1} :a)", "Bool");
 assertType('(= (get {:status "active"} :status) "active")', "Bool");
-assertType("((fn [x] (+ x 1)) 2)", "Int");
+assertType("((fn [x] (+ x 1)) 2)", "Number");
 assertType('(let [id (fn [x] x) a (id 1)] (id "x"))', "String");
 assertType("(: inc (-> Int Int)) (define (inc x) (+ x 1)) (inc 2)", "Int");
 assertType("(type EmployeeId String) (: id EmployeeId) (define id \"e1\") id", "String");
@@ -1092,7 +1092,7 @@ if (daemonOutputs[2].value.kind !== "int" || daemonOutputs[2].value.value !== 3)
   throw new Error(`Unexpected daemon evaluate response: ${JSON.stringify(daemonOutputs[2])}`);
 }
 
-if (daemonOutputs[3].type !== "Int") {
+if (daemonOutputs[3].type !== "Number") {
   throw new Error(`Unexpected daemon typecheck response: ${JSON.stringify(daemonOutputs[3])}`);
 }
 

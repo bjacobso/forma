@@ -13,6 +13,7 @@ import { parse, toSExprMany } from "../reader/index.js";
 import { head, name } from "../surface/effect.js";
 import type { SExpr } from "../reader/types.js";
 import { reachableHelpers } from "../surface/helpers.js";
+import { patternBindings } from "../surface/members.js";
 import { unifiedFormHooks } from "../surface/form.js";
 import { readFileSync } from "node:fs";
 import { parsePrelude, type MetaFnDecl, type MetaFnKind } from "./meta-fn-decl.js";
@@ -119,7 +120,7 @@ export function bootstrapFromSources(
   const allHelpers = [...compiler.helpers, ...domain.helpers, ...additional.flatMap(prelude => prelude.helpers)];
   for (const descriptor of descriptions.list()) if (descriptor.surface) {
     const spec = descriptor.surface;
-    descriptions.register({...descriptor, surface: {...spec, helpers: reachableHelpers([spec.body, ...spec.options.values()], allHelpers)}});
+    descriptions.register({...descriptor, surface: {...spec, helpers: reachableHelpers([spec.body, ...spec.options.values()], allHelpers, new Set(spec.holes.keys()))}});
   }
 
 
@@ -135,7 +136,7 @@ export function bootstrapFromSources(
       const parameter = definition.items[2].items[0];
       const functionBody = definition.items.length === 4 ? definition.items[3]! : { _tag:"List" as const,loc:definition.loc,items:[{_tag:"Sym" as const,name:"do",loc:definition.loc},...definition.items.slice(3)] };
       const body: SExpr = { _tag:"List",loc:definition.loc,items:[{_tag:"Sym",loc:definition.loc,name:"let"},{_tag:"Vector",loc:definition.loc,items:[parameter!,{_tag:"Sym",loc:definition.loc,name:"input"}]},functionBody] };
-      derivedHooks.push({name:strategy.fn,kind,inputType:"NormalizedForm",outputType:kind === "construct" ? descriptor.produces ?? "IR" : kind === "result-type" ? "Type" : kind === "validate" ? "Diagnostics" : "Bindings",capabilities:[],body,helpers:reachableHelpers([functionBody],helpers)});
+      derivedHooks.push({name:strategy.fn,kind,inputType:"NormalizedForm",outputType:kind === "construct" ? descriptor.produces ?? "IR" : kind === "result-type" ? "Type" : kind === "validate" ? "Diagnostics" : "Bindings",capabilities:[],body,helpers:reachableHelpers([functionBody],helpers,new Set(patternBindings(parameter!)))});
     }
   }
   const allMetaFns = [
@@ -269,7 +270,7 @@ function parseHostedDsls(
     for (const source of hostedDsl.sources) for (const e of toSExprMany(parse(source).redTree)) { const definition=typeDefinition(e); if (definition) typeDefinitions.set(...definition); }
     const parsedSources = hostedDsl.sources.map((source) => parsePrelude(source, typeDefinitions));
     const allHelpers = parsedSources.flatMap(parsed => parsed.helpers);
-    const descriptors = parsedSources.flatMap((parsed) => parsed.forms).map(descriptor => descriptor.surface ? {...descriptor, surface: {...descriptor.surface, helpers: reachableHelpers([descriptor.surface.body, ...descriptor.surface.options.values()], allHelpers)}} : descriptor);
+    const descriptors = parsedSources.flatMap((parsed) => parsed.forms).map(descriptor => descriptor.surface ? {...descriptor, surface: {...descriptor.surface, helpers: reachableHelpers([descriptor.surface.body, ...descriptor.surface.options.values()], allHelpers, new Set(descriptor.surface.holes.keys()))}} : descriptor);
     const metaFns = parsedSources.flatMap((parsed) => parsed.metaFns);
     const elaborations = parsedSources.flatMap((parsed) => parsed.elaborations);
     registrations.set(hostedDsl.name, {

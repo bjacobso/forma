@@ -37,7 +37,7 @@ let rec constructor_type env result_ty type_params = function
       Error
         [
           diagnostic ~span:(Ast.expr_span bad) "typecheck/define-type"
-            "__sum-type constructor must be a list headed by a symbol.";
+            "Tagged constructor must be a list headed by a symbol.";
         ]
 
 and field_types env type_params fields =
@@ -79,7 +79,7 @@ let bindings name type_param_names constructors env =
         Error
           [
             diagnostic ~span:(Ast.expr_span bad) "typecheck/define-type"
-              "__sum-type constructor must be a list headed by a symbol.";
+              "Tagged constructor must be a list headed by a symbol.";
           ]
   in
   loop

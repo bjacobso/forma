@@ -440,6 +440,139 @@
         "compiler.lisp",
         "ontology.lisp"
       ]
+    },
+    {
+      "id": "review-keyword-match",
+      "source": "(define f [k] (match k :a 1 :b 2 _ 3)) (f :b)",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-number-equality",
+      "source": "(= (/ 4 2) 2)",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-numeric-parameters",
+      "source": "(define f [x] (+ x 1)) (f 2.5)",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-double-option",
+      "source": "(type R {:value (Option String)}) (: r R) (define r {:value (if true (Some \"x\") None)}) (match r.value (Some x) x None \"absent\")",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-dictionary-pattern",
+      "source": "(: m (Map String Int)) (define m {\"a\" 1}) (match m {\"a\" x} x _ 0)",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-computed-get-default",
+      "source": "(let [r {:x 1} k :absent] (get r k 0))",
+      "passes": [
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-macro-definition",
+      "source": "(macro (make name) `(define ~name [r] r.count)) (make read) (read {:count 7})",
+      "passes": [
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-class-pattern",
+      "source": "(class Box {:value Int}) (match {} (Box box) 1 _ 0)",
+      "passes": [
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-type-error",
+      "source": "(: x Int) (define x \"no\")",
+      "passes": [
+        "typecheck"
+      ]
+    },
+    {
+      "id": "review-unknown-constructor",
+      "source": "(match 1 (Unknown x) x _ 0)",
+      "passes": [
+        "typecheck"
+      ]
+    },
+    {
+      "id": "effect-typescript/surface-review",
+      "sourceFile": "../effect-typescript/cases/surface-review/program.lisp",
+      "passes": [
+        "effect-ir"
+      ]
+    },
+    {
+      "id": "review-stateless-form-definition",
+      "source": "(type GreetingIR {:text String}) (form (greet text) :types {:text String} :ir GreetingIR {:text text})",
+      "passes": [
+        "typecheck"
+      ]
+    },
+    {
+      "id": "review-stateless-form-application",
+      "source": "(type GreetingIR {:text String}) (form (greet text) :types {:text String} :ir GreetingIR {:text text}) (greet \"Hello\")",
+      "passes": [
+        "typecheck"
+      ]
+    },
+    {
+      "id": "review-stateless-form-error",
+      "source": "(type GreetingIR {:text String}) (form (greet text) :types {:text String} :ir GreetingIR {:text text}) (greet 42)",
+      "passes": [
+        "typecheck"
+      ]
+    },
+    {
+      "id": "review-string-record-pattern",
+      "source": "(match {:a 1 \":a\" \"text\"} {\":a\" text :a value} text)",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-string-map-pattern",
+      "source": "(: data (Map String String)) (define data {\":a\" \"text\"}) (match data {\":a\" text} text)",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-stateless-form-helper",
+      "source": "(type GreetingIR {:text String}) (define decorate [text] (str \"Hello \" text)) (form (greet text) :types {:text String} :ir GreetingIR {:text (decorate text)}) (greet \"world\")",
+      "passes": [
+        "typecheck"
+      ]
+    },
+    {
+      "id": "review-higher-kinded-numeric",
+      "sourceFile": "../fixtures/typecheck/typeclass-hkt-instance-success/source.lisp",
+      "passes": [
+        "typecheck"
+      ]
     }
   ]
 }

@@ -30,7 +30,8 @@ export function resolveConstructors(program: readonly SExpr[]): readonly SExpr[]
   }
   for (const [n, type] of signatures) globals.set(n, type);
   const standard = new Map([["Some", "Option"], ["None", "Option"], ["Ok", "Result"], ["Err", "Result"]]);
-  const ownerOfType = (type?: SExpr): string | undefined => type?._tag === "List" ? head(type) : name(type);
+  const ownerOfType = (type?: SExpr): string | undefined => type?._tag === "List"
+    ? head(type) === "Effect" ? ownerOfType(type.items[1]) : head(type) : name(type);
   const resultOfType = (type?: SExpr): SExpr | undefined => type?._tag === "List" && head(type) === "->" ? type.items.at(-1) : type;
   const typeOf = (expr: SExpr, bindings: Bindings): SExpr | undefined => {
     const n = name(expr), callee = head(expr);
@@ -50,7 +51,7 @@ export function resolveConstructors(program: readonly SExpr[]): readonly SExpr[]
     const expectedOwner = ownerOfType(expected);
     let owner = expectedOwner && (candidates?.has(expectedOwner) || standard.get(n) === expectedOwner) ? expectedOwner : undefined;
     if (!owner && candidates?.size === 1) owner = [...candidates][0];
-    if (!owner && candidates && candidates.size > 1) throw new Error(`Ambiguous constructor ${n}; use Type.${n} or provide an expected type`);
+    if (!owner && candidates && candidates.size > 1) throw Object.assign(new Error(`Ambiguous constructor ${n}; use Type.${n} or provide an expected type`), {loc:expr.loc});
     return owner ? copySourceTrace(expr, sym(expr, `${owner}.${n}`)) : expr;
   };
   const rebuild = (expr: SExpr, items: readonly SExpr[]): SExpr => expr._tag === "List" && items.every((item, i) => item === expr.items[i]) ? expr : copySourceTrace(expr, {...expr, _tag: "List", items} as SExpr);

@@ -29,7 +29,7 @@ const rowType = (fields: ReadonlyMap<string, Type>, tail: Row): Type => {
 export const inferCollectionOperation = (env: TypeEnv, expr: CoreExpr & { _tag: "App" }, op: string, infer: InferFn) => Effect.gen(function* () {
   const ctx = yield* InferContext;
   const origin = originOf(expr, op);
-  const fail = (message: string) => ctx.fail(origin, { message });
+  const fail = (message: string) => ctx.fail(origin, { message, ...(message.includes("closed record") ? {code:"typecheck/open-record"} : {}) });
   const inferred: Type[] = [];
   for (const [index,arg] of expr.args.entries()) {
     const keys = op === "select-keys" && index === 1 && arg._tag === "App" && arg.fn._tag === "Var" && arg.fn.name === "__vector";
@@ -61,6 +61,7 @@ export const inferCollectionOperation = (env: TypeEnv, expr: CoreExpr & { _tag: 
     for (const type of types) {
       if (type._tag !== "TRow") return yield* fail("merge requires records or dictionaries");
       const row = flattenRow(type.row);
+      if (row.tail._tag !== "REmpty" && types.length > 1) return yield* fail("Merging records requires closed records or typed Maps");
       if (row.tail._tag !== "REmpty") {
         if (tail._tag !== "REmpty") return yield* fail("Merging two open records requires a known shared row");
         tail = row.tail;
@@ -113,6 +114,7 @@ export const inferCollectionOperation = (env: TypeEnv, expr: CoreExpr & { _tag: 
     for (let i = 1; i < types.length; i += 2) {
       const label = literalKey(expr.args[i]!);
       if (label === undefined) return yield* fail("Record association requires a literal key");
+      if (tail._tag !== "REmpty" && !fields.has(label)) return yield* fail("Updating an unknown field requires a closed record or a typed Map");
       result.set(label, types[i + 1]!);
     }
     return rowType(result, tail);
@@ -132,6 +134,7 @@ export const inferCollectionOperation = (env: TypeEnv, expr: CoreExpr & { _tag: 
   if (!keys || keys.some(key => literalKey(key) === undefined)) return yield* fail("Record selection requires literal keys");
   const { fields, tail } = flattenRow(first.row);
   const labels = new Set(keys.map(key => literalKey(key)!));
+  if (tail._tag !== "REmpty" && (op === "dissoc" || [...labels].some(label => !fields.has(label)))) return yield* fail("Selecting or removing an unknown field requires a closed record or a typed Map");
   if (op === "select-keys") return rowType(new Map([...fields].filter(([key]) => labels.has(key))), { _tag: "REmpty" });
   return rowType(new Map([...fields].filter(([key]) => !labels.has(key))), tail);
 });

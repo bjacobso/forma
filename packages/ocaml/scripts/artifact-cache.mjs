@@ -204,19 +204,26 @@ try {
     "module warm artifactSummary",
     await request({ op: "artifactSummary", sessionId, sourceIds: moduleSourceIds }),
   );
+  const privateEditedSource = modulePeopleSource.replace("(entity InternalNote {:body", "(entity InternalNote {:text");
+  if (privateEditedSource === modulePeopleSource) throw new Error("Private cache edit did not change the source");
   expectOk(
     "reload module private change",
     await request({
       op: "loadSource",
       sessionId,
       sourceId: moduleSourceIds[0],
-      source: modulePeopleSource.replace("internal-note/body", "internal-note/text"),
+      source: privateEditedSource,
     }),
   );
   const modulePrivateEdited = expectOk(
     "module private edited artifactSummary",
     await request({ op: "artifactSummary", sessionId, sourceIds: moduleSourceIds }),
   );
+  const privateEmit = expectOk("emit private module edit", await request({op:"emit",sessionId,sourceId:moduleSourceIds[0]}));
+  const privateNote = privateEmit.artifacts[0].content.declarations.find(declaration => declaration.name === "InternalNote");
+  if (!privateNote?.fields.some(field => field.name.endsWith("/text")) || privateNote.fields.some(field => field.name.endsWith("/body"))) {
+    throw new Error(`Private edit did not reach the artifact: ${JSON.stringify(privateNote)}`);
+  }
   expectOk(
     "reload module public export change",
     await request({
@@ -256,8 +263,8 @@ try {
   if (
     edited.declarationCount !== cold.declarationCount ||
     edited.diagnosticCount !== 0 ||
-    edited.cacheHitCount !== 4 ||
-    edited.cacheMissCount !== 0 ||
+    edited.cacheHitCount !== 3 ||
+    edited.cacheMissCount !== 1 ||
     cacheHitForSource(edited, sourceIds[1]) !== true
   ) {
     throw new Error(
@@ -308,6 +315,7 @@ try {
   }
 
   if (
+    // loadSource rebuilds the edited source eagerly; its dependent stays cached.
     modulePrivateEdited.cacheHitCount !== moduleSourceIds.length ||
     modulePrivateEdited.cacheMissCount !== 0 ||
     cacheHitForSource(modulePrivateEdited, moduleSourceIds[1]) !== true

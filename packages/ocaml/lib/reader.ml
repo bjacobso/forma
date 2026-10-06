@@ -244,6 +244,10 @@ let parse_cst ~source_id source =
       else
         match parse_expr i with
         | Error _ as error -> error
+        | Ok (key, _) when List.exists (fun (prior,_) -> match prior,key with
+            | String (_,a),String (_,b) | Keyword (_,a),Keyword (_,b) -> a=b
+            | _ -> false) entries ->
+            error ~span:(expr_span key) "reader/duplicate-map-key" "Duplicate map key."
         | Ok (key, after_key) -> (
             let after_key = skip_ws after_key in
             if after_key >= len then

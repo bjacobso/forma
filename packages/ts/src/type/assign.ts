@@ -4,12 +4,13 @@ import { TCon, TApp, TRow, RExtend, REmpty, type Row, flattenRow } from "./types
 import { InferContext } from "./context.js";
 import { applyType } from "./substitution.js";
 import { unify } from "./unify.js";
-import type { Origin, InferenceError } from "./errors.js";
+import { InferenceError, type Origin } from "./errors.js";
 
 /** Assignment is directional: every Int is a Number; arbitrary Numbers are not Ints. */
 export const assignType = (actual: Type, expected: Type, origin: Origin): Effect.Effect<void,InferenceError,InferContext> => Effect.gen(function* () {
   const ctx = yield* InferContext, subst = yield* Ref.get(ctx.subst);
   const a = applyType(subst,actual), b = applyType(subst,expected);
+  if (a._tag === "TVar" || b._tag === "TVar") return yield* unify(a, b, origin);
   if (a._tag === "TApp" && a.con._tag === "TCon" && a.con.name === "Union") {
     for (const member of a.args) yield* assignType(member,b,origin);
     return;
@@ -38,7 +39,8 @@ export const assignType = (actual: Type, expected: Type, origin: Origin): Effect
     if (a.rest || b.rest || a.effect || b.effect) yield* unify({...a,arg:b.arg,res:b.res},b,origin);
     return;
   }
-  if (a._tag === "TApp" && b._tag === "TApp" && a.con._tag === "TCon" && b.con._tag === "TCon" && a.con.name === b.con.name && a.args.length === b.args.length) {
+  if (a._tag === "TApp" && b._tag === "TApp" && a.args.length === b.args.length) {
+    yield* unify(a.con,b.con,origin);
     for (let i=0;i<a.args.length;i++) yield* assignType(a.args[i]!,b.args[i]!,origin);
     return;
   }
@@ -56,7 +58,10 @@ export const assignType = (actual: Type, expected: Type, origin: Origin): Effect
       return;
     }
   }
-  yield* unify(a,b,origin);
+  yield* unify(a,b,origin).pipe(Effect.mapError(error => new InferenceError({
+    message:error.message.replace(/ \(at offset \d+\)$/, ""), origin:error.origin,
+    details:{...error.details,code:"typecheck/type-mismatch"},
+  })));
 });
 
 /** Common numeric supertype for branches and collections, without narrowing Numbers to Int. */

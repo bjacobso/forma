@@ -47,11 +47,26 @@ let binding_name (env : Eval.env) = function
             (fun id ->
               let declaration=Descriptor.application_value op (Surface_form.normalize_application ~span:application_span env op args) in
               match Eval_slot.identifier_value_with_lookup ~lookup:(fun n->Env.lookup n env) declaration (Value.VString id.name) with
-              | Value.VSymbol n -> Some n | _ -> None))
+              | Value.VSymbol n | Value.VString n -> Some n | _ -> None))
       else Descriptor.declaration_binding_name args
   | _ -> None
 
-let names env exprs =
+let names ?(existing = []) env exprs =
+  let seen=Hashtbl.create 16 in
+  List.iter (fun expr -> match expr with
+    | Ast.List (span,Ast.Symbol (_,op)::_) when Descriptor.is_form_descriptor env op ->
+        (* String identities are global seed IDs. Symbol declarations can be
+           separately owned by modules with the same local name. *)
+        let string_identity = match Env.lookup ("__form.types/" ^ op) env with
+          | Some (Value.VMap fields) -> List.exists (function
+              | _, Value.VList [Value.VSymbol "Declares"; _; Value.VSymbol "String"] -> true
+              | _ -> false) fields
+          | _ -> false in
+        (match binding_name env expr with
+         | Some n when Hashtbl.mem seen n || (string_identity && List.mem n existing) -> raise (Surface.Invalid_form (span,"Duplicate declaration " ^ n))
+         | Some n -> Hashtbl.add seen n ()
+         | _ -> ())
+    | _ -> ()) exprs;
   Surface.core_program (Surface_protocol.program (Surface_form.program exprs))
   |> List.concat_map (fun expr ->
       let definitions=Option.value ~default:[] (Surface.runtime_constructors expr) in

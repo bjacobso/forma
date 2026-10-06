@@ -257,7 +257,10 @@ export function evalList(
           return (yield* evalInstance(items, loc, env, runtime, evalExpr)).result;
       }
 
-      if (items.length === 1 && /^[A-Z]/.test(head.name) && env.has(head.name)) return env.lookup(head.name)!;
+      if (items.length === 1 && /^[A-Z]/.test(head.name) && env.has(head.name)) {
+        const value = env.lookup(head.name)!;
+        if (!isKFn(value) && !isKBuiltin(value) && !isKMacro(value)) return value;
+      }
       // Check builtins — args are NOT in tail position
       if (head.name in runtime.builtins) {
         const prevTail = getTcoTail();

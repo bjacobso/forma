@@ -44,7 +44,7 @@ let is_schema_projection_expr = function
       ( _,
         Ast.Symbol
           ( _,
-            ( "Struct" | "Array" | "Optional" | "Ref" | "Brand" | "Enum"
+            ( "Struct" | "Array" | "Option" | "Optional" | "Ref" | "Brand" | "Enum"
             | "Literal" | "Tuple" | "Union" | "TaggedUnion" | "Map" | "object"
             | "Object" | "array" | "optional" | "ref" | "brand" | "enum"
             | "literal" | "tuple" | "union" | "tagged-union" | "taggedUnion"
@@ -255,7 +255,7 @@ let error_declaration ?(kind = "ErrorDef") ?status ~source_id ~form_index span n
       Error
         [
           diagnostic ~span:(Ast.expr_span bad) "artifact/error"
-            "__error expects a (:fields ...) block.";
+            "error expects a field record.";
         ]
 
 let service_declaration ~source_id ~form_index span name methods_expr =
@@ -332,7 +332,7 @@ let declaration ~source_id ~form_index signatures service_effects operation_effe
       Error
         [
           diagnostic ~span "artifact/error"
-            "__error expects an error name and (:fields ...) block.";
+            "error expects an error name and field record.";
         ]
   | Ast.List
       ( span,
@@ -373,7 +373,7 @@ let declaration ~source_id ~form_index signatures service_effects operation_effe
           Error
             [
               diagnostic ~span:(Ast.expr_span name_expr) "artifact/layer"
-                "__layer expects a layer name.";
+                "layer expects a layer name.";
             ]
       | Some name ->
           Mechanics_declaration_json.layer_payload ~source_id ~service_effects
@@ -384,7 +384,7 @@ let declaration ~source_id ~form_index signatures service_effects operation_effe
       Error
         [
           diagnostic ~span "artifact/layer"
-            "__layer expects a name and a layer body.";
+            "layer expects a name and a layer body.";
         ]
   | _ -> Error []
 

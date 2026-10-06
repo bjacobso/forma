@@ -100,7 +100,7 @@ export const corpusGolden = {
     "View": 38,
     "Workspace": 9
   },
-  "manifestHash": "20b5cbb227e240b9df6e0d9f4440a869e872afb45a7fa2833791b66aa899c93a"
+  "manifestHash": "65acd85f3dd1580573a2774c7129773d45a34ebc246317667c7b44d70e05c06b"
 };
 
 export const architectureThresholds = {

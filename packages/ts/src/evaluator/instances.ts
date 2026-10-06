@@ -4,7 +4,7 @@ import { KernelTypeError, ArityError } from "../diagnostic/errors.js";
 import type { KernelError } from "../diagnostic/errors.js";
 import { Env } from "../Env.js";
 import type { KValue, KFn } from "./types.js";
-import { isKFn, describeType } from "./types.js";
+import { isKFn, isKKeyword, describeType } from "./types.js";
 import type { EvaluatorRuntime, EvalFn } from "./eval-types.js";
 import {
   getEvaluatorRuntime,
@@ -40,7 +40,8 @@ export function runtimeTypeName(val: KValue): string {
   if (val === null) return "Unit";
   if (Array.isArray(val)) return "List";
   if (val instanceof Map) return "Map";
-  if (typeof val === "number") return "Number";
+  if (typeof val === "number") return Number.isInteger(val) ? "Int" : "Number";
+  if (isKKeyword(val)) return "Keyword";
   if (typeof val === "string") return "String";
   if (typeof val === "boolean") return "Boolean";
   return "Unknown";
@@ -241,7 +242,7 @@ export function makeDispatchWrapper(
         }
 
         const tn = runtimeTypeName(dispatchArg);
-        const impl = data.implementations.get(tn);
+        const impl = data.implementations.get(tn) ?? (tn === "Int" ? data.implementations.get("Number") : undefined);
 
         if (!impl) {
           return yield* new KernelTypeError({

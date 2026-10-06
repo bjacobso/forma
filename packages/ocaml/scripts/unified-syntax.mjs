@@ -10,6 +10,10 @@ try {
   const {sessionId} = ok(await daemon.request({op: "openSession"}));
   for (const prelude of readPreludes()) ok(await daemon.request({op:"loadPrelude",sessionId,...prelude}));
 
+  const typo=await daemon.request({op:"loadSource",sessionId,sourceId:"typo",source:'(view misspelled :titel "Typo")'});
+  assert.equal(typo.ok,false);
+  assert.match(typo.diagnostics[0].message,/Did you mean/);
+
   const source = `(entity Todo {:title String :done Bool})
 (: complete (-> (Id Todo) (Action Unit)))
 (define complete [id] (update! id {:done true}))

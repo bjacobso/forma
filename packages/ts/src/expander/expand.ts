@@ -168,7 +168,7 @@ function expandExpr(
         tagExpandedExpr(result, { macroName: binding.name, loc: expr.loc });
         const expanded = markExpansion(expr, result);
         return expandExpr(
-          expanded,
+          normalizeCoreProgram([expanded])[0]!,
           macroEnv,
           builtins,
           macroStepLimit,

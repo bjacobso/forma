@@ -184,6 +184,7 @@ let rec apply_subst subst ty =
   match ty with
   | TVar id -> (
       match List.assoc_opt id subst with
+      | Some (TVar other) when other = id -> TVar id
       | Some replacement -> apply_subst subst replacement
       | None -> ty)
   | TList item -> TList (apply_subst subst item)
@@ -214,7 +215,8 @@ let rec apply_subst subst ty =
       ty
 
 let compose_subst newer older =
-  List.map (fun (var, ty) -> (var, apply_subst newer ty)) older @ newer
+  List.filter (fun (var,ty) -> ty <> TVar var)
+    (List.map (fun (var, ty) -> (var, apply_subst newer ty)) older @ newer)
 
 let sort_record_fields fields =
   List.sort (fun (left, _) (right, _) -> String.compare left right) fields

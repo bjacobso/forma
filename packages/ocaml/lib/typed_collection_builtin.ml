@@ -8,6 +8,7 @@ type env = Type_env.env
 
 type callbacks = {
   infer_expr : env -> Core_ast.expr -> (subst * ty, diagnostic list) result;
+  check_expr : env -> Core_ast.expr -> ty -> (subst * ty, diagnostic list) result;
 }
 
 let diagnostic = Type_diagnostic.make
@@ -99,6 +100,17 @@ let function_candidate = function TFn _ | TAny | TVar _ -> true | _ -> false
 
 let infer_higher_order_args callbacks env op args =
   match args with
+  | [ (Core_ast.Lam _ as fn); collection ]
+  | [ collection; (Core_ast.Lam _ as fn) ] -> (
+      match callbacks.infer_expr env collection with
+      | Error _ as error -> error
+      | Ok (subst, collection_ty) -> (
+          match collection_item subst collection_ty with
+          | Error _ as error -> error
+          | Ok (subst, _, item_ty) -> (
+              match callbacks.check_expr (apply_subst_env subst env) fn (TFn ([item_ty], fresh_tyvar ())) with
+              | Error _ as error -> error
+              | Ok (fn_subst, fn_ty) -> Ok (compose_subst fn_subst subst, fn_ty, collection_ty))))
   | [ left; right ] -> (
       match callbacks.infer_expr env left with
       | Error _ as error -> error
@@ -295,6 +307,22 @@ let infer_reduce_result subst first_ty initial_ty third_ty =
       ]
 
 let infer_reduce callbacks env = function
+  | [ (Core_ast.Lam _ as fn); initial; collection ]
+  | [ collection; initial; (Core_ast.Lam _ as fn) ] -> (
+      match callbacks.infer_expr env initial with
+      | Error _ as error -> error
+      | Ok (subst, initial_ty) -> (
+          match callbacks.infer_expr (apply_subst_env subst env) collection with
+          | Error _ as error -> error
+          | Ok (s, collection_ty) ->
+              let subst = compose_subst s subst in
+              match collection_item subst collection_ty with
+              | Error _ as error -> error
+              | Ok (subst, _, item_ty) ->
+                  let acc_ty = apply_subst subst initial_ty in
+                  match callbacks.check_expr (apply_subst_env subst env) fn (TFn ([acc_ty; item_ty], acc_ty)) with
+                  | Error _ as error -> error
+                  | Ok (s, fn_ty) -> infer_reduce_with (compose_subst s subst) fn_ty acc_ty collection_ty))
   | [ first; initial; third ] -> (
       match callbacks.infer_expr env first with
       | Error _ as error -> error

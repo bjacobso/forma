@@ -128,6 +128,7 @@ function isSchemaProjectionExpr(expr: SExpr): boolean {
     head === "Struct" ||
     head === "Array" ||
     head === "Optional" ||
+    head === "Option" ||
     head === "Map" ||
     head === "Ref" ||
     head === "Brand" ||
@@ -278,7 +279,7 @@ function schemaDeclaration(
           sourceId,
           expr,
           "artifact/schema",
-          "__schema expects a schema name and schema expression.",
+          "type expects a schema name and schema expression.",
         ),
       ],
     };
@@ -293,7 +294,7 @@ function schemaDeclaration(
           sourceId,
           expr.items[1]!,
           "artifact/schema",
-          "__schema expects a schema name.",
+          "type expects a schema name.",
         ),
       ],
     };
@@ -419,7 +420,7 @@ function serviceDeclaration(
           sourceId,
           expr,
           "artifact/service",
-          "__service expects a service name and (:methods ...) block.",
+          "service expects a service name and member signatures.",
         ),
       ],
     };
@@ -434,7 +435,7 @@ function serviceDeclaration(
           sourceId,
           expr.items[1]!,
           "artifact/service",
-          "__service expects a service name.",
+          "service expects a service name.",
         ),
       ],
     };
@@ -449,7 +450,7 @@ function serviceDeclaration(
           sourceId,
           methodsBlock,
           "artifact/service",
-          "__service expects a (:methods ...) block.",
+          "service expects member signatures.",
         ),
       ],
     };
@@ -705,10 +706,10 @@ function layerDeclaration(
   operationEffects: OperationEffects,
 ): DeclarationResult {
   if (expr._tag !== "List" || expr.items.length < 3) {
-    return failed(sourceId, expr, "artifact/layer", "__layer expects a name and a layer body.");
+    return failed(sourceId, expr, "artifact/layer", "layer expects a name and a layer body.");
   }
   const name = symName(expr.items[1]);
-  if (!name) return failed(sourceId, expr.items[1]!, "artifact/layer", "__layer expects a layer name.");
+  if (!name) return failed(sourceId, expr.items[1]!, "artifact/layer", "layer expects a layer name.");
 
   let signature: JsonValue | undefined;
   const signatureExpr = signatures.get(name);
@@ -1287,7 +1288,7 @@ function bindingPairsToJson(
           report(context, binding, "artifact/effect-body", ":let binding names must be symbols.");
           continue;
         }
-        bindings.push({ name: binding.name, pure: true, value: { kind: "Pure", value: valueExprToCoreJson(context.sourceId, value), span: spanJson(context.sourceId, value) }, span: spanJson(context.sourceId, value) });
+        bindings.push({ name: binding.name, pure: true, value: { kind: "Pure", value: valueExprToCoreJson(context.sourceId, value), effect: context.effect, span: spanJson(context.sourceId, value) }, span: spanJson(context.sourceId, value) });
       }
       continue;
     }
@@ -1377,8 +1378,8 @@ function effectCatchToJson(context: BodyContext, expr: Extract<SExpr, { readonly
       span: spanJson(context.sourceId, expr),
     };
   }
-  if (handlers.some((handler) => (handler as Record<string, JsonValue>)["errorType"] === "_")) {
-    return report(context, expr, "artifact/effect-body", "a (_ binding) catch-all must be the only catch clause.");
+  if (handlers.slice(0,-1).some((handler) => (handler as Record<string, JsonValue>)["errorType"] === "_")) {
+    return report(context, expr, "artifact/effect-body", "A catch-all must be the last catch clause.");
   }
   if (handlers.length === 1) {
     return {
@@ -1879,6 +1880,7 @@ function schemaExprToJson(sourceId: string, expr: SExpr): MechanicsJsonResult {
       return { ok: true, value: { kind: "Struct", fields, span: spanJson(sourceId, expr) } };
     }
     case "Array":
+    case "Option":
     case "Optional": {
       const metadata = metadataPairs(expr.items.slice(2));
       if (!metadata.ok) {

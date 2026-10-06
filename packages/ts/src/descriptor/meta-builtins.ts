@@ -1,3 +1,5 @@
+import { syntaxForDatum } from "../surface/datum.js";
+import { kValueToSExpr } from "../evaluator/quasiquote.js";
 import { isKKeyword, isKSymbol } from "../evaluator/types.js";
 /**
  * Meta-builtins — helper vocabulary available inside __form-hook bodies.
@@ -18,9 +20,10 @@ import type { KValue } from "../evaluator/types.js";
 import type { SemanticEnvironment, NormalizedChildForm } from "./ElaborationHook.js";
 import type { FormDescriptor, IdentifierSpec } from "./FormDescriptor.js";
 import { headSym, tail, type SExpr } from "../reader/types.js";
+import { KernelTypeError } from "../diagnostic/errors.js";
 import { showType, type Row, type Type, TCon, TApp, TRow, REmpty, RExtend } from "../type/types.js";
 import { SimpleNormalizedSlots, type SlotValue } from "./NormalizedSlots.js";
-import { typeCheckDescriptorTree } from "./descriptor-tree-check.js";
+import { typeCheckDescriptorTree, validateDescriptorTreeLiteralOptions } from "./descriptor-tree-check.js";
 import { normalizeRuntimeExprObject, runtimeExpr } from "./runtime-expr.js";
 import {
   buildDescriptorTreeLayoutAliases,
@@ -617,8 +620,9 @@ export function createMetaBuiltins(
           const diag = new Map<string, KValue>();
           diag.set("severity", "error");
           for (let i = 0; i < args.length; i += 2) {
-            const key = args[i];
+            const key = String(args[i]);
             const val = args[i + 1] as KValue;
+            if (key === ":code") diag.set("code", val);
             if (key === ":message") diag.set("message", val);
             if (key === ":slot") diag.set("slot", val);
             if (key === ":form") diag.set("form", val);
@@ -1160,8 +1164,9 @@ export function createMetaBuiltins(
 
           const explicitExtensionKey = typeof args[1] === "string" ? args[1] : undefined;
           const layoutArgIndex = explicitExtensionKey ? 2 : 1;
-          const layoutExpr = args[layoutArgIndex] as unknown as SExpr | undefined;
-          if (!layoutExpr || !("_tag" in layoutExpr)) return [];
+          const raw = args[layoutArgIndex];
+          if (raw === undefined || raw === null) return [];
+          const layoutExpr = syntaxForDatum(raw) ?? (typeof raw === "object" && "_tag" in raw && ["List", "Vector", "Map"].includes(raw._tag) ? raw as unknown as SExpr : kValueToSExpr(raw));
 
           const hostedDsl = hostedDsls.get(hostedDslName);
           if (!hostedDsl) {
@@ -1231,6 +1236,9 @@ export function createMetaBuiltins(
         if (layoutExpr === undefined || layoutExpr === null) return null;
 
         const extensionKey = explicitExtensionKey ?? protocolRegistry.componentExtension;
+        const syntax = syntaxForDatum(layoutExpr) ?? kValueToSExpr(layoutExpr);
+        const problems = validateDescriptorTreeLiteralOptions(syntax, hostedDsl.descriptors, extensionKey);
+        if (problems.length) return yield* new KernelTypeError({message: problems.map(problem => problem.message).join("; "), expected: "declared component options", got: "invalid layout", loc: syntax.loc});
         return yield* apply({ _tag: "KBuiltin", name: protocolRegistry.compileLayoutTreeOp }, [
           hostedDslName,
           extensionKey,

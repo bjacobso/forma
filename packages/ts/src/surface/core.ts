@@ -8,8 +8,12 @@ import { head, name, sym, list, vector } from "./effect.js";
 const call = (e: SExpr, h: string, ...args: SExpr[]) => list(e, [sym(e, h), ...args]);
 
 /** Surface sugar common to expansion, inference and evaluation. */
-export function normalizeCoreProgram(exprs: readonly SExpr[]): readonly SExpr[] {
-  return coerceProgram(resolveConstructors(exprs.map(e => normalizeCore(lowerMembers(e,moduleBindings(exprs)), true))));
+export function normalizeCoreProgram(exprs: readonly SExpr[], coerce = true): readonly SExpr[] {
+  const resolved = resolveConstructors(exprs.map(e => {
+    try { return normalizeCore(lowerMembers(e,moduleBindings(exprs)), true); }
+    catch (error) { if (error instanceof Error && !("loc" in error)) Object.assign(error, {loc: e.loc}); throw error; }
+  }));
+  return coerce ? coerceProgram(resolved) : resolved;
 }
 
 function normalizeCore(e: SExpr, top = false): SExpr {
@@ -101,7 +105,7 @@ function normalizeCore(e: SExpr, top = false): SExpr {
     return body;
   }
   if (h === "get" && e.items.length === 3 && !(e.items[2]?._tag === "Str" || name(e.items[2])?.startsWith(":"))) {
-    return call(e, "__map-get", normalizeCore(e.items[1]!), normalizeCore(e.items[2]!));
+    return list(e, [sym(e.items[0]!, "__map-get"), normalizeCore(e.items[1]!), normalizeCore(e.items[2]!)]);
   }
   const items = e.items.map(a => normalizeCore(a));
   return items.every((a, i) => a === e.items[i]) ? e : { ...e, items };
@@ -114,7 +118,7 @@ export function runtimeTypeDefinitions(expr: SExpr): readonly SExpr[] | undefine
     const n = expr.items[1]!, value = sym(expr, "__record_value");
     const error = name(expr.items[3]) === "error";
     const tag: SExpr = {_tag: "Str", value: name(n)!, loc: n.loc};
-    const spec: SExpr = {_tag: "Map",loc:expr.loc,pairs:[[sym(expr, ":discriminator"),{_tag:"Str",value:"_tag",loc:expr.loc}],[sym(expr, ":record"),{_tag:"Bool",value:true,loc:expr.loc}],[sym(expr, ":class"),{_tag:"Bool",value:!error,loc:expr.loc}],[sym(expr, ":arity"),{_tag:"Num",value:1,loc:expr.loc}]]};
+    const spec: SExpr = {_tag: "Map",loc:expr.loc,pairs:[[sym(expr, ":discriminator"),{_tag:"Str",value:"_tag",loc:expr.loc}],[sym(expr, ":record"),{_tag:"Bool",value:true,loc:expr.loc}],[sym(expr, ":class"),{_tag:"Bool",value:!error,loc:expr.loc}],[sym(expr, ":arity"),{_tag:"Num",value:1,loc:expr.loc}],[sym(expr, ":fields"),vector(expr, expr.items[2]?._tag === "Map" ? expr.items[2].pairs.filter(([,type]) => head(type)!=="Option").map(([key]) => key) : [])]]};
     return [call(expr,"define",sym(expr,`__constructor/${name(n)}`),spec), call(expr,"define",n,call(expr,"fn",vector(expr,[value]),error ? call(expr,"assoc",value,sym(expr,":_tag"),tag) : value))];
   }
   if (head(expr) !== "__sum-type" || expr._tag !== "List") return undefined;

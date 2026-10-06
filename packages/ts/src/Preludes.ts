@@ -34,6 +34,8 @@ export const preludeSource = (name: PreludeName): string => preludeSources[name]
 export const ontologyPreludeStack = [
   "compiler.lisp",
   "ontology.lisp",
+  "ui.lisp",
+  "viewspec.lisp",
 ] as const satisfies readonly PreludeName[];
 
 /**

@@ -149,7 +149,7 @@ export const inferEffectFail = (
     const errorTypes = yield* Ref.get(ctx.errorTypes);
     if (!errorTypes.has(expr.errorName)) {
       return yield* ctx.fail(originOf(expr, "effect-fail"), {
-        message: `Unknown error type ${expr.errorName}. Define it with __error before using fail.`,
+        message: `Unknown error type ${expr.errorName}. Define it with error before using fail.`,
       });
     }
     const payloadType = yield* inferExpr(env, expr.payload);
@@ -176,7 +176,7 @@ export const inferEffectCatch = (
     const errorTypes = yield* Ref.get(ctx.errorTypes);
     if (!errorTypes.has(expr.errorName)) {
       return yield* ctx.fail(originOf(expr, "effect-catch"), {
-        message: `Unknown error type ${expr.errorName}. Define it with __error before using catch.`,
+        message: `Unknown error type ${expr.errorName}. Define it with error before using catch.`,
       });
     }
     const bodyType = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.body));
@@ -245,7 +245,25 @@ function inferDataPattern(env: TypeEnv, syntax: import("../reader/types.js").SEx
       if (p._tag === "Map") {
         const as = p.pairs.find(([k])=>k._tag === "Sym" && k.name === ":as")?.[1];
         if (as) yield* visit(as,t);
-        const fields = p.pairs.filter(([k])=>!(k._tag === "Sym" && k.name === ":as")).flatMap(([k,v]) => k._tag === "Sym" && k.name === ":keys" && v._tag === "Vector" ? v.items.map(a => [a._tag === "Sym" ? `:${a.name}` : "", a] as const) : [[k._tag === "Sym" ? k.name : k._tag === "Str" ? k.value : "", v] as const]);
+        const fields = p.pairs
+          .filter(([key]) => !(key._tag === "Sym" && key.name === ":as"))
+          .flatMap(([key, value]) => {
+            if (key._tag === "Sym" && key.name === ":keys" && value._tag === "Vector") {
+              return value.items.map(binding => [binding._tag === "Sym" ? `:${binding.name}` : "", binding] as const);
+            }
+            const label = key._tag === "Sym" ? key.name : key._tag === "Str"
+              ? key.value.startsWith(":") || key.value.startsWith("\0") ? `\0str:${key.value}` : key.value
+              : "";
+            return [[label, value] as const];
+          });
+        const target = applyType(yield* Ref.get(ctx.subst), t);
+        if (target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "Map") {
+          for (const [label,value] of fields) {
+            yield* assignType(TCon(label.startsWith(":") ? label : JSON.stringify(label.startsWith("\0str:") ? label.slice(5) : label)), target.args[0]!, origin);
+            yield* visit(value,target.args[1]!);
+          }
+          return;
+        }
         let row = yield* ctx.freshRowVar;
         const children: [import("../reader/types.js").SExpr, Type][] = [];
         for (const [label,v] of fields) { const ft = yield* ctx.freshTVar; row = RExtend(label, ft, row); children.push([v,ft]); }
@@ -268,7 +286,7 @@ function inferDataPattern(env: TypeEnv, syntax: import("../reader/types.js").SEx
       const ctor = p._tag === "Sym" && /^[A-Z]/.test(p.name) ? p.name : p._tag === "List" && p.items[0]?._tag === "Sym" && /^[A-Z]/.test(p.items[0].name) ? p.items[0].name : undefined;
       if (ctor) {
         const scheme = bindings.get(ctor) ?? ctx.builtinScheme(ctor);
-        if (!scheme) return yield* ctx.fail(origin,{message: `Unknown constructor: ${ctor}`});
+        if (!scheme) return yield* ctx.fail(origin,{message: `Unknown constructor: ${ctor}`, code:"typecheck/pattern-constructor"});
         let ct = yield* instantiate(scheme);
         const args = p._tag === "List" ? p.items.slice(1) : [];
         for (const a of args) {
@@ -280,7 +298,11 @@ function inferDataPattern(env: TypeEnv, syntax: import("../reader/types.js").SEx
       }
       const literal = p._tag === "Num" || p._tag === "Str" || p._tag === "Bool" ? TCon(JSON.stringify(p.value)) : p._tag === "Sym" && p.name.startsWith(":") ? TCon(p.name) : p._tag === "Sym" && p.name === "nil" ? tNil : undefined;
       if (!literal) return yield* ctx.fail(origin,{message: "Invalid match pattern"});
-      yield* assignType(literal,t,origin);
+      const target = applyType(yield* Ref.get(ctx.subst), t);
+      const widened = p._tag === "Num" ? TCon(Number.isInteger(p.value) ? "Int" : "Number")
+        : p._tag === "Str" ? TCon("String") : p._tag === "Bool" ? TCon("Bool")
+        : p._tag === "Sym" && p.name.startsWith(":") ? TCon("Keyword") : literal;
+      yield* assignType(target._tag === "TVar" ? widened : literal, t, origin);
     });
     yield* visit(syntax,expected);
     return applyEnv(yield* Ref.get(ctx.subst), bindings);
@@ -345,6 +367,7 @@ export const inferMatch = (
         if (!conScheme) {
           return yield* ctx.fail(originOf(expr, "match"), {
             message: `Unknown constructor: ${conName}`,
+            code:"typecheck/pattern-constructor",
           });
         }
 

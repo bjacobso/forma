@@ -206,11 +206,11 @@ function lowerList(expr: SExpr & { _tag: "List" }): CoreExpr {
         return lowerAscribe(lower, span, items);
       case "deftype":
         throw new InferenceError({
-          message: "Legacy public type form 'deftype' is no longer supported; use '__sum-type'",
+          message: "Legacy public type form 'deftype' is no longer supported; use 'type'",
         });
       case "data":
         throw new InferenceError({
-          message: "Legacy public ADT form 'data' is no longer supported; use '__sum-type'",
+          message: "Legacy public ADT form 'data' is no longer supported; use 'type'",
         });
       case "__record-type":
         if (items[1]?._tag !== "Sym" || !items[2]) throw new InferenceError({message: "Named record type requires a name and fields"});
@@ -230,7 +230,7 @@ function lowerList(expr: SExpr & { _tag: "List" }): CoreExpr {
       case "defclass":
         throw new InferenceError({
           message:
-            "Legacy public typeclass form 'defclass' is no longer supported; use '__typeclass'",
+            "Legacy public typeclass form 'defclass' is no longer supported; use 'typeclass'",
         });
       case "__typeclass":
         return lowerDefineTypeclass(span, items);

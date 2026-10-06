@@ -438,6 +438,9 @@ const expandTopLevel = (
   return exprs.flatMap((expr, formIndex): readonly TopLevelForm[] => {
     const head = headName(expr);
     if (head === "__macro" || head === "macro") return [];
+    if (head === "do" && expr._tag === "List") {
+      return expandTopLevel([...macroDefs, ...expr.items.slice(1)], locate, at).map(node => ({ ...node, formIndex }));
+    }
     if (head === undefined || !macroNames.has(head)) return [{ expr, formIndex, loc: expr.loc, origin: authored }];
     try {
       const [expanded] = expandProgramSync([...macroDefs, expr], { builtins: defaultBuiltins }).exprs;

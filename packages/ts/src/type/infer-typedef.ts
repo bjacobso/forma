@@ -29,6 +29,11 @@ export const inferTypeDef = (
 ): Effect.Effect<Type, InferenceError, InferContext> =>
   Effect.gen(function* () {
     const ctx = yield* InferContext;
+    if (expr.source === "form") {
+      const type = TCon("FormDescriptor");
+      getAdtConstructorSchemes().set(expr.name, mkScheme([], [], type));
+      return type;
+    }
 
     // Type alias
     if (expr.typeExpr) {

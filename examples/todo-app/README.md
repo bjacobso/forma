@@ -15,8 +15,7 @@ A simple todo list application with support for adding, listing, and marking tas
 Represents a task item in the todo list.
 
 ```lisp
-(entity Todo {:title String
-    :completed (Option Bool :default false)})
+(entity Todo {:title String :completed (Option Bool :default false)})
 ```
 
 ## Queries
@@ -26,9 +25,7 @@ Represents a task item in the todo list.
 Returns all todo items in the system.
 
 ```lisp
-(query list-todos
-  :from Todo
-  :select [title completed])
+(query list-todos :from Todo :select [title completed])
 ```
 
 ### List Incomplete Todos
@@ -76,34 +73,57 @@ Retracts the current todo facts from the system while preserving time-travel his
 A comprehensive view for managing the todo list with add, complete, and delete capabilities.
 
 ```lisp
-(view todo-list-manager :query list-todos :subject session :title "Todo List Manager" :description "Add todos, inspect all tasks, and run completion or delete actions." :layout (rows
+(view todo-list-manager
+  :query list-todos
+  :subject session
+  :title "Todo List Manager"
+  :description
+    "Add todos, inspect all tasks, and run completion or delete actions."
+  :layout
+    (rows
       (heading "Todo List Manager")
       (columns
-        (input {:name "newTitle"
-                :label "Task"
-                :placeholder "What needs to be done?"})
-        (action-button {:action-ref "add-todo"
-                        :label "Add Todo"
-                        :parameters {:title (state newTitle)}
-                        :variant "default"}))
-      (table {:bind (query todos)
-              :columns [{:key "?title" :label "Task"}
-                        {:key "?completed" :label "Done" :kind "boolean"}
-                        {:key "?id" :label "ID" :kind "mono"}]
-              :empty-state "No todos yet."})
+        (input
+          {:name "newTitle" :label "Task" :placeholder "What needs to be done?"})
+        (action-button
+          {
+            :action-ref "add-todo"
+            :label "Add Todo"
+            :parameters {:title (state newTitle)}
+            :variant "default"}))
+      (table
+        {
+          :bind (query todos)
+          :columns
+            [
+              {:key "?title" :label "Task"}
+              {:key "?completed" :label "Done" :kind "boolean"}
+              {:key "?id" :label "ID" :kind "mono"}]
+          :empty-state "No todos yet."})
       (columns
-        (entity-picker {:name "selectedTodo"
-                        :label "Todo"
-                        :entity-type "Todo"
-                        :placeholder "Select todo"})
-        (action-button {:action-ref "mark-done"
-                        :label "Mark Complete"
-                        :parameters {:todo (get (state selectedTodo) :entityId)}
-                        :variant "secondary"
-                        :visible (not (nil? (state selectedTodo)))})
-        (action-button {:action-ref "delete-todo"
-                        :label "Delete"
-                        :parameters {:todo (get (state selectedTodo) :entityId)}
-                        :variant "destructive"
-                        :visible (not (nil? (state selectedTodo)))}))) :state {:newTitle {:initial "" :kind "string"} :selectedTodo {:initial nil :kind "null"}} :queries {:todos {:ref "list-todos"}})
+        (entity-picker
+          {
+            :name "selectedTodo"
+            :label "Todo"
+            :entity-type "Todo"
+            :placeholder "Select todo"})
+        (action-button
+          {
+            :action-ref "mark-done"
+            :label "Mark Complete"
+            :parameters {:todo (get (state selectedTodo) :entityId)}
+            :variant "secondary"
+            :visible (not (nil? (state selectedTodo)))})
+        (action-button
+          {
+            :action-ref "delete-todo"
+            :label "Delete"
+            :parameters {:todo (get (state selectedTodo) :entityId)}
+            :variant "destructive"
+            :visible (not (nil? (state selectedTodo)))})))
+  :state
+    {
+      :newTitle {:initial "" :kind "string"}
+      :selectedTodo {:initial nil :kind "null"}}
+  :queries {:todos {:ref "list-todos"}})
 ```

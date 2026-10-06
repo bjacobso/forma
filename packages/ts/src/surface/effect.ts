@@ -17,9 +17,9 @@ const effectResult = (e: SExpr | undefined): SExpr | undefined => head(e) === "E
 /** Whether this declaration represents an effect value rather than a thunk. */
 export const serviceValues = new WeakSet<SExpr>();
 
-export function normalizeEffectTypes(e: SExpr, schema = false, brandName?: SExpr): SExpr {
+export function normalizeEffectTypes(e: SExpr, schema = false, brandName?: SExpr, optionalField = false): SExpr {
   if (e._tag === "Map") {
-    return call(e, "Struct", ...e.pairs.map(([k, t]) => call(t, "field", k, normalizeEffectTypes(t, true))));
+    return call(e, "Struct", ...e.pairs.map(([k, t]) => call(t, "field", k, normalizeEffectTypes(t, true, undefined, true))));
   }
   if (literal(e)) return call(e, "Literal", name(e)?.startsWith(":") ? { _tag: "Str", value: name(e)!.slice(1), loc: e.loc } : e);
   if (e._tag !== "List") return e;
@@ -53,11 +53,11 @@ export function normalizeEffectTypes(e: SExpr, schema = false, brandName?: SExpr
   }
   if (h === "->") return call(e, h, ...args.map(a => normalizeEffectTypes(a)));
   if (h === "Struct" || h === ":fields") return call(e, h, ...args.map(f => {
-    if (f._tag === "List" && head(f) === "field") return list(f, [...f.items.slice(0, 2), ...f.items.slice(2).map(t => normalizeEffectTypes(t, true))]);
-    if (f._tag === "Vector") return vector(f, [f.items[0]!, ...f.items.slice(1).map(t => normalizeEffectTypes(t, true))]);
+    if (f._tag === "List" && head(f) === "field") return list(f, [...f.items.slice(0, 2), ...f.items.slice(2).map(t => normalizeEffectTypes(t, true, undefined, true))]);
+    if (f._tag === "Vector") return vector(f, [f.items[0]!, ...f.items.slice(1).map(t => normalizeEffectTypes(t, true, undefined, true))]);
     return f;
   }));
-  const normalizedHead = h === "List" ? "Array" : schema && h === "Option" ? "Optional" : h;
+  const normalizedHead = h === "List" ? "Array" : schema && optionalField && h === "Option" ? "Optional" : h;
   if (!normalizedHead) return e;
   // Metadata values are data, not types.
   const metadataAt = args.findIndex(a => name(a)?.startsWith(":") === true);
@@ -70,7 +70,7 @@ export function normalizeEffectTypes(e: SExpr, schema = false, brandName?: SExpr
 function body(e: SExpr, protectedNames: ReadonlySet<string> = new Set()): SExpr {
   if (e._tag === "Sym") {
     const n = e.name;
-    const aliases: Record<string, string> = { Some: "some", None: "none", Ok: "success", Err: "failure", "Option.Some": "some", "Option.None": "none", "Result.Ok": "success", "Result.Err": "failure" };
+    const aliases: Record<string, string> = { "__map-get": "get", Some: "some", None: "none", Ok: "success", Err: "failure", "Option.Some": "some", "Option.None": "none", "Result.Ok": "success", "Result.Err": "failure" };
     if (aliases[n] && !protectedNames.has(n)) return sym(e, aliases[n]!);
     return e;
   }
@@ -85,12 +85,13 @@ function body(e: SExpr, protectedNames: ReadonlySet<string> = new Set()): SExpr 
 
 interface Constructor { readonly tag: SExpr; readonly payload?: SExpr; }
 function lowerConstructors(e: SExpr, constructors: ReadonlyMap<string, Constructor>): SExpr {
-  if (head(e) === "quote" || head(e) === "quasiquote" || head(e) === ":") return e;
+  if (head(e) === "quote" || head(e) === "quasiquote") return e;
+  if (head(e) === ":" && e._tag === "List") return list(e, [e.items[0]!, lowerConstructors(e.items[1]!, constructors), e.items[2]!]);
   const constructor = constructors.get(e._tag === "Sym" ? e.name : head(e) ?? "");
   if (constructor && (e._tag === "Sym" && !constructor.payload || e._tag === "List")) {
     const arg = e._tag === "List" ? e.items[1] : undefined;
     const tagName = name(constructor.tag) ?? "_tag";
-    const tag: SExpr = { _tag: "Str", value: e._tag === "Sym" ? e.name : head(e)!, loc: e.loc };
+    const tag: SExpr = { _tag: "Str", value: (e._tag === "Sym" ? e.name : head(e)!).split(".").at(-1)!, loc: e.loc };
     const fields = arg?._tag === "Map" ? arg.pairs.map(([k,v]) => [k,lowerConstructors(v,constructors)] as const) : arg ? [[sym(arg,":value"),lowerConstructors(arg,constructors)] as const] : [];
     return { _tag: "Map", pairs: [[sym(e,`:${tagName.replace(/^:/, "")}`),tag], ...fields], loc: e.loc };
   }
@@ -104,10 +105,14 @@ function lowerConstructors(e: SExpr, constructors: ReadonlyMap<string, Construct
         const temp = sym(p,`__pattern_${p.loc.start}`);
         const bindings = p.items[1].pairs.flatMap(([k,v]) => [v,call(v,"get",temp,k)]);
         result = call(result,"let",vector(p,bindings),result);
-        items.push(list(p,[p.items[0]!,temp]),result);
-      } else if (ctor && p._tag === "Sym") items.push(p,result);
+        items.push(list(p,[sym(p, name(p.items[0])!.split(".").at(-1)!),temp]),result);
+      } else if (ctor && ctor.payload?._tag !== "Map" && p._tag === "List" && p.items[1]) {
+        const temp = sym(p, `__pattern_${p.loc.start}`);
+        result = call(result, "let", vector(p, [p.items[1], call(p, "get", temp, sym(p, ":value"))]), result);
+        items.push(list(p, [sym(p, name(p.items[0])!.split(".").at(-1)!), temp]), result);
+      } else if (ctor && p._tag === "Sym") items.push(sym(p, p.name.split(".").at(-1)!),result);
       else if (p._tag === "Sym" && /^[a-z_]/.test(p.name) && p.name !== "_" && !["none","some","success","failure"].includes(p.name)) items.push(call(p,"_",p),result);
-      else items.push(p,result);
+      else items.push(ctor && p._tag === "List" ? list(p, [sym(p, name(p.items[0])!.split(".").at(-1)!), ...p.items.slice(1)]) : p,result);
     }
     return list(e,items);
   }
@@ -118,7 +123,10 @@ function lowerConstructors(e: SExpr, constructors: ReadonlyMap<string, Construct
 }
 
 export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true): readonly SExpr[] {
-  if (validate) normalizeCoreProgram(exprs);
+  if (validate) {
+    const normalized = normalizeCoreProgram(exprs, false);
+    exprs = exprs.map((expr, i) => head(expr) === "define" ? normalized[i]! : expr);
+  }
   const signatures = new Map<string, SExpr>();
   for (const e of exprs) if (head(e) === ":" && e._tag === "List" && name(e.items[1])) signatures.set(name(e.items[1])!, e.items[2]!);
   const constructors = new Map<string, Constructor>();
@@ -128,7 +136,8 @@ export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true)
     const tag = custom ? t.items[2]! : sym(t,"_tag");
     for (const arm of t.items.slice(custom ? 3 : 1)) {
       const n = arm._tag === "List" ? name(arm.items[0]) : name(arm);
-      if (n) constructors.set(n, {tag,...(arm._tag === "List" && arm.items[1] ? {payload:arm.items[1]} : {})});
+      const owner = name(e.items[1]) ?? head(e.items[1]);
+      if (n && owner) constructors.set(`${owner}.${n}`, {tag,...(arm._tag === "List" && arm.items[1] ? {payload:arm.items[1]} : {})});
     }
   }
   const protectedNames = new Set(constructors.keys());
@@ -150,7 +159,7 @@ export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true)
       case "service": {
         if (!n) return e;
         const methods = args.map(m => {
-          if (m._tag !== "List" || head(m) !== ":" || m.items.length !== 3) return m;
+          if (m._tag !== "List" || head(m) !== ":" || m.items.length !== 3) throw new Error("service members require (: name Type)");
           const t = normalizeEffectTypes(m.items[2]!);
           const params: SExpr[] = [];
           const isFunction = head(t) === "->" && t._tag === "List";
@@ -178,7 +187,7 @@ export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true)
           const params = a.items[2]?._tag === "Vector" ? a.items[2] : vector(a,[]);
           const expressions = a.items.slice(params === a.items[2] ? 3 : 2);
           const wrapped = helperBindings.length ? [call(a,"let",vector(a,helperBindings),call(a,"do",...expressions))] : expressions;
-          const scope = new Set([...moduleBindings(exprs),...patternBindings(params),...helpers.flatMap(a=>name(a.items[1]) ? [name(a.items[1])!] : [])]);
+          const scope = new Set([...moduleBindings(exprs),...patternBindings(params),...args.flatMap((a, i) => name(a) === ":setup" && args[i + 1]?._tag === "Vector" ? (args[i + 1] as Extract<SExpr, {_tag: "Vector"}>).items.filter((_, i) => i % 2 === 0).flatMap(a => [...patternBindings(a)]) : []),...helpers.flatMap(a=>name(a.items[1]) ? [name(a.items[1])!] : [])]);
           return list(a,[a.items[1]!,params,...wrapped.map(v=>body(lowerConstructors(lowerMembers(v,scope),constructors),protectedNames))]);
         });
         for (let i=0;i<args.length;i++) {

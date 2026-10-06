@@ -34,11 +34,13 @@ let parse expr = match expr with
         let identifier = positional && (name u = Some "Symbol" || List.mem (Option.value ~default:"" (head u)) ["Declares";"Refers"]) in
         if identifier then (
           let declares = head u = Some "Declares" in
-          if declares then (match u with Ast.List (_,[_;Ast.Symbol (_,n)]) -> declarations := n :: !declarations | _ -> invalid_arg "Declares expects a type");
-          identifiers := !identifiers @ [call s "identifier" ([sym s n;sym s "Symbol"] @ if declares then [clause s "declaration" [Ast.Bool (s,true)]] else [])])
+          if declares then (match u with Ast.List (_,_::Ast.Symbol (_,n)::_) -> declarations := n :: !declarations | _ -> invalid_arg "Declares expects a type");
+          let string_id = match u with Ast.List (_,[_;_;Ast.Symbol (_,"String")]) -> true | _ -> false in
+          identifiers := !identifiers @ [call s "identifier" ([sym s n;sym s (if string_id then "String" else "Symbol")] @ if declares then [clause s "declaration" [Ast.Bool (s,true)]] else [])])
         else slots := !slots @ [call s "slot" ([sym s n;sym s (if head u = Some "Expr" then "expr" else "value")] @ (if optional t || many then [] else [clause s "required" [Ast.Bool (s,true)]]) @ (if many then [clause s "many" [Ast.Bool (s,true)]] else []) @ (match u with Ast.List (_, [Ast.Symbol (_,"Expr");t]) -> [clause s "type" [t]] | _ -> []))];
         let value = call s (if identifier then "meta/identifier" else if many then "meta/slot-values" else "meta/slot-value") [sym s "__form_input";text s n] in
-        let value = if identifier then call s "sym" [value] else value in
+        let string_id = match u with Ast.List (_,[_;_;Ast.Symbol (_,"String")]) when head u=Some "Declares" -> true | _ -> false in
+        let value = if identifier && not string_id then call s "sym" [value] else value in
         let value = match u with
           | Ast.List (_,[Ast.Symbol (_,"List");Ast.Symbol (_,child)]) when is_lower child -> call s "form/children" [text s child;value]
           | Ast.Symbol (_,child) when is_lower child -> call s "form/optional-child" [text s child;value]
@@ -61,6 +63,7 @@ let parse expr = match expr with
       let result_type = match List.assoc_opt ":type" options with Some t when head t <> Some "fn" -> t | _ -> sym s (match !declarations with n :: _ -> n | [] -> "Unit") in
       let hook kind expression = call s "__form-hook" [sym s ("form/" ^ form_name ^ "/" ^ kind);clause s "kind" [sym s kind];clause s "input" [sym s "NormalizedForm"];clause s "output" [sym s (if kind = "construct" then ir else if kind = "validate" then "Diagnostics" else "Type")];clause s "body" [bind expression]] in
       let rec schema t = match t with
+        | Ast.List (_, [Ast.Symbol (_,"Declares");_;Ast.Symbol (_,"String")]) -> call s "quote" [sym s "String"]
         | Ast.List (_, [Ast.Symbol (_,("Declares" | "Refers"));_]) -> call s "quote" [sym s "Symbol"]
         | Ast.List (_, [Ast.Symbol (_,"Expr");_]) -> call s "quote" [sym s "Syntax"]
         | Ast.List (_, [Ast.Symbol (_,"List");Ast.Symbol (_,child)]) when is_lower child -> call s "List" [call s "form/ir-type" [text s child]]
@@ -89,7 +92,7 @@ let normalize_application_unchecked env form_name args =
       | Ast.Map (_,[(Ast.Keyword (_,":keys"),Ast.Vector (_,keys))]) :: rest,args ->
           let allowed = List.filter_map name keys in
           let rec options acc = function
-            | Ast.Keyword (s,n) :: value :: args -> let key = String.sub n 1 (String.length n-1) in if not (List.mem key allowed) then raise (Surface.Invalid_form (s,"Unknown option " ^ n ^ ". Available options: " ^ String.concat ", " (List.map (fun key->":" ^ key) allowed))); options (clause s key [value] :: acc) args
+            | Ast.Keyword (s,n) :: value :: args -> let key = String.sub n 1 (String.length n-1) in if not (List.mem key allowed) then raise (Surface.Invalid_form (s,"Unknown option " ^ n ^ (match Descriptor_application_validation.closest_slot_name key (List.map (fun name -> Descriptor_application_validation.{name;aliases=[]}) allowed) with Some suggestion -> ". Did you mean \"" ^ ":" ^ suggestion ^ "\"?" | None -> ".") ^ " Available options: " ^ String.concat ", " (List.map (fun key->":" ^ key) allowed))); options (clause s key [value] :: acc) args
             | args -> match_ acc rest args in options acc args
       | Ast.Symbol (_,n) :: rest,value :: args ->
           let descriptor = Descriptor.form env form_name in

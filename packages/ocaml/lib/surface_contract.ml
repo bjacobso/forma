@@ -2,6 +2,11 @@
 let lookup entries key =
   let key = match key with Ast.Keyword (_,n) -> Value.VKeyword n | Ast.String (_,n) -> Value.VString n | _ -> Value.VNil in
   List.assoc_opt key entries
+let declaration_lookup env n =
+  match Env.lookup n env with Some _ as value -> value | None ->
+    (match Option.bind (Eval_meta.current_environment ()) (fun env -> Env.lookup n env) with
+     | Some _ as value -> value
+     | None -> Option.bind (Eval_meta.current_lookup_declaration ()) (fun lookup -> lookup n))
 let rec errors env ?(path="payload") value schema =
   let schema=Surface_type_alias.resolve (Surface_type_alias.environment_lookup env) schema in
   let fail message = [path ^ " " ^ message] in
@@ -23,7 +28,12 @@ let rec errors env ?(path="payload") value schema =
   | Ast.Map _,_ -> fail "must be a record"
   | Ast.List (_,Ast.Symbol (_,"List") :: [t]),(Value.VList values | Value.VVector values) -> List.mapi (fun i v -> check v t (path ^ "[" ^ string_of_int i ^ "]")) values |> List.concat
   | Ast.List (_,Ast.Symbol (_,"List") :: [_]),_ -> fail "must be a list"
-  | Ast.List (_,Ast.Symbol (_,"Id") :: [_]),Value.VString _ -> []
+  | Ast.List (_,Ast.Symbol (_,"Id") :: [Ast.Symbol (_,owner)]),Value.VString id ->
+      (match declaration_lookup env id with
+       | Some record when Descriptor.declaration_form record = Some "seed" ->
+           let actual=Eval_slot.identifier_value_with_lookup ~lookup:(declaration_lookup env) record (Value.VString "entity") in
+           if actual=Value.VSymbol owner then [] else fail ("has unknown " ^ owner ^ " ID " ^ id)
+       | _ -> fail ("has unknown " ^ owner ^ " ID " ^ id))
   | Ast.List (_,Ast.Symbol (_,"Id") :: [_]),_ -> fail "must be an entity ID string"
   | Ast.List (_,Ast.Symbol (_,"Brand") :: [t]),value -> check value t path
   | Ast.List (_,Ast.Symbol (_,"Union") :: arms),value -> if List.exists (fun t -> check value t path = []) arms then [] else fail "does not match any Union member"
@@ -45,7 +55,10 @@ let rec errors env ?(path="payload") value schema =
   | Ast.Symbol (_,"Bool"),Value.VBool _
   | Ast.Symbol (_,"Unit"),Value.VNil -> []
   | Ast.Symbol (_, ("String" | "Symbol" | "Keyword" | "Int" | "Number" | "Bool" | "Unit" as n)),_ -> fail ("must be " ^ n)
-  | Ast.Symbol (_,("Any" | "Type" | "Syntax" | "RuntimeExpr" | "Json")),_ -> []
+  | Ast.Symbol (_,"Type"),value -> (match Quote.syntax_of_value value with
+      | Ok syntax -> Type_syntax.errors syntax @ Type_syntax.unknown_references (fun n -> declaration_lookup env n <> None || declaration_lookup env ("__type/" ^ n) <> None) syntax
+      | Error _ -> fail "must be type syntax")
+  | Ast.Symbol (_,("Any" | "Syntax" | "RuntimeExpr" | "Json")),_ -> []
   | Ast.Symbol (_,n),value -> (match Env.lookup ("__type/" ^ n) env with
       | Some t -> (match Quote.syntax_of_value t with Ok t when t <> schema -> check value t path | _ -> fail ("has invalid type " ^ n))
       | None -> fail ("has unknown type " ^ n))

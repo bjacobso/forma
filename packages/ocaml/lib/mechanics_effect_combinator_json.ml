@@ -188,8 +188,8 @@ let catch_json ~core context expr items =
           | [ ("_", binding, handler, _) ] ->
               node "CatchAll"
                 [ ("body", body); ("binding", Ir_json.String binding); ("handler", handler) ]
-          | handlers when List.exists (fun (error_type, _, _, _) -> error_type = "_") handlers ->
-              report context expr "a (_ binding) catch-all must be the only catch clause."
+          | handlers when List.exists (fun (error_type, _, _, _) -> error_type = "_") (List.filteri (fun i _ -> i < List.length handlers-1) handlers) ->
+              report context expr "A catch-all must be the last catch clause."
           | [ (error_type, binding, handler, _) ] ->
               node "Catch"
                 [

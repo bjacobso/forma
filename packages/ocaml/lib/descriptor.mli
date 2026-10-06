@@ -21,6 +21,7 @@ type slot_mode = Value | Expr | Form
 type typed_slot = {
   name : string;
   mode : slot_mode;
+  many : bool;
   typ : Value.t option;
   aliases : string list;
   child_identifiers : identifier_spec list;

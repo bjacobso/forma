@@ -174,7 +174,7 @@ let validate_schema_references (declarations : declaration list) =
           (diagnostic_for_ref declarations ~path ~code:"http/unknown-schema-ref"
              ~message:
                (Printf.sprintf
-                  "Unknown schema reference %S. Define it with __schema \
+                  "Unknown schema reference %S. Define it with type \
                    or __error before using it in an HTTP API."
                   target)))
 

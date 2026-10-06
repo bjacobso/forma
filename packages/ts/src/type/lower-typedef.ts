@@ -28,7 +28,7 @@ import { parseTypeExpr } from "./type-parser.js";
 
 export function lowerTypeDef(span: Span, items: readonly SExpr[]): CoreExpr {
   if (items.length < 3) {
-    throw new InferenceError({ message: "(__sum-type ...) requires at least 2 arguments" });
+    throw new InferenceError({ message: "(type ...) requires at least 2 arguments" });
   }
 
   const nameExpr = items[1]!;
@@ -37,9 +37,9 @@ export function lowerTypeDef(span: Span, items: readonly SExpr[]): CoreExpr {
   if (nameExpr._tag === "List") {
     const typeName = headSym(nameExpr);
     if (!typeName) {
-      throw new InferenceError({ message: "__sum-type type name must be a symbol" });
+      throw new InferenceError({ message: "A type name must be a symbol" });
     }
-    const typeParams = nameExpr.items.slice(1).map((p) => asSym(p, "__sum-type type parameter"));
+    const typeParams = nameExpr.items.slice(1).map((p) => asSym(p, "type parameter"));
     if (asSym(items[0]!, "type declaration") === "__type-alias") {
       if (items.length !== 3) throw new InferenceError({message: "A type alias requires one body"});
       if (new Set(typeParams).size !== typeParams.length || typeParams.some(p => !/^[a-z]/.test(p)))
@@ -50,7 +50,7 @@ export function lowerTypeDef(span: Span, items: readonly SExpr[]): CoreExpr {
     const constructors = items.slice(2).filter(con=>headSym(con) !== ":tag").map((con) => {
       const conName = headSym(con);
       if (!conName) {
-        throw new InferenceError({ message: "__sum-type constructor must be (Name fields...)" });
+        throw new InferenceError({ message: "type constructor must be (Name fields...)" });
       }
       return {
         name: conName,
@@ -59,17 +59,17 @@ export function lowerTypeDef(span: Span, items: readonly SExpr[]): CoreExpr {
     });
 
     if (constructors.length === 0) {
-      throw new InferenceError({ message: "__sum-type requires at least one constructor" });
+      throw new InferenceError({ message: "type requires at least one constructor" });
     }
 
     return CTypeDef(span, typeName, undefined, typeParams, constructors);
   }
 
   // Alias: (__sum-type Name TypeExpr)
-  const aliasName = asSym(nameExpr, "__sum-type name");
+  const aliasName = asSym(nameExpr, "type name");
   if (items.length !== 3) {
     throw new InferenceError({
-      message: "(__sum-type Name Type) requires exactly 2 arguments for aliases",
+      message: "(type Name Type) requires exactly 2 arguments for aliases",
     });
   }
   let typeExpr = parseTypeExpr(items[2]!);
@@ -216,11 +216,11 @@ export function lowerDefineSchema(span: Span, items: readonly SExpr[]): CoreExpr
 export function lowerDefineError(span: Span, items: readonly SExpr[]): CoreExpr {
   if (items.length !== 3) {
     throw new InferenceError({
-      message: "(__error Name (:fields ...)) requires a name and fields block",
+      message: "(error Name {...}) requires a name and field record",
     });
   }
 
-  const errorName = asSym(items[1]!, "__error name");
+  const errorName = asSym(items[1]!, "error name");
   const fields = parseErrorFields(items[2]!);
   return CTypeDef(span, errorName, TERow(spanOf(items[2]!), fields), undefined, undefined, "error");
 }
@@ -590,7 +590,7 @@ function parseErrorFields(
   const items = asList(expr, "error fields");
   if (trySym(items[0]!) !== ":fields") {
     throw new InferenceError({
-      message: "__error expects a (:fields ...) block.",
+      message: "error expects a field record.",
     });
   }
   return items.slice(1).map((field) => schemaFieldToRowField(field));

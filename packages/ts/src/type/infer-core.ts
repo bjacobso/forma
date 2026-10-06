@@ -604,7 +604,7 @@ const inferApp = (
     if (expr.fn._tag === "Var" && !env.has(expr.fn.name) && ctx.builtinScheme(expr.fn.name) && ["=","!="].includes(expr.fn.name) && expr.args.length === 2) {
       const left=yield* inferExpr(env,expr.args[0]!), right=yield* inferExpr(env,expr.args[1]!);
       const keyword=(t:Type):boolean => t._tag === "TCon" && (t.name === "Keyword" || t.name.startsWith(":")) || t._tag === "TApp" && t.con._tag === "TCon" && t.con.name === "Union" && t.args.every(keyword);
-      if (!(keyword(left) && keyword(right))) yield* unify(left,right,originOf(expr,"equality"));
+      if (!(keyword(left) && keyword(right))) yield* joinType(left,right,originOf(expr,"equality"));
       return TCon("Bool");
     }
     if (expr.fn._tag === "Var" && !env.has(expr.fn.name) && collectionOperations.has(expr.fn.name)) {
@@ -652,6 +652,21 @@ const inferApp = (
       return args.every(t=>t._tag === "TCon" && t.name === "Int") ? TCon("Int") : tNum;
     }
     let fnT = yield* inferExpr(env, expr.fn);
+    // Solve repeated unconstrained parameters together, using their common
+    // supertype rather than letting the first argument narrow the variable.
+    const parameters: Type[] = [];
+    let cursor = fnT;
+    while (cursor._tag === "TFun" && parameters.length < expr.args.length) {
+      parameters.push(cursor.arg); cursor = cursor.res;
+    }
+    const repeated = new Map<string, Type>();
+    for (const [i, parameter] of parameters.entries()) {
+      if (parameter._tag !== "TVar" || parameters.filter(p => p._tag === "TVar" && p.id === parameter.id).length < 2) continue;
+      const actual = yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[i]!);
+      const previous = repeated.get(parameter.id);
+      repeated.set(parameter.id, previous ? yield* joinType(previous, actual, originOf(expr, "argument-join")) : actual);
+    }
+    for (const [id, actual] of repeated) yield* unify({ _tag: "TVar", id }, actual, originOf(expr, "argument-join"));
     for (let i = 0; i < expr.args.length; i++) {
       const sBefore = yield* Ref.get(ctx.subst);
       const current = applyType(sBefore, fnT);

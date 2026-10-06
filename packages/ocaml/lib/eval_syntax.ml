@@ -165,7 +165,7 @@ let eval ctx env op args =
               | None -> Ok (Some VNil)
               | Some declaration -> let key_name=Value.to_str_part key in let key_name=if String.starts_with ~prefix:":" key_name then String.sub key_name 1 (String.length key_name-1) else key_name in
                   let identifier=Option.bind (Descriptor.declaration_form declaration) (Descriptor.form_with_lookup ~lookup) |> Option.fold ~none:false ~some:(fun (form:Descriptor.form) -> List.exists (fun (i:Descriptor.identifier_spec)->i.name=key_name) form.identifiers) in
-                  let value=if identifier then Eval_slot.identifier_value_with_lookup ~lookup declaration (VString key_name) else Eval_slot.slot_value_with_lookup ~lookup declaration (VString key_name) in Ok (Some value))
+                  let value=if identifier then Eval_slot.identifier_value_with_lookup ~lookup declaration (VString key_name) else if Option.fold ~none:false ~some:(fun (slot:Descriptor.typed_slot) -> slot.many) (Eval_slot.slot_spec_with_lookup ~lookup declaration key_name) then VList (Eval_slot.slot_values_with_lookup ~lookup declaration (VString key_name)) else Eval_slot.slot_value_with_lookup ~lookup declaration (VString key_name) in Ok (Some value))
           | Error ds,_ | _,Error ds -> Error ds)
       | _ -> Error [diagnostic "eval/arity" "declaration-hole expects a declaration and a hole name"])
   | "declaration-fields" -> (match args with [owner] -> ctx.eval_expr env owner |> Result.map (fun owner -> Some (VMap (declaration_fields env owner))) | _ -> Error [diagnostic "eval/arity" "declaration-fields expects a declaration"])
