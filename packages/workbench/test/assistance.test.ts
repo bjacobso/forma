@@ -11,7 +11,7 @@ it("shares typed hover facts and scoped completions", async () => {
 });
 
 it("obtains missing slots and their templates from descriptors", async () => {
-  const analysis = await analyzeSource(onboarding.replace('  (:system "Okta")\n', ""));
-  const activate = analysis.rows.find((row) => row.text === "define-step activate")!;
+  const analysis = await analyzeSource(onboarding.replace(' :system "Okta"', ""));
+  const activate = analysis.rows.find((row) => row.text.startsWith("step activate "))!;
   expect(analysis.slots[activate.id]).toEqual(expect.arrayContaining([expect.objectContaining({ key: "system", text: expect.stringContaining(":system") })]));
 });

@@ -88,6 +88,35 @@ export const update = (model: Model, message: Message): UpdateReturn =>
     } }),
     ReleasedAnalysis: () => ({ model }),
     GotOutlinerMessage: ({ message: event }) => {
+      if (
+        event._tag === "FilledPlaceholder" &&
+        event.parentId !== null &&
+        model.analysis?.revision === model.outline.revision
+      ) {
+        const slot = model.analysis.slots[event.parentId]?.find((slot) => slot.key === event.key);
+        const parent = find(model.outline.items, event.parentId);
+        if (slot?.inline && parent !== undefined) {
+          const header = `${parent.text.trimEnd()} ${event.text}`;
+          const replace = (rows: ReturnType<typeof toRows>): ReturnType<typeof toRows> =>
+            rows.map((row) => ({
+              ...row,
+              text: row.id === parent.id ? header : row.text,
+              children: replace(row.children),
+            }));
+          const changed = foldOutliner(
+            model,
+            Outliner.Message.Replace({
+              items: fromRows(replace(toRows(model.outline.items)), model.outline.items),
+              announcement: `Added ${slot.label}.`,
+            }),
+          );
+          const focused = foldOutliner(changed.model, Outliner.Message.Reveal({ id: parent.id }));
+          return followOutline(model, {
+            ...focused,
+            commands: [...(changed.commands ?? []), ...(focused.commands ?? [])],
+          });
+        }
+      }
       if (event._tag === "RequestedCompletion" && model.analysis !== null) {
         const row = find(model.outline.items, event.id);
         const layout = model.analysis.rows.find((layout) => layout.id === event.id);

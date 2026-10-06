@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("shows typed keyboard hover, scoped completion, and descriptor placeholders", async ({ page }) => {
+test("shows typed keyboard hover, scoped completion, and descriptor placeholders", async ({
+  page,
+}) => {
   await page.goto("/");
   await expect(page.getByText(/0 errors/)).toBeVisible();
   const tree = page.getByRole("tree", { name: "Program" });
@@ -14,11 +16,17 @@ test("shows typed keyboard hover, scoped completion, and descriptor placeholders
   await page.keyboard.press("Control+Space");
   await expect(page.getByRole("listbox")).toBeVisible();
   await page.keyboard.press("Escape");
-  const activate = tree.getByRole("treeitem", { name: /^define-step activate/ });
+  const activate = tree.getByRole("treeitem", { name: /^step activate/ });
   const id = await activate.getAttribute("data-outline-row");
-  await tree.locator(`[data-outline-placeholder="doc"][data-parent="${id}"]`).getByRole("button", { name: "Add doc" }).click();
+  await tree
+    .locator(`[data-outline-placeholder="doc"][data-parent="${id}"]`)
+    .getByRole("button", { name: "Add doc" })
+    .click();
   await page.keyboard.type('"Activate the new hire"');
-  await expect(tree.getByRole("treeitem", { name: ':doc "Activate the new hire"', exact: true })).toBeVisible();
+  await expect(activate.locator("textarea")).toHaveValue(
+    'step activate :system "Okta" :reads [:check :i9 :payroll] :doc "Activate the new hire"',
+  );
+  await expect(page.getByText(/0 errors/)).toBeVisible();
   await page.getByRole("button", { name: "Brackets", exact: true }).click();
   await expect(map.locator(".fw-outliner__handle")).toContainText("(");
 });
