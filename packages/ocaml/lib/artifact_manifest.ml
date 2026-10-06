@@ -19,7 +19,7 @@ let source_manifest table id =
 let source_manifests table ids = List.filter_map (source_manifest table) ids
 
 let build_package ~engine_name ~engine_version ~session_id ~sources ~preludes
-    ~source_ids ~declarations ~modules ~type_summary =
+    ~source_ids ~declarations ~modules ~type_summary ~diagnostics =
   let declarations_hash =
     Artifact_package_hash.hash_declarations ~algorithm:hash_algorithm
       declarations
@@ -32,4 +32,4 @@ let build_package ~engine_name ~engine_version ~session_id ~sources ~preludes
     ~session_id ~hash_algorithm ~source_ids
     ~sources:(source_manifests sources source_ids)
     ~preludes:(source_manifests preludes (sorted_hashtbl_keys preludes))
-    ~declarations_hash ~declarations ~modules ~type_summary ~diagnostics:[]
+    ~declarations_hash ~declarations ~modules ~type_summary ~diagnostics

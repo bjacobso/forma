@@ -1,4 +1,3 @@
-(define-typeclass (Show a)
-  (show (-> a Str)))
+(typeclass (Show a) (: show (-> a String)))
 (instance (Show Num)
-  (define show (fn [x] 42)))
+  (define show  [x] 42))

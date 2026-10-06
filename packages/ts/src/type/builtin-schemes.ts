@@ -4,6 +4,7 @@
 import type { Scheme } from "./types.js";
 import {
   TVar,
+  TCon,
   TApp,
   TFun,
   TVariadic,
@@ -48,6 +49,10 @@ function arithUnary(): Scheme {
 
 export function builtinScheme(name: string): Scheme | undefined {
   switch (name) {
+    case "Some": case "Option.Some": return mkScheme(["__option"],[],fnType([TVar("__option")],TApp(TCon("Option"),[TVar("__option")])));
+    case "None": case "Option.None": return mkScheme(["__option"],[],TApp(TCon("Option"),[TVar("__option")]));
+    case "Ok": case "Result.Ok": return mkScheme(["__result","__error"],[],fnType([TVar("__result")],TApp(TCon("Result"),[TVar("__result"),TVar("__error")])));
+    case "Err": case "Result.Err": return mkScheme(["__result","__error"],[],fnType([TVar("__error")],TApp(TCon("Result"),[TVar("__result"),TVar("__error")])));
     case "+":
     case "-":
     case "*":
@@ -76,8 +81,12 @@ export function builtinScheme(name: string): Scheme | undefined {
     case ">":
     case ">=":
       return mono(fnType([tNum, tNum], tBool));
+    case "format":
+    case "str":
+      return mono(TVariadic(tUnknown,tStr));
     case "concat":
       return mono(fnType([tStr, tStr], tStr));
+
     case "upcase":
     case "downcase":
     case "uppercase":
@@ -86,7 +95,9 @@ export function builtinScheme(name: string): Scheme | undefined {
       return mono(fnType([tStr], tStr));
     case "length":
       return mono(fnType([tStr], tNum));
+    case "starts-with?":
     case "starts-with":
+    case "ends-with?":
     case "ends-with":
     case "contains":
       return mono(fnType([tStr, tStr], tBool));
@@ -101,6 +112,8 @@ export function builtinScheme(name: string): Scheme | undefined {
       return mono(fnType([tStr, tStr], TApp(tList, [tStr])));
     case "join":
       return mono(fnType([TApp(tList, [tStr]), tStr], tStr));
+    case "keyword?":
+    case "symbol?":
     case "is-nil":
     case "is-string":
     case "is-number":
@@ -164,8 +177,16 @@ export function builtinScheme(name: string): Scheme | undefined {
       // (not expr) -> Bool — internal desugared name
       return mono(fnType([tBool], tBool));
 
-    case "meta":
-      return mono(TVariadic(tUnknown, tMeta));
+    case "meta": return mono(fnType([tUnknown,tUnknown,tUnknown],tUnknown));
+    case "attribute-type":
+      return mono(fnType([tUnknown], tUnknown));
+    case "meta/get": return mono(fnType([tUnknown,tUnknown],tUnknown));
+    case "declaration-hole": return mono(fnType([tUnknown,tUnknown],tUnknown));
+    case "type/kind": return mono(fnType([tUnknown],tUnknown));
+    case "type/base": return mono(fnType([tUnknown],tUnknown));
+    case "keyword/name": return mono(fnType([tUnknown],tStr));
+    case "keyword": return mono(TFun(tUnknown,{_tag:"TCon",name:"Keyword"},undefined,tUnknown));
+    case "sym": return mono(fnType([tStr],{_tag:"TCon",name:"Symbol"}));
 
     case "fail":
       return mono(fnType([tStr], tNever));

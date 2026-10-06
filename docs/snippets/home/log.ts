@@ -7,7 +7,7 @@ export class ConsoleUnavailable extends Schema.TaggedError<ConsoleUnavailable>()
 export class Console extends Context.Service<
   Console,
   {
-    readonly print: (message: string) => Effect.Effect<void, ConsoleUnavailable>;
+    readonly print: (arg0: string) => Effect.Effect<void, ConsoleUnavailable>;
   }
 >()("Console") {}
 

@@ -17,8 +17,8 @@ let mk_binding expr name value =
 let mk_field expr label value = Core_ast.{ node = mk_node expr; label; value }
 
 let label_name = function
-  | Ast.Symbol (_, name) | Ast.Keyword (_, name) | Ast.String (_, name) ->
-      Some name
+  | Ast.Symbol (_, name) | Ast.Keyword (_, name) -> Some name
+  | Ast.String (_,name) -> Some (if String.starts_with ~prefix:":" name || String.starts_with ~prefix:"\000" name then "\000str:" ^ name else name)
   | _ -> None
 
 let is_else = function
@@ -150,10 +150,16 @@ let rec lower_expr expr =
 
 and lower_form expr op args =
   match op with
+  | "quote" -> (match args with
+      | [Ast.Symbol (_,n)] -> Ok (Core_ast.Lit (mk_node expr, LSymbol n))
+      | [(Ast.List _ | Ast.Vector _ | Ast.Map _) as value] -> Ok (Core_ast.Lit (mk_node expr, LQuoted value))
+      | [value] -> lower_expr value
+      | _ -> Error [diagnostic ~span:(Ast.expr_span expr) "lower/quote" "quote expects one datum"])
+
   | "fn" | "lambda" -> lower_lambda expr args
   | "let" -> lower_let expr args
   | "define" | "def" -> lower_define expr args
-  | "defn" | "define-operation" -> lower_defn expr args
+  | "defn" | "__operation" -> lower_defn expr args
   | "if" -> lower_if expr args
   | "when" -> lower_when expr args
   | "unless" -> lower_unless expr args
@@ -166,12 +172,12 @@ and lower_form expr op args =
   | "get" -> lower_get expr args
   | ":" -> lower_ascribe expr args
   | "match" -> Lower_match.lower_match lower_expr expr args
-  | "define-type" -> lower_type_def expr args
+  | "__sum-type" -> lower_type_def expr args
   | "define-effect" | "perform" | "handle" | "->!" ->
       Error
         [
           diagnostic ~span:(Ast.expr_span expr) "lower/legacy-effect"
-            "Legacy algebraic effect forms are not supported; use define-service, define-operation, and Effect.";
+            "Legacy algebraic effect forms are not supported; use __service, __operation, and Effect.";
         ]
   | _ -> lower_application expr (Ast.Symbol (Ast.expr_span expr, op)) args
 
@@ -472,7 +478,7 @@ and lower_and expr args =
 and lower_sequence span exprs = Lower_effect.lower_body lower_expr span exprs
 and lower_get expr args =
   match args with
-  | [ record_expr; label_expr ] -> (
+  | [record_expr; ((Ast.Keyword _ | Ast.String _) as label_expr)] -> (
       match (lower_expr record_expr, label_name label_expr) with
       | Error diagnostics, _ -> Error diagnostics
       | _, None ->
@@ -483,6 +489,7 @@ and lower_get expr args =
             ]
       | Ok record, Some label -> Ok (Core_ast.Get (mk_node expr, record, label))
       )
+  | [record;key] -> lower_application expr (Ast.Symbol (Ast.expr_span expr,"get")) [record;key]
   | _ ->
       Error
         [
@@ -512,46 +519,31 @@ and lower_type_def expr args =
       Error
         [
           diagnostic ~span:(Ast.expr_span expr) "lower/type-definition"
-            "define-type expects a name and optional type expression.";
+            "__sum-type expects a name and optional type expression.";
         ]
 let program exprs =
   Core_ast.reset_node_ids ();
-  let rec loop acc = function
-    | [] -> Ok (List.rev acc)
-    | expr :: rest -> (
-        match Lower_type.type_signature expr with
-        | Some (name, type_expr) -> (
-            match rest with
-            | [] ->
-                Error
-                  [
-                    diagnostic ~span:(Ast.expr_span expr) "lower/signature"
-                      "Type signature must be followed by a definition.";
-                  ]
-            | def_expr :: rest -> (
-                match Lower_type.definition_name def_expr with
-                | Some def_name when def_name = name -> (
-                    match
-                      (Lower_type.parse_type_expr type_expr, lower_expr def_expr)
-                    with
-                    | Error diagnostics, _ | _, Error diagnostics ->
-                        Error diagnostics
-                    | Ok signature, Ok lowered -> (
-                        match Lower_type.attach_signature signature lowered with
-                        | Error _ as error -> error
-                        | Ok lowered -> loop (lowered :: acc) rest))
-                | _ ->
-                    Error
-                      [
-                        diagnostic ~span:(Ast.expr_span expr) "lower/signature"
-                          (Printf.sprintf
-                             "Type signature for %S must be followed by a \
-                              matching definition."
-                             name);
-                      ]))
-        | None -> (
-            match lower_expr expr with
-            | Error _ as error -> error
-            | Ok lowered -> loop (lowered :: acc) rest))
-  in
-  loop [] exprs
+  let signatures = List.filter_map (fun e -> Option.map (fun (n,t) -> n,(e,t)) (Lower_type.type_signature e)) exprs in
+  let definitions = List.filter_map Lower_type.definition_name exprs in
+  let duplicate = List.find_opt (fun (n,_) -> List.length (List.filter (fun (m,_) -> n=m) signatures) > 1) signatures in
+  match duplicate with
+  | Some (_, (e,_)) -> Error [diagnostic ~span:(Ast.expr_span e) "lower/signature" "Duplicate module signature."]
+  | None ->
+      let missing = List.find_opt (fun (n,_) -> not (List.mem n definitions)) signatures in
+      match missing with
+      | Some (n,(e,_)) -> Error [diagnostic ~span:(Ast.expr_span e) "lower/signature" ("No definition for signature " ^ n)]
+      | None ->
+          let rec loop acc = function
+            | [] -> Ok (List.rev acc)
+            | e :: rest when Option.is_some (Lower_type.type_signature e) -> loop acc rest
+            | e :: rest -> (match lower_expr e with
+              | Error _ as error -> error
+              | Ok lowered ->
+                  let signature = Option.bind (Lower_type.definition_name e) (fun n -> List.assoc_opt n signatures) in
+                  match signature with
+                  | None -> loop (lowered :: acc) rest
+                  | Some (_,t) -> (match Lower_type.parse_type_expr t with
+                    | Error _ as error -> error
+                    | Ok signature -> match Lower_type.attach_signature signature lowered with
+                      | Error _ as error -> error | Ok lowered -> loop (lowered :: acc) rest))
+          in loop [] exprs

@@ -125,7 +125,7 @@ let editor_definition request = Abi_editor_ops.definition ~with_session request
 let editor_format request = Abi_editor_ops.format ~with_session request
 let decode_request = Abi_request.decode
 
-let handle_request request =
+let dispatch_request request =
   match request.op with
   | "version" -> version_json ()
   | "openSession" -> open_session ()
@@ -169,6 +169,18 @@ let handle_request request =
           Response.diagnostic_json ~code:"abi/unsupported-op"
             ~message:(Printf.sprintf "Unsupported operation %S." op);
         ]
+
+let handle_request request =
+  try
+    (match request.source with
+     | Some source when List.mem request.op ["evaluate";"eval";"expand";"typecheck";"typecheckCore";"typecheckCoreTyped";"emit";"elaborate"] ->
+         (match Reader.parse_ast ~source_id:(Option.value ~default:"request" request.source_id) source with Ok exprs -> Surface.validate_program exprs | Error _ -> ())
+     | _ -> ());
+    dispatch_request request with
+  | Surface.Invalid_form (span,message) -> Response.eval_diagnostics_json [Eval.{span=Some span;code="surface/invalid-form";message}]
+  | Invalid_argument message ->
+      let span=Option.map (fun source -> {Ast.source_id=Option.value ~default:"request" request.source_id;start_offset=0;end_offset=String.length source}) request.source in
+      Response.eval_diagnostics_json [Eval.{span;code="surface/invalid-form";message}]
 
 let handle_json json =
   match decode_request json with

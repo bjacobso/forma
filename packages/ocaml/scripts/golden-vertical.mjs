@@ -17,6 +17,8 @@ const daemon = spawn(nativeCli, ["daemon"], {
   stdio: ["pipe", "pipe", "pipe"],
 });
 
+const daemonExit = new Promise((resolveExit) => daemon.on("close", resolveExit));
+
 let stderr = "";
 daemon.stderr.on("data", (chunk) => {
   stderr += chunk;
@@ -101,29 +103,13 @@ const effectGolden = JSON.parse(
 
 const sourceId = "golden-vertical/agent-tool-slice";
 const source = `
-(define-schema FindEmployeeInput
-  (:kind struct)
-  (:fields
-    (field id String)
-    (field includeInactive Bool)))
-
-(define-error EmployeeNotFound
-  (:fields (field id String))
-  (:status 404))
-
-(define-api-group employee-tools
-  (:path-params)
-  (endpoint find-employee
-    (:method POST)
-    (:path "/agent-tools/find-employee")
-    (:payload FindEmployeeInput)
-    (:success FindEmployeeInput)
-    (:errors EmployeeNotFound InternalError)))
-
-(define-action find-employee
-  (:input [id String])
-  (:returns Bool)
-  (:do (= id "employee:ada")))
+(type FindEmployeeInput {:id String :includeInactive Bool})
+(error EmployeeNotFound {:id String} :status 404)
+(api employee-tools
+  (endpoint find-employee :method :post :path "/agent-tools/find-employee"
+    :payload FindEmployeeInput :success FindEmployeeInput :errors [EmployeeNotFound]))
+(: find-employee (-> String (Action Bool)))
+(define find-employee [id] (= id "employee:ada"))
 `;
 
 let sessionId;
@@ -206,8 +192,8 @@ try {
 
   const loaded = await request({ op: "loadSource", sessionId, sourceId, source });
   expectOk("loadSource golden vertical", loaded);
-  if (loaded.value?.formCount !== 4) {
-    throw new Error(`Expected four forms, got:\n${JSON.stringify(loaded, null, 2)}`);
+  if (loaded.value?.formCount !== 5) {
+    throw new Error(`Expected five forms, got:\n${JSON.stringify(loaded, null, 2)}`);
   }
 
   const typechecked = await request({ op: "typecheck", sessionId, sourceId });
@@ -238,7 +224,8 @@ try {
     content?.sourceIds?.join(",") !== sourceId ||
     content?.declarationCount !== 4 ||
     content?.typeSummary?.declarationCount !== 4 ||
-    content?.typeSummary?.resultTypes?.SchemaDecl !== 2 ||
+    content?.typeSummary?.resultTypes?.SchemaDef !== 1 ||
+    content?.typeSummary?.resultTypes?.ErrorDef !== 1 ||
     content?.typeSummary?.resultTypes?.HttpApiDecl !== 1 ||
     content?.typeSummary?.resultTypes?.ActionDef !== 1 ||
     !Array.isArray(content?.declarations) ||
@@ -251,34 +238,32 @@ try {
     throw new Error(`Unexpected golden vertical IR envelope:\n${JSON.stringify(emitted, null, 2)}`);
   }
 
-  const inputSchema = findDeclaration(content.declarations, "Schema", "FindEmployeeInput");
+  const inputSchema = findDeclaration(content.declarations, "SchemaDef", "FindEmployeeInput");
   if (
     inputSchema.schema?.kind !== "Struct" ||
-    fieldSchema(inputSchema.schema, "id")?.prim !== "String" ||
-    fieldSchema(inputSchema.schema, "includeInactive")?.prim !== "Bool"
+    fieldSchema(inputSchema.schema, "id")?.name !== "String" ||
+    fieldSchema(inputSchema.schema, "includeInactive")?.name !== "Bool"
   ) {
     throw new Error(`Unexpected input schema IR:\n${JSON.stringify(inputSchema, null, 2)}`);
   }
 
-  const notFound = findDeclaration(content.declarations, "Schema", "EmployeeNotFound");
+  const notFound = findDeclaration(content.declarations, "ErrorDef", "EmployeeNotFound");
   if (
-    notFound.schemaKind !== "Error" ||
-    notFound.schema?.kind !== "Annotated" ||
-    notFound.schema.annotations?.status !== 404 ||
-    notFound.schema.schema?.brand !== "EmployeeNotFound"
+    notFound.status !== 404 || notFound.schema?.kind !== "Struct" ||
+    fieldSchema(notFound.schema, "id")?.name !== "String"
   ) {
     throw new Error(`Unexpected error schema IR:\n${JSON.stringify(notFound, null, 2)}`);
   }
 
   const api = findDeclaration(content.declarations, "HttpApi", "employee-tools");
-  const endpoint = api.groups?.[0]?.endpoints?.[0];
+  const endpoint = api.endpoints?.[0];
   if (
     endpoint?.name !== "find-employee" ||
     endpoint?.method !== "POST" ||
     endpoint?.path !== "/agent-tools/find-employee" ||
-    endpoint?.payload?.target !== "FindEmployeeInput" ||
-    endpoint?.success?.target !== "FindEmployeeInput" ||
-    endpoint?.errors?.map((error) => error.target).join(",") !== "EmployeeNotFound,InternalError"
+    endpoint?.payload !== "FindEmployeeInput" ||
+    endpoint?.success !== "FindEmployeeInput" ||
+    endpoint?.errors?.join(",") !== "EmployeeNotFound"
   ) {
     throw new Error(`Unexpected HTTP/tool endpoint IR:\n${JSON.stringify(api, null, 2)}`);
   }
@@ -287,14 +272,14 @@ try {
   if (
     action.inputs?.[0]?.name !== "id" ||
     action.inputs?.[0]?.type !== "String" ||
-    action.do?.join(" ") !== "= id employee:ada"
+    JSON.stringify(action.do) !== JSON.stringify({kind:"raw-expr",expr:["=", "id", {"$forma.runtimeExpr":"string-literal",value:"employee:ada"}]})
   ) {
     throw new Error(`Unexpected action logic IR payload:\n${JSON.stringify(action, null, 2)}`);
   }
 
   if (
-    findTypeSummary(content.declarationTypeSummaries, "Schema", "FindEmployeeInput").resultType !==
-      "SchemaDecl" ||
+    findTypeSummary(content.declarationTypeSummaries, "SchemaDef", "FindEmployeeInput").resultType !==
+      "SchemaDef" ||
     findTypeSummary(content.declarationTypeSummaries, "HttpApi", "employee-tools").resultType !==
       "HttpApiDecl" ||
     findTypeSummary(content.declarationTypeSummaries, "Action", "find-employee").resultType !==
@@ -321,7 +306,7 @@ try {
   daemon.stdin.end();
 }
 
-const exitCode = await new Promise((resolveExit) => daemon.on("close", resolveExit));
+const exitCode = await daemonExit;
 if (exitCode !== 0) {
   throw new Error(`Daemon exited with ${exitCode}: ${stderr}`);
 }

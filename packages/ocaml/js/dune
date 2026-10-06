@@ -1,6 +1,6 @@
 (executable
  (name jsoo_entry)
  (modes js)
- (libraries forma_ocaml)
+ (libraries forma_ocaml js_of_ocaml)
  (js_of_ocaml
   (flags --effects=cps)))

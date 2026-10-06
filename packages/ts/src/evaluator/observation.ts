@@ -73,7 +73,7 @@ export class ObservationCollector implements KernelObserver {
     const visit = (expr: SExpr): void => {
       // A macro definition's body runs at expansion time, and its templates
       // are copied into every expansion: neither is author code that runs.
-      if (expr._tag === "List" && expr.items[0]?._tag === "Sym" && expr.items[0].name === "define-macro") {
+      if (expr._tag === "List" && expr.items[0]?._tag === "Sym" && expr.items[0].name === "__macro") {
         return;
       }
       const node = index.withSpan(expr.loc.start, expr.loc.end);

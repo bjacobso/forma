@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of closure
   | VMacro of closure
 
@@ -59,6 +60,15 @@ let with_lookup_declaration handler thunk =
 
 let current_lookup_declaration () = !active_lookup_declaration
 
+let active_environment : Env.t option ref = ref None
+let current_environment () = !active_environment
+let with_environment env thunk =
+  match !active_environment with
+  | Some _ -> thunk ()
+  | None ->
+      active_environment := Some env;
+      Fun.protect ~finally:(fun () -> active_environment := None) thunk
+
 module Util = Eval_meta_util
 
 let eval ctx env op args =
@@ -83,6 +93,7 @@ let eval ctx env op args =
           eval_all;
           eval_required_builtin;
           current_lookup_declaration = (fun () -> !active_lookup_declaration);
+          current_environment;
         }
       in
       Eval_meta_builders.eval builders_ctx env op args

@@ -3,106 +3,64 @@
 ; Hosted ContentProtocol protocol descriptors.
 ; -----------------------------------------------------------------------------
 
-(define-protocol ContentProtocol
-  (record ContentText
-    (:schema-name ContentText)
-    (:fields
-      (:kind (:kind literal) (:values [text]) (:required true))
-      (:value (:type string) (:required true))))
+(type ContentText
+  {:kind "text"
+   :value String})
 
-  (record ContentMarkdown
-    (:schema-name ContentMarkdown)
-    (:fields
-      (:kind (:kind literal) (:values [md]) (:required true))
-      (:content (:type string) (:required true))))
+(type ContentMarkdown
+  {:kind "md"
+   :content String})
 
-  (record ContentCode
-    (:schema-name ContentCode)
-    (:fields
-      (:kind (:kind literal) (:values [code]) (:required true))
-      (:content (:type string) (:required true))))
+(type ContentCode
+  {:kind "code"
+   :content String})
 
-  (record ContentH1
-    (:schema-name ContentH1)
-    (:fields
-      (:kind (:kind literal) (:values [h1]) (:required true))
-      (:children (:kind array) (:item ContentNode) (:required true))))
+(type ContentH1
+  {:kind "h1"
+   :children (List ContentNode)})
 
-  (record ContentH2
-    (:schema-name ContentH2)
-    (:fields
-      (:kind (:kind literal) (:values [h2]) (:required true))
-      (:children (:kind array) (:item ContentNode) (:required true))))
+(type ContentH2
+  {:kind "h2"
+   :children (List ContentNode)})
 
-  (record ContentH3
-    (:schema-name ContentH3)
-    (:fields
-      (:kind (:kind literal) (:values [h3]) (:required true))
-      (:children (:kind array) (:item ContentNode) (:required true))))
+(type ContentH3
+  {:kind "h3"
+   :children (List ContentNode)})
 
-  (record ContentParagraph
-    (:schema-name ContentParagraph)
-    (:fields
-      (:kind (:kind literal) (:values [p]) (:required true))
-      (:children (:kind array) (:item ContentNode) (:required true))))
+(type ContentParagraph
+  {:kind "p"
+   :children (List ContentNode)})
 
-  (record ContentUnorderedList
-    (:schema-name ContentUnorderedList)
-    (:fields
-      (:kind (:kind literal) (:values [ul]) (:required true))
-      (:children (:kind array) (:item ContentNode) (:required true))))
+(type ContentUnorderedList
+  {:kind "ul"
+   :children (List ContentNode)})
 
-  (record ContentOrderedList
-    (:schema-name ContentOrderedList)
-    (:fields
-      (:kind (:kind literal) (:values [ol]) (:required true))
-      (:children (:kind array) (:item ContentNode) (:required true))))
+(type ContentOrderedList
+  {:kind "ol"
+   :children (List ContentNode)})
 
-  (record ContentListItem
-    (:schema-name ContentListItem)
-    (:fields
-      (:kind (:kind literal) (:values [li]) (:required true))
-      (:children (:kind array) (:item ContentNode) (:required true))))
+(type ContentListItem
+  {:kind "li"
+   :children (List ContentNode)})
 
-  (record ContentBold
-    (:schema-name ContentBold)
-    (:fields
-      (:kind (:kind literal) (:values [bold]) (:required true))
-      (:children (:kind array) (:item ContentNode) (:required true))))
+(type ContentBold
+  {:kind "bold"
+   :children (List ContentNode)})
 
-  (record ContentItalic
-    (:schema-name ContentItalic)
-    (:fields
-      (:kind (:kind literal) (:values [italic]) (:required true))
-      (:children (:kind array) (:item ContentNode) (:required true))))
+(type ContentItalic
+  {:kind "italic"
+   :children (List ContentNode)})
 
-  (record ContentLink
-    (:schema-name ContentLink)
-    (:fields
-      (:kind (:kind literal) (:values [link]) (:required true))
-      (:href (:type string) (:required true))
-      (:children (:kind array) (:item ContentNode) (:required true))))
+(type ContentLink
+  {:kind "link"
+   :href String
+   :children (List ContentNode)})
 
-  (record ContentDoc
-    (:schema-name ContentDoc)
-    (:fields
-      (:kind (:kind literal) (:values [doc]) (:required true))
-      (:children (:kind array) (:item ContentNode) (:required true))))
+(type ContentDoc
+  {:kind "doc"
+   :children (List ContentNode)})
 
-  (sum ContentNode
-    (:schema-name ContentNodeSchema)
-    (:members
-      (:text (:ref ContentText))
-      (:md (:ref ContentMarkdown))
-      (:code (:ref ContentCode))
-      (:h1 (:ref ContentH1))
-      (:h2 (:ref ContentH2))
-      (:h3 (:ref ContentH3))
-      (:p (:ref ContentParagraph))
-      (:ul (:ref ContentUnorderedList))
-      (:ol (:ref ContentOrderedList))
-      (:li (:ref ContentListItem))
-      (:bold (:ref ContentBold))
-      (:italic (:ref ContentItalic))
-      (:link (:ref ContentLink))
-      (:doc (:ref ContentDoc)))))
+(type ContentNode
+  (Union ContentText ContentMarkdown ContentCode ContentH1 ContentH2 ContentH3 ContentParagraph ContentUnorderedList ContentOrderedList ContentListItem ContentBold ContentItalic ContentLink ContentDoc))
+
+(define protocol {:name "ContentProtocol"})

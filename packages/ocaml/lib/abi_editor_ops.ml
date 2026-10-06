@@ -87,23 +87,31 @@ let definition_of_expr env uri = function
       ( _,
         Ast.Symbol
           ( _,
-            (( "define" | "def" | "defn" | "defmacro" | "define-macro"
-             | "define-form" | "meta-fn" | "define-elaboration"
-             | "define-elaboration-primitive" | "define-protocol"
-             | "define-payload-contract" | "define-service" | "define-error"
-             | "define-operation" | "define-type" ) as
+            (( "define" | "macro" | "form" | "type" | "error" | "class"
+             | "service" | "layer" | "typeclass" ) as
              detail) )
         :: binding :: _ ) -> (
       match binding_name_and_span binding with
       | Some (name, span) -> Some { name; uri; span; detail }
       | None -> None)
-  | Ast.List (span, Ast.Symbol (_, op) :: args)
-    when Option.fold ~none:false
-           ~some:(fun env -> Descriptor.is_form_descriptor env op)
-           env -> (
-      match Descriptor.declaration_binding_name args with
-      | Some name -> Some { name; uri; span; detail = op }
-      | None -> None)
+  | (Ast.List (span, Ast.Symbol (_, op) :: args) as expression)
+    when Option.fold ~none:false ~some:(fun env -> Descriptor.is_form_descriptor env op) env ->
+      Option.bind env (fun env ->
+        Option.map (fun name ->
+          let binding_span =
+            if Env.lookup ("__form/" ^ op) env=None then span else
+            match Descriptor.form env op with
+            | None -> span
+            | Some descriptor ->
+                let normalized=Surface_form.normalize_application env op args in
+                let identifiers=List.filter (function Ast.Symbol _ -> true | _ -> false) normalized in
+                let declared = match Env.lookup ("__form.types/" ^ op) env with
+                  | Some (Value.VMap fields) -> List.find_opt (fun (id:Descriptor.identifier_spec) ->
+                      match List.assoc_opt (Value.VKeyword (":" ^ id.name)) fields with
+                      | Some (Value.VList (Value.VSymbol "Declares" :: _)) -> true | _ -> false) descriptor.identifiers
+                  | _ -> None in
+                (match declared with Some id -> Option.fold ~none:span ~some:Ast.expr_span (List.nth_opt identifiers id.positional_index) | None -> span) in
+          {name;uri;span=binding_span;detail=op}) (Source_bindings.binding_name env expression))
   | _ -> None
 
 let definitions session uri exprs =
@@ -113,50 +121,10 @@ let definitions session uri exprs =
 let definitions_json definitions = list_json definition_to_json definitions
 
 let builtin_completion_labels =
-  [
-    "define";
-    "def";
-    "defn";
-    "fn";
-    "lambda";
-    "let";
-    "let*";
-    "if";
-    "do";
-    "match";
-    "quote";
-    "quasiquote";
-    "unquote";
-    "define-type";
-    "define-form";
-    "define-service";
-    "define-operation";
-    "define-error";
-    "define-protocol";
-    "define-elaboration";
-    "meta-fn";
-    "list";
-    "vector";
-    "map";
-    "get";
-    "+";
-    "-";
-    "*";
-    "/";
-    "=";
-    "<";
-    "<=";
-    ">";
-    ">=";
-    "and";
-    "or";
-    "not";
-    "concat";
-    "count";
-    "first";
-    "rest";
-    "reduce";
-  ]
+  ["define";"fn";"let";"if";"do";"do!";"match";"quote";"quasiquote";"unquote";
+   "type";"error";"class";"service";"layer";"form";"macro";"typeclass";":";
+   "list";"vector";"map";"get";"+";"-";"*";"/";"=";"<";"<=";">";">=";
+   "and";"or";"not";"concat";"count";"first";"rest";"reduce"]
 
 let completion_item ?(kind = "value") ?detail label =
   Printf.sprintf "{\"label\":%s,\"kind\":%s,%s}" (string_json label)
@@ -180,7 +148,7 @@ let completions_json session definitions =
     | None -> names
     | Some session ->
         List.fold_left
-          (fun acc (name, _) -> add_unique acc name)
+          (fun acc (name, _) -> if String.starts_with ~prefix:"__" name then acc else add_unique acc name)
           names session.Session.type_env
   in
   names |> List.sort String.compare
@@ -201,7 +169,7 @@ let analyze_typed session exprs =
             match session with
             | None -> Descriptor_protocol.empty_hooks
             | Some session ->
-                Descriptor_contract.descriptor_hooks session.Session.env
+                Descriptor_contract.descriptor_hooks ~syntax:expanded session.Session.env
           in
           let type_env =
             match session with
@@ -325,10 +293,14 @@ let definition ~with_session (request : request) =
 
 let format ~with_session (request : request) =
   with_exprs ~with_session "editorFormat" request
-    (fun _session exprs diagnostics ->
+    (fun session exprs diagnostics ->
       editor_response
         [
           Printf.sprintf "\"text\":%s"
-            (string_json (Editor_format.format_program exprs));
+            (let source = match request.source,session,request.source_id with
+              | Some source,_,_ -> source
+              | None,Some session,Some id -> Option.fold ~none:"" ~some:Source.text (Hashtbl.find_opt session.Session.sources id)
+              | _ -> "" in
+            string_json (Editor_format.format_source ~env:(Option.fold ~none:Env.empty ~some:(fun s->s.Session.env) session) source exprs));
         ]
         diagnostics)

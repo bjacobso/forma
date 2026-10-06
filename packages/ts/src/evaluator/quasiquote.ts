@@ -18,7 +18,7 @@ import { Env } from "../Env.js";
 import type { KernelError } from "../diagnostic/errors.js";
 import { KernelTypeError } from "../diagnostic/errors.js";
 import type { KValue, BuiltinFn } from "./types.js";
-import { isKList, isKSExpr } from "./types.js";
+import { isKList, isKSExpr, isKKeyword, isKSymbol, mapKeyValue } from "./types.js";
 
 /** Synthetic loc for generated nodes */
 const synLoc: Loc = { start: 0, end: 0, line: 1, col: 1 };
@@ -114,6 +114,14 @@ function expandQQ(
       return T.Vector(expanded, expr.loc);
     }
 
+    if (expr._tag === "Map") {
+      const pairs: [SExpr, SExpr][] = [];
+      for (const [key,value] of expr.pairs) pairs.push([
+        yield* expandQQ(key,env,builtins,counter,stepLimit,evalExpr),
+        yield* expandQQ(value,env,builtins,counter,stepLimit,evalExpr),
+      ]);
+      return T.SMap(pairs,expr.loc);
+    }
     // Atoms pass through unchanged
     return expr;
   });
@@ -216,11 +224,11 @@ function spliceValueToSExprs(val: KValue, loc: Loc): Effect.Effect<readonly SExp
  * Used by quasiquote to embed evaluated results back into templates.
  */
 export function kValueToSExpr(value: KValue): SExpr {
+  if (isKKeyword(value) || isKSymbol(value)) return T.Sym(value.name,synLoc);
   if (value === null) return T.Sym("nil", synLoc);
   if (typeof value === "boolean") return T.Bool(value, synLoc);
   if (typeof value === "number") return T.Num(value, synLoc);
   if (typeof value === "string") {
-    if (value.startsWith(":")) return T.Sym(value, synLoc);
     return T.Str(value, synLoc);
   }
   if (Array.isArray(value)) {
@@ -229,7 +237,7 @@ export function kValueToSExpr(value: KValue): SExpr {
   if (value instanceof Map) {
     const pairs: [SExpr, SExpr][] = [];
     for (const [k, v] of value as ReadonlyMap<string, KValue>) {
-      pairs.push([kValueToSExpr(k), kValueToSExpr(v)]);
+      pairs.push([kValueToSExpr(mapKeyValue(k)), kValueToSExpr(v)]);
     }
     return T.SMap(pairs, synLoc);
   }

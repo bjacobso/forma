@@ -2,52 +2,47 @@
 ;; in reverse order when their scope ends, whether the work succeeds or
 ;; fails. A layer holds a connection for its whole lifetime.
 
-(define-schema Connection (Struct (field id String)))
+(type Connection {:id String})
 
-(define-schema Row
-  (Struct
-    (field region String)
-    (field amount Int)))
+(type Row {:region String
+ :amount Int})
 
-(define-error QueryFailed (:fields (field query String)))
+(error QueryFailed {:query String})
 
-(define-service Pool
-  (:methods
-    (open [name String] (Effect Connection [] []))
-    (close [connection Connection] (Effect Unit [] []))
-    (query [connection Connection sql String] (Effect (Array Row) [QueryFailed] []))))
+(service Pool
+  (: open (-> String (Effect Connection [] [])))
+  (: close (-> Connection (Effect Unit [] [])))
+  (: query (-> Connection String (Effect (List Row) [QueryFailed] []))))
 
-(define-service Audit
-  (:methods
-    (record [event String] (Effect Unit [] []))))
+(service Audit
+  (: record (-> String (Effect Unit [] []))))
 
-(define-service ReportStore
-  (:methods
-    (save [name String total Int] (Effect Unit [QueryFailed] []))))
+(service ReportStore
+  (: save (-> String Int (Effect Unit [QueryFailed] []))))
 
 (: connection (-> String (Effect Connection [] [Pool Scope])))
-(define-operation connection [name]
+(define connection [name]
   (acquire-release (Pool.open name)
     (fn [opened] (Pool.close opened))))
 
-(: add-row (-> (Map Int) Row (Map Int)))
+(: add-row (-> (Map String Int) Row (Map String Int)))
 (define add-row
-  (fn [totals row]
+   [totals row]
     (assoc totals (get row :region)
-      (+ (get-or-else (get totals (get row :region)) 0) (get row :amount)))))
+      (+ (get-or-else (get totals (get row :region)) 0) (get row :amount))))
 
-(: regional-totals (-> String (Effect (Map Int) [QueryFailed] [Pool Audit])))
-(define-operation regional-totals [sql]
+(: regional-totals (-> String (Effect (Map String Int) [QueryFailed] [Pool Audit])))
+(define regional-totals [sql]
   (scoped
     (do! [_ (add-finalizer (Audit.record "report finished"))
           primary (connection "primary")
           replica (connection "replica")
           rows (Pool.query primary sql)
           _ (Audit.record (str "read " (count rows) " rows; replica " (get replica :id) " idle"))]
-      (succeed (reduce add-row (: {} (Map Int)) rows)))))
+      (succeed (reduce add-row (: {} (Map String Int)) rows)))))
 
 (: publish (-> String (Effect Int [QueryFailed] [Pool Audit ReportStore])))
-(define-operation publish [sql]
+(define publish [sql]
   (ensuring
     (do! [totals (regional-totals sql)
           grand (succeed (sum (vals totals)))
@@ -55,10 +50,7 @@
       (succeed grand))
     (Audit.record "publish attempted")))
 
-(define-layer ReportStoreLive
-  (:provides ReportStore)
-  (:setup [store (connection "reports")])
-  (:methods
-    (save [name total]
-      (do! [_ (Pool.query store (str "insert " name " " total))]
-        (succeed nil)))))
+(layer ReportStoreLive :provides ReportStore
+  :setup [store (connection "reports")]
+  (define save [name total] (do! [_ (Pool.query store (str "insert " name " " total))]
+        (succeed nil))))

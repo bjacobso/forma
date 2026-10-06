@@ -15,122 +15,109 @@
 ;; Entity Types
 ;; ---------------------------------------------------------------------------
 
-(define-entity Attorney
-  (:field [attorney/first-name String {:required true}])
-  (:field [attorney/last-name String {:required true}])
-  (:field [attorney/email String {:required true}])
-  (:field [attorney/phone String])
-  (:field [attorney/bar-number String {:required true}])
-  (:field [attorney/practice-area String])
-  (:field [attorney/status String {:required true}]))
+(entity Attorney {:first-name String
+    :last-name String
+    :email String
+    :phone (Option String)
+    :bar-number String
+    :practice-area (Option String)
+    :status String})
 
-(define-entity Paralegal
-  (:field [paralegal/first-name String {:required true}])
-  (:field [paralegal/last-name String {:required true}])
-  (:field [paralegal/email String {:required true}])
-  (:field [paralegal/team String])
-  (:field [paralegal/status String {:required true}]))
+(entity Paralegal {:first-name String
+    :last-name String
+    :email String
+    :team (Option String)
+    :status String})
 
-(define-entity Client
-  (:field [client/name String {:required true}])
-  (:field [client/type String {:required true}])
-  (:field [client/industry String])
-  (:field [client/phone String])
-  (:field [client/email String])
-  (:field [client/status String {:required true}])
-  (:field [client/risk-level String])
-  (:field [client/source String]))
+(entity Client {:name String
+    :type String
+    :industry (Option String)
+    :phone (Option String)
+    :email (Option String)
+    :status String
+    :risk-level (Option String)
+    :source (Option String)})
 
-(define-entity Contact
-  (:field [contact/name String {:required true}])
-  (:field [contact/title String])
-  (:field [contact/email String {:required true}])
-  (:field [contact/phone String])
-  (:field [contact/role String {:required true}]))
+(entity Contact {:name String
+    :title (Option String)
+    :email String
+    :phone (Option String)
+    :role String})
 
-(define-entity Matter
-  (:field [matter/title String {:required true}])
-  (:field [matter/practice-area String {:required true}])
-  (:field [matter/status String {:required true}])
-  (:field [matter/opened-date Number])
-  (:field [matter/next-deadline Number])
-  (:field [matter/budget Number])
-  (:field [matter/fee-type String])
-  (:field [matter/summary String]))
+(entity Matter {:title String
+    :practice-area String
+    :status String
+    :opened-date (Option Number)
+    :next-deadline (Option Number)
+    :budget (Option Number)
+    :fee-type (Option String)
+    :summary (Option String)})
 
-(define-entity IntakePacket
-  (:field [intakepacket/status String {:required true}])
-  (:field [intakepacket/submitted-at Number])
-  (:field [intakepacket/reviewed-at Number])
-  (:field [intakepacket/notes String]))
+(entity IntakePacket {:intakepacket/status String
+    :intakepacket/submitted-at (Option Number)
+    :intakepacket/reviewed-at (Option Number)
+    :intakepacket/notes (Option String)})
 
-(define-entity ConflictCheck
-  (:field [conflictcheck/status String {:required true}])
-  (:field [conflictcheck/search-terms String])
-  (:field [conflictcheck/result String])
-  (:field [conflictcheck/reviewed-by String])
-  (:field [conflictcheck/reviewed-at Number])
-  (:field [conflictcheck/notes String]))
+(entity ConflictCheck {:conflictcheck/status String
+    :conflictcheck/search-terms (Option String)
+    :conflictcheck/result (Option String)
+    :conflictcheck/reviewed-by (Option String)
+    :conflictcheck/reviewed-at (Option Number)
+    :conflictcheck/notes (Option String)})
 
-(define-entity EngagementLetter
-  (:field [engagementletter/status String {:required true}])
-  (:field [engagementletter/sent-at Number])
-  (:field [engagementletter/signed-at Number])
-  (:field [engagementletter/fee-type String])
-  (:field [engagementletter/scope-summary String]))
+(entity EngagementLetter {:engagementletter/status String
+    :engagementletter/sent-at (Option Number)
+    :engagementletter/signed-at (Option Number)
+    :engagementletter/fee-type (Option String)
+    :engagementletter/scope-summary (Option String)})
 
-(define-entity CaseTask
-  (:field [casetask/title String {:required true}])
-  (:field [casetask/type String {:required true}])
-  (:field [casetask/priority String {:required true}])
-  (:field [casetask/status String {:required true}])
-  (:field [casetask/due-date Number])
-  (:field [casetask/completed-at Number])
-  (:field [casetask/assignee-role String {:required true}])
-  (:field [casetask/notes String]))
+(entity CaseTask {:casetask/title String
+    :casetask/type String
+    :casetask/priority String
+    :casetask/status String
+    :casetask/due-date (Option Number)
+    :casetask/completed-at (Option Number)
+    :casetask/assignee-role String
+    :casetask/notes (Option String)})
 
-(define-entity DocumentRequest
-  (:field [documentrequest/title String {:required true}])
-  (:field [documentrequest/status String {:required true}])
-  (:field [documentrequest/due-date Number])
-  (:field [documentrequest/received-at Number])
-  (:field [documentrequest/requested-from String])
-  (:field [documentrequest/notes String]))
+(entity DocumentRequest {:documentrequest/title String
+    :documentrequest/status String
+    :documentrequest/due-date (Option Number)
+    :documentrequest/received-at (Option Number)
+    :documentrequest/requested-from (Option String)
+    :documentrequest/notes (Option String)})
 
-(define-entity Invoice
-  (:field [invoice/number String {:required true}])
-  (:field [invoice/status String {:required true}])
-  (:field [invoice/amount Number {:required true}])
-  (:field [invoice/issued-at Number])
-  (:field [invoice/due-date Number])
-  (:field [invoice/needs-review Boolean]))
+(entity Invoice {:number String
+    :status String
+    :amount Number
+    :issued-at (Option Number)
+    :due-date (Option Number)
+    :needs-review (Option Bool)})
 
 ;; ---------------------------------------------------------------------------
 ;; Relations
 ;; ---------------------------------------------------------------------------
 
-(define-relation represents Attorney Client
-  (:field [represents/since Number])
-  (:field [represents/role String]))
+(relation represents Attorney Client {:since (Option Number)
+    :role (Option String)})
 
-(define-relation contact-at Contact Client
-  (:field [contact-at/primary Boolean]))
+(relation contact-at Contact Client {:primary (Option Bool)})
 
-(define-relation intake-for IntakePacket Client)
+(relation intake-for IntakePacket Client {})
 
-(define-relation conflict-for ConflictCheck Client)
+(relation conflict-for ConflictCheck Client {})
 
-(define-relation matter-for Matter Client)
+(relation matter-for Matter Client {})
 
-(define-relation matter-managed-by Matter Attorney)
+(relation matter-managed-by Matter Attorney {})
 
-(define-relation matter-supported-by Matter Paralegal)
+(relation matter-supported-by Matter Paralegal {})
 
-(define-relation engagement-letter-for EngagementLetter Matter)
+(relation engagement-letter-for EngagementLetter Matter {})
 
-(define-relation task-for-matter CaseTask Matter)
+(relation task-for-matter CaseTask Matter {})
 
-(define-relation document-request-for DocumentRequest Matter)
+(relation document-request-for DocumentRequest Matter {})
 
-(define-relation invoice-for Invoice Matter)
+(relation invoice-for Invoice Matter {})
 ```

@@ -17,6 +17,7 @@ export type ProtocolTypeDescriptor =
   | { readonly kind: "ref"; readonly ref: string }
   | { readonly kind: "array"; readonly item: ProtocolTypeDescriptor }
   | { readonly kind: "record"; readonly value: ProtocolTypeDescriptor }
+  | { readonly kind: "object"; readonly fields: readonly ProtocolObjectFieldDescriptor[] }
   | { readonly kind: "union"; readonly variants: readonly ProtocolTypeDescriptor[] };
 
 export interface ProtocolObjectFieldDescriptor {
@@ -260,6 +261,9 @@ export function parseProtocolType(
 
   const inlineArray = raw["array"];
   if (inlineArray !== undefined) return parseArrayType(inlineArray);
+
+  const inlineObject = raw["object"];
+  if (inlineObject !== undefined) return { kind: "object", fields: parseProtocolFields(inlineObject) };
 
   const inlineRecord = raw["record"];
   if (inlineRecord !== undefined) return parseRecordType(inlineRecord);

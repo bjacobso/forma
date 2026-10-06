@@ -3,6 +3,8 @@ import { Effect } from "effect";
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import {
+  elaborateProgramOrThrow,
+  isJsonRuntimeStringLiteral,
   RUNTIME_STRING_LITERAL_KEY,
   SimpleSemanticEnvironment,
   isRuntimeStringLiteral,
@@ -21,25 +23,7 @@ const preludesDir = resolve(import.meta.dirname, "../../../preludes");
 
 const ontology = bootstrapOntologyPreludes();
 
-const construct = (source: string): unknown[] => {
-  const semanticEnv = new SimpleSemanticEnvironment();
-  return recognizeForms(toSExprMany(parse(source).redTree), ontology.descriptions).map((recognized) => {
-    const form = normalizeForm(recognized, ontology.descriptions);
-    const hook = form.descriptor.elaboration;
-    if (hook.kind !== "hook") throw new Error(`${form.formName} has no construct hook`);
-    return Effect.runSync(
-      ontology.elaboration.construct(hook.fn, {
-        formName: form.formName,
-        descriptor: form.descriptor,
-        normalizedSlots: form.slots,
-        identifiers: form.identifiers,
-        semanticEnv,
-        loc: form.loc,
-        rawExpr: form.rawExpr,
-      }),
-    );
-  });
-};
+const construct = (source: string): unknown[] => elaborateProgramOrThrow(source, {prelude:ontology}).map(declaration => declaration.payload);
 
 describe("bundled preludes", () => {
   test("embed every repository prelude verbatim", () => {
@@ -54,42 +38,28 @@ describe("bundled preludes", () => {
 
   test("bootstrap fresh registries for a named stack", () => {
     const first = bootstrapPreludes(ontologyPreludeStack);
-    expect(first.descriptions.get("define-entity")).toBeDefined();
+    expect(first.descriptions.get("entity")).toBeDefined();
     expect(bootstrapOntologyPreludes().descriptions).not.toBe(first.descriptions);
     expect(() => bootstrapPreludes(["compiler.lisp"])).toThrow(/domain prelude/);
   });
 });
 
 describe("ontology preludes on the TypeScript engine", () => {
-  test("constructs Datalog queries with construct/query", () => {
-    const [query] = construct(`
-      (define-datalog-query open-orders
-        (:query {:find ["?title"] :where [["?o" ":order/title" "?title"]]}))`);
-    expect(query).toBeInstanceOf(Map);
-    const map = query as Map<string, unknown>;
-    expect(map.get("kind")).toBe("Query");
-    expect(map.get("name")).toBe("open-orders");
-    expect((map.get("datalog") as Map<string, unknown>).get("kind")).toBe("raw-expr");
+  test("constructs Datalog queries from typed syntax", () => {
+    const [,query] = construct(`(entity Order {:title String})
+      (datalog-query open-orders {:find [?title] :where [[?o :order/title ?title]]})`);
+    expect(query).toMatchObject({kind:"Query",name:"open-orders",datalog:{kind:"raw-expr",expr:{find:["?title"],where:[["?o",":order/title","?title"]]}}});
   });
 
   test("marks runtime string literals with a Forma-owned key", () => {
-    const [action] = construct(`
-      (define-action close
-        (:input [order String {:required true}])
-        (:do (set order :order/status "closed")))`) as Map<string, unknown>[];
-    const body = (action!.get("do") as Map<string, unknown>).get("expr") as unknown[];
-    const literal = body[3];
+    const [action] = construct(`(: close (Action String)) (define close "closed")`) as {do:{expr:import("../src/artifact/artifact.js").JsonValue}}[];
     expect(RUNTIME_STRING_LITERAL_KEY).toBe("$forma.runtimeExpr");
-    expect(isRuntimeStringLiteral(literal)).toBe(true);
-    expect((literal as Map<string, unknown>).get("value")).toBe("closed");
+    expect(isJsonRuntimeStringLiteral(action!.do.expr)).toBe(true);
+    expect(action!.do.expr).toEqual({"$forma.runtimeExpr":"string-literal",value:"closed"});
   });
 
   test("constructs typed queries with select fields", () => {
-    const [, query] = construct(`
-      (define-entity Order (:field [order/title String {:required true}]))
-      (define-query titles (:from Order) (:select [order/title]))`) as Map<string, unknown>[];
-    expect(query!.get("kind")).toBe("Query");
-    expect(query!.get("from")).toBe("Order");
-    expect(query!.get("select")).toEqual(["order/title"]);
+    const [,query] = construct(`(entity Order {:title String}) (query titles :from Order :select [title])`);
+    expect(query).toMatchObject({kind:"Query",from:"Order",select:["order/title"]});
   });
 });

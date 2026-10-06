@@ -13,6 +13,7 @@ type ty =
   | TVector of ty
   | TMap
   | TRecord of (string * ty) list
+  | TOpenRecord of (string * ty) list * ty
   | TFn of ty list * ty
   | TVariadicFn of ty list * ty * ty
   | TMacro

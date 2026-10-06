@@ -2,14 +2,14 @@
   "diagnostic": {
     "span": {
       "sourceId": "thesis-gate/query-string.lisp",
-      "startOffset": 154,
-      "endOffset": 167
+      "startOffset": 101,
+      "endOffset": 105
     },
     "severity": "error",
     "code": "typecheck/type-mismatch",
-    "message": "Expected Bool to match String.",
+    "message": "Expected String to match Bool.",
     "notes": [],
     "fixes": []
   },
-  "spannedText": "employee/name"
+  "spannedText": "name"
 }

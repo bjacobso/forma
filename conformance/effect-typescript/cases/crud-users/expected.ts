@@ -37,18 +37,18 @@ export class InvalidUser extends Schema.TaggedError<InvalidUser>()("InvalidUser"
 export class UserRepo extends Context.Service<
   UserRepo,
   {
-    readonly find: (id: UserId) => Effect.Effect<Option.Option<User>>;
-    readonly findByEmail: (email: string) => Effect.Effect<Option.Option<User>>;
-    readonly save: (user: User) => Effect.Effect<void>;
-    readonly remove: (id: UserId) => Effect.Effect<boolean>;
-    readonly all: () => Effect.Effect<ReadonlyArray<User>>;
+    readonly find: (arg0: UserId) => Effect.Effect<Option.Option<User>>;
+    readonly findByEmail: (arg0: string) => Effect.Effect<Option.Option<User>>;
+    readonly save: (arg0: User) => Effect.Effect<void>;
+    readonly remove: (arg0: UserId) => Effect.Effect<boolean>;
+    readonly all: Effect.Effect<ReadonlyArray<User>>;
   }
 >()("UserRepo") {}
 
 export class Ids extends Context.Service<
   Ids,
   {
-    readonly next: () => Effect.Effect<UserId>;
+    readonly next: Effect.Effect<UserId>;
   }
 >()("Ids") {}
 
@@ -77,7 +77,7 @@ export const createUser = (
     if (Option.isSome(existing)) {
       return yield* Effect.fail(new DuplicateEmail({ email: valid.email }));
     } else {
-      const id = yield* ids.next();
+      const id = yield* ids.next;
       const user = { id, name: valid.name, email: valid.email, role: valid.role };
       yield* userRepo.save(user);
       return user;
@@ -122,10 +122,10 @@ export const deleteUser = (id: UserId): Effect.Effect<void, UserNotFound, UserRe
     return;
   });
 
-export const adminNames = (): Effect.Effect<ReadonlyArray<string>, never, UserRepo> =>
+export const adminNames: Effect.Effect<ReadonlyArray<string>, never, UserRepo> =
   Effect.gen(function* () {
     const userRepo = yield* UserRepo;
-    const users = yield* userRepo.all();
+    const users = yield* userRepo.all;
     return users.filter((user) => user.role === "admin").map(displayName);
   });
 
@@ -166,7 +166,7 @@ export const UserRepoMemory: Layer.Layer<UserRepo> = Layer.effect(
           yield* Ref.set(store, Record.remove(users, id));
           return Record.has(users, id);
         }),
-      all: () =>
+      all:
         Effect.gen(function* () {
           const users = yield* Ref.get(store);
           return Record.values(users);

@@ -9,7 +9,7 @@
  */
 
 import type { KValue } from "./types.js";
-import { isKFn, isKSExpr, isKMacro, isKMap, isKList, isKMeta } from "./types.js";
+import { isKFn, isKSExpr, isKMacro, isKMap, isKList, isKMeta, isKKeyword, isKSymbol, mapKeyValue } from "./types.js";
 
 /**
  * Convert a KValue to a parseable Lisp source string.
@@ -26,12 +26,12 @@ import { isKFn, isKSExpr, isKMacro, isKMap, isKList, isKMeta } from "./types.js"
  * ```
  */
 export function printKValue(value: KValue): string {
+  if (isKKeyword(value) || isKSymbol(value)) return value.name;
   if (value === null) return "nil";
   if (typeof value === "boolean") return value ? "true" : "false";
   if (typeof value === "number") return String(value);
   if (typeof value === "string") {
     // Keywords (start with :) are printed as bare symbols
-    if (value.startsWith(":")) return value;
     return `"${escapeString(value)}"`;
   }
   if (isKFn(value)) {
@@ -53,7 +53,7 @@ export function printKValue(value: KValue): string {
   if (isKMap(value)) {
     const entries: string[] = [];
     for (const [k, v] of value) {
-      entries.push(`${printKValue(k)} ${printKValue(v)}`);
+      entries.push(`${printKValue(mapKeyValue(k))} ${printKValue(v)}`);
     }
     return `{${entries.join(" ")}}`;
   }

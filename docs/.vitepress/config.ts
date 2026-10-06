@@ -40,6 +40,7 @@ export default defineConfig({
         items: [
           { text: "Vision", link: "/vision" },
           { text: "Language", link: "/language" },
+          { text: "Writing a form", link: "/writing-a-form" },
           { text: "Forma for Effect", link: "/effect" },
           { text: "Effect reference", link: "/effect/reference" },
         ],
@@ -51,6 +52,10 @@ export default defineConfig({
           { text: "Design decisions", link: "/design-decisions" },
           { text: "Language services", link: "/language-services" },
         ],
+      },
+      {
+        text: "RFCs",
+        items: [{ text: "0001: One language, one syntax", link: "/rfcs/0001-unified-syntax" }],
       },
       {
         text: "Project",

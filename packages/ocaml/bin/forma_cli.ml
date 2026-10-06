@@ -44,7 +44,7 @@ let rec render_value = function
       "(" ^ String.concat " " (List.map render_value values) ^ ")"
   | Value.VVector values ->
       "[" ^ String.concat " " (List.map render_value values) ^ "]"
-  | Value.VMap entries ->
+  | Value.VMap entries | Value.VDictionary entries ->
       let render_entry (key, value) =
         render_value key ^ " " ^ render_value value
       in

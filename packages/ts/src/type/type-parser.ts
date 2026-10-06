@@ -1,3 +1,4 @@
+import { mapKey } from "../evaluator/types.js";
 /**
  * Type expression parsing — standalone, no dependency on the lower dispatch.
  */
@@ -85,16 +86,16 @@ export function parseTypeExpr(expr: SExpr): TypeExpr {
 
       // Operational Effect type: (Effect Success [Errors...] [Requirements...])
       if (head.name === "Effect") {
-        if (items.length !== 4) {
+        if (items.length < 2 || items.length > 4) {
           throw new InferenceError({
-            message: "Effect type requires exactly success, errors, and requirements arguments.",
+            message: "Effect type expects success and optional error and requirement vectors.",
           });
         }
 
         return TEApp(span, TESym(spanOf(head), "Effect"), [
           parseTypeExpr(items[1]!),
-          parseEffectTypeSet(items[2]!, "ErrorSet"),
-          parseEffectTypeSet(items[3]!, "RequirementSet"),
+          parseEffectTypeSet(items[2] ?? { _tag: "Vector", items: [], loc: expr.loc }, "ErrorSet"),
+          parseEffectTypeSet(items[3] ?? { _tag: "Vector", items: [], loc: expr.loc }, "RequirementSet"),
         ]);
       }
 
@@ -131,7 +132,7 @@ export function parseTypeExpr(expr: SExpr): TypeExpr {
 
       for (const [k, v] of expr.pairs) {
         // Check for row variable tail: :* r
-        if (k._tag === "Sym" && k.name === ":*") {
+        if (k._tag === "Sym" && (k.name === ":*" || k.name === "&")) {
           if (v._tag !== "Sym") {
             throw new InferenceError({ message: "Row variable tail must be a symbol" });
           }
@@ -139,7 +140,7 @@ export function parseTypeExpr(expr: SExpr): TypeExpr {
           continue;
         }
 
-        const label = k._tag === "Sym" ? k.name : k._tag === "Str" ? k.value : "";
+        const label = k._tag === "Sym" ? k.name : k._tag === "Str" ? mapKey(k.value)! : "";
         if (!label) {
           throw new InferenceError({ message: "Record field label must be a symbol or string" });
         }
@@ -157,9 +158,7 @@ export function parseTypeExpr(expr: SExpr): TypeExpr {
     case "Num":
     case "Str":
     case "Bool":
-      throw new InferenceError({
-        message: `Literal ${expr._tag} not allowed in type expression, use symbol`,
-      });
+      return TESym(span,JSON.stringify(expr.value));
 
     case "Error":
       throw new InferenceError({ message: `Parse error in type: ${expr.message}` });

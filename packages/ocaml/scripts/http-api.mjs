@@ -10,6 +10,8 @@ const daemon = spawn(nativeCli, ["daemon"], {
   stdio: ["pipe", "pipe", "pipe"],
 });
 
+const daemonExit = new Promise((resolveExit) => daemon.on("close", resolveExit));
+
 let stderr = "";
 daemon.stderr.on("data", (chunk) => {
   stderr += chunk;
@@ -74,101 +76,35 @@ const findField = (fields, name) => {
 
 const validSourceId = "http-api/basic";
 const validSource = `
-(define-schema BlobHash
-  (:kind string)
-  (:pattern "^[a-f0-9]{64}$")
-  (:brand "BlobHash")
-  (:doc "64-char hex content hash"))
-
-(define-schema BlobUploadResponse
-  (:kind struct)
-  (:fields
-    (field hash BlobHash)
-    (field size Int)
-    (field mime-type String)
-    (field filename (Optional String))
-    (field derived-from (Optional String))
-    (field is-new Bool))
-  (:identifier "BlobUploadResponse")
-  (:doc "Result of uploading a blob to content-addressed storage"))
-
-(define-error DatabaseNotFound
-  (:fields (field database String))
-  (:status 404))
-
-(define-error BlobUploadError
-  (:fields (field reason String))
-  (:status 500))
-
-(define-api-group blobs
-  (:path-params
-    (param database String)
-    (param hash BlobHash))
-
-  (endpoint upload
-    (:method POST)
-    (:path "/db/{database}/blobs")
-    (:payload Uint8Array)
-    (:query
-      (field filename (Optional String))
-      (field derived-from (Optional String)))
-    (:success BlobUploadResponse)
-    (:errors DatabaseNotFound BlobUploadError InternalError))
-
-  (endpoint metadata
-    (:method GET)
-    (:path "/db/{database}/blobs/{hash}/metadata")
-    (:success BlobUploadResponse)
-    (:errors DatabaseNotFound InternalError)))
+(type BlobHash (Brand String))
+(type BlobUploadResponse {:hash BlobHash :size Int :filename (Option String) :content-type String :created-at DateTime :derived-from (Option BlobHash)})
+(error DatabaseNotFound {:database String} :status 404)
+(error BlobUploadError {:reason String} :status 400)
+(error InternalError :status 500)
+(api blobs :path-params {:database String :hash BlobHash}
+  (endpoint upload :method :post :path "/db/{database}/blobs"
+    :payload Bytes :query {:filename (Option String) :derived-from (Option String)}
+    :success BlobUploadResponse :errors [DatabaseNotFound BlobUploadError InternalError])
+  (endpoint metadata :method :get :path "/db/{database}/blobs/{hash}/metadata"
+    :success BlobUploadResponse :errors [DatabaseNotFound InternalError]))
 `;
 
 const invalidSourceId = "http-api/invalid-path";
 const invalidSource = `
-(define-schema BlobUploadResponse
-  (:kind struct)
-  (:fields (field hash String)))
-
-(define-api-group broken
-  (:path-params
-    (param database String))
-
-  (endpoint metadata
-    (:method GET)
-    (:path "/db/{database}/blobs/{hash}/metadata")
-    (:success BlobUploadResponse)
-    (:errors InternalError)))
+(api broken :path-params {:database String}
+  (endpoint metadata :method :get :path "/db/{database}/blobs/{hash}/metadata"
+    :success BlobUploadResponse :errors [InternalError]))
 `;
 
 const unknownSchemaSourceId = "http-api/unknown-schema";
 const unknownSchemaSource = `
-(define-api-group broken
-  (:path-params)
-
-  (endpoint list
-    (:method GET)
-    (:path "/broken")
-    (:success MissingResponse)
-    (:errors InternalError)))
+(api broken (endpoint list :method :get :path "/broken" :success MissingResponse :errors [InternalError]))
 `;
 
 const undeclaredErrorSourceId = "http-api/undeclared-error";
 const undeclaredErrorSource = `
-(define-schema BlobUploadResponse
-  (:kind struct)
-  (:fields (field hash String)))
-
-(define-schema PlainProblem
-  (:kind struct)
-  (:fields (field reason String)))
-
-(define-api-group broken
-  (:path-params)
-
-  (endpoint list
-    (:method GET)
-    (:path "/broken")
-    (:success BlobUploadResponse)
-    (:errors PlainProblem)))
+(type PlainProblem {})
+(api broken (endpoint list :method :get :path "/broken" :success BlobUploadResponse :errors [PlainProblem]))
 `;
 
 let sessionId;
@@ -202,77 +138,32 @@ try {
   expectOk("emit valid HTTP API", emitted);
 
   const content = emitted.value?.artifacts?.[0]?.content;
-  if (
-    content?.kind !== "CanonicalIr" ||
-    content?.declarationCount !== 5 ||
-    !Array.isArray(content?.declarations) ||
-    content.declarations.some((declaration) =>
-      Object.prototype.hasOwnProperty.call(declaration, "$summary"),
-    ) ||
-    content?.typeSummary?.declarationCount !== 5 ||
-    content?.typeSummary?.resultTypes?.SchemaDecl !== 4 ||
-    content?.typeSummary?.resultTypes?.HttpApiDecl !== 1 ||
-    !Array.isArray(content?.declarationTypeSummaries) ||
-    content.declarationTypeSummaries.some(
-      (summary) => summary == null || summary.resultType == null,
-    ) ||
-    content.declarationTypeSummaries[4]?.kind !== "HttpApi" ||
-    content.declarationTypeSummaries[4]?.name !== "blobs" ||
-    content.declarationTypeSummaries[4]?.resultType !== "HttpApiDecl" ||
-    !Array.isArray(content?.derivedArtifacts) ||
-    content.derivedArtifacts[0]?.declarations?.some(
-      (declaration) => declaration?.kind === "Unknown" || declaration?.resultType == null,
-    ) ||
-    content.derivedArtifacts[0]?.declarations?.[4]?.resultType !== "HttpApiDecl"
-  ) {
+  if (content?.kind !== "CanonicalIr" || content.declarationCount !== 6 ||
+      content.typeSummary?.resultTypes?.SchemaDef !== 2 || content.typeSummary?.resultTypes?.ErrorDef !== 3 ||
+      content.typeSummary?.resultTypes?.HttpApiDecl !== 1 || content.declarations.some(d => "$summary" in d) ||
+      content.declarationTypeSummaries.some(d => !d.resultType)) {
     throw new Error(`Unexpected HTTP API IR envelope:\n${JSON.stringify(emitted, null, 2)}`);
   }
-
-  const blobHash = findDeclaration(content.declarations, "Schema", "BlobHash");
-  if (
-    blobHash.schema?.kind !== "Annotated" ||
-    blobHash.schema.schema?.kind !== "Brand" ||
-    blobHash.schema.schema?.schema?.prim !== "String" ||
-    blobHash.schema.annotations?.pattern !== "^[a-f0-9]{64}$"
-  ) {
-    throw new Error(`Unexpected BlobHash schema:\n${JSON.stringify(blobHash, null, 2)}`);
+  const blobHash = findDeclaration(content.declarations, "SchemaDef", "BlobHash");
+  if (blobHash.schema?.kind !== "Brand" || blobHash.schema.schema?.name !== "String") {
+    throw new Error(`Unexpected BlobHash schema: ${JSON.stringify(blobHash)}`);
   }
-
-  const uploadResponse = findDeclaration(content.declarations, "Schema", "BlobUploadResponse");
-  const responseSchema =
-    uploadResponse.schema?.kind === "Annotated"
-      ? uploadResponse.schema.schema
-      : uploadResponse.schema;
-  const responseFields = responseSchema?.fields;
-  if (!Array.isArray(responseFields) || responseFields.length !== 6) {
-    throw new Error(
-      `BlobUploadResponse should have six fields:\n${JSON.stringify(uploadResponse, null, 2)}`,
-    );
+  const uploadResponse = findDeclaration(content.declarations, "SchemaDef", "BlobUploadResponse");
+  if (uploadResponse.schema?.fields?.length !== 6 || findField(uploadResponse.schema.fields, "filename").schema?.kind !== "Optional") {
+    throw new Error(`Unexpected response fields: ${JSON.stringify(uploadResponse)}`);
   }
-  if (findField(responseFields, "filename").schema?.kind !== "Optional") {
-    throw new Error(`filename should be optional:\n${JSON.stringify(uploadResponse, null, 2)}`);
+  const notFound = findDeclaration(content.declarations, "ErrorDef", "DatabaseNotFound");
+  if (notFound.status !== 404 || findField(notFound.schema.fields, "database").schema.name !== "String") {
+    throw new Error(`Unexpected error schema: ${JSON.stringify(notFound)}`);
   }
-
-  const notFound = findDeclaration(content.declarations, "Schema", "DatabaseNotFound");
-  if (notFound.schemaKind !== "Error" || notFound.schema?.annotations?.status !== 404) {
-    throw new Error(`Unexpected DatabaseNotFound error:\n${JSON.stringify(notFound, null, 2)}`);
-  }
-
   const httpApi = findDeclaration(content.declarations, "HttpApi", "blobs");
-  const group = httpApi.groups?.[0];
-  const upload = group?.endpoints?.find((endpoint) => endpoint.name === "upload");
-  const metadata = group?.endpoints?.find((endpoint) => endpoint.name === "metadata");
-  if (
-    group?.pathParams?.length !== 2 ||
-    group.pathParams[1]?.schema?.target !== "BlobHash" ||
-    upload?.method !== "POST" ||
-    upload?.payload?.prim !== "Uint8Array" ||
-    upload?.query?.fields?.length !== 2 ||
-    upload?.success?.target !== "BlobUploadResponse" ||
-    upload?.errors?.length !== 3 ||
-    metadata?.path !== "/db/{database}/blobs/{hash}/metadata"
-  ) {
-    throw new Error(`Unexpected HttpApi IR:\n${JSON.stringify(httpApi, null, 2)}`);
+  const upload = httpApi.endpoints?.find(endpoint => endpoint.name === "upload");
+  const metadata = httpApi.endpoints?.find(endpoint => endpoint.name === "metadata");
+  if (Object.keys(httpApi.pathParams).length !== 2 || httpApi.pathParams.hash !== "BlobHash" ||
+      upload?.method !== "POST" || upload?.payload !== "Bytes" || Object.keys(upload?.query ?? {}).length !== 2 ||
+      upload?.success !== "BlobUploadResponse" || upload?.errors?.length !== 3 ||
+      metadata?.path !== "/db/{database}/blobs/{hash}/metadata") {
+    throw new Error(`Unexpected HttpApi IR: ${JSON.stringify(httpApi)}`);
   }
 
   expectOk(
@@ -368,7 +259,7 @@ try {
   daemon.stdin.end();
 }
 
-const exitCode = await new Promise((resolveExit) => daemon.on("close", resolveExit));
+const exitCode = await daemonExit;
 if (exitCode !== 0) {
   throw new Error(`Daemon exited with ${exitCode}: ${stderr}`);
 }

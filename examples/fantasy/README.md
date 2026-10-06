@@ -10,29 +10,25 @@ preludes:
 Fantasy realm example in canonical ontology syntax.
 
 ```lisp
-(define-entity Realm
-  (:field [realm/name String {:required true}])
-  (:field [realm/element String]))
+(entity Realm {:name String
+    :element (Option String)})
 
-(define-entity Hero
-  (:field [hero/name String {:required true}])
-  (:field [hero/class String])
-  (:field [hero/realm (Ref Realm)]))
+(entity Hero {:name String
+    :class (Option String)
+    :realm (Option (Id Realm))})
 ```
 
 ```lisp
-(define-record "realm:emberfall" Realm
-  (:field [realm/name "Emberfall"])
-  (:field [realm/element "fire"]))
+(seed Realm "realm:emberfall" {:name "Emberfall"
+  :element "fire"})
 
-(define-record "hero:lyra" Hero
-  (:field [hero/name "Lyra"])
-  (:field [hero/class "warden"])
-  (:field [hero/realm "realm:emberfall"]))
+(seed Hero "hero:lyra" {:name "Lyra"
+  :class "warden"
+  :realm "realm:emberfall"})
 ```
 
 ```lisp
-(define-query heroes
-  (:from Hero)
-  (:select [hero/name hero/class hero/realm]))
+(query heroes
+  :from Hero
+  :select [name class realm])
 ```

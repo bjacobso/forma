@@ -7,9 +7,9 @@
       "code": "mechanics/missing-field",
       "message": "Point requires :y.",
       "line": 6,
-      "column": 12,
+      "column": 25,
       "endLine": 6,
-      "endColumn": 18
+      "endColumn": 31
     },
     {
       "phase": "check",

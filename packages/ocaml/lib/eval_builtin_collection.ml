@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of closure
   | VMacro of closure
 
@@ -41,7 +42,7 @@ let eval ctx env op args =
         match ctx.eval_expr env expr with
         | Ok (VList items) -> Ok (VInt (List.length items))
         | Ok (VVector items) -> Ok (VInt (List.length items))
-        | Ok (VMap entries) -> Ok (VInt (List.length entries))
+        | Ok (VMap entries | VDictionary entries) -> Ok (VInt (List.length entries))
         | Ok (VString value) -> Ok (VInt (String.length value))
         | Ok _ ->
             Error
@@ -146,12 +147,11 @@ let eval ctx env op args =
     | [ pairs ] -> (
         match ctx.eval_expr env pairs with
         | Ok (VList pairs) | Ok (VVector pairs) ->
-            let pair_entry = function
-              | VList [ key; value ] | VVector [ key; value ] ->
-                  Some (key, value)
-              | _ -> None
-            in
-            Ok (VMap (List.filter_map pair_entry pairs))
+            let rec entries acc = function
+              | [] -> Ok (VMap (List.rev acc))
+              | (VList [((VString _ | VKeyword _ | VSymbol _) as key);value] | VVector [((VString _ | VKeyword _ | VSymbol _) as key);value]) :: rest -> entries ((key,value) :: acc) rest
+              | _ -> Error [diagnostic "eval/expected-pair" "into expects pairs with string, keyword or symbol keys."] in
+            entries [] pairs
         | Ok _ ->
             Error
               [
@@ -245,6 +245,11 @@ let eval ctx env op args =
   let rec eval_get env = function
     | [ collection; key ] | [ collection; key; Reader.Nil _ ] -> (
         match (ctx.eval_expr env collection, ctx.eval_expr env key) with
+        | Ok (VDictionary entries), Ok key ->
+            let found=List.find_opt (fun (k,_) -> Value.equal k key) entries in
+            Ok (match found with None -> VMap [VKeyword ":_tag",VString "None"] | Some (_,v) -> VMap [VKeyword ":_tag",VString "Some";VKeyword ":value",v])
+        | Ok (VMap entries), Ok key when op="__map-get" || (op="get" && (match key with _ -> match List.nth_opt args 1 with Some (Ast.Keyword _ | Ast.String _ | Ast.Int _) | Some (Ast.List (_, [Ast.Symbol (_,"quote");(Ast.Keyword _ | Ast.String _ | Ast.Int _)])) -> false | _ -> true)) ->
+            Ok (match Value.lookup_map entries key with None -> VMap [VKeyword ":_tag",VString "None"] | Some value -> VMap [VKeyword ":_tag",VString "Some";VKeyword ":value",value])
         | Ok (VMap entries), Ok key -> (
             match
               List.find_opt
@@ -276,6 +281,9 @@ let eval ctx env op args =
               "get expects collection, key, and optional default.";
           ]
   in
+  let runtime_path_segment value key = match value with
+    | VMap fields -> Option.value ~default:VNil (Value.lookup_map fields key)
+    | _ -> Value.lookup_path_segment value key in
   let eval_path env = function
     | value :: segments -> (
         match ctx.eval_expr env value with
@@ -284,7 +292,7 @@ let eval ctx env op args =
             match ctx.eval_all env segments with
             | Error _ as error -> error
             | Ok segments ->
-                Ok (List.fold_left Value.lookup_path_segment value segments)))
+                Ok (List.fold_left runtime_path_segment value segments)))
     | [] ->
         Error
           [ diagnostic "eval/arity" "path expects a value and path segments." ]
@@ -320,13 +328,13 @@ let eval ctx env op args =
             ctx.eval_expr env key,
             ctx.eval_expr env value )
         with
-        | Ok (VMap entries), Ok key, Ok value ->
+        | Ok ((VMap entries | VDictionary entries) as collection), Ok key, Ok value ->
             let filtered =
               List.filter
                 (fun (entry_key, _) -> not (Value.equal entry_key key))
                 entries
             in
-            Ok (VMap ((key, value) :: filtered))
+            Ok (match collection with VDictionary _ -> VDictionary ((key,value) :: filtered) | _ -> VMap ((key,value) :: filtered))
         | Ok _, Ok _, Ok _ ->
             Error [ diagnostic "eval/expected-map" "assoc expects a map." ]
         | Error diagnostics, _, _
@@ -340,9 +348,10 @@ let eval ctx env op args =
     match ctx.eval_all env args with
     | Error _ as error -> error
     | Ok maps ->
+        let dictionary=List.exists (function VDictionary _ -> true | _ -> false) maps in
         let rec loop entries = function
-          | [] -> Ok (VMap (List.rev entries))
-          | VMap next :: rest ->
+          | [] -> Ok (if dictionary then VDictionary (List.rev entries) else VMap (List.rev entries))
+          | (VMap next | VDictionary next) :: rest ->
               let entries =
                 List.fold_left
                   (fun acc (key, value) ->
@@ -360,19 +369,18 @@ let eval ctx env op args =
   let eval_dissoc env = function
     | map_expr :: keys -> (
         match (ctx.eval_expr env map_expr, ctx.eval_all env keys) with
-        | Ok (VMap entries), Ok keys ->
+        | Ok ((VMap entries | VDictionary entries) as collection), Ok keys ->
             let entries =
               List.filter
                 (fun (entry_key, _) ->
                   not
                     (List.exists
                        (fun key ->
-                         List.exists (Value.equal entry_key)
-                           (Value.key_candidates key))
+                         Value.equal entry_key key)
                        keys))
                 entries
             in
-            Ok (VMap entries)
+            Ok (match collection with VDictionary _ -> VDictionary entries | _ -> VMap entries)
         | Ok _, Ok _ ->
             Error [ diagnostic "eval/expected-map" "dissoc expects a map." ]
         | Error diagnostics, _ | _, Error diagnostics -> Error diagnostics)
@@ -381,19 +389,18 @@ let eval ctx env op args =
   let eval_select_keys env = function
     | [ map_expr; keys_expr ] -> (
         match (ctx.eval_expr env map_expr, ctx.eval_expr env keys_expr) with
-        | Ok (VMap entries), Ok (VList keys)
-        | Ok (VMap entries), Ok (VVector keys) ->
+        | Ok ((VMap entries | VDictionary entries) as collection), Ok (VList keys)
+        | Ok ((VMap entries | VDictionary entries) as collection), Ok (VVector keys) ->
             let selected =
               List.filter
                 (fun (entry_key, _) ->
                   List.exists
                     (fun key ->
-                      List.exists (Value.equal entry_key)
-                        (Value.key_candidates key))
+                      Value.equal entry_key key)
                     keys)
                 entries
             in
-            Ok (VMap selected)
+            Ok (match collection with VDictionary _ -> VDictionary selected | _ -> VMap selected)
         | Ok _, Ok _ ->
             Error
               [
@@ -411,7 +418,7 @@ let eval ctx env op args =
   let eval_keys env = function
     | [ collection ] -> (
         match ctx.eval_expr env collection with
-        | Ok (VMap entries) -> Ok (VList (List.map fst entries))
+        | Ok (VMap entries | VDictionary entries) -> Ok (VList (List.map fst entries))
         | Ok _ -> Error [ diagnostic "eval/expected-map" "keys expects a map." ]
         | Error _ as error -> error)
     | _ -> Error [ diagnostic "eval/arity" "keys expects one argument." ]
@@ -419,7 +426,7 @@ let eval ctx env op args =
   let eval_values env = function
     | [ collection ] -> (
         match ctx.eval_expr env collection with
-        | Ok (VMap entries) -> Ok (VList (List.map snd entries))
+        | Ok (VMap entries | VDictionary entries) -> Ok (VList (List.map snd entries))
         | Ok _ ->
             Error [ diagnostic "eval/expected-map" "values expects a map." ]
         | Error _ as error -> error)
@@ -450,7 +457,7 @@ let eval ctx env op args =
         | Ok VNil -> Ok (VBool true)
         | Ok (VString value) -> Ok (VBool (String.length value = 0))
         | Ok (VList values) | Ok (VVector values) -> Ok (VBool (values = []))
-        | Ok (VMap entries) -> Ok (VBool (entries = []))
+        | Ok (VMap entries | VDictionary entries) -> Ok (VBool (entries = []))
         | Ok _ -> Ok (VBool false)
         | Error _ as error -> error)
     | _ -> Error [ diagnostic "eval/arity" "empty? expects one argument." ]
@@ -460,12 +467,15 @@ let eval ctx env op args =
         match (ctx.eval_expr env collection, ctx.eval_expr env value) with
         | Ok (VList values), Ok value | Ok (VVector values), Ok value ->
             Ok (VBool (List.exists (Value.equal value) values))
-        | Ok (VMap entries), Ok key ->
+        | Ok (VMap entries | VDictionary entries), Ok key ->
             Ok
               (VBool
                  (List.exists
                     (fun (entry_key, _) -> Value.equal entry_key key)
                     entries))
+        | Ok (VString haystack), Ok (VString needle) ->
+            let rec contains i = i + String.length needle <= String.length haystack && (String.sub haystack i (String.length needle) = needle || contains (i+1)) in
+            Ok (VBool (contains 0))
         | Ok _, Ok _ ->
             Error
               [
@@ -488,7 +498,10 @@ let eval ctx env op args =
   | "map" | "list/map" -> some (eval_map_builtin env args)
   | "filter" | "list/filter" -> some (eval_filter_builtin env args)
   | "flat-map" | "list/flat-map" -> some (eval_flat_map_builtin env args)
-  | "get" -> some (eval_get env args)
+  | "__dictionary" -> some (match args with
+      | [e] -> (match ctx.eval_expr env e with Ok (VMap entries | VDictionary entries) -> Ok (VDictionary entries) | Ok _ -> Error [diagnostic "eval/expected-map" "Map construction requires a record or map."] | Error _ as e -> e)
+      | _ -> Error [diagnostic "eval/arity" "Map construction expects one value."])
+  | "get" | "__map-get" | "meta/get" -> some (eval_get env args)
   | "path" -> some (eval_path env args)
   | "get-in" -> some (eval_get_in env args)
   | "assoc" -> some (eval_assoc env args)

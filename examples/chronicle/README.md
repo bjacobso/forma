@@ -10,29 +10,25 @@ preludes:
 Narrative event log example in canonical ontology syntax.
 
 ```lisp
-(define-entity Chronicle
-  (:field [chronicle/title String {:required true}])
-  (:field [chronicle/theme String]))
+(entity Chronicle {:title String
+    :theme (Option String)})
 
-(define-entity Entry
-  (:field [entry/title String {:required true}])
-  (:field [entry/era String])
-  (:field [entry/chronicle (Ref Chronicle)]))
+(entity Entry {:title String
+    :era (Option String)
+    :chronicle (Option (Id Chronicle))})
 ```
 
 ```lisp
-(define-record "chronicle:founding" Chronicle
-  (:field [chronicle/title "Founding Era"])
-  (:field [chronicle/theme "origins"]))
+(seed Chronicle "chronicle:founding" {:title "Founding Era"
+  :theme "origins"})
 
-(define-record "entry:arrival" Entry
-  (:field [entry/title "Arrival of the Archive Fleet"])
-  (:field [entry/era "year-zero"])
-  (:field [entry/chronicle "chronicle:founding"]))
+(seed Entry "entry:arrival" {:title "Arrival of the Archive Fleet"
+  :era "year-zero"
+  :chronicle "chronicle:founding"})
 ```
 
 ```lisp
-(define-query chronicle-entries
-  (:from Entry)
-  (:select [entry/title entry/era entry/chronicle]))
+(query chronicle-entries
+  :from Entry
+  :select [title era chronicle])
 ```

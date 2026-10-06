@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of Value.closure
   | VMacro of Value.closure
 
@@ -140,7 +141,7 @@ let rec eval_expr callbacks env expr continuation =
       | Ok value -> continuation value)
   | Ast.Vector (_, items) ->
       eval_pure_values callbacks env items [] (fun values ->
-          continuation (RPure (VVector values)))
+          continuation (RPure (VList values)))
   | Ast.Map (_, entries) ->
       eval_map_entries callbacks env entries [] (fun values ->
           continuation (RPure (VMap values)))

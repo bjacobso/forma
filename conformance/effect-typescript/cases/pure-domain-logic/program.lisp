@@ -2,78 +2,70 @@
 ;; value-level match over options, results, enums, and tagged unions, and
 ;; the collection and string functions that compile to plain TypeScript.
 
-(define-schema Tier (Enum free pro enterprise))
+(type Tier (Union :free :pro :enterprise))
 
-(define-schema Discount
-  (TaggedUnion type
-    [percent (Struct (field rate Int))]
-    [fixed (Struct (field cents Int))]
-    [none (Struct)]))
+(type Discount (Tagged :tag type (Percent {:rate Int}) (Fixed {:cents Int}) (None {})))
 
-(define-class Customer
-  (:fields
-    (field id String)
-    (field name String)
-    (field tier Tier)
-    (field email (Optional String))))
+(class Customer {:id String
+ :name String
+ :tier Tier
+ :email (Option String)})
 
-(define-class LineItem
-  (:fields
-    (field sku String)
-    (field quantity Int)
-    (field unit-cents Int)))
+(class LineItem {:sku String
+ :quantity Int
+ :unit-cents Int})
 
-(define-error EmptyCart (:fields (field customer String)))
+(error EmptyCart {:customer String})
 
-(: tier-discounts (Map Discount))
+(: tier-discounts (Map String Discount))
 (define tier-discounts
-  {"free" {:type "none"}
-   "pro" {:type "percent" :rate 10}
-   "enterprise" {:type "fixed" :cents 500}})
+  {"free" {:type "None"}
+   "pro" {:type "Percent" :rate 10}
+   "enterprise" {:type "Fixed" :cents 500}})
 
-(: subtotal (-> (Array LineItem) Int))
+(: subtotal (-> (List LineItem) Int))
 (define subtotal
-  (fn [items]
-    (reduce (fn [total item] (+ total (* (get item :quantity) (get item :unit-cents)))) 0 items)))
+   [items]
+    (reduce (fn [total item] (+ total (* (get item :quantity) (get item :unit-cents)))) 0 items))
 
 (: discount-for (-> Customer Discount))
 (define discount-for
-  (fn [customer]
-    (get-or-else (get tier-discounts (get customer :tier)) {:type "none"})))
+   [customer]
+    (get-or-else (get tier-discounts (get customer :tier)) {:type "None"}))
 
 (: apply-discount (-> Discount Int Int))
 (define apply-discount
-  (fn [discount cents]
+   [discount cents]
     (match discount
-      (percent p) (- cents (quot (* cents (get p :rate)) 100))
-      (fixed f) (max 0 (- cents (get f :cents)))
-      none cents)))
+      (Percent p) (- cents (quot (* cents (get p :rate)) 100))
+      (Fixed f) (max 0 (- cents (get f :cents)))
+      None cents))
 
 (: tier-label (-> Tier String))
 (define tier-label
-  (fn [tier]
+   [tier]
     (match tier
       "free" "Free"
       "pro" "Pro"
-      _ "Enterprise")))
+      _ "Enterprise"))
 
 (: contact (-> Customer String))
 (define contact
-  (fn [customer]
+   [customer]
     (match (get customer :email)
-      (some address) (str (get customer :name) " <" address ">")
-      none (get customer :name))))
+      (Some address) (str (get customer :name) " <" address ">")
+      None (get customer :name)))
 
 (: shout (-> String String))
-(define shout (fn [text] (str (upcase (trim text)) "!")))
+(define shout  [text] (str (upcase (trim text)) "!"))
 
-(: skus (-> (Array LineItem) String))
+(: skus (-> (List LineItem) String))
 (define skus
-  (fn [items]
-    (join (map (fn [item] (get item :sku)) (filter (fn [item] (> (get item :quantity) 0)) items)) ",")))
+   [items]
+    (join (map (fn [item] (get item :sku)) (filter (fn [item] (> (get item :quantity) 0)) items)) ","))
 
-(: summarize (-> Customer (Array LineItem) (Effect String [EmptyCart] [])))
-(define-operation summarize [customer items]
+(: summarize (-> Customer (List LineItem) (Effect String [EmptyCart] [])))
+(define summarize [customer items]
   (do! [nonempty (succeed (filter (fn [item] (> (get item :quantity) 0)) items))
         _ (when (empty? nonempty) (fail (EmptyCart {:customer (get customer :id)})))
         gross (succeed (subtotal nonempty))
@@ -84,28 +76,28 @@
            (count nonempty) " items (" (skus nonempty) "), "
            gross " -> " net " cents"
            (match biggest
-             (some item) (str ", top " (get item :sku))
-             none "")))))
+             (Some item) (str ", top " (get item :sku))
+             None "")))))
 
-(: outcome-label (-> Customer (Array LineItem) (Effect String [] [])))
-(define-operation outcome-label [customer items]
+(: outcome-label (-> Customer (List LineItem) (Effect String [] [])))
+(define outcome-label [customer items]
   (do! [outcome (result (summarize customer items))]
     (succeed
       (match outcome
-        (success text) text
-        (failure error) (str "empty cart for " (get error :customer))))))
+        (Ok text) text
+        (Err error) (str "empty cart for " (get error :customer))))))
 
 (: upgrade (-> Customer Customer))
 (define upgrade
-  (fn [customer]
+   [customer]
     (assoc customer :tier
       (cond
         (= (get customer :tier) "free") "pro"
-        :else "enterprise"))))
+        :else "enterprise")))
 
-(: loud-names (-> (Array Customer) (Array String)))
+(: loud-names (-> (List Customer) (List String)))
 (define loud-names
-  (fn [customers]
+   [customers]
     (let [names (map (fn [customer] (get customer :name)) customers)
           sorted (concat names ["staff"])]
-      (map shout (conj sorted "everyone")))))
+      (map shout (conj sorted "everyone"))))

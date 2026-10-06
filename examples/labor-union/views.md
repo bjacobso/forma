@@ -7,17 +7,7 @@
 ;; Labor Relations Ontology - Views
 ;; =============================================================================
 
-(define-view lr-dashboard
-  (:title "Labor Relations Dashboard")
-  (:description "Covered placements, authorization work, and document routing state.")
-  (:subject session)
-  (:state selectedEmployee nil)
-  (:named-query placements (:ref covered-placements))
-  (:named-query tasks (:ref pending-authorization-tasks))
-  (:named-query documents (:ref completed-authorization-documents))
-  (:named-query reviews (:ref rehire-review-cases))
-  (:layout
-    (rows
+(view lr-dashboard :subject session :title "Labor Relations Dashboard" :description "Covered placements, authorization work, and document routing state." :layout (rows
       (heading "Labor Relations Operations")
       (workflow-strip {:title "Union Authorization Flow"
                        :description "CBA data drives the task, the employee signs the card, and completion becomes a routable document event."}
@@ -45,15 +35,9 @@
                             {:key "?placement_status" :label "Status" :kind "status"}
                             {:key "?placement_source_system" :label "Source"}
                             {:key "?placement_cba_id" :label "CBA" :kind "mono"}]
-                  :empty-state "No covered placements found."}))))))
+                  :empty-state "No covered placements found."})))) :state {:selectedEmployee {:initial nil :kind "null"}} :queries {:placements {:ref "covered-placements"} :tasks {:ref "pending-authorization-tasks"} :documents {:ref "completed-authorization-documents"} :reviews {:ref "rehire-review-cases"}})
 
-(define-view covered-placement-queue
-  (:title "Covered Placement Queue")
-  (:description "Placements where employee-level or position-level CBA data can trigger card work.")
-  (:subject session)
-  (:named-query placements (:ref covered-placements))
-  (:layout
-    (rows
+(view covered-placement-queue :subject session :title "Covered Placement Queue" :description "Placements where employee-level or position-level CBA data can trigger card work." :layout (rows
       (heading "Covered Placement Queue")
       (table {:bind (query placements)
               :columns [{:key "?placement_start_date" :label "Start Date" :kind "date"}
@@ -63,15 +47,9 @@
                         {:key "?placement_employee" :label "Employee" :kind "mono"}
                         {:key "?placement_position" :label "Position" :kind "mono"}]
               :default-sort {:key "?placement_start_date" :direction "asc"}
-              :empty-state "No covered placements are waiting."}))))
+              :empty-state "No covered placements are waiting."})) :queries {:placements {:ref "covered-placements"}})
 
-(define-view authorization-task-queue
-  (:title "Authorization Task Queue")
-  (:description "Union authorization tasks produced by CBA policy evaluation.")
-  (:subject session)
-  (:named-query tasks (:ref pending-authorization-tasks))
-  (:layout
-    (rows
+(view authorization-task-queue :subject session :title "Authorization Task Queue" :description "Union authorization tasks produced by CBA policy evaluation." :layout (rows
       (heading "Authorization Task Queue")
       (table {:bind (query tasks)
               :columns [{:key "?unionauthtask_title" :label "Task"}
@@ -80,16 +58,9 @@
                         {:key "?unionauthtask_assignee_role" :label "Assignee"}
                         {:key "?unionauthtask_delivery_channel" :label "Delivery"}
                         {:key "?unionauthtask_template_version" :label "Template"}]
-              :empty-state "No authorization work is open."}))))
+              :empty-state "No authorization work is open."})) :queries {:tasks {:ref "pending-authorization-tasks"}})
 
-(define-view cba-template-library
-  (:title "CBA Template Library")
-  (:description "Template metadata as consumed from the CBA master data source.")
-  (:subject session)
-  (:named-query templates (:ref all-cba-templates))
-  (:named-query review (:ref cbas-needing-review))
-  (:layout
-    (rows
+(view cba-template-library :subject session :title "CBA Template Library" :description "Template metadata as consumed from the CBA master data source." :layout (rows
       (heading "CBA Template Library")
       (columns
         (card {:title "Card Templates"}
@@ -106,15 +77,9 @@
                             {:key "?cba_union_name" :label "Union"}
                             {:key "?cba_local_label" :label "Local"}
                             {:key "?cba_status" :label "Status" :kind "status"}]
-                  :empty-state "All CBA records are active."}))))))
+                  :empty-state "All CBA records are active."})))) :queries {:templates {:ref "all-cba-templates"} :review {:ref "cbas-needing-review"}})
 
-(define-view rehire-review
-  (:title "Rehire Review")
-  (:description "Returning workers where prior authorization policy must be evaluated.")
-  (:subject session)
-  (:named-query rehires (:ref rehire-review-cases))
-  (:layout
-    (rows
+(view rehire-review :subject session :title "Rehire Review" :description "Returning workers where prior authorization policy must be evaluated." :layout (rows
       (heading "Rehire Review")
       (table {:bind (query rehires)
               :columns [{:key "?employee_first_name" :label "First"}
@@ -123,16 +88,9 @@
                         {:key "?employee_global_hr_id" :label "Global HR ID" :kind "mono"}
                         {:key "?employee_cba_id" :label "CBA" :kind "mono"}
                         {:key "?employee_union_card_signed" :label "Prior Card"}]
-              :empty-state "No rehire reviews are waiting."}))))
+              :empty-state "No rehire reviews are waiting."})) :queries {:rehires {:ref "rehire-review-cases"}})
 
-(define-view document-routing-monitor
-  (:title "Document Routing Monitor")
-  (:description "Executed authorization documents and downstream routing status.")
-  (:subject session)
-  (:named-query documents (:ref completed-authorization-documents))
-  (:named-query exceptions (:ref routing-exceptions))
-  (:layout
-    (rows
+(view document-routing-monitor :subject session :title "Document Routing Monitor" :description "Executed authorization documents and downstream routing status." :layout (rows
       (heading "Document Routing Monitor")
       (stat-group
         (metric {:label "Available Documents" :value (length (query documents))})
@@ -143,15 +101,9 @@
                         {:key "?executeddocument_template_version" :label "Template"}
                         {:key "?executeddocument_routing_status" :label "Routing" :kind "status"}
                         {:key "?executeddocument_pdf_reference" :label "PDF Reference" :kind "mono"}]
-              :empty-state "No executed authorization documents are available."}))))
+              :empty-state "No executed authorization documents are available."})) :queries {:documents {:ref "completed-authorization-documents"} :exceptions {:ref "routing-exceptions"}})
 
-(define-view integration-events-view
-  (:title "Integration Events")
-  (:description "Webhook-style events emitted for downstream labor-relations systems.")
-  (:subject session)
-  (:named-query events (:ref integration-events))
-  (:layout
-    (rows
+(view integration-events-view :subject session :title "Integration Events" :description "Webhook-style events emitted for downstream labor-relations systems." :layout (rows
       (heading "Integration Events")
       (table {:bind (query events)
               :columns [{:key "?integrationevent_event_type" :label "Event"}
@@ -159,14 +111,9 @@
                         {:key "?integrationevent_target_system" :label "Target"}
                         {:key "?integrationevent_emitted_at" :label "Emitted" :kind "date"}
                         {:key "?integrationevent_payload_summary" :label "Payload Summary"}]
-              :empty-state "No integration events have been emitted."}))))
+              :empty-state "No integration events have been emitted."})) :queries {:events {:ref "integration-events"}})
 
-(define-view employee-card-dashboard
-  (:title "Union Authorization")
-  (:description "Employee-facing authorization task and submitted card details.")
-  (:subject required)
-  (:layout
-    (rows
+(view employee-card-dashboard :subject required :title "Union Authorization" :description "Employee-facing authorization task and submitted card details." :layout (rows
       (heading "Union Authorization")
       (custom {:component-name "runtime/employee-task-list"
                :title "My Authorization Tasks"
@@ -180,5 +127,5 @@
                :fields [{:field "Global HR ID" :attribute ":employee/global-hr-id"}
                         {:field "CBA Identifier" :attribute ":employee/cba-id"}
                         {:field "Address" :attribute ":employee/address"}
-                        {:field "Signed" :attribute ":employee/union-card-signed"}]}))))
+                        {:field "Signed" :attribute ":employee/union-card-signed"}]})))
 ```

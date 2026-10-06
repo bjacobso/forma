@@ -9,6 +9,7 @@ type t =
   | VList of t list
   | VVector of t list
   | VMap of (t * t) list
+  | VDictionary of (t * t) list
   | VClosure of closure
   | VMacro of closure
 

@@ -56,3 +56,5 @@ export {
   asList,
   asKFn,
 } from "./evaluator/types.js";
+
+export { KKeyword, KSymbol, isKKeyword, isKSymbol, mapKey, mapKeyValue } from "./evaluator/types.js";

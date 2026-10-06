@@ -6,9 +6,9 @@
       "severity": "error",
       "code": "mechanics/finalizer-failure",
       "message": "The release action of acquire-release must not fail, but it can fail with [CloseFailed]; recover with catch or or-die.",
-      "line": 12,
+      "line": 11,
       "column": 5,
-      "endLine": 12,
+      "endLine": 11,
       "endColumn": 39
     }
   ]

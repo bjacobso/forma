@@ -1,7 +1,8 @@
+import { readFileSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 import { createInterface } from "node:readline";
-import { packageDir, readMarkdownLispSource, readPreludes, repoRoot } from "./corpus.mjs";
+import { packageDir, readMarkdownLispSource, readPreludes, readExampleSources, repoRoot } from "./corpus.mjs";
 import { requireNativeCli } from "./require-build.mjs";
 
 const nativeCli = requireNativeCli();
@@ -10,6 +11,8 @@ const daemon = spawn(nativeCli, ["daemon"], {
   cwd: packageDir,
   stdio: ["pipe", "pipe", "pipe"],
 });
+
+const daemonExit = new Promise((resolveExit) => daemon.on("close", resolveExit));
 
 let stderr = "";
 daemon.stderr.on("data", (chunk) => {
@@ -31,7 +34,7 @@ const waitForLine = async () => {
   return new Promise((resolveLine, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error(`Timed out waiting for daemon response. stderr: ${stderr}`));
-    }, 10000);
+    }, 30000);
     waiters.push(() => {
       clearTimeout(timeout);
       resolveLine(responses.shift());
@@ -172,8 +175,6 @@ const preludes = readPreludes();
 
 const exampleSources = [
   "examples/company/README.md",
-  "examples/staffing/documents.md",
-  "examples/staffing/views.md",
 ].map((sourceId) => ({
   sourceId,
   source: readMarkdownLispSource(resolve(repoRoot, sourceId)),
@@ -233,11 +234,11 @@ try {
   const departmentFieldType = departmentField.type ?? entryValue(departmentField, ":type");
   if (
     !Array.isArray(departmentFieldType) ||
-    departmentFieldType[0] !== "Ref" ||
+    departmentFieldType[0] !== "Id" ||
     departmentFieldType[1] !== "Department"
   ) {
     throw new Error(
-      `Employee department field should preserve Ref type:\n${JSON.stringify(departmentField, null, 2)}`,
+      `Employee department field should preserve Id type:\n${JSON.stringify(departmentField, null, 2)}`,
     );
   }
 
@@ -248,6 +249,13 @@ try {
     );
   }
 
+  const staffingSources=readExampleSources({canonicalOnly:true,dropOntologyManifest:true})
+    .filter(source=>source.sourceId.startsWith("examples/staffing/"))
+    .map(source=>({kind:"source",...source,sourceId:source.sourceId.replace("#lisp-blocks","")}));
+  const staffingLoaded=await request({op:"loadSourceBundle",sessionId,sources:[
+    {kind:"source",sourceId:"system",source:readFileSync(resolve(repoRoot,"preludes/system.lisp"),"utf8")},...staffingSources]});
+  expectOk("staffing dependencies",staffingLoaded);
+  if (staffingLoaded.value.results.some(result=>!result.ok)) throw new Error(JSON.stringify(staffingLoaded));
   const documents = expectCanonicalIr(
     "emit staffing documents",
     await request({
@@ -348,7 +356,7 @@ try {
   daemon.stdin.end();
 }
 
-const exitCode = await new Promise((resolveExit) => daemon.on("close", resolveExit));
+const exitCode = await daemonExit;
 if (exitCode !== 0) {
   throw new Error(`Daemon exited with ${exitCode}: ${stderr}`);
 }

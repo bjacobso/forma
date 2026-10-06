@@ -52,7 +52,7 @@ let parse_typeclass_param = function
       Error
         [
           diagnostic ~span:(Ast.expr_span bad) "typecheck/define-typeclass"
-            "define-typeclass parameters must be symbols or (name : kind) \
+            "__typeclass parameters must be symbols or (name : kind) \
              forms.";
         ]
 
@@ -70,7 +70,7 @@ let parse_typeclass_header = function
       Error
         [
           diagnostic ~span:(Ast.expr_span bad) "typecheck/define-typeclass"
-            "define-typeclass header must be (ClassName params...).";
+            "__typeclass header must be (ClassName params...).";
         ]
 
 let parse_typeclass_method_type env type_param_bindings type_param_ids =
@@ -117,7 +117,7 @@ let parse_typeclass_method_type env type_param_bindings type_param_ids =
       Error
         [
           diagnostic ~span:(Ast.expr_span bad) "typecheck/define-typeclass"
-            "define-typeclass methods must be (name type) forms.";
+            "__typeclass methods must be (name type) forms.";
         ]
 
 let build_class_info env name type_param_names methods =
@@ -256,7 +256,10 @@ let type_toplevel callbacks registry env expr rest =
     | Some result -> result
     | None -> (
     match expr with
-    | Ast.List (_, Ast.Symbol (_, "define-typeclass") :: header :: body) -> (
+    | Ast.List (_, Ast.Symbol (_, "__type-alias") :: _) ->
+        Typed_structural_alias.infer_structural_alias env expr
+        |> Result.map (fun (ty,env) -> ty,registry,env,false)
+    | Ast.List (_, Ast.Symbol (_, "__typeclass") :: header :: body) -> (
         let methods =
           match body with
           | Ast.Vector _ :: methods -> methods
@@ -273,11 +276,11 @@ let type_toplevel callbacks registry env expr rest =
                     registry_bind class_info registry,
                     bind_class_methods env class_info,
                     false )))
-    | Ast.List (_, Ast.Symbol (_, "define-typeclass") :: _) ->
+    | Ast.List (_, Ast.Symbol (_, "__typeclass") :: _) ->
         Error
           [
             diagnostic "typecheck/define-typeclass"
-              "define-typeclass expects a header followed by method \
+              "__typeclass expects a header followed by method \
                declarations.";
           ]
     | Ast.List (_, Ast.Symbol (_, "instance") :: args) -> (
@@ -323,7 +326,7 @@ let type_toplevel callbacks registry env expr rest =
                                 false ))))))
     | Ast.List
         ( _,
-          Ast.Symbol (_, "define-type")
+          Ast.Symbol (_, "__sum-type")
           :: Ast.List (_, Ast.Symbol (_, name) :: type_params)
           :: constructors ) -> (
         let type_param_names =
@@ -335,7 +338,7 @@ let type_toplevel callbacks registry env expr rest =
                     [
                       diagnostic ~span:(Ast.expr_span bad)
                         "typecheck/define-type"
-                        "define-type parameters must be symbols.";
+                        "__sum-type parameters must be symbols.";
                     ])
             type_params
         in
@@ -353,21 +356,21 @@ let type_toplevel callbacks registry env expr rest =
             | Error _ as error -> error
             | Ok env -> Ok (Type_expr.TDeclaration, registry, env, false)))
     | Ast.List
-        (_, Ast.Symbol (_, "define-form") :: Ast.Symbol (_, name) :: _clauses)
+        (_, Ast.Symbol (_, "__form-descriptor") :: Ast.Symbol (_, name) :: _clauses)
       ->
         Ok
           ( Type_expr.TFormDescriptor,
             registry,
             Type_env.bind name (plain_scheme Type_expr.TFormDescriptor) env,
             false )
-    | Ast.List (_, Ast.Symbol (_, "define-form") :: _) ->
+    | Ast.List (_, Ast.Symbol (_, "__form-descriptor") :: _) ->
         Error
           [
             diagnostic "typecheck/define-form"
-              "define-form expects a symbol name followed by descriptor \
+              "__form-descriptor expects a symbol name followed by descriptor \
                clauses.";
           ]
-    | Ast.List (_, Ast.Symbol (_, "meta-fn") :: Ast.Symbol (_, name) :: _clauses)
+    | Ast.List (_, Ast.Symbol (_, "__form-hook") :: Ast.Symbol (_, name) :: _clauses)
       ->
         let scheme =
           plain_scheme (Type_expr.TFn ([ Type_expr.TAny ], Type_expr.TAny))
@@ -377,34 +380,34 @@ let type_toplevel callbacks registry env expr rest =
             registry,
             Type_env.bind name scheme env,
             false )
-    | Ast.List (_, Ast.Symbol (_, "meta-fn") :: _) ->
+    | Ast.List (_, Ast.Symbol (_, "__form-hook") :: _) ->
         Error
           [
             diagnostic "typecheck/meta-fn"
-              "meta-fn expects a symbol name followed by descriptor clauses.";
+              "__form-hook expects a symbol name followed by descriptor clauses.";
           ]
     | Ast.List
         ( _,
-          Ast.Symbol (_, "define-protocol") :: Ast.Symbol (_, name) :: _clauses
+          Ast.Symbol (_, "__protocol-descriptor") :: Ast.Symbol (_, name) :: _clauses
         ) ->
         Ok
           ( Type_expr.TProtocolDescriptor,
             registry,
             Type_env.bind name (plain_scheme Type_expr.TProtocolDescriptor) env,
             false )
-    | Ast.List (_, Ast.Symbol (_, "define-protocol") :: _) ->
+    | Ast.List (_, Ast.Symbol (_, "__protocol-descriptor") :: _) ->
         Error
           [
             diagnostic "typecheck/define-protocol"
-              "define-protocol expects a symbol name followed by descriptor \
+              "__protocol-descriptor expects a symbol name followed by descriptor \
                clauses.";
           ]
     | Ast.List
         ( _,
           Ast.Symbol
             ( _,
-              ( "define-elaboration" | "define-elaboration-primitive"
-              | "define-payload-contract" ) )
+              ( "__projection-plan" | "__projection-primitive"
+              | "__payload-contract" ) )
           :: Ast.Symbol (_, name)
           :: _clauses ) ->
         Ok
@@ -416,18 +419,18 @@ let type_toplevel callbacks registry env expr rest =
         ( _,
           Ast.Symbol
             ( _,
-              ( "define-elaboration" | "define-elaboration-primitive"
-              | "define-payload-contract" ) )
+              ( "__projection-plan" | "__projection-primitive"
+              | "__payload-contract" ) )
           :: _ ) ->
         Error
           [
             diagnostic "typecheck/define-payload-contract"
-              "define-payload-contract expects a symbol name followed by \
+              "__payload-contract expects a symbol name followed by \
                payload descriptor clauses.";
           ]
     | Ast.List
         ( _,
-          Ast.Symbol (_, ("defmacro" | "define-macro"))
+          Ast.Symbol (_, ("defmacro" | "__macro"))
           :: Ast.Symbol (_, name)
           :: Ast.Vector (_, _params)
           :: _body ) ->
@@ -436,11 +439,11 @@ let type_toplevel callbacks registry env expr rest =
             registry,
             Type_env.bind name (plain_scheme Type_expr.TMacro) env,
             false )
-    | Ast.List (_, Ast.Symbol (_, ("defmacro" | "define-macro")) :: _) ->
+    | Ast.List (_, Ast.Symbol (_, ("defmacro" | "__macro")) :: _) ->
         Error
           [
             diagnostic "typecheck/define-macro"
-              "define-macro expects a symbol name, parameter vector, and body \
+              "__macro expects a symbol name, parameter vector, and body \
                forms.";
           ]
     | Ast.List
@@ -510,25 +513,39 @@ let prebind_top_level_definitions env exprs =
       match expr with
       | Ast.List
           ( _,
-            Ast.Symbol (_, ("define" | "define-operation"))
+            Ast.Symbol (_, ("define" | "__operation"))
             :: Ast.Symbol (_, name) :: _ ) ->
           Type_env.bind name (plain_scheme (Type_expr.fresh_tyvar ())) env
       | _ -> env)
     env exprs
 
 let collect_expression_types callbacks env exprs =
+  let signatures = List.filter_map (fun e -> Option.map (fun (n,_) -> n,e) (Lower_type.type_signature e)) exprs in
+  let definitions = List.filter_map Lower_type.definition_name exprs in
   let rec loop registry env form_index acc last = function
     | [] -> Ok (List.rev acc, Type_expr.ty_to_string last, env)
-    | expr :: rest -> (
-        match type_toplevel callbacks registry env expr rest with
-        | Error _ as error -> error
-        | Ok (ty, registry, env, consumed_next) ->
-            let acc =
-              { form_index; span = Ast.expr_span expr; typ = ty } :: acc
-            in
-            let rest = if consumed_next then List.tl rest else rest in
-            let form_index = form_index + if consumed_next then 2 else 1 in
-            loop registry env form_index acc ty rest)
+    | expr :: rest ->
+        let signature = Lower_type.type_signature expr in
+        (match signature with
+        | Some (n,_) when not (List.mem n definitions) -> Error [diagnostic ~span:(Ast.expr_span expr) "typecheck/signature" ("No definition for signature " ^ n)]
+        | Some (n,_) when List.length (List.filter (fun (m,_) -> m=n) signatures) > 1 -> Error [diagnostic ~span:(Ast.expr_span expr) "typecheck/signature" "Duplicate module signature."]
+        | Some (n,_) when (match rest with next :: _ -> Lower_type.definition_name next <> Some n | [] -> true) ->
+            loop registry env (form_index+1) acc last rest
+        | _ ->
+            let result = match Lower_type.definition_name expr with
+              | Some n when List.mem_assoc n signatures ->
+                  (match Lower.program [List.assoc n signatures; expr] with
+                   | Error ds -> Error (lower_diagnostics ds)
+                   | Ok [lowered] -> Result.map (fun (ty,env) -> ty,registry,env,false) (callbacks.infer_toplevel_core env lowered)
+                   | _ -> assert false)
+              | _ -> type_toplevel callbacks registry env expr rest in
+            match result with
+            | Error _ as error -> error
+            | Ok (ty, registry, env, consumed_next) ->
+                let acc = { form_index; span = Ast.expr_span expr; typ = ty } :: acc in
+                let rest = if consumed_next then List.tl rest else rest in
+                let form_index = form_index + if consumed_next then 2 else 1 in
+                loop registry env form_index acc ty rest)
   in
   loop [] (prebind_top_level_definitions env exprs) 0 [] Type_expr.TNil exprs
 

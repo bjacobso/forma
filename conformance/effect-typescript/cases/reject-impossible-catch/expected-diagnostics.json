@@ -6,9 +6,9 @@
       "severity": "error",
       "code": "mechanics/impossible-catch",
       "message": "Impossible catch: this effect cannot fail with Timeout (it can fail with [NotFound]).",
-      "line": 11,
+      "line": 10,
       "column": 3,
-      "endLine": 12,
+      "endLine": 11,
       "endColumn": 38
     }
   ]

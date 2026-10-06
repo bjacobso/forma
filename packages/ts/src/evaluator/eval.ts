@@ -1,3 +1,4 @@
+import { runtimeTypeDefinitions } from "../surface/core.js";
 import { Effect, Layer, Ref } from "effect";
 import type { SExpr } from "../reader/index.js";
 import { ParseError, parse, toSExprMany } from "../reader/index.js";
@@ -179,7 +180,7 @@ function evaluateExpandedRuntimeExprs(
  * This is the evaluator used for compile-time macro execution and for the
  * small evaluator-only runtime subset (`unquote`, `unquote-splicing`).
  *
- * Unlike the VM-first runtime facade, this API preserves `define-macro` bindings
+ * Unlike the VM-first runtime facade, this API preserves `__macro` bindings
  * in the returned environment and can execute expressions that still contain
  * macro calls.
  */
@@ -205,6 +206,10 @@ export function evaluateCompileTimeExprs(
       // For define: use a mutable slot so fn closures can self-reference
       if (expr._tag === "List" && expr.items.length >= 3) {
         const head = expr.items[0];
+        if (head?._tag === "Sym" && head.name === ":" && expr.items[1]?._tag === "Sym") {
+          result = null;
+          continue;
+        }
         if (head?._tag === "Sym" && head.name === "define") {
           const defGroup: Array<{
             expr: SExpr;
@@ -273,8 +278,15 @@ export function evaluateCompileTimeExprs(
           exprIndex = groupEnd - 1;
           continue;
         }
-        // define-typeclass: no-op at runtime (type system handles it)
-        if (head?._tag === "Sym" && head.name === "define-typeclass") {
+        const constructors = runtimeTypeDefinitions(expr);
+        if (constructors) {
+          const evaluated = yield* evaluateCompileTimeExprs(constructors, { ...options, env: currentEnv });
+          currentEnv = evaluated.env;
+          result = null;
+          continue;
+        }
+        // __typeclass: no-op at runtime (type system handles it)
+        if (head?._tag === "Sym" && head.name === "__typeclass") {
           result = null;
           continue;
         }
@@ -291,8 +303,8 @@ export function evaluateCompileTimeExprs(
           result = null;
           continue;
         }
-        // define-macro: (define-macro name [params] body...)
-        if (head?._tag === "Sym" && head.name === "define-macro") {
+        // __macro: (__macro name [params] body...)
+        if (head?._tag === "Sym" && head.name === "__macro") {
           const nameSym = expr.items[1];
           if (nameSym?._tag === "Sym" && expr.items.length >= 4) {
             const paramsExpr = expr.items[2]!;

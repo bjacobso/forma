@@ -6,6 +6,7 @@ type callbacks = {
     env ->
     Core_ast.expr ->
     (Type_expr.subst * Type_expr.ty, diagnostic list) result;
+  check_expr : env -> Core_ast.expr -> Type_expr.ty -> (Type_expr.subst * Type_expr.ty, diagnostic list) result;
 }
 
 val infer_application :

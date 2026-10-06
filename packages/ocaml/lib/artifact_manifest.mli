@@ -13,4 +13,5 @@ val build_package :
   declarations:Artifact_types.package_declaration list ->
   modules:Module_decl.t list ->
   type_summary:Artifact_summary_types.package_summary ->
+  diagnostics:Diagnostic.t list ->
   Artifact_types.package

@@ -7,96 +7,91 @@
 ;; Law Firm Backoffice Ontology - Queries
 ;; =============================================================================
 
-(define-query onboarding-clients
-  (:from Client)
-  (:where (= (get it :client/status) "onboarding"))
-  (:select [client/name client/type client/industry client/risk-level client/email]))
+(query onboarding-clients
+  :from Client
+  :where (= status "onboarding")
+  :select [name type industry risk-level email])
 
-(define-query active-clients
-  (:from Client)
-  (:where (= (get it :client/status) "active"))
-  (:select [client/name client/type client/industry client/risk-level client/email]))
+(query active-clients
+  :from Client
+  :where (= status "active")
+  :select [name type industry risk-level email])
 
-(define-query high-risk-clients
-  (:from Client)
-  (:where (= (get it :client/risk-level) "high"))
-  (:select [client/name client/type client/industry client/status client/email]))
+(query high-risk-clients
+  :from Client
+  :where (match risk-level (Some __risk_level) (= __risk_level "high") None false)
+  :select [name type industry status email])
 
-(define-query active-matters
-  (:from Matter)
-  (:where (= (get it :matter/status) "active"))
-  (:select [matter/title matter/practice-area matter/fee-type matter/next-deadline matter/budget]))
+(query active-matters
+  :from Matter
+  :where (= status "active")
+  :select [title practice-area fee-type next-deadline budget])
 
-(define-query matters-opening
-  (:from Matter)
-  (:where (= (get it :matter/status) "opening"))
-  (:select [matter/title matter/practice-area matter/fee-type matter/opened-date matter/summary]))
+(query matters-opening
+  :from Matter
+  :where (= status "opening")
+  :select [title practice-area fee-type opened-date summary])
 
-(define-query intake-packets-needing-review
-  (:from IntakePacket)
-  (:where (= (get it :intakepacket/status) "submitted"))
-  (:select [intakepacket/status intakepacket/submitted-at intakepacket/notes]))
+(query intake-packets-needing-review
+  :from IntakePacket
+  :where (= intakepacket/status "submitted")
+  :select [intakepacket/status intakepacket/submitted-at intakepacket/notes])
 
-(define-query pending-conflict-checks
-  (:from ConflictCheck)
-  (:where (= (get it :conflictcheck/status) "pending"))
-  (:select [conflictcheck/status conflictcheck/search-terms conflictcheck/result conflictcheck/notes]))
+(query pending-conflict-checks
+  :from ConflictCheck
+  :where (= conflictcheck/status "pending")
+  :select [conflictcheck/status conflictcheck/search-terms conflictcheck/result conflictcheck/notes])
 
-(define-query conflicts-needing-attorney-review
-  (:from ConflictCheck)
-  (:where (= (get it :conflictcheck/status) "needs-review"))
-  (:select [conflictcheck/status conflictcheck/search-terms conflictcheck/result conflictcheck/notes]))
+(query conflicts-needing-attorney-review
+  :from ConflictCheck
+  :where (= conflictcheck/status "needs-review")
+  :select [conflictcheck/status conflictcheck/search-terms conflictcheck/result conflictcheck/notes])
 
-(define-query engagement-letters-outstanding
-  (:from EngagementLetter)
-  (:where
-    (and
-      (!= (get it :engagementletter/status) "signed")
-      (!= (get it :engagementletter/status) "declined")))
-  (:select [engagementletter/status engagementletter/sent-at engagementletter/fee-type engagementletter/scope-summary]))
+(query engagement-letters-outstanding
+  :from EngagementLetter
+  :where (and
+      (!= engagementletter/status "signed")
+      (!= engagementletter/status "declined"))
+  :select [engagementletter/status engagementletter/sent-at engagementletter/fee-type engagementletter/scope-summary])
 
-(define-query open-case-tasks
-  (:from CaseTask)
-  (:where
-    (and
-      (!= (get it :casetask/status) "completed")
-      (!= (get it :casetask/status) "cancelled")))
-  (:select [casetask/title casetask/type casetask/priority casetask/status casetask/due-date casetask/assignee-role]))
+(query open-case-tasks
+  :from CaseTask
+  :where (and
+      (!= casetask/status "completed")
+      (!= casetask/status "cancelled"))
+  :select [casetask/title casetask/type casetask/priority casetask/status casetask/due-date casetask/assignee-role])
 
-(define-query urgent-case-tasks
-  (:from CaseTask)
-  (:where
-    (and
-      (= (get it :casetask/priority) "urgent")
-      (!= (get it :casetask/status) "completed")))
-  (:select [casetask/title casetask/type casetask/status casetask/due-date casetask/assignee-role]))
+(query urgent-case-tasks
+  :from CaseTask
+  :where (and
+      (= casetask/priority "urgent")
+      (!= casetask/status "completed"))
+  :select [casetask/title casetask/type casetask/status casetask/due-date casetask/assignee-role])
 
-(define-query overdue-document-requests
-  (:from DocumentRequest)
-  (:where (= (get it :documentrequest/status) "overdue"))
-  (:select [documentrequest/title documentrequest/requested-from documentrequest/due-date documentrequest/notes]))
+(query overdue-document-requests
+  :from DocumentRequest
+  :where (= documentrequest/status "overdue")
+  :select [documentrequest/title documentrequest/requested-from documentrequest/due-date documentrequest/notes])
 
-(define-query open-document-requests
-  (:from DocumentRequest)
-  (:where
-    (and
-      (!= (get it :documentrequest/status) "received")
-      (!= (get it :documentrequest/status) "cancelled")))
-  (:select [documentrequest/title documentrequest/status documentrequest/requested-from documentrequest/due-date]))
+(query open-document-requests
+  :from DocumentRequest
+  :where (and
+      (!= documentrequest/status "received")
+      (!= documentrequest/status "cancelled"))
+  :select [documentrequest/title documentrequest/status documentrequest/requested-from documentrequest/due-date])
 
-(define-query invoices-needing-review
-  (:from Invoice)
-  (:where (= (get it :invoice/status) "draft"))
-  (:select [invoice/number invoice/status invoice/amount invoice/issued-at invoice/due-date]))
+(query invoices-needing-review
+  :from Invoice
+  :where (= status "draft")
+  :select [number status amount issued-at due-date])
 
-(define-query active-violations
-  (:from Violation)
-  (:where (= (get it :violation/status) "open"))
-  (:select
-    [violation/constraint-name
-     violation/severity
-     violation/message
-     violation/entity-id
-     violation/task-id
-     violation/detected-at]))
+(query active-violations
+  :from Violation
+  :where (= status "open")
+  :select [constraint-name
+     severity
+     message
+     entity-id
+     task-id
+     detected-at])
 ```

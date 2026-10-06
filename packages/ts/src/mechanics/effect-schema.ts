@@ -70,7 +70,7 @@ export function schemaExpressionTs(schema: JsonValue | undefined, naming: Schema
     case "Optional":
       return `Schema.optionalKey(${schemaExpressionTs(schema["item"], naming)})`;
     case "Map":
-      return `Schema.Record(Schema.String, ${schemaExpressionTs(schema["value"], naming)})`;
+      return `Schema.Record(${schema["key"] ? schemaExpressionTs(schema["key"], naming) : "Schema.String"}, ${schemaExpressionTs(schema["value"], naming)})`;
     case "Ref":
       return typeof schema["name"] === "string" ? naming.schemaConst(schema["name"]) : "Schema.Unknown";
     case "Brand":

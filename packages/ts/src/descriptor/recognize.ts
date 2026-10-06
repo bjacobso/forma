@@ -41,7 +41,7 @@ export function recognizeForm(
   if (!head) return null;
 
   const descriptor = registry.get(head);
-  if (descriptor) return { formName: head, descriptor, expr };
+  if (descriptor) return { formName: descriptor.name, descriptor, expr };
 
   // Try unwrapping (define name (form-type ...))
   const unwrapped = unwrapDefine(expr, registry);

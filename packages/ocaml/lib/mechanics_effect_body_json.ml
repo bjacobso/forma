@@ -30,6 +30,11 @@ let rec effect_json context expr =
   in
   let values args = Ir_json.Array (List.map (value_json source_id) args) in
   match expr with
+  | Ast.Symbol (_,n) when Option.is_some (service_and_method n) && (match List.assoc_opt n context.service_effects with Some (Ir_json.Object fields) -> List.assoc_opt "value" fields = Some (Ir_json.Bool true) | _ -> false) ->
+      let service,method_name = Option.get (service_and_method n) in
+      let effect = List.assoc n context.service_effects in
+      let effect = match effect with Ir_json.Object fields -> Ir_json.Object (List.remove_assoc "value" fields) | _ -> effect in
+      obj "ServiceCall" ["service",Ir_json.String service;"method",Ir_json.String method_name;"args",Ir_json.Array [];"effect",effect;"value",Ir_json.Bool true;"span",source_json source_id expr]
   | Ast.List (_, (head_expr :: args as items)) -> (
       let head = sym_name head_expr in
       let count = List.length items in
@@ -156,6 +161,13 @@ and bindings_json context = function
         [])
       else
         let rec loop acc = function
+          | Ast.Keyword (_,":let") :: Ast.Vector (_,pure) :: rest ->
+              let rec pure_bindings = function
+                | n :: value :: tail ->
+                    let entry = Ir_json.Object ["name",Ir_json.String (Option.value ~default:"_" (scalar_name n));"value",obj "Pure" ["value",value_json context.source_id value;"effect",context.effect;"span",source_json context.source_id value];"pure",Ir_json.Bool true;"span",source_json context.source_id value] in
+                    entry :: pure_bindings tail
+                | [] -> [] | _ -> ignore (report context bindings_expr ":let expects pattern/value pairs."); [] in
+              loop (List.rev (pure_bindings pure) @ acc) rest
           | name :: value :: rest -> (
               let binding_name =
                 match name with

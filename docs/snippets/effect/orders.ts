@@ -24,15 +24,15 @@ export class PaymentDeclined extends Schema.TaggedError<PaymentDeclined>()("Paym
 export class Orders extends Context.Service<
   Orders,
   {
-    readonly find: (id: OrderId) => Effect.Effect<Option.Option<Order>>;
-    readonly save: (order: Order) => Effect.Effect<void>;
+    readonly find: (arg0: OrderId) => Effect.Effect<Option.Option<Order>>;
+    readonly save: (arg0: Order) => Effect.Effect<void>;
   }
 >()("Orders") {}
 
 export class Payments extends Context.Service<
   Payments,
   {
-    readonly charge: (cents: number) => Effect.Effect<string, PaymentDeclined>;
+    readonly charge: (arg0: number) => Effect.Effect<string, PaymentDeclined>;
   }
 >()("Payments") {}
 

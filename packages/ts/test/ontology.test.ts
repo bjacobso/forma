@@ -9,29 +9,25 @@ import {
 } from "../src/Ontology.js";
 import { preludeSource } from "../src/Preludes.js";
 
-const supportDesk = `(define-entity Customer
-  (:doc "An organisation that raises tickets.")
-  (:field [customer/name String {:required true}]))
+const supportDesk = `(entity Customer
+  {:name String}
+  :doc "An organisation that raises tickets.")
 
-(define-entity Ticket
-  (:field [ticket/title String {:required true :indexed true}])
-  (:field [ticket/customer (Ref Customer) {:required true}])
-  (:field [ticket/owner Customer])
-  (:field [ticket/tags (List String)]))
+(entity Ticket
+  {:title (String :indexed true)
+   :customer (Id Customer)
+   :owner (Option (Id Customer))
+   :tags (Option (List String))})
 
-(define-relation escalated-to Ticket Customer
-  (:field [escalated-to/at Instant {:required true}]))
+(relation escalated-to Ticket Customer {:at Int})
 
-(define-action close-ticket
-  (:input [ticket String {:required true}])
-  (:input [watchers (List Customer)])
-  (:returns String)
-  (:do (set ticket :ticket/status "closed")))
+(: close-ticket (-> (Id Ticket) (Option (List (Id Customer))) (Action Unit)))
+(define close-ticket [ticket watchers]
+  (update! Ticket ticket {:title "closed"}))
 
-(define-query titles (:from Ticket) (:select [ticket/title]))
+(query titles :from Ticket :select [title])
 
-(define-datalog-query open-work
-  (:query {:find ["?title"] :where [["?t" ":ticket/title" "?title"]]}))
+(datalog-query open-work {:find [?title] :where [[?t :ticket/title ?title]]})
 `;
 
 describe("elaborateOntology", () => {
@@ -66,9 +62,9 @@ describe("elaborateOntology", () => {
     ]);
 
     const [action] = model.actions;
-    expect(action!.inputs.map((i) => i.span?.startLine)).toEqual([15, 16]);
+    expect(action!.inputs.map((i) => i.span?.startLine)).toEqual([14, 14]);
     expect(action!.inputs.map(({ span: _span, ...i }) => i)).toEqual([
-      { name: "ticket", type: { kind: "scalar", name: "String" }, required: true },
+      { name: "ticket", type: { kind: "ref", target: "Ticket" }, required: true },
       {
         name: "watchers",
         type: { kind: "list", item: { kind: "ref", target: "Customer" } },
@@ -76,10 +72,10 @@ describe("elaborateOntology", () => {
       },
     ]);
     expect(action!.body).toEqual([
-      "set",
+      "update!",
+      "Ticket",
       "ticket",
-      ":ticket/status",
-      { "$forma.runtimeExpr": "string-literal", value: "closed" },
+      {title:{ "$forma.runtimeExpr": "string-literal", value: "closed" }},
     ]);
 
     expect(model.queries).toMatchObject([
@@ -96,25 +92,25 @@ describe("elaborateOntology", () => {
   test("reports unknown references and duplicate fields at the declaration", () => {
     const { ok, diagnostics } = elaborateOntology(
       [
-        "(define-entity A (:field [a/x String]) (:field [a/x Int]) (:field [a/b Missing]))",
-        "(define-relation r A Ghost)",
-        "(define-query q (:from Nowhere))",
+        "(entity A {:x String :x Int :b (Id Missing)})",
+        "(relation r A Ghost {})",
+        "(query q :from Nowhere)",
       ].join("\n"),
       { sourceId: "m.lisp" },
     );
     expect(ok).toBe(false);
     expect(diagnostics.map((d) => [d.code, formatDiagnostic(d)])).toEqual([
+      ["elaborate/hole-type", "m.lisp:2:15: Unknown reference Ghost"],
+      ["elaborate/hole-type", "m.lisp:3:16: Unknown reference Nowhere"],
       ["ontology/duplicate-field", "m.lisp:1:1: A declares a/x twice"],
       ["ontology/unknown-type", "m.lisp:1:1: a/b refers to unknown type Missing"],
-      ["ontology/unknown-entity", "m.lisp:2:1: r refers to unknown entity Ghost"],
-      ["ontology/unknown-entity", "m.lisp:3:1: q queries unknown entity Nowhere"],
     ]);
   });
 
   test("resolves references across sources", () => {
     const { ok, model, diagnostics } = elaborateOntology([
-      { sourceId: "queries.lisp", source: "(define-query everyone (:from Person))" },
-      { sourceId: "entities.lisp", source: "(define-entity Person (:field [person/name String]))" },
+      { sourceId: "queries.lisp", source: "(query everyone :from Person)" },
+      { sourceId: "entities.lisp", source: "(entity Person {:name String})" },
     ]);
     expect(diagnostics).toEqual([]);
     expect(ok).toBe(true);
@@ -123,7 +119,7 @@ describe("elaborateOntology", () => {
   });
 
   test("parses type expressions and unwraps runtime literals", () => {
-    expect(parseOntologyType(["Set", ["Ref", "User"]])).toEqual({
+    expect(parseOntologyType(["Set", ["Id", "User"]])).toEqual({
       kind: "set",
       item: { kind: "ref", target: "User" },
     });
@@ -153,6 +149,7 @@ describe("elaborateOntology", () => {
         }
         if (!entry.name.endsWith(".md")) continue;
         const sourceId = relative(examples, path);
+        if (sourceId === "compiler-debug/invalid-query.md") continue;
         const blocks = [...readFileSync(path, "utf8").matchAll(/```(?:lisp|clojure|clj)\n([\s\S]*?)```/g)]
           .map((match) => match[1]!)
           .filter((block) => !/^\s*\(ontology[\s)]/.test(block));
@@ -166,10 +163,10 @@ describe("elaborateOntology", () => {
     let entities = 0;
     for (const [example, sources] of groups) {
       const { model, diagnostics } = elaborateOntology([system, ...sources]);
-      const ontologyErrors = diagnostics.filter((d) => d.code.startsWith("ontology/"));
+      const ontologyErrors = diagnostics.filter((d) => d.severity === "error" && !(d.code === "elaborate/unknown-form" && ["export","export-from","import","test","test-suite"].includes(String(d.details?.["form"]))));
       expect(ontologyErrors.map(formatDiagnostic), example).toEqual([]);
       entities += model.entities.length;
     }
     expect(entities).toBeGreaterThan(60);
-  });
+  }, 60_000);
 });

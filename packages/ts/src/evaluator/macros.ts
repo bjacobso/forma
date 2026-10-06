@@ -21,7 +21,7 @@ export function evalDefMacro(
 ): Effect.Effect<KValue, KernelError> {
   if (items.length < 4) {
     return Effect.fail(
-      new ArityError({ name: "define-macro", expected: "3+", got: items.length - 1, loc }),
+      new ArityError({ name: "__macro", expected: "3+", got: items.length - 1, loc }),
     );
   }
   const nameSym = items[1]!;
@@ -29,7 +29,7 @@ export function evalDefMacro(
   if (!macroName) {
     return Effect.fail(
       new KernelTypeError({
-        message: "define-macro name must be a symbol",
+        message: "__macro name must be a symbol",
         expected: "symbol",
         got: nameSym._tag,
         loc: nameSym.loc,
@@ -40,7 +40,7 @@ export function evalDefMacro(
   if (paramsExpr._tag !== "Vector") {
     return Effect.fail(
       new KernelTypeError({
-        message: "define-macro params must be a vector",
+        message: "__macro params must be a vector",
         expected: "vector",
         got: paramsExpr._tag,
         loc: paramsExpr.loc,
@@ -55,7 +55,7 @@ export function evalDefMacro(
     if (!pName) {
       return Effect.fail(
         new KernelTypeError({
-          message: "define-macro param must be a symbol",
+          message: "__macro param must be a symbol",
           expected: "symbol",
           got: p._tag,
           loc: p.loc,

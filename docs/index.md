@@ -116,7 +116,7 @@ pageClass: forma-index
 <div>
 <p class="fh-file">log.lisp · signature missing <code>Console.print</code></p>
 
-<<< @/snippets/home/log-undeclared.lisp{10-12} [log.lisp]
+<<< @/snippets/home/log-undeclared.lisp{7-9} [log.lisp]
 
 </div>
 <div>

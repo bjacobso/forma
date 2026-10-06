@@ -1,3 +1,2 @@
-(define-typeclass (Show a)
-  (show (-> a Str)))
+(typeclass (Show a) (: show (-> a String)))
 (show 42)

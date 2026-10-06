@@ -1,3 +1,4 @@
+import { KKeyword, mapKey, quotedDatum } from "./types.js";
 import { Effect, Ref } from "effect";
 import type { SExpr, Loc } from "../reader/index.js";
 import {
@@ -111,7 +112,7 @@ export function evalSym(
 ): Effect.Effect<KValue, KernelError> {
   // Handle keyword symbols (e.g., :foo) as self-evaluating strings
   if (name.startsWith(":")) {
-    return Effect.succeed(name);
+    return Effect.succeed(KKeyword(name));
   }
   // nil literal
   if (name === "nil") {
@@ -120,6 +121,7 @@ export function evalSym(
   if (env.has(name)) {
     return Effect.succeed(env.lookup(name)!);
   }
+  if (name==="None" || name==="Option.None") return Effect.succeed(new Map([[":_tag","None"]]));
   if (name in runtime.builtins) {
     return Effect.succeed(makeKBuiltin(name));
   }
@@ -179,7 +181,8 @@ export function evalMap(
     const result = new Map<string, KValue>();
     for (const [kExpr, vExpr] of pairs) {
       const k = yield* evalExpr(kExpr, env, runtime);
-      if (typeof k !== "string") {
+      const key = mapKey(k);
+      if (key === undefined) {
         return yield* new KernelTypeError({
           message: "Map keys must be strings",
           expected: "string",
@@ -188,7 +191,7 @@ export function evalMap(
         });
       }
       const v = yield* evalExpr(vExpr, env, runtime);
-      result.set(k, v);
+      result.set(key, v);
     }
     return result as ReadonlyMap<string, KValue>;
   });
@@ -222,6 +225,11 @@ export function evalList(
           return yield* evalMatch(items, loc, env, runtime, evalExpr);
         case "define":
           return yield* evalDef(items, loc, env, runtime, evalExpr);
+        case ":":
+          return items[1] ? yield* evalExpr(items[1], env, runtime) : null;
+        case "quote":
+          if (items.length !== 2) return yield* new ArityError({ name: "quote", expected: 1, got: items.length - 1, loc });
+          return quotedDatum(items[1]!);
         case "quasiquote":
           return yield* evalQuasiquoteForm(items, loc, env, runtime, evalExpr);
         case "unquote":
@@ -238,9 +246,9 @@ export function evalList(
             got: "bare unquote-splicing",
             loc,
           });
-        case "define-macro":
+        case "__macro":
           return yield* evalDefMacro(items, loc, env);
-        case "define-typeclass":
+        case "__typeclass":
           // No-op at runtime — type system handles class definitions
           return null;
         case "instance":
@@ -249,6 +257,7 @@ export function evalList(
           return (yield* evalInstance(items, loc, env, runtime, evalExpr)).result;
       }
 
+      if (items.length === 1 && /^[A-Z]/.test(head.name) && env.has(head.name)) return env.lookup(head.name)!;
       // Check builtins — args are NOT in tail position
       if (head.name in runtime.builtins) {
         const prevTail = getTcoTail();

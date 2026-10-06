@@ -1,3 +1,4 @@
+import { checkExpr } from "./check-expr.js";
 /**
  * Inference for let-bindings and top-level definitions (define).
  */
@@ -5,11 +6,12 @@ import { Effect, Ref } from "effect";
 import type { Type, Row } from "./types.js";
 import { mono } from "./types.js";
 import { applyType, applyEnv, type TypeEnv } from "./substitution.js";
+import { assignType } from "./assign.js";
 import { unify } from "./unify.js";
 import { InferContext } from "./context.js";
 import { InferenceError } from "./errors.js";
 import type { CoreExpr } from "./core-expr.js";
-import { originOf, typeExprToType } from "./infer-core.js";
+import { inferLam, originOf, typeExprToType } from "./infer-core.js";
 import { generalizeBinding } from "./scheme-ops.js";
 
 /**
@@ -95,10 +97,11 @@ export const inferDef = (
       defEnv.set(expr.name, mono(sigT));
 
       // Infer the expression type
-      const exprT = yield* inferExpr(defEnv, expr.expr);
+      const exprT = yield* checkExpr(defEnv,expr.expr,sigT).pipe(Effect.mapError(error =>
+        new InferenceError({message:error.message.replace(/ \(at offset \d+\)$/,""),origin:originOf(expr,"def-signature"),details:error.details})));
 
       // Unify inferred type with signature type
-      yield* unify(
+      yield* assignType(
         applyType(yield* Ref.get(ctx.subst), exprT),
         applyType(yield* Ref.get(ctx.subst), sigT),
         originOf(expr, "def-signature"),

@@ -1,6 +1,6 @@
 ;; Refs, fibers, and collections keep their element types.
-(: count-up (-> (Array String) (Effect Int [] [])))
-(define-operation count-up [names]
+(: count-up (-> (List String) (Effect Int [] [])))
+(define count-up [names]
   (do! [counter (ref-make 0)
         _ (ref-set counter "one")
         _ (ref-update counter (fn [n] (str n "!")))
@@ -8,10 +8,10 @@
     (succeed total)))
 
 (: wait-for (-> Int (Effect Int [] [])))
-(define-operation wait-for [n]
+(define wait-for [n]
   (do! [result (join n)]
     (succeed result)))
 
-(: each-letter (-> String (Effect (Array String) [] [])))
-(define-operation each-letter [word]
+(: each-letter (-> String (Effect (List String) [] [])))
+(define each-letter [word]
   (for-each word (fn [letter] (succeed letter))))

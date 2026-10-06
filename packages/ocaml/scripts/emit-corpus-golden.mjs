@@ -1,13 +1,8 @@
-import { spawn } from "node:child_process";
+import { emitExampleModules } from "./corpus-emission.mjs";
 import { createHash } from "node:crypto";
-import { createInterface } from "node:readline";
-import { packageDir, readExampleSources, readPreludes } from "./corpus.mjs";
 import { corpusGolden } from "./gates.mjs";
-import { requireNativeCli } from "./require-build.mjs";
 
-const nativeCli = requireNativeCli();
 const printActual = process.argv.includes("--print");
-const daemonResponseTimeoutMs = Number(process.env.FORMA_DAEMON_TIMEOUT_MS ?? 30000);
 
 const stableJson = (value) => {
   if (Array.isArray(value)) {
@@ -55,101 +50,9 @@ const summaryMetadataPaths = (value, path = "$") => {
   return paths;
 };
 
-const diagnosticsSummary = (response) => {
-  const first = response?.diagnostics?.[0];
-  if (!first) return "unknown failure";
-  return `${first.code ?? "unknown"}: ${first.message ?? ""}`.trim();
-};
-
-const expectOk = (label, response) => {
-  if (response?.ok !== true) {
-    throw new Error(
-      `${label} failed: ${diagnosticsSummary(response)}\n${JSON.stringify(response)}`,
-    );
-  }
-};
-
-const preludes = readPreludes({ kind: "prelude" });
-const sources = readExampleSources({
-  kind: "source",
-  canonicalOnly: true,
-  dropOntologyManifest: true,
-});
-
-if (sources.length === 0) {
-  throw new Error("No Lisp example sources found.");
-}
-
-const daemon = spawn(nativeCli, ["daemon"], {
-  cwd: packageDir,
-  stdio: ["pipe", "pipe", "pipe"],
-});
-
-let stderr = "";
-daemon.stderr.on("data", (chunk) => {
-  stderr += chunk;
-});
-
-const responses = [];
-const waiters = [];
-const lines = createInterface({ input: daemon.stdout });
-
-lines.on("line", (line) => {
-  responses.push(line);
-  const waiter = waiters.shift();
-  if (waiter) waiter();
-});
-
-const waitForLine = async () => {
-  if (responses.length > 0) return responses.shift();
-  return new Promise((resolveLine, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error(`Timed out waiting for daemon response. stderr: ${stderr}`));
-    }, daemonResponseTimeoutMs);
-    waiters.push(() => {
-      clearTimeout(timeout);
-      resolveLine(responses.shift());
-    });
-  });
-};
-
-const request = async (payload) => {
-  daemon.stdin.write(`${JSON.stringify(payload)}\n`);
-  const line = await waitForLine();
-  try {
-    return JSON.parse(line);
-  } catch (error) {
-    throw new Error(`Could not parse daemon response ${JSON.stringify(line)}: ${error}`);
-  }
-};
-
-let sessionId;
-
-try {
-  const opened = await request({ op: "openSession" });
-  expectOk("openSession", opened);
-  sessionId = opened.value.sessionId;
-
-  const loaded = await request({
-    op: "loadSourceBundle",
-    sessionId,
-    sources: [...preludes, ...sources],
-  });
-  expectOk("loadSourceBundle", loaded);
-
-  const loadFailures = (loaded.value?.results ?? []).filter((result) => result?.ok !== true);
-  if (loadFailures.length > 0) {
-    throw new Error(`Corpus load failures:\n${JSON.stringify(loadFailures, null, 2)}`);
-  }
-
-  const sourceIds = sources.map((source) => source.sourceId);
-  const emitted = await request({ op: "emitMany", sessionId, sourceIds });
-  expectOk("emitMany", emitted);
-  const results = emitted.value?.results;
-  if (!Array.isArray(results) || results.length !== sourceIds.length) {
-    throw new Error(`emitMany returned ${results?.length ?? 0}/${sourceIds.length} results.`);
-  }
-
+const results=await emitExampleModules();
+const sources=results.map(result=>({sourceId:result.sourceId}));
+{
   const perSource = [];
   const corpusKindCounts = new Map();
   let declarationCount = 0;
@@ -195,9 +98,16 @@ try {
 
   perSource.sort((left, right) => left.sourceId.localeCompare(right.sourceId));
 
+  const moduleCounts={};
+  for (const source of perSource) {
+    const name=source.sourceId.split("/")[1];
+    const module=moduleCounts[name] ??= {sourceCount:0,declarationCount:0};
+    module.sourceCount++; module.declarationCount+=source.declarationCount;
+  }
   const actual = {
+    moduleCounts,
     sourceCount: sources.length,
-    emittedCount: emitted.value?.emittedCount,
+    emittedCount: results.length,
     declarationCount,
     kindCounts: objectFromCounts(corpusKindCounts),
     manifestHash: sha256(stableJson(perSource)),
@@ -214,18 +124,4 @@ try {
       `forma-ocaml corpus golden ok (${actual.sourceCount} sources, ${actual.declarationCount} declarations)`,
     );
   }
-} finally {
-  if (sessionId) {
-    try {
-      await request({ op: "closeSession", sessionId });
-    } catch {
-      // The daemon may already be closing after an earlier hard failure.
-    }
-  }
-  daemon.stdin.end();
-}
-
-const exitCode = await new Promise((resolveExit) => daemon.on("close", resolveExit));
-if (exitCode !== 0) {
-  throw new Error(`Daemon exited with ${exitCode}: ${stderr}`);
 }

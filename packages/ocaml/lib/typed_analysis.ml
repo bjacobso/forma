@@ -6,6 +6,7 @@ type callbacks = {
     env ->
     Core_ast.expr ->
     (Type_expr.subst * Type_expr.ty, diagnostic list) result;
+  check_expr : env -> Core_ast.expr -> Type_expr.ty -> (Type_expr.subst * Type_expr.ty, diagnostic list) result;
   pattern_bindings : Core_ast.pattern -> env;
 }
 
@@ -14,62 +15,32 @@ let infer_toplevel_core callbacks env expr =
   | Core_ast.TypeDef (_, name, Some type_expr) -> (
       match Type_resolve.resolve env type_expr with
       | Error _ as error -> error
+      | Ok (Type_expr.TNamedApp ("Brand", [base])) ->
+          let branded = Type_expr.TNamedApp ("Brand", [Type_expr.TNamed name;base]) in
+          let plain t = Type_env.Forall ([],t,[],Type_env.Plain) in
+          Ok (Type_expr.TDeclaration, env |> Type_env.bind ("__type/" ^ name) (plain branded) |> Type_env.bind name (plain (Type_expr.TFn ([base],branded))))
       | Ok ty ->
-          Ok
-            ( Type_expr.TDeclaration,
-              Type_env.bind name
-                (Type_env.Forall ([], ty, [], Type_env.Plain))
-                env ))
+          Ok (Type_expr.TDeclaration, Type_env.bind name (Type_env.Forall ([], ty, [], Type_env.Plain)) env))
   | Core_ast.TypeDef (_, name, None) ->
       Ok
         ( Type_expr.TDeclaration,
           Type_env.bind name
             (Type_env.Forall ([], Type_expr.TAny, [], Type_env.Plain))
             env )
-  | Core_ast.Def (_, name, signature, value) -> (
-      let recursive_ty = Type_expr.fresh_tyvar () in
-      let recursive_env =
-        Type_env.bind name
-          (Type_env.Forall ([], recursive_ty, [], Type_env.Plain))
-          env
-      in
-      let pending_start = Type_env.pending_constraints_count () in
-      match callbacks.infer_expr recursive_env value with
-      | Error _ as error -> error
-      | Ok (value_subst, value_ty) -> (
-          let env = Type_env.apply_subst_env value_subst env in
-          let inferred_ty = Type_expr.apply_subst value_subst value_ty in
-          let recursive_ty = Type_expr.apply_subst value_subst recursive_ty in
-          match Type_unify.unify recursive_ty inferred_ty with
-          | Error _ as error -> error
-          | Ok recursive_subst -> (
-              let subst = Type_expr.compose_subst recursive_subst value_subst in
-              let env = Type_env.apply_subst_env subst env in
-              let inferred_ty = Type_expr.apply_subst subst inferred_ty in
-              let checked_ty =
-                match signature with
-                | None -> Ok (subst, inferred_ty)
-                | Some signature -> (
-                    match Type_resolve.resolve env signature with
-                    | Error _ as error -> error
-                    | Ok expected -> (
-                        match Type_unify.unify inferred_ty expected with
-                        | Error _ as error -> error
-                        | Ok signature_subst ->
-                            let subst =
-                              Type_expr.compose_subst signature_subst subst
-                            in
-                            Ok (subst, Type_expr.apply_subst subst expected)))
-              in
-              match checked_ty with
-              | Error _ as error -> error
-              | Ok (subst, ty) ->
-                  let env = Type_env.apply_subst_env subst env in
-                  Ok
-                    ( ty,
-                      Type_env.bind name
-                        (Type_env.generalize_binding env ty pending_start)
-                        env ))))
+  | Core_ast.Def (_, name, signature, value) ->
+      let expected = match signature with None -> Ok (env,None) | Some t -> Type_resolve.resolve_polymorphic env t |> Result.map (fun (env,t)->env,Some t) in
+      (match expected with Error _ as e -> e | Ok (signature_env,expected) ->
+        let recursive_ty = Option.value ~default:(Type_expr.fresh_tyvar ()) expected in
+        let recursive_env = Type_env.bind name (Type_env.Forall ([],recursive_ty,[],Type_env.Plain)) signature_env in
+        let pending_start = Type_env.pending_constraints_count () in
+        let inferred = match expected with Some t -> callbacks.check_expr recursive_env value t | None -> callbacks.infer_expr recursive_env value in
+        match inferred with Error _ as e -> e | Ok (subst,ty) ->
+          match Type_unify.unify (Type_expr.apply_subst subst recursive_ty) (Type_expr.apply_subst subst ty) with
+          | Error _ as e -> e | Ok recursive_subst ->
+            let subst = Type_expr.compose_subst recursive_subst subst in
+            let ty = Type_expr.apply_subst subst ty in
+            let env = Type_env.apply_subst_env subst env in
+            Ok (ty,Type_env.bind name (Type_env.generalize_binding env ty pending_start) env))
   | _ -> (
       match callbacks.infer_expr env expr with
       | Error _ as error -> error

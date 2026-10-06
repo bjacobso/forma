@@ -2,46 +2,45 @@
 ;; error, translating errors, falling back, and turning failures into
 ;; Option or Result values that are matched like any other data.
 
-(define-error NotFound (:fields (field key String)))
-(define-error Forbidden (:fields (field user String)))
-(define-error RateLimited (:fields (field retry-after Int)))
-(define-error StorageError (:fields (field detail String)))
+(error NotFound {:key String})
+(error Forbidden {:user String})
+(error RateLimited {:retry-after Int})
+(error StorageError {:detail String})
 
-(define-service Storage
-  (:methods
-    (read [user String key String] (Effect String [NotFound Forbidden RateLimited] []))))
+(service Storage
+  (: read (-> String String (Effect String [NotFound Forbidden RateLimited] []))))
 
 (: read-or-explain (-> String String (Effect String [RateLimited] [Storage.read])))
-(define-operation read-or-explain [user key]
+(define read-or-explain [user key]
   (catch (Storage.read user key)
     (NotFound missing) (succeed (str "no " (get missing :key)))
     (Forbidden denied) (succeed (str (get denied :user) " may not read " key))))
 
 (: read-anything (-> String String (Effect String [] [Storage.read])))
-(define-operation read-anything [user key]
+(define read-anything [user key]
   (catch (Storage.read user key)
     (_ error) (succeed (str "failed with " (get error :_tag)))))
 
 (: read-wrapped (-> String String (Effect String [StorageError] [Storage.read])))
-(define-operation read-wrapped [user key]
+(define read-wrapped [user key]
   (map-error (Storage.read user key)
     (fn [error] (StorageError {:detail (str "read " key " failed")}))))
 
 (: read-with-default (-> String String (Effect String [] [Storage.read])))
-(define-operation read-with-default [user key]
+(define read-with-default [user key]
   (or-else-succeed (Storage.read user key) "default"))
 
 (: read-option (-> String String (Effect (Option String) [] [Storage.read])))
-(define-operation read-option [user key]
+(define read-option [user key]
   (option (Storage.read user key)))
 
 (: describe-read (-> String String (Effect String [] [Storage.read])))
-(define-operation describe-read [user key]
+(define describe-read [user key]
   (do! [outcome (result (Storage.read user key))]
     (match outcome
-      (success value) (succeed (str "ok: " value))
-      (failure error) (succeed (str "error: " (get error :_tag))))))
+      (Ok value) (succeed (str "ok: " value))
+      (Err error) (succeed (str "error: " (get error :_tag))))))
 
 (: read-or-die (-> String String (Effect String [] [Storage.read])))
-(define-operation read-or-die [user key]
+(define read-or-die [user key]
   (or-die (Storage.read user key)))

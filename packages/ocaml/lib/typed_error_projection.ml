@@ -9,5 +9,5 @@ let bind env name = function
       Error
         [
           diagnostic ~span:(Ast.expr_span bad) "typecheck/define-error"
-            "define-error expects a (:fields ...) block.";
+            "__error expects a (:fields ...) block.";
         ]

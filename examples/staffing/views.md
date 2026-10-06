@@ -11,70 +11,31 @@
 ;; alerts, charts, and narrative groupings instead of flat table browsers.
 ;;
 
-(define-view onboarding-workers-view
-  (:query onboarding-employees)
-  (:title "Workers In Onboarding")
-  (:description "New hires whose onboarding process is still in flight.")
-  (:subject session)
-  (:mode table)
-  (:column employee/first-name)
-  (:column employee/last-name)
-  (:column employee/hire-date)
-  (:default-sort [employee/hire-date :asc])
-  (:empty-state "No workers are currently onboarding.")
-  (:row-action :read))
+(view onboarding-workers-view :query onboarding-employees :subject session :title "Workers In Onboarding" :description "New hires whose onboarding process is still in flight." :mode "table" :empty-state "No workers are currently onboarding." :default-sort [employee/hire-date :asc] :row-action :read
+ (column :employee/first-name)
+ (column :employee/last-name)
+ (column :employee/hire-date))
 
-(define-view employer-review-queue-view
-  (:query employer-review-tasks)
-  (:title "Employer Review Queue")
-  (:description "Live runtime tasks waiting on employer-side onboarding review.")
-  (:subject session)
-  (:mode table)
-  (:column task/title)
-  (:column task/completion-document-ref)
-  (:column task/priority)
-  (:column task/status)
-  (:column task/due-date)
-  (:default-sort [task/due-date :asc])
-  (:empty-state "No employer review tasks are waiting right now.")
-  (:row-action :read))
+(view employer-review-queue-view :query employer-review-tasks :subject session :title "Employer Review Queue" :description "Live runtime tasks waiting on employer-side onboarding review." :mode "table" :empty-state "No employer review tasks are waiting right now." :default-sort [task/due-date :asc] :row-action :read
+ (column :task/title)
+ (column :task/completion-document-ref)
+ (column :task/priority)
+ (column :task/status)
+ (column :task/due-date))
 
-(define-view generated-documents-view
-  (:query generated-documents)
-  (:title "Pending Generated Docs")
-  (:description "Documents created by onboarding flows that still need follow-up.")
-  (:subject session)
-  (:mode table)
-  (:column document/name)
-  (:column document/type)
-  (:column document/status)
-  (:column document/created-at)
-  (:default-sort [document/created-at :desc])
-  (:empty-state "No generated documents need attention.")
-  (:row-action :read))
+(view generated-documents-view :query generated-documents :subject session :title "Pending Generated Docs" :description "Documents created by onboarding flows that still need follow-up." :mode "table" :empty-state "No generated documents need attention." :default-sort [document/created-at :desc] :row-action :read
+ (column :document/name)
+ (column :document/type)
+ (column :document/status)
+ (column :document/created-at))
 
-(define-view pending-documents-view
-  (:query pending-documents)
-  (:title "Pending Documents")
-  (:description "A deliberate empty-state demo for document operations.")
-  (:subject session)
-  (:mode table)
-  (:column document/name)
-  (:column document/type)
-  (:column document/status)
-  (:column document/created-at)
-  (:default-sort [document/created-at :desc])
-  (:empty-state "No pending documents are currently waiting for the team.")
-  (:row-action :read))
+(view pending-documents-view :query pending-documents :subject session :title "Pending Documents" :description "A deliberate empty-state demo for document operations." :mode "table" :empty-state "No pending documents are currently waiting for the team." :default-sort [document/created-at :desc] :row-action :read
+ (column :document/name)
+ (column :document/type)
+ (column :document/status)
+ (column :document/created-at))
 
-(define-view employees-rest-resource-view
-  (:title "Employees REST Resource")
-  (:description "Versioned REST access for Employee records.")
-  (:subject session)
-  (:state selectedEmployee nil)
-  (:named-query employees (:ref employees-rest-resource))
-  (:layout
-    (rows
+(view employees-rest-resource-view :subject session :title "Employees REST Resource" :description "Versioned REST access for Employee records." :layout (rows
       (heading "Employees REST Resource")
       (table {:bind (query employees)
               :columns [{:key "?employee_first_name" :label "First Name"}
@@ -92,16 +53,9 @@
       (dialog {:id "employee-detail-sheet"
                :title "Employee Record"
                :description "Review the selected Employee entity."}
-        (entity-detail {:entity-id (state selectedEmployee)})))))
+        (entity-detail {:entity-id (state selectedEmployee)}))) :state {:selectedEmployee {:initial nil :kind "null"}} :queries {:employees {:ref "employees-rest-resource"}})
 
-(define-view clients-rest-resource-view
-  (:title "Clients REST Resource")
-  (:description "Versioned REST access for Client records.")
-  (:subject session)
-  (:state selectedClient nil)
-  (:named-query clients (:ref clients-rest-resource))
-  (:layout
-    (rows
+(view clients-rest-resource-view :subject session :title "Clients REST Resource" :description "Versioned REST access for Client records." :layout (rows
       (heading "Clients REST Resource")
       (table {:bind (query clients)
               :columns [{:key "?client_name" :label "Client"}
@@ -118,20 +72,9 @@
       (dialog {:id "client-detail-sheet"
                :title "Client Record"
                :description "Review the selected Client entity."}
-        (entity-detail {:entity-id (state selectedClient)})))))
+        (entity-detail {:entity-id (state selectedClient)}))) :state {:selectedClient {:initial nil :kind "null"}} :queries {:clients {:ref "clients-rest-resource"}})
 
-(define-view onboarding-dashboard
-  (:title "Onboarding Dashboard")
-  (:description "Operational story of the current hiring pipeline and its live work queue.")
-  (:subject session)
-  (:state selectedEmployee nil)
-  (:named-query onboarding (:ref onboarding-employees))
-  (:named-query active-workers (:ref active-employees))
-  (:named-query employer-review (:ref employer-review-tasks))
-  (:named-query runtime-tasks (:ref open-runtime-tasks))
-  (:named-query violations (:ref active-violations))
-  (:layout
-    (rows
+(view onboarding-dashboard :subject session :title "Onboarding Dashboard" :description "Operational story of the current hiring pipeline and its live work queue." :layout (rows
       (heading "Onboarding Operations")
       (columns
         (create-entity-button {:entity-type "Employee"
@@ -196,16 +139,9 @@
           (else
             (empty-state {:icon "users"
                           :title "No workers in onboarding"
-                          :description "New hires will appear here as soon as a staffing workflow starts."})))))))
+                          :description "New hires will appear here as soon as a staffing workflow starts."}))))) :state {:selectedEmployee {:initial nil :kind "null"}} :queries {:onboarding {:ref "onboarding-employees"} :active-workers {:ref "active-employees"} :employer-review {:ref "employer-review-tasks"} :runtime-tasks {:ref "open-runtime-tasks"} :violations {:ref "active-violations"}})
 
-(define-view onboarding-tracker
-  (:title "Onboarding Tracker")
-  (:description "Employees currently in the onboarding process.")
-  (:subject session)
-  (:named-query onboarding (:ref onboarding-with-ids))
-  (:state selected nil)
-  (:layout
-    (rows
+(view onboarding-tracker :subject session :title "Onboarding Tracker" :description "Employees currently in the onboarding process." :layout (rows
       (heading "Onboarding Tracker")
       (table {:bind (query onboarding)
               :columns [{:key "?employee_first_name" :label "First Name"}
@@ -221,15 +157,9 @@
                         :entity-id-bind (state selected)
                         :variant "default"
                         :on-success [(run-query onboarding)
-                                     (set-state :selected nil)]})))))
+                                     (set-state :selected nil)]}))) :state {:selected {:initial nil :kind "null"}} :queries {:onboarding {:ref "onboarding-with-ids"}})
 
-(define-view employer-inbox
-  (:title "Employer Inbox")
-  (:description "Pending employer-assigned runtime tasks that keep new hires moving.")
-  (:subject session)
-  (:named-query employer-pending (:ref employer-pending-tasks))
-  (:layout
-    (rows
+(view employer-inbox :subject session :title "Employer Inbox" :description "Pending employer-assigned runtime tasks that keep new hires moving." :layout (rows
       (heading "Employer Inbox")
       (condition
         (case {:when (> (length (query employer-pending)) 0)}
@@ -242,16 +172,8 @@
                         {:key "?task_priority" :label "Priority" :kind "priority"}
                         {:key "?task_status" :label "Status" :kind "status"}
                         {:key "?task_due_date" :label "Due Date" :kind "date"}]
-              :empty-state "No pending employer tasks."}))))
-(define-view runtime-task-queue-view
-  (:title "Tasks & Compliance")
-  (:description "Workflow automation output and violations in one place.")
-  (:subject session)
-  (:state show-guide true)
-  (:named-query runtime-tasks (:ref open-runtime-tasks))
-  (:named-query violations (:ref active-violations))
-  (:layout
-    (rows
+              :empty-state "No pending employer tasks."})) :queries {:employer-pending {:ref "employer-pending-tasks"}})
+(view runtime-task-queue-view :subject session :title "Tasks & Compliance" :description "Workflow automation output and violations in one place." :layout (rows
       (heading "Tasks & Compliance")
       (card {:title "What this view shows" :visible (state show-guide)}
         (rows
@@ -281,15 +203,9 @@
             (else
               (empty-state {:icon "check-circle"
                             :title "No active violations"
-                            :description "The constraint engine is clear right now."}))))))))
+                            :description "The constraint engine is clear right now."})))))) :state {:show-guide {:initial true :kind "null"}} :queries {:runtime-tasks {:ref "open-runtime-tasks"} :violations {:ref "active-violations"}})
 
-(define-view active-violations-view
-  (:title "Active Violations")
-  (:description "Intrinsic violation records emitted by the constraint engine.")
-  (:subject session)
-  (:named-query active (:ref active-violations))
-  (:layout
-    (rows
+(view active-violations-view :subject session :title "Active Violations" :description "Intrinsic violation records emitted by the constraint engine." :layout (rows
       (workflow-strip {:title "Clearance Flow"
                        :description "Requirements surface as live operational records before they disappear into workflow automation."}
         (workflow-step {:label "Requirement Detected"
@@ -312,16 +228,9 @@
                         {:key "?violation_task_id" :label "Task Id" :kind "mono"}
                         {:key "?violation_detected_at" :label "Detected" :kind "date"}]
               :default-sort {:key "?violation_detected_at" :direction "desc"}
-              :empty-state "No active violations found."}))))
+              :empty-state "No active violations found."})) :queries {:active {:ref "active-violations"}})
 
-(define-view resolved-violations-view
-  (:title "Resolved Violations")
-  (:description "Compliance issues that have been cleared by workflow automation or coordinator action.")
-  (:subject session)
-  (:input-param entityId String)
-  (:input-param constraintId String)
-  (:layout
-    (rows
+(view resolved-violations-view :subject session :title "Resolved Violations" :description "Compliance issues that have been cleared by workflow automation or coordinator action." :layout (rows
       (workflow-strip {:title "Clearance Flow"
                        :description "This record shows the workflow path after the underlying requirement has been satisfied."}
         (workflow-step {:label "Requirement Detected"
@@ -341,15 +250,9 @@
                        :status "resolved"
                        :entity-id (input entityId)
                        :constraint-id (input constraintId)
-                       :empty-message "No violations have been resolved yet."}))))
+                       :empty-message "No violations have been resolved yet."})) :input {   })
 
-(define-view i9-submission-mapping-view
-  (:title "I-9 Submission Mapping")
-  (:description "Submitted Section 1 data written back to the Employee entity.")
-  (:subject session)
-  (:input-param entityId String)
-  (:layout
-    (rows
+(view i9-submission-mapping-view :subject session :title "I-9 Submission Mapping" :description "Submitted Section 1 data written back to the Employee entity." :layout (rows
       (workflow-strip {:title "Clearance Flow"
                        :description "Section 1 is complete and its form values now exist as employee facts instead of isolated form state."}
         (workflow-step {:label "Requirement Detected"
@@ -374,14 +277,9 @@
                         {:field "Date of Birth" :attribute ":employee/date-of-birth"}
                         {:field "Social Security Number" :attribute ":employee/ssn"}
                         {:field "Citizenship Status" :attribute ":employee/i9-citizenship-status"}
-                        {:field "Employee Signature" :attribute ":employee/i9-section-1-signed"}]}))))
+                        {:field "Employee Signature" :attribute ":employee/i9-section-1-signed"}]})) :input { })
 
-(define-view employee-profile-dashboard
-  (:title "Employee Profile")
-  (:description "Employee-facing onboarding tasks and completed work.")
-  (:subject required)
-  (:layout
-    (rows
+(view employee-profile-dashboard :subject required :title "Employee Profile" :description "Employee-facing onboarding tasks and completed work." :layout (rows
       (heading "Employee Profile")
       (custom {:component-name "runtime/employee-task-list"
                :title "My Tasks"
@@ -395,37 +293,13 @@
                :fields [{:field "Date of Birth" :attribute ":employee/date-of-birth"}
                         {:field "Social Security Number" :attribute ":employee/ssn"}
                         {:field "Citizenship Status" :attribute ":employee/i9-citizenship-status"}
-                        {:field "Employee Signature" :attribute ":employee/i9-section-1-signed"}]}))))
+                        {:field "Employee Signature" :attribute ":employee/i9-section-1-signed"}]})))
 
-(define-view-component violation-history
-  (:title "Violation History")
-  (:description "Reusable violation timeline fragment.")
-  (:subject session)
-  (:input-param violationId String)
-  (:layout
-    (card
+(view violation-history :subject session :title "Violation History" :description "Reusable violation timeline fragment." :layout (card
       (heading "History")
-      (violation-timeline {:violation-id (input violationId)}))))
+      (violation-timeline {:violation-id (input violationId)})) :fragment true :input { })
 
-(define-view runtime-task-detail-native
-  (:title "Task Detail")
-  (:description "Runtime task detail rendered directly inside the staffing workspace.")
-  (:subject session)
-  (:input-param taskId String)
-  (:def task-overview
-    (card
-      (task-summary {:task-id (input taskId)})))
-  (:def task-status-panel
-    (card
-      (task-status-editor {:task-id (input taskId)})))
-  (:def task-documents-panel
-    (card
-      (task-document-links {:task-id (input taskId)})))
-  (:def task-metadata-panel
-    (card
-      (task-metadata {:task-id (input taskId)})))
-  (:layout
-    (rows
+(view runtime-task-detail-native :subject session :title "Task Detail" :description "Runtime task detail rendered directly inside the staffing workspace." :layout (rows
       (workflow-strip {:title "Clearance Flow"
                        :description "This employer task is the operational handoff between employee-submitted evidence and final clearance."}
         (workflow-step {:label "Requirement Detected"
@@ -444,24 +318,13 @@
       (grid {:columns 2}
         (use task-status-panel)
         (use task-documents-panel))
-      (use task-metadata-panel))))
+      (use task-metadata-panel)) :input { } :defs {:task-overview (card
+      (task-summary {:task-id (input taskId)})) :task-status-panel (card
+      (task-status-editor {:task-id (input taskId)})) :task-documents-panel (card
+      (task-document-links {:task-id (input taskId)})) :task-metadata-panel (card
+      (task-metadata {:task-id (input taskId)}))})
 
-(define-view violation-detail-native
-  (:title "Violation Detail")
-  (:description "Violation summary and event chronology rendered natively in the staffing workspace.")
-  (:subject session)
-  (:input-param violationId String)
-  (:def violation-summary-panel
-    (card
-      (violation-summary {:violation-id (input violationId)})))
-  (:def violation-status-panel
-    (card
-      (violation-status-editor {:violation-id (input violationId)})))
-  (:def violation-related-panel
-    (card
-      (violation-related-records {:violation-id (input violationId)})))
-  (:layout
-    (rows
+(view violation-detail-native :subject session :title "Violation Detail" :description "Violation summary and event chronology rendered natively in the staffing workspace." :layout (rows
       (workflow-strip {:title "Clearance Flow"
                        :description "The violation stays visible even after automation resolves it, so the case remains auditable."}
         (workflow-step {:label "Requirement Detected"
@@ -482,18 +345,12 @@
           (use violation-status-panel)
           (use violation-related-panel))
         (view-ref {:name "violation-history"
-                   :input {:violationId (input violationId)}})))))
+                   :input {:violationId (input violationId)}}))) :input { } :defs {:violation-summary-panel (card
+      (violation-summary {:violation-id (input violationId)})) :violation-status-panel (card
+      (violation-status-editor {:violation-id (input violationId)})) :violation-related-panel (card
+      (violation-related-records {:violation-id (input violationId)}))})
 
-(define-view active-client-portfolio-view
-  (:title "Client Portfolio")
-  (:description "Account-management view of active clients and current staffing load.")
-  (:subject optional)
-  (:state show-guide true)
-  (:named-query clients (:ref active-clients))
-  (:named-query placements (:ref active-placements))
-  (:named-query onboarding (:ref onboarding-employees))
-  (:layout
-    (rows
+(view active-client-portfolio-view :subject optional :title "Client Portfolio" :description "Account-management view of active clients and current staffing load." :layout (rows
       (heading "Client Portfolio")
       (card {:title "Portfolio narrative" :visible (state show-guide)}
         (rows
@@ -515,16 +372,9 @@
                   :bind (query placements)
                   :categoryKey "?placement_start_date"
                   :series [{:dataKey "?placement_bill_rate" :label "Bill Rate"}
-                           {:dataKey "?placement_pay_rate" :label "Pay Rate"}]}))))))
+                           {:dataKey "?placement_pay_rate" :label "Pay Rate"}]})))) :state {:show-guide {:initial true :kind "null"}} :queries {:clients {:ref "active-clients"} :placements {:ref "active-placements"} :onboarding {:ref "onboarding-employees"}})
 
-(define-view profitable-active-placements
-  (:title "Placements & Margin")
-  (:description "Quick scan of active placements where spread is positive.")
-  (:subject optional)
-  (:state show-guide true)
-  (:named-query placements (:ref profitable-placements))
-  (:layout
-    (rows
+(view profitable-active-placements :subject optional :title "Placements & Margin" :description "Quick scan of active placements where spread is positive." :layout (rows
       (heading "Placements & Margin")
       (card {:title "Margin focus" :visible (state show-guide)}
         (rows
@@ -543,5 +393,5 @@
                   :bind (query placements)
                   :categoryKey "?placement_status"
                   :series [{:dataKey "?placement_bill_rate" :label "Bill Rate"}
-                           {:dataKey "?placement_pay_rate" :label "Pay Rate"}]}))))))
+                           {:dataKey "?placement_pay_rate" :label "Pay Rate"}]})))) :state {:show-guide {:initial true :kind "null"}} :queries {:placements {:ref "profitable-placements"}})
 ```

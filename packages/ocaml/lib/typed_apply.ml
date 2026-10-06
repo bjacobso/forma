@@ -8,6 +8,7 @@ type env = Type_env.env
 
 type callbacks = {
   infer_expr : env -> Core_ast.expr -> (subst * ty, diagnostic list) result;
+  check_expr : env -> Core_ast.expr -> ty -> (subst * ty, diagnostic list) result;
 }
 
 let diagnostic = Type_diagnostic.make
@@ -26,7 +27,8 @@ and infer_apply callbacks env initial_subst callee_ty args =
   let rec infer_args subst env acc = function
     | [] -> Ok (subst, List.rev acc)
     | arg :: rest -> (
-        match callbacks.infer_expr env arg with
+        let expected=match apply_subst subst callee_ty with TFn (params,_) -> List.nth_opt params (List.length acc) | TVariadicFn (params,rest,_) -> Some (Option.value ~default:rest (List.nth_opt params (List.length acc))) | _ -> None in
+        match (match expected with Some t -> callbacks.check_expr env arg t | None -> callbacks.infer_expr env arg) with
         | Error _ as error -> error
         | Ok (arg_subst, arg_ty) ->
             let subst = compose_subst arg_subst subst in
@@ -76,7 +78,7 @@ and infer_known_function_apply subst param_tys result_ty arg_tys =
     match split arg_count [] param_tys with
     | Error _ as error -> error
     | Ok (provided_param_tys, remaining_param_tys) -> (
-        match unify_many provided_param_tys arg_tys with
+        match assign_many arg_tys provided_param_tys with
         | Error _ as error -> error
         | Ok unify_subst ->
             let subst = compose_subst unify_subst subst in
@@ -105,7 +107,7 @@ and infer_known_variadic_function_apply subst param_tys rest_ty result_ty
     match split arg_count [] param_tys with
     | Error _ as error -> error
     | Ok (provided_param_tys, remaining_param_tys) -> (
-        match unify_many provided_param_tys arg_tys with
+        match assign_many arg_tys provided_param_tys with
         | Error _ as error -> error
         | Ok unify_subst ->
             let subst = compose_subst unify_subst subst in
@@ -120,7 +122,7 @@ and infer_known_variadic_function_apply subst param_tys rest_ty result_ty
     let expected_arg_tys =
       param_tys @ List.init extra_count (fun _ -> rest_ty)
     in
-    match unify_many expected_arg_tys arg_tys with
+    match assign_many arg_tys expected_arg_tys with
     | Error _ as error -> error
     | Ok unify_subst ->
         let subst = compose_subst unify_subst subst in

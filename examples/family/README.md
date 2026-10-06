@@ -10,27 +10,23 @@ preludes:
 Family relationships example in canonical ontology syntax.
 
 ```lisp
-(define-entity Household
-  (:field [household/name String {:required true}]))
+(entity Household {:name String})
 
-(define-entity Person
-  (:field [person/name String {:required true}])
-  (:field [person/role String])
-  (:field [person/household (Ref Household)]))
+(entity Person {:name String
+    :role (Option String)
+    :household (Option (Id Household))})
 ```
 
 ```lisp
-(define-record "household:rivera" Household
-  (:field [household/name "Rivera Household"]))
+(seed Household "household:rivera" {:name "Rivera Household"})
 
-(define-record "person:maya" Person
-  (:field [person/name "Maya Rivera"])
-  (:field [person/role "parent"])
-  (:field [person/household "household:rivera"]))
+(seed Person "person:maya" {:name "Maya Rivera"
+  :role "parent"
+  :household "household:rivera"})
 ```
 
 ```lisp
-(define-query household-members
-  (:from Person)
-  (:select [person/name person/role person/household]))
+(query household-members
+  :from Person
+  :select [name role household])
 ```

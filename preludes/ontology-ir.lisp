@@ -1,910 +1,157 @@
-; ontology-ir.lisp
-; -----------------------------------------------------------------------------
-; Canonical ontology IR metadata used by TypeScript code generation.
-;
-; This file describes declaration catalog facts that are otherwise easy to
-; duplicate across schemas, grouping helpers, and declaration indexes.
-; -----------------------------------------------------------------------------
+; Generated from ontology.lisp by scripts/derive-domain-protocol.mjs. Do not edit.
 
-(define-form ontology-ir-entity-field
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name EntityFieldIR)
-      (:fields
-        (:name (:type string) (:required true))
-        (:type (:type RuntimeExpr) (:required true))
-        (:required (:kind union) (:variants [boolean string]))
-        (:indexed (:kind union) (:variants [boolean string]))
-        (:format (:type string))
-        (:description (:type string))))))
+; Forms, their IR types and their declaration order are the only source of truth.
 
-(define-form ontology-ir-action-input
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name ActionInputIR)
-      (:fields
-        (:name (:type string) (:required true))
-        (:type (:type RuntimeExpr) (:required true))
-        (:required (:kind union) (:variants [boolean string]))))))
+(type EntityFieldIR
+  {:name Keyword :type Type :required Bool :indexed Bool :description (Option String) :default (Option Json)})
 
-(define-form ontology-ir-view-column
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name ViewColumnIR)
-      (:fields
-        (:name (:type string) (:required true))
-        (:label (:type string))
-        (:expr (:type ExecutableRuntimeExpr))))))
+(type EntityIR
+  {:kind "Entity" :name Symbol :fields (List EntityFieldIR)
+   :doc (Option String) :role (Option String) :idPattern (Option String)})
 
-(define-form ontology-ir-view-sort
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name ViewSortIR)
-      (:fields
-        (:field (:type string) (:required true))
-        (:direction (:kind literal) (:values [asc desc]) (:required true))))))
+(type RelationIR
+  {:kind "Relation" :name Symbol :source Symbol :target Symbol :fields (List EntityFieldIR)})
 
-(define-form ontology-ir-resolution-input
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name ResolutionInputIR)
-      (:fields
-        (:param (:type string))
-        (:runtimeSource (:type ExecutableRuntimeExpr))))))
+(type RecordIR
+  {:kind "Record" :id String :entity Symbol :fields (Map String Json)})
 
-(define-form ontology-ir-resolution
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name ResolutionIR)
-      (:fields
-        (:kind (:kind literal) (:values [Resolution]))
-        (:action (:type string))
-        (:actionRef (:type RuntimeExpr))
-        (:mutation (:type string))
-        (:mutationRef (:type RuntimeExpr))
-        (:label (:type string))
-        (:autoInvoke (:kind union) (:variants [boolean string]))
-        (:auto (:kind union) (:variants [boolean string]))
-        (:inputs (:kind array) (:item ResolutionInputIR))))))
+(type LinkIR
+  {:kind "Link" :relation Symbol :source String :target String :sourceId String :targetId String :fields (Map String Json)})
 
-(define-form ontology-ir-trigger
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name TriggerIR)
-      (:fields
-        (:kind (:kind literal) (:values [Trigger]))
-        (:triggerKind (:type string))
-        (:entity (:type string))))))
+(type SystemAttributeIR
+  {:kind "SystemAttribute" :name Symbol :valueType Type :required Bool :doc (Option String)})
 
-(define-form ontology-ir-process-node-input
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name ProcessNodeInputIR)
-      (:fields
-        (:name (:type string) (:required true))
-        (:expr (:type ExecutableRuntimeExpr) (:required true))))))
+(type MetaEntityIR {:kind "MetaEntity" :name Symbol :fields (List EntityFieldIR) :doc (Option String) :role (Option String) :idPattern (Option String)})
 
-(define-form ontology-ir-process-node
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name ProcessNodeIR)
-      (:fields
-        (:kind (:kind literal) (:values [Node]))
-        (:id (:type string))
-        (:action (:type string))
-        (:actionRef (:type RuntimeExpr))
-        (:mutation (:type string))
-        (:mutationRef (:type RuntimeExpr))
-        (:join (:type string))
-        (:fanOut (:type string))
-        (:inputs (:kind array) (:item ProcessNodeInputIR))))))
+(type QueryIR
+  {:kind "Query" :name Symbol :from Symbol :where (Option RuntimeExpr) :datalog (Option RuntimeExpr) :select (List Keyword)})
 
-(define-form ontology-ir-process-guard
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name ProcessGuardIR)
-      (:fields
-        (:kind (:kind literal) (:values [Guard]))
-        (:guardKind (:type string))
-        (:expr (:type ExecutableRuntimeExpr))))))
+(type WorkspaceIR {:kind "Workspace" :name Symbol :title (Option String) :persona (Option String) :subject (Option Symbol) :home (Option Symbol) :views (List Symbol)})
 
-(define-form ontology-ir-process-edge
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name ProcessEdgeIR)
-      (:fields
-        (:kind (:kind literal) (:values [Edge]))
-        (:from (:type string))
-        (:to (:type string))
-        (:guard (:type ProcessGuardIR))))))
+(type IdentityDeclarationIR {:kind "IdentityDeclaration" :identityKind String :name Symbol :description (Option String) :member (Option Symbol) :group (Option Symbol) :principal (Option Symbol) :resource (Option Symbol) :resolver (Option RuntimeExpr)})
 
-(define-form ontology-ir-document-completion
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name DocumentCompletionIR)
-      (:fields
-        (:kind (:kind literal) (:values [CompletionMutation]))
-        (:mutation (:type string))
-        (:mutationRef (:type RuntimeExpr))
-        (:entity (:type string))
-        (:entityRef (:type RuntimeExpr))))))
+(type PermissionDeclarationIR {:kind "PermissionDeclaration" :name Symbol :principal Symbol :action Symbol :resource Symbol :effect String :condition (Option RuntimeExpr) :description (Option String)})
 
-(define-form ontology-ir-document-page
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name DocumentPageIR)
-      (:fields
-        (:kind (:kind literal) (:values [Page]))
-        (:sectionId (:type string))
-        (:assignee (:type string))
-        (:description (:type string))
-        (:dependsOn (:kind array) (:item string))
-        (:completion (:type DocumentCompletionIR))
-        (:fields (:kind array) (:item DocumentFieldIR))))))
+(type TriggerIR {:kind "Trigger" :triggerKind String :entity Symbol})
 
-(define-form ontology-ir-attribute-binding
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name AttributeBindingIR)
-      (:fields
-        (:kind (:kind literal) (:values [AttributeBinding]))
-        (:attribute (:type string) (:required true))
-        (:transform (:type AttributeBindingTransformIR))
-        (:entity (:type string))
-        (:cardinality (:type AttributeBindingCardinalityIR))))))
+(type ProcessInputIR {:name String :expr RuntimeExpr})
 
-(define-form ontology-ir-document-field-option
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name DocumentFieldOptionIR)
-      (:fields
-        (:kind (:kind literal) (:values [Option]))
-        (:value (:type string))
-        (:label (:type string))))))
+(type ProcessNodeIR {:kind "Node" :id Symbol :action (Option Symbol) :actionRef (Option {:kind "Action" :name Symbol}) :join (Option String) :fanOut (Option String) :inputs (List ProcessInputIR)})
 
-(define-form ontology-ir-document-field
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name DocumentFieldIR)
-      (:fields
-        (:kind (:kind literal) (:values [Field]))
-        (:type (:type string))
-        (:path (:type string))
-        (:label (:type string))
-        (:description (:type string))
-        (:content (:type string))
-        (:required (:kind union) (:variants [boolean string]))
-        (:options (:kind array) (:item DocumentFieldOptionIR))
-        (:binding (:type AttributeBindingIR))))))
+(type ProcessEdgeIR {:kind "Edge" :from Symbol :to Symbol :guard (Option RuntimeExpr)})
 
-(define-form ontology-ir-document-role-locale
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name DocumentRoleLocaleIR)
-      (:fields
-        (:kind (:kind literal) (:values [Role]))
-        (:name (:type string))
-        (:label (:type string))
-        (:description (:type string))))))
+(type ProcessIR {:kind "Process" :name Symbol :description (Option String) :trigger TriggerIR :nodes (List ProcessNodeIR) :edges (List ProcessEdgeIR)})
 
-(define-form ontology-ir-document-section-locale
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name DocumentSectionLocaleIR)
-      (:fields
-        (:kind (:kind literal) (:values [Section]))
-        (:name (:type string))
-        (:label (:type string))
-        (:description (:type string))))))
+(type DocumentOptionIR {:kind "Option" :value String :label String})
 
-(define-form ontology-ir-document-field-locale
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name DocumentFieldLocaleIR)
-      (:fields
-        (:kind (:kind literal) (:values [LocaleField]))
-        (:path (:type string))
-        (:label (:type string))
-        (:description (:type string))
-        (:options (:kind array) (:item DocumentFieldOptionIR))))))
+(type AttributeBindingIR {:kind "AttributeBinding" :attribute Keyword :entity Symbol :transform (Option String) :cardinality (Option String)})
 
-(define-form ontology-ir-pdf-direct-mapping
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name PdfDirectMappingIR)
-      (:fields
-        (:kind (:kind literal) (:values [Direct]) (:required true))
-        (:source (:type string))
-        (:pdfField (:type string))
-        (:transform (:type string))))))
+(type DocumentFieldIR {:kind "Field" :type String :path Keyword :label (Option String) :description (Option String) :content (Option String) :required Bool :binding (Option AttributeBindingIR) :options (List DocumentOptionIR)})
 
-(define-form ontology-ir-pdf-computed-mapping
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name PdfComputedMappingIR)
-      (:fields
-        (:kind (:kind literal) (:values [Computed computed]) (:required true))
-        (:expr (:type ExecutableRuntimeExpr))
-        (:pdfField (:type string))
-        (:transform (:type string))))))
+(type DocumentCompletionIR {:kind "CompletionMutation" :mutation Symbol :mutationRef {:kind "Action" :name Symbol} :entity (Option Symbol) :entityRef (Option {:kind "Entity" :name Symbol})})
 
-(define-form ontology-ir-pdf-switch-assignment
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name PdfSwitchAssignmentIR)
-      (:fields
-        (:kind (:kind literal) (:values [Set set]))
-        (:pdfField (:type string))
-        (:value (:kind union) (:variants [string boolean number]))))))
+(type DocumentPageIR {:kind "Page" :sectionId Symbol :assignee Symbol :description (Option String) :dependsOn (List Symbol) :completion (Option DocumentCompletionIR) :fields (List DocumentFieldIR)})
 
-(define-form ontology-ir-pdf-switch-case
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name PdfSwitchCaseIR)
-      (:fields
-        (:kind (:kind literal) (:values [Case case]))
-        (:when (:type string))
-        (:assignments (:kind array) (:item PdfSwitchAssignmentIR))))))
+(type DocumentIR {:kind "Document" :name Symbol :description (Option String) :pages (List DocumentPageIR)})
 
-(define-form ontology-ir-pdf-switch-mapping
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name PdfSwitchMappingIR)
-      (:fields
-        (:kind (:kind literal) (:values [Switch switch]) (:required true))
-        (:source (:type string))
-        (:cases (:kind array) (:item PdfSwitchCaseIR))))))
+(type TaskInputIR {:name Keyword :type Type :required Bool})
 
-(define-form ontology-ir-pdf-mapping-entry
-  (:phase meta)
-  (:extensions
-    (:protocol/union
-      (:name PdfMappingEntryIR)
-      (:schema-name PdfMappingEntryIRSchema)
-      (:members
-        (:direct (:ref PdfDirectMappingIR))
-        (:computed (:ref PdfComputedMappingIR))
-        (:switch (:ref PdfSwitchMappingIR))))))
+(type TaskDefinitionIR {:kind "TaskDefinition" :name Symbol :title String :description (Option String) :documentRef (Option {:kind "Document" :name Symbol}) :sectionRefs (List Symbol) :defaultAssignee (Option Json) :guidanceRef (Option Symbol) :inputs (List TaskInputIR) :scope (Option Json)})
 
-(define-form ontology-ir-system-attribute
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name SystemAttributeIR)
-      (:fields
-        (:kind (:kind literal) (:values [SystemAttribute]) (:required true))
-        (:name (:type string) (:required true))
-        (:doc (:type string))
-        (:valueType (:type RuntimeExpr))
-        (:required (:kind union) (:variants [boolean string]))
-        (:enum (:kind array) (:item string))))))
+(type DocumentRoleLocaleIR {:kind "Role" :name Symbol :label (Option String) :description (Option String)})
 
-(define-form ontology-ir-entity
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name EntityIR)
-      (:fields
-        (:kind (:kind literal) (:values [Entity]) (:required true))
-        (:name (:type string) (:required true))
-        (:doc (:type string))
-        (:role (:type string))
-        (:idPattern (:type string))
-        (:fields (:kind array) (:item EntityFieldIR) (:required true))))))
+(type DocumentSectionLocaleIR {:kind "Section" :name Symbol :label (Option String) :description (Option String)})
 
-(define-form ontology-ir-meta-entity
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name MetaEntityIR)
-      (:fields
-        (:kind (:kind literal) (:values [MetaEntity]) (:required true))
-        (:name (:type string) (:required true))
-        (:doc (:type string))
-        (:role (:type string))
-        (:idPattern (:type string))
-        (:fields (:kind array) (:item EntityFieldIR) (:required true))))))
+(type DocumentFieldLocaleIR {:kind "LocaleField" :path Keyword :label (Option String) :description (Option String) :options (List DocumentOptionIR)})
 
-(define-form ontology-ir-relation
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name RelationIR)
-      (:fields
-        (:kind (:kind literal) (:values [Relation]) (:required true))
-        (:name (:type string) (:required true))
-        (:source (:type string) (:required true))
-        (:target (:type string) (:required true))
-        (:fields (:kind array) (:item EntityFieldIR))))))
+(type DocumentLocaleIR {:kind "DocumentLocale" :documentName Symbol :documentRef {:kind "Document" :name Symbol} :locale String :roles (List DocumentRoleLocaleIR) :sections (List DocumentSectionLocaleIR) :fields (List DocumentFieldLocaleIR)})
 
-(define-form ontology-ir-record
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name RecordIR)
-      (:fields
-        (:kind (:kind literal) (:values [Record]) (:required true))
-        (:id (:type string) (:required true))
-        (:entity (:type string) (:required true))
-        (:fields (:kind record) (:value RuntimeExpr))))))
+(type DocumentLocalizedIR {:kind "DocumentLocalized" :documentName Symbol :documentRef {:kind "Document" :name Symbol} :locales (List String) :defaultLocale (Option String)})
 
-(define-form ontology-ir-link-field
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name LinkFieldIR)
-      (:fields
-        (:name (:type string) (:required true))
-        (:value (:type RuntimeExpr) (:required true))))))
+(type PdfSetIR {:kind "Set" :pdfField String :value Json})
 
-(define-form ontology-ir-link
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name LinkIR)
-      (:fields
-        (:kind (:kind literal) (:values [Link]) (:required true))
-        (:relation (:type string) (:required true))
-        (:source (:type string) (:required true))
-        (:target (:type string) (:required true))
-        (:sourceId (:type string))
-        (:targetId (:type string))
-        (:fields (:kind array) (:item LinkFieldIR))))))
+(type PdfCaseIR {:kind "Case" :when String :assignments (List PdfSetIR)})
 
-(define-form ontology-ir-query
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name QueryIR)
-      (:fields
-        (:kind (:kind literal) (:values [Query]) (:required true))
-        (:name (:type string) (:required true))
-        (:from (:type string) (:required true))
-        (:fromRef (:type RuntimeExpr))
-        (:where (:type RuntimeExpr))
-        (:datalog (:type RuntimeExpr))
-        (:select (:kind array) (:item string))))))
+(type PdfDirectIR {:kind "Direct" :source Keyword :pdfField String :transform (Option Symbol)})
 
-(define-form ontology-ir-query-ref
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name QueryRefIR)
-      (:fields
-        (:kind (:kind literal) (:values [Query]) (:required true))
-        (:name (:type string) (:required true))))))
+(type PdfComputedIR {:kind "Computed" :expr RuntimeExpr :pdfField String :transform (Option Symbol)})
 
-(define-form ontology-ir-query-preset-param
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name QueryPresetParamIR)
-      (:fields
-        (:name (:type string) (:required true))
-        (:value (:type RuntimeExpr) (:required true))))))
+(type PdfSwitchIR {:kind "Switch" :source Keyword :cases (List PdfCaseIR)})
 
-(define-form ontology-ir-query-preset
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name QueryPresetIR)
-      (:fields
-        (:kind (:kind literal) (:values [QueryPreset]) (:required true))
-        (:name (:type string) (:required true))
-        (:queryRef (:type QueryRefIR) (:required true))
-        (:defaults (:kind array) (:item QueryPresetParamIR))
-        (:mergePolicy (:kind literal) (:values [caller-overrides preset-overrides]))))))
+(type PdfMappingEntryIR (Union PdfDirectIR PdfComputedIR PdfSwitchIR))
 
-(define-form ontology-ir-identity-declaration
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name IdentityDeclarationIR)
-      (:fields
-        (:kind (:kind literal) (:values [IdentityDeclaration]) (:required true))
-        (:identityKind (:type IdentityKindIR) (:required true))
-        (:name (:type string) (:required true))
-        (:description (:type string))
-        (:principal (:type string))
-        (:member (:type string))
-        (:group (:type string))
-        (:resource (:type string))
-        (:resolver (:type ExecutableRuntimeExpr))))))
+(type PdfMappingIR {:kind "PdfMapping" :name Symbol :displayName (Option String) :description (Option String) :templateBlob String :templateFile (Option String) :templateFilename (Option String) :documentName (Option Symbol) :documentRef (Option {:kind "Document" :name Symbol}) :mappings (List PdfMappingEntryIR)})
 
-(define-form ontology-ir-permission-declaration
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name PermissionDeclarationIR)
-      (:fields
-        (:kind (:kind literal) (:values [PermissionDeclaration]) (:required true))
-        (:name (:type string) (:required true))
-        (:principal (:type string) (:required true))
-        (:action (:type string) (:required true))
-        (:resource (:type string) (:required true))
-        (:effect (:kind literal) (:values [allow deny]))
-        (:condition (:type ExecutableRuntimeExpr))
-        (:description (:type string))))))
+(type ResolutionInputIR {:param String :runtimeSource RuntimeExpr})
 
-(define-form ontology-ir-view
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name ViewIR)
-      (:fields
-        (:kind (:kind literal) (:values [View]) (:required true))
-        (:name (:type string) (:required true))
-        (:doc (:type string))
-        (:query (:type string))
-        (:title (:type string))
-        (:subject (:type string))
-        (:mode (:type string))
-        (:emptyState (:type string))
-        (:where (:type RuntimeExpr))
-        (:defaultSort (:type ViewSortIR))
-        (:rowAction (:type RuntimeExpr))
-        (:columns (:kind array) (:item ViewColumnIR))
-        (:state (:type unknown))
-        (:input (:type unknown))
-        (:queries (:type unknown))
-        (:layout (:type unknown))))))
+(type ResolutionIR {:kind "Resolution" :label String :action Symbol :actionRef {:kind "Action" :name Symbol} :autoInvoke Bool :inputs (List ResolutionInputIR)})
 
-(define-form ontology-ir-action
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name ActionIR)
-      (:fields
-        (:kind (:kind literal) (:values [Action]) (:required true))
-        (:name (:type string) (:required true))
-        (:doc (:type string))
-        (:inputs (:kind array) (:item ActionInputIR) (:required true))
-        (:do (:type ExecutableRuntimeExpr))
-        (:returns (:type string))))))
+(type ConstraintTaskAssignmentIR {:kind "TaskAssignment" :role Symbol :priority (Option String) :title (Option RuntimeExpr) :body (Option RuntimeExpr)})
 
-(define-form ontology-ir-mutation
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name MutationIR)
-      (:fields
-        (:kind (:kind literal) (:values [Mutation]) (:required true))
-        (:name (:type string) (:required true))
-        (:doc (:type string))
-        (:inputs (:kind array) (:item ActionInputIR) (:required true))
-        (:do (:type ExecutableRuntimeExpr))
-        (:returns (:type string))))))
+(type ConstraintIR {:kind "Constraint" :name Symbol :entity Symbol :entityRef {:kind "Entity" :name Symbol} :severity String :description (Option String) :category (Option String) :when (Option RuntimeExpr) :query (Option RuntimeExpr) :message RuntimeExpr :taskAssignments (List ConstraintTaskAssignmentIR) :resolutions (List ResolutionIR)})
 
-(define-form ontology-ir-constraint-task-assignment
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name ConstraintTaskAssignmentIR)
-      (:fields
-        (:role (:type string) (:required true))
-        (:priority (:type string))
-        (:title (:type RuntimeExpr))
-        (:body (:type RuntimeExpr))))))
+(type QueryPresetParamIR {:name String :value RuntimeExpr})
 
-(define-form ontology-ir-constraint
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name ConstraintIR)
-      (:fields
-        (:kind (:kind literal) (:values [Constraint]) (:required true))
-        (:name (:type string) (:required true))
-        (:doc (:type string))
-        (:entity (:type string) (:required true))
-        (:severity (:type string) (:required true))
-        (:description (:type string))
-        (:category (:type string))
-        (:when (:type RuntimeExpr))
-        (:message (:type ExecutableRuntimeExpr))
-        (:taskAssignments (:kind array) (:item ConstraintTaskAssignmentIR))
-        (:resolutions (:kind array) (:item ResolutionIR))))))
+(type QueryPresetIR {:kind "QueryPreset" :name Symbol :queryRef {:kind "Query" :name Symbol} :defaults (List QueryPresetParamIR) :mergePolicy String})
 
-(define-form ontology-ir-process
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name ProcessIR)
-      (:fields
-        (:kind (:kind literal) (:values [Process]) (:required true))
-        (:name (:type string) (:required true))
-        (:description (:type string))
-        (:trigger (:type TriggerIR))
-        (:nodes (:kind array) (:item ProcessNodeIR))
-        (:edges (:kind array) (:item ProcessEdgeIR))))))
+(type ViewColumnIR {:name Keyword :label (Option String) :expr (Option RuntimeExpr)})
 
-(define-form ontology-ir-task-input-definition
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name TaskInputDefinitionIR)
-      (:fields
-        (:name (:type string) (:required true))
-        (:type (:type RuntimeExpr))
-        (:required (:kind union) (:variants [boolean string]))))))
+(type ViewSortIR {:field Keyword :direction String})
 
-(define-form ontology-ir-document-ref
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name DocumentRefIR)
-      (:fields
-        (:kind (:type string) (:required true))
-        (:name (:type string) (:required true))))))
+(type ViewIR {:kind "View" :name Symbol :doc (Option String) :query (Option Symbol) :queryRef (Option {:kind "Query" :name Symbol}) :title (Option String) :subject (Option Symbol) :mode (Option String) :fragment Bool :emptyState (Option String) :where (Option RuntimeExpr) :defaultSort (Option ViewSortIR) :rowAction (Option RuntimeExpr) :columns (List ViewColumnIR) :state (Option Json) :input (Option Json) :queries (Option Json) :defs (Option Json) :root (Option Json) :layout (Option Json)})
 
-(define-form ontology-ir-task-definition
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name TaskDefinitionIR)
-      (:fields
-        (:kind (:kind literal) (:values [TaskDefinition]) (:required true))
-        (:name (:type string) (:required true))
-        (:title (:type string) (:required true))
-        (:description (:type string))
-        (:documentRef (:type DocumentRefIR))
-        (:sectionRefs (:kind array) (:item string))
-        (:defaultAssignee (:type unknown))
-        (:guidanceRef (:type string))
-        (:inputs (:kind array) (:item TaskInputDefinitionIR))
-        (:scope (:type unknown))))))
+(type ActionInputIR {:name String :type Type :required Bool})
 
-(define-form ontology-ir-document
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name DocumentIR)
-      (:fields
-        (:kind (:kind literal) (:values [Document]) (:required true))
-        (:name (:type string) (:required true))
-        (:description (:type string))
-        (:pages (:kind array) (:item DocumentPageIR))))))
+(type ActionIR {:kind "Action" :name Symbol :inputs (List ActionInputIR) :returns Type :do RuntimeExpr})
 
-(define-form ontology-ir-document-locale
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name DocumentLocaleIR)
-      (:fields
-        (:kind (:kind literal) (:values [DocumentLocale]) (:required true))
-        (:documentName (:type string))
-        (:documentRef (:type RuntimeExpr))
-        (:locale (:type string))
-        (:roles (:kind array) (:item DocumentRoleLocaleIR))
-        (:sections (:kind array) (:item DocumentSectionLocaleIR))
-        (:fields (:kind array) (:item DocumentFieldLocaleIR))))))
+(type HttpEndpointIR {:kind "Endpoint" :name Symbol :method String :path String :payload (Option Type) :query (Map String Type) :headers (Map String Type) :success Type :errors (List Type) :openapi (Option Json)})
 
-(define-form ontology-ir-document-localized
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name DocumentLocalizedIR)
-      (:fields
-        (:kind (:kind literal) (:values [DocumentLocalized]) (:required true))
-        (:documentName (:type string))
-        (:documentRef (:type RuntimeExpr))
-        (:locales (:kind array) (:item string))
-        (:defaultLocale (:type string))))))
+(type HttpApiIR {:kind "HttpApi" :name Symbol :pathParams (Map String Type) :endpoints (List HttpEndpointIR) :openapi (Option Json)})
 
-(define-form ontology-ir-pdf-mapping
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name PdfMappingIR)
-      (:fields
-        (:kind (:kind literal) (:values [PdfMapping]) (:required true))
-        (:name (:type string) (:required true))
-        (:displayName (:type string))
-        (:description (:type string))
-        (:templateBlob (:type string))
-        (:documentName (:type string))
-        (:documentRef (:type RuntimeExpr))
-        (:mappings (:kind array) (:item PdfMappingEntryIR))))))
+(type CanonicalIR (Union EntityIR MetaEntityIR RelationIR RecordIR LinkIR SystemAttributeIR QueryIR WorkspaceIR IdentityDeclarationIR PermissionDeclarationIR ProcessIR DocumentIR TaskDefinitionIR DocumentLocaleIR DocumentLocalizedIR PdfMappingIR ConstraintIR QueryPresetIR ViewIR ActionIR HttpApiIR))
 
-(define-form ontology-ir-workspace
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name WorkspaceIR)
-      (:fields
-        (:kind (:kind literal) (:values [Workspace]) (:required true))
-        (:name (:type string) (:required true))
-        (:title (:type string))
-        (:persona (:type string))
-        (:subject (:type string))
-        (:home (:type string))
-        (:views (:kind array) (:item string))))))
+(type CompiledDeclarations {:entities (List EntityIR)
+ :metaEntities (List MetaEntityIR)
+ :relations (List RelationIR)
+ :records (List RecordIR)
+ :links (List LinkIR)
+ :systemAttributes (List SystemAttributeIR)
+ :queries (List QueryIR)
+ :workspaces (List WorkspaceIR)
+ :identityDeclarations (List IdentityDeclarationIR)
+ :permissionDeclarations (List PermissionDeclarationIR)
+ :processes (List ProcessIR)
+ :documents (List DocumentIR)
+ :taskDefinitions (List TaskDefinitionIR)
+ :documentLocales (List DocumentLocaleIR)
+ :documentLocalizeds (List DocumentLocalizedIR)
+ :pdfMappings (List PdfMappingIR)
+ :constraints (List ConstraintIR)
+ :queryPresets (List QueryPresetIR)
+ :views (List ViewIR)
+ :actions (List ActionIR)
+ :httpApis (List HttpApiIR)})
 
-(define-form ontology-ir-canonical-ir
-  (:phase meta)
-  (:extensions
-    (:protocol/union
-      (:name CanonicalIR)
-      (:schema-name CanonicalIRSchema)
-      (:members
-        (:system-attribute (:ref SystemAttributeIR))
-        (:entity (:ref EntityIR))
-        (:meta-entity (:ref MetaEntityIR))
-        (:relation (:ref RelationIR))
-        (:record (:ref RecordIR))
-        (:link (:ref LinkIR))
-        (:query (:ref QueryIR))
-        (:query-preset (:ref QueryPresetIR))
-        (:identity-declaration (:ref IdentityDeclarationIR))
-        (:permission-declaration (:ref PermissionDeclarationIR))
-        (:view (:ref ViewIR))
-        (:action (:ref ActionIR))
-        (:mutation (:ref MutationIR))
-        (:constraint (:ref ConstraintIR))
-        (:process (:ref ProcessIR))
-        (:task-definition (:ref TaskDefinitionIR))
-        (:document (:ref DocumentIR))
-        (:document-locale (:ref DocumentLocaleIR))
-        (:document-localized (:ref DocumentLocalizedIR))
-        (:pdf-mapping (:ref PdfMappingIR))
-        (:workspace (:ref WorkspaceIR))))))
+(define protocol {:name "OntologyIR"})
 
-(define-form ontology-ir-compiled-declarations
-  (:phase meta)
-  (:extensions
-    (:protocol/object
-      (:name CompiledDeclarations)
-      (:fields
-        (:systemAttributes (:kind array) (:item SystemAttributeIR) (:required true))
-        (:entities (:kind array) (:item EntityIR) (:required true))
-        (:metaEntities (:kind array) (:item MetaEntityIR) (:required true))
-        (:relations (:kind array) (:item RelationIR) (:required true))
-        (:records (:kind array) (:item RecordIR) (:required true))
-        (:links (:kind array) (:item LinkIR) (:required true))
-        (:queries (:kind array) (:item QueryIR) (:required true))
-        (:queryPresets (:kind array) (:item QueryPresetIR) (:required true))
-        (:identityDeclarations (:kind array) (:item IdentityDeclarationIR) (:required true))
-        (:permissionDeclarations (:kind array) (:item PermissionDeclarationIR) (:required true))
-        (:views (:kind array) (:item ViewIR) (:required true))
-        (:actions (:kind array) (:item ActionIR) (:required true))
-        (:mutations (:kind array) (:item MutationIR) (:required true))
-        (:constraints (:kind array) (:item ConstraintIR) (:required true))
-        (:processes (:kind array) (:item ProcessIR) (:required true))
-        (:taskDefinitions (:kind array) (:item TaskDefinitionIR) (:required true))
-        (:documents (:kind array) (:item DocumentIR) (:required true))
-        (:documentLocales (:kind array) (:item DocumentLocaleIR) (:required true))
-        (:documentLocalized (:kind array) (:item DocumentLocalizedIR) (:required true))
-        (:pdfMappings (:kind array) (:item PdfMappingIR) (:required true))
-        (:workspaces (:kind array) (:item WorkspaceIR) (:required true))))))
-
-(define-form ontology-ir-protocol-module
-  (:phase meta)
-  (:extensions
-    (:protocol/module
-      (:name OntologyIR)
-      (:imports [
-        [CanonicalRuntimeExpr from CanonicalRuntime CanonicalRuntimeExpr]
-      ])
-      (:objects [
-        EntityFieldIR
-        ActionInputIR
-        ViewColumnIR
-        ViewSortIR
-        ResolutionInputIR
-        ResolutionIR
-        TriggerIR
-        ProcessNodeInputIR
-        ProcessNodeIR
-        ProcessGuardIR
-        ProcessEdgeIR
-        DocumentCompletionIR
-        DocumentPageIR
-        AttributeBindingIR
-        DocumentFieldOptionIR
-        DocumentFieldIR
-        DocumentRoleLocaleIR
-        DocumentSectionLocaleIR
-        DocumentFieldLocaleIR
-        PdfDirectMappingIR
-        PdfComputedMappingIR
-        PdfSwitchAssignmentIR
-        PdfSwitchCaseIR
-        PdfSwitchMappingIR
-        SystemAttributeIR
-        EntityIR
-        MetaEntityIR
-        RelationIR
-        RecordIR
-        LinkFieldIR
-        LinkIR
-        QueryIR
-        QueryRefIR
-        QueryPresetParamIR
-        QueryPresetIR
-        IdentityDeclarationIR
-        PermissionDeclarationIR
-        ViewIR
-        ActionIR
-        MutationIR
-        ConstraintTaskAssignmentIR
-        ConstraintIR
-        ProcessIR
-        TaskInputDefinitionIR
-        DocumentRefIR
-        TaskDefinitionIR
-        DocumentIR
-        DocumentLocaleIR
-        DocumentLocalizedIR
-        PdfMappingIR
-        WorkspaceIR
-        CompiledDeclarations
-      ])
-      (:unions [PdfMappingEntryIR CanonicalIR])
-      (:literals [
-        {:name AttributeBindingTransformIR
-         :values [identity string number boolean date datetime json ref]
-         :description "Document attribute binding transform."}
-        {:name AttributeBindingCardinalityIR
-         :values [one many]
-         :description "Document attribute binding cardinality."}
-        {:name IdentityKindIR
-         :values [role group membership contextual-role]
-         :description "Canonical identity declaration kind."}
-      ]))))
-
-(define-form canonical-ir-declaration-catalog
-  (:phase meta)
-  (:extensions
-    (:protocol/catalog
-      (:name CanonicalIRDeclarations)
-      (:entries [
-        {:kind SystemAttribute
-         :schema SystemAttributeIRSchema
-         :collection systemAttributes
-         :flatten-order 10
-         :index-order 10
-         :index-name name}
-        {:kind Entity
-         :schema EntityIRSchema
-         :collection entities
-         :flatten-order 30
-         :index-order 20
-         :index-name name}
-        {:kind MetaEntity
-         :schema MetaEntityIRSchema
-         :collection metaEntities
-         :flatten-order 20
-         :index-order 30
-         :index-name name}
-        {:kind Relation
-         :schema RelationIRSchema
-         :collection relations
-         :flatten-order 40
-         :index-order 40
-         :index-name name}
-        {:kind Record
-         :schema RecordIRSchema
-         :collection records
-         :flatten-order 50
-         :index-order 50
-         :index-name id}
-        {:kind Link
-         :schema LinkIRSchema
-         :collection links
-         :flatten-order 60
-         :index-order 60
-         :index-name link}
-        {:kind Query
-         :schema QueryIRSchema
-         :collection queries
-         :flatten-order 70
-         :index-order 70
-         :index-name name}
-        {:kind QueryPreset
-         :schema QueryPresetIRSchema
-         :collection queryPresets
-         :flatten-order 80
-         :index-order 80
-         :index-name name}
-        {:kind IdentityDeclaration
-         :schema IdentityDeclarationIRSchema
-         :collection identityDeclarations
-         :flatten-order 90
-         :index-order 90
-         :index-name name}
-        {:kind PermissionDeclaration
-         :schema PermissionDeclarationIRSchema
-         :collection permissionDeclarations
-         :flatten-order 100
-         :index-order 100
-         :index-name name}
-        {:kind View
-         :schema ViewIRSchema
-         :collection views
-         :flatten-order 110
-         :index-order 110
-         :index-name name}
-        {:kind Action
-         :schema ActionIRSchema
-         :collection actions
-         :flatten-order 120
-         :index-order 120
-         :index-name name}
-        {:kind Mutation
-         :schema MutationIRSchema
-         :collection mutations
-         :flatten-order 130
-         :index-order 130
-         :index-name name}
-        {:kind Constraint
-         :schema ConstraintIRSchema
-         :collection constraints
-         :flatten-order 140
-         :index-order 140
-         :index-name name}
-        {:kind Process
-         :schema ProcessIRSchema
-         :collection processes
-         :flatten-order 150
-         :index-order 150
-         :index-name name}
-        {:kind TaskDefinition
-         :schema TaskDefinitionIRSchema
-         :collection taskDefinitions
-         :flatten-order 160
-         :index-order 160
-         :index-name name}
-        {:kind Document
-         :schema DocumentIRSchema
-         :collection documents
-         :flatten-order 170
-         :index-order 170
-         :index-name name}
-        {:kind DocumentLocale
-         :schema DocumentLocaleIRSchema
-         :collection documentLocales
-         :flatten-order 180
-         :index-order 180
-         :index-name document-locale}
-        {:kind DocumentLocalized
-         :schema DocumentLocalizedIRSchema
-         :collection documentLocalized
-         :flatten-order 190
-         :index-order 190
-         :index-name document-localized}
-        {:kind PdfMapping
-         :schema PdfMappingIRSchema
-         :collection pdfMappings
-         :flatten-order 200
-         :index-order 200
-         :index-name name}
-        {:kind Workspace
-         :schema WorkspaceIRSchema
-         :collection workspaces
-         :flatten-order 210
-         :index-order 210
-         :index-name name}
-      ]))))
+(define canonical-ir-declaration-catalog (quote {:extensions {:protocol/catalog {:name "CanonicalIRDeclarations" :entries [{:kind "Entity" :schema "EntityIRSchema" :collection "entities" :flatten-order 1 :index-order 1 :index-name "name" :index-fields ["name"]}
+ {:kind "MetaEntity" :schema "MetaEntityIRSchema" :collection "metaEntities" :flatten-order 2 :index-order 2 :index-name "name" :index-fields ["name"]}
+ {:kind "Relation" :schema "RelationIRSchema" :collection "relations" :flatten-order 3 :index-order 3 :index-name "name" :index-fields ["name" "source" "target"]}
+ {:kind "Record" :schema "RecordIRSchema" :collection "records" :flatten-order 4 :index-order 4 :index-name "id" :index-fields ["id" "entity"]}
+ {:kind "Link" :schema "LinkIRSchema" :collection "links" :flatten-order 5 :index-order 5 :index-name "composite" :index-fields ["relation" "source" "target" "sourceId" "targetId"]}
+ {:kind "SystemAttribute" :schema "SystemAttributeIRSchema" :collection "systemAttributes" :flatten-order 6 :index-order 6 :index-name "name" :index-fields ["name"]}
+ {:kind "Query" :schema "QueryIRSchema" :collection "queries" :flatten-order 7 :index-order 7 :index-name "name" :index-fields ["name" "from"]}
+ {:kind "Workspace" :schema "WorkspaceIRSchema" :collection "workspaces" :flatten-order 8 :index-order 8 :index-name "name" :index-fields ["name"]}
+ {:kind "IdentityDeclaration" :schema "IdentityDeclarationIRSchema" :collection "identityDeclarations" :flatten-order 9 :index-order 9 :index-name "name" :index-fields ["identityKind" "name"]}
+ {:kind "PermissionDeclaration" :schema "PermissionDeclarationIRSchema" :collection "permissionDeclarations" :flatten-order 10 :index-order 10 :index-name "name" :index-fields ["name" "principal" "action" "resource" "effect"]}
+ {:kind "Process" :schema "ProcessIRSchema" :collection "processes" :flatten-order 11 :index-order 11 :index-name "name" :index-fields ["name"]}
+ {:kind "Document" :schema "DocumentIRSchema" :collection "documents" :flatten-order 12 :index-order 12 :index-name "name" :index-fields ["name"]}
+ {:kind "TaskDefinition" :schema "TaskDefinitionIRSchema" :collection "taskDefinitions" :flatten-order 13 :index-order 13 :index-name "name" :index-fields ["name" "title"]}
+ {:kind "DocumentLocale" :schema "DocumentLocaleIRSchema" :collection "documentLocales" :flatten-order 14 :index-order 14 :index-name "composite" :index-fields ["documentName" "locale"]}
+ {:kind "DocumentLocalized" :schema "DocumentLocalizedIRSchema" :collection "documentLocalizeds" :flatten-order 15 :index-order 15 :index-name "composite" :index-fields ["documentName"]}
+ {:kind "PdfMapping" :schema "PdfMappingIRSchema" :collection "pdfMappings" :flatten-order 16 :index-order 16 :index-name "name" :index-fields ["name" "templateBlob"]}
+ {:kind "Constraint" :schema "ConstraintIRSchema" :collection "constraints" :flatten-order 17 :index-order 17 :index-name "name" :index-fields ["name" "entity" "severity"]}
+ {:kind "QueryPreset" :schema "QueryPresetIRSchema" :collection "queryPresets" :flatten-order 18 :index-order 18 :index-name "name" :index-fields ["name" "mergePolicy"]}
+ {:kind "View" :schema "ViewIRSchema" :collection "views" :flatten-order 19 :index-order 19 :index-name "name" :index-fields ["name"]}
+ {:kind "Action" :schema "ActionIRSchema" :collection "actions" :flatten-order 20 :index-order 20 :index-name "name" :index-fields ["name"]}
+ {:kind "HttpApi" :schema "HttpApiIRSchema" :collection "httpApis" :flatten-order 21 :index-order 21 :index-name "name" :index-fields ["name"]}]}}}))

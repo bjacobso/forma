@@ -61,3 +61,5 @@ val infer_values :
   env ->
   Core_ast.expr list ->
   (Type_expr.subst * Type_expr.ty, diagnostic list) result
+
+val record_values_item_type : Type_expr.subst -> (string * Type_expr.ty) list -> Type_expr.ty

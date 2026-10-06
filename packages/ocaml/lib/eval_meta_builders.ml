@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of closure
   | VMacro of closure
 
@@ -31,6 +32,7 @@ type context = {
   eval_required_builtin :
     Env.t -> string -> Reader.expr list -> (value, diagnostic list) result;
   current_lookup_declaration : unit -> (string -> value option) option;
+  current_environment : unit -> Env.t option;
 }
 
 let diagnostic = Eval_common.diagnostic
@@ -314,6 +316,8 @@ let eval ctx env op args =
           [ diagnostic "eval/arity" "view/compile-expr-record expects expr." ]
   in
   let eval_compile_descriptor_tree env args =
+    let env=Env.extend (Env.visible_bindings env)
+      (Option.value ~default:env (ctx.current_environment ())) in
     let registry_for hosted_dsl_name =
       Eval_meta_protocol_metadata.protocol_registries env
       |> List.find_opt (fun registry ->

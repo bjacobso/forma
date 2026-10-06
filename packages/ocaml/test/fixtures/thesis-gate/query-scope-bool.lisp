@@ -1,7 +1,6 @@
-(define-entity Employee
-  (:field [employee/status String]))
+(entity Employee {:status String})
 
-(define-query active-employees
-  (:from Employee)
-  (:where (= employee/status "active"))
-  (:select [employee/status]))
+(query active-employees
+  :from Employee
+  :where (= status "active")
+  :select [status])

@@ -1,3 +1,5 @@
+import { typeDefinition } from "../surface/type-alias.js";
+import { parseUnifiedForm } from "../surface/form.js";
 import type { FormDescriptor } from "../descriptor/FormDescriptor.js";
 import { FormDescriptorRegistry } from "../descriptor/FormDescriptorRegistry.js";
 import { parseFormDescriptorForms } from "../descriptor/parse-descriptor.js";
@@ -12,7 +14,7 @@ export interface DescriptorLookup {
 }
 
 /**
- * Descriptors from every `define-form` and `define-protocol` form found in
+ * Descriptors derived from `form` declarations and their types found in
  * `sources`, falling back to the given descriptors. Malformed declarations
  * are skipped: editor services must keep working while a prelude is being
  * written.
@@ -22,14 +24,16 @@ export function editorDescriptors(
   descriptors: DescriptorSource = [],
 ): DescriptorLookup {
   const found = new FormDescriptorRegistry();
-  for (const source of sources) {
-    for (const expr of toSExprMany(parse(source).redTree)) {
+  const expressions = sources.flatMap(source => toSExprMany(parse(source).redTree));
+  const types = new Map(expressions.flatMap(expr => { const definition = typeDefinition(expr); return definition ? [definition] : []; }));
+  for (const expr of expressions) {
       try {
-        for (const descriptor of parseFormDescriptorForms(expr)) found.register(descriptor);
+        const unified = parseUnifiedForm(expr, types);
+        if (unified) found.register(unified);
+        else for (const descriptor of parseFormDescriptorForms(expr)) found.register(descriptor);
       } catch {
         // An incomplete declaration contributes nothing.
       }
-    }
   }
   const given =
     descriptors instanceof FormDescriptorRegistry

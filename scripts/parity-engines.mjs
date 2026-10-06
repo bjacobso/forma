@@ -44,7 +44,7 @@ const matrix = readJson(resolve(suiteDir, "matrix.json"));
 function validateFixtures() {
   if (casesManifest.version !== 1 || matrix.version !== 1) throw new Error("Unsupported engine parity manifest version");
   const ids = new Set();
-  const passes = new Set(["parse", "expand", "typecheck", "evaluate", "effect-ir"]);
+  const passes = new Set(["parse", "expand", "typecheck", "evaluate", "effect-ir", "canonical-ir"]);
   for (const fixture of casesManifest.cases) {
     if (!fixture.id || ids.has(fixture.id)) throw new Error(`Duplicate or missing fixture id: ${fixture.id}`);
     ids.add(fixture.id);
@@ -97,10 +97,11 @@ function projectTsEffectIr(sourceId, source, ts) {
   return normalizeTsDeclarations(projected.declarations);
 }
 
-async function emitOcamlEffectIr(sourceId, source, daemon) {
+async function emitOcamlEffectIr(sourceId, source, daemon, preludes = []) {
   const opened = checkOk("openSession", await daemon.request({ op: "openSession" }));
   const sessionId = opened.sessionId;
   try {
+    for (const filename of preludes) checkOk(`loadPrelude ${filename}`, await daemon.request({op: "loadPrelude", sessionId, sourceId: `preludes/${filename}.lisp`, source: readFileSync(resolve(repoRoot, `preludes/${filename}.lisp`), "utf8")}));
     checkOk("loadSource", await daemon.request({ op: "loadSource", sessionId, sourceId, source }));
     const emitted = checkOk("emit", await daemon.request({ op: "emit", sessionId, sourceId, backend: "canonical-ir" }));
     const content = emitted.artifacts?.[0]?.content;
@@ -222,6 +223,20 @@ async function main() {
       const source = fixture.source ?? readFileSync(resolve(suiteDir, fixture.sourceFile), "utf8");
       const sourceId = `engine-parity/${fixture.id}`;
       for (const pass of fixture.passes) {
+        if (pass === "canonical-ir") {
+          const [typescript, ocaml] = await Promise.all([
+            capture(() => {
+              const read = n => readFileSync(resolve(repoRoot, `preludes/${n}.lisp`), "utf8");
+              const prelude = ts.Descriptor.bootstrapFromSources(read("compiler"), read("ontology"));
+              const result = ts.Descriptor.elaborateProgram(source, {sourceId, prelude});
+              if (!result.ok) throw new Error(`TS domain projection failed: ${JSON.stringify(result.diagnostics)}`);
+              return normalizeTsDeclarations(result.declarations);
+            }),
+            capture(() => emitOcamlEffectIr(sourceId, source, daemon, ["kernel", "compiler", "ontology"])),
+          ]);
+          addComparison(report, fixture.id, pass, typescript, ocaml);
+          continue;
+        }
         if (pass === "effect-ir") {
           const [typescript, ocaml] = await Promise.all([
             capture(() => projectTsEffectIr(sourceId, source, ts)),

@@ -85,7 +85,7 @@ expectSourceIncludes("elaborate.ml", [
   "Artifact_payload_contract.of_declaration ~span ~summary",
   "payload_contract =",
   "Packageable_declaration.make_validator",
-  "Packageable_declaration.make ~payload",
+  "Packageable_declaration.make ~diagnostics",
   "artifact/untyped-runtime-declaration",
 ]);
 
@@ -149,12 +149,12 @@ expectSourceExcludes("artifact_payload_descriptor.mli", [
 ]);
 
 expectSourceIncludes("eval_toplevel.ml", [
-  '"define-payload-contract"',
+  '"__payload-contract"',
   'Descriptor.declaration_value "payload-contract" name clauses',
 ]);
 
 expectSourceIncludes("typed_toplevel.ml", [
-  '"define-payload-contract"',
+  '"__payload-contract"',
   "typecheck/define-payload-contract",
 ]);
 
@@ -222,7 +222,7 @@ expectSourceIncludes("packageable_declaration.ml", [
   "let payload_value (payload : payload)",
   "let make_validator ~name ~value",
   "let validator_name (validator : validator)",
-  "let make ~payload ~payload_contract ~validators ~summary ~source_id ~form_index",
+  "let make ~diagnostics ~payload ~payload_contract ~validators ~summary ~source_id ~form_index",
   "let payload (declaration : t)",
   "let payload_contract (declaration : t)",
   "let validators (declaration : t)",
@@ -860,205 +860,9 @@ expectSourceIncludes("descriptor_contract.ml", [
 const expectTextIncludes = (path, snippets) => {
   const text = readFileSync(path, "utf8");
   for (const snippet of snippets) {
-    if (!text.includes(snippet)) {
-      failures.push(`${path.pathname} is missing reset guard text: ${snippet}`);
-    }
+    if (!text.includes(snippet)) failures.push(`${path.pathname} is missing reset guard text: ${snippet}`);
   }
 };
-
-const payloadContractBlocks = (text) => {
-  const blocks = [];
-  const marker = "(:payload";
-  let searchFrom = 0;
-
-  while (true) {
-    const start = text.indexOf(marker, searchFrom);
-    if (start === -1) break;
-
-    let depth = 0;
-    let end = -1;
-
-    for (let index = start; index < text.length; index += 1) {
-      const char = text[index];
-      if (char === "(") depth += 1;
-      if (char === ")") {
-        depth -= 1;
-        if (depth === 0) {
-          end = index + 1;
-          break;
-        }
-      }
-    }
-
-    if (end === -1) {
-      failures.push("preludes/ontology.lisp contains an unterminated :payload contract.");
-      break;
-    }
-
-    blocks.push({
-      start,
-      block: text.slice(start, end),
-    });
-    searchFrom = end;
-  }
-
-  return blocks;
-};
-
-const malformedFixtureSourceBlock = (text, fixture) => {
-  const fixtureCall = `(${fixture} `;
-  const fixtureIndex = text.indexOf(fixtureCall);
-  if (fixtureIndex === -1) return null;
-  const start = text.lastIndexOf("const ", fixtureIndex);
-  const end = text.indexOf("`;", fixtureIndex);
-  if (start === -1 || end === -1) return null;
-  return text.slice(start, end);
-};
-
-const malformedFixtureSymbolBase = (fixture) =>
-  fixture
-    .replace(/^define-/, "")
-    .split("-")
-    .map((part, index) => (index === 0 ? part : `${part[0].toUpperCase()}${part.slice(1)}`))
-    .join("");
-
-const typedMalformedFixtureCaseBlock = (text, fixture) => {
-  const formSnippet = `form: "(${fixture} `;
-  const formIndex = text.indexOf(formSnippet);
-  if (formIndex === -1) return null;
-  const start = text.lastIndexOf("    {", formIndex);
-  const end = text.indexOf("\n    },", formIndex);
-  if (start === -1 || end === -1) return null;
-  return text.slice(start, end);
-};
-
-const typedMalformedPayloadSourcesBlock = (text) => {
-  const start = text.indexOf("const typedMalformedPayloadSources = [");
-  if (start === -1) return null;
-  const end = text.indexOf("\n  ];", start);
-  if (end === -1) return null;
-  return text.slice(start, end);
-};
-
-const phase3CorpusPayloadMatrix = [
-  {
-    kind: "Record",
-    contract: "RecordPayload",
-    validatorModule: "Canonical_record_decl",
-    diagnosticCode: "artifact/record-payload",
-    malformedFixture: "define-malformed-record-payload",
-  },
-  {
-    kind: "Link",
-    contract: "LinkPayload",
-    validatorModule: "Canonical_edge_decl",
-    diagnosticCode: "artifact/edge-payload",
-    malformedFixture: "define-malformed-link-payload",
-  },
-  {
-    kind: "Entity",
-    contract: "EntityPayload",
-    validatorModule: "Canonical_entity_decl",
-    diagnosticCode: "artifact/entity-payload",
-    malformedFixture: "define-malformed-entity-payload",
-  },
-  {
-    kind: "Query",
-    contract: "QueryPayload",
-    validatorModule: "Canonical_query_decl",
-    diagnosticCode: "artifact/query-payload",
-    malformedFixture: "define-malformed-query-payload",
-  },
-  {
-    kind: "Action",
-    contract: "ActionPayload",
-    validatorModule: "Canonical_operation_decl",
-    diagnosticCode: "artifact/operation-payload",
-    malformedFixture: "define-malformed-operation-payload",
-  },
-  {
-    kind: "View",
-    contract: "ViewPayload",
-    validatorModule: "Canonical_surface_decl",
-    diagnosticCode: "artifact/surface-payload",
-    malformedFixture: "define-malformed-surface-payload",
-  },
-  {
-    kind: "Constraint",
-    contract: "ConstraintPayload",
-    validatorModule: "Canonical_rule_decl",
-    diagnosticCode: "artifact/rule-payload",
-    malformedFixture: "define-malformed-rule-payload",
-  },
-  {
-    kind: "Relation",
-    contract: "RelationPayload",
-    validatorModule: "Canonical_edge_decl",
-    diagnosticCode: "artifact/edge-payload",
-    malformedFixture: "define-malformed-edge-payload",
-  },
-  {
-    kind: "DocumentLocale",
-    contract: "DocumentLocalePayload",
-    validatorModule: "Canonical_content_decl",
-    diagnosticCode: "artifact/content-payload",
-    malformedFixture: "define-malformed-content-locale-payload",
-  },
-  {
-    kind: "Document",
-    contract: "DocumentPayload",
-    validatorModule: "Canonical_content_decl",
-    diagnosticCode: "artifact/content-payload",
-    malformedFixture: "define-malformed-content-payload",
-  },
-  {
-    kind: "DocumentLocalized",
-    contract: "DocumentLocalizedPayload",
-    validatorModule: "Canonical_content_decl",
-    diagnosticCode: "artifact/content-payload",
-    malformedFixture: "define-malformed-content-localized-payload",
-  },
-  {
-    kind: "Workspace",
-    contract: "WorkspacePayload",
-    validatorModule: "Canonical_surface_decl",
-    diagnosticCode: "artifact/surface-payload",
-    malformedFixture: "define-malformed-workspace-payload",
-  },
-  {
-    kind: "Process",
-    contract: "ProcessPayload",
-    validatorModule: "Canonical_workflow_decl",
-    diagnosticCode: "artifact/workflow-payload",
-    malformedFixture: "define-malformed-workflow-payload",
-  },
-  {
-    kind: "Schema",
-    contract: "SchemaPayload",
-    httpValidator: true,
-    malformedFixture: "http-api.mjs",
-  },
-  {
-    kind: "TaskDefinition",
-    contract: "TaskPayload",
-    validatorModule: "Canonical_workflow_decl",
-    diagnosticCode: "artifact/workflow-payload",
-    malformedFixture: "define-malformed-task-payload",
-  },
-  {
-    kind: "HttpApi",
-    contract: "HttpApiPayload",
-    httpValidator: true,
-    malformedFixture: "http-api.mjs",
-  },
-  {
-    kind: "PdfMapping",
-    contract: "PdfMappingPayload",
-    validatorModule: "Canonical_content_decl",
-    diagnosticCode: "artifact/content-payload",
-    malformedFixture: "define-malformed-content-mapping-payload",
-  },
-];
 
 const forbiddenOntologyForms = [
   "define-entity",
@@ -1154,9 +958,9 @@ expectTextIncludes(new URL("turbo.json", repoRoot), [
 ]);
 
 expectSourceIncludes("abi_source_ops.ml", [
-  "let typecheck_typed_core type_env eval_env program",
+  "let typecheck_typed_core ?(syntax=[]) type_env eval_env program",
   "let typecheck_core_success_json ?(typed_core = false) program",
-  "typecheck_core_result_json ~typed type_env eval_env program",
+  "typecheck_core_result_json ~syntax:expanded ~typed type_env eval_env program",
   "typecheck_core_success_json ~typed_core:typed program",
 ]);
 
@@ -1284,333 +1088,24 @@ expectSourceExcludes("abi_emit_ops.ml", [
   'phase:"validateArtifact"',
 ]);
 
-expectSourceIncludes("abi_session_ops.ml", ['"define-payload-contract"']);
+expectSourceIncludes("eval_toplevel.ml", ['"__payload-contract"']);
 
-const expectConstructDeclarationsCarrySummaries = (path) => {
-  const text = readFileSync(path, "utf8");
-  const lines = text.split(/\r?\n/);
-  for (let index = 0; index < lines.length; index += 1) {
-    if (!lines[index].includes("(construct/declaration")) continue;
+// Public forms derive their contracts from the same types used by the protocol.
+// A second authored descriptor/hook/contract table would reintroduce duplicate sources of truth.
+const preludeSources = ["ontology.lisp", "ui.lisp", "viewspec.lisp"].map(name => [name, readFileSync(new URL(`preludes/${name}`, repoRoot), "utf8")]);
+const contracts = new Set(preludeSources.flatMap(([, text]) => [...text.matchAll(/\(type\s+([A-Za-z][A-Za-z0-9_/-]*)\s/g)].map(match => match[1])));
+for (const [preludeName, ontology] of preludeSources) {
 
-    const window = lines.slice(index, Math.min(lines.length, index + 16)).join("\n");
-    const summaryCount = [...window.matchAll(/:\$summary\b/g)].length;
-    if (summaryCount === 0) {
-      failures.push(
-        `${path.pathname}:${index + 1} construct/declaration is missing explicit :$summary metadata.`,
-      );
-    } else if (summaryCount > 1) {
-      failures.push(
-        `${path.pathname}:${index + 1} construct/declaration has ${summaryCount} explicit :$summary metadata entries.`,
-      );
-    }
-    if (!window.includes(":resultType")) {
-      failures.push(
-        `${path.pathname}:${index + 1} construct/declaration summary is missing explicit :resultType.`,
-      );
-    }
-  }
-};
-
-expectConstructDeclarationsCarrySummaries(new URL("preludes/ontology-compiler.lisp", repoRoot));
-
-expectTextIncludes(new URL("preludes/ontology-compiler.lisp", repoRoot), [
-  "(construct/assoc\n      (http/schema-decl input)\n      :$summary",
-  '(construct/summary\n        :kind "Schema"\n        :name (meta/declaration-name input)\n        :resultType "SchemaDecl")',
-  "(construct/assoc\n      (http/error-decl input)\n      :$summary",
-  "(construct/assoc\n      (http/api-group-decl input)\n      :$summary",
-  '(construct/summary\n        :kind "HttpApi"\n        :name (meta/declaration-name input)\n        :resultType "HttpApiDecl")',
-]);
-
-expectTextIncludes(new URL("preludes/ontology.lisp", repoRoot), [
-  "(define-payload-contract KindPayload",
-  "(define-payload-contract NamedKindPayload",
-  "(define-payload-contract ArrayFieldsPayload",
-  "(define-payload-contract ObjectFieldsPayload",
-  "(define-payload-contract SourceTargetPayload",
-  "(define-payload-contract NamedSourceTargetFieldsPayload",
-  "(define-payload-contract SchemaPayload",
-  "(define-payload-contract HttpApiPayload",
-  "(define-payload-contract IdentityDeclarationPayload",
-  "(define-payload-contract RoleIdentityPayload",
-  "(define-payload-contract GroupIdentityPayload",
-  "(define-payload-contract MembershipIdentityPayload",
-  "(define-payload-contract ContextualRoleIdentityPayload",
-  "(define-payload-contract FieldSchemaPayload",
-  "(define-payload-contract EntityPayload",
-  "(define-payload-contract MetaEntityPayload",
-  "(define-payload-contract RelationPayload",
-  "(define-payload-contract RecordPayload",
-  "(define-payload-contract LinkPayload",
-  "(define-payload-contract QueryPayload",
-  "(define-payload-contract DatalogQueryPayload",
-  "(define-payload-contract QueryPresetPayload",
-  "(define-payload-contract ViewPayload",
-  "(define-payload-contract WorkspacePayload",
-  "(define-payload-contract PermissionPayload",
-  "(define-payload-contract ConstraintPayload",
-  "(define-payload-contract OperationPayload",
-  "(define-payload-contract ActionPayload",
-  "(define-payload-contract MutationPayload",
-  "(define-payload-contract ProcessPayload",
-  "(define-payload-contract TaskPayload",
-  "(define-payload-contract DocumentPayload",
-  "(define-payload-contract DocumentLocalePayload",
-  "(define-payload-contract DocumentLocalizedPayload",
-  "(define-payload-contract PdfMappingPayload",
-  "(:contract KindPayload)",
-  "(:contract NamedKindPayload)",
-  "(:contract [KindPayload ObjectFieldsPayload])",
-  "(:contract [KindPayload SourceTargetPayload ArrayFieldsPayload])",
-  "(:contract [NamedKindPayload ArrayFieldsPayload])",
-  "(:contract [NamedKindPayload SourceTargetPayload ArrayFieldsPayload])",
-  "(:artifact\n      (:validators [http])",
-  "(:payload (:contract SchemaPayload))",
-  "(:payload (:contract HttpApiPayload))",
-  "(:payload (:contract EntityPayload))",
-  "(:payload (:contract MetaEntityPayload))",
-  "(:payload (:contract RelationPayload))",
-  "(:payload (:contract RecordPayload))",
-  "(:payload (:contract LinkPayload))",
-  "(:contract QueryPayload)",
-  "(:payload (:contract DatalogQueryPayload))",
-  "(:payload (:contract QueryPresetPayload))",
-  "(:contract ViewPayload)",
-  "(:payload (:contract WorkspacePayload))",
-  "(:payload (:contract PermissionPayload))",
-  "(:payload (:contract ConstraintPayload))",
-  "(:payload (:contract RoleIdentityPayload))",
-  "(:payload (:contract GroupIdentityPayload))",
-  "(:payload (:contract MembershipIdentityPayload))",
-  "(:payload (:contract ContextualRoleIdentityPayload))",
-  "(:payload (:contract ActionPayload))",
-  "(:payload (:contract MutationPayload))",
-  "(:payload (:contract ProcessPayload))",
-  "(:payload (:contract TaskPayload))",
-  "(:payload (:contract DocumentPayload))",
-  "(:payload (:contract DocumentLocalePayload))",
-  "(:payload (:contract DocumentLocalizedPayload))",
-  "(:payload (:contract PdfMappingPayload))",
-  '(:literal-fields [[kind "Link"]])',
-  "(:contract IdentityDeclarationPayload)",
-  '(:literal-fields [[kind "Process"]])',
-  "(:array-fields [nodes edges])",
-  "(:object-fields [trigger])",
-]);
-
-{
-  const ontology = readFileSync(new URL("preludes/ontology.lisp", repoRoot), "utf8");
-  const typedPayloadValidator = readFileSync(
-    new URL("lib/artifact_typed_payload_validator.ml", cwd),
-    "utf8",
-  );
-  const artifactHttpValidator = readFileSync(
-    new URL("lib/artifact_http_validator.ml", cwd),
-    "utf8",
-  );
-  const emitScript = readFileSync(new URL("scripts/emit.mjs", cwd), "utf8");
-  const httpApiScript = readFileSync(new URL("scripts/http-api.mjs", cwd), "utf8");
-  const validatorCount = [...ontology.matchAll(/\(:artifact\s+\(:validators\s+\[http\]\)/g)].length;
-  const httpPayloadContractCount = [
-    ...ontology.matchAll(
-      /\(:artifact\s+\(:validators\s+\[http\]\)\s+\(:payload\s+\(:contract\s+(?:SchemaPayload|HttpApiPayload)\)\)/g,
-    ),
-  ].length;
-  const payloadBlocks = payloadContractBlocks(ontology);
-  const genericPayloadContractCount = payloadBlocks.length;
-  const contractBackedPayloadCount = payloadBlocks.filter(({ block }) =>
-    /:contract\b/.test(block),
-  ).length;
-  const directPayloadFieldBlocks = payloadBlocks.filter(({ block }) =>
-    /:(?:required-fields|literal-fields|string-fields|array-fields|object-fields)\b/.test(block),
-  );
-  if (validatorCount !== 3) {
-    failures.push(
-      `preludes/ontology.lisp should declare three HTTP artifact validator descriptor contracts, found ${validatorCount}.`,
-    );
-  }
-  if (httpPayloadContractCount !== 3) {
-    failures.push(
-      `preludes/ontology.lisp should declare three HTTP artifact payload descriptor contracts, found ${httpPayloadContractCount}.`,
-    );
-  }
-  if (genericPayloadContractCount < 28) {
-    failures.push(
-      `preludes/ontology.lisp should declare descriptor payload contracts for HTTP and corpus-heavy ontology forms, found ${genericPayloadContractCount}.`,
-    );
-  }
-  if (contractBackedPayloadCount !== genericPayloadContractCount) {
-    failures.push(
-      `preludes/ontology.lisp should route every artifact payload descriptor through a named payload contract; found ${contractBackedPayloadCount}/${genericPayloadContractCount}.`,
-    );
+  for (const oldHead of ["define-form", "meta-fn", "define-elaboration", "define-payload-contract", "__form-descriptor", "__form-hook", "__payload-contract"]) {
+    if (new RegExp(`\\(${oldHead}\\s`).test(ontology)) failures.push(`${preludeName} authors duplicate ${oldHead} declarations.`);
   }
 
-  const matrixKinds = new Set(phase3CorpusPayloadMatrix.map((entry) => entry.kind));
-  const corpusKinds = new Set(Object.keys(corpusGolden.kindCounts));
-  const typedMatrixEntries = phase3CorpusPayloadMatrix.filter((entry) => !entry.httpValidator);
-  const typedSourceBlock = typedMalformedPayloadSourcesBlock(emitScript);
-  const typedMalformedSourceCount = [...emitScript.matchAll(/label: "malformed [^"]+ payload"/g)]
-    .length;
-  const typedMalformedCaseCount = [...emitScript.matchAll(/label: "typed [^"]+ payload"/g)].length;
-  for (const kind of corpusKinds) {
-    if (!matrixKinds.has(kind)) {
-      failures.push(`Phase 3 descriptor payload matrix is missing corpus-emitted kind ${kind}.`);
-    }
-  }
-  if (typedMalformedSourceCount !== typedMatrixEntries.length) {
-    failures.push(
-      `scripts/emit.mjs typed malformed payload source table has ${typedMalformedSourceCount} cases; expected ${typedMatrixEntries.length} non-HTTP Phase 3 matrix entries.`,
-    );
-  }
-  if (typedSourceBlock == null) {
-    failures.push("scripts/emit.mjs must keep typedMalformedPayloadSources table-driven.");
-  }
-  if (typedMalformedCaseCount !== typedMatrixEntries.length) {
-    failures.push(
-      `scripts/emit.mjs typed malformed payload table has ${typedMalformedCaseCount} cases; expected ${typedMatrixEntries.length} non-HTTP Phase 3 matrix entries.`,
-    );
-  }
-
-  const typedFixtureOwners = new Map();
-  for (const entry of phase3CorpusPayloadMatrix) {
-    const count = corpusGolden.kindCounts[entry.kind];
-    if (typeof count !== "number" || count <= 0) {
-      failures.push(
-        `Phase 3 descriptor payload matrix includes ${entry.kind}, but corpus golden has count ${count}.`,
-      );
-    }
-    if (!ontology.includes(`(define-payload-contract ${entry.contract}`)) {
-      failures.push(
-        `preludes/ontology.lisp is missing descriptor payload contract ${entry.contract} for corpus kind ${entry.kind}.`,
-      );
-    }
-    if (!ontology.includes(`(:contract ${entry.contract})`)) {
-      failures.push(
-        `preludes/ontology.lisp does not route corpus kind ${entry.kind} through ${entry.contract}.`,
-      );
-    }
-
-    if (entry.httpValidator) {
-      if (!artifactHttpValidator.includes('Artifact_validator.make_spec ~name:"http" ~validate')) {
-        failures.push(`${entry.kind} must remain covered by the HTTP artifact validator spec.`);
-      }
-      if (!artifactHttpValidator.includes("Http_ir_validation.validate_declarations")) {
-        failures.push(`${entry.kind} must remain validated through Http_ir_validation.`);
-      }
-      if (!httpApiScript.includes("http-api ok")) {
-        failures.push(
-          `${entry.kind} malformed/ref fixture coverage should remain in scripts/http-api.mjs.`,
-        );
-      }
-      continue;
-    }
-
-    if (!typedPayloadValidator.includes(`${entry.validatorModule}.validate_declaration`)) {
-      failures.push(
-        `${entry.kind} must remain covered by ${entry.validatorModule}.validate_declaration.`,
-      );
-    }
-    if (!typedPayloadValidator.includes(entry.diagnosticCode)) {
-      failures.push(`${entry.kind} must keep typed payload diagnostic ${entry.diagnosticCode}.`);
-    }
-    const symbolBase = malformedFixtureSymbolBase(entry.malformedFixture);
-    if (typedSourceBlock != null) {
-      if (!typedSourceBlock.includes(`sourceId: ${symbolBase}SourceId`)) {
-        failures.push(
-          `${entry.kind} malformed fixture ${entry.malformedFixture} must be loaded from ${symbolBase}SourceId.`,
-        );
-      }
-      if (!typedSourceBlock.includes(`source: ${symbolBase}Source`)) {
-        failures.push(
-          `${entry.kind} malformed fixture ${entry.malformedFixture} must load ${symbolBase}Source.`,
-        );
-      }
-    }
-    if (!emitScript.includes(entry.malformedFixture)) {
-      failures.push(
-        `${entry.kind} must keep malformed fixture ${entry.malformedFixture} in scripts/emit.mjs.`,
-      );
-    }
-    if (!emitScript.includes(`form: "(${entry.malformedFixture} `)) {
-      failures.push(
-        `${entry.kind} malformed fixture ${entry.malformedFixture} must be asserted in typedMalformedPayloadCases.`,
-      );
-    }
-    if (!emitScript.includes(`code: "${entry.diagnosticCode}"`)) {
-      failures.push(
-        `${entry.kind} typed malformed payload case must assert diagnostic ${entry.diagnosticCode}.`,
-      );
-    }
-    const caseBlock = typedMalformedFixtureCaseBlock(emitScript, entry.malformedFixture);
-    if (caseBlock == null) {
-      failures.push(
-        `${entry.kind} malformed fixture ${entry.malformedFixture} must have a typedMalformedPayloadCases table entry.`,
-      );
-    } else {
-      if (!caseBlock.includes(`sourceId: ${symbolBase}SourceId`)) {
-        failures.push(
-          `${entry.kind} malformed fixture ${entry.malformedFixture} must assert diagnostics against ${symbolBase}SourceId.`,
-        );
-      }
-      if (!caseBlock.includes(`source: ${symbolBase}Source`)) {
-        failures.push(
-          `${entry.kind} malformed fixture ${entry.malformedFixture} must assert offsets against ${symbolBase}Source.`,
-        );
-      }
-      if (!caseBlock.includes(`code: "${entry.diagnosticCode}"`)) {
-        failures.push(
-          `${entry.kind} malformed fixture ${entry.malformedFixture} must assert diagnostic ${entry.diagnosticCode} in its own typedMalformedPayloadCases entry.`,
-        );
-      }
-      if (!caseBlock.includes("messageIncludes: [")) {
-        failures.push(
-          `${entry.kind} malformed fixture ${entry.malformedFixture} must assert diagnostic message text in typedMalformedPayloadCases.`,
-        );
-      }
-    }
-    const fixtureBlock = malformedFixtureSourceBlock(emitScript, entry.malformedFixture);
-    if (fixtureBlock == null) {
-      failures.push(
-        `${entry.kind} malformed fixture ${entry.malformedFixture} must be defined as a source block in scripts/emit.mjs.`,
-      );
-    } else {
-      if (!fixtureBlock.includes(`(:payload (:contract ${entry.contract}))`)) {
-        failures.push(
-          `${entry.kind} malformed fixture ${entry.malformedFixture} must target ${entry.contract}.`,
-        );
-      }
-      if (!fixtureBlock.includes(`:kind "${entry.kind}"`)) {
-        failures.push(
-          `${entry.kind} malformed fixture ${entry.malformedFixture} must emit kind ${entry.kind}.`,
-        );
-      }
-    }
-    const fixtureOwners = typedFixtureOwners.get(entry.malformedFixture) ?? [];
-    fixtureOwners.push(entry.kind);
-    typedFixtureOwners.set(entry.malformedFixture, fixtureOwners);
-  }
-
-  for (const [fixture, owners] of typedFixtureOwners) {
-    if (owners.length > 1) {
-      failures.push(
-        `Typed malformed fixture ${fixture} is shared by ${owners.join(
-          ", ",
-        )}; Phase 3 requires branch-specific malformed fixture coverage.`,
-      );
-    }
-    if (occurrences(emitScript, fixture) < 3) {
-      failures.push(
-        `Typed malformed fixture ${fixture} should be defined, invoked, and asserted in scripts/emit.mjs.`,
-      );
-    }
-  }
-
-  for (const { start, block } of directPayloadFieldBlocks) {
-    const line = ontology.slice(0, start).split(/\r?\n/).length;
-    failures.push(
-      `preludes/ontology.lisp:${line} should not put generic field clauses directly inside artifact :payload; move them to define-payload-contract instead:\n${block}`,
-    );
-  }
+  const outputTypes = [...ontology.matchAll(/:ir\s+([A-Za-z][A-Za-z0-9_/-]*)/g)].map(match => match[1]);
+  for (const outputType of outputTypes) if (!contracts.has(outputType)) failures.push(`${preludeName} form refers to undeclared IR contract ${outputType}.`);
+  if (outputTypes.length === 0) failures.push(`${preludeName} must declare typed forms.`);
 }
+expectSourceIncludes("surface_form.ml", ["__form.types/", "form/ensure", "form/project"]);
+expectSourceIncludes("form_semantics.ml", ["resolve_type", "Typecheck.typecheck_program_with_env", "severity"]);
 
 const result = {
   ok: failures.length === 0,

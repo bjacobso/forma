@@ -336,26 +336,27 @@ function toErrorNode(node: RedNode): T.ErrorNode {
 }
 
 /**
- * Get the first token child of a node
+ * Get the first token in a node, including nested reader macros
  */
 function getFirstToken(node: RedNode): RedToken | undefined {
   for (const child of node.children()) {
-    if (isRedToken(child)) {
-      return child;
-    }
+    if (isRedToken(child)) return child;
+    const token = getFirstToken(child);
+    if (token) return token;
   }
   return undefined;
 }
 
 /**
- * Get the last token child of a node
+ * Get the last token in a node, including nested reader macros
  */
 function getLastToken(node: RedNode): RedToken | undefined {
   const children = node.children();
   for (let i = children.length - 1; i >= 0; i--) {
-    if (isRedToken(children[i]!)) {
-      return children[i] as RedToken;
-    }
+    const child = children[i]!;
+    if (isRedToken(child)) return child;
+    const token = getLastToken(child);
+    if (token) return token;
   }
   return undefined;
 }

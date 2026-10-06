@@ -1,3 +1,4 @@
+import { KKeyword, mapKey, quotedDatum } from "../evaluator/types.js";
 /**
  * Stack-based bytecode virtual machine for the Lisp kernel.
  *
@@ -846,6 +847,9 @@ function executeVM(
           break;
         }
 
+        case Op.MATCH_FAILURE:
+          throw new KernelTypeError({message:"No pattern matched the value",expected:"matching pattern",got:"unmatched value",...(currentTrace() ? {loc:currentTrace()!.loc} : {})});
+
         case Op.MATCH: {
           const pattern = frame.chunk.constants[readU16()] as CompiledMatchPattern;
           const bindingCount = readU8();
@@ -855,7 +859,7 @@ function executeVM(
           }
 
           const scrutinee = stack.pop()!;
-          const bindings = matchCompiledPattern(pattern, scrutinee);
+          const bindings = matchCompiledPattern(pattern, scrutinee, name => { const index = runtime.globalNames?.indexOf(`__constructor/${name}`) ?? -1; return index < 0 ? undefined : runtime.globals[index]; });
           if (bindings === null) {
             stack.push(false);
             break;
@@ -883,7 +887,9 @@ function executeVM(
           const pairs: [string, KValue][] = new Array(n);
           for (let i = n - 1; i >= 0; i--) {
             const val = stack.pop()!;
-            const key = stack.pop()! as string;
+            const rawKey = stack.pop()!;
+            const key = mapKey(rawKey);
+            if (key === undefined) return yield* new KernelTypeError({message:"Map keys must be strings, keywords or symbols",expected:"map key",got:typeof rawKey});
             pairs[i] = [key, val];
           }
           for (const [key, val] of pairs) map.set(key, val);
@@ -894,7 +900,7 @@ function executeVM(
         case Op.GET: {
           const key = stack.pop()!;
           const coll = stack.pop()!;
-          if (coll instanceof Map) stack.push(coll.get(key as string) ?? null);
+          if (coll instanceof Map) stack.push(coll.get(mapKey(key) ?? "") ?? null);
           else if (Array.isArray(coll)) stack.push(coll[key as number] ?? null);
           else stack.push(null);
           break;

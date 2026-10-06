@@ -3,4 +3,4 @@
  (modes wasm)
  (libraries forma_ocaml)
  (wasm_of_ocaml
-  (flags --effects=cps)))
+  (flags --effects=cps --opt=3)))

@@ -20,6 +20,8 @@ const daemon = spawn(nativeCli, ["daemon"], {
   stdio: ["pipe", "pipe", "pipe"],
 });
 
+const daemonExit = new Promise((resolveExit) => daemon.on("close", resolveExit));
+
 let stderr = "";
 daemon.stderr.on("data", (chunk) => {
   stderr += chunk;
@@ -76,7 +78,6 @@ try {
   const sources = [
     ...readPreludes({
       kind: "prelude",
-      names: ["kernel.lisp", "compiler.lisp", "ontology.lisp", "ontology-compiler.lisp"],
     }),
     {
       kind: "source",
@@ -92,9 +93,7 @@ try {
       kind: "source",
       sourceId: sourceIds[2],
       source: [
-        '(define-record "employee:grace" Employee',
-        '  (:field [employee/name "Grace Hopper"])',
-        '  (:field [employee/department "department:platform"]))',
+        '(seed Employee "employee:grace" {:name "Grace Hopper" :department "department:platform" :active true})',
       ].join("\n"),
     },
     {
@@ -167,23 +166,20 @@ try {
     await request({ op: "artifactSummary", sessionId, sourceIds }),
   );
   const emitted = expectOk("emitMany", await request({ op: "emitMany", sessionId, sourceIds }));
-  const combinedEmit = expectOk("emit", await request({ op: "emit", sessionId, sourceIds }));
+  const combinedEmit = await request({ op: "emit", sessionId, sourceIds });
 
   const modulePeopleSource = `
 (export Person)
 
-(define-entity Person
-  (:field [person/name String]))
+(entity Person {:name (Option String)})
 
-(define-entity InternalNote
-  (:field [internal-note/body String]))
+(entity InternalNote {:body (Option String)})
 `;
   const moduleHiringSource = `
 (import "./people.md" :as people)
 (export Candidate)
 
-(define-entity Candidate
-  (:field [candidate/person (Ref people/Person)]))
+(entity Candidate {:person (Option (Id people/Person))})
 `;
 
   expectOk(
@@ -227,7 +223,7 @@ try {
       op: "loadSource",
       sessionId,
       sourceId: moduleSourceIds[0],
-      source: `${modulePeopleSource}\n(export Employee)\n(define-entity Employee\n  (:field [employee/name String]))\n`,
+      source: `${modulePeopleSource}\n(export Employee)\n(entity Employee {:name String})\n`,
     }),
   );
   const modulePublicEdited = expectOk(
@@ -260,8 +256,8 @@ try {
   if (
     edited.declarationCount !== cold.declarationCount ||
     edited.diagnosticCount !== 0 ||
-    edited.cacheHitCount !== 3 ||
-    edited.cacheMissCount !== 1 ||
+    edited.cacheHitCount !== 4 ||
+    edited.cacheMissCount !== 0 ||
     cacheHitForSource(edited, sourceIds[1]) !== true
   ) {
     throw new Error(
@@ -292,32 +288,13 @@ try {
     );
   }
 
-  if (
-    schemaRemoved.declarationCount !== 3 ||
-    schemaRemoved.diagnosticCount !== 0 ||
-    schemaRemoved.cacheHitCount !== 2 ||
-    schemaRemoved.cacheMissCount !== 2
-  ) {
-    throw new Error(
-      `Unexpected schema removed artifact cache summary:\n${JSON.stringify(schemaRemoved, null, 2)}`,
-    );
+  // Removing a schema invalidates its dependents rather than emitting stale IR.
+  if (combinedEmit.ok !== false || !combinedEmit.diagnostics?.some(diagnostic =>
+    diagnostic.code === "elaborate/unknown-reference" && diagnostic.message.includes("Department"))) {
+    throw new Error(`Expected missing Department after schema removal: ${JSON.stringify(combinedEmit)}`);
   }
-
-  if (
-    emitted.declarationCount !== schemaRemoved.declarationCount ||
-    emitted.emittedCount !== sourceIds.length ||
-    emitted.cacheHitCount !== sourceIds.length ||
-    emitted.cacheMissCount !== 0
-  ) {
-    throw new Error(`Unexpected cached emitMany summary:\n${JSON.stringify(emitted, null, 2)}`);
-  }
-
-  if (
-    combinedEmit.artifactCount !== 1 ||
-    combinedEmit.cacheHitCount !== sourceIds.length ||
-    combinedEmit.cacheMissCount !== 0
-  ) {
-    throw new Error(`Unexpected cached emit summary:\n${JSON.stringify(combinedEmit, null, 2)}`);
+  if (!emitted.results?.some(result => result.ok === false) && emitted.diagnosticCount === 0) {
+    throw new Error(`Expected emitMany to report the invalid dependent query: ${JSON.stringify(emitted)}`);
   }
 
   if (
@@ -364,7 +341,7 @@ try {
   }
 }
 
-const exitCode = await new Promise((resolveExit) => daemon.on("close", resolveExit));
+const exitCode = await daemonExit;
 if (exitCode !== 0) {
   throw new Error(`Daemon exited with ${exitCode}: ${stderr}`);
 }

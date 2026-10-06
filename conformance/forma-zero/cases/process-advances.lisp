@@ -6,4 +6,4 @@
       final (opeval log
                     (concat [{:fact ["maria" "completed" "i9"] :by "root"}] [])
                     (concat [advance] []))]
-  (get (first (where (concat ["s"] []) (concat [["maria" "now" "s"]] []) final)) "s"))
+  (binding-value (first (where (concat ["s"] []) (concat [["maria" "now" "s"]] []) final)) "s"))

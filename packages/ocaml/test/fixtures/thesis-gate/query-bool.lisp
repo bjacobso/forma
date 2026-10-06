@@ -1,8 +1,7 @@
-(define-entity Employee
-  (:field [employee/active Bool])
-  (:field [employee/name String]))
+(entity Employee {:active Bool
+    :name String})
 
-(define-query active-employees
-  (:from Employee)
-  (:where employee/active)
-  (:select [employee/name]))
+(query active-employees
+  :from Employee
+  :where active
+  :select [name])

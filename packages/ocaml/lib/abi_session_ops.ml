@@ -69,51 +69,8 @@ let reset_session session_id =
       Session.reset session;
       Response.null_json)
 
-let expr_updates_session (env : Eval.env) = function
-  | Ast.List
-      ( _,
-        Ast.Symbol
-          ( _,
-            ( "define" | "def" | "defn" | "defmacro" | "define-macro"
-            | "define-form" | "meta-fn" | "define-elaboration"
-            | "define-elaboration-primitive" | "define-protocol"
-            | "define-payload-contract" ) )
-        :: _ ) ->
-      true
-  | Ast.List (_, Ast.Symbol (_, op) :: args) ->
-      Descriptor.is_form_descriptor env op
-      && Option.is_some (Descriptor.declaration_binding_name args)
-  | _ -> false
-
-let expr_binding_name (env : Eval.env) = function
-  | Ast.List
-      ( _,
-        Ast.Symbol
-          ( _,
-            ( "define-form" | "meta-fn" | "define-elaboration"
-            | "define-elaboration-primitive" | "define-protocol"
-            | "define-payload-contract" | "defmacro" | "define-macro"
-            | "defn" ) )
-        :: Ast.Symbol (_, name)
-        :: _ ) ->
-      Some name
-  | Ast.List (_, Ast.Symbol (_, ("define" | "def")) :: Ast.Symbol (_, name) :: _)
-    ->
-      Some name
-  | Ast.List
-      ( _,
-        Ast.Symbol (_, "define") :: Ast.List (_, Ast.Symbol (_, name) :: _) :: _
-      ) ->
-      Some name
-  | Ast.List (_, Ast.Symbol (_, op) :: args)
-    when Descriptor.is_form_descriptor env op ->
-      Descriptor.declaration_binding_name args
-  | _ -> None
-
-let source_binding_names env exprs =
-  exprs
-  |> List.filter_map (expr_binding_name env)
-  |> List.sort_uniq String.compare
+let expr_updates_session = Source_bindings.updates
+let source_binding_names = Source_bindings.names
 
 let host_builtin_names host_builtins =
   host_builtins
@@ -146,7 +103,7 @@ let source_mentions_host_builtin host_builtins source =
 let warm_source_artifact_cache (session : Session.t) source_id =
   match Hashtbl.find_opt session.parsed_sources source_id with
   | None -> Load_phase.zero
-  | Some exprs when List.exists Mechanics_artifact.is_mechanics_form exprs ->
+  | Some exprs when Mechanics_artifact.has_mechanics_forms exprs ->
       Load_phase.zero
   | Some exprs -> (
       let emitted, elaborate_ms =
@@ -242,6 +199,7 @@ let load_runtime_input ~kind (session : Session.t) source_id source =
   match parsed with
   | Error diagnostics -> Error (List.map Reader.diagnostic_to_json diagnostics)
   | Ok exprs -> (
+      Surface.validate_program exprs;
       let known_source_ids =
         if kind = "prelude" then []
         else
@@ -287,9 +245,16 @@ let load_runtime_input ~kind (session : Session.t) source_id source =
         let timings = { timings with Load_phase.store_ms } in
         Ok (id, List.length exprs, timings)
       in
-      let projected = Mechanics_artifact.projected_form_predicate exprs in
+      let evaluation_env =
+        if List.exists (fun e -> List.mem (Option.value ~default:"" (Surface.head e)) ["type";"class";"error"]) exprs then
+          let type_definitions = Surface.core_program (Surface_protocol.program exprs) |> List.concat_map (fun e -> match Surface.runtime_constructors e with
+            | Some definitions -> definitions
+            | None -> (match e with Ast.List (_,Ast.Symbol (_,"define") :: Ast.Symbol (_,n) :: _) when String.starts_with ~prefix:"__descriptor/" n -> [e] | _ -> [])) in
+          match Eval.evaluate_program_with_env evaluation_env type_definitions with Ok (_,env) -> env | Error _ -> evaluation_env
+        else evaluation_env in
+      let projected = Mechanics_artifact.projected_form_predicate ~include_pure:false exprs in
       let updates expr =
-        (not (projected expr)) && expr_updates_session evaluation_env expr
+        List.mem (Option.value ~default:"" (Surface.head expr)) ["type";"class";"error"] || (not (projected expr)) && expr_updates_session evaluation_env expr
       in
       if not (List.exists updates exprs) then
         stores_source ~env:evaluation_env ~type_env:source_type_env
@@ -298,11 +263,11 @@ let load_runtime_input ~kind (session : Session.t) source_id source =
       else
         let evaluated, eval_ms =
           Load_phase.timed_ms (fun () ->
-              Eval.evaluate_program_with_env evaluation_env exprs)
+              Eval.evaluate_program_with_env evaluation_env (List.filter (fun expr -> not (projected expr)) exprs))
         in
         let typechecked, typecheck_ms =
           Load_phase.timed_ms (fun () ->
-              Typecheck.typecheck_program_with_env source_type_env exprs)
+              Typecheck.typecheck_program_with_env source_type_env (List.filter (fun expr -> List.mem (Option.value ~default:"" (Surface.head expr)) ["type";"class";"error"] || not (projected expr)) exprs))
         in
         let timings = { timings with Load_phase.eval_ms; typecheck_ms } in
         match evaluated with

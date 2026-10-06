@@ -5,31 +5,26 @@
 ;; error unions, builtins passed as functions, constants that call
 ;; functions at load time, and provide inside a layer method.
 
-(define-schema Role (Enum admin member))
+(type Role (Union :admin :member))
 
-(define-schema Member
-  (Struct
-    (field name String)
-    (field role Role)))
+(type Member {:name String
+ :role Role})
 
-(define-error NotFound (:fields (field key String)))
-(define-error Forbidden (:fields (field user String)))
+(error NotFound {:key String})
+(error Forbidden {:user String})
 
-(define-service Store
-  (:methods
-    (read [key String] (Effect String [NotFound Forbidden] []))
-    (save [member Member] (Effect Unit [] []))))
+(service Store
+  (: read (-> String (Effect String [NotFound Forbidden] [])))
+  (: save (-> Member (Effect Unit [] []))))
 
-(define-service Clock
-  (:methods
-    (now [] (Effect Int [] []))))
+(service Clock
+  (: now (Effect Int [] [])))
 
-(define-service Greeter
-  (:methods
-    (greet [name String] (Effect String [] []))))
+(service Greeter
+  (: greet (-> String (Effect String [] []))))
 
 (: neg-neg (-> Int Int))
-(define neg-neg (fn [x] (- (- x))))
+(define neg-neg  [x] (- (- x)))
 
 (: neg-literal Int)
 (define neg-literal (- -1))
@@ -38,99 +33,90 @@
 (define answer (neg-neg 42))
 
 (: price-tag (-> String String))
-(define price-tag (fn [amount] (str "cost: $" "{amount} `" amount "`")))
+(define price-tag  [amount] (str "cost: $" "{amount} `" amount "`"))
 
-(: reset-key (-> (Map Int) String (Map Int)))
-(define reset-key (fn [counts key] (assoc (dissoc counts key) key 0)))
+(: reset-key (-> (Map String Int) String (Map String Int)))
+(define reset-key  [counts key] (assoc (dissoc counts key) key 0))
 
-(: lookup (-> (Map Int) String (Option Int)))
-(define lookup (fn [counts key] (get counts key)))
+(: lookup (-> (Map String Int) String (Option Int)))
+(define lookup  [counts key] (get counts key))
 
 (: rebound (-> Int Int))
-(define rebound (fn [x] (let [x (+ x 1) x (* x 10)] x)))
+(define rebound  [x] (let [x (+ x 1) x (* x 10)] x))
 
-(: shout-all (-> (Array String) (Array String)))
-(define shout-all (fn [names] (map upcase names)))
+(: shout-all (-> (List String) (List String)))
+(define shout-all  [names] (map upcase names))
 
 (: status-text (-> Int String))
-(define status-text (fn [code] (match code 200 "ok" 404 "missing" _ "other")))
+(define status-text  [code] (match code 200 "ok" 404 "missing" _ "other"))
 
 (: yes-no (-> Bool String))
-(define yes-no (fn [flag] (match flag true "yes" false "no")))
+(define yes-no  [flag] (match flag true "yes" false "no"))
 
 (: invite (-> String (Effect Member [] [Store.save])))
-(define-operation invite [name]
+(define invite [name]
   (do! [member (succeed (Member {:name name :role "member"}))
         _ (Store.save member)]
     (succeed member)))
 
 (: explain (-> String (Effect String [] [Store.read])))
-(define-operation explain [key]
+(define explain [key]
   (catch (Store.read key)
     (_ error) (succeed (match error
                          (NotFound missing) (str "missing " (get missing :key))
                          (Forbidden denied) (str "denied " (get denied :user))))))
 
 (: exclaim (-> String (Effect String [NotFound Forbidden] [Store.read])))
-(define-operation exclaim [key]
+(define exclaim [key]
   (do! [value (Store.read key)
         value (succeed (str value "!"))]
     (succeed value)))
 
 (: stamp (-> String (Effect String [] [Clock])))
-(define-operation stamp [name]
-  (do! [time (Clock.now)]
+(define stamp [name]
+  (do! [time Clock.now]
     (succeed (str name "@" time))))
 
-(define-layer ClockFixed
-  (:provides Clock)
-  (:methods
-    (now [] (succeed 7))))
+(layer ClockFixed :provides Clock
+  (define now [] (succeed 7)))
 
-(define-layer GreeterLive
-  (:provides Greeter)
-  (:methods
-    (greet [name] (provide (stamp name) ClockFixed))))
+(layer GreeterLive :provides Greeter
+  (define greet [name] (provide (stamp name) ClockFixed)))
 
 ;; Second adversarial pass: literals in positions TypeScript does not type
 ;; from context, constants that reach other constants through functions,
 ;; and builtins used as values.
 
-(define-schema Shape
-  (TaggedUnion kind
-    [circle (Struct (field radius Number))]
-    [square (Struct (field side Number))]))
+(type Shape (Tagged :tag kind (Circle {:radius Number}) (Square {:side Number})))
 
-(: default-role (-> (Effect Role [] [])))
-(define-operation default-role []
-  (succeed "admin"))
+(: default-role (Effect Role [] []))
+(define default-role (succeed "admin"))
 
-(: circles (-> (Array Number) (Effect (Array Shape) [] [])))
-(define-operation circles [radii]
-  (for-each radii (fn [r] (if (> r 1) (succeed {:kind "circle" :radius r}) (succeed {:kind "square" :side r})))))
+(: circles (-> (List Number) (Effect (List Shape) [] [])))
+(define circles [radii]
+  (for-each radii (fn [r] (if (> r 1) (succeed {:kind "Circle" :radius r}) (succeed {:kind "Square" :side r})))))
 
-(: pair (-> (Effect (Tuple Shape Role) [] [])))
-(define-operation pair []
-  (all [(succeed {:kind "circle" :radius 1}) (succeed "member")]))
+(: pair (Effect (Tuple Shape Role) [] []))
+(define pair (all [(succeed {:kind "Circle" :radius 1}) (succeed "member")]))
 
-(: roles (-> (Array Role)))
-(define roles (fn [] (let [rs (: ["admin" "member"] (Array Role))] rs)))
+(: roles (-> (List Role)))
+(define roles  [] (let [rs (: ["admin" "member"] (List Role))] rs))
 
-(: by-name (-> (Map Member) (Map Member)))
-(define by-name (fn [members] (let [next (assoc members "b" {:name "b" :role "member"})] next)))
+(: by-name (-> (Map String Member) (Map String Member)))
+(define by-name  [members] (let [next (assoc members "b" {:name "b" :role "member"})] next))
 
-(: largest (-> (Array Number) (Effect Shape [] [])))
-(define-operation largest [sizes]
-  (stream-run-fold (stream-of sizes) (Shape {:kind "square" :side 0}) (fn [acc size] {:kind "circle" :radius size})))
+(: largest (-> (List Number) (Effect Shape [] [])))
+(define largest [sizes]
+  (stream-run-fold (stream-of sizes) (Shape {:kind "Square" :side 0}) (fn [acc size] {:kind "Circle" :radius size})))
 
-(: lower-all (-> (Array String) (Array String)))
-(define lower-all (fn [names] (let [f downcase] (map f names))))
+(: lower-all (-> (List String) (List String)))
+(define lower-all  [names] (let [f downcase] (map f names)))
 
 (: scaled Int)
 (define scaled (scale 3))
 
 (: scale (-> Int Int))
-(define scale (fn [x] (* x factor)))
+(define scale  [x] (* x factor))
 
 (: factor Int)
 (define factor 2)

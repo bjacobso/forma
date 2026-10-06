@@ -136,6 +136,7 @@ function parseForm(state: BuilderState): FormResult {
       return parseVector(state);
     case "lbrace":
       return parseMap(state);
+    case "keyword":
     case "symbol":
       return parseAtom(state, "Symbol");
     case "string":
@@ -294,29 +295,6 @@ function parseVector(state: BuilderState): FormResult {
 }
 
 /**
- * Check if brace-delimited children form a set literal.
- * A set literal has all non-delimiter children being Symbol nodes
- * whose text does not start with ":" (to exclude keyword-keyed records).
- */
-function isSetLiteral(children: readonly GreenElement[]): boolean {
-  for (const child of children) {
-    if (isGreenToken(child)) {
-      if (child.tokenType === "lbrace" || child.tokenType === "rbrace") continue;
-      // Any other bare token is not a set
-      return false;
-    }
-    // Must be a Symbol node with non-keyword text
-    if (isGreenNode(child)) {
-      if (child.kind !== "Symbol") return false;
-      // Check the symbol text doesn't start with ":"
-      const symToken = child.children[0];
-      if (symToken && isGreenToken(symToken) && symToken.text.startsWith(":")) return false;
-    }
-  }
-  return true;
-}
-
-/**
  * Parse a map: {...}
  */
 function parseMap(state: BuilderState): FormResult {
@@ -333,13 +311,6 @@ function parseMap(state: BuilderState): FormResult {
     const twt = current(state);
 
     if (twt.token.type === "rbrace") {
-      // Check if this is a set literal: all children (excluding delimiters)
-      // are symbols (non-keyword, capitalized or lowercase — any symbol)
-      if (elementCount > 0 && isSetLiteral(children)) {
-        children.push(consumeToken(state));
-        return { node: GreenNode("Set", children), errors };
-      }
-
       // Check for odd number of elements in maps
       if (elementCount % 2 !== 0) {
         errors.push(

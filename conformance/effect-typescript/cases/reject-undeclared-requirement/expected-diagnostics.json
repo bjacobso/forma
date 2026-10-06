@@ -6,9 +6,9 @@
       "severity": "error",
       "code": "mechanics/undeclared-requirement",
       "message": "Operation welcome requires Mailer.send, but its signature declares only [Users.find].",
-      "line": 13,
+      "line": 11,
       "column": 5,
-      "endLine": 13,
+      "endLine": 11,
       "endColumn": 35
     }
   ]

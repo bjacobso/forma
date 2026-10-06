@@ -53,7 +53,7 @@ let rec json_of_value ~path = function
           json_of_value ~path:(Printf.sprintf "%s[%d]" path index) value)
       |> collect_results
       |> Result.map (fun values -> Ir_json.Array values)
-  | Eval.VMap entries -> json_of_map ~path entries
+  | (Eval.VMap entries | Eval.VDictionary entries) -> json_of_map ~path entries
   | Eval.VClosure _ ->
       Error
         [

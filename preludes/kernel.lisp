@@ -11,12 +11,13 @@
 ; -----------------------------------------------------------------------------
 
 ;; not — logical negation
-(define-macro not [x]
-  `(if ~x false true))
+(macro (not x) `(if ~x false true))
 
 ;; when — conditional with implicit do
-(define-macro when [test & body]
-  `(if ~test (do ~@body) nil))
+(macro (when test body ...) `(if ~test (do ~@body) nil))
+
+;; unless — inverse conditional with implicit do
+(macro (unless test body ...) `(if ~test nil (do ~@body)))
 
 ;; cond — multi-branch conditional
 ;;
@@ -25,8 +26,7 @@
 ;;   (< x 0)  "negative"
 ;;   :else    "zero")
 ;;
-(define-macro cond [& clauses]
-  (if (empty? clauses)
+(macro (cond clauses ...) (if (empty? clauses)
     nil
     (let [test (first clauses)
           expr (nth clauses 1)
@@ -41,8 +41,7 @@
 ;;
 ;; (and x y z) expands to nested let/if that stops on first falsy value
 ;;
-(define-macro and [& args]
-  (if (empty? args)
+(macro (and args ...) (if (empty? args)
     true
     (if (= (count args) 1)
       (first args)
@@ -54,8 +53,7 @@
 ;;
 ;; (or x y z) expands to nested let/if that stops on first truthy value
 ;;
-(define-macro or [& args]
-  (if (empty? args)
+(macro (or args ...) (if (empty? args)
     nil
     (if (= (count args) 1)
       (first args)
@@ -67,8 +65,7 @@
 ;;
 ;; (-> x (f a) (g b)) expands to (g (f x a) b)
 ;;
-(define-macro -> [x & forms]
-  (if (empty? forms)
+(macro (-> x forms ...) (if (empty? forms)
     x
     (let [form (first forms)
           rest-forms (rest forms)
@@ -86,8 +83,7 @@
 ;;
 ;; (->> x (f a) (g b)) expands to (g b (f a x))
 ;;
-(define-macro ->> [x & forms]
-  (if (empty? forms)
+(macro (->> x forms ...) (if (empty? forms)
     x
     (let [form (first forms)
           rest-forms (rest forms)

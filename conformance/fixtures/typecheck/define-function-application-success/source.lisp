@@ -1,2 +1,2 @@
-(define add1 (fn [x] (+ x 1)))
+(define add1  [x] (+ x 1))
 (add1 5)

@@ -137,7 +137,7 @@ pageClass: forma-index forma-effect
 <div class="fh-section__head">
 <p class="fh-label">05 · Size, honestly</p>
 <h2 id="size-heading">Less to write, but not ten times less.</h2>
-<p>Across the conformance programs, the generated TypeScript is about 1.6 times as many lines as the Forma source, and roughly 1.4 times as many characters. Part of that is formatting. One program is longer in Forma than in TypeScript. Brevity is a side effect. The reasons to use Forma are what it checks and how it reports problems.</p>
+<p>Across the conformance programs, the generated TypeScript is about 1.9 times as many lines as the Forma source, and roughly 1.4 times as many characters. Part of that is formatting. One program is longer in Forma than in TypeScript. Brevity is a side effect. The reasons to use Forma are what it checks and how it reports problems.</p>
 </div>
 <div class="fh-table">
 

@@ -10,30 +10,26 @@ preludes:
 Insurance policy and claims example in canonical ontology syntax.
 
 ```lisp
-(define-entity PolicyHolder
-  (:field [policy-holder/name String {:required true}])
-  (:field [policy-holder/segment String]))
+(entity PolicyHolder {:name String
+    :segment (Option String)})
 
-(define-entity Claim
-  (:field [claim/status String {:required true}])
-  (:field [claim/amount Number])
-  (:field [claim/policy-holder (Ref PolicyHolder)]))
+(entity Claim {:status String
+    :amount (Option Number)
+    :policy-holder (Option (Id PolicyHolder))})
 ```
 
 ```lisp
-(define-record "policy-holder:acme" PolicyHolder
-  (:field [policy-holder/name "Acme Manufacturing"])
-  (:field [policy-holder/segment "commercial"]))
+(seed PolicyHolder "policy-holder:acme" {:name "Acme Manufacturing"
+  :segment "commercial"})
 
-(define-record "claim:wind" Claim
-  (:field [claim/status "open"])
-  (:field [claim/amount 42000])
-  (:field [claim/policy-holder "policy-holder:acme"]))
+(seed Claim "claim:wind" {:status "open"
+  :amount 42000
+  :policy-holder "policy-holder:acme"})
 ```
 
 ```lisp
-(define-query open-claims
-  (:from Claim)
-  (:where (= (get it :claim/status) "open"))
-  (:select [claim/status claim/amount claim/policy-holder]))
+(query open-claims
+  :from Claim
+  :where (= status "open")
+  :select [status amount policy-holder])
 ```

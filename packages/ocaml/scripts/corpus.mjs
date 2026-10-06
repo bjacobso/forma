@@ -11,8 +11,6 @@ export const preludeNames = [
   "viewspec-protocol.lisp",
   "ui.lisp",
   "viewspec.lisp",
-  "ontology-compiler.lisp",
-  "viewspec-compiler.lisp",
 ];
 
 export const walk = (dir, predicate) => {
@@ -31,7 +29,7 @@ export const walk = (dir, predicate) => {
 
 export const formNameCounts = (source) => {
   const counts = new Map();
-  const formPattern = /\(\s*(define-[^\s()]+)/g;
+  const formPattern = /\(\s*(entity|relation|seed|link|attribute|query|view|workspace|constraint|process|document|document-locale|document-localized|pdf-mapping|task|api|define-[^\s()]+)/g;
   let match;
   while ((match = formPattern.exec(source)) !== null) {
     counts.set(match[1], (counts.get(match[1]) ?? 0) + 1);

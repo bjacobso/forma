@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 import type { BuiltinFn } from "../evaluator/types.js";
-import { isKBuiltin, isKFn, isKList, isKMap } from "../evaluator/types.js";
+import { isKBuiltin, isKFn, isKList, isKMap, isKKeyword, isKSymbol } from "../evaluator/types.js";
 import { ArityError } from "../diagnostic/errors.js";
 
 export const nilQ: BuiltinFn = (args) => {
@@ -46,6 +46,8 @@ export const fnQ: BuiltinFn = (args) => {
 };
 
 export const typecheckBuiltins: Record<string, BuiltinFn> = {
+  "keyword?": args => Effect.succeed(args.length===1 && isKKeyword(args[0]!)),
+  "symbol?": args => Effect.succeed(args.length===1 && isKSymbol(args[0]!)),
   "nil?": nilQ,
   "string?": stringQ,
   "number?": numberQ,

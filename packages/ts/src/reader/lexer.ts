@@ -23,6 +23,7 @@ export type Token =
   | { type: "number"; value: number; loc: Loc }
   | { type: "bool"; value: boolean; loc: Loc }
   | { type: "symbol"; name: string; loc: Loc }
+  | { type: "keyword"; name: string; loc: Loc }
   | { type: "quote"; loc: Loc }
   | { type: "backtick"; loc: Loc }
   | { type: "tilde"; loc: Loc }
@@ -319,7 +320,7 @@ const readSymbol = (state: LexerState): Token => {
     return { type: "bool", value: false, loc };
   }
 
-  return { type: "symbol", name, loc };
+  return { type: name.startsWith(":") ? "keyword" : "symbol", name, loc };
 };
 
 /**

@@ -1,2 +1,2 @@
-(define-type (Maybe a) (Some a) (None))
+(type (Maybe a) (Tagged (Some a) None))
 (Some 1)

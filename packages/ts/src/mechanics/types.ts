@@ -110,7 +110,7 @@ export function setOf(names: readonly string[], span?: JsonValue): Provenance {
 export interface TypeEnvironment {
   readonly schemas: ReadonlyMap<string, MType>;
   readonly errors: ReadonlySet<string>;
-  /** `define-class` names: nominal types whose fields live in `classFields`. */
+  /** `__class` names: nominal types whose fields live in `classFields`. */
   readonly classes: ReadonlyMap<string, readonly MField[]>;
 }
 

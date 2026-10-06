@@ -2,63 +2,34 @@
 // snippets. `sources.test.ts` keeps the copies of repository files in sync.
 
 /** Verbatim copy of `conformance/fixtures/canonical-ir/schema.lisp`. */
-export const entitySchemaSource = `(define-entity Department
-  (:field [department/name String {:required true}]))
+export const entitySchemaSource = `(entity Department {:name String})
 
-(define-entity Employee
-  (:field [employee/name String {:required true}])
-  (:field [employee/department (Ref Department)])
-  (:field [employee/active Bool]))
+(entity Employee {:name String
+    :department (Option (Id Department))
+    :active Bool})
 
-(define-query employee-directory
-  (:from Employee)
-  (:where employee/active)
-  (:select [employee/name employee/department]))
+(query employee-directory
+  :from Employee
+  :where active
+  :select [name department])
 `;
 
 /** Verbatim excerpt of `preludes/ontology.lisp`. */
-export const defineEntityDescriptor = `(define-form define-entity
-  (:phase domain)
-  (:doc "Canonical entity/schema declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot doc value)
-    (slot role value)
-    (slot id-pattern value)
-    (slot field value
-      (:many true)
-      (:required true)
-      (:child-form field)
-      (:child-identifier name Value)
-      (:child-slot type expr (:positional true))
-      (:child-slot required value)
-      (:child-slot indexed value)))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type SchemaDecl)))
-  (:bindings-fn entity/bindings)
-  (:extensions
-    (:artifact
-      (:payload (:contract EntityPayload))))
-  (:construct-fn entity/construct)
-  (:construct
-    [kind "Entity"]
-    [name (or declaration-name "anonymous-entity")]
-    [fields (entity-fields field)]
-    [loc loc])
-  (:declaration-type (row))
-  (:result-type (constant SchemaDecl)))`;
+export const defineEntityDescriptor = `(form (entity name fields {:keys [doc role id-pattern tier]})
+  "A named record of attributes."
+  :types {:name (Declares SchemaDecl) :fields (Record Type)
+          :doc (Option String) :role (Option String) :id-pattern (Option String) :tier (Option (Union :user :meta))}
+  :ir EntityDeclarationIR
+  {:kind (if (= tier :meta) "MetaEntity" "Entity") :name name :fields (fields->ir name fields)
+   :doc doc :role role :idPattern id-pattern})`;
 
-const consoleServiceSource = `(define-error ConsoleUnavailable
-  (:fields (field message String)))
+const consoleServiceSource = `(error ConsoleUnavailable {:message String})
 
-(define-service Console
-  (:methods
-    (print [message String]
-      (Effect Unit [ConsoleUnavailable] []))))
+(service Console
+  (: print (-> String (Effect Unit [ConsoleUnavailable] []))))
 `;
 
-const logOperationSource = `(define-operation log [message]
+const logOperationSource = `(define log [message]
   (do! [_ (Console.print message)]
     (succeed nil)))`;
 

@@ -7,6 +7,8 @@ type literal =
   | LFloat of float
   | LString of string
   | LKeyword of string
+  | LSymbol of string
+  | LQuoted of Ast.expr
 
 type type_expr =
   | TESym of Ast.span * string
@@ -15,7 +17,7 @@ type type_expr =
   | TERow of Ast.span * (string * type_expr) list * string option
 
 type param = { node : node; name : string }
-type pattern = PCon of string * string list | PWild
+type pattern = PCon of string * string list | PWild | PData of Ast.expr
 
 type binding = { node : node; name : string; expr : expr }
 and field = { node : node; label : string; value : expr }

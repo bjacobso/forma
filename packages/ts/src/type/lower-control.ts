@@ -1,3 +1,4 @@
+import { mapKey } from "../evaluator/types.js";
 /**
  * Control flow forms: if, match, get, ascribe.
  */
@@ -74,24 +75,13 @@ export function lowerMatch(lower: LowerFn, span: Span, items: readonly SExpr[]):
     const patExpr = items[i]!;
     const bodyExpr = items[i + 1]!;
 
-    let pattern: import("./core-expr.js").Pattern;
     const patSym = trySym(patExpr);
     const conHead = headSym(patExpr);
-    if (patSym === "_") {
-      pattern = { _tag: "PWild" };
-    } else if (conHead) {
-      const vars = asList(patExpr, "match pattern")
-        .slice(1)
-        .map((v) => {
-          return asSym(v, "match pattern variable");
-        });
-      pattern = { _tag: "PCon", name: conHead, vars };
-    } else if (patSym) {
-      // Nullary constructor: just a symbol like None
-      pattern = { _tag: "PCon", name: patSym, vars: [] };
-    } else {
-      throw new InferenceError({ message: "Invalid match pattern" });
-    }
+    const simple = patExpr._tag === "List" && patExpr.items.slice(1).every(v => v._tag === "Sym" && /^[a-z_]/.test(v.name));
+    const pattern: import("./core-expr.js").Pattern = patSym === "_" ? { _tag: "PWild" }
+      : conHead && /^[A-Z]/.test(conHead) && simple ? { _tag: "PCon", name: conHead, vars: asList(patExpr, "pattern").slice(1).map(v => asSym(v, "binder")) }
+      : patSym && /^[A-Z]/.test(patSym) ? { _tag: "PCon", name: patSym, vars: [] }
+      : { _tag: "PData", syntax: patExpr };
 
     arms.push({ pattern, body: lower(bodyExpr) });
   }
@@ -105,8 +95,8 @@ export function lowerGet(lower: LowerFn, span: Span, items: readonly SExpr[]): C
   }
   const record = lower(items[1]!);
   const labelExpr = items[2]!;
-  const label = trySym(labelExpr) ?? (labelExpr._tag === "Str" ? labelExpr.value : "");
-  return CGet(span, record, label);
+  const label = labelExpr._tag === "Sym" && labelExpr.name.startsWith(":") ? labelExpr.name : labelExpr._tag === "Str" ? mapKey(labelExpr.value)! : undefined;
+  return label === undefined ? { ...CGet(span, record, ""), key: lower(labelExpr) } : CGet(span, record, label);
 }
 
 export function lowerAscribe(lower: LowerFn, span: Span, items: readonly SExpr[]): CoreExpr {

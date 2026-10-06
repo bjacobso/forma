@@ -5,7 +5,7 @@
  * functions that transform forms into canonical IR.
  *
  * Today: hooks are TypeScript functions.
- * Future: hooks can be meta-fn Lisp bodies executed by the kernel.
+ * Future: hooks can be __form-hook Lisp bodies executed by the kernel.
  */
 
 import type { Effect } from "effect";

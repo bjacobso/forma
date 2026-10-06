@@ -1,3 +1,5 @@
+import { parseTypeExpr } from "./type-parser.js";
+import { mapKey } from "../evaluator/types.js";
 /**
  * Core lower dispatch and module-level state.
  *
@@ -11,6 +13,7 @@
 import type { SExpr } from "../reader/index.js";
 import type { CoreExpr, DSLFormChild, Span } from "./core-expr.js";
 import {
+  CTypeDef,
   CLit,
   CVar,
   CApp,
@@ -21,6 +24,7 @@ import {
   LString,
   LBool,
   LKeyword,
+  LSymbol,
   LNil,
   mkRecordField,
 } from "./core-expr.js";
@@ -139,7 +143,7 @@ export function lower(expr: SExpr): CoreExpr {
 function lowerMap(expr: SExpr & { _tag: "Map" }): CoreExpr {
   const span = spanOf(expr);
   const fields = expr.pairs.map(([k, v]) => {
-    const label = k._tag === "Sym" ? k.name : k._tag === "Str" ? k.value : `:${String(k)}`;
+    const label = k._tag === "Sym" ? k.name : k._tag === "Str" ? mapKey(k.value)! : `:${String(k)}`;
     return mkRecordField(spanOf(k), label, lower(v));
   });
   return CRecord(span, fields);
@@ -157,6 +161,11 @@ function lowerList(expr: SExpr & { _tag: "List" }): CoreExpr {
 
   if (head._tag === "Sym") {
     switch (head.name) {
+      case "quote": {
+        if (items.length !== 2) throw new InferenceError({message:"quote expects one datum"});
+        const quoted = (e:SExpr):CoreExpr => e._tag === "Sym" && e.name !== "nil" && !e.name.startsWith(":") ? CLit(spanOf(e),LSymbol(e.name)) : ["List","Vector","Map"].includes(e._tag) ? CLit(spanOf(e),{_tag:"LQuoted",value:e}) : lower(e);
+        return quoted(items[1]!);
+      }
       case "fn":
         return lowerFn(lower, span, items);
       case "let":
@@ -172,7 +181,7 @@ function lowerList(expr: SExpr & { _tag: "List" }): CoreExpr {
         });
       case "define":
         return lowerDef(lower, span, items);
-      case "define-operation":
+      case "__operation":
         return lowerDefineOperation(lower, span, items);
       case "module":
         return lowerModule(span, items);
@@ -191,34 +200,39 @@ function lowerList(expr: SExpr & { _tag: "List" }): CoreExpr {
       case "catch":
         return lowerEffectCatch(lower, span, items);
       case "get":
+      case "__map-get":
         return lowerGet(lower, span, items);
       case ":":
         return lowerAscribe(lower, span, items);
       case "deftype":
         throw new InferenceError({
-          message: "Legacy public type form 'deftype' is no longer supported; use 'define-type'",
+          message: "Legacy public type form 'deftype' is no longer supported; use '__sum-type'",
         });
       case "data":
         throw new InferenceError({
-          message: "Legacy public ADT form 'data' is no longer supported; use 'define-type'",
+          message: "Legacy public ADT form 'data' is no longer supported; use '__sum-type'",
         });
-      case "define-type":
+      case "__record-type":
+        if (items[1]?._tag !== "Sym" || !items[2]) throw new InferenceError({message: "Named record type requires a name and fields"});
+        return CTypeDef(span, items[1].name, parseTypeExpr(items[2]), undefined, undefined, items[3]?._tag === "Sym" && items[3].name === "error" ? "error" : "class");
+      case "__type-alias":
+      case "__sum-type":
         return lowerTypeDef(span, items);
-      case "define-schema":
+      case "__schema":
         if (isDefineSchemaProjection(items)) return lowerDefineSchema(span, items);
         break;
-      case "define-error":
+      case "__error":
         return lowerDefineError(span, items);
-      case "define-service":
+      case "__service":
         return lowerDefineService(span, items);
       case "match":
         return lowerMatch(lower, span, items);
       case "defclass":
         throw new InferenceError({
           message:
-            "Legacy public typeclass form 'defclass' is no longer supported; use 'define-typeclass'",
+            "Legacy public typeclass form 'defclass' is no longer supported; use '__typeclass'",
         });
-      case "define-typeclass":
+      case "__typeclass":
         return lowerDefineTypeclass(span, items);
       case "instance":
         return lowerInstance(lower, span, items);
@@ -229,22 +243,22 @@ function lowerList(expr: SExpr & { _tag: "List" }): CoreExpr {
       case "define-effect":
         throw new InferenceError({
           message:
-            "Legacy algebraic effect form 'define-effect' is no longer supported; use define-service and define-operation.",
+            "Legacy algebraic effect form 'define-effect' is no longer supported; use __service and __operation.",
         });
       case "def-macro":
         throw new InferenceError({
           message:
-            "Legacy public macro form 'def-macro' is no longer supported; use 'define-macro'",
+            "Legacy public macro form 'def-macro' is no longer supported; use '__macro'",
         });
-      case "define-macro":
+      case "__macro":
         throw new InferenceError({
           message:
-            "define-macro is compile-time only and cannot be lowered as a runtime expression",
+            "__macro is compile-time only and cannot be lowered as a runtime expression",
         });
       case "perform":
         throw new InferenceError({
           message:
-            "Legacy algebraic effect form 'perform' is no longer supported; use service method calls inside define-operation.",
+            "Legacy algebraic effect form 'perform' is no longer supported; use service method calls inside __operation.",
         });
       case "handle":
         throw new InferenceError({
@@ -270,7 +284,7 @@ function lowerList(expr: SExpr & { _tag: "List" }): CoreExpr {
 function lowerDefineOperation(lower: LowerFn, span: Span, items: readonly SExpr[]): CoreExpr {
   if (items.length < 4 || items[1]?._tag !== "Sym" || items[2]?._tag !== "Vector") {
     throw new InferenceError({
-      message: "define-operation expects a name, parameter vector, and body.",
+      message: "__operation expects a name, parameter vector, and body.",
     });
   }
 

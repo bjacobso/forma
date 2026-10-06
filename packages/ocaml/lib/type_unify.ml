@@ -53,7 +53,20 @@ let rec unify left right =
   | TProtocolDescriptor, TProtocolDescriptor ->
       Ok []
   | TNamed left, TNamed right when left = right -> Ok []
-  | TRecord _, TMap | TMap, TRecord _ -> Ok []
+  | (TRecord _ | TOpenRecord _), TMap | TMap, (TRecord _ | TOpenRecord _) -> Ok []
+  | TRecord fields,TOpenRecord (required,tail)
+  | TOpenRecord (required,tail),TRecord fields -> unify_open_closed fields required tail
+  | TOpenRecord (left,left_tail),TOpenRecord (right,right_tail) ->
+      let shared=List.filter (fun (k,_) -> List.mem_assoc k right) left in
+      let extra_left=List.filter (fun (k,_) -> not (List.mem_assoc k right)) left in
+      let extra_right=List.filter (fun (k,_) -> not (List.mem_assoc k left)) right in
+      (match unify_many (List.map snd shared) (List.map (fun (k,_) -> List.assoc k right) shared) with
+       | Error _ as e -> e | Ok subst ->
+         if extra_left=[] && extra_right=[] then unify (apply_subst subst left_tail) (apply_subst subst right_tail) |> Result.map (fun s -> compose_subst s subst)
+         else let common=fresh_tyvar () in
+           match unify (apply_subst subst left_tail) (TOpenRecord (List.map (fun (k,t)->k,apply_subst subst t) extra_right,common)) with
+           | Error _ as e -> e | Ok s -> let subst=compose_subst s subst in
+             unify (apply_subst subst right_tail) (TOpenRecord (List.map (fun (k,t)->k,apply_subst subst t) extra_left,apply_subst subst common)) |> Result.map (fun s -> compose_subst s subst))
   | TRecord left, TRecord right ->
       let left = sort_record_fields left in
       let right = sort_record_fields right in
@@ -132,6 +145,14 @@ let rec unify left right =
                    (ty_to_diagnostic_string right));
             ])
 
+and unify_open_closed fields required tail =
+  if List.exists (fun (k,_) -> not (List.mem_assoc k fields)) required then
+    Error [diagnostic "typecheck/record-shape" "Record is missing a required field."]
+  else match unify_many (List.map (fun (k,_) -> List.assoc k fields) required) (List.map snd required) with
+    | Error _ as e -> e | Ok subst ->
+      let remainder = TRecord (List.filter (fun (k,_) -> not (List.mem_assoc k required)) fields) in
+      unify (apply_subst subst tail) (apply_subst subst remainder) |> Result.map (fun s -> compose_subst s subst)
+
 and unify_many left right =
   match (left, right) with
   | [], [] -> Ok []
@@ -150,3 +171,61 @@ let unify_with_span span left right =
   match unify left right with
   | Ok _ as ok -> ok
   | Error diagnostics -> Error (Type_diagnostic.with_span span diagnostics)
+
+let literal_base name =
+  if String.starts_with ~prefix:":" name then Some TKeyword
+  else if String.starts_with ~prefix:"\"" name then Some TString
+  else if name="true" || name="false" then Some TBool
+  else match float_of_string_opt name with Some n -> Some (if Float.floor n=n then TInt else TFloat) | None -> None
+
+let rec assign actual expected =
+  match actual,expected with
+  | TNamedApp ((("ErrorSet" | "RequirementSet") as kind),actual),TNamedApp (expected_kind,expected) when kind=expected_kind ->
+      let covered = List.for_all (fun actual -> List.exists (fun expected -> actual=expected || match actual,expected with TNamed actual,TNamed expected when kind="RequirementSet" -> String.starts_with ~prefix:(expected ^ ".") actual | _ -> false) expected) actual in
+      if covered then Ok [] else Error [diagnostic "typecheck/effect-set" "An effect's errors or requirements exceed its declared set."]
+  | TInt,TFloat -> Ok []
+  | TNamed literal,expected when literal_base literal=Some expected -> Ok []
+  | TNamed literal,TFloat when literal_base literal=Some TInt -> Ok []
+  | TNamedApp ("Union",members),expected -> assign_many members (List.map (fun _ -> expected) members)
+  | actual,TNamedApp ("Union",members) -> (match List.find_map (fun member -> match assign actual member with Ok s -> Some s | Error _ -> None) members with Some s -> Ok s | None -> unify actual expected)
+  | TFn (args,result),TFn (parameters,returns) -> (match assign_many parameters args with Error _ as e -> e | Ok subst -> match assign (apply_subst subst result) (apply_subst subst returns) with Error _ as e -> e | Ok s -> Ok (compose_subst s subst))
+  | TRecord fields,TOpenRecord (required,tail) ->
+      if List.exists (fun (k,_) -> not (List.mem_assoc k fields)) required then Error [diagnostic "typecheck/record-shape" "Record is missing a required field."]
+      else (match assign_many (List.map (fun (k,_) -> List.assoc k fields) required) (List.map snd required) with
+        | Error _ as e -> e | Ok subst ->
+          let remainder=TRecord (List.filter (fun (k,_) -> not (List.mem_assoc k required)) fields) in
+          unify (apply_subst subst tail) (apply_subst subst remainder) |> Result.map (fun s -> compose_subst s subst))
+  | TRecord a,TRecord b when List.map fst (sort_record_fields a)=List.map fst (sort_record_fields b) -> assign_many (List.map snd (sort_record_fields a)) (List.map snd (sort_record_fields b))
+  | _ -> (match application_view actual,application_view expected with Some (a,aa),Some (b,ba) when a=b -> assign_many aa ba | _ -> unify actual expected)
+and assign_many actual expected = match actual,expected with
+  | [],[] -> Ok []
+  | a :: ar,b :: br -> (match assign a b with Error _ as e -> e | Ok s -> match assign_many (List.map (apply_subst s) ar) (List.map (apply_subst s) br) with Error _ as e -> e | Ok rest -> Ok (compose_subst rest s))
+  | _ -> Error [diagnostic "typecheck/arity" "Arity mismatch."]
+
+let rec keyword_members = function
+  | TKeyword -> Some [TKeyword]
+  | TNamed n as t when String.starts_with ~prefix:":" n -> Some [t]
+  | TNamedApp ("Union",members) ->
+      let resolved=List.map keyword_members members in
+      if List.for_all Option.is_some resolved then Some (List.concat_map Option.get resolved) else None
+  | _ -> None
+
+let rec join left right =
+  match keyword_members left,keyword_members right with
+  | Some left,Some right ->
+      let members=List.fold_left (fun acc t->if List.mem t acc then acc else acc @ [t]) [] (left @ right) in
+      Ok ([],if List.mem TKeyword members then TKeyword else match members with [t]->t | members -> TNamedApp ("Union",members))
+  | _ -> match left,right with
+      | TInt,TFloat | TFloat,TInt -> Ok ([],TFloat)
+      | TList left,TList right -> join left right |> Result.map (fun (s,t)->s,TList t)
+      | TRecord left,TRecord right when List.length left=List.length right && List.for_all (fun (key,_)->List.mem_assoc key right) left ->
+          let rec fields subst acc = function
+            | [] -> Ok (subst,TRecord (List.rev acc))
+            | (key,t) :: rest -> (match join (apply_subst subst t) (apply_subst subst (List.assoc key right)) with Error _ as e -> e | Ok (s,t)->fields (compose_subst s subst) ((key,t) :: acc) rest) in
+          fields [] [] left
+      | TNamedApp (name,left),TNamedApp (other,right) when name=other && List.length left=List.length right ->
+          let rec args subst acc left right = match left,right with
+            | [],[] -> Ok (subst,TNamedApp (name,List.rev acc))
+            | left :: lr,right :: rr -> (match join (apply_subst subst left) (apply_subst subst right) with Error _ as e -> e | Ok (s,t)->args (compose_subst s subst) (t :: acc) lr rr)
+            | _ -> assert false in args [] [] left right
+      | _ -> unify left right |> Result.map (fun s -> s,apply_subst s left)

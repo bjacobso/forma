@@ -13,21 +13,13 @@ type callbacks = {
 let diagnostic = Type_diagnostic.make
 
 let infer_collection callbacks env wrap items =
-  let item_ty = fresh_tyvar () in
-  let rec loop subst env = function
+  let rec loop subst env item_ty = function
     | [] -> Ok (subst, wrap (apply_subst subst item_ty))
-    | item :: rest -> (
-        match callbacks.infer_expr env item with
-        | Error _ as error -> error
-        | Ok (item_subst, ty) -> (
-            let subst = compose_subst item_subst subst in
-            match unify (apply_subst subst ty) (apply_subst subst item_ty) with
-            | Error _ as error -> error
-            | Ok unify_subst ->
-                let subst = compose_subst unify_subst subst in
-                loop subst (apply_subst_env subst env) rest))
-  in
-  loop [] env items
+    | item :: rest -> (match callbacks.infer_expr env item with Error _ as e -> e | Ok (s,ty) ->
+        let subst=compose_subst s subst in
+        match join (apply_subst subst item_ty) (apply_subst subst ty) with Error _ as e -> e | Ok (s,joined) ->
+          let subst=compose_subst s subst in loop subst (apply_subst_env subst env) joined rest) in
+  loop [] env (fresh_tyvar ()) items
 
 let collection_item subst collection_ty =
   match apply_subst subst collection_ty with
@@ -67,13 +59,11 @@ let infer_first callbacks env = function
   | _ -> Error [ diagnostic "typecheck/arity" "first expects one argument." ]
 
 let infer_count callbacks env = function
-  | [ collection ] -> (
-      match callbacks.infer_expr env collection with
+  | [ collection ] -> (match callbacks.infer_expr env collection with
       | Error _ as error -> error
-      | Ok (collection_subst, collection_ty) -> (
-          match item_type_of_collection collection_subst collection_ty with
-          | Error _ as error -> error
-          | Ok _ -> Ok (collection_subst, TInt)))
+      | Ok (subst,ty) -> (match apply_subst subst ty with
+          | TRecord _ | TOpenRecord _ | TString -> Ok (subst,TInt)
+          | _ -> match collection_item subst ty with Error _ as error -> error | Ok (subst,_,_) -> Ok (subst,TInt)))
   | _ -> Error [ diagnostic "typecheck/arity" "count expects one argument." ]
 
 let infer_nth callbacks env = function
@@ -278,11 +268,17 @@ let infer_reduce_with subst fn_ty initial_ty collection_ty =
   | Error _ as error -> error
   | Ok (subst, _, item_ty) -> (
       let acc_ty = apply_subst subst initial_ty in
-      match unify fn_ty (TFn ([ acc_ty; item_ty ], acc_ty)) with
+      let result_ty = fresh_tyvar () in
+      match unify fn_ty (TFn ([ acc_ty; item_ty ], result_ty)) with
       | Error _ as error -> error
       | Ok fn_subst ->
           let subst = compose_subst fn_subst subst in
-          Ok (subst, apply_subst subst acc_ty))
+          let result_ty = apply_subst subst result_ty in
+          match unify (apply_subst subst acc_ty) result_ty with
+          | Error _ as error -> error
+          | Ok acc_subst ->
+              let subst = compose_subst acc_subst subst in
+              Ok (subst, apply_subst subst result_ty))
 
 let infer_reduce_result subst first_ty initial_ty third_ty =
   let first_ty = apply_subst subst first_ty in

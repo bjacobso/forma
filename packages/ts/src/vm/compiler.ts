@@ -33,7 +33,7 @@ export { GlobalRegistry, BuiltinRegistry } from "./scope.js";
 
 const VM_REJECTED_RUNTIME_HEADS = new Set([
   "def-macro",
-  "define-macro",
+  "__macro",
   "def",
   "defn",
   "def-effect",
@@ -45,7 +45,6 @@ const VM_REJECTED_RUNTIME_HEADS = new Set([
   "unquote-splicing",
   "deftype",
   "data",
-  ":",
   "::",
 ]);
 
@@ -109,8 +108,12 @@ export function compileProgram(exprs: readonly SExpr[], options: CompileOptions)
 
   for (let i = 0; i < normalizedExprs.length; i++) {
     const isLast = i === normalizedExprs.length - 1;
-    compileSExpr(
-      normalizedExprs[i]!,
+    const expression = normalizedExprs[i]!;
+    const moduleSignature = expression._tag === "List" && expression.items[0]?._tag === "Sym"
+      && expression.items[0].name === ":" && expression.items[1]?._tag === "Sym";
+    if (moduleSignature) emit(chunk, Op.NIL, traceOf(expression));
+    else compileSExpr(
+      expression,
       chunk,
       scope,
       globals,

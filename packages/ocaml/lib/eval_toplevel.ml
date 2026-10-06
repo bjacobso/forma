@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of closure
   | VMacro of closure
 
@@ -43,21 +44,21 @@ let descriptor_diagnostics (diagnostics : Descriptor.diagnostic list) :
 
 let eval ctx env = function
   | Reader.List
-      (_, Reader.Symbol (_, "define-form") :: Reader.Symbol (_, name) :: clauses)
+      (_, Reader.Symbol (_, "__form-descriptor") :: Reader.Symbol (_, name) :: clauses)
     -> (
       match Descriptor.validate_form_clauses clauses with
       | Error diagnostics -> Error (descriptor_diagnostics diagnostics)
       | Ok () ->
           let value = Descriptor.declaration_value "form" name clauses in
           Ok (value, Env.bind name value env))
-  | Reader.List (_, Reader.Symbol (_, "define-form") :: _) ->
+  | Reader.List (_, Reader.Symbol (_, "__form-descriptor") :: _) ->
       Error
         [
           diagnostic "eval/define-form"
-            "define-form expects a symbol name followed by descriptor clauses.";
+            "__form-descriptor expects a symbol name followed by descriptor clauses.";
         ]
   | Reader.List
-      (_, Reader.Symbol (_, "meta-fn") :: Reader.Symbol (_, name) :: clauses)
+      (_, Reader.Symbol (_, "__form-hook") :: Reader.Symbol (_, name) :: clauses)
     -> (
       match Descriptor.validate_meta_fn_clauses clauses with
       | Error diagnostics -> Error (descriptor_diagnostics diagnostics)
@@ -72,80 +73,80 @@ let eval ctx env = function
                     body;
                     env = Env.bindings env;
                   }
-            | None -> Descriptor.declaration_value "meta-fn" name clauses
+            | None -> Descriptor.declaration_value "__form-hook" name clauses
           in
           Ok (value, Env.bind name value env))
-  | Reader.List (_, Reader.Symbol (_, "meta-fn") :: _) ->
+  | Reader.List (_, Reader.Symbol (_, "__form-hook") :: _) ->
       Error
         [
           diagnostic "eval/meta-fn"
-            "meta-fn expects a symbol name followed by descriptor clauses.";
+            "__form-hook expects a symbol name followed by descriptor clauses.";
         ]
   | Reader.List
       ( _,
-        Reader.Symbol (_, "define-elaboration")
+        Reader.Symbol (_, "__projection-plan")
         :: Reader.Symbol (_, name)
         :: clauses ) ->
       let value = Descriptor.declaration_value "elaboration" name clauses in
       Ok (value, Env.bind name value env)
   | Reader.List
       ( _,
-        Reader.Symbol (_, "define-elaboration-primitive")
+        Reader.Symbol (_, "__projection-primitive")
         :: Reader.Symbol (_, name)
         :: clauses ) ->
       let value =
         Descriptor.declaration_value "elaboration-primitive" name clauses
       in
       Ok (value, Env.bind name value env)
-  | Reader.List (_, Reader.Symbol (_, "define-elaboration") :: _) ->
+  | Reader.List (_, Reader.Symbol (_, "__projection-plan") :: _) ->
       Error
         [
           diagnostic "eval/define-elaboration"
-            "define-elaboration expects a symbol name followed by descriptor \
+            "__projection-plan expects a symbol name followed by descriptor \
              clauses.";
         ]
-  | Reader.List (_, Reader.Symbol (_, "define-elaboration-primitive") :: _) ->
+  | Reader.List (_, Reader.Symbol (_, "__projection-primitive") :: _) ->
       Error
         [
           diagnostic "eval/define-elaboration-primitive"
-            "define-elaboration-primitive expects a symbol name followed by \
+            "__projection-primitive expects a symbol name followed by \
              descriptor clauses.";
         ]
   | Reader.List
       ( _,
-        Reader.Symbol (_, "define-protocol")
+        Reader.Symbol (_, "__protocol-descriptor")
         :: Reader.Symbol (_, name)
         :: clauses ) ->
       let value = Descriptor.declaration_value "protocol" name clauses in
       Ok (value, Env.bind name value env)
-  | Reader.List (_, Reader.Symbol (_, "define-protocol") :: _) ->
+  | Reader.List (_, Reader.Symbol (_, "__protocol-descriptor") :: _) ->
       Error
         [
           diagnostic "eval/define-protocol"
-            "define-protocol expects a symbol name followed by descriptor \
+            "__protocol-descriptor expects a symbol name followed by descriptor \
              clauses.";
         ]
   | Reader.List
       ( _,
-        Reader.Symbol (_, "define-payload-contract")
+        Reader.Symbol (_, "__payload-contract")
         :: Reader.Symbol (_, name)
         :: clauses ) ->
       let value =
         Descriptor.declaration_value "payload-contract" name clauses
       in
       Ok (value, Env.bind name value env)
-  | Reader.List (_, Reader.Symbol (_, "define-payload-contract") :: _) ->
+  | Reader.List (_, Reader.Symbol (_, "__payload-contract") :: _) ->
       Error
         [
           diagnostic "eval/define-payload-contract"
-            "define-payload-contract expects a symbol name followed by payload \
+            "__payload-contract expects a symbol name followed by payload \
              descriptor clauses.";
         ]
   | Reader.List (_, Reader.Symbol (_, "define-effect") :: _) ->
       Error
         [
           diagnostic "eval/legacy-effect"
-            "define-effect is not a public Forma form; use define-service and define-operation.";
+            "define-effect is not a public Forma form; use __service and __operation.";
         ]
   | Reader.List
       ( _,
@@ -168,7 +169,7 @@ let eval ctx env = function
         ]
   | Reader.List
       ( _,
-        Reader.Symbol (_, "define-macro")
+        Reader.Symbol (_, "__macro")
         :: Reader.Symbol (_, name)
         :: Reader.Vector (_, params)
         :: body ) -> (
@@ -179,11 +180,11 @@ let eval ctx env = function
             VMacro { params; rest_param; body; env = Env.bindings env }
           in
           Ok (value, Env.bind name value env))
-  | Reader.List (_, Reader.Symbol (_, "define-macro") :: _) ->
+  | Reader.List (_, Reader.Symbol (_, "__macro") :: _) ->
       Error
         [
           diagnostic "eval/define-macro-form"
-            "define-macro expects a symbol name, parameter vector, and body \
+            "__macro expects a symbol name, parameter vector, and body \
              forms.";
         ]
   | Reader.List
@@ -222,7 +223,13 @@ let eval ctx env = function
     -> (
       match ctx.eval_expr env value_expr with
       | Error _ as error -> error
-      | Ok value -> Ok (value, Env.bind name value env))
+      | Ok value ->
+          let value = match value with
+            | VClosure closure ->
+                let rec self = VClosure {params=closure.params;rest_param=closure.rest_param;
+                  body=closure.body;env=(name,self) :: closure.env} in self
+            | value -> value in
+          Ok (value, Env.bind name value env))
   | Reader.List (_, Reader.Symbol (_, "define") :: _) ->
       Error
         [
@@ -234,7 +241,13 @@ let eval ctx env = function
     -> (
       match ctx.eval_expr env value_expr with
       | Error _ as error -> error
-      | Ok value -> Ok (value, Env.bind name value env))
+      | Ok value ->
+          let value = match value with
+            | VClosure closure ->
+                let rec self = VClosure {params=closure.params;rest_param=closure.rest_param;
+                  body=closure.body;env=(name,self) :: closure.env} in self
+            | value -> value in
+          Ok (value, Env.bind name value env))
   | Reader.List (_, Reader.Symbol (_, "def") :: _) ->
       Error
         [
@@ -255,6 +268,7 @@ let eval ctx env = function
       | Ok value -> Ok (value, env))
   | Reader.List (_, Reader.Symbol (_, op) :: args)
     when Descriptor.is_form_descriptor env op ->
+      let args = Surface_form.normalize_application env op args in
       let descriptor_form = Descriptor.form env op in
       let slot_validation =
         match descriptor_form with
@@ -266,9 +280,13 @@ let eval ctx env = function
       | Ok () ->
           let value = Descriptor.application_value op args in
           let env =
-            match Descriptor.declaration_binding_name args with
-            | Some name -> Env.bind name value env
-            | None -> env
+            match descriptor_form with
+            | Some form when Env.lookup ("__form/" ^ op) env <> None ->
+                let types = match Env.lookup ("__form.types/" ^ op) env with Some (VMap fields) -> fields | _ -> [] in
+                let declares n = match Value.lookup_map types (VKeyword (":" ^ n)) with Some (VList (VSymbol "Declares" :: _)) -> true | _ -> false in
+                let positional = List.filter (fun e -> match Surface.head e with Some n -> not (String.starts_with ~prefix:":" n) | None -> true) args in
+                List.fold_left (fun env (i:Descriptor.identifier_spec) -> if declares i.name then match List.nth_opt positional i.positional_index with Some arg -> (match Surface.name arg with Some n -> Env.bind n value env | None -> env) | None -> env else env) env form.identifiers
+            | _ -> (match Descriptor.declaration_binding_name args with Some name -> Env.bind name value env | None -> env)
           in
           Ok (value, env))
   | expr -> (

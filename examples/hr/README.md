@@ -10,36 +10,31 @@ preludes:
 HR onboarding example in canonical ontology syntax.
 
 ```lisp
-(define-entity Candidate
-  (:field [candidate/name String {:required true}])
-  (:field [candidate/email String])
-  (:field [candidate/status String {:required true}]))
+(entity Candidate {:name String
+    :email (Option String)
+    :status String})
 
-(define-entity Offer
-  (:field [offer/title String {:required true}])
-  (:field [offer/status String {:required true}])
-  (:field [offer/candidate (Ref Candidate)]))
+(entity Offer {:title String
+    :status String
+    :candidate (Option (Id Candidate))})
 ```
 
 ```lisp
-(define-record "candidate:sam" Candidate
-  (:field [candidate/name "Sam Patel"])
-  (:field [candidate/email "sam@example.com"])
-  (:field [candidate/status "interviewing"]))
+(seed Candidate "candidate:sam" {:name "Sam Patel"
+  :email "sam@example.com"
+  :status "interviewing"})
 
-(define-record "candidate:taylor" Candidate
-  (:field [candidate/name "Taylor Brooks"])
-  (:field [candidate/email "taylor@example.com"])
-  (:field [candidate/status "hired"]))
+(seed Candidate "candidate:taylor" {:name "Taylor Brooks"
+  :email "taylor@example.com"
+  :status "hired"})
 
-(define-record "offer:taylor" Offer
-  (:field [offer/title "Customer Success Manager"])
-  (:field [offer/status "accepted"])
-  (:field [offer/candidate "candidate:taylor"]))
+(seed Offer "offer:taylor" {:title "Customer Success Manager"
+  :status "accepted"
+  :candidate "candidate:taylor"})
 ```
 
 ```lisp
-(define-query active-offers
-  (:from Offer)
-  (:select [offer/title offer/status offer/candidate]))
+(query active-offers
+  :from Offer
+  :select [title status candidate])
 ```

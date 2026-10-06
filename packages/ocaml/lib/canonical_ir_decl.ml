@@ -51,7 +51,7 @@ let rec value_to_json = function
       Some (String value)
   | Eval.VList values | Eval.VVector values ->
       values_to_json values |> Option.map (fun values -> Array values)
-  | Eval.VMap entries -> map_value_to_json entries
+  | (Eval.VMap entries | Eval.VDictionary entries) -> map_value_to_json entries
   | Eval.VClosure _ | Eval.VMacro _ -> None
 
 and values_to_json values =
@@ -88,7 +88,7 @@ and map_value_to_json entries =
       loop [] entries
 
 let declaration_of_runtime_value = function
-  | Eval.VMap entries -> (
+  | (Eval.VMap entries | Eval.VDictionary entries) -> (
       match map_value_to_json entries with
       | Some (Object _ as value) -> declaration_of_json value
       | _ -> None)

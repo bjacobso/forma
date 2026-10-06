@@ -1,3 +1,4 @@
+import { normalizeUnifiedForm } from "../surface/form.js";
 import type { SExpr, Loc } from "../Reader.js";
 import { headSym, tail, trySym, children } from "../SExpr.js";
 import type { FormDescriptor, ChildFormShape, IdentifierSpec, SlotSpec } from "./FormDescriptor.js";
@@ -21,7 +22,9 @@ export function normalizeForm(
   recognized: RecognizedForm,
   registry?: FormDescriptorRegistry,
 ): NormalizedForm {
-  const { formName, descriptor, expr } = recognized;
+  const { formName, descriptor } = recognized;
+  if (descriptor.surface) return normalizeUnifiedForm(descriptor, recognized.expr);
+  const expr = recognized.expr;
   const args = tail(expr); // everything after the head symbol
 
   // Extract identifiers from positional args
@@ -130,7 +133,7 @@ function extractSlots(
     const head = headSym(arg)!;
     const slotName = head.startsWith(":") ? head.slice(1) : head;
     const spec = specMap.get(slotName);
-    if (!spec) continue;
+    if (!spec) throw new Error(`Unknown slot :${slotName} in ${formName}`);
 
     // Use the canonical name from the spec
     const canonicalName = spec.name;
@@ -279,7 +282,9 @@ function normalizeChildForm(
     for (const [key, value] of item.pairs) {
       const keyStr = key._tag === "Sym" ? key.name : undefined;
       if (!keyStr) continue;
-      values.set(keyStr.startsWith(":") ? keyStr.slice(1) : keyStr, scalarSlotValue(value));
+      const canonicalKey = keyStr.startsWith(":") ? keyStr.slice(1) : keyStr;
+      if (!resolved.shape.slots.some(s => s.name === canonicalKey || s.aliases?.includes(canonicalKey))) throw new Error(`Unknown option :${canonicalKey} in ${resolved.shape.formName}`);
+      values.set(canonicalKey, scalarSlotValue(value));
     }
   }
 

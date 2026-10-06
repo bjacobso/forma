@@ -149,9 +149,13 @@ let rec schema_expr_to_json expr =
       match schema_expr_to_json value with
       | Error _ as error -> error
       | Ok value ->
-          Ok (apply_metadata ~span
-                (kinded ~span "Map" [ ("value", value) ])
-                metadata)))
+          let key = List.assoc_opt "key" metadata in
+          let metadata = List.remove_assoc "key" metadata in
+          (match (match key with None -> Ok [] | Some key -> Result.map (fun key -> ["key",key]) (schema_expr_to_json key)) with
+          | Error _ as error -> error
+          | Ok key -> Ok (apply_metadata ~span
+                (kinded ~span "Map" (("value", value) :: key))
+                metadata))))
   | Ast.List (span, [ Ast.Symbol (_, ("Map" | "map")) ]) ->
       Error [ diagnostic ~span "artifact/schema" "Map schema expects a value schema." ]
   | Ast.List (span, Ast.Symbol (_, ("Ref" | "ref")) :: target :: metadata) -> (
@@ -340,6 +344,10 @@ let rec type_expr_to_json expr =
       one head item
   | Ast.List (_, Ast.Symbol (_, "Ref") :: [ item ]) -> one "RefCell" item
   | Ast.List (_, Ast.Symbol (_, ("Array" | "List")) :: [ item ]) -> one "Array" item
+  | Ast.List (_, [Ast.Symbol (_, "Map");value;(Ast.Keyword (_,":key") | Ast.Symbol (_,":key"));key]) ->
+      (match type_expr_to_json key, type_expr_to_json value with
+      | Ok key, Ok value -> Ok (kinded "Map" ["key",key;"value",value])
+      | Error e, _ | _, Error e -> Error e)
   | Ast.List (_, Ast.Symbol (_, "Map") :: [ value ]) ->
       Result.map (fun value -> kinded "Map" [ ("value", value) ]) (type_expr_to_json value)
   | Ast.List (_, Ast.Symbol (_, "Tuple") :: items) ->

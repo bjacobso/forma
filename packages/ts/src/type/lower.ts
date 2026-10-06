@@ -17,6 +17,7 @@
  * SExpr level by expand.ts BEFORE lowering, so the lowerer only handles
  * core forms.
  */
+import { normalizeEffectProgram,head,name,list,sym } from "../surface/effect.js";
 import type { SExpr } from "../reader/index.js";
 import type { CoreExpr } from "./core-expr.js";
 import { CDef } from "./core-expr.js";
@@ -62,15 +63,14 @@ function isDef(expr: SExpr): expr is SExpr & { _tag: "List" } {
     expr._tag === "List" &&
     expr.items.length >= 3 &&
     expr.items[0]?._tag === "Sym" &&
-    (expr.items[0].name === "define" || expr.items[0].name === "define-operation")
+    (expr.items[0].name === "define" || expr.items[0].name === "__operation")
   );
 }
 
 /**
  * Lower a sequence of top-level SExprs into CoreExprs.
  *
- * Handles (: name Type) signatures that must immediately precede a matching
- * define form.
+ * Collects (: name Type) signatures anywhere in the module.
  *
  * @param exprs The parsed SExprs to lower
  * @param dslProvider Optional DSL type provider for recognizing DSL forms.
@@ -83,60 +83,34 @@ export function lowerProgram(exprs: readonly SExpr[], dslProvider?: DSLTypeProvi
   const prevInternalBindingCounter = getInternalBindingCounter();
   setDslProvider(dslProvider);
   setInternalBindingCounter(0);
-  const expanded = expandKernelExprsSync(exprs, { builtins: defaultBuiltins }).expanded;
+  const effectModule = exprs.some(e => ["service","layer"].includes(head(e) ?? ""));
+  const signatures = new Map(exprs.flatMap(e=>head(e)===":" && e._tag === "List" ? [[name(e.items[1])!,e.items[2]!] as const] : []));
+  const normalized = effectModule ? normalizeEffectProgram(exprs).map((e, i)=>{
+    if (["class", "error"].includes(head(exprs[i]) ?? "")) return exprs[i]!;
+    if (head(e)==="__operation" && e._tag === "List" && e.items[2]?._tag === "Vector" && !e.items[2].items.length && head(signatures.get(name(e.items[1])!))==="Effect") return list(e,[sym(e,"define"),e.items[1]!,e.items.length === 4 ? e.items[3]! : list(e,[sym(e,"do"),...e.items.slice(3)])]);
+    return e;
+  }) : exprs;
+  const expanded = expandKernelExprsSync(normalized, { builtins: defaultBuiltins }).expanded;
 
   try {
-    const result: CoreExpr[] = [];
-    let i = 0;
-
-    while (i < expanded.length) {
-      const expr = expanded[i]!;
-
-      // Check for type signature
+    const signatures = new Map<string, ReturnType<typeof parseTypeExpr>>();
+    const definitions = new Set<string>();
+    for (const expr of expanded) {
       if (isTypeSig(expr)) {
-        const sigItems = expr.items;
-        const sigNameSym = sigItems[1]!;
-        if (sigNameSym._tag !== "Sym") {
-          throw new InferenceError({ message: "(:) name must be a symbol" });
-        }
-        const sigName = sigNameSym.name;
-        const typeExpr = parseTypeExpr(sigItems[2]!);
-
-        // Must be immediately followed by matching define
-        const next = expanded[i + 1];
-        if (!next || !isDef(next)) {
-          throw new InferenceError({
-            message: `Type signature for '${sigName}' must be immediately followed by (define ${sigName} ...) or (define-operation ${sigName} ...)`,
-          });
-        }
-
-        const defItems = next.items;
-        const defNameExpr = defItems[1]!;
-        const defName =
-          defNameExpr._tag === "Sym"
-            ? defNameExpr.name
-            : defNameExpr._tag === "List" && defNameExpr.items[0]?._tag === "Sym"
-              ? defNameExpr.items[0].name
-              : undefined;
-        if (defName !== sigName) {
-          throw new InferenceError({
-            message: `Type signature for '${sigName}' must be followed by a matching definition, found ${defName ?? "?"}`,
-          });
-        }
-
-        // Lower define with signature attached
-        const lowered = lower(next);
-        if (lowered._tag !== "Def") {
-          throw new InferenceError({
-            message: `Type signature for '${sigName}' must be followed by a definition`,
-          });
-        }
-        result.push(CDef(lowered.span, sigName, lowered.expr, typeExpr));
-        i += 2; // Skip both signature and definition
-      } else {
-        result.push(lower(expr));
-        i++;
+        const name = expr.items[1]!;
+        if (name._tag !== "Sym") throw new InferenceError({ message: "Signature name must be a symbol" });
+        if (signatures.has(name.name)) throw new InferenceError({ message: `Duplicate signature for '${name.name}'` });
+        signatures.set(name.name, parseTypeExpr(expr.items[2]!));
       }
+      if (isDef(expr) && expr.items[1]?._tag === "Sym") definitions.add(expr.items[1].name);
+    }
+    for (const name of signatures.keys()) if (!definitions.has(name)) throw new InferenceError({ message: `Type signature for '${name}' has no matching definition` });
+    const result: CoreExpr[] = [];
+    for (const expr of expanded) {
+      if (isTypeSig(expr)) continue;
+      const lowered = lower(expr);
+      const annotation = lowered._tag === "Def" ? signatures.get(lowered.name) : undefined;
+      result.push(lowered._tag === "Def" && annotation ? CDef(lowered.span, lowered.name, lowered.expr, annotation) : lowered);
     }
 
     return result;

@@ -1,68 +1,15 @@
 import type { CstExpr, SymbolDefinition } from "./protocol.js";
 
 export const BUILTIN_COMPLETIONS: readonly string[] = [
-  "define",
-  "def",
-  "defn",
-  "fn",
-  "lambda",
-  "let",
-  "let*",
-  "if",
-  "do",
-  "match",
-  "quote",
-  "quasiquote",
-  "unquote",
-  "define-type",
-  "define-form",
-  "define-service",
-  "define-operation",
-  "define-error",
-  "define-protocol",
-  "define-elaboration",
-  "meta-fn",
-  "list",
-  "vector",
-  "map",
-  "get",
-  "+",
-  "-",
-  "*",
-  "/",
-  "=",
-  "<",
-  "<=",
-  ">",
-  ">=",
-  "and",
-  "or",
-  "not",
-  "concat",
-  "count",
-  "first",
-  "rest",
-  "reduce",
+  "define", "fn", "let", "if", "do", "do!", "match", "quote", "quasiquote", "unquote",
+  "type", "error", "class", "service", "layer", "form", "macro", "typeclass", ":",
+  "list", "vector", "map", "get", "+", "-", "*", "/", "=", "<", "<=", ">", ">=",
+  "and", "or", "not", "concat", "count", "first", "rest", "reduce",
 ];
 
 const definitionHeads = new Set([
-  "define",
-  "def",
-  "defn",
-  "defmacro",
-  "define-macro",
-  "define-form",
-  "meta-fn",
-  "define-elaboration",
-  "define-elaboration-primitive",
-  "define-protocol",
-  "define-payload-contract",
-  "define-service",
-  "define-operation",
-  "define-error",
-  "define-type",
-  "defclass",
-  "define-typeclass",
+  "define", "type", "error", "class", "service", "layer", "form", "macro", "typeclass",
+  "entity", "relation", "query", "view", "workspace", "process", "task", "document", "api",
 ]);
 
 export function collectDefinitions(
@@ -75,6 +22,7 @@ export function collectDefinitions(
       const head = expr.items[0];
       const binding = expr.items[1];
       const headName = symbolName(head);
+      if (headName === "quote" || headName === "quasiquote") return;
       if (headName && definitionHeads.has(headName) && binding) {
         const name = bindingName(binding);
         const span =
@@ -84,16 +32,6 @@ export function collectDefinitions(
             name,
             uri,
             span,
-            detail: headName,
-          });
-        }
-      } else if (headName && headName.startsWith("define-") && binding) {
-        const name = bindingName(binding);
-        if (name) {
-          definitions.push({
-            name,
-            uri,
-            span: binding.span,
             detail: headName,
           });
         }

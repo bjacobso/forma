@@ -39,17 +39,32 @@ let pattern_head_name = function
       Some name
   | _ -> None
 
-let match_pattern_name = function
-  | Ast.Symbol (_, "_") -> None
-  | pattern -> pattern_head_name pattern
+let unqualified name = List.hd (List.rev (String.split_on_char '.' name))
+let catchall_pattern = function
+  | Ast.Symbol (_,n) -> n="_" || (Surface.is_lower n && n<>"nil" && n<>"true" && n<>"false")
+  | _ -> false
+let total_constructor_pattern pattern =
+  let bound = ref [] in
+  let rec total = function
+    | Ast.Symbol (_,"_") -> true
+    | Ast.Symbol (_,n) when Surface.is_lower n && n<>"nil" && n<>"true" && n<>"false" ->
+        if List.mem n !bound then false else (bound := n :: !bound; true)
+    | Ast.Map (_,fields) -> List.for_all (function Ast.Keyword (_,":keys"),Ast.Vector (_,keys) -> List.for_all total keys | _,v -> total v) fields
+    | _ -> false in
+  match pattern with
+  | Ast.Symbol (_,n) when Surface.is_upper n -> true
+  | Ast.List (_,Ast.Symbol (_,n) :: payload) when Surface.is_upper n -> List.for_all total payload
+  | _ -> false
+let match_pattern_name pattern =
+  if total_constructor_pattern pattern then Option.map unqualified (pattern_head_name pattern) else None
 
 let adt_constructor_names = function
   | Ast.List
       ( _,
-        Ast.Symbol (_, "define-type")
+        Ast.Symbol (_, "__sum-type")
         :: Ast.List (_, Ast.Symbol (_, _) :: _)
         :: constructors ) ->
-      constructors |> List.filter_map pattern_head_name
+      constructors |> List.filter (fun e -> Surface.head e <> Some ":tag") |> List.filter_map pattern_head_name
   | _ -> []
 
 let direct_scrutinee_constructor = function
@@ -86,74 +101,29 @@ let constructor_binding_of_expr env expr =
   | _ -> direct_scrutinee_constructor expr
 
 let collect_match_warning_jsons exprs =
+  let exprs = Surface.core_program exprs in
   let constructor_sets =
-    exprs
-    |> List.filter_map (fun expr ->
-        match adt_constructor_names expr with [] -> None | names -> Some names)
-    |> List.concat_map (fun names -> List.map (fun name -> (name, names)) names)
-  in
-  let constructor_set_for name = List.assoc_opt name constructor_sets in
+    let standard = ["Some",["Some";"None"];"None",["Some";"None"];"Ok",["Ok";"Err"];"Err",["Ok";"Err"]] in
+    standard @ (exprs |> List.concat_map (fun expr ->
+      let names = adt_constructor_names expr in
+      List.map (fun name -> name,names) names)) in
+  let constructor_set_for name = List.assoc_opt (unqualified name) constructor_sets in
   let rec analyze_match env span scrutinee arms =
-    match constructor_binding_of_expr env scrutinee with
+    match Option.bind (constructor_binding_of_expr env scrutinee) constructor_set_for with
     | None -> []
-    | Some constructor_name -> (
-        match constructor_set_for constructor_name with
-        | None -> []
-        | Some constructors -> (
-            let patterns =
-              let rec collect acc = function
-                | [] -> List.rev acc
-                | pattern :: _body :: rest ->
-                    collect (match_pattern_name pattern :: acc) rest
-                | _ -> List.rev acc
-              in
-              collect [] arms
-            in
-            let rec find_redundant_after_wildcard = function
-              | [] | [ None ] -> false
-              | None :: _ -> true
-              | _ :: rest -> find_redundant_after_wildcard rest
-            in
-            if find_redundant_after_wildcard patterns then
-              [
-                warning_json span
-                  "Unreachable match arm(s) after wildcard pattern";
-              ]
-            else
-              let rec find_duplicate seen = function
-                | [] -> None
-                | None :: rest -> find_duplicate seen rest
-                | Some name :: rest ->
-                    if List.mem name seen then Some name
-                    else find_duplicate (name :: seen) rest
-              in
-              match find_duplicate [] patterns with
-              | Some name ->
-                  [
-                    warning_json span
-                      (Printf.sprintf "Duplicate match arm for constructor '%s'"
-                         name);
-                  ]
-              | None ->
-                  if List.mem None patterns then []
-                  else
-                    let covered =
-                      patterns |> List.filter_map Fun.id
-                      |> List.sort_uniq String.compare
-                    in
-                    let missing =
-                      List.filter
-                        (fun name -> not (List.mem name covered))
-                        constructors
-                    in
-                    if missing = [] then []
-                    else
-                      [
-                        warning_json span
-                          (Printf.sprintf
-                             "Non-exhaustive match: missing constructor(s) %s"
-                             (String.concat ", " missing));
-                      ]))
+    | Some constructors ->
+      let rec scan covered = function
+        | [] ->
+            let missing = List.filter (fun n -> not (List.mem n covered)) constructors in
+            if missing=[] then [] else [warning_json span ("Non-exhaustive match: missing constructor(s) " ^ String.concat ", " missing)]
+        | pattern :: _body :: rest when catchall_pattern pattern ->
+            if rest=[] then [] else [warning_json span "Unreachable match arm(s) after wildcard pattern"]
+        | pattern :: _body :: rest -> (match match_pattern_name pattern with
+            | Some n when List.mem n covered -> [warning_json span (Printf.sprintf "Duplicate match arm for constructor '%s'" n)]
+            | Some n -> scan (n :: covered) rest
+            | None -> scan covered rest)
+        | _ -> [] in
+      scan [] arms
   and collect_match_arms env arms =
     let rec loop acc = function
       | pattern :: body :: rest ->
@@ -354,7 +324,7 @@ let lower_core_source ~with_session (request : request) =
         (Option.map (fun session -> session.Session.env) session)
         exprs)
 
-let typecheck_typed_core type_env eval_env program =
+let typecheck_typed_core ?(syntax=[]) type_env eval_env program =
   match (type_env, eval_env) with
   | None, None ->
       Typecheck.typecheck_core_program_typed_with_descriptor_infer
@@ -366,12 +336,12 @@ let typecheck_typed_core type_env eval_env program =
       |> Result.map fst
   | None, Some env ->
       Typecheck.typecheck_core_program_typed_with_descriptor_infer
-        (Descriptor_contract.descriptor_hooks env)
+        (Descriptor_contract.descriptor_hooks ~syntax env)
         [] program
       |> Result.map fst
   | Some type_env, Some env ->
       Typecheck.typecheck_core_program_typed_with_descriptor_infer
-        (Descriptor_contract.descriptor_hooks env)
+        (Descriptor_contract.descriptor_hooks ~syntax env)
         type_env program
       |> Result.map fst
 
@@ -385,8 +355,8 @@ let typecheck_core_success_json ?(typed_core = false) program =
     Printf.sprintf "{\"ok\":true,\"type\":\"%s\"}"
       (Response.json_escape result_type)
 
-let typecheck_core_result_json ~typed type_env eval_env program =
-  match typecheck_typed_core type_env eval_env program with
+let typecheck_core_result_json ?(syntax=[]) ~typed type_env eval_env program =
+  match typecheck_typed_core ~syntax type_env eval_env program with
   | Error diagnostics -> Response.typecheck_diagnostics_json diagnostics
   | Ok program -> typecheck_core_success_json ~typed_core:typed program
 
@@ -398,7 +368,7 @@ let typecheck_core_source ?(typed = false) ~with_session (request : request) =
         match Lower.program expanded with
         | Error diagnostics -> Response.lower_diagnostics_json diagnostics
         | Ok program ->
-            typecheck_core_result_json ~typed type_env eval_env program)
+            typecheck_core_result_json ~syntax:expanded ~typed type_env eval_env program)
   in
   with_request_exprs ~with_session
     ~missing_source_message:
@@ -439,8 +409,9 @@ let typecheck_source ~with_session (request : request) =
         | Error diagnostics -> Response.typecheck_diagnostics_json diagnostics
         | Ok type_env ->
             let extra_diagnostics = collect_match_warning_jsons expanded in
-            let result =
-              match request.result with
+            let result = match Descriptor_contract.validate_unified_forms (Option.value ~default:Env.empty eval_env) expanded with
+              | Error _ as e -> e
+              | Ok () -> match request.result with
               | Some "per-expression" ->
                   Typecheck.typecheck_program_with_env_all type_env expanded
                   |> Result.map (fun (expression_types, typ, _env) ->
@@ -485,8 +456,8 @@ let emitted_values_exprs (session : Session.t) exprs =
   match Elaborate.emitted_values session.env exprs with
   | Error diagnostics -> Response.eval_diagnostics_json diagnostics
   | Ok values ->
-      Printf.sprintf "{\"ok\":true,\"value\":%s}"
-        (Elaborate.emitted_values_json values)
+      Printf.sprintf "{\"ok\":true,\"value\":%s,\"diagnostics\":%s}"
+        (Elaborate.emitted_values_json values) (Response.diagnostic_array (Elaborate.emitted_values_diagnostics values))
 
 let emitted_values_source ~with_session (request : request) =
   with_session_exprs ~with_session

@@ -1,3 +1,8 @@
+; UI forms: typed projections and constant renderer configuration.
+(type ComponentIR {:component String :props Json :children (List Json)})
+(type component ComponentIR)
+(define component [name props children] {:component name :props props :children children})
+
 ; ui.lisp
 ; -----------------------------------------------------------------------------
 ; Hosted UI prelude for domain-neutral ViewSpec component forms.
@@ -7,978 +12,637 @@
 ; DSL symbol table.
 ; -----------------------------------------------------------------------------
 
-(define-form text
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind true)
-      (:compile
-        (:expr-props [visible bind]))
-      (:children none)
-      (:positional-prop content)))
-  (:slots
-    (slot content expr (:alias text))))
+(define text.metadata (quote {:descriptor-name "text" :extensions {:view/component {:allows-bind true :compile {:expr-props ["visible" "bind"]} :children "none" :positional-prop "content"}}}))
 
-(define-form rows
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:compile
-        (:required-children true))))
-  (:slots
-    (slot gap value (:type Number))))
+(form (text content {:keys [visible bind]})
+  :types {:content (Option (Expr a))
+          :visible (Option (Expr Bool))
+          :bind (Option (Expr a))}
+  :ir ComponentIR
+  (component "text" {"content" content "visible" visible "bind" bind} []))
 
-(define-form columns
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:compile
-        (:required-children true))))
-  (:slots
-    (slot gap value (:type Number))))
+(define rows.metadata (quote {:descriptor-name "rows" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children "any"}}}))
 
-(define-form card
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:compile
-        (:required-children true)
-        (:node-slots [action footer]))))
-  (:slots
-    (slot title expr)
-    (slot description expr)
-    (slot subject-mode expr)
-    (slot action form (:many true))
-    (slot footer form (:many true))))
+(form (rows {:keys [gap visible]} child ...)
+  :types {:gap (Option Number)
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "rows" {"gap" gap "visible" visible} child))
 
-(define-form item-group
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind true)
-      (:compile
-        (:expr-props [visible bind]))
-      (:children any)
-      (:compile
-        (:required-children true)))))
+(define columns.metadata (quote {:descriptor-name "columns" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children "any"}}}))
 
-(define-form item
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:events {:on-click onClick})))
-  (:slots
-    (slot variant value (:type String))
-    (slot size value (:type String))
-    (slot icon value (:type String))
-    (slot title expr (:alias text) (:alias content))
-    (slot description expr)
-    (slot value expr)
-    (slot badge expr)
-    (slot badge-variant value (:type String)))
-  (:validation
-    (validate validate-one-of (:slot variant) (:values [default outline muted]))
-    (validate validate-one-of (:slot size) (:values [default sm xs]))
-    (validate validate-one-of
-      (:slot badge-variant)
-      (:values [default secondary outline destructive]))))
+(form (columns {:keys [gap visible]} child ...)
+  :types {:gap (Option Number)
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "columns" {"gap" gap "visible" visible} child))
 
-(define-form button
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible disabled]))
-      (:children any)
-      (:events {:on-click onClick})
-      (:positional-prop label)))
-  (:slots
-    (slot label expr (:alias text) (:alias title) (:alias content))
-    (slot variant value (:type String))
-    (slot size value (:type String))
-    (slot disabled expr)
-    (slot button-type value (:type String) (:alias type)))
-  (:validation
-    (validate validate-one-of
-      (:slot variant)
-      (:values [default destructive outline secondary ghost link]))
-    (validate validate-one-of (:slot size) (:values [default sm lg icon]))
-    (validate validate-one-of (:slot button-type) (:values [button submit reset]))))
+(define card.metadata (quote {:descriptor-name "card" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true :node-slots ["action" "footer"]} :children "any"}}}))
 
-(define-form progress
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind true)
-      (:compile
-        (:expr-props [visible bind]))
-      (:children none)))
-  (:slots
-    (slot value expr)
-    (slot label expr (:alias title))
-    (slot hint expr (:alias description))))
+(form (card {:keys [title description subject-mode action footer visible]} child ...)
+  :types {:title (Option (Expr a))
+          :description (Option (Expr a))
+          :subject-mode (Option (Expr a))
+          :action (Option Syntax)
+          :footer (Option Syntax)
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "card" {"title" title "description" description "subject-mode" subject-mode "action" action "footer" footer "visible" visible} child))
 
-(define-form workflow-strip
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:children only [workflow-step])
-      (:compile
-        (:required-children true))))
-  (:slots
-    (slot title expr)
-    (slot description expr)))
+(define item-group.metadata (quote {:descriptor-name "item-group" :extensions {:view/component {:allows-bind true :compile {:expr-props ["visible" "bind"] :required-children true} :children "any"}}}))
 
-(define-form workflow-step
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:children none)
-      (:parents [workflow-strip])))
-  (:slots
-    (slot label expr (:required true) (:alias title))
-    (slot description expr)
-    (slot status expr)
-    (slot icon value (:type String))))
+(form (item-group {:keys [visible bind]} child ...)
+  :types {:visible (Option (Expr Bool))
+          :bind (Option (Expr a))
+          :child (List component)}
+  :ir ComponentIR
+  (component "item-group" {"visible" visible "bind" bind} child))
 
-(define-form empty-state
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)))
-  (:slots
-    (slot icon value (:type String))
-    (slot title expr (:alias text) (:alias content))
-    (slot description expr)))
+(define item.metadata (quote {:descriptor-name "item" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "any" :events {:on-click "onClick"}}}}))
 
-(define-form badge
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:positional-prop content)))
-  (:slots
-    (slot content expr (:alias text) (:alias label) (:alias value))
-    (slot variant value (:type String))
-    (slot dot value (:type Boolean))
-    (slot dot-color value (:type String)))
-  (:validation
-    (validate validate-one-of
-      (:slot variant)
-      (:values [default secondary outline destructive]))))
+(form (item {:keys [variant size icon title description value badge badge-variant visible]} child ...)
+  :types {:variant (Option (Union "default" "outline" "muted"))
+          :size (Option (Union "default" "sm" "xs"))
+          :icon (Option String)
+          :title (Option (Expr a))
+          :description (Option (Expr a))
+          :value (Option (Expr a))
+          :badge (Option (Expr a))
+          :badge-variant (Option (Union "default" "secondary" "outline" "destructive"))
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "item" {"variant" variant "size" size "icon" icon "title" title "description" description "value" value "badge" badge "badge-variant" badge-variant "visible" visible} child))
 
-(define-form avatar
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)))
-  (:slots
-    (slot src expr)
-    (slot alt expr)
-    (slot fallback expr (:alias text) (:alias label))
-    (slot size value (:type String)))
-  (:validation
-    (validate validate-one-of (:slot size) (:values [default sm lg]))))
+(define button.metadata (quote {:descriptor-name "button" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible" "disabled"]} :children "any" :events {:on-click "onClick"} :positional-prop "label"}}}))
 
-(define-form kbd
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:positional-prop content)))
-  (:slots
-    (slot content expr (:alias text) (:alias label))))
+(form (button label {:keys [variant size disabled button-type visible]} child ...)
+  :types {:label (Option (Expr a))
+          :variant (Option (Union "default" "destructive" "outline" "secondary" "ghost" "link"))
+          :size (Option (Union "default" "sm" "lg" "icon"))
+          :disabled (Option (Expr a))
+          :button-type (Option (Union "button" "submit" "reset"))
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "button" {"label" label "variant" variant "size" size "disabled" disabled "button-type" button-type "visible" visible} child))
 
-(define-form spinner
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)))
-  (:slots
-    (slot label expr)
-    (slot size value (:type String)))
-  (:validation
-    (validate validate-one-of (:slot size) (:values [sm default lg]))))
+(define progress.metadata (quote {:descriptor-name "progress" :extensions {:view/component {:allows-bind true :compile {:expr-props ["visible" "bind"]} :children "none"}}}))
 
-(define-form separator
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)))
-  (:slots
-    (slot orientation value (:type String)))
-  (:validation
-    (validate validate-one-of
-      (:slot orientation)
-      (:values [horizontal vertical]))))
+(form (progress {:keys [value label hint visible bind]})
+  :types {:value (Option (Expr a))
+          :label (Option (Expr a))
+          :hint (Option (Expr a))
+          :visible (Option (Expr Bool))
+          :bind (Option (Expr a))}
+  :ir ComponentIR
+  (component "progress" {"value" value "label" label "hint" hint "visible" visible "bind" bind} []))
 
-(define-form tabs
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children only [tab-panel])
-      (:compile
-        (:required-children true)))))
+(define workflow-strip.metadata (quote {:descriptor-name "workflow-strip" :extensions {:view/component {:allows-bind false :children ["only" ["workflow-step"]] :compile {:required-children true}}}}))
 
-(define-form tab-panel
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:parents [tabs])
-      (:compile
-        (:required-children true)
-        (:extra-fields [
-          {:name title :optional true :ts ViewExpr :schema ViewExpression}
-        ])
-        (:extra-normalize-fields [
-          {:field title :keys [title label] :kind expr}
-        ]))))
-  (:slots
-    (slot label expr (:alias title))))
+(form (workflow-strip {:keys [title description visible]} child ...)
+  :types {:title (Option (Expr a))
+          :description (Option (Expr a))
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "workflow-strip" {"title" title "description" description "visible" visible} child))
 
-(define-form accordion
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children only [accordion-item])
-      (:compile
-        (:required-children true))))
-  (:slots
-    (slot mode value (:type String)))
-  (:validation
-    (validate validate-one-of (:slot mode) (:values [single multiple]))))
+(define workflow-step.metadata (quote {:descriptor-name "workflow-step" :extensions {:view/component {:allows-bind false :children "none" :parents ["workflow-strip"]}}}))
 
-(define-form accordion-item
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:parents [accordion])
-      (:compile
-        (:required-children true))))
-  (:slots
-    (slot title expr (:alias label) (:alias text))
-    (slot default-open value (:type Boolean))))
+(form (workflow-step {:keys [label description status icon visible]})
+  :types {:label (Expr a)
+          :description (Option (Expr a))
+          :status (Option (Expr a))
+          :icon (Option String)
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "workflow-step" {"label" label "description" description "status" status "icon" icon "visible" visible} []))
 
-(define-form grid
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:compile
-        (:required-children true))))
-  (:slots
-    (slot columns value (:type Number))))
+(define empty-state.metadata (quote {:descriptor-name "empty-state" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "any"}}}))
 
-(define-form aspect-ratio
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:compile
-        (:required-children true))))
-  (:slots
-    (slot ratio value (:type Number))))
+(form (empty-state {:keys [icon title description visible]} child ...)
+  :types {:icon (Option String)
+          :title (Option (Expr a))
+          :description (Option (Expr a))
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "empty-state" {"icon" icon "title" title "description" description "visible" visible} child))
 
-(define-form spacer
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)))
-  (:slots
-    (slot height value (:type Number))))
+(define badge.metadata (quote {:descriptor-name "badge" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none" :positional-prop "content"}}}))
 
-(define-form split-pane
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:compile
-        (:required-children true)
-        (:slot-normalize-kinds {:sizes number-array})
-        (:slot-types
-          {:sizes {:kind array :item number}}))))
-  (:slots
-    (slot direction value (:type String))
-    (slot sizes value (:type Array)))
-  (:validation
-    (validate validate-one-of
-      (:slot direction)
-      (:values [horizontal vertical]))))
+(form (badge content {:keys [variant dot dot-color visible]})
+  :types {:content (Option (Expr a))
+          :variant (Option (Union "default" "secondary" "outline" "destructive"))
+          :dot (Option Json)
+          :dot-color (Option String)
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "badge" {"content" content "variant" variant "dot" dot "dot-color" dot-color "visible" visible} []))
 
-(define-form for-each
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind true)
-      (:compile
-        (:expr-props [visible bind]))
-      (:children any)
-      (:compile
-        (:required-children true)
-        (:required-bind true))))
-  (:slots
-    (slot empty-text value (:type String))))
+(define avatar.metadata (quote {:descriptor-name "avatar" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none"}}}))
 
-(define-form condition
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children only [case else])
-      (:compile
-        (:required-children true)))))
+(form (avatar {:keys [src alt fallback size visible]})
+  :types {:src (Option (Expr a))
+          :alt (Option (Expr a))
+          :fallback (Option (Expr a))
+          :size (Option (Union "default" "sm" "lg"))
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "avatar" {"src" src "alt" alt "fallback" fallback "size" size "visible" visible} []))
 
-(define-form case
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:parents [condition])
-      (:compile
-        (:required-children true)
-        (:slot-defaults {:when false-expr-or-bind}))))
-  (:slots
-    (slot when expr (:required true) (:type Bool))))
+(define kbd.metadata (quote {:descriptor-name "kbd" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none" :positional-prop "content"}}}))
 
-(define-form else
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:parents [condition])
-      (:compile
-        (:required-children true)))))
+(form (kbd content {:keys [visible]})
+  :types {:content (Option (Expr a))
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "kbd" {"content" content "visible" visible} []))
 
-(define-form slot
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind true)
-      (:compile
-        (:expr-props [visible bind]))
-      (:children any)
-      (:positional-prop name)))
-  (:slots
-    (slot name value (:type String) (:alias ref))))
+(define spinner.metadata (quote {:descriptor-name "spinner" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none"}}}))
 
-(define-form use
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:positional-prop name)))
-  (:slots
-    (slot name value (:type String) (:required true) (:alias ref) (:alias def))
-    (slot overrides value (:type Object) (:alias params))))
+(form (spinner {:keys [label size visible]})
+  :types {:label (Option (Expr a))
+          :size (Option (Union "sm" "default" "lg"))
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "spinner" {"label" label "size" size "visible" visible} []))
 
-(define-form tooltip
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:compile
-        (:required-children true))))
-  (:slots
-    (slot content expr (:required true) (:alias text) (:alias label))
-    (slot side value (:type String)))
-  (:validation
-    (validate validate-one-of (:slot side) (:values [top right bottom left]))))
+(define separator.metadata (quote {:descriptor-name "separator" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none"}}}))
 
-(define-form popover
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:compile
-        (:required-children true)
-        (:node-slots [trigger]))))
-  (:slots
-    (slot trigger form (:many true) (:required true))
-    (slot title expr)
-    (slot description expr)
-    (slot side value (:type String))
-    (slot align value (:type String)))
-  (:validation
-    (validate validate-one-of (:slot side) (:values [top right bottom left]))
-    (validate validate-one-of (:slot align) (:values [start center end]))))
+(form (separator {:keys [orientation visible]})
+  :types {:orientation (Option (Union "horizontal" "vertical"))
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "separator" {"orientation" orientation "visible" visible} []))
 
-(define-form hover-card
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:compile
-        (:required-children true)
-        (:node-slots [trigger]))))
-  (:slots
-    (slot trigger form (:many true) (:required true))
-    (slot side value (:type String))
-    (slot align value (:type String)))
-  (:validation
-    (validate validate-one-of (:slot side) (:values [top right bottom left]))
-    (validate validate-one-of (:slot align) (:values [start center end]))))
+(define tabs.metadata (quote {:descriptor-name "tabs" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children ["only" ["tab-panel"]]}}}))
 
-(define-form dialog
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:events {:on-open-change onOpenChange})
-      (:compile
-        (:required-children true))))
-  (:slots
-    (slot dialog-id value (:type String) (:required true) (:alias id) (:alias name))
-    (slot title expr)
-    (slot description expr)))
+(form (tabs {:keys [visible]} child ...)
+  :types {:visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "tabs" {"visible" visible} child))
 
-(define-form table
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind true)
-      (:compile
-        (:expr-props [visible bind]))
-      (:children none)
-      (:events {:on-row-click onRowClick})
-      (:compile
-        (:required-bind true)
-        (:slot-normalize-kinds
-          {:columns table-columns
-           :filters table-filters
-           :default-sort table-sort})
-        (:slot-types
-          {:columns {:kind array :item [string ViewTableColumn]}
-           :filters {:kind array :item [string ViewTableFilter]}
-           :default-sort ViewTableSort}))))
-  (:slots
-    (slot columns value (:type Array))
-    (slot filters value (:type Array))
-    (slot page-size value (:type Number))
-    (slot default-sort value (:type Object))
-    (slot empty-state value (:type String))))
+(define tab-panel.metadata (quote {:descriptor-name "tab-panel" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true :extra-fields [{:name "title" :optional true :ts "ViewExpr" :schema "ViewExpression"}] :extra-normalize-fields [{:field "title" :keys ["title" "label"] :kind "expr"}]} :children "any" :parents ["tabs"]}}}))
 
-(define-form tree
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind true)
-      (:compile
-        (:expr-props [visible bind]))
-      (:children any)
-      (:events {:on-node-click onNodeClick})
-      (:compile
-        (:slot-normalize-kinds {:default-expanded boolean-or-number})
-        (:slot-types
-          {:default-expanded [boolean number]}))))
-  (:slots
-    (slot id-key value (:type String))
-    (slot parent-id-key value (:type String) (:alias parent-key))
-    (slot label-key value (:type String))
-    (slot default-expanded value (:type Any))))
+(form (tab-panel {:keys [label visible]} child ...)
+  :types {:label (Option (Expr a))
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "tab-panel" {"label" label "visible" visible} child))
 
-(define-form metric
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind true)
-      (:compile
-        (:expr-props [visible bind]))
-      (:children none)
-      (:compile
-        (:required-bind true)
-        (:slot-normalize-kinds {:series chart-series}))))
-  (:slots
-    (slot label expr (:alias title))
-    (slot value expr)
-    (slot value-key value (:type String))))
+(define accordion.metadata (quote {:descriptor-name "accordion" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children ["only" ["accordion-item"]]}}}))
 
-(define-form chart
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind true)
-      (:compile
-        (:expr-props [visible bind]))
-      (:children none)
-      (:compile
-        (:slot-types
-          {:series {:kind array :item [string ViewChartSeries]}}))))
-  (:slots
-    (slot title expr)
-    (slot chart-type value (:type String) (:alias variant))
-    (slot category-key value (:type String) (:alias x-key))
-    (slot series value (:type Array)))
-  (:validation
-    (validate validate-one-of
-      (:slot chart-type)
-      (:values [bar line area pie radar radial scatter]))))
+(form (accordion {:keys [mode visible]} child ...)
+  :types {:mode (Option (Union "single" "multiple"))
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "accordion" {"mode" mode "visible" visible} child))
 
-(define-form markdown
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind true)
-      (:compile
-        (:expr-props [visible bind]))
-      (:children none)
-      (:positional-prop content)))
-  (:slots
-    (slot content expr)))
+(define accordion-item.metadata (quote {:descriptor-name "accordion-item" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children "any" :parents ["accordion"]}}}))
 
-(define-form stat-group
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:compile
-        (:required-children true))))
-  (:slots
-    (slot gap value (:type Number))))
+(form (accordion-item {:keys [title default-open visible]} child ...)
+  :types {:title (Option (Expr a))
+          :default-open (Option Json)
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "accordion-item" {"title" title "default-open" default-open "visible" visible} child))
 
-(define-form heading
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:positional-prop text)))
-  (:slots
-    (slot text expr (:alias title) (:alias content))
-    (slot level value (:type Number))))
+(define grid.metadata (quote {:descriptor-name "grid" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children "any"}}}))
 
-(define-form divider
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none))))
+(form (grid {:keys [columns visible]} child ...)
+  :types {:columns (Option Number)
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "grid" {"columns" columns "visible" visible} child))
 
-(define-form alert
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:positional-prop message)
-      (:compile
-        (:slot-defaults {:message empty-expr}))))
-  (:slots
-    (slot variant value (:type String))
-    (slot message expr (:required true) (:alias text)))
-  (:validation
-    (validate validate-one-of (:slot variant) (:values [default warning error info]))))
+(define aspect-ratio.metadata (quote {:descriptor-name "aspect-ratio" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children "any"}}}))
 
-(define-form form
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:events {:on-submit onSubmit})
-      (:compile
-        (:required-children true))))
-  (:slots
-    (slot title expr)
-    (slot description expr)))
+(form (aspect-ratio {:keys [ratio visible]} child ...)
+  :types {:ratio (Option Number)
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "aspect-ratio" {"ratio" ratio "visible" visible} child))
 
-(define-form button-group
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:compile
-        (:required-children true))))
-  (:slots
-    (slot orientation value (:type String)))
-  (:validation
-    (validate validate-one-of (:slot orientation) (:values [horizontal vertical]))))
+(define spacer.metadata (quote {:descriptor-name "spacer" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none"}}}))
 
-(define-form breadcrumb
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children only [breadcrumb-item])
-      (:compile
-        (:required-children true)))))
+(form (spacer {:keys [height visible]})
+  :types {:height (Option Number)
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "spacer" {"height" height "visible" visible} []))
 
-(define-form breadcrumb-item
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:parents [breadcrumb])
-      (:events {:on-click onClick})))
-  (:slots
-    (slot label expr (:required true) (:alias text) (:alias title))
-    (slot href expr)
-    (slot current value (:type Boolean))))
+(define split-pane.metadata (quote {:descriptor-name "split-pane" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true :slot-normalize-kinds {:sizes "number-array"} :slot-types {:sizes {:kind "array" :item "number"}}} :children "any"}}}))
 
-(define-form input
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:events {:on-change onChange})))
-  (:slots
-    (slot name value (:type String) (:required true) (:alias state-key) (:alias key))
-    (slot default-value expr)
-    (slot label expr)
-    (slot description expr)
-    (slot placeholder value (:type String))
-    (slot input-type value (:type String) (:alias type))
-    (slot prefix value (:type String))
-    (slot suffix value (:type String)))
-  (:validation
-    (validate validate-one-of
-      (:slot input-type)
-      (:values [text email password number url date]))))
+(form (split-pane {:keys [direction sizes visible]} child ...)
+  :types {:direction (Option (Union "horizontal" "vertical"))
+          :sizes (Option Json)
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "split-pane" {"direction" direction "sizes" sizes "visible" visible} child))
 
-(define-form textarea
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:events {:on-change onChange})))
-  (:slots
-    (slot name value (:type String) (:required true) (:alias state-key) (:alias key))
-    (slot default-value expr)
-    (slot label expr)
-    (slot description expr)
-    (slot placeholder value (:type String))))
+(define for-each.metadata (quote {:descriptor-name "for-each" :extensions {:view/component {:allows-bind true :compile {:expr-props ["visible" "bind"] :required-children true :required-bind true} :children "any"}}}))
 
-(define-form checkbox
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:events {:on-change onChange})))
-  (:slots
-    (slot name value (:type String) (:required true) (:alias state-key) (:alias key))
-    (slot default-value expr)
-    (slot label expr (:alias text) (:alias title))
-    (slot description expr)))
+(form (for-each {:keys [empty-text visible bind]} child ...)
+  :types {:empty-text (Option String)
+          :visible (Option (Expr Bool))
+          :bind (Option (Expr a))
+          :child (List component)}
+  :ir ComponentIR
+  (component "for-each" {"empty-text" empty-text "visible" visible "bind" bind} child))
 
-(define-form switch
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:events {:on-change onChange})))
-  (:slots
-    (slot name value (:type String) (:required true) (:alias state-key) (:alias key))
-    (slot default-value expr)
-    (slot label expr (:alias text) (:alias title))
-    (slot description expr)))
+(define condition.metadata (quote {:descriptor-name "condition" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children ["only" ["case" "else"]]}}}))
 
-(define-form select
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children only [select-option])
-      (:events {:on-change onChange})
-      (:compile
-        (:slot-normalize-kinds {:options select-options})
-        (:slot-types
-          {:options {:kind array :item [string ViewSelectOptionValue]}}))))
-  (:slots
-    (slot name value (:type String) (:required true) (:alias state-key) (:alias key))
-    (slot default-value expr)
-    (slot label expr)
-    (slot description expr)
-    (slot placeholder value (:type String))
-    (slot options value (:type Array))))
+(form (condition {:keys [visible]} child ...)
+  :types {:visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "condition" {"visible" visible} child))
 
-(define-form select-option
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:parents [select])
-      (:compile
-        (:extra-normalize-fields [
-          {:field label :keys [label text value] :kind expr}
-        ]))))
-  (:slots
-    (slot value value (:type String) (:required true) (:alias key))
-    (slot label expr (:alias text))))
+(define case.metadata (quote {:descriptor-name "case" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true :slot-defaults {:when "false-expr-or-bind"}} :children "any" :parents ["condition"]}}}))
 
-(define-form radio-group
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children only [radio-option])
-      (:events {:on-change onChange})
-      (:compile
-        (:slot-normalize-kinds {:options select-options})
-        (:slot-types
-          {:options {:kind array :item [string ViewSelectOptionValue]}}))))
-  (:slots
-    (slot name value (:type String) (:required true) (:alias state-key) (:alias key))
-    (slot default-value expr)
-    (slot label expr)
-    (slot description expr)
-    (slot options value (:type Array))))
+(form (case {:keys [when visible]} child ...)
+  :types {:when (Expr a)
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "case" {"when" when "visible" visible} child))
 
-(define-form radio-option
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:parents [radio-group])
-      (:compile
-        (:extra-normalize-fields [
-          {:field label :keys [label text value] :kind expr}
-        ]))))
-  (:slots
-    (slot value value (:type String) (:required true) (:alias key))
-    (slot label expr (:alias text))))
+(define else.metadata (quote {:descriptor-name "else" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children "any" :parents ["condition"]}}}))
 
-(define-form slider
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:events {:on-change onChange})
-      (:compile
-        (:slot-normalize-kinds {:options select-options}))))
-  (:slots
-    (slot name value (:type String) (:required true) (:alias state-key) (:alias key))
-    (slot default-value expr)
-    (slot label expr)
-    (slot description expr)
-    (slot min value (:type Number))
-    (slot max value (:type Number))
-    (slot step value (:type Number))))
+(form (else {:keys [visible]} child ...)
+  :types {:visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "else" {"visible" visible} child))
 
-(define-form toggle-group
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:events {:on-change onChange})
-      (:compile
-        (:slot-types
-          {:options {:kind array :item [string ViewSelectOptionValue]}}))))
-  (:slots
-    (slot name value (:type String) (:required true) (:alias state-key) (:alias key))
-    (slot default-value expr)
-    (slot mode value (:type String))
-    (slot variant value (:type String))
-    (slot options value (:type Array)))
-  (:validation
-    (validate validate-one-of (:slot mode) (:values [single multiple]))
-    (validate validate-one-of (:slot variant) (:values [default outline]))))
+(define slot.metadata (quote {:descriptor-name "slot" :extensions {:view/component {:allows-bind true :compile {:expr-props ["visible" "bind"]} :children "any" :positional-prop "name"}}}))
 
-(define-form skeleton
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)))
-  (:slots
-    (slot lines value (:type Number))))
+(form (slot name {:keys [visible bind]} child ...)
+  :types {:name (Option String)
+          :visible (Option (Expr Bool))
+          :bind (Option (Expr a))
+          :child (List component)}
+  :ir ComponentIR
+  (component "slot" {"name" name "visible" visible "bind" bind} child))
 
-(define-form raw-html
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:positional-prop content)))
-  (:slots
-    (slot content expr (:required true) (:alias html))))
+(define use.metadata (quote {:descriptor-name "use" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "any" :positional-prop "name"}}}))
 
-(define-form raw-css
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:positional-prop content)))
-  (:slots
-    (slot content expr (:required true) (:alias css))))
+(form (use name {:keys [overrides visible]} child ...)
+  :types {:name String
+          :overrides (Option Json)
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "use" {"name" name "overrides" overrides "visible" visible} child))
 
-(define-form raw-js
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children none)
-      (:positional-prop code)))
-  (:slots
-    (slot code expr (:required true) (:alias js) (:alias content))))
+(define tooltip.metadata (quote {:descriptor-name "tooltip" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children "any"}}}))
 
-(define-form custom
-  (:phase meta)
-  (:extensions
-    (:view/component
-      (:allows-bind false)
-      (:compile
-        (:expr-props [visible]))
-      (:children any)
-      (:compile
-        (:json-slots [props])
-        (:unknown-props json)
-        (:slot-types
-          {:props {:kind record :value unknown}}))))
-  (:slots
-    (slot component-name value (:type String) (:required true))
-    (slot props value (:type Object))))
+(form (tooltip {:keys [content side visible]} child ...)
+  :types {:content (Expr a)
+          :side (Option (Union "top" "right" "bottom" "left"))
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "tooltip" {"content" content "side" side "visible" visible} child))
 
-(define-form component-ref
-  (:phase meta)
-  (:extensions
-    (:view/layout-alias
-      (:form "component-ref")
-      (:to "view-ref"))))
+(define popover.metadata (quote {:descriptor-name "popover" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true :node-slots ["trigger"]} :children "any"}}}))
 
-(define-form cond
-  (:phase meta)
-  (:extensions
-    (:view/layout-alias
-      (:form "cond")
-      (:to "condition"))))
+(form (popover {:keys [trigger title description side align visible]} child ...)
+  :types {:trigger Syntax
+          :title (Option (Expr a))
+          :description (Option (Expr a))
+          :side (Option (Union "top" "right" "bottom" "left"))
+          :align (Option (Union "start" "center" "end"))
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "popover" {"trigger" trigger "title" title "description" description "side" side "align" align "visible" visible} child))
+
+(define hover-card.metadata (quote {:descriptor-name "hover-card" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true :node-slots ["trigger"]} :children "any"}}}))
+
+(form (hover-card {:keys [trigger side align visible]} child ...)
+  :types {:trigger Syntax
+          :side (Option (Union "top" "right" "bottom" "left"))
+          :align (Option (Union "start" "center" "end"))
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "hover-card" {"trigger" trigger "side" side "align" align "visible" visible} child))
+
+(define dialog.metadata (quote {:descriptor-name "dialog" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children "any" :events {:on-open-change "onOpenChange"}}}}))
+
+(form (dialog {:keys [dialog-id title description visible]} child ...)
+  :types {:dialog-id String
+          :title (Option (Expr a))
+          :description (Option (Expr a))
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "dialog" {"dialog-id" dialog-id "title" title "description" description "visible" visible} child))
+
+(define table.metadata (quote {:descriptor-name "table" :extensions {:view/component {:allows-bind true :compile {:expr-props ["visible" "bind"] :required-bind true :slot-normalize-kinds {:columns "table-columns" :filters "table-filters" :default-sort "table-sort"} :slot-types {:columns {:kind "array" :item ["string" "ViewTableColumn"]} :filters {:kind "array" :item ["string" "ViewTableFilter"]} :default-sort "ViewTableSort"}} :children "none" :events {:on-row-click "onRowClick"}}}}))
+
+(form (table {:keys [columns filters page-size default-sort empty-state visible bind]})
+  :types {:columns (Option Json)
+          :filters (Option Json)
+          :page-size (Option Number)
+          :default-sort (Option Json)
+          :empty-state (Option String)
+          :visible (Option (Expr Bool))
+          :bind (Option (Expr a))}
+  :ir ComponentIR
+  (component "table" {"columns" columns "filters" filters "page-size" page-size "default-sort" default-sort "empty-state" empty-state "visible" visible "bind" bind} []))
+
+(define tree.metadata (quote {:descriptor-name "tree" :extensions {:view/component {:allows-bind true :compile {:expr-props ["visible" "bind"] :slot-normalize-kinds {:default-expanded "boolean-or-number"} :slot-types {:default-expanded ["boolean" "number"]}} :children "any" :events {:on-node-click "onNodeClick"}}}}))
+
+(form (tree {:keys [id-key parent-id-key label-key default-expanded visible bind]} child ...)
+  :types {:id-key (Option String)
+          :parent-id-key (Option String)
+          :label-key (Option String)
+          :default-expanded (Option Json)
+          :visible (Option (Expr Bool))
+          :bind (Option (Expr a))
+          :child (List component)}
+  :ir ComponentIR
+  (component "tree" {"id-key" id-key "parent-id-key" parent-id-key "label-key" label-key "default-expanded" default-expanded "visible" visible "bind" bind} child))
+
+(define metric.metadata (quote {:descriptor-name "metric" :extensions {:view/component {:allows-bind true :compile {:expr-props ["visible" "bind"] :required-bind true :slot-normalize-kinds {:series "chart-series"}} :children "none"}}}))
+
+(form (metric {:keys [label value value-key visible bind]})
+  :types {:label (Option (Expr a))
+          :value (Option (Expr a))
+          :value-key (Option String)
+          :visible (Option (Expr Bool))
+          :bind (Option (Expr a))}
+  :ir ComponentIR
+  (component "metric" {"label" label "value" value "value-key" value-key "visible" visible "bind" bind} []))
+
+(define chart.metadata (quote {:descriptor-name "chart" :extensions {:view/component {:allows-bind true :compile {:expr-props ["visible" "bind"] :slot-types {:series {:kind "array" :item ["string" "ViewChartSeries"]}}} :children "none"}}}))
+
+(form (chart {:keys [title chart-type category-key series visible bind]})
+  :types {:title (Option (Expr a))
+          :chart-type (Option (Union "bar" "line" "area" "pie" "radar" "radial" "scatter"))
+          :category-key (Option String)
+          :series (Option Json)
+          :visible (Option (Expr Bool))
+          :bind (Option (Expr a))}
+  :ir ComponentIR
+  (component "chart" {"title" title "chart-type" chart-type "category-key" category-key "series" series "visible" visible "bind" bind} []))
+
+(define markdown.metadata (quote {:descriptor-name "markdown" :extensions {:view/component {:allows-bind true :compile {:expr-props ["visible" "bind"]} :children "none" :positional-prop "content"}}}))
+
+(form (markdown content {:keys [visible bind]})
+  :types {:content (Option (Expr a))
+          :visible (Option (Expr Bool))
+          :bind (Option (Expr a))}
+  :ir ComponentIR
+  (component "markdown" {"content" content "visible" visible "bind" bind} []))
+
+(define stat-group.metadata (quote {:descriptor-name "stat-group" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children "any"}}}))
+
+(form (stat-group {:keys [gap visible]} child ...)
+  :types {:gap (Option Number)
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "stat-group" {"gap" gap "visible" visible} child))
+
+(define heading.metadata (quote {:descriptor-name "heading" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none" :positional-prop "text"}}}))
+
+(form (heading text {:keys [level visible]})
+  :types {:text (Option (Expr a))
+          :level (Option Number)
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "heading" {"text" text "level" level "visible" visible} []))
+
+(define divider.metadata (quote {:descriptor-name "divider" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none"}}}))
+
+(form (divider {:keys [visible]})
+  :types {:visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "divider" {"visible" visible} []))
+
+(define alert.metadata (quote {:descriptor-name "alert" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :slot-defaults {:message "empty-expr"}} :children "none" :positional-prop "message"}}}))
+
+(form (alert message {:keys [variant visible]})
+  :types {:message (Expr a)
+          :variant (Option (Union "default" "warning" "error" "info"))
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "alert" {"message" message "variant" variant "visible" visible} []))
+
+(define form.metadata (quote {:descriptor-name "form" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children "any" :events {:on-submit "onSubmit"}}}}))
+
+(form (form {:keys [title description visible]} child ...)
+  :types {:title (Option (Expr a))
+          :description (Option (Expr a))
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "form" {"title" title "description" description "visible" visible} child))
+
+(define button-group.metadata (quote {:descriptor-name "button-group" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children "any"}}}))
+
+(form (button-group {:keys [orientation visible]} child ...)
+  :types {:orientation (Option (Union "horizontal" "vertical"))
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "button-group" {"orientation" orientation "visible" visible} child))
+
+(define breadcrumb.metadata (quote {:descriptor-name "breadcrumb" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :required-children true} :children ["only" ["breadcrumb-item"]]}}}))
+
+(form (breadcrumb {:keys [visible]} child ...)
+  :types {:visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "breadcrumb" {"visible" visible} child))
+
+(define breadcrumb-item.metadata (quote {:descriptor-name "breadcrumb-item" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none" :parents ["breadcrumb"] :events {:on-click "onClick"}}}}))
+
+(form (breadcrumb-item {:keys [label href current visible]})
+  :types {:label (Expr a)
+          :href (Option (Expr a))
+          :current (Option Json)
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "breadcrumb-item" {"label" label "href" href "current" current "visible" visible} []))
+
+(define input.metadata (quote {:descriptor-name "input" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none" :events {:on-change "onChange"}}}}))
+
+(form (input {:keys [name default-value label description placeholder input-type prefix suffix visible]})
+  :types {:name String
+          :default-value (Option (Expr a))
+          :label (Option (Expr a))
+          :description (Option (Expr a))
+          :placeholder (Option String)
+          :input-type (Option (Union "text" "email" "password" "number" "url" "date"))
+          :prefix (Option String)
+          :suffix (Option String)
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "input" {"name" name "default-value" default-value "label" label "description" description "placeholder" placeholder "input-type" input-type "prefix" prefix "suffix" suffix "visible" visible} []))
+
+(define textarea.metadata (quote {:descriptor-name "textarea" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none" :events {:on-change "onChange"}}}}))
+
+(form (textarea {:keys [name default-value label description placeholder visible]})
+  :types {:name String
+          :default-value (Option (Expr a))
+          :label (Option (Expr a))
+          :description (Option (Expr a))
+          :placeholder (Option String)
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "textarea" {"name" name "default-value" default-value "label" label "description" description "placeholder" placeholder "visible" visible} []))
+
+(define checkbox.metadata (quote {:descriptor-name "checkbox" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none" :events {:on-change "onChange"}}}}))
+
+(form (checkbox {:keys [name default-value label description visible]})
+  :types {:name String
+          :default-value (Option (Expr a))
+          :label (Option (Expr a))
+          :description (Option (Expr a))
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "checkbox" {"name" name "default-value" default-value "label" label "description" description "visible" visible} []))
+
+(define switch.metadata (quote {:descriptor-name "switch" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none" :events {:on-change "onChange"}}}}))
+
+(form (switch {:keys [name default-value label description visible]})
+  :types {:name String
+          :default-value (Option (Expr a))
+          :label (Option (Expr a))
+          :description (Option (Expr a))
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "switch" {"name" name "default-value" default-value "label" label "description" description "visible" visible} []))
+
+(define select.metadata (quote {:descriptor-name "select" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :slot-normalize-kinds {:options "select-options"} :slot-types {:options {:kind "array" :item ["string" "ViewSelectOptionValue"]}}} :children ["only" ["select-option"]] :events {:on-change "onChange"}}}}))
+
+(form (select {:keys [name default-value label description placeholder options visible]} child ...)
+  :types {:name String
+          :default-value (Option (Expr a))
+          :label (Option (Expr a))
+          :description (Option (Expr a))
+          :placeholder (Option String)
+          :options (Option Json)
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "select" {"name" name "default-value" default-value "label" label "description" description "placeholder" placeholder "options" options "visible" visible} child))
+
+(define select-option.metadata (quote {:descriptor-name "select-option" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :extra-normalize-fields [{:field "label" :keys ["label" "text" "value"] :kind "expr"}]} :children "none" :parents ["select"]}}}))
+
+(form (select-option {:keys [value label visible]})
+  :types {:value String
+          :label (Option (Expr a))
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "select-option" {"value" value "label" label "visible" visible} []))
+
+(define radio-group.metadata (quote {:descriptor-name "radio-group" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :slot-normalize-kinds {:options "select-options"} :slot-types {:options {:kind "array" :item ["string" "ViewSelectOptionValue"]}}} :children ["only" ["radio-option"]] :events {:on-change "onChange"}}}}))
+
+(form (radio-group {:keys [name default-value label description options visible]} child ...)
+  :types {:name String
+          :default-value (Option (Expr a))
+          :label (Option (Expr a))
+          :description (Option (Expr a))
+          :options (Option Json)
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "radio-group" {"name" name "default-value" default-value "label" label "description" description "options" options "visible" visible} child))
+
+(define radio-option.metadata (quote {:descriptor-name "radio-option" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :extra-normalize-fields [{:field "label" :keys ["label" "text" "value"] :kind "expr"}]} :children "none" :parents ["radio-group"]}}}))
+
+(form (radio-option {:keys [value label visible]})
+  :types {:value String
+          :label (Option (Expr a))
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "radio-option" {"value" value "label" label "visible" visible} []))
+
+(define slider.metadata (quote {:descriptor-name "slider" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :slot-normalize-kinds {:options "select-options"}} :children "none" :events {:on-change "onChange"}}}}))
+
+(form (slider {:keys [name default-value label description min max step visible]})
+  :types {:name String
+          :default-value (Option (Expr a))
+          :label (Option (Expr a))
+          :description (Option (Expr a))
+          :min (Option Number)
+          :max (Option Number)
+          :step (Option Number)
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "slider" {"name" name "default-value" default-value "label" label "description" description "min" min "max" max "step" step "visible" visible} []))
+
+(define toggle-group.metadata (quote {:descriptor-name "toggle-group" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :slot-types {:options {:kind "array" :item ["string" "ViewSelectOptionValue"]}}} :children "none" :events {:on-change "onChange"}}}}))
+
+(form (toggle-group {:keys [name default-value mode variant options visible]})
+  :types {:name String
+          :default-value (Option (Expr a))
+          :mode (Option (Union "single" "multiple"))
+          :variant (Option (Union "default" "outline"))
+          :options (Option Json)
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "toggle-group" {"name" name "default-value" default-value "mode" mode "variant" variant "options" options "visible" visible} []))
+
+(define skeleton.metadata (quote {:descriptor-name "skeleton" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none"}}}))
+
+(form (skeleton {:keys [lines visible]})
+  :types {:lines (Option Number)
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "skeleton" {"lines" lines "visible" visible} []))
+
+(define raw-html.metadata (quote {:descriptor-name "raw-html" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none" :positional-prop "content"}}}))
+
+(form (raw-html content {:keys [visible]})
+  :types {:content (Expr a)
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "raw-html" {"content" content "visible" visible} []))
+
+(define raw-css.metadata (quote {:descriptor-name "raw-css" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none" :positional-prop "content"}}}))
+
+(form (raw-css content {:keys [visible]})
+  :types {:content (Expr a)
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "raw-css" {"content" content "visible" visible} []))
+
+(define raw-js.metadata (quote {:descriptor-name "raw-js" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"]} :children "none" :positional-prop "code"}}}))
+
+(form (raw-js code {:keys [visible]})
+  :types {:code (Expr a)
+          :visible (Option (Expr Bool))}
+  :ir ComponentIR
+  (component "raw-js" {"code" code "visible" visible} []))
+
+(define custom.metadata (quote {:descriptor-name "custom" :extensions {:view/component {:allows-bind false :compile {:expr-props ["visible"] :json-slots ["props"] :unknown-props "json" :slot-types {:props {:kind "record" :value "unknown"}}} :children "any"}}}))
+
+(form (custom {:keys [component-name props visible]} child ...)
+  :types {:component-name String
+          :props (Option Json)
+          :visible (Option (Expr Bool))
+          :child (List component)}
+  :ir ComponentIR
+  (component "custom" {"component-name" component-name "props" props "visible" visible} child))
+
+(define component-ref (quote {:extensions {:view/layout-alias {:form "component-ref" :to "view-ref"}}}))
+
+(define cond (quote {:extensions {:view/layout-alias {:form "cond" :to "condition"}}}))

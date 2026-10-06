@@ -26,22 +26,22 @@ export class Unavailable extends Schema.TaggedError<Unavailable>()("Unavailable"
 export class Profiles extends Context.Service<
   Profiles,
   {
-    readonly fetch: (id: string) => Effect.Effect<Profile, Unavailable>;
-    readonly cached: (id: string) => Effect.Effect<Profile, Unavailable>;
+    readonly fetch: (arg0: string) => Effect.Effect<Profile, Unavailable>;
+    readonly cached: (arg0: string) => Effect.Effect<Profile, Unavailable>;
   }
 >()("Profiles") {}
 
 export class Activities extends Context.Service<
   Activities,
   {
-    readonly fetch: (id: string) => Effect.Effect<Activity, Unavailable>;
+    readonly fetch: (arg0: string) => Effect.Effect<Activity, Unavailable>;
   }
 >()("Activities") {}
 
 export class Metrics extends Context.Service<
   Metrics,
   {
-    readonly track: (name: string, value: number) => Effect.Effect<void>;
+    readonly track: (arg0: string, arg1: number) => Effect.Effect<void>;
   }
 >()("Metrics") {}
 

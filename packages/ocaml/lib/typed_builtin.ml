@@ -42,6 +42,13 @@ let nth_type () =
   TFn ([ TList item_ty; TInt ], item_ty)
 
 let builtin_value_type = function
+  | "Some" | "Option.Some" -> let a=fresh_tyvar () in Some (TFn ([a],TNamedApp ("Option",[a])))
+  | "None" | "Option.None" -> Some (TNamedApp ("Option",[fresh_tyvar ()]))
+  | "Ok" | "Result.Ok" -> let a=fresh_tyvar () and e=fresh_tyvar () in Some (TFn ([a],TNamedApp ("Result",[a;e])))
+  | "Err" | "Result.Err" -> let a=fresh_tyvar () and e=fresh_tyvar () in Some (TFn ([e],TNamedApp ("Result",[a;e])))
+  | "starts-with?" | "ends-with?" -> Some (TFn ([TString;TString],TBool))
+  | "upper" | "lower" | "trim" -> Some (TFn ([TString],TString))
+  | "split" -> Some (TFn ([TString;TString],TList TString))
   | "map" | "list/map" -> Some (map_type ())
   | "filter" | "list/filter" -> Some (filter_type ())
   | "flat-map" | "list/flat-map" -> Some (flat_map_type ())
@@ -101,7 +108,11 @@ let infer_numeric callbacks env op args =
                   (saw_float || numeric_ty = TFloat)
                   rest))
   in
-  loop [] env false args
+  let arity = List.length args in
+  if ((op = "/" && arity < 2) || (List.mem op ["-";"min";"max"] && arity < 1)
+      || (List.mem op ["floor";"ceil";"round";"abs"] && arity <> 1) || (op = "mod" && arity <> 2)) then
+    Error [diagnostic "typecheck/arity" ("Invalid argument count for " ^ op)]
+  else loop [] env false args |> Result.map (fun (subst,t) -> subst, if List.mem op ["floor";"ceil";"round"] then TInt else t)
 
 let infer_comparison callbacks env op args =
   match args with
@@ -123,15 +134,18 @@ let infer_equality callbacks env = function
       | Ok (left_subst, left_ty), Ok (right_subst, right_ty) -> (
           let subst = compose_subst right_subst left_subst in
           match
-            unify (apply_subst subst left_ty) (apply_subst subst right_ty)
+            let rec keyword = function TKeyword -> true | TNamed n -> String.starts_with ~prefix:":" n | TNamedApp ("Union",members) -> List.for_all keyword members | _ -> false in
+            let left=apply_subst subst left_ty and right=apply_subst subst right_ty in
+            if keyword left && keyword right then Ok [] else unify left right
           with
           | Error _ as error -> error
           | Ok unify_subst -> Ok (compose_subst unify_subst subst, TBool)))
   | _ ->
       Error [ diagnostic "typecheck/arity" "= expects exactly two arguments." ]
 
-let infer_builtin_application callbacks env op args =
+let infer_builtin_application_fallback callbacks env op args =
   match op with
+  | "Some" | "Option.Some" | "Ok" | "Result.Ok" | "Err" | "Result.Err" -> (match builtin_value_type op with Some t -> callbacks.infer_apply env [] t args | None -> assert false)
   | "quote" | "quasiquote" -> Ok ([], TSyntax)
   | "and" | "or" -> infer_args_return callbacks env args TAny
   | "not" -> infer_unary callbacks env TAny TBool args
@@ -139,9 +153,9 @@ let infer_builtin_application callbacks env op args =
       Typed_collection_builtin.infer_collection
         Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
         env
-        (fun ty -> TVector ty)
+        (fun ty -> TList ty)
         args
-  | "+" | "-" | "*" | "/" | "mod" -> infer_numeric callbacks env op args
+  | "+" | "-" | "*" | "/" | "mod" | "floor" | "ceil" | "round" | "abs" | "min" | "max" -> infer_numeric callbacks env op args
   | "=" | "!=" -> infer_equality callbacks env args
   | "<" | "<=" | ">" | ">=" -> infer_comparison callbacks env op args
   | "list" ->
@@ -150,6 +164,11 @@ let infer_builtin_application callbacks env op args =
         env
         (fun ty -> TList ty)
         args
+  | "starts-with?" | "ends-with?" -> callbacks.infer_apply env [] (TFn ([TString;TString],TBool)) args
+  | "upper" | "lower" | "trim" -> callbacks.infer_apply env [] (TFn ([TString],TString)) args
+  | "split" -> (match args with
+      | [left;right] -> callbacks.infer_apply env [] (TFn ([TString;TString],TList TString)) [left;right]
+      | _ -> Error [diagnostic "typecheck/arity" "split expects a string and separator."])
   | "str" | "format" -> infer_args_return callbacks env args TString
   | "count" ->
       Typed_collection_builtin.infer_count
@@ -192,7 +211,35 @@ let infer_builtin_application callbacks env op args =
         Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
         env args
   | "into" -> infer_args_return callbacks env args TMap
-  | "get" | "path" -> infer_args_return callbacks env args TAny
+  | "__dictionary" -> (match args with
+      | [e] -> (match callbacks.infer_expr env e with
+          | Error _ as e -> e
+          | Ok (subst,(TNamedApp ("Map",_) as t)) -> Ok (subst,t)
+          | Ok (subst,TRecord fields) ->
+              let key=match List.map (fun (label,_) -> TNamed (if String.starts_with ~prefix:":" label then label else Value.string_json (if String.starts_with ~prefix:"\000str:" label then String.sub label 5 (String.length label-5) else label))) fields with [] -> fresh_tyvar () | [t] -> t | ts -> TNamedApp ("Union",ts) in
+              let rec values subst current = function [] -> Ok (subst,TNamedApp ("Map",[key;current])) | (_,t) :: rest -> (match join (apply_subst subst current) (apply_subst subst t) with Error _ as e -> e | Ok (s,t) -> values (compose_subst s subst) t rest) in
+              (match fields with [] -> Ok (subst,TNamedApp ("Map",[key;fresh_tyvar ()])) | (_,t) :: rest -> values subst t rest)
+          | Ok _ -> Error [diagnostic "typecheck/expected-map" "Map construction requires a record or map."])
+      | _ -> Error [diagnostic "typecheck/arity" "Map construction expects one value."])
+  | "get" | "__map-get" -> (match args with
+      | [record;key] -> (match callbacks.infer_expr env record with Error _ as e -> e | Ok (subst,record_ty) ->
+          match callbacks.infer_expr (apply_subst_env subst env) key with Error _ as e -> e | Ok (key_subst,key_ty) ->
+            let subst=compose_subst key_subst subst in
+            match apply_subst subst record_ty with
+            | TNamedApp ("Map",[key;item]) -> assign (apply_subst subst key_ty) key |> Result.map (fun s -> let subst=compose_subst s subst in subst,TNamedApp ("Option",[apply_subst subst item]))
+            | TVar _ as variable -> let item=fresh_tyvar () in
+                unify variable (TNamedApp ("Map",[apply_subst subst key_ty;item])) |> Result.map (fun s -> let subst=compose_subst s subst in subst,TNamedApp ("Option",[apply_subst subst item]))
+            | TOpenRecord _ -> Error [diagnostic "typecheck/open-record" "Computed lookup requires a closed record or a typed Map."]
+            | TRecord fields ->
+                let key_kinds=List.sort_uniq compare (List.map (fun (label,_) -> if String.starts_with ~prefix:":" label then TKeyword else TString) fields) in
+                let expected=match key_kinds with [key] -> key | keys -> TNamedApp ("Union",if keys=[] then [TKeyword;TString] else keys) in
+                (match assign (apply_subst subst key_ty) expected with Error _ as e -> e | Ok s ->
+                  let subst=compose_subst s subst in
+                  Ok (subst,TNamedApp ("Option",[Typed_record_builtin.record_values_item_type subst fields])))
+            | TList item | TVector item -> assign (apply_subst subst key_ty) TInt |> Result.map (fun s -> let subst=compose_subst s subst in subst,apply_subst subst item)
+            | _ -> Ok (subst,TAny))
+      | _ -> Error [diagnostic "typecheck/arity" "get expects a collection and key"])
+  | "path" -> infer_args_return callbacks env args TAny
   | "get-in" ->
       Typed_record_builtin.infer_get_in
         (typed_record_callbacks callbacks)
@@ -225,18 +272,25 @@ let infer_builtin_application callbacks env op args =
       Typed_collection_builtin.infer_conj
         Typed_collection_builtin.{ infer_expr = callbacks.infer_expr }
         env args
-  | "empty?" | "contains?" | "set/contains?" | "nil?" | "string?" | "number?"
+  | "empty?" | "contains?" | "set/contains?" | "keyword?" | "symbol?" | "nil?" | "string?" | "number?"
   | "boolean?" | "list?" | "map?" | "fn?" ->
       infer_args_return callbacks env args TBool
+  | "keyword/name" -> infer_args_return callbacks env args TString
+  | "keyword" -> infer_args_return callbacks env args TKeyword
+  | "sym" -> infer_args_return callbacks env args TSymbol
+  | "meta/get" | "attribute-type" | "declaration-hole" | "declaration-fields" | "row-of" | "meta" | "type/base" | "type/kind" | "type/metadata" | "form/ensure" | "form/project" -> infer_args_return callbacks env args TAny
   | "gensym" -> infer_args_return callbacks env args TSymbol
   | "sexpr-sym-name" -> infer_args_return callbacks env args TString
   | "sexpr-list?" -> infer_args_return callbacks env args TBool
-  | "sexpr-items" -> infer_args_return callbacks env args (TList TAny)
+  | "meta/entries" | "sexpr-items" -> infer_args_return callbacks env args (TList TAny)
   | "meta/declaration-name" | "meta/form-name" | "meta/declaration-kind"
   | "meta/slot-symbol" | "meta/slot-string" ->
       infer_args_return callbacks env args TString
   | "meta/slot-string-list" | "meta/slot-values" | "meta/declaration-fields"
-  | "diag/concat" | "diag/require-slot" | "diag/member-of" | "diag/one-of" ->
+  | "diag/concat" | "diag/require-slot" | "diag/member-of" | "diag/one-of"
+  | "diag/validate-membership-list" | "diag/validate-default-in-list"
+  | "meta/query-select-fields" | "meta/validate-query-select-fields"
+  | "meta/validate-tree-bindings" | "meta/validate-descriptor-tree" ->
       infer_args_return callbacks env args (TList TAny)
   | "meta/semantic-env" | "meta/declaration-field" | "meta/slot-value"
   | "meta/slot-expr" | "meta/slot-runtime-expr" | "meta/slot-ref" | "meta/loc"
@@ -252,7 +306,9 @@ let infer_builtin_application callbacks env op args =
       infer_args_return callbacks env args TTypeValue
   | "bindings/empty" | "bindings/of" | "bindings/merge" | "bindings/when"
   | "bindings/from-declaration" | "bindings/from-fields" | "bindings/scoped"
-  | "diag/error" | "construct/object" | "construct/declaration"
+  | "http/schema-decl" | "http/error-decl" | "http/api-group-decl"
+  | "view/compile-expr-record" | "meta/compile-descriptor-tree"
+  | "diag/error" | "construct/object" | "construct/query" | "construct/declaration"
   | "construct/summary" | "construct/assoc" | "construct/from-descriptor" ->
       infer_args_return callbacks env args TMap
   | "meta/declaration-type" | "meta/project-type" | "type/unknown"
@@ -265,6 +321,11 @@ let infer_builtin_application callbacks env op args =
           diagnostic "typecheck/unknown-form"
             (Printf.sprintf "Unknown form or function %S." op);
         ]
+
+let infer_builtin_application (callbacks : callbacks) env op args =
+  match Typed_dictionary_builtin.infer Typed_dictionary_builtin.{infer_expr=callbacks.infer_expr} env op args with
+  | Some result -> result
+  | None -> infer_builtin_application_fallback callbacks env op args
 
 let infer_named_application callbacks env name args =
   match env_lookup name env with

@@ -37,6 +37,7 @@ let rec normalize_typeclass_instance_ty = function
       TNamedApp ("List", List.map normalize_typeclass_instance_ty args)
   | TList item -> TNamedApp ("List", [ normalize_typeclass_instance_ty item ])
   | TVector item -> TNamedApp ("List", [ normalize_typeclass_instance_ty item ])
+  | TOpenRecord (fields,tail) -> TOpenRecord (List.map (fun (label,t)->label,normalize_typeclass_instance_ty t) fields,normalize_typeclass_instance_ty tail)
   | TRecord fields ->
       TRecord
         (List.map

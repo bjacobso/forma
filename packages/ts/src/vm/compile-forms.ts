@@ -190,6 +190,7 @@ export function compileLet(
       const slot = scope.addLocal(letBindName);
       emit(chunk, Op.STORE_LOCAL, trace);
       emitU8(chunk, slot, trace);
+      emit(chunk, Op.POP, trace);
     } else {
       // Unsupported destructuring in bytecode — emit store to a dummy slot
       emit(chunk, Op.POP, trace);
@@ -351,7 +352,7 @@ export function compileMatch(
     scope.locals.length = localsBeforeArm;
   }
 
-  emit(chunk, Op.NIL, trace);
+  emit(chunk, Op.MATCH_FAILURE, trace);
   for (const offset of jumpToEndOffsets) {
     patchJump(chunk, offset);
   }

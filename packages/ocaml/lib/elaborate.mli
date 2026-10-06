@@ -45,3 +45,5 @@ val typed_artifact_declarations :
 val emitted_declarations_json : emitted_declaration list -> string
 val emitted_values_json : emitted_value list -> string
 val values_json : Eval.value list -> string
+
+val emitted_values_diagnostics : emitted_value list -> Diagnostic.t list

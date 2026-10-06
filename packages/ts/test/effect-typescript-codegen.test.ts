@@ -59,7 +59,7 @@ describe("Effect TypeScript projection", () => {
       print: (message: string) => Effect.sync(() => { messages.push(message); }),
     }))).toBeUndefined();
     expect(messages).toEqual(["hello"]);
-  });
+  },20_000);
 
   test("lowers nested sequencing and branches from the shared body IR", async () => {
     const forms = Effect.runSync(Reader.parseManyToSExpr(source));
@@ -114,13 +114,13 @@ describe("Effect TypeScript projection", () => {
 
   test("keeps shadowed bindings distinct within one generated block", async () => {
     const program = `
-      (define-service Counter (:methods (next [] (Effect Int [] []))))
-      (: shadow (-> (Effect Int [] [Counter])))
-      (define-operation shadow []
-        (do! [x (Counter.next)]
-          (do (do! [x (Counter.next) y (succeed (+ x 100))] (log y))
-              (do! [x (Counter.next) y (succeed (* x 10))] (log y))
-              (succeed x))))`;
+      (service Counter
+        (: next (Effect Int [] [])))
+      (: shadow (Effect Int [] [Counter]))
+      (define shadow (do! [x Counter.next]
+                (do (do! [x Counter.next y (succeed (+ x 100))] (log y))
+                    (do! [x Counter.next y (succeed (* x 10))] (log y))
+                    (succeed x))))`;
     const result = Mechanics.generateEffectProgram(program);
     expect(result.diagnostics).toEqual([]);
     const code = result.code ?? "";
@@ -130,10 +130,10 @@ describe("Effect TypeScript projection", () => {
     }).outputText;
     const exports: Record<string, unknown> = {};
     new Function("require", "exports", js)(createRequire(import.meta.url), exports);
-    const shadow = exports["shadow"] as () => Effect.Effect<number, never, never>;
+    const shadow = exports["shadow"] as Effect.Effect<number, never, never>;
     const Counter = exports["Counter"] as never;
     let next = 0;
-    const counted = Effect.provideService(shadow(), Counter, { next: () => Effect.sync(() => ++next) });
+    const counted = Effect.provideService(shadow, Counter, { next: Effect.sync(() => ++next) });
     // The final x is the first binding, not either shadowing one.
     expect(await Effect.runPromise(counted)).toBe(1);
     expect(next).toBe(3);

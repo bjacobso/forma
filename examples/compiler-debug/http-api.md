@@ -6,47 +6,24 @@ canonical HTTP API IR shape golden-stable while the TypeScript runtime
 translator is still pending.
 
 ```lisp
-(define-schema DebugBlobHash
-  (:kind string)
-  (:pattern "^[a-f0-9]{64}$")
-  (:brand "DebugBlobHash")
-  (:doc "64-character lowercase hex blob hash"))
+(type DebugBlobHash (Brand String))
+(type DebugBlobUploadResponse {:hash DebugBlobHash :size Int})
+(error DebugDatabaseNotFound {:database String} :status 404)
+(error DebugBlobUploadError {:reason String} :status 400)
+(error InternalError {:message String} :status 500)
 
-(define-schema DebugBlobUploadResponse
-  (:kind struct)
-  (:fields
-    (field hash DebugBlobHash)
-    (field size Int)
-    (field mime-type String)
-    (field filename (Optional String))
-    (field is-new Bool))
-  (:identifier "DebugBlobUploadResponse"))
-
-(define-error DebugDatabaseNotFound
-  (:fields (field database String))
-  (:status 404))
-
-(define-error DebugBlobUploadError
-  (:fields (field reason String))
-  (:status 500))
-
-(define-api-group debug-blobs
-  (:path-params
-    (param database String)
-    (param hash DebugBlobHash))
-
+(api debug-blobs
+  :path-params {:database String :hash DebugBlobHash}
   (endpoint upload
-    (:method POST)
-    (:path "/db/{database}/debug-blobs")
-    (:payload Uint8Array)
-    (:query
-      (field filename (Optional String)))
-    (:success DebugBlobUploadResponse)
-    (:errors DebugDatabaseNotFound DebugBlobUploadError InternalError))
-
+    :method :post
+    :path "/db/{database}/debug-blobs"
+    :payload Bytes
+    :query {:filename (Option String)}
+    :success DebugBlobUploadResponse
+    :errors [DebugDatabaseNotFound DebugBlobUploadError InternalError])
   (endpoint metadata
-    (:method GET)
-    (:path "/db/{database}/debug-blobs/{hash}/metadata")
-    (:success DebugBlobUploadResponse)
-    (:errors DebugDatabaseNotFound InternalError)))
+    :method :get
+    :path "/db/{database}/debug-blobs/{hash}/metadata"
+    :success DebugBlobUploadResponse
+    :errors [DebugDatabaseNotFound InternalError]))
 ```

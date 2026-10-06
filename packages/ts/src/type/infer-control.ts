@@ -3,8 +3,9 @@
  */
 import { Effect, Ref } from "effect";
 import type { Type, Scheme } from "./types.js";
-import { TApp, TCon, tNil, tStr, mono, showType } from "./types.js";
+import { TApp, TCon, TRow, RExtend, tNil, tStr, tNum, tBool, mono, showType } from "./types.js";
 import { applyType, applyEnv, type TypeEnv } from "./substitution.js";
+import { assignType, joinType } from "./assign.js";
 import { unify } from "./unify.js";
 import { InferContext } from "./context.js";
 import { InferenceError } from "./errors.js";
@@ -26,7 +27,7 @@ export const inferIf = (
   Effect.gen(function* () {
     const ctx = yield* InferContext;
 
-    yield* inferExpr(env, expr.cond);
+    yield* assignType(yield* inferExpr(env,expr.cond),tBool,originOf(expr,"condition"));
 
     // Detect type narrowing from predicate conditions
     const narrowing = detectTypeNarrowing(expr.cond);
@@ -74,7 +75,7 @@ export const inferIf = (
         );
       }
 
-      yield* unify(resolvedThen, resolvedElse, originOf(expr, "if-branches"));
+      return yield* joinType(resolvedThen, resolvedElse, originOf(expr, "if-branches"));
     }
 
     const sFinal = yield* Ref.get(ctx.subst);
@@ -148,15 +149,15 @@ export const inferEffectFail = (
     const errorTypes = yield* Ref.get(ctx.errorTypes);
     if (!errorTypes.has(expr.errorName)) {
       return yield* ctx.fail(originOf(expr, "effect-fail"), {
-        message: `Unknown error type ${expr.errorName}. Define it with define-error before using fail.`,
+        message: `Unknown error type ${expr.errorName}. Define it with __error before using fail.`,
       });
     }
     const payloadType = yield* inferExpr(env, expr.payload);
-    const expectedPayload = yield* typeExprToType(
-      TESym(expr.span, expr.errorName),
-      new Map<string, Type>(),
-      new Map(),
-    );
+    const shapes = yield* Ref.get(ctx.nominalRecords);
+    const shape = shapes.get(expr.errorName);
+    const expectedPayload = shape?._tag === "TRow" && shape.row._tag === "RExtend" && shape.row.label === ":_tag"
+      ? { ...shape, row: shape.row.tail }
+      : yield* typeExprToType(TESym(expr.span, expr.errorName), new Map<string, Type>(), new Map());
     yield* unify(
       applyType(yield* Ref.get(ctx.subst), expectedPayload),
       applyType(yield* Ref.get(ctx.subst), payloadType),
@@ -175,7 +176,7 @@ export const inferEffectCatch = (
     const errorTypes = yield* Ref.get(ctx.errorTypes);
     if (!errorTypes.has(expr.errorName)) {
       return yield* ctx.fail(originOf(expr, "effect-catch"), {
-        message: `Unknown error type ${expr.errorName}. Define it with define-error before using catch.`,
+        message: `Unknown error type ${expr.errorName}. Define it with __error before using catch.`,
       });
     }
     const bodyType = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.body));
@@ -227,6 +228,83 @@ export const inferEffectCatch = (
 // Match (pattern matching)
 // ---------------------------------------------------------------------------
 
+/** Infer nested data patterns with the same binders used by the evaluator. */
+function inferDataPattern(env: TypeEnv, syntax: import("../reader/types.js").SExpr, expected: Type, expr: CoreExpr): Effect.Effect<Map<string, Scheme>, InferenceError, InferContext> {
+  return Effect.gen(function* () {
+    const ctx = yield* InferContext;
+    const bindings = new Map<string, Scheme>(env);
+    const bound = new Map<string, Type>();
+    const visit = (p: import("../reader/types.js").SExpr, t: Type): Effect.Effect<void, InferenceError, InferContext> => Effect.gen(function* () {
+      const origin = originOf(expr, "match-pattern");
+      if (p._tag === "Sym" && p.name === "_") return;
+      if (p._tag === "Sym" && /^[a-z_$]/.test(p.name) && p.name !== "nil") {
+        const previous = bound.get(p.name);
+        if (previous) yield* unify(previous, t, origin);
+        bound.set(p.name, t); bindings.set(p.name, mono(t)); return;
+      }
+      if (p._tag === "Map") {
+        const as = p.pairs.find(([k])=>k._tag === "Sym" && k.name === ":as")?.[1];
+        if (as) yield* visit(as,t);
+        const fields = p.pairs.filter(([k])=>!(k._tag === "Sym" && k.name === ":as")).flatMap(([k,v]) => k._tag === "Sym" && k.name === ":keys" && v._tag === "Vector" ? v.items.map(a => [a._tag === "Sym" ? `:${a.name}` : "", a] as const) : [[k._tag === "Sym" ? k.name : k._tag === "Str" ? k.value : "", v] as const]);
+        let row = yield* ctx.freshRowVar;
+        const children: [import("../reader/types.js").SExpr, Type][] = [];
+        for (const [label,v] of fields) { const ft = yield* ctx.freshTVar; row = RExtend(label, ft, row); children.push([v,ft]); }
+        yield* unify(t, TRow(row), origin);
+        for (const [v,ft] of children) yield* visit(v,ft);
+        return;
+      }
+      if (p._tag === "Vector") {
+        const element = yield* ctx.freshTVar;
+        const list = TApp(TCon("List"), [element]);
+        yield* unify(t, list, origin);
+        for (let i=0;i<p.items.length;i++) {
+          const item = p.items[i]!;
+          if (item._tag === "Sym" && item.name === "&") {
+            if (i !== p.items.length - 2) return yield* ctx.fail(origin, {message: "Vector rest pattern requires one final binder"});
+            yield* visit(p.items[++i]!, list);
+          } else yield* visit(item,element);
+        } return;
+      }
+      const ctor = p._tag === "Sym" && /^[A-Z]/.test(p.name) ? p.name : p._tag === "List" && p.items[0]?._tag === "Sym" && /^[A-Z]/.test(p.items[0].name) ? p.items[0].name : undefined;
+      if (ctor) {
+        const scheme = bindings.get(ctor) ?? ctx.builtinScheme(ctor);
+        if (!scheme) return yield* ctx.fail(origin,{message: `Unknown constructor: ${ctor}`});
+        let ct = yield* instantiate(scheme);
+        const args = p._tag === "List" ? p.items.slice(1) : [];
+        for (const a of args) {
+          if (ct._tag !== "TFun") return yield* ctx.fail(origin,{message: `Too many pattern arguments for ${ctor}`});
+          yield* visit(a,ct.arg); ct = ct.res;
+        }
+        if (ct._tag === "TFun") return yield* ctx.fail(origin,{message: `Missing pattern arguments for ${ctor}`});
+        yield* unify(t,ct,origin); return;
+      }
+      const literal = p._tag === "Num" || p._tag === "Str" || p._tag === "Bool" ? TCon(JSON.stringify(p.value)) : p._tag === "Sym" && p.name.startsWith(":") ? TCon(p.name) : p._tag === "Sym" && p.name === "nil" ? tNil : undefined;
+      if (!literal) return yield* ctx.fail(origin,{message: "Invalid match pattern"});
+      yield* assignType(literal,t,origin);
+    });
+    yield* visit(syntax,expected);
+    return applyEnv(yield* Ref.get(ctx.subst), bindings);
+  });
+}
+const patternConstructor = (p: import("./core-expr.js").Pattern): string | undefined => {
+  if (p._tag === "PCon") return p.name;
+  if (p._tag === "PData") { const e=p.syntax; const name=e._tag==="Sym" ? e.name : e._tag==="List" && e.items[0]?._tag==="Sym" ? e.items[0].name : undefined; if (name && /^[A-Z]/.test(name)) return name; }
+};
+function totalConstructorPattern(p: import("./core-expr.js").Pattern): boolean {
+  if (p._tag==="PCon") return new Set(p.vars).size===p.vars.length;
+  if (p._tag!=="PData") return false;
+  const bindings=new Set<string>();
+  const total=(e: import("../reader/types.js").SExpr): boolean => {
+    if (e._tag==="Sym" && e.name==="_") return true;
+    if (e._tag==="Sym" && /^[a-z_$]/.test(e.name) && e.name!=="nil") { if (bindings.has(e.name)) return false; bindings.add(e.name); return true; }
+    if (e._tag==="Map") return e.pairs.every(([k,v])=>k._tag==="Sym" && k.name===":keys" && v._tag==="Vector" ? v.items.every(total) : total(v));
+    return false;
+  };
+  return p.syntax._tag==="Sym" || p.syntax._tag==="List" && p.syntax.items.slice(1).every(total);
+}
+
+const catchAllPattern = (p: import("./core-expr.js").Pattern): boolean => p._tag === "PWild" || p._tag === "PData" && p.syntax._tag === "Sym" && /^[a-z_$]/.test(p.syntax.name) && p.syntax.name !== "nil";
+
 export const inferMatch = (
   env: TypeEnv,
   expr: CoreExpr & { _tag: "Match" },
@@ -251,7 +329,9 @@ export const inferMatch = (
 
       let armEnv: Map<string, Scheme>;
 
-      if (arm.pattern._tag === "PWild") {
+      if (arm.pattern._tag === "PData") {
+        armEnv = yield* inferDataPattern(envN, arm.pattern.syntax, scrut, expr);
+      } else if (arm.pattern._tag === "PWild") {
         armEnv = new Map(envN);
       } else if (arm.pattern.name.startsWith(":") && arm.pattern.vars.length === 0) {
         yield* unify(tStr, scrut, originOf(expr, "match-pattern"));
@@ -327,17 +407,17 @@ export const inferMatch = (
         const currentResult = applyType(yield* Ref.get(ctx.subst), resultT);
         if (resultHasOperationalEffect || bodyEffect) {
           const bodySuccess = bodyEffect?.success ?? resolvedBodyT;
-          yield* unify(currentResult, bodySuccess, originOf(expr, "match-arms"));
+          resultT = yield* joinType(currentResult, bodySuccess, originOf(expr, "match-arms"));
           accumulatedErrors = mergeTypeSets(accumulatedErrors, bodyEffect?.errors ?? []);
           accumulatedRequirements = mergeTypeSets(
             accumulatedRequirements,
             bodyEffect?.requirements ?? [],
           );
           resultHasOperationalEffect = true;
-          resultT = applyType(yield* Ref.get(ctx.subst), currentResult);
+          resultT = applyType(yield* Ref.get(ctx.subst), resultT!);
         } else {
-          yield* unify(currentResult, resolvedBodyT, originOf(expr, "match-arms"));
-          resultT = applyType(yield* Ref.get(ctx.subst), currentResult);
+          resultT = yield* joinType(currentResult, resolvedBodyT, originOf(expr, "match-arms"));
+          resultT = applyType(yield* Ref.get(ctx.subst), resultT!);
         }
       }
     }
@@ -368,11 +448,12 @@ export const inferMatch = (
 
         for (let i = 0; i < expr.arms.length; i++) {
           const arm = expr.arms[i]!;
-          if (arm.pattern._tag === "PWild") {
+          if (catchAllPattern(arm.pattern)) {
             hasWildcard = true;
             wildcardIndex = i;
           } else {
-            matchedConstructors.add(arm.pattern.name);
+            const ctor = patternConstructor(arm.pattern);
+            if (ctor && totalConstructorPattern(arm.pattern)) matchedConstructors.add(ctor.split(".").at(-1)!);
           }
         }
 

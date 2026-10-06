@@ -10,30 +10,26 @@ preludes:
 Listings and agents example in canonical ontology syntax.
 
 ```lisp
-(define-entity Agent
-  (:field [agent/name String {:required true}])
-  (:field [agent/market String]))
+(entity Agent {:name String
+    :market (Option String)})
 
-(define-entity Listing
-  (:field [listing/address String {:required true}])
-  (:field [listing/status String {:required true}])
-  (:field [listing/agent (Ref Agent)]))
+(entity Listing {:address String
+    :status String
+    :agent (Option (Id Agent))})
 ```
 
 ```lisp
-(define-record "agent:noah" Agent
-  (:field [agent/name "Noah Bennett"])
-  (:field [agent/market "Austin"]))
+(seed Agent "agent:noah" {:name "Noah Bennett"
+  :market "Austin"})
 
-(define-record "listing:oakhill" Listing
-  (:field [listing/address "18 Oakhill Drive"])
-  (:field [listing/status "active"])
-  (:field [listing/agent "agent:noah"]))
+(seed Listing "listing:oakhill" {:address "18 Oakhill Drive"
+  :status "active"
+  :agent "agent:noah"})
 ```
 
 ```lisp
-(define-query active-listings
-  (:from Listing)
-  (:where (= (get it :listing/status) "active"))
-  (:select [listing/address listing/status listing/agent]))
+(query active-listings
+  :from Listing
+  :where (= status "active")
+  :select [address status agent])
 ```

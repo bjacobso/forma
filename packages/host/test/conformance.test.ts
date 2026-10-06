@@ -359,13 +359,13 @@ exit 1
     });
 
     expect(result.diagnostics).toEqual([]);
-    expect(result.display).toBe("Number");
+    expect(result.display).toBe("Int");
     expect(result.expressionTypes).toEqual([
       {
         expressionId: "typecheck:0",
         formIndex: 0,
-        display: "Number",
-        type: { kind: "display", display: "Number" },
+        display: "Int",
+        type: { kind: "named", name:"Int", display: "Int" },
       },
     ]);
   });
@@ -1713,7 +1713,7 @@ exit 1
     });
 
     expect(result.success).toBe(true);
-    expect(result.resultTypeDisplay).toBe("Number");
+    expect(result.resultTypeDisplay).toBe("Int");
     expect(result.errors).toEqual([]);
     expect(result.parse.redTree).toMatchObject({
       kind: "Root",

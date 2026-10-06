@@ -7,32 +7,32 @@
 ; boundary mismatch returns a located HM diagnostic.
 ; -----------------------------------------------------------------------------
 
-(define-form literal-type
+(__form-descriptor literal-type
   (:check-fn literal-type/check))
 
-(define-form expected-echo
+(__form-descriptor expected-echo
   (:check-fn expected-echo/check))
 
-(define-form checked-bool
+(__form-descriptor checked-bool
   (:check-fn checked-bool/check))
 
-(define-form inferred-type
+(__form-descriptor inferred-type
   (:infer-fn inferred-type/infer))
 
-(define-form typed-field
+(__form-descriptor typed-field
   (:slots
     (slot field value
       (:child-identifier name Value)
       (:child-slot value expr (:positional true) (:type Bool)))))
 
-(define-form repeated-bool
+(__form-descriptor repeated-bool
   (:slots
     (slot item expr (:many true) (:type Bool))))
 
-(define-macro bool-wrapper [value]
+(__macro bool-wrapper [value]
   `(repeated-bool (:item ~value)))
 
-(meta-fn literal-type/check
+(__form-hook literal-type/check
   (:kind check)
   (:body
     (if (= (get-in input [:args 0 :kind]) "literal")
@@ -41,11 +41,11 @@
         "String")
       "Any")))
 
-(meta-fn expected-echo/check
+(__form-hook expected-echo/check
   (:kind check)
   (:body (get input :expected-type)))
 
-(meta-fn checked-bool/check
+(__form-hook checked-bool/check
   (:kind check)
   (:body
     (meta/check-expr
@@ -53,7 +53,7 @@
       (meta/positional-arg input 0)
       (type/constant "Bool"))))
 
-(meta-fn inferred-type/infer
+(__form-hook inferred-type/infer
   (:kind infer)
   (:body
     (meta/infer-expr-type input (meta/positional-arg input 0))))

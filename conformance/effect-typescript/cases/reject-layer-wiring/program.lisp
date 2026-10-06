@@ -1,18 +1,17 @@
 ;; Layer signatures and provide are checked against what layers really
 ;; provide and require.
-(define-service Clock (:methods (now [] (Effect Int [] []))))
-(define-service Greeter (:methods (greet [name String] (Effect String [] []))))
+(service Clock
+  (: now (Effect Int [] [])))
+(service Greeter
+  (: greet (-> String (Effect String [] []))))
 
-(define-layer GreeterLive
-  (:provides Greeter)
-  (:methods
-    (greet [name]
-      (do! [time (Clock.now)]
-        (succeed (str "hello " name " at " time))))))
+(layer GreeterLive :provides Greeter
+  (define greet [name] (do! [time Clock.now]
+        (succeed (str "hello " name " at " time)))))
 
 (: AppLive (Layer [Greeter] [] []))
-(define-layer AppLive GreeterLive)
+(layer AppLive GreeterLive)
 
 (: greet-everyone (-> String (Effect String [] [])))
-(define-operation greet-everyone [name]
+(define greet-everyone [name]
   (provide (Greeter.greet name) GreeterLive))

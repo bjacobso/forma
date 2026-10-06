@@ -151,7 +151,7 @@ function isCompileTimeOnlyExpr(expr: SExpr): boolean {
   }
 
   const head = expr.items[0];
-  return head?._tag === "Sym" && head.name === "define-macro";
+  return head?._tag === "Sym" && head.name === "__macro";
 }
 
 // =============================================================================

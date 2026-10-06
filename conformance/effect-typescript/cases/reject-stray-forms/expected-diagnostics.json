@@ -9,13 +9,13 @@
       "line": 3,
       "column": 1,
       "endLine": 3,
-      "endColumn": 33
+      "endColumn": 29
     },
     {
       "phase": "project",
       "severity": "error",
       "code": "mechanics/top-level-form",
-      "message": "define-servce is not an Effect program form; expected define-schema, define-error, define-class, define-service, define-operation, define-layer, define, or a (: name Type) signature.",
+      "message": "define-servce is not an Effect program form; expected type, error, class, service, layer, define, or a (: name Type) signature.",
       "line": 5,
       "column": 1,
       "endLine": 5,
@@ -25,7 +25,7 @@
       "phase": "project",
       "severity": "error",
       "code": "mechanics/top-level-form",
-      "message": "Top-level expressions are not part of an Effect program; put them in a define or define-operation.",
+      "message": "Top-level expressions are not part of an Effect program; put them in a define.",
       "line": 7,
       "column": 1,
       "endLine": 7,
@@ -35,7 +35,7 @@
       "phase": "project",
       "severity": "error",
       "code": "mechanics/top-level-form",
-      "message": "The signature for orphan has no matching define, define-operation, or define-layer.",
+      "message": "The signature for orphan has no matching define or layer.",
       "line": 9,
       "column": 1,
       "endLine": 9,

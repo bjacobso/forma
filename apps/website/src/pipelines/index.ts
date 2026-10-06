@@ -40,82 +40,69 @@ const typesRecordSource = `(fn [order]
 
 const typesBrokenSource = `(fn [x] (+ x "oops"))`;
 
-const gradesSource = `(define grade (fn [score]
+const gradesSource = `(define grade  [score]
   (cond
     (>= score 90) "A"
     (>= score 80) "B"
     (>= score 70) "C"
     (>= score 60) "D"
-    :else "F")))
+    :else "F"))
 
 (map grade [95 82 75 63 45])`;
 
-const effectTsSource = `(define-schema CheckoutLine
-  (Struct
-    (field sku String)
-    (field quantity Int)
-    (field price-cents Int)))
+const effectTsSource = `(type CartId (Brand String))
+(type CustomerId (Brand String))
 
-(define-schema CheckoutRequest
-  (Struct
-    (field cart-id (Brand CartId String))
-    (field customer-id (Brand CustomerId String))
-    (field coupon (Optional String))
-    (field lines (Array CheckoutLine))))
+(type CheckoutLine {:sku String
+ :quantity Int
+ :price-cents Int})
 
-(define-schema Cart
-  (Struct
-    (field cart-id (Brand CartId String))
-    (field lines (Array CheckoutLine))))
+(type CheckoutRequest {:cart-id CartId
+ :customer-id CustomerId
+ :coupon (Option String)
+ :lines (List CheckoutLine)})
 
-(define-schema PricedCart
-  (Struct
-    (field cart Cart)
-    (field total-cents Int)))
+(type Cart {:cart-id CartId
+ :lines (List CheckoutLine)})
 
-(define-schema CheckoutResult
-  (Struct
-    (field order-id String)
-    (field total-cents Int)))
+(type PricedCart {:cart Cart
+ :total-cents Int})
 
-(define-error CheckoutRejected
-  (:fields
-    (field reason String)))
+(type CheckoutResult {:order-id String
+ :total-cents Int})
 
-(define-service CartRepo
-  (:methods
-    (load [request CheckoutRequest] (Effect Cart [CheckoutRejected] []))))
+(error CheckoutRejected {:reason String})
 
-(define-service Pricing
-  (:methods
-    (price [cart Cart request CheckoutRequest] (Effect PricedCart [CheckoutRejected] []))))
+(service CartRepo
+  (: load (-> CheckoutRequest (Effect Cart [CheckoutRejected] []))))
 
-(define-service Orders
-  (:methods
-    (create [priced PricedCart] (Effect CheckoutResult [CheckoutRejected] []))))
+(service Pricing
+  (: price (-> Cart CheckoutRequest (Effect PricedCart [CheckoutRejected] []))))
+
+(service Orders
+  (: create (-> PricedCart (Effect CheckoutResult [CheckoutRejected] []))))
 
 (: checkout (-> CheckoutRequest (Effect CheckoutResult [CheckoutRejected] [CartRepo.load Pricing.price Orders.create])))
-(define-operation checkout [request]
+(define checkout [request]
   (do!
     [cart (<- (CartRepo.load request))
      priced (<- (Pricing.price cart request))
      order (<- (Orders.create priced))]
     (succeed order)))`;
 
-const schemaSource = `(define-schema CheckoutLine
-  (Struct
-    (field sku String)
-    (field quantity Int)
-    (field price-cents Int)))
+const schemaSource = `(type CartId (Brand String))
+(type CustomerId (Brand String))
 
-(define-schema CheckoutRequest
-  (Struct
-    (field cart-id (Brand CartId String))
-    (field customer-id (Brand CustomerId String))
-    (field coupon (Optional String))
-    (field lines (Array CheckoutLine))))`;
+(type CheckoutLine {:sku String
+ :quantity Int
+ :price-cents Int})
 
-const threadLastMacro = preludeSection(";; ->>") ?? `(define-macro ->> [x & forms]
+(type CheckoutRequest {:cart-id CartId
+ :customer-id CustomerId
+ :coupon (Option String)
+ :lines (List CheckoutLine)})`;
+
+const threadLastMacro = preludeSection(";; ->>") ?? `(macro (->> x forms ...)
   ...)`;
 
 export const pipelines: readonly PipelineDef[] = [
@@ -141,7 +128,7 @@ export const pipelines: readonly PipelineDef[] = [
     narration: [
       {
         stage: "source",
-        md: "`define-entity` is not a compiler keyword. The descriptor below the editor comes from `preludes/ontology.lisp` and declares the form's slots, the name it binds, its result type, and the hook that constructs its output.",
+        md: "`entity` is not a compiler keyword. The form definition below the editor comes from `preludes/ontology.lisp` and declares the syntax, hole types, and IR projection.",
       },
       {
         stage: "parse",
@@ -191,7 +178,7 @@ export const pipelines: readonly PipelineDef[] = [
     narration: [
       {
         stage: "source",
-        md: "`define-service` declares a capability and how it can fail. `log` calls `Console.print`, and its signature says so.",
+        md: "`service` declares a capability and how it can fail. `log` calls `Console.print`, and its signature says so.",
       },
       {
         stage: "typecheck",
@@ -199,7 +186,7 @@ export const pipelines: readonly PipelineDef[] = [
       },
       {
         stage: "typecheck",
-        md: "Switch to a variant that drops `Console.print` or `ConsoleUnavailable` from the signature. The typechecker rejects the operation and the diagnostic points at the `define-operation` form.",
+        md: "Switch to a variant that drops `Console.print` or `ConsoleUnavailable` from the signature. The typechecker rejects the operation and the diagnostic points at the `define` form.",
       },
     ],
   },
@@ -220,7 +207,7 @@ export const pipelines: readonly PipelineDef[] = [
     narration: [
       {
         stage: "parse",
-        md: "`define-service` and `define-operation` describe a typed effect boundary. The live pass reads those forms into mechanics artifacts.",
+        md: "`service` and `define` describe a typed effect boundary. The live pass reads those forms into mechanics artifacts.",
       },
       {
         stage: "target",
@@ -245,7 +232,7 @@ export const pipelines: readonly PipelineDef[] = [
     narration: [
       {
         stage: "source",
-        md: "`define-schema` is already a Forma mechanics artifact form. The live pass reads the Lisp source into structured forms.",
+        md: "`type` is already a Forma mechanics artifact form. The live pass reads the Lisp source into structured forms.",
       },
       {
         stage: "target",
@@ -383,8 +370,11 @@ export function getPipeline(id: string | undefined): PipelineDef {
 function preludeSection(marker: string): string | null {
   const start = PRELUDE_SOURCE.indexOf(marker);
   if (start === -1) return null;
-  const next = PRELUDE_SOURCE.indexOf("\n;; ", start + marker.length);
-  return PRELUDE_SOURCE.slice(start, next === -1 ? undefined : next).trim();
+  const macroName=marker.replace(/^;;\s*/, "");
+  const macro=Effect.runSync(parseManyToSExpr(PRELUDE_SOURCE)).find(expr =>
+    expr._tag==="List" && expr.items[0]?._tag==="Sym" && expr.items[0].name==="macro" &&
+    expr.items[1]?._tag==="List" && expr.items[1].items[0]?._tag==="Sym" && expr.items[1].items[0].name===macroName);
+  return macro ? PRELUDE_SOURCE.slice(start,macro.loc.end).trim() : null;
 }
 
 function effectSchemaTarget(source: string): string {

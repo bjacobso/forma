@@ -112,7 +112,7 @@ const expandResult = run(nativeCli, [
   JSON.stringify({
     op: "expand",
     sourceId: "expand-smoke",
-    source: "(define-macro unless [test body] `(if ~test nil ~body)) (unless false 7)",
+    source: "(macro (unless test body) `(if ~test nil ~body)) (unless false 7)",
   }),
 ]);
 const expanded = JSON.parse(expandResult.stdout);
@@ -131,7 +131,7 @@ const expandErrorResult = run(nativeCli, [
   JSON.stringify({
     op: "expand",
     sourceId: "expand-error",
-    source: "(define-macro one [x] x) (one)",
+    source: "(macro (one x) x) (one)",
   }),
 ]);
 const expandError = JSON.parse(expandErrorResult.stdout);
@@ -454,10 +454,10 @@ assertInt("(and true 1 3)", 3);
 assertInt("(or nil false 7)", 7);
 assertInt("((fn [x] (+ x 1)) 2)", 3);
 assertInt("(let [base 10 add-base (fn [x] (+ base x))] (add-base 5))", 15);
-assertInt("(defn add-two [x] (+ x 2)) (add-two 3)", 5);
+assertInt("(define add-two [x] (+ x 2)) (add-two 3)", 5);
 assertInt("(define x 4) (+ x 1)", 5);
 assertInt("(define (add-three x) (+ x 3)) (add-three 4)", 7);
-assertInt("(defmacro unless [test body] `(if ~test nil ~body)) (unless false 7)", 7);
+assertInt("(macro (unless test body) `(if ~test nil ~body)) (unless false 7)", 7);
 
 const quoted = assertKind("(quote (alpha :beta 3))", "list");
 if (quoted.items?.[0]?.kind !== "symbol" || quoted.items?.[0]?.value !== "alpha") {
@@ -552,7 +552,7 @@ assertInt("(count (select-keys {:a 1 :b 2} [:a]))", 1);
 assertInt("(count (conj [1] 2 3))", 3);
 
 const bidirectionalDescriptor = evaluate(`
-(define-form endpoint
+(__form-descriptor endpoint
   (:infer-fn endpoint/infer)
   (:check-fn endpoint/check)
   (:construct-fn endpoint/construct))
@@ -575,7 +575,7 @@ if (
 
 const malformedDescriptorHook = evaluateWithSourceId(
   "descriptor-hook-error",
-  "(define-form endpoint (:infer-fn))",
+  "(__form-descriptor endpoint (:infer-fn))",
 );
 const malformedDescriptorDiagnostic = malformedDescriptorHook?.diagnostics?.[0];
 if (
@@ -592,7 +592,7 @@ if (
 
 const malformedMetaKind = evaluateWithSourceId(
   "descriptor-meta-kind-error",
-  "(meta-fn broken (:kind))",
+  "(__form-hook broken (:kind))",
 );
 const malformedMetaKindDiagnostic = malformedMetaKind?.diagnostics?.[0];
 if (
@@ -602,7 +602,7 @@ if (
   typeof malformedMetaKindDiagnostic?.span?.startOffset !== "number" ||
   malformedMetaKindDiagnostic.span.endOffset <= malformedMetaKindDiagnostic.span.startOffset
 ) {
-  throw new Error(`Unexpected meta-fn kind diagnostic: ${JSON.stringify(malformedMetaKind)}`);
+  throw new Error(`Unexpected __form-hook kind diagnostic: ${JSON.stringify(malformedMetaKind)}`);
 }
 
 const formatted = assertKind('(format "Hello {}, {}" "Ada" nil)', "string");
@@ -613,45 +613,45 @@ if (formatted.value !== "Hello Ada, ") {
 console.log("forma-ocaml special-form smoke ok");
 
 assertType("(+ 1 2)", "Int");
-assertType("(/ 4 2)", "Float");
+assertType("(/ 4 2)", "Number");
 assertType("(if true 1 2)", "Int");
 assertType("(when true (+ 1 2))", "Int");
 assertType("(cond false 1 (< 1 2) 3 :else 4)", "Int");
-assertType("(and true 1 3)", "Int");
-assertType('(str "a" 1)', "Str");
-assertType("(defmacro unless [test body] `(if ~test nil ~body)) (unless false 7)", "Int");
-assertType("(map (fn [x] (+ x 1)) (list 1 2))", "List");
+assertType("(and true true false)", "Bool");
+assertType('(str "a" 1)', "String");
+assertType("(macro (unless test body) `(if ~test nil ~body)) (unless false 7)", "Int");
+assertType("(map (fn [x] (+ x 1)) (list 1 2))", "List<Int>");
 assertType("(first (map (fn [x] (+ x 1)) [1 2]))", "Int");
-assertType('(first (map ["a" "b"] (fn [x] (str x "!"))))', "Str");
+assertType('(first (map ["a" "b"] (fn [x] (str x "!"))))', "String");
 assertType("(first (filter (fn [x] (> x 1)) [1 2]))", "Int");
-assertType("(first (flat-map [1 2] (fn [x] (list (str x)))))", "Str");
+assertType("(first (flat-map [1 2] (fn [x] (list (str x)))))", "String");
 assertType("(reduce (fn [acc x] (+ acc x)) 0 [1 2 3])", "Int");
-assertType('(reduce ["a" "b"] "" (fn [acc x] (str acc x)))', "Str");
+assertType('(reduce ["a" "b"] "" (fn [acc x] (str acc x)))', "String");
 assertType("(first [1 2])", "Int");
-assertType('(nth ["a" "b"] 1)', "Str");
+assertType('(nth ["a" "b"] 1)', "String");
 assertType("(first (append [1] [2]))", "Int");
-assertType('(first (concat ["a"] ["b"]))', "Str");
-assertType('(first (conj ["a"] "b"))', "Str");
-assertType("{:a (+ 1 2)}", "Map");
+assertType('(first (concat ["a"] ["b"]))', "String");
+assertType('(first (conj ["a"] "b"))', "String");
+assertType("{:a (+ 1 2)}", "{:a Int}");
 assertType("(get {:a 1} :a)", "Int");
 assertType("(get (assoc {:a 1} :b 2) :b)", "Int");
-assertType('(get (assoc {:a 1} :a "two") :a)', "Str");
-assertType('(get (merge {:a 1} {:b "two"}) :b)', "Str");
-assertType('(get (merge {:a 1} {:a "two" :b 3}) :a)', "Str");
-assertType('(get (dissoc {:a 1 :b "two"} :a) :b)', "Str");
-assertType('(get (select-keys {:a 1 :b "two"} [:b]) :b)', "Str");
-assertType("(first (keys {:a 1}))", "Keyword");
+assertType('(get (assoc {:a 1} :a "two") :a)', "String");
+assertType('(get (merge {:a 1} {:b "two"}) :b)', "String");
+assertType('(get (merge {:a 1} {:a "two" :b 3}) :a)', "String");
+assertType('(get (dissoc {:a 1 :b "two"} :a) :b)', "String");
+assertType('(get (select-keys {:a 1 :b "two"} [:b]) :b)', "String");
+assertType("(first (keys {:a 1}))", ":a");
 assertType("(first (values {:a 1 :b 2}))", "Int");
 assertType("(get-in {:a {:b 3}} [:a :b])", "Int");
-assertType('(get {:status "active"} :status)', "Str");
+assertType('(get {:status "active"} :status)', "String");
 assertType("(contains? {:a 1} :a)", "Bool");
 assertType('(= (get {:status "active"} :status) "active")', "Bool");
 assertType("((fn [x] (+ x 1)) 2)", "Int");
-assertType('(let [id (fn [x] x) a (id 1)] (id "x"))', "Str");
+assertType('(let [id (fn [x] x) a (id 1)] (id "x"))', "String");
 assertType("(: inc (-> Int Int)) (define (inc x) (+ x 1)) (inc 2)", "Int");
-assertType('(define-type EmployeeId String) (: id EmployeeId) (define id "e1") id', "Str");
+assertType("(type EmployeeId String) (: id EmployeeId) (define id \"e1\") id", "String");
 assertType(
-  '(: employee {:name Str :age Int}) (define employee {:name "Ada" :age 37}) (get employee :age)',
+  "(: employee {:name String :age Int}) (define employee {:name \"Ada\" :age 37}) (get employee :age)",
   "Int",
 );
 
@@ -669,8 +669,8 @@ const prefixPolicyTypecheck = typecheckRequest({
 
 if (
   prefixPolicyTypecheck?.ok !== true ||
-  prefixPolicyTypecheck.type !== "Str" ||
-  prefixPolicyTypecheck.value?.type?.name !== "Str"
+  prefixPolicyTypecheck.type !== "String" ||
+  prefixPolicyTypecheck.value?.type?.name !== "String"
 ) {
   throw new Error(
     `Unexpected prefix type policy response: ${JSON.stringify(prefixPolicyTypecheck)}`,
@@ -738,26 +738,14 @@ if (
 console.log("forma-ocaml typecheck hostBuiltins smoke ok");
 
 const keywordLiteral = typecheckWithSourceId("keyword-literal", ":firstName");
-const keywordLiteralDiagnostic = keywordLiteral?.diagnostics?.[0];
-if (
-  keywordLiteral?.ok !== true ||
-  keywordLiteral.type !== "Str" ||
-  keywordLiteralDiagnostic?.severity !== "warning" ||
-  keywordLiteralDiagnostic?.message?.includes("self-evaluating literals") !== true ||
-  keywordLiteralDiagnostic?.span?.sourceId !== "keyword-literal" ||
-  typeof keywordLiteralDiagnostic?.span?.startOffset !== "number" ||
-  keywordLiteralDiagnostic.span.endOffset <= keywordLiteralDiagnostic.span.startOffset
-) {
-  throw new Error(
-    `Unexpected keyword literal typecheck response: ${JSON.stringify(keywordLiteral)}`,
-  );
+if (keywordLiteral?.ok !== true || keywordLiteral.type !== ":firstName" || keywordLiteral.diagnostics.length !== 0) {
+  throw new Error(`Unexpected keyword literal typecheck response: ${JSON.stringify(keywordLiteral)}`);
 }
-
-console.log("forma-ocaml keyword literal warning smoke ok");
+console.log("forma-ocaml keyword literal type smoke ok");
 
 const nonExhaustiveMatch = typecheckWithSourceId(
   "match-warning",
-  `(define-type (Option a) (Some a) (None))
+  `(type (Option a) (Tagged (Some a) None))
    (match (Some 42)
      (Some x) x)`,
 );
@@ -836,7 +824,7 @@ console.log("forma-ocaml missing record field smoke ok");
 
 const recordSignatureMismatch = typecheckWithSourceId(
   "record-signature-mismatch",
-  '(: employee {:name Str :age Int}) (define employee {:name "Ada"})',
+  "(: employee {:name String :age Int}) (define employee {:name \"Ada\"})",
 );
 const recordSignatureDiagnostic = recordSignatureMismatch?.diagnostics?.[0];
 if (
@@ -867,21 +855,8 @@ if (
 
 console.log("forma-ocaml nth index mismatch smoke ok");
 
-const appendKindMismatch = typecheckWithSourceId("append-kind-mismatch", "(append [1] (list 2))");
-const appendKindDiagnostic = appendKindMismatch?.diagnostics?.[0];
-if (
-  appendKindMismatch?.ok !== false ||
-  appendKindDiagnostic?.code !== "typecheck/type-mismatch" ||
-  appendKindDiagnostic?.span?.sourceId !== "append-kind-mismatch" ||
-  typeof appendKindDiagnostic?.span?.startOffset !== "number" ||
-  appendKindDiagnostic.span.endOffset <= appendKindDiagnostic.span.startOffset
-) {
-  throw new Error(
-    `Unexpected append kind mismatch response: ${JSON.stringify(appendKindMismatch)}`,
-  );
-}
-
-console.log("forma-ocaml append kind mismatch smoke ok");
+assertType("(append [1] (list 2))", "List<Int>");
+console.log("forma-ocaml unified List append smoke ok");
 
 const conjItemMismatch = typecheckWithSourceId("conj-item-mismatch", '(conj ["a"] 1)');
 const conjItemDiagnostic = conjItemMismatch?.diagnostics?.[0];
@@ -1033,14 +1008,14 @@ requests[1] = {
       kind: "prelude",
       sourceId: "core",
       source: [
-        "(defn add-one [x] (+ x 1))",
-        "(defmacro unless [test body] `(if ~test nil ~body))",
-        "(define-form typed-box (:infer-fn typed-box/infer))",
-        '(meta-fn typed-box/infer (:kind infer) (:body (if (= (count (get input :args)) 1) "Int" "Bool")))',
-        "(define-form checked-box (:check-fn checked-box/check))",
-        "(meta-fn checked-box/check (:kind check) (:body (get input :expected-type)))",
-        "(define-form bad-box (:infer-fn bad-box/infer))",
-        '(meta-fn bad-box/infer (:kind infer) (:body "UnknownType"))',
+        "(define add-one [x] (+ x 1))",
+        "(macro (unless test body) `(if ~test nil ~body))",
+        "(__form-descriptor typed-box (:infer-fn typed-box/infer))",
+        '(__form-hook typed-box/infer (:kind infer) (:body (if (= (count (get input :args)) 1) "Int" "Bool")))',
+        "(__form-descriptor checked-box (:check-fn checked-box/check))",
+        "(__form-hook checked-box/check (:kind check) (:body (get input :expected-type)))",
+        "(__form-descriptor bad-box (:infer-fn bad-box/infer))",
+        '(__form-hook bad-box/infer (:kind infer) (:body "UnknownType"))',
       ].join("\n"),
     },
     {
@@ -1129,7 +1104,7 @@ if (
   daemonOutputs[4].value.parsedPreludeCount !== 1 ||
   daemonOutputs[4].value.parsedSourceCount !== 4 ||
   daemonOutputs[4].value.envBindingCount !== 8 ||
-  daemonOutputs[4].value.typeBindingCount !== 8
+  daemonOutputs[4].value.typeBindingCount !== 9
 ) {
   throw new Error(`Unexpected parsed sessionInfo response: ${JSON.stringify(daemonOutputs[4])}`);
 }

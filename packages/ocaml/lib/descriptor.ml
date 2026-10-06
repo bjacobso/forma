@@ -6,17 +6,14 @@ let value_keyword key = function
           | _ -> None)
         entries
   | _ -> None
-
 let value_text = function
   | Value.VString value | Value.VSymbol value | Value.VKeyword value ->
       Some value
   | _ -> None
-
 let kind value =
   match value_keyword ":kind" value with
   | Some (Value.VString kind) -> Some kind
   | _ -> None
-
 type diagnostic = Descriptor_validation.diagnostic = {
   span : Ast.span option;
   code : string;
@@ -391,14 +388,20 @@ let constructed_child_from_clauses clauses =
         option_child options
     | _ -> None)
 
+let metadata_extensions = function
+  | Value.VMap entries -> (match Value.lookup_map entries (Value.VKeyword ":extensions") with
+      | Some (Value.VMap extensions) -> List.filter_map (fun (key,value) -> match Descriptor_extension.value_text key with Some key -> Some (Descriptor_extension.normalize_name key,value) | None -> None) extensions
+      | _ -> [])
+  | _ -> []
+
 let form_of_descriptor name descriptor =
-  descriptor_clauses descriptor
+  (match descriptor_clauses descriptor with Some clauses -> Some clauses | None -> if metadata_extensions descriptor = [] then None else Some [])
   |> Option.map (fun clauses ->
       {
-        name;
+        name = (match descriptor with Value.VMap fields -> (match Value.lookup_map fields (Value.VKeyword ":descriptor-name") with Some (Value.VString n) -> n | _ -> name) | _ -> name);
         clauses;
         identifiers = identifiers_from_clauses clauses;
-        extensions = Descriptor_extension.from_clauses clauses;
+        extensions = Descriptor_extension.from_clauses clauses @ metadata_extensions descriptor;
         result_type = result_type_from_clauses clauses;
         declaration_type = declaration_type_from_clauses clauses;
         construct_kind = construct_kind_from_clauses clauses;
@@ -471,15 +474,26 @@ let identifier_index_in_descriptor descriptor identifier_name =
   | Some descriptor -> identifier_index_in_form descriptor identifier_name
   | None -> None
 
+let metadata_for env form_name =
+  match Env.lookup ("__metadata/" ^ form_name) env with
+  | Some metadata -> metadata_extensions metadata
+  | None -> []
+
 let form env form_name =
   form_with_lookup ~lookup:(fun name -> Env.lookup name env) form_name
+  |> Option.map (fun form -> {form with extensions = form.extensions @ metadata_for env form_name})
 
 let forms env =
-  Env.bindings env
-  |> List.filter_map (fun (name, descriptor) ->
-      match kind descriptor with
-      | Some "form" -> form_of_descriptor name descriptor
-      | _ -> None)
+  let grouped = Hashtbl.create 128 in
+  Env.visible_bindings env |> List.iter (fun (name, value) -> if not (String.starts_with ~prefix:"__metadata/" name) then match form_of_descriptor name value with
+    | None -> ()
+    | Some descriptor -> (match Hashtbl.find_opt grouped descriptor.name with
+        | None -> Hashtbl.add grouped descriptor.name descriptor
+        | Some previous ->
+            let primary = if previous.clauses = [] && kind value = Some "form" then descriptor else previous in
+            Hashtbl.replace grouped descriptor.name {primary with extensions = previous.extensions @ descriptor.extensions}));
+  Hashtbl.fold (fun _ descriptor acc -> descriptor :: acc) grouped []
+  |> List.sort (fun left right -> String.compare left.name right.name)
 
 let typed_slots env form_name =
   match form env form_name with

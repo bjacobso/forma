@@ -10,30 +10,26 @@ preludes:
 Revenue and operations example in canonical ontology syntax.
 
 ```lisp
-(define-entity Account
-  (:field [account/name String {:required true}])
-  (:field [account/segment String]))
+(entity Account {:name String
+    :segment (Option String)})
 
-(define-entity Invoice
-  (:field [invoice/status String {:required true}])
-  (:field [invoice/amount Number])
-  (:field [invoice/account (Ref Account)]))
+(entity Invoice {:status String
+    :amount (Option Number)
+    :account (Option (Id Account))})
 ```
 
 ```lisp
-(define-record "account:northstar" Account
-  (:field [account/name "Northstar Health"])
-  (:field [account/segment "enterprise"]))
+(seed Account "account:northstar" {:name "Northstar Health"
+  :segment "enterprise"})
 
-(define-record "invoice:1001" Invoice
-  (:field [invoice/status "open"])
-  (:field [invoice/amount 18500])
-  (:field [invoice/account "account:northstar"]))
+(seed Invoice "invoice:1001" {:status "open"
+  :amount 18500
+  :account "account:northstar"})
 ```
 
 ```lisp
-(define-query revenue-open-invoices
-  (:from Invoice)
-  (:where (= (get it :invoice/status) "open"))
-  (:select [invoice/status invoice/amount invoice/account]))
+(query revenue-open-invoices
+  :from Invoice
+  :where (= status "open")
+  :select [status amount account])
 ```

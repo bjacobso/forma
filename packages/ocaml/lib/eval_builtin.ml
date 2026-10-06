@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of closure
   | VMacro of closure
 
@@ -214,10 +215,19 @@ let eval ctx env op args =
   let some result = Result.map (fun value -> Some value) result in
   match op with
   | "module" -> some (Ok VNil)
+  | ("floor" | "ceil" | "round" | "abs") -> some (match args with
+      | [arg] -> (match numeric_value env op arg with Error _ as e -> e | Ok n ->
+          let value = number_to_float n in
+          if op = "abs" then Ok (match n with `Int n -> VInt (abs n) | `Float n -> VFloat (Float.abs n))
+          else Ok (VInt (int_of_float ((match op with "floor" -> Float.floor | "ceil" -> Float.ceil | _ -> fun n -> Float.floor (n +. 0.5)) value))))
+      | _ -> Error [diagnostic "eval/arity" (op ^ " expects one argument")])
+  | ("min" | "max") -> some (match args with
+      | [] -> Error [diagnostic "eval/arity" (op ^ " expects at least one argument")]
+      | first :: _rest -> (match numeric_value env op first with Error _ as e -> e | Ok n -> numeric_fold env op (number_to_float n) (if op = "min" then Float.min else Float.max) args))
   | "+" -> some (numeric_fold env op 0.0 ( +. ) args)
   | "*" -> some (numeric_fold env op 1.0 ( *. ) args)
   | "-" -> some (numeric_minus env args)
-  | "/" -> some (numeric_divide env args)
+  | "/" -> some (if List.length args < 2 then Error [diagnostic "eval/arity" "/ expects at least two arguments"] else numeric_divide env args)
   | "mod" -> some (int_binary env op ( mod ) args)
   | "=" -> some (eval_equals env args)
   | "!=" -> some (eval_not_equals env args)
@@ -227,11 +237,30 @@ let eval ctx env op args =
   | ">=" -> some (compare_numeric env op ( >= ) args)
   | "list" ->
       some (ctx.eval_all env args |> Result.map (fun values -> VList values))
+  | "split" -> some (match ctx.eval_all env args with
+      | Error _ as e -> e
+      | Ok [VString value;VString separator] ->
+          if separator = "" then Ok (VList (List.init (String.length value) (fun i -> VString (String.make 1 value.[i]))))
+          else let size = String.length separator in
+            let rec pieces start index acc =
+              if index + size > String.length value then List.rev (VString (String.sub value start (String.length value - start)) :: acc)
+              else if String.sub value index size = separator then pieces (index + size) (index + size) (VString (String.sub value start (index - start)) :: acc)
+              else pieces start (index + 1) acc in
+            Ok (VList (pieces 0 0 []))
+      | Ok _ -> Error [diagnostic "eval/expected-string" "split expects a string and separator."])
+  | "starts-with?" | "ends-with?" -> some (match ctx.eval_all env args with
+      | Ok [VString value; VString part] -> Ok (VBool (if op="starts-with?" then String.starts_with ~prefix:part value else String.ends_with ~suffix:part value))
+      | Error _ as error -> error | Ok _ -> Error [diagnostic "eval/expected-string" (op ^ " expects two strings")])
+  | "upper" | "lower" | "trim" -> some (match ctx.eval_all env args with
+      | Ok [VString value] -> Ok (VString ((if op="upper" then String.uppercase_ascii else if op="lower" then String.lowercase_ascii else String.trim) value))
+      | Error _ as error -> error | Ok _ -> Error [diagnostic "eval/expected-string" (op ^ " expects a string")])
   | "str" -> some (ctx.eval_all env args |> Result.map Value.concat_string)
   | "format" -> some (eval_format env args)
   | "nil?" ->
       some
         (eval_predicate env "nil?" args (function VNil -> true | _ -> false))
+  | "keyword?" -> some (eval_predicate env "keyword?" args (function VKeyword _ -> true | _ -> false))
+  | "symbol?" -> some (eval_predicate env "symbol?" args (function VSymbol _ -> true | _ -> false))
   | "string?" ->
       some
         (eval_predicate env "string?" args (function

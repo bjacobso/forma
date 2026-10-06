@@ -1,14 +1,35 @@
 {
   "version": 1,
   "surfaces": [
-    { "id": "parse", "status": "compared", "fixture": "cases.json" },
-    { "id": "expand", "status": "compared", "fixture": "cases.json" },
-    { "id": "typecheck", "status": "compared", "fixture": "cases.json" },
-    { "id": "evaluate", "status": "compared", "fixture": "cases.json and ../forma-zero" },
+    {
+      "id": "parse",
+      "status": "compared",
+      "fixture": "cases.json"
+    },
+    {
+      "id": "expand",
+      "status": "compared",
+      "fixture": "cases.json"
+    },
+    {
+      "id": "typecheck",
+      "status": "compared",
+      "fixture": "cases.json"
+    },
+    {
+      "id": "evaluate",
+      "status": "compared",
+      "fixture": "cases.json and ../forma-zero"
+    },
     {
       "id": "effect-ir",
       "status": "compared",
       "fixture": "../operational-effects and ../effect-typescript/cases (positive cases)"
+    },
+    {
+      "id": "canonical-ir",
+      "status": "compared",
+      "fixture": "cases.json (canonical typed domain forms)"
     },
     {
       "id": "loadSource",

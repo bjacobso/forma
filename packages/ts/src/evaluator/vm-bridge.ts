@@ -84,10 +84,10 @@ export function buildRuntimeEnvFromGlobals(
  * Checked forms (must match HM lowering rejections):
  *   - `(def ...)` bare binder -> use `(define ...)`
  *   - `(defn ...)` function binder -> use `(define name (fn [...] ...))`
- *   - `(def-macro ...)` -> use `(define-macro ...)`
+ *   - `(def-macro ...)` -> use `(__macro ...)`
  *   - `(def-effect ...)` -> removed legacy algebraic effect syntax
- *   - `(defclass ...)` -> use `(define-typeclass ...)`
- *   - `(deftype ...)` / `(data ...)` -> use `(define-type ...)`
+ *   - `(defclass ...)` -> use `(__typeclass ...)`
+ *   - `(deftype ...)` / `(data ...)` -> use `(__sum-type ...)`
  *   - `(:: ...)` type signature -> use `(: ...)`
  */
 export function checkCanonicalPublicSyntax(exprs: readonly SExpr[]): KernelError | null {
@@ -127,38 +127,38 @@ function checkCanonicalPublicExpr(expr: SExpr): KernelError | null {
         case "def-macro":
           return new KernelTypeError({
             message:
-              "Legacy public macro form 'def-macro' is no longer supported; use 'define-macro'",
-            expected: "(define-macro name [params] body...)",
+              "Legacy public macro form 'def-macro' is no longer supported; use '__macro'",
+            expected: "(__macro name [params] body...)",
             got: "(def-macro ...)",
             loc: expr.loc,
           });
         case "def-effect":
           return new KernelTypeError({
             message:
-              "Legacy public effect form 'def-effect' is no longer supported; use 'define-service' and 'define-operation'",
-            expected: "(define-service ...) and (define-operation ...)",
+              "Legacy public effect form 'def-effect' is no longer supported; use '__service' and '__operation'",
+            expected: "(__service ...) and (__operation ...)",
             got: "(def-effect ...)",
             loc: expr.loc,
           });
         case "defclass":
           return new KernelTypeError({
             message:
-              "Legacy public typeclass form 'defclass' is no longer supported; use 'define-typeclass'",
-            expected: "(define-typeclass (Class params...) methods...)",
+              "Legacy public typeclass form 'defclass' is no longer supported; use '__typeclass'",
+            expected: "(__typeclass (Class params...) methods...)",
             got: "(defclass ...)",
             loc: expr.loc,
           });
         case "deftype":
           return new KernelTypeError({
-            message: "Legacy public type form 'deftype' is no longer supported; use 'define-type'",
-            expected: "(define-type Name Type) or (define-type (Name params...) constructors...)",
+            message: "Legacy public type form 'deftype' is no longer supported; use '__sum-type'",
+            expected: "(__sum-type Name Type) or (__sum-type (Name params...) constructors...)",
             got: "(deftype ...)",
             loc: expr.loc,
           });
         case "data":
           return new KernelTypeError({
-            message: "Legacy public ADT form 'data' is no longer supported; use 'define-type'",
-            expected: "(define-type (Name params...) constructors...)",
+            message: "Legacy public ADT form 'data' is no longer supported; use '__sum-type'",
+            expected: "(__sum-type (Name params...) constructors...)",
             got: "(data ...)",
             loc: expr.loc,
           });

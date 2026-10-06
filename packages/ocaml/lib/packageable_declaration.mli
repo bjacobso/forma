@@ -13,6 +13,7 @@ val validator_value : validator -> Value.t
 type t
 
 val make :
+  diagnostics:Diagnostic.t list ->
   payload:payload ->
   payload_contract:payload_contract ->
   validators:validator list ->
@@ -29,3 +30,5 @@ val summary : t -> Artifact_summary_types.declaration_summary
 val source_id : t -> string
 val form_index : t -> int
 val span : t -> Ast.span
+
+val diagnostics : t -> Diagnostic.t list

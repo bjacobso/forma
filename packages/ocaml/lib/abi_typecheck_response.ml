@@ -1,6 +1,3 @@
-let well_known_keywords =
-  [ ":"; ":else"; ":default"; ":none"; ":all"; ":true"; ":false" ]
-
 let keyword_literal_warning_json span keyword =
   Printf.sprintf
     "{\"span\":{\"sourceId\":%s,\"startOffset\":%d,\"endOffset\":%d},\"severity\":\"warning\",\"message\":%s,\"notes\":[],\"fixes\":[]}"
@@ -12,9 +9,7 @@ let keyword_literal_warning_json span keyword =
            not variable references."
           keyword))
 
-let should_warn_keyword keyword =
-  (not (String.contains keyword '/'))
-  && not (List.mem keyword well_known_keywords)
+let should_warn_keyword _keyword = false
 
 let rec keyword_literal_warnings expr =
   let recurse exprs = List.concat_map keyword_literal_warnings exprs in
@@ -41,7 +36,7 @@ let rec keyword_literal_warnings expr =
     ->
       keyword_literal_warnings value_expr
   | Ast.List
-      (_, Ast.Symbol (_, ("define-schema" | "define-service" | "define-error")) :: _)
+      (_, Ast.Symbol (_, ("__schema" | "__service" | "__error")) :: _)
     ->
       []
   | Ast.List
@@ -59,13 +54,13 @@ let rec keyword_literal_warnings expr =
 let type_projection_json display =
   let named =
     match display with
-    | "Int" | "Float" | "Bool" | "Str" | "String" | "Unit" | "Keyword"
+    | "Int" | "Number" | "Bool" | "String" | "Unit" | "Keyword"
     | "Symbol" | "Syntax" | "Any" | "Map" | "List" | "Vector" | "Declaration" ->
         true
     | _ -> false
   in
   if named then
-    let name = if String.equal display "String" then "Str" else display in
+    let name = display in
     Printf.sprintf "{\"kind\":\"named\",\"name\":%s,\"display\":%s}"
       (Value.string_json name)
       (Value.string_json display)

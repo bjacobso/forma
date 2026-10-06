@@ -1,13 +1,19 @@
+import { typeDefinition } from "../surface/type-alias.js";
 /**
- * Bootstrap — load prelude sources and register form descriptors + meta-fn hooks.
+ * Bootstrap — load prelude sources and register form descriptors + __form-hook hooks.
  *
  * This is the entry point for bootstrapping the language from prelude files.
- * It parses descriptor preludes, extracts form descriptors and meta-fn
+ * It parses descriptor preludes, extracts form descriptors and __form-hook
  * declarations, and registers them in the appropriate registries.
  *
  * @module bootstrap
  */
 
+import { parse, toSExprMany } from "../reader/index.js";
+import { head, name } from "../surface/effect.js";
+import type { SExpr } from "../reader/types.js";
+import { reachableHelpers } from "../surface/helpers.js";
+import { unifiedFormHooks } from "../surface/form.js";
 import { readFileSync } from "node:fs";
 import { parsePrelude, type MetaFnDecl, type MetaFnKind } from "./meta-fn-decl.js";
 import { FormDescriptorRegistry } from "./FormDescriptorRegistry.js";
@@ -30,6 +36,7 @@ import type {
 // =============================================================================
 
 export interface BootstrappedPrelude {
+  readonly formBuiltins?: HostedMetaBuiltinsFactory;
   readonly descriptions: FormDescriptorRegistry;
   readonly elaboration: ElaborationRegistry;
   readonly elaborationDescriptors: ElaborationDescriptorRegistry;
@@ -83,9 +90,11 @@ export function bootstrapFromSources(
   ...additionalSourcesAndOptions: readonly (string | BootstrapOptions)[]
 ): BootstrappedPrelude {
   const { additionalSources, options } = splitBootstrapInputs(additionalSourcesAndOptions);
-  const compiler = parsePrelude(compilerSource);
-  const domain = parsePrelude(domainSource);
-  const additional = additionalSources.map((s) => parsePrelude(s));
+  const typeDefinitions = new Map<string,SExpr>();
+  for (const source of [compilerSource,domainSource,...additionalSources]) for (const e of toSExprMany(parse(source).redTree)) { const definition=typeDefinition(e); if (definition) typeDefinitions.set(...definition); }
+  const compiler = parsePrelude(compilerSource,typeDefinitions);
+  const domain = parsePrelude(domainSource,typeDefinitions);
+  const additional = additionalSources.map((s) => parsePrelude(s,typeDefinitions));
   const hostedDsls = parseHostedDsls(options.hostedDsls ?? []);
 
   const descriptions = new FormDescriptorRegistry();
@@ -107,10 +116,30 @@ export function bootstrapFromSources(
     }
   }
 
-  descriptions.alias("completion-action", "completion-mutation");
+  const allHelpers = [...compiler.helpers, ...domain.helpers, ...additional.flatMap(prelude => prelude.helpers)];
+  for (const descriptor of descriptions.list()) if (descriptor.surface) {
+    const spec = descriptor.surface;
+    descriptions.register({...descriptor, surface: {...spec, helpers: reachableHelpers([spec.body, ...spec.options.values()], allHelpers)}});
+  }
 
-  // Register all meta-fn hooks (deduplicated, last wins)
+
+  // Register all __form-hook hooks (deduplicated, last wins)
+  const helpers = [...compiler.helpers,...domain.helpers,...additional.flatMap(prelude=>prelude.helpers)];
+  const derivedHooks: MetaFnDecl[] = [];
+  for (const descriptor of descriptions.list()) {
+    const strategies = [["bindings",descriptor.bindings], ["validate",descriptor.validation], ["construct",descriptor.elaboration], ["result-type",descriptor.resultType]] as const;
+    for (const [kind,strategy] of strategies) {
+      if (strategy.kind !== "hook" && strategy.kind !== "composite") continue;
+      const definition = helpers.find(expr=>expr._tag === "List" && name(expr.items[1])===strategy.fn);
+      if (definition?._tag !== "List" || definition.items[2]?._tag !== "Vector" || definition.items[2].items.length !== 1) continue;
+      const parameter = definition.items[2].items[0];
+      const functionBody = definition.items.length === 4 ? definition.items[3]! : { _tag:"List" as const,loc:definition.loc,items:[{_tag:"Sym" as const,name:"do",loc:definition.loc},...definition.items.slice(3)] };
+      const body: SExpr = { _tag:"List",loc:definition.loc,items:[{_tag:"Sym",loc:definition.loc,name:"let"},{_tag:"Vector",loc:definition.loc,items:[parameter!,{_tag:"Sym",loc:definition.loc,name:"input"}]},functionBody] };
+      derivedHooks.push({name:strategy.fn,kind,inputType:"NormalizedForm",outputType:kind === "construct" ? descriptor.produces ?? "IR" : kind === "result-type" ? "Type" : kind === "validate" ? "Diagnostics" : "Bindings",capabilities:[],body,helpers:reachableHelpers([functionBody],helpers)});
+    }
+  }
   const allMetaFns = [
+    ...derivedHooks,
     ...compiler.metaFns,
     ...domain.metaFns,
     ...additional.flatMap((a) => a.metaFns),
@@ -143,11 +172,13 @@ export function bootstrapFromSources(
     }
   }
 
+  for (const descriptor of descriptions.list()) for (const hook of unifiedFormHooks(descriptor,descriptions,hostedMetaBuiltins,hostedDsls)) elaboration.registerHook(hook);
   validateDescriptorHookReferences(descriptions.list(), elaboration);
   validateElaborationDescriptorReferences(elaborationDescriptors.list(), descriptions);
   validateConstructedByReferences(descriptions.list(), elaborationDescriptors);
 
   return {
+    ...(hostedMetaBuiltins ? {formBuiltins: hostedMetaBuiltins} : {}),
     descriptions,
     elaboration,
     elaborationDescriptors,
@@ -234,8 +265,11 @@ function parseHostedDsls(
       throw new Error(`Duplicate hosted DSL registration '${hostedDsl.name}'`);
     }
 
-    const parsedSources = hostedDsl.sources.map((source) => parsePrelude(source));
-    const descriptors = parsedSources.flatMap((parsed) => parsed.forms);
+    const typeDefinitions = new Map<string, SExpr>();
+    for (const source of hostedDsl.sources) for (const e of toSExprMany(parse(source).redTree)) { const definition=typeDefinition(e); if (definition) typeDefinitions.set(...definition); }
+    const parsedSources = hostedDsl.sources.map((source) => parsePrelude(source, typeDefinitions));
+    const allHelpers = parsedSources.flatMap(parsed => parsed.helpers);
+    const descriptors = parsedSources.flatMap((parsed) => parsed.forms).map(descriptor => descriptor.surface ? {...descriptor, surface: {...descriptor.surface, helpers: reachableHelpers([descriptor.surface.body, ...descriptor.surface.options.values()], allHelpers)}} : descriptor);
     const metaFns = parsedSources.flatMap((parsed) => parsed.metaFns);
     const elaborations = parsedSources.flatMap((parsed) => parsed.elaborations);
     registrations.set(hostedDsl.name, {

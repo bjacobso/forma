@@ -21,6 +21,7 @@ let extend bindings env =
   }
 
 let bindings env = env.bindings
+let visible_bindings env = String_map.bindings env.index
 let of_bindings bindings = extend bindings empty
 let length env = List.length env.bindings
 

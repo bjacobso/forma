@@ -96,6 +96,8 @@ export enum Op {
    * Pops scrutinee, writes matched bindings into locals, pushes boolean.
    */
   MATCH = 53,
+  /** Raise a located error after every match arm fails. */
+  MATCH_FAILURE = 54,
 
   // ── Collections ─────────────────────────────────────────
   /** MAKE_LIST u16 — pop u16 items, push frozen array */

@@ -3,98 +3,65 @@
 ; Hosted CanonicalRuntime protocol descriptors.
 ; -----------------------------------------------------------------------------
 
-(define-protocol CanonicalRuntime
-  (:imports [[CanonicalDeclarationRef from CanonicalRef CanonicalDeclarationRef]])
+(type Span
+  {:sourceId String
+   :startOffset Number
+   :endOffset Number})
 
-  (record Span
-    (:schema-name Span)
-    (:fields
-      (:sourceId (:type string) (:required true))
-      (:startOffset (:type number) (:required true))
-      (:endOffset (:type number) (:required true))))
+(type CanonicalExpr (Union Unit Bool Number String (List CanonicalExpr) (Map String CanonicalExpr)))
 
-  (type CanonicalExpr
-    (:schema-name CanonicalExpr)
-    (:type (:kind union)
-      (:variants [nil boolean number string {:array CanonicalExpr} {:record CanonicalExpr}])))
+(type CanonicalRuntimeExpr
+  {:kind "raw-expr"
+   :expr CanonicalExpr})
 
-  (record CanonicalRuntimeExpr
-    (:schema-name CanonicalRuntimeExpr)
-    (:fields
-      (:kind (:kind literal) (:values [raw-expr]) (:required true))
-      (:expr (:type CanonicalExpr) (:required true))))
+(type CanonicalRuntimeActionInput
+  {:name String
+   :entityRef CanonicalDeclarationRef})
 
-  (record CanonicalRuntimeActionInput
-    (:schema-name CanonicalRuntimeActionInput)
-    (:fields
-      (:name (:type string) (:required true))
-      (:entityRef (:type CanonicalDeclarationRef) (:required true))))
+(type CanonicalRuntimeFieldValue
+  {:field String
+   :value CanonicalExpr})
 
-  (record CanonicalRuntimeFieldValue
-    (:schema-name CanonicalRuntimeFieldValue)
-    (:fields
-      (:field (:type string) (:required true))
-      (:value (:type CanonicalExpr) (:required true))))
+(type CanonicalRuntimeEmitStep
+  {:kind "emit"
+   :event CanonicalExpr})
 
-  (record CanonicalRuntimeEmitStep
-    (:schema-name CanonicalRuntimeEmitStep)
-    (:fields
-      (:kind (:kind literal) (:values [emit]) (:required true))
-      (:event (:type CanonicalExpr) (:required true))))
+(type CanonicalRuntimeSetFieldStep
+  {:kind "set-field"
+   :targetBinding String
+   :field String
+   :value CanonicalExpr})
 
-  (record CanonicalRuntimeSetFieldStep
-    (:schema-name CanonicalRuntimeSetFieldStep)
-    (:fields
-      (:kind (:kind literal) (:values [set-field]) (:required true))
-      (:targetBinding (:type string) (:required true))
-      (:field (:type string) (:required true))
-      (:value (:type CanonicalExpr) (:required true))))
+(type CanonicalRuntimeCreateEntityStep
+  {:kind "create-entity"
+   :entityName String
+   :assignments (List CanonicalRuntimeFieldValue)})
 
-  (record CanonicalRuntimeCreateEntityStep
-    (:schema-name CanonicalRuntimeCreateEntityStep)
-    (:fields
-      (:kind (:kind literal) (:values [create-entity]) (:required true))
-      (:entityName (:type string) (:required true))
-      (:assignments (:kind array) (:item CanonicalRuntimeFieldValue) (:required true))))
+(type CanonicalRuntimeLinkRecordsStep
+  {:kind "link-records"
+   :sourceBinding String
+   :targetBinding String
+   :relation String})
 
-  (record CanonicalRuntimeLinkRecordsStep
-    (:schema-name CanonicalRuntimeLinkRecordsStep)
-    (:fields
-      (:kind (:kind literal) (:values [link-records]) (:required true))
-      (:sourceBinding (:type string) (:required true))
-      (:targetBinding (:type string) (:required true))
-      (:relation (:type string) (:required true))))
+(type CanonicalRuntimeCallActionStep
+  {:kind "call-action"
+   :actionRef CanonicalDeclarationRef
+   :entityArguments (List String)
+   :arguments (List CanonicalRuntimeFieldValue)})
 
-  (record CanonicalRuntimeCallActionStep
-    (:schema-name CanonicalRuntimeCallActionStep)
-    (:fields
-      (:kind (:kind literal) (:values [call-action]) (:required true))
-      (:actionRef (:type CanonicalDeclarationRef) (:required true))
-      (:entityArguments (:kind array) (:item string) (:required true))
-      (:arguments (:kind array) (:item CanonicalRuntimeFieldValue) (:required true))))
+(type CanonicalRuntimeEvalStep
+  {:kind "eval"
+   :expr CanonicalRuntimeExpr})
 
-  (record CanonicalRuntimeEvalStep
-    (:schema-name CanonicalRuntimeEvalStep)
-    (:fields
-      (:kind (:kind literal) (:values [eval]) (:required true))
-      (:expr (:type CanonicalRuntimeExpr) (:required true))))
+(type CanonicalRuntimeActionStep
+  (Union CanonicalRuntimeEmitStep CanonicalRuntimeSetFieldStep CanonicalRuntimeCreateEntityStep CanonicalRuntimeLinkRecordsStep CanonicalRuntimeCallActionStep CanonicalRuntimeEvalStep))
 
-  (sum CanonicalRuntimeActionStep
-    (:schema-name CanonicalRuntimeActionStep)
-    (:members
-      (:emit (:ref CanonicalRuntimeEmitStep))
-      (:set-field (:ref CanonicalRuntimeSetFieldStep))
-      (:create-entity (:ref CanonicalRuntimeCreateEntityStep))
-      (:link-records (:ref CanonicalRuntimeLinkRecordsStep))
-      (:call-action (:ref CanonicalRuntimeCallActionStep))
-      (:eval (:ref CanonicalRuntimeEvalStep))))
+(type CanonicalRuntimeAction
+  {:kind "RuntimeAction"
+   :name String
+   :inputs (List CanonicalRuntimeActionInput)
+   :declaredReturnType CanonicalExpr
+   :steps (List CanonicalRuntimeActionStep)
+   :loc (Option Span)})
 
-  (record CanonicalRuntimeAction
-    (:schema-name CanonicalRuntimeAction)
-    (:fields
-      (:kind (:kind literal) (:values [RuntimeAction]) (:required true))
-      (:name (:type string) (:required true))
-      (:inputs (:kind array) (:item CanonicalRuntimeActionInput) (:required true))
-      (:declaredReturnType (:type CanonicalExpr) (:required true))
-      (:steps (:kind array) (:item CanonicalRuntimeActionStep) (:required true))
-      (:loc (:type Span)))))
+(define protocol {:name "CanonicalRuntime" :imports [["CanonicalDeclarationRef" "from" "CanonicalRef" "CanonicalDeclarationRef"]]})

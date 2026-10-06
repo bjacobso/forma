@@ -1,12 +1,12 @@
 {
   "code": "InferenceError",
   "severity": "error",
-  "message": "Type application arity mismatch (at offset 240)",
+  "message": "Type application arity mismatch (at offset 185)",
   "phase": "typecheck",
   "span": {
     "sourceId": "log.lisp",
-    "startOffset": 240,
-    "endOffset": 326
+    "startOffset": 185,
+    "endOffset": 261
   },
   "details": {
     "message": "Type application arity mismatch",

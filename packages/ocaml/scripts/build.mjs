@@ -74,7 +74,7 @@ const targets = {
   wasm: false,
 };
 
-runDune(["build", "bin/forma_cli.exe"]);
+runDune(["build", "--profile", "release", "bin/forma_cli.exe"]);
 copyFileSync(
   new URL("_build/default/bin/forma_cli.exe", cwd),
   new URL("native/forma_cli.exe", dist),
@@ -82,7 +82,7 @@ copyFileSync(
 
 if (hasTool("js_of_ocaml")) {
   mkdirSync(new URL("js/", dist), { recursive: true });
-  runDune(["build", "js/jsoo_entry.bc.js"]);
+  runDune(["build", "--profile", "release", "js/jsoo_entry.bc.js"]);
   copyFileSync(
     new URL("_build/default/js/jsoo_entry.bc.js", cwd),
     new URL("js/jsoo_entry.cjs", dist),
@@ -93,7 +93,7 @@ if (hasTool("js_of_ocaml")) {
 
 if (hasTool("wasm_of_ocaml")) {
   mkdirSync(new URL("wasm/", dist), { recursive: true });
-  runDune(["build", "wasm/wasm_entry.bc.wasm.js"]);
+  runDune(["build", "--profile", "release", "wasm/wasm_entry.bc.wasm.js"]);
   copyFileSync(
     new URL("_build/default/wasm/wasm_entry.bc.wasm.js", cwd),
     new URL("wasm/wasm_entry.cjs", dist),

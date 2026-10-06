@@ -1,15 +1,13 @@
+import { namespaceOf } from "../surface/domain.js";
 import { Effect } from "effect";
 import type { BuiltinFn, KValue } from "../evaluator/types.js";
-import { asString } from "../evaluator/types.js";
+import { asString, isKKeyword, isKSymbol, KKeyword, KSymbol } from "../evaluator/types.js";
 import { ArityError } from "../diagnostic/errors.js";
-import * as T from "../reader/types.js";
-import type { Loc } from "../reader/types.js";
 
-/** Synthetic loc for generated AST nodes */
-const synLoc: Loc = { start: 0, end: 0, line: 1, col: 1 };
 
 function stringify(v: KValue): string {
   if (v === null) return "";
+  if (isKKeyword(v) || isKSymbol(v)) return v.name;
   if (typeof v === "string") return v;
   if (typeof v === "number") return String(v);
   if (typeof v === "boolean") return String(v);
@@ -76,17 +74,22 @@ export const sym: BuiltinFn = (args) => {
   if (args.length !== 1)
     return Effect.fail(new ArityError({ name: "sym", expected: 1, got: args.length }));
   const s = asString(args[0]!, "sym");
-  return Effect.succeed({ _tag: "KSExpr" as const, expr: T.Sym(s, synLoc) });
+  return Effect.succeed(KSymbol(s));
 };
 
-export const keyword: BuiltinFn = (args) => {
-  if (args.length !== 1)
-    return Effect.fail(new ArityError({ name: "keyword", expected: 1, got: args.length }));
-  const s = asString(args[0]!, "keyword");
-  return Effect.succeed(s.startsWith(":") ? s : ":" + s);
+export const keyword: BuiltinFn = args => {
+  if (args.length<1 || args.length>2) return Effect.fail(new ArityError({name:"keyword",expected:"1-2",got:args.length}));
+  const key=String(args.at(-1)).replace(/^:/,"");
+  return Effect.succeed(KKeyword(args.length===1 || key.includes("/") ? key : `${namespaceOf(String(args[0]))}/${key}`));
+};
+
+export const split: BuiltinFn = args => {
+  if (args.length !== 2) return Effect.fail(new ArityError({name:"split",expected:2,got:args.length}));
+  return Effect.succeed(asString(args[0]!, "split").split(asString(args[1]!, "split")));
 };
 
 export const stringBuiltins: Record<string, BuiltinFn> = {
+  split,
   str,
   upper,
   lower,

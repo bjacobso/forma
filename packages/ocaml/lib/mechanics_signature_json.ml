@@ -34,7 +34,9 @@ let method_params_to_json = function
             "service method params must be [name Type ...] pairs.";
         ]
 
-let method_to_json service_name = function
+let rec method_to_json service_name = function
+  | Ast.List (s,[n;params;result;Ast.Keyword (_,":value")]) ->
+      method_to_json service_name (Ast.List (s,[n;params;result])) |> Result.map (function Ir_json.Object pairs -> Ir_json.Object (pairs @ ["value",Ir_json.Bool true]) | value -> value)
   | Ast.List (_, [ Ast.Symbol (_, method_name); params_expr; return_expr ]) -> (
     match method_params_to_json params_expr with
     | Error _ as error -> error
@@ -101,6 +103,7 @@ let operation_signatures exprs =
 
 let operation_signature_to_json signature params_expr =
   match (signature, params_expr) with
+  | Ast.List (_, Ast.Symbol (_,"Effect") :: _) as effect, Ast.Vector (_,[]) -> effect_type_to_json effect None |> Result.map (fun effect -> [],effect)
   | Ast.List (_, Ast.Symbol (_, "->") :: signature_items), Ast.Vector (_, params)
     when signature_items <> [] ->
       let input_types = List.rev (List.tl (List.rev signature_items)) in
@@ -109,7 +112,7 @@ let operation_signature_to_json signature params_expr =
         Error
           [
             diagnostic ~span:(Ast.expr_span params_expr) "artifact/effect"
-              "operation signature arity must match define-operation parameters.";
+              "operation signature arity must match __operation parameters.";
           ]
       else
         let rec params_loop acc params input_types =

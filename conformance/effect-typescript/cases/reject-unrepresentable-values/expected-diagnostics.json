@@ -57,19 +57,19 @@
       "code": "mechanics/error-tag",
       "message": "Errors get their _tag from their name; a field cannot be called _tag.",
       "line": 14,
-      "column": 31,
+      "column": 22,
       "endLine": 14,
-      "endColumn": 50
+      "endColumn": 28
     },
     {
       "phase": "check",
       "severity": "error",
       "code": "mechanics/discriminator-field",
-      "message": "Variant circle has a field named kind, which is the union's tag.",
-      "line": 18,
-      "column": 5,
-      "endLine": 18,
-      "endColumn": 64
+      "message": "Variant Circle has a field named kind, which is the union's tag.",
+      "line": 16,
+      "column": 31,
+      "endLine": 17,
+      "endColumn": 18
     }
   ]
 }

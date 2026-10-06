@@ -4,9 +4,9 @@ export const Tier = Schema.Literals(["free", "pro", "enterprise"]);
 export type Tier = typeof Tier.Type;
 
 export const Discount = Schema.Union([
-  Schema.Struct({ type: Schema.Literal("percent"), rate: Schema.Int }),
-  Schema.Struct({ type: Schema.Literal("fixed"), cents: Schema.Int }),
-  Schema.Struct({ type: Schema.Literal("none") }),
+  Schema.Struct({ type: Schema.Literal("Percent"), rate: Schema.Int }),
+  Schema.Struct({ type: Schema.Literal("Fixed"), cents: Schema.Int }),
+  Schema.Struct({ type: Schema.Literal("None") }),
 ]);
 export type Discount = typeof Discount.Type;
 
@@ -31,12 +31,12 @@ export const subtotal = (items: ReadonlyArray<LineItem>): number =>
   items.reduce<number>((total, item) => total + item.quantity * item["unit-cents"], 0);
 
 export const discountFor = (customer: Customer): Discount =>
-  Option.getOrElse(Record.get(tierDiscounts, customer.tier), (): Discount => ({ type: "none" }));
+  Option.getOrElse(Record.get(tierDiscounts, customer.tier), (): Discount => ({ type: "None" }));
 
 export const applyDiscount = (discount: Discount, cents: number): number =>
-  discount.type === "percent"
+  discount.type === "Percent"
     ? cents - Math.trunc(cents * discount.rate / 100)
-    : discount.type === "fixed"
+    : discount.type === "Fixed"
       ? Math.max(0, cents - discount.cents)
       : cents;
 
@@ -91,7 +91,7 @@ export const outcomeLabel = (
   });
 
 export const tierDiscounts: { readonly [key: string]: Discount } = {
-  free: { type: "none" },
-  pro: { type: "percent", rate: 10 },
-  enterprise: { type: "fixed", cents: 500 },
+  free: { type: "None" },
+  pro: { type: "Percent", rate: 10 },
+  enterprise: { type: "Fixed", cents: 500 },
 } as const;

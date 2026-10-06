@@ -1,5 +1,5 @@
 /**
- * Parse (define-form ...) S-expression syntax into FormDescriptor objects.
+ * Parse (__form-descriptor ...) S-expression syntax into FormDescriptor objects.
  *
  * Converts the declarative ONTOLOGY.lisp form definitions into the
  * FormDescriptor type used by the elaboration pipeline.
@@ -7,6 +7,7 @@
  * @module parse-descriptor
  */
 
+import { parseUnifiedForm } from "../surface/form.js";
 import { Effect } from "effect";
 import { parseManyToSExpr } from "../reader/index.js";
 import type { SExpr } from "../reader/types.js";
@@ -78,7 +79,7 @@ function parseParentConstructSpec(
 // =============================================================================
 
 /**
- * Parse a source string containing one or more (define-form ...) declarations
+ * Parse a source string containing one or more (__form-descriptor ...) declarations
  * into FormDescriptor objects.
  */
 export function parseFormDescriptors(
@@ -101,11 +102,12 @@ export function parseFormDescriptors(
 }
 
 /**
- * Parse a single (define-form ...) S-expression into a FormDescriptor.
+ * Parse a single (__form-descriptor ...) S-expression into a FormDescriptor.
  * Returns undefined if the expression is not a form declaration.
  */
 export function parseFormDescriptor(expr: SExpr): FormDescriptor | undefined {
-  if (headSym(expr) !== "define-form") return undefined;
+  if (headSym(expr) === "form") return parseUnifiedForm(expr);
+  if (headSym(expr) !== "__form-descriptor") return undefined;
 
   const args = tail(expr);
   if (args.length < 1) return undefined;
@@ -314,7 +316,7 @@ export function parseFormDescriptor(expr: SExpr): FormDescriptor | undefined {
         throw new FormDescriptorSyntaxError(
           name,
           kw,
-          `Unknown define-form section '${kw}' in form '${name}'`,
+          `Unknown __form-descriptor section '${kw}' in form '${name}'`,
         );
     }
   }
@@ -387,8 +389,8 @@ export function parseFormDescriptor(expr: SExpr): FormDescriptor | undefined {
 }
 
 /**
- * Parse one top-level descriptor expression. `define-form` returns one
- * descriptor; `define-protocol` lowers into synthetic protocol descriptors.
+ * Parse one top-level descriptor expression. `__form-descriptor` returns one
+ * descriptor; `__protocol-descriptor` lowers into synthetic protocol descriptors.
  */
 export function parseFormDescriptorForms(expr: SExpr): FormDescriptor[] {
   const form = parseFormDescriptor(expr);
@@ -397,7 +399,7 @@ export function parseFormDescriptorForms(expr: SExpr): FormDescriptor[] {
 }
 
 function parseProtocolDescriptorForms(expr: SExpr): FormDescriptor[] {
-  if (headSym(expr) !== "define-protocol") return [];
+  if (headSym(expr) !== "__protocol-descriptor") return [];
 
   const args = tail(expr);
   const protocolName = args[0] ? trySym(args[0]) : undefined;

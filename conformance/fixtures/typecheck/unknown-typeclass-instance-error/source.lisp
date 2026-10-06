@@ -1,2 +1,2 @@
 (instance (NonExistent Num)
-  (define foo (fn [x] x)))
+  (define foo  [x] x))
