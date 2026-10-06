@@ -1,4 +1,7 @@
 import { Option } from "effect";
+import { selectedRoots } from "@foldworks/outliner";
+import { refactoring, type Proposal } from "./edits.js";
+import { PrepareEdit } from "./edit-commands.js";
 import { CodeEditor } from "@foldworks/code-editor";
 import { editSource, setPane, sourceAnalysis, sourceOperation } from "./source-update.js";
 import { Command, Update } from "foldkit";
@@ -47,8 +50,9 @@ const followOutline = (before: Model, result: UpdateReturn): UpdateReturn => {
   if (result.model.outline.revision === before.outline.revision || result.model.document === null) return result;
   const rows = toRows(result.model.outline.items);
   const known = before.documents.find((entry) => sameRows(entry.rows, rows));
-  const model = known === undefined ? result.model : { ...result.model, document: { ...known.document, revision: result.model.outline.revision } };
-  return { ...result, model, commands: [...(result.commands ?? []), ScheduleAnalysis({ revision: model.outline.revision })] };
+  const document = known === undefined ? result.model.document : { ...known.document, revision: result.model.outline.revision };
+  const model = { ...result.model, document, proposal: null, editBusy: false, editToken: result.model.editToken + 1 };
+  return { ...result, model, commands: [...(result.commands ?? []), ...(before.proposal?.analysis.valueSession == null ? [] : [ReleaseAnalysis({ sessionId: before.proposal.analysis.valueSession })]), ScheduleAnalysis({ revision: model.outline.revision })] };
 };
 
 /** Keeps the newest analysis, and its document as the base for the next printing. */
@@ -72,8 +76,44 @@ const received = (model: Model, analysis: Analysis): UpdateReturn => {
   };
 };
 
+const applyProposal = (model: Model, proposal: Proposal): UpdateReturn => {
+  const changed = foldOutliner(model, Outliner.Message.Replace({ items: fromRows(proposal.rows, model.outline.items), announcement: proposal.title }));
+  const revision = changed.model.outline.revision;
+  const adopted = received({ ...changed.model, proposal: null, editBusy: false, editToken: model.editToken + 1 }, {
+    ...proposal.analysis, revision, document: { ...proposal.analysis.document, revision },
+  });
+  return { ...adopted, commands: [...(changed.commands ?? []), ...(adopted.commands ?? [])] };
+};
+
 export const update = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
+    EditArgument: ({ value }) => ({ model: { ...model, editArgument: value } }),
+    Refactor: ({ action }) => {
+      if (model.analysis === null || model.analysis.revision !== model.outline.revision || model.sourceDirty || model.editBusy) return { model };
+      const selected = selectedRoots(model.outline);
+      let targets = selected.length > 0 ? selected : model.outline.focus === null ? [] : [model.outline.focus.id];
+      if (action === "rename" && targets.length === 1) {
+        const definition = model.analysis.definitions.find((definition) => definition.formNodeId === targets[0] && definition.scope === "global");
+        const layout = model.analysis.rows.find((row) => row.id === targets[0]);
+        const at = model.outline.focus?.start ?? 0;
+        const symbol = layout?.nodes.find((node) => node.kind === "Symbol" && node.from <= at && at < node.to && model.analysis!.symbols[node.nodeId]?.definition !== undefined);
+        targets = [definition?.nodeId ?? symbol?.nodeId ?? targets[0]!];
+      }
+      try {
+        const script = refactoring(action, targets, model.editArgument);
+        const token = model.editToken + 1;
+        return { model: { ...model, editToken: token, editBusy: true, failure: null }, commands: [PrepareEdit({ basis: model.analysis, script, title: `${action[0]!.toUpperCase()}${action.slice(1)}`, proposer: "Refactoring", token, direct: true })] };
+      } catch (error) { return { model: { ...model, failure: String(error) } }; }
+    },
+    PreparedEdit: ({ proposal, direct }) => {
+      if (proposal.token !== model.editToken || proposal.basis !== model.outline.revision || model.sourceDirty) return { model,
+        commands: proposal.analysis.valueSession === null ? [] : [ReleaseAnalysis({ sessionId: proposal.analysis.valueSession })] };
+      return direct ? applyProposal(model, proposal) : { model: { ...model, proposal, editBusy: false } };
+    },
+    FailedEdit: ({ token, reason }) => ({ model: token !== model.editToken ? model : { ...model, failure: reason, editBusy: false } }),
+    AcceptProposal: () => model.proposal === null || model.proposal.basis !== model.outline.revision || model.sourceDirty ? { model } : applyProposal(model, model.proposal),
+    DiscardProposal: () => ({ model: { ...model, proposal: null, editToken: model.editToken + 1, editBusy: false },
+      commands: model.proposal?.analysis.valueSession == null ? [] : [ReleaseAnalysis({ sessionId: model.proposal.analysis.valueSession })] }),
     SetPane: ({ pane }) => setPane(model, pane),
     GotSourceMessage: ({ message }) => editSource(model, message),
     ReadSource: ({ expected, document, rows, errors }) => {

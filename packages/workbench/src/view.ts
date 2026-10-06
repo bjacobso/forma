@@ -1,6 +1,6 @@
 import type { Html } from "foldkit/html";
 import { CodeEditor } from "@foldworks/code-editor";
-import { ValueTree } from "@foldworks/ui";
+import { ChangeSetPreview, TreeDiff, ValueTree } from "@foldworks/ui";
 import { preview } from "./values.js";
 import { defineView } from "foldkit/submodel";
 import { Outliner, walk, type RowDecoration } from "@foldworks/outliner";
@@ -12,6 +12,9 @@ import { lexicalTokens, spansOf } from "./decorations.js";
 import { Message } from "./message.js";
 import type { Model } from "./model.js";
 import { policy } from "./update.js";
+
+const diffNodes = (rows: ReadonlyArray<import("@formalang/host/types").OutlineItem>): ReadonlyArray<import("@foldworks/ui").TreeDiffNode> =>
+  rows.map((row) => ({ id: row.id, label: row.text, children: diffNodes(row.children) }));
 
 const outlineMessage = (message: Outliner.Message): Message => Message.GotOutlinerMessage({ message });
 
@@ -66,6 +69,21 @@ export const view = defineView<Model, Message>((model, h): Html => {
             h.button([h.Type("button"), h.OnClick(Message.SetPane({ pane: model.pane === "outline" ? "source" : "outline" }))], [model.pane === "outline" ? "Source" : "Back to outline"]),
             ...(["Outline", "Brackets"] as const).map((notation) => h.button([h.Type("button"), h.AriaPressed(String(model.notation === notation)), h.OnClick(Message.SetNotation({ notation }))], [notation])),
           ]),
+          h.nav([h.Class("wb__toolbar"), h.AriaLabel("Refactorings")], [
+            h.input([h.Type("text"), h.AriaLabel("Refactoring name or wrapper"), h.Value(model.editArgument), h.Placeholder("Name or wrapper"), h.OnInput((value) => Message.EditArgument({ value }))]),
+            ...(["wrap", "unwrap", "raise", "splice", "rename", "extract"] as const).map((action) => h.button([
+              h.Type("button"), h.Disabled(model.editBusy || model.analysis?.revision !== model.outline.revision || model.sourceDirty), h.OnClick(Message.Refactor({ action })),
+            ], [`${action[0]!.toUpperCase()}${action.slice(1)}`])),
+            h.button([h.Type("button"), h.OnClick(Message.GotOutlinerMessage({ message: Outliner.Message.ClickedUndo() }))], ["Undo"]),
+            h.button([h.Type("button"), h.OnClick(Message.GotOutlinerMessage({ message: Outliner.Message.ClickedRedo() }))], ["Redo"]),
+          ]),
+          ...(model.proposal === null ? [] : [h.div([h.Class("wb__review")], [ChangeSetPreview.view({
+            label: model.proposal.title, basis: `${model.proposal.proposer} · revision ${model.proposal.basis}`,
+            content: [TreeDiff.view({ label: "Structural diff", before: diffNodes(model.outline.items), after: diffNodes(model.proposal.rows) }, h)],
+            consequences: model.proposal.consequences,
+            notices: ["Capabilities are not performed during preview."],
+            actions: [h.button([h.Type("button"), h.OnClick(Message.AcceptProposal())], ["Accept"]), h.button([h.Type("button"), h.OnClick(Message.DiscardProposal())], ["Discard"])],
+          }, h)])]),
           ...(model.failure === null
             ? []
             : [h.p([h.Class("wb-error"), h.Role("alert")], [model.failure])]),

@@ -4,6 +4,7 @@ import { ValueTree } from "@foldworks/ui";
 import { ValueNodeSchema } from "./values.js";
 import { Outliner } from "@foldworks/outliner";
 
+import { Proposal } from "./edits.js";
 import { Analysis } from "./analysis.js";
 import { Document, OutlineRow } from "./document.js";
 
@@ -17,6 +18,10 @@ export const Model = S.Struct({
   document: S.NullOr(Document),
   /** The latest analysis. Rows show its facts while their text is the text it analyzed. */
   analysis: S.NullOr(Analysis),
+  editArgument: S.String,
+  editToken: S.Number,
+  editBusy: S.Boolean,
+  proposal: S.NullOr(Proposal),
   pane: S.Literals(["outline", "source"]),
   source: CodeEditor.Model,
   sourceDirty: S.Boolean,

@@ -5,10 +5,17 @@ import { ValueTree } from "@foldworks/ui";
 import { ValueNodeSchema } from "./values.js";
 import { Outliner } from "@foldworks/outliner";
 
+import { Proposal } from "./edits.js";
 import { Analysis } from "./analysis.js";
 import { Document, OutlineRow } from "./document.js";
 
 export const Message = defineMessageUnion({
+  EditArgument: { value: S.String },
+  Refactor: { action: S.Literals(["wrap", "unwrap", "raise", "splice", "rename", "extract"]) },
+  PreparedEdit: { proposal: Proposal, direct: S.Boolean },
+  FailedEdit: { token: S.Number, reason: S.String },
+  AcceptProposal: {},
+  DiscardProposal: {},
   SetPane: { pane: S.Literals(["outline", "source"]) },
   GotSourceMessage: { message: CodeEditor.Message },
   ReadSource: { expected: CodeEditor.DocumentVersion, document: Document, rows: S.Array(OutlineRow), errors: S.Array(CodeEditor.Diagnostic) },

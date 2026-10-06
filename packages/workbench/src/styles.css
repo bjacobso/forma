@@ -159,3 +159,8 @@
 .wb__hover p { margin: 6px 0; }
 
 .wb .native-editor { min-height: 600px; }
+
+.wb__review { border-bottom: 1px solid var(--border); padding: 16px; }
+.wb__toolbar input { width: 165px; min-width: 0; border: 1px solid var(--border); background: var(--background); color: var(--foreground); border-radius: 5px; padding: 5px 8px; font: inherit; font-size: 12px; }
+.wb__toolbar { flex-wrap: wrap; }
+.wb__toolbar button:disabled { opacity: .5; cursor: default; }
