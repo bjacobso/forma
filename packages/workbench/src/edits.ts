@@ -46,6 +46,10 @@ export const consequences = (before: AnalysisValue, after: AnalysisValue): Reado
     const was = preview(previous), value = preview(observed.value);
     if (was !== value) result.push({ kind: "changed", label: after.rows.find((row) => row.id === id)?.text ?? "Expression value", detail: `${was} → ${value}` });
   }
+  const oldRequirements = new Set(Object.values(before.requirements).flat());
+  const newRequirements = new Set(Object.values(after.requirements).flat());
+  for (const name of newRequirements) if (!oldRequirements.has(name)) result.push({ kind: "added", label: `Requires ${name}`, detail: "Approval is required before this capability runs." });
+  for (const name of oldRequirements) if (!newRequirements.has(name)) result.push({ kind: "removed", label: `Requires ${name}` });
   return result;
 };
 

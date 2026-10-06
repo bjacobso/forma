@@ -1,4 +1,5 @@
 import { Option } from "effect";
+import { BeginRun, ResumeRun, AbortRun } from "./run-commands.js";
 import { selectedRoots } from "@foldworks/outliner";
 import { refactoring, type Proposal } from "./edits.js";
 import { PrepareEdit } from "./edit-commands.js";
@@ -85,8 +86,25 @@ const applyProposal = (model: Model, proposal: Proposal): UpdateReturn => {
   return { ...adopted, commands: [...(changed.commands ?? []), ...(adopted.commands ?? [])] };
 };
 
-export const update = (model: Model, message: Message): UpdateReturn =>
+const updateModel = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
+    Run: () => {
+      if (model.analysis === null || model.analysis.revision !== model.outline.revision || model.runBusy || model.run?.status === "pending" || model.sourceDirty || model.analysis.diagnostics.some((diagnostic) => diagnostic.severity === "error") || model.analysis.brokenRows.length > 0) return { model };
+      const token = model.runToken + 1;
+      return { model: { ...model, runToken: token, runBusy: true, run: null, failure: null }, commands: [BeginRun({ basis: model.analysis, token })] };
+    },
+    DecideCapability: ({ allow }) => model.run?.status !== "pending" || model.runBusy || model.analysis === null ? { model } : {
+      model: { ...model, runBusy: true }, commands: [ResumeRun({ run: model.run, basis: model.analysis, allow })],
+    },
+    Ran: ({ outcome }) => {
+      if (outcome.token !== model.runToken || outcome.basis !== model.outline.revision || model.sourceDirty) return { model, commands: [AbortRun({ run: outcome })] };
+      const next = { ...model, run: outcome, runBusy: false };
+      if (outcome.status === "pending" || model.analysis === null) return { model: next };
+      return received(next, { ...model.analysis, valueSession: outcome.sessionId, values: outcome.values,
+        diagnostics: [...model.analysis.diagnostics.filter((diagnostic) => diagnostic.phase !== "evaluate"), ...outcome.diagnostics],
+      });
+    },
+    FailedRun: ({ token, reason }) => token !== model.runToken ? { model } : { model: { ...model, run: null, runBusy: false, failure: reason }, commands: model.run?.status !== "pending" ? [] : [AbortRun({ run: model.run })] },
     EditArgument: ({ value }) => ({ model: { ...model, editArgument: value } }),
     Refactor: ({ action }) => {
       if (model.analysis === null || model.analysis.revision !== model.outline.revision || model.sourceDirty || model.editBusy) return { model };
@@ -206,3 +224,17 @@ export const update = (model: Model, message: Message): UpdateReturn =>
         ? { model: evo(model, { failure: () => reason }) }
         : { model },
   });
+
+/** Every editing route cancels a paused run and rejects subsequent replies for it. */
+export const update = (model: Model, message: Message): UpdateReturn => {
+  const result = updateModel(model, message);
+  if (result.model.outline.revision === model.outline.revision && !(result.model.sourceDirty && result.model.source.document !== model.source.document)) return result;
+  const changedSource = result.model.sourceDirty && result.model.source.document !== model.source.document;
+  return { ...result, model: { ...result.model, run: null, runBusy: false, runToken: model.runToken + 1,
+    ...(changedSource ? { proposal: null, editBusy: false, editToken: model.editToken + 1 } : {}),
+  },
+    commands: [...(result.commands ?? []), ...(model.run?.status !== "pending" ? [] : [AbortRun({ run: model.run })]),
+      ...(changedSource && model.proposal?.analysis.valueSession != null ? [ReleaseAnalysis({ sessionId: model.proposal.analysis.valueSession })] : []),
+    ],
+  };
+};

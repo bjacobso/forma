@@ -1,4 +1,5 @@
 import type { Html } from "foldkit/html";
+import { Agent } from "@foldworks/agent";
 import { CodeEditor } from "@foldworks/code-editor";
 import { ChangeSetPreview, TreeDiff, ValueTree } from "@foldworks/ui";
 import { preview } from "./values.js";
@@ -66,6 +67,7 @@ export const view = defineView<Model, Message>((model, h): Html => {
             ],
           ),
           h.nav([h.Class("wb__toolbar"), h.AriaLabel("Notation")], [
+            h.button([h.Type("button"), h.Disabled(model.runBusy || model.run?.status === "pending" || model.sourceDirty || model.analysis?.revision !== model.outline.revision), h.OnClick(Message.Run())], [model.runBusy ? "Running…" : "Run"]),
             h.button([h.Type("button"), h.OnClick(Message.SetPane({ pane: model.pane === "outline" ? "source" : "outline" }))], [model.pane === "outline" ? "Source" : "Back to outline"]),
             ...(["Outline", "Brackets"] as const).map((notation) => h.button([h.Type("button"), h.AriaPressed(String(model.notation === notation)), h.OnClick(Message.SetNotation({ notation }))], [notation])),
           ]),
@@ -84,6 +86,12 @@ export const view = defineView<Model, Message>((model, h): Html => {
             notices: ["Capabilities are not performed during preview."],
             actions: [h.button([h.Type("button"), h.OnClick(Message.AcceptProposal())], ["Accept"]), h.button([h.Type("button"), h.OnClick(Message.DiscardProposal())], ["Discard"])],
           }, h)])]),
+          ...(model.run?.call == null ? [] : [h.div([h.Class("wb__review")], [Agent.PermissionRequest.view({
+            part: { _tag: "Tool", callId: model.run.call.callId, name: model.run.call.name, input: "", output: "", status: "WaitingApproval", permissionReason: `${model.run.purity} capability · ${model.run.description}` },
+            onDecision: (decision) => Message.DecideCapability({ allow: decision === "Allow" }),
+            presentation: { renderDetails: () => [h.code([], [`${model.run!.call!.name} ${model.run!.call!.args.map((value) => preview(value)).join(" ")}`])] },
+          }, h)])]),
+          ...(model.run?.printed == null ? [] : [h.p([h.Class("wb__run-result"), h.Role("status")], [`Run completed: ${model.run.printed}`])]),
           ...(model.failure === null
             ? []
             : [h.p([h.Class("wb-error"), h.Role("alert")], [model.failure])]),
@@ -122,10 +130,12 @@ export const view = defineView<Model, Message>((model, h): Html => {
                     if (model.analysis?.rows.find((layout) => layout.id === row.id)?.text !== row.text) return null;
                     const observed = model.analysis?.values[row.id];
                     const type = model.analysis?.types[row.id];
-                    if (observed?.value == null && type === undefined) return null;
+                    const requirements = model.analysis?.requirements[row.id] ?? [];
+                    if (observed?.value == null && type === undefined && requirements.length === 0) return null;
                     return h.button([h.Class("wb__value"), h.Type("button"), h.OnClick(Message.Inspect({ id: row.id })), h.AriaLabel(`Inspect ${row.text}`)], [
                       ...(observed?.value == null ? [] : [h.span([], [preview(observed.value) + (observed.count > 1 ? ` ×${observed.count}` : "")])]),
                       ...(type === undefined ? [] : [h.small([h.Class("wb__type")], [type])]),
+                      ...(requirements.length === 0 ? [] : [h.small([h.Class("wb__requirements")], [`Requires ${requirements.join(", ")}`])]),
                     ]);
                   },
                 },
@@ -137,6 +147,7 @@ export const view = defineView<Model, Message>((model, h): Html => {
             h.h2([], ["Inspector"]),
             h.code([], [model.analysis?.rows.find((row) => row.id === model.inspector)?.text ?? "Form"]),
             h.p([], [model.analysis?.types[model.inspector] ?? "Type unavailable"]),
+            h.p([], [`Requires: ${(model.analysis?.requirements[model.inspector] ?? []).join(", ") || "none"}`]),
             h.p([], [model.analysis?.values[model.inspector]?.failure ?? `${model.analysis?.values[model.inspector]?.count ?? 0} evaluations`]),
             ValueTree.view({ model: model.valueTree, nodes: model.valueNodes, label: "Value", toParentMessage: (message) => Message.GotValueMessage({ message }) }, h),
           ])]),

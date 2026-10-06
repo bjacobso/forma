@@ -164,3 +164,6 @@
 .wb__toolbar input { width: 165px; min-width: 0; border: 1px solid var(--border); background: var(--background); color: var(--foreground); border-radius: 5px; padding: 5px 8px; font: inherit; font-size: 12px; }
 .wb__toolbar { flex-wrap: wrap; }
 .wb__toolbar button:disabled { opacity: .5; cursor: default; }
+
+.wb__requirements { color: var(--wb-warning); }
+.wb__run-result { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--border); margin: 0; color: var(--wb-success); }

@@ -8,6 +8,7 @@ export const hoverContent = <Message>(fact: NonNullable<ReturnType<typeof hoverF
     h.strong([], [fact.title]),
     h.p([], [fact.type ?? fact.kind]),
     ...(fact.observed?.value == null ? [] : [h.code([], [preview(fact.observed.value)])]),
+    ...(fact.requirements.length === 0 ? [] : [h.p([], [`Requires: ${fact.requirements.join(", ")}`])]),
     ...(fact.doc === undefined ? [] : [h.p([], [fact.doc])]),
     ...(fact.definition === undefined ? [] : [h.p([], [`Defined in ${fact.definition.sourceId} · ${fact.references.length} references`])]),
   ]);

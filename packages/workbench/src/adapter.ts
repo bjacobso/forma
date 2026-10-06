@@ -142,7 +142,7 @@ export const hoverFact = (analysis: Analysis, offset: number) => {
   return { from: node.span.start, to: node.span.end, nodeId: node.id,
     title: symbol?.name ?? source.slice(node.span.start, node.span.end),
     kind: symbol?.kind ?? node.kind, type,
-    observed: analysis.values[node.id], definition,
+    observed: analysis.values[node.id], definition, requirements: analysis.requirements[node.id] ?? [],
     references: symbol?.definition === undefined ? [] : (analysis.references[symbol.definition] ?? []),
     doc: analysis.suggestions.find((item) => item.name === symbol?.name)?.doc,
   };

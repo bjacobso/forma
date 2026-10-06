@@ -17,6 +17,7 @@ import { builtinScheme } from "@formalang/ts/type";
 
 import { Document, SyntaxIdentitySchema } from "./document.js";
 import { FormaHost, call, required, type FormaHostService } from "./host.js";
+import { requirementsFor } from "./requirements.js";
 import { Suggestion, Slot } from "./assistance.js";
 import { Observed, observeProgram, observationsOf, evaluationDiagnostics } from "./values.js";
 import { rowLayouts, type RowLayout } from "./rows.js";
@@ -98,6 +99,7 @@ export const Analysis = S.Struct({
   symbols: S.Record(S.String, SymbolFact),
   /** Inferred types by node id. */
   types: S.Record(S.String, S.String),
+  requirements: S.Record(S.String, S.Array(S.String)),
   suggestions: S.Array(Suggestion),
   slots: S.Record(S.String, S.Array(Slot)),
   values: S.Record(S.String, Observed),
@@ -463,6 +465,7 @@ export const analyzeProgram = (input: AnalyzeInput): Effect.Effect<Analysis, str
       ),
       symbols: facts.symbols,
       types,
+      requirements: requirementsFor(text.identity, facts.symbols, facts.definitions),
       suggestions,
       slots,
       values: observed === undefined ? {} : observationsOf(observed.state),

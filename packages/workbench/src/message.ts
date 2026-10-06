@@ -5,11 +5,16 @@ import { ValueTree } from "@foldworks/ui";
 import { ValueNodeSchema } from "./values.js";
 import { Outliner } from "@foldworks/outliner";
 
+import { RunOutcome } from "./run.js";
 import { Proposal } from "./edits.js";
 import { Analysis } from "./analysis.js";
 import { Document, OutlineRow } from "./document.js";
 
 export const Message = defineMessageUnion({
+  Run: {},
+  DecideCapability: { allow: S.Boolean },
+  Ran: { outcome: RunOutcome },
+  FailedRun: { token: S.Number, reason: S.String },
   EditArgument: { value: S.String },
   Refactor: { action: S.Literals(["wrap", "unwrap", "raise", "splice", "rename", "extract"]) },
   PreparedEdit: { proposal: Proposal, direct: S.Boolean },
