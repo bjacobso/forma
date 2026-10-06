@@ -16,10 +16,10 @@ it("gates every host call, propagates requirements, and cancels a stale permissi
   const performed: string[] = [];
   const capabilities: ReadonlyArray<Capability> = [
     { name: "Test.read", arity: 0, purity: "read", description: "Read a value", typeScheme: { kind: "function", params: [], result: { kind: "type", name: "Number" } }, perform: () => Effect.sync(() => { performed.push('read'); return { kind: "int", value: 42 }; }) },
-    { name: "Test.write", arity: 1, purity: "write", description: "Write a value", typeScheme: { kind: "function", params: [{ kind: "type", name: "Number" }], result: { kind: "type", name: "Nil" } }, perform: () => Effect.sync(() => { performed.push('write'); return { kind: "nil" }; }) },
+    { name: "Test.write", arity: 1, purity: "write", description: "Write a value", typeScheme: { kind: "function", params: [{ kind: "type", name: "Number" }], result: { kind: "type", name: "Unit" } }, perform: () => Effect.sync(() => { performed.push('write'); return { kind: "nil" }; }) },
   ];
   await Effect.runPromise(Effect.gen(function* () {
-    const source = '(define (commit x) (Test.write x))\n(commit (Test.read))';
+    const source = '(define commit [x] (Test.write x))\n(commit (Test.read))';
     const read = sourceToOutline(source);
     const basis = yield* analyzeProgram({ revision: 1, rows: read.items, base: { revision: 1, source, identity: read.identity } });
     expect(basis.requirements[read.items[1]!.id]).toEqual(['Test.read', 'Test.write']);
