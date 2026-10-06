@@ -4,7 +4,9 @@ import { preview } from "./values.js";
 import { defineView } from "foldkit/submodel";
 import { Outliner, walk, type RowDecoration } from "@foldworks/outliner";
 
-import { summary, viewOf } from "./adapter.js";
+import { brackets } from "./notation.js";
+import { hoverContent } from "./intelligence-view.js";
+import { summary, viewOf, hoverFact, sourceOffsetAtRow } from "./adapter.js";
 import { lexicalTokens, spansOf } from "./decorations.js";
 import { Message } from "./message.js";
 import type { Model } from "./model.js";
@@ -29,6 +31,10 @@ const decorations = (model: Model): Readonly<Record<string, RowDecoration>> => {
             ...(row.diagnostics.length === 0 ? {} : { diagnostics: row.diagnostics }),
             ...(row.tone === undefined ? {} : { tone: row.tone }),
           };
+  }
+  if (model.notation === "Brackets") {
+    const markers = brackets(model.outline.items, { scopeId: model.outline.scopeId, focusId: model.outline.focus?.id ?? null });
+    for (const [id, decoration] of markers) result[id] = { ...result[id], ...decoration };
   }
   return result;
 };
@@ -55,6 +61,9 @@ export const view = defineView<Model, Message>((model, h): Html => {
               h.span([h.Class("wb__stats"), h.AriaLive("polite")], [stats(model)]),
             ],
           ),
+          h.nav([h.Class("wb__toolbar"), h.AriaLabel("Notation")], [
+            ...(["Outline", "Brackets"] as const).map((notation) => h.button([h.Type("button"), h.AriaPressed(String(model.notation === notation)), h.OnClick(Message.SetNotation({ notation }))], [notation])),
+          ]),
           ...(model.failure === null
             ? []
             : [h.p([h.Class("wb-error"), h.Role("alert")], [model.failure])]),
@@ -70,6 +79,16 @@ export const view = defineView<Model, Message>((model, h): Html => {
                   label: "Program",
                   spellcheck: false,
                   decorations: decorations(model),
+                  hover: ({ id, offset, text }) => {
+                    const analysis = model.analysis;
+                    const layout = analysis?.rows.find((layout) => layout.id === id);
+                    if (analysis == null || layout == null || layout.text !== text) return null;
+                    const fact = hoverFact(analysis, sourceOffsetAtRow(layout, offset));
+                    if (fact === null) return null;
+                    const node = layout.nodes.find((node) => node.nodeId === fact.nodeId);
+                    return { from: node?.from ?? 0, to: node?.to ?? text.length, content: hoverContent(fact, h) };
+                  },
+                  placeholders: (parentId) => parentId === null || model.analysis?.revision !== model.outline.revision ? [] : model.analysis.slots[parentId] ?? [],
                   rowAccessory: (row) => {
                     if (model.analysis?.rows.find((layout) => layout.id === row.id)?.text !== row.text) return null;
                     const observed = model.analysis?.values[row.id];

@@ -8,6 +8,7 @@ import { Analysis } from "./analysis.js";
 import { Document, OutlineRow } from "./document.js";
 
 export const Message = defineMessageUnion({
+  SetNotation: { notation: S.Literals(["Outline", "Brackets"]) },
   Inspect: { id: S.String },
   GotValueMessage: { message: ValueTree.Message },
   LoadedValue: { sessionId: S.String, id: S.String, nodes: S.Array(ValueNodeSchema) },

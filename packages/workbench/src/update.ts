@@ -4,6 +4,8 @@ import { evo } from "foldkit/struct";
 import { Outliner, type Policy } from "@foldworks/outliner";
 
 import { ValueTree } from "@foldworks/ui";
+import { completeAt, sourceOffsetAtRow } from "./adapter.js";
+import { find } from "@foldworks/outliner";
 import { valueRoot } from "./values.js";
 import { AnalyzeProgram, ScheduleAnalysis, LoadValue, ReleaseAnalysis } from "./commands.js";
 import { fromRows, toRows } from "./document.js";
@@ -67,6 +69,7 @@ const received = (model: Model, analysis: Analysis): UpdateReturn => {
 
 export const update = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
+    SetNotation: ({ notation }) => ({ model: { ...model, notation } }),
     Inspect: ({ id }) => {
       const value = model.analysis?.values[id]?.value;
       return { model: { ...model, inspector: id, valueTree: ValueTree.init({ id: model.valueTree.id }),
@@ -84,8 +87,17 @@ export const update = (model: Model, message: Message): UpdateReturn =>
       ...model, valueNodes: model.valueNodes.map((node) => node.id === id ? { ...node, children: nodes, expandable: false } : node),
     } }),
     ReleasedAnalysis: () => ({ model }),
-    GotOutlinerMessage: ({ message: event }) =>
-      followOutline(model, foldOutliner(model, event)),
+    GotOutlinerMessage: ({ message: event }) => {
+      if (event._tag === "RequestedCompletion" && model.analysis !== null) {
+        const row = find(model.outline.items, event.id);
+        const layout = model.analysis.rows.find((layout) => layout.id === event.id);
+        if (row !== undefined && layout !== undefined && layout.text === row.text) {
+          const answer = completeAt(model.analysis, row.text, event.start, sourceOffsetAtRow(layout, event.start));
+          return foldOutliner(model, Outliner.Message.ShowCompletions({ id: event.id, ...answer }));
+        }
+      }
+      return followOutline(model, foldOutliner(model, event));
+    },
     LoadedProgram: ({ document, rows }) => {
       const loaded = foldOutliner(
         evo(model, { failure: () => null }),

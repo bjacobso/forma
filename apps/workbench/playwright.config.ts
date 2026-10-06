@@ -7,6 +7,7 @@ export default defineConfig({
   testMatch: "*.pw.ts",
   outputDir: "./test-results",
   timeout: 30_000,
+  workers: 2,
   expect: { timeout: 8_000 },
   use: {
     baseURL: `http://127.0.0.1:${port}`,

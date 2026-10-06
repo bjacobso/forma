@@ -16,6 +16,7 @@ export const Model = S.Struct({
   document: S.NullOr(Document),
   /** The latest analysis. Rows show its facts while their text is the text it analyzed. */
   analysis: S.NullOr(Analysis),
+  notation: S.Literals(["Outline", "Brackets"]),
   inspector: S.NullOr(S.String),
   valueTree: ValueTree.Model,
   valueNodes: S.Array(ValueNodeSchema),

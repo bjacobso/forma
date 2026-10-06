@@ -17,6 +17,7 @@ import { builtinScheme } from "@formalang/ts/type";
 
 import { Document, SyntaxIdentitySchema } from "./document.js";
 import { FormaHost, call, required, type FormaHostService } from "./host.js";
+import { Suggestion, Slot } from "./assistance.js";
 import { Observed, observeProgram, observationsOf, evaluationDiagnostics } from "./values.js";
 import { rowLayouts, type RowLayout } from "./rows.js";
 import type { SymbolKind } from "./tokens.js";
@@ -54,12 +55,13 @@ export const Definition = S.Struct({
   form: S.String,
   formNodeId: S.NullOr(S.String),
   sourceId: S.String,
+  scopeNodeId: S.NullOr(S.String),
 });
 export type Definition = typeof Definition.Type;
 
 const RowNodeSchema = S.Struct({
   nodeId: S.String,
-  kind: S.String,
+  kind: S.Literals(["List", "Vector", "Map", "Set", "Symbol", "String", "Number", "Boolean", "ReaderMacro", "Error", "Comment"]),
   from: S.Number,
   to: S.Number,
   start: S.Number,
@@ -96,6 +98,8 @@ export const Analysis = S.Struct({
   symbols: S.Record(S.String, SymbolFact),
   /** Inferred types by node id. */
   types: S.Record(S.String, S.String),
+  suggestions: S.Array(Suggestion),
+  slots: S.Record(S.String, S.Array(Slot)),
   values: S.Record(S.String, Observed),
   valueSession: S.NullOr(S.String),
   diagnostics: S.Array(SourceDiagnostic),
@@ -247,6 +251,7 @@ const symbolFacts = (
     formNodeId:
       definition.span.sourceId === sourceId ? (definition.formNodeId ?? null) : null,
     sourceId: definition.span.sourceId,
+    scopeNodeId: definition.scopeNodeId ?? null,
   }));
   const byKey = new Map(definitions.map((definition) => [definition.key, definition]));
   for (const definition of definitions) {
@@ -419,6 +424,27 @@ export const analyzeProgram = (input: AnalyzeInput): Effect.Effect<Analysis, str
       ...elaborated.diagnostics.flatMap((diagnostic) => fromHost(diagnostic) ?? []),
     ];
 
+    const types = typesByNode(typed.typedSpans, syntax);
+    const suggestions = [
+      ...Object.keys(defaultBuiltins).map((name) => ({ name, kind: "builtin" })),
+      ...[...SPECIAL_FORMS].map((name) => ({ name, kind: "special" })),
+      ...[...KERNEL_MACROS].map((name) => ({ name, kind: "macro" })),
+      ...(config.capabilities ?? []).map((capability) => ({ name: capability.name, kind: "capability", doc: capability.description })),
+      ...(descriptors?.list() ?? []).filter((descriptor) => descriptor.phase === "domain").map((descriptor) => ({ name: descriptor.name, kind: "form", doc: descriptor.doc })),
+    ];
+    const slots: Record<string, Array<typeof Slot.Type>> = {};
+    if (host.formSlots !== undefined) {
+      for (const form of domainForms) {
+        const result = yield* call(() => host.formSlots!({ sourceId, source: text.source, identity: text.identity, sessionId, nodeId: form.nodeId }));
+        slots[form.nodeId] = result.slots.filter((slot) => slot.available && slot.occurrences.length === 0).map((slot) => {
+          // The service supplies a source form; its outer parentheses are painted by the outline.
+          const insertion = slot.insertion;
+          const listed = insertion.text.startsWith("(") && insertion.text.endsWith(")");
+          return { key: slot.name, label: slot.name, text: listed ? insertion.text.slice(1, -1) : insertion.text,
+            caret: Math.max(0, insertion.cursor - (listed ? 1 : 0)), doc: slot.doc };
+        });
+      }
+    }
     const observed = typed.errors.length > 0 || parseErrors.length > 0
       ? undefined : yield* observeProgram({ ...document, identity: text.identity as Document["identity"] }, code);
     const runtimeErrors = observed === undefined ? [] : evaluationDiagnostics(observed.state).flatMap((diagnostic) => fromHost(diagnostic) ?? []);
@@ -435,7 +461,9 @@ export const analyzeProgram = (input: AnalyzeInput): Effect.Effect<Analysis, str
         (layout): RowLayout => layout,
       ),
       symbols: facts.symbols,
-      types: typesByNode(typed.typedSpans, syntax),
+      types,
+      suggestions,
+      slots,
       values: observed === undefined ? {} : observationsOf(observed.state),
       valueSession: observed?.sessionId ?? null,
       diagnostics: [...diagnostics, ...runtimeErrors],

@@ -129,3 +129,53 @@ export const summary = (
     analysis.diagnostics.filter((diagnostic) => diagnostic.severity === "error").length,
   warnings: analysis.diagnostics.filter((diagnostic) => diagnostic.severity === "warning").length,
 });
+
+/** Shared hover facts in source coordinates. Views choose the presentation. */
+export const hoverFact = (analysis: Analysis, offset: number) => {
+  const { identity, source } = analyzedText(analysis);
+  const node = [...identity.nodes].filter((node) => node.span.start <= offset && offset < node.span.end)
+    .sort((a, b) => (a.span.end - a.span.start) - (b.span.end - b.span.start))[0];
+  if (node === undefined) return null;
+  const symbol = analysis.symbols[node.id];
+  const definition = symbol?.definition === undefined ? undefined : analysis.definitions.find((item) => item.key === symbol.definition);
+  const type = analysis.types[node.id] ?? (definition?.formNodeId == null ? undefined : analysis.types[definition.formNodeId]);
+  return { from: node.span.start, to: node.span.end, nodeId: node.id,
+    title: symbol?.name ?? source.slice(node.span.start, node.span.end),
+    kind: symbol?.kind ?? node.kind, type,
+    observed: analysis.values[node.id], definition,
+    references: symbol?.definition === undefined ? [] : (analysis.references[symbol.definition] ?? []),
+    doc: analysis.suggestions.find((item) => item.name === symbol?.name)?.doc,
+  };
+};
+
+/** Word boundaries are surface-local; scope is a point in the shared source. */
+export const completeAt = (analysis: Analysis, text: string, offset: number, sourceOffset = offset) => {
+  let from = offset;
+  while (from > 0 && /[^\s()[\]{}";,]/.test(text[from - 1]!)) from -= 1;
+  const prefix = text.slice(from, offset);
+  const identity = analyzedText(analysis).identity;
+  const visible = analysis.definitions.filter((definition) => {
+    if (definition.scope === "global") return true;
+    const scope = identity.nodes.find((node) => node.id === definition.scopeNodeId);
+    return scope !== undefined && scope.span.start <= sourceOffset && sourceOffset < scope.span.end;
+  });
+  const candidates = [
+    ...visible.map((definition) => ({ name: definition.name, kind: definition.kind,
+      type: definition.formNodeId === null ? undefined : analysis.types[definition.formNodeId] })),
+    ...analysis.suggestions,
+  ];
+  const seen = new Set<string>();
+  return { from, to: offset, items: candidates.filter((item) => {
+    if (!item.name.startsWith(prefix) || seen.has(item.name)) return false;
+    seen.add(item.name); return true;
+  }).map((item) => ({ label: item.name, insert: item.name, kind: item.kind,
+    detail: item.type ?? item.kind })),
+  };
+};
+
+/** A row offset refers to the same node as the corresponding source offset. */
+export const sourceOffsetAtRow = (layout: RowLayout, offset: number): number => {
+  const node = [...layout.nodes].filter((node) => node.from <= offset && offset <= node.to)
+    .sort((a, b) => (a.to - a.from) - (b.to - b.from))[0];
+  return node === undefined ? layout.start : node.start + Math.min(offset - node.from, node.end - node.start);
+};

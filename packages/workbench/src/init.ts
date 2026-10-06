@@ -23,6 +23,7 @@ export const init = (config: InitConfig): Update.Return<Model, Message, FormaHos
     outline: Outliner.init({ id: domIds(config.id).outline }),
     document: null,
     analysis: null,
+    notation: "Outline",
     inspector: null,
     valueTree: ValueTree.init({ id: `${config.id}-value` }),
     valueNodes: [],
