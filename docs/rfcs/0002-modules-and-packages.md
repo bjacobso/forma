@@ -19,6 +19,10 @@ consistent language. This proposal gives those programs a project model: reusabl
 libraries, independently checked modules, packages, and application entry points.
 All examples and commands on this page describe proposed behavior.
 
+The examples use the current Effect-value authoring surface.
+[RFC 0003](./0003-direct-style-effects.md) proposes direct-style calls, inferred
+effects, and deferred functions as an alternative surface for the same module model.
+
 ## Current foundations
 
 The Native engine already analyzes `use`, `import`, `export`, and `export-from`
@@ -77,6 +81,12 @@ as signatures do in the [language reference](../language.md).
 `valid-total?` belongs to this module and cannot be imported. The module interface
 describes the exported definitions, including their types and any constructors
 made public with them. Exporting a name that has no definition is an error.
+
+Ordinary function signatures are optional, including on exported functions. The
+compiler derives interfaces from inferred types; an explicit signature constrains
+the author's intended API. Service interfaces and form contracts still require
+their declared types because those types specify behavior that inference cannot
+recover from an ordinary function body.
 
 ### Imports
 
@@ -256,7 +266,7 @@ forma run src/main.forma
 forma test
 ```
 
-These extend the existing migration CLI. Runner behavior, test discovery, and
+These define a project CLI. Runner behavior, test discovery, and
 package distribution are part of the project model and are not available today.
 
 The module graph also drives editor navigation, completion, rename, and diagnostics.
