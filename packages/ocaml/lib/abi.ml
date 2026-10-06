@@ -134,6 +134,10 @@ let dispatch_request request =
   | "loadPrelude" -> load_prelude request
   | "loadSource" -> load_source request
   | "loadSourceBundle" -> load_source_bundle request
+  | "moduleDeclarations" -> Abi_module_ops.declarations ~with_session request
+  | "moduleGraph" -> Abi_module_ops.graph ~with_session request
+  | "evaluateModule" -> Abi_module_ops.evaluate ~with_session request
+  | "typecheckModule" -> Abi_module_ops.typecheck ~with_session request
   | "replSubmit" -> repl_submit request
   | "resumeHostCall" -> Abi_session_ops.resume_host_call request
   | "abortEvaluation" -> Abi_session_ops.abort_evaluation request
@@ -148,7 +152,9 @@ let dispatch_request request =
   | "typecheckCore" -> typecheck_core_source request
   | "typecheckCoreTyped" -> typecheck_core_source ~typed:true request
   | "parseSummary" -> parse_summary request
+  | "evaluate" when Option.is_some request.session_id -> Abi_module_ops.evaluate ~with_session request
   | "evaluate" -> evaluate_source request
+  | "typecheck" when Option.is_some request.session_id -> Abi_module_ops.typecheck ~with_session request
   | "typecheck" -> typecheck_source request
   | "elaborate" -> elaborate_source request
   | "elaborateMany" -> elaborate_many request
@@ -185,7 +191,8 @@ let handle_request request =
          (match Reader.parse_ast ~source_id:(Option.value ~default:"request" request.source_id) source with Ok exprs -> Surface.validate_program exprs | Error _ -> ())
      | _ -> ());
     dispatch_request request
-  with exn -> (
+  with Module_graph.Error diagnostic -> Response.typecheck_diagnostics_json [diagnostic]
+  | exn -> (
     match Surface.diagnostic_of_exn exn with
     | Some (span, code, message) -> Response.eval_diagnostics_json [Eval.{span=Some span;code;message}]
     | None -> internal_error_json request.op exn)

@@ -281,18 +281,18 @@ let effect_result = function
   | _ -> false
 
 (* Constructor values use the same canonical record inside ascriptions. *)
-let rec effect_body ?(ascribed=false) constructors e =
+let rec effect_body ?(ascribed=false) ?(linked=false) constructors e =
   let s = Ast.expr_span e in
-  let lower = effect_body ~ascribed constructors in
+  let lower = effect_body ~ascribed ~linked constructors in
   let alias = function "__map-get" -> "get" | "Some" | "Option.Some" -> "some" | "None" | "Option.None" -> "none" | "Ok" | "Result.Ok" -> "success" | "Err" | "Result.Err" -> "failure" | n -> n in
   match e with
-  | Ast.List (_,[(Ast.Symbol (_,":") | Ast.Keyword (_,":"));value;t]) -> call s ":" [effect_body ~ascribed:true constructors value;type_expr t]
+  | Ast.List (_,[(Ast.Symbol (_,":") | Ast.Keyword (_,":"));value;t]) -> call s ":" [effect_body ~ascribed:true ~linked constructors value;type_expr t]
   | Ast.List (_,Ast.Symbol (_,("quote" | "quasiquote" | ":")) :: _) -> e
-  | Ast.Symbol (_,n) when List.mem_assoc n constructors && snd (List.assoc n constructors) = None -> let tag,_ = List.assoc n constructors in Ast.Map (s,[kw s (":" ^ tag),Ast.String (s,List.hd (List.rev (String.split_on_char '.' n)))])
+  | Ast.Symbol (_,n) when List.mem_assoc n constructors && snd (List.assoc n constructors) = None -> let tag,_ = List.assoc n constructors in if linked then call s n [] else Ast.Map (s,[kw s (":" ^ tag),Ast.String (s,List.hd (List.rev (String.split_on_char '.' n)))])
   | Ast.List (_,Ast.Symbol (_,n) :: args) when List.mem_assoc n constructors ->
       let tag,_ = List.assoc n constructors in
       let fields = match args with [Ast.Map (_,pairs)] -> List.map (fun (k,v)->k,lower v) pairs | [v] -> [kw (Ast.expr_span v) ":value",lower v] | [] -> [] | _ -> [] in
-      Ast.Map (s,(kw s (":" ^ tag),Ast.String (s,List.hd (List.rev (String.split_on_char '.' n)))) :: fields)
+      if linked then call s n (if snd (List.assoc n constructors)=None then [] else [Ast.Map (s,fields)]) else Ast.Map (s,(kw s (":" ^ tag),Ast.String (s,List.hd (List.rev (String.split_on_char '.' n)))) :: fields)
   | Ast.List (s,(Ast.Symbol (_, ("match" | "catch")) as h) :: value :: arms) ->
       let rec arms_ = function
         | p :: rhs :: rest ->
@@ -319,7 +319,7 @@ let rec effect_body ?(ascribed=false) constructors e =
   | Ast.Map (s,pairs) -> Ast.Map (s,List.map (fun (k,v)->k,lower v) pairs)
   | _ -> e
 
-let effect_program exprs =
+let effect_program ?(linked=false) exprs =
   let internal = List.exists (fun e -> List.mem (Option.value ~default:"" (head e)) ["__schema";"__service";"__operation";"__layer"]) exprs in
   let normalized=if internal then exprs else Constructor_scope.program (List.map (fun e -> binding_patterns (core (body ~bound:(module_names exprs) e))) exprs) in
   let exprs=List.map2 (fun original normalized -> if head original=Some "define" then normalized else original) exprs normalized in
@@ -329,7 +329,7 @@ let effect_program exprs =
       let owner=Option.value ~default:"" (match name owner with Some _ as n -> n | None -> head owner) in
       List.filter_map (function Ast.Symbol (_,n) -> Some (owner ^ "." ^ n,(tag,None)) | Ast.List (_,Ast.Symbol (_,n) :: [payload]) -> Some (owner ^ "." ^ n,(tag,Some payload)) | _ -> None) arms
     | _ -> []) exprs in
-  let lower_body e = effect_body constructors (body ~bound:(module_names exprs) e) in
+  let lower_body e = effect_body ~linked constructors (body ~bound:(module_names exprs) e) in
   let signatures = List.filter_map (function Ast.List (_, [(Ast.Symbol (_,":") | Ast.Keyword (_,":"));Ast.Symbol (_,n);t]) -> Some (n,t) | _ -> None) exprs in
   let bound = module_names exprs in
   let convert e = let e = body ~bound e in let s = Ast.expr_span e in match e with
@@ -352,9 +352,9 @@ let effect_program exprs =
     | Ast.List (_, [(Ast.Symbol (_,":") | Ast.Keyword (_,":"));n;t]) -> call s ":" [n;type_expr t]
     | Ast.List (_, Ast.Symbol (_,"define") :: (Ast.Symbol (_,n) as id) :: args) when (match List.assoc_opt n signatures with Some t -> effect_result t | None -> false) ->
         let params,bodies = match args with (Ast.Vector _ as p) :: bodies when bodies <> [] -> (p,bodies) | [Ast.List (_, Ast.Symbol (_,"fn") :: p :: bodies)] -> (p,bodies) | bodies -> (Ast.Vector (s,[]),bodies) in
-        call s "__operation" (id :: params :: List.map (fun e -> effect_body constructors (body ~bound:(Names.union bound (pattern_names params)) e)) bodies)
+        call s "__operation" (id :: params :: List.map (fun e -> effect_body ~linked constructors (body ~bound:(Names.union bound (pattern_names params)) e)) bodies)
     | Ast.List (_,Ast.Symbol (_,"define") :: n :: (Ast.Vector _ as params) :: bodies) when bodies <> [] ->
-        call s "define" [n;call s "fn" (params :: List.map (fun e -> effect_body constructors (body ~bound:(Names.union bound (pattern_names params)) e)) bodies)]
+        call s "define" [n;call s "fn" (params :: List.map (fun e -> effect_body ~linked constructors (body ~bound:(Names.union bound (pattern_names params)) e)) bodies)]
     | Ast.List (_,Ast.Symbol (_,"layer") :: n :: args) ->
         (match args with [value] -> call s "__layer" [n;lower_body value] | _ ->
           (* Only the defines the provided service declares are methods; the
@@ -389,7 +389,7 @@ let effect_program exprs =
             let params = Option.value ~default:(Ast.Vector (ms,[])) params in
             let bodies = if helper_bindings = [] then bodies else [call ms "let" [Ast.Vector (ms,helper_bindings);call ms "do" bodies]] in
             let scope = Names.union (setup_names args) (Names.union bound (Names.union helper_names (pattern_names params))) in
-            Some (Ast.List (ms,id :: params :: List.map (fun e -> effect_body constructors (body ~bound:scope e)) bodies))) definitions in
+            Some (Ast.List (ms,id :: params :: List.map (fun e -> effect_body ~linked constructors (body ~bound:scope e)) bodies))) definitions in
           let rec sections = function
             | (Ast.Keyword _ as key) :: value :: rest -> call (Ast.expr_span key) (Option.get (name key)) [lower_body value] :: sections rest
             | d :: rest when definition_name d <> None -> sections rest

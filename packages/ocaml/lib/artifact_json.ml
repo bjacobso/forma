@@ -1,5 +1,10 @@
 open Ir_json
 
+let declaration_payload_json declaration =
+  Artifact_validated_payload.canonical_json
+    (Packageable_declaration.payload_value
+       (Packageable_declaration.payload declaration))
+
 let option_int_json = function
   | Some value -> Ir_json.Int value
   | None -> Ir_json.Null
@@ -99,27 +104,16 @@ let module_declarations package module_id =
                   canonical_name = module_id ^ "/" ^ local_name;
                 })
 
-let module_public_export_names package ~export_all_by_default module_decl =
-  if
-    module_decl.Module_decl.explicit_exports = []
-    && module_decl.Module_decl.re_exports = [] && export_all_by_default
-  then
-    module_declarations package module_decl.Module_decl.module_id
-    |> List.map (fun declaration -> declaration.Module_decl.local_name)
-  else
-    module_decl.Module_decl.explicit_exports
-    @ List.concat_map
-        (fun (re_export : Module_decl.module_re_export) -> re_export.names)
-        module_decl.Module_decl.re_exports
+let module_public_export_names module_decl =
+  module_decl.Module_decl.explicit_exports @ List.concat_map (fun (re_export : Module_decl.module_re_export) -> re_export.names) module_decl.Module_decl.re_exports
 
 let modules_json package =
   let modules = Artifact_types.package_modules package in
-  let export_all_by_default = List.length modules = 1 in
   let module_exports =
     modules
     |> List.map (fun module_decl ->
         ( module_decl.Module_decl.module_id,
-          module_public_export_names package ~export_all_by_default
+          module_public_export_names
             module_decl ))
   in
   let resolve_exports module_id = List.assoc_opt module_id module_exports in
@@ -127,7 +121,6 @@ let modules_json package =
   |> List.map (fun module_decl ->
       Module_decl_artifact.to_json
         ~resolve_exports
-        ~export_all_by_default
         ~source_hash:
           (module_source_hash package module_decl.Module_decl.source_path)
         ~declarations:

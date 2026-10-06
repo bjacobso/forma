@@ -1,0 +1,10 @@
+(import "./state.forma" :as state)
+(import "./identity.forma" [identity])
+(import "./ids.forma" :as ids)
+(import "./log.forma" [log Console])
+(export main)
+(: main (Effect String [] [Console.print]))
+(define main
+  (log (ids/make-customer (ids/CustomerId (identity "1")) (state/label (state/Status.Ready {:message (identity "Ada")})))))
+
+(define inferred-int (identity 42))

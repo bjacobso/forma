@@ -20,23 +20,6 @@ let sorted_hashtbl_keys table =
   Hashtbl.fold (fun key _ keys -> key :: keys) table []
   |> List.sort String.compare
 
-let module_exports (session : Session.t) module_id =
-  match Hashtbl.find_opt session.source_exports module_id with
-  | Some names -> Some names
-  | None -> (
-      match Hashtbl.find_opt session.source_modules module_id with
-      | Some module_decl
-        when module_decl.Module_decl.explicit_exports <> []
-             || module_decl.Module_decl.re_exports <> [] ->
-          Some
-            (module_decl.Module_decl.explicit_exports
-            @ List.concat_map
-                (fun (re_export : Module_decl.module_re_export) ->
-                  re_export.names)
-                module_decl.Module_decl.re_exports
-            |> List.sort_uniq String.compare)
-      | _ -> None)
-
 let with_session session_id (f : Session.t -> string) =
   match session_id with
   | None ->
@@ -72,43 +55,15 @@ let reset_session session_id =
 let expr_updates_session = Source_bindings.updates
 let source_binding_names = Source_bindings.names
 
-let host_builtin_names host_builtins =
-  host_builtins
-  |> List.filter_map (fun (descriptor : Abi_request.host_builtin_descriptor) ->
-      match descriptor.effect_name with
-      | Some _ -> Some descriptor.name
-      | None -> None)
-
-let source_mentions_host_builtin host_builtins source =
-  let host_names = host_builtin_names host_builtins in
-  if host_names = [] then false
-  else
-    match Reader.parse_ast ~source_id:"abi-host-effect-scan" source with
-    | Error _ -> true
-    | Ok exprs ->
-        let rec mentions = function
-          | Ast.Symbol (_, name) -> List.mem name host_names
-          | Ast.List (_, exprs) | Ast.Vector (_, exprs) ->
-              List.exists mentions exprs
-          | Ast.Map (_, entries) ->
-              List.exists
-                (fun (key, value) -> mentions key || mentions value)
-                entries
-          | Ast.Nil _ | Ast.Bool _ | Ast.Int _ | Ast.Float _ | Ast.String _
-          | Ast.Keyword _ ->
-              false
-        in
-        List.exists mentions exprs
-
 let warm_source_artifact_cache (session : Session.t) source_id =
   match Hashtbl.find_opt session.parsed_sources source_id with
   | None -> Load_phase.zero
-  | Some exprs when Mechanics_artifact.has_mechanics_forms exprs ->
+  | Some exprs when Mechanics_artifact.has_mechanics_forms (Artifact_context.expressions exprs) ->
       Load_phase.zero
   | Some exprs -> (
       let emitted, elaborate_ms =
         Load_phase.timed_ms (fun () ->
-            Elaborate.emitted_declarations_with_timings session.env exprs)
+            Elaborate.emitted_declarations_with_timings (Artifact_context.environment session ()) (Artifact_context.expressions exprs))
       in
       let timings = { Load_phase.zero with Load_phase.elaborate_ms } in
       match emitted with
@@ -138,59 +93,11 @@ let warm_source_artifact_cache (session : Session.t) source_id =
               in
               { timings with Load_phase.artifact_cache_ms }))
 
-let load_runtime_input ~kind (session : Session.t) source_id source =
+let load_prelude_input ~kind (session : Session.t) source_id source =
   let id =
     match source_id with Some id -> id | None -> Session.fresh_input_id kind
   in
-  let table =
-    match kind with "prelude" -> session.preludes | _ -> session.sources
-  in
-  let parsed_table =
-    match kind with
-    | "prelude" -> session.parsed_preludes
-    | _ -> session.parsed_sources
-  in
-  let previous_module =
-    if kind = "prelude" then None
-    else Hashtbl.find_opt session.source_modules id
-  in
   let loaded_source = Source.make ~id ~text:source () in
-  let public_exports_changed =
-    match (kind, previous_module) with
-    | "prelude", _ -> true
-    | _, Some previous -> (
-        match Reader.parse_ast ~source_id:id source with
-        | Error _ -> true
-        | Ok exprs ->
-            let known_source_ids =
-              id :: sorted_hashtbl_keys session.sources
-              |> List.sort_uniq String.compare
-            in
-            let analysis =
-              Module_decl.analyze
-                ~resolve_exports:(module_exports session)
-                ~source_id:id ~known_source_ids exprs
-            in
-            let current = analysis.Module_decl.decl in
-            let has_explicit_surface module_decl =
-              module_decl.Module_decl.explicit_exports <> []
-              || module_decl.Module_decl.re_exports <> []
-            in
-            if
-              has_explicit_surface previous || has_explicit_surface current
-            then
-              Module_decl_artifact.public_export_hash previous
-              <> Module_decl_artifact.public_export_hash current
-            else true)
-    | _, None -> true
-  in
-  let invalidate_after_store () =
-    match kind with
-    | "prelude" -> Session.invalidate_artifacts session
-    | _ ->
-        Session.invalidate_artifacts_from_source
-          ~public_exports_changed session id
-  in
   let parsed, parse_ms =
     Load_phase.timed_ms (fun () ->
         Reader.parse_ast ~source_id:id (Source.text loaded_source))
@@ -200,111 +107,219 @@ let load_runtime_input ~kind (session : Session.t) source_id source =
   | Error diagnostics -> Error (List.map Reader.diagnostic_to_json diagnostics)
   | Ok exprs -> (
       try
-      Surface.validate_program exprs;
-      let known_source_ids =
-        if kind = "prelude" then []
+        Surface.validate_program exprs;
+        let evaluation_env, source_type_env =
+          (session.core_env, session.core_types)
+        in
+        let stores_source ~env ~type_env ~timings () =
+          let (), store_ms =
+            Load_phase.timed_ms (fun () ->
+                Hashtbl.replace session.preludes id loaded_source;
+                Hashtbl.replace session.parsed_preludes id exprs;
+                session.env <- env;
+                session.type_env <- type_env;
+                session.core_env <- env;
+                session.core_types <- type_env;
+                Hashtbl.clear session.module_instances;
+                Session.invalidate_artifacts session)
+          in
+          let timings = { timings with Load_phase.store_ms } in
+          Ok (id, List.length exprs, timings)
+        in
+        let evaluation_env =
+          if
+            List.exists
+              (fun e ->
+                List.mem
+                  (Option.value ~default:"" (Surface.head e))
+                  [ "type"; "class"; "error" ])
+              exprs
+          then
+            let type_definitions =
+              Surface.core_program (Surface_protocol.program exprs)
+              |> List.concat_map (fun e ->
+                  match Surface.runtime_constructors e with
+                  | Some definitions -> definitions
+                  | None -> (
+                      match e with
+                      | Ast.List
+                          (_, Ast.Symbol (_, "define") :: Ast.Symbol (_, n) :: _)
+                        when String.starts_with ~prefix:"__descriptor/" n ->
+                          [ e ]
+                      | _ -> []))
+            in
+            match
+              Eval.evaluate_program_with_env evaluation_env type_definitions
+            with
+            | Ok (_, env) -> env
+            | Error _ -> evaluation_env
+          else evaluation_env
+        in
+        let projected =
+          Mechanics_artifact.projected_form_predicate ~include_pure:false exprs
+        in
+        let updates expr =
+          List.mem
+            (Option.value ~default:"" (Surface.head expr))
+            [ "type"; "class"; "error" ]
+          || ((not (projected expr)) && expr_updates_session evaluation_env expr)
+        in
+        if not (List.exists updates exprs) then
+          stores_source ~env:evaluation_env ~type_env:source_type_env ~timings
+            ()
         else
-          id :: sorted_hashtbl_keys session.sources
-          |> List.sort_uniq String.compare
-      in
-      let module_analysis =
-        if kind = "prelude" then None
-        else
-          Some
-            (Module_decl.analyze
-               ~resolve_exports:(module_exports session)
-               ~source_id:id ~known_source_ids exprs)
-      in
-      let exprs =
-        match module_analysis with
-        | Some analysis -> analysis.Module_decl.source_exprs
-        | None -> exprs
-      in
-      let evaluation_env, source_type_env =
-        match kind with
-        | "prelude" -> (session.env, session.type_env)
-        | _ -> Session.env_without_source_bindings session id
-      in
-      let existing_bindings =
-        if kind = "prelude" then [] else
-        Hashtbl.fold (fun owner names acc ->
-          if owner = id then acc else names @ acc) session.source_bindings []
-      in
-      let stores_source ~env ~type_env ~binding_names ~timings () =
-        let (), store_ms =
-          Load_phase.timed_ms (fun () ->
-              Hashtbl.replace table id loaded_source;
-              Hashtbl.replace parsed_table id exprs;
-              (match module_analysis with
-              | Some analysis ->
-                  Hashtbl.replace session.source_modules id
-                    analysis.Module_decl.decl
-              | None -> ());
-              session.env <- env;
-              session.type_env <- type_env;
-              if kind <> "prelude" then
-                Session.cache_source_bindings session ~source_id:id
-                  binding_names;
-              if kind <> "prelude" then Session.remember_source_order session id;
-              invalidate_after_store ())
-        in
-        let timings = { timings with Load_phase.store_ms } in
-        Ok (id, List.length exprs, timings)
-      in
-      let evaluation_env =
-        if List.exists (fun e -> List.mem (Option.value ~default:"" (Surface.head e)) ["type";"class";"error"]) exprs then
-          let type_definitions = Surface.core_program (Surface_protocol.program exprs) |> List.concat_map (fun e -> match Surface.runtime_constructors e with
-            | Some definitions -> definitions
-            | None -> (match e with Ast.List (_,Ast.Symbol (_,"define") :: Ast.Symbol (_,n) :: _) when String.starts_with ~prefix:"__descriptor/" n -> [e] | _ -> [])) in
-          match Eval.evaluate_program_with_env evaluation_env type_definitions with Ok (_,env) -> env | Error _ -> evaluation_env
-        else evaluation_env in
-      let projected = Mechanics_artifact.projected_form_predicate ~include_pure:false exprs in
-      let updates expr =
-        List.mem (Option.value ~default:"" (Surface.head expr)) ["type";"class";"error"] || (not (projected expr)) && expr_updates_session evaluation_env expr
-      in
-      if not (List.exists updates exprs) then
-        stores_source ~env:evaluation_env ~type_env:source_type_env
-          ~binding_names:(source_binding_names ~existing:existing_bindings evaluation_env exprs)
-          ~timings ()
-      else
-        let evaluated, eval_ms =
-          Load_phase.timed_ms (fun () ->
-              Eval.evaluate_program_with_env evaluation_env (List.filter (fun expr -> not (projected expr)) exprs))
-        in
-        let typechecked, typecheck_ms =
-          Load_phase.timed_ms (fun () ->
-              Typecheck.typecheck_program_with_env source_type_env (List.filter (fun expr -> List.mem (Option.value ~default:"" (Surface.head expr)) ["type";"class";"error"] || not (projected expr)) exprs))
-        in
-        let timings = { timings with Load_phase.eval_ms; typecheck_ms } in
-        match evaluated with
-        | Error diagnostics ->
-            Error (List.map Eval.diagnostic_to_json diagnostics)
-        | Ok (_, env) -> (
-            match typechecked with
-            | Error diagnostics ->
-                Error (List.map Type_diagnostic.to_json diagnostics)
-            | Ok (_, type_env) -> (
-                let metacheck, metacheck_ms =
-                  Load_phase.timed_ms (fun () ->
-                      match kind with
-                      | "prelude" -> Descriptor_metacheck.validate env exprs
-                      | _ -> Ok ())
-                in
-                let timings = { timings with Load_phase.metacheck_ms } in
-                match metacheck with
-                | Error diagnostics ->
-                    Error (List.map Eval.diagnostic_to_json diagnostics)
-                | Ok () ->
-                    stores_source ~env ~type_env
-                      ~binding_names:(source_binding_names ~existing:existing_bindings env exprs)
-                      ~timings ()))
+          let evaluated, eval_ms =
+            Load_phase.timed_ms (fun () ->
+                Eval.evaluate_program_with_env evaluation_env
+                  (List.filter (fun expr -> not (projected expr)) exprs))
+          in
+          let typechecked, typecheck_ms =
+            Load_phase.timed_ms (fun () ->
+                Typecheck.typecheck_program_with_env source_type_env
+                  (List.filter
+                     (fun expr ->
+                       List.mem
+                         (Option.value ~default:"" (Surface.head expr))
+                         [ "type"; "class"; "error" ]
+                       || not (projected expr))
+                     exprs))
+          in
+          let timings = { timings with Load_phase.eval_ms; typecheck_ms } in
+          match evaluated with
+          | Error diagnostics ->
+              Error (List.map Eval.diagnostic_to_json diagnostics)
+          | Ok (_, env) -> (
+              match typechecked with
+              | Error diagnostics ->
+                  Error (List.map Type_diagnostic.to_json diagnostics)
+              | Ok (_, type_env) -> (
+                  let metacheck, metacheck_ms =
+                    Load_phase.timed_ms (fun () ->
+                        Descriptor_metacheck.validate env exprs)
+                  in
+                  let timings = { timings with Load_phase.metacheck_ms } in
+                  match metacheck with
+                  | Error diagnostics ->
+                      Error (List.map Eval.diagnostic_to_json diagnostics)
+                  | Ok () -> stores_source ~env ~type_env ~timings ()))
       with exn -> (
         (* Authoring errors found while lowering are located diagnostics;
            the session is unchanged because nothing has been stored. *)
         match Surface.diagnostic_of_exn exn with
         | Some (span, code, message) ->
-            Error [ Eval.diagnostic_to_json { Eval.span = Some span; code; message } ]
+            Error
+              [
+                Eval.diagnostic_to_json { Eval.span = Some span; code; message };
+              ]
         | None -> raise exn))
+
+let load_runtime_input ~kind (session : Session.t) source_id source =
+  if kind = "prelude" then load_prelude_input ~kind session source_id source
+  else
+    let id =
+      Module_graph.normalize_id
+        (Option.value ~default:(Session.fresh_input_id "source") source_id)
+    in
+    let parsed, parse_ms =
+      Load_phase.timed_ms (fun () -> Reader.parse_ast ~source_id:id source)
+    in
+    match parsed with
+    | Error diagnostics ->
+        Error (List.map Reader.diagnostic_to_json diagnostics)
+    | Ok exprs -> (
+        try
+          let validation_syntax =
+            List.filter
+              (fun e ->
+                not
+                  (List.mem
+                     (Option.value ~default:"" (Surface.head e))
+                     [ "use"; "import"; "export"; "export-from" ]))
+              exprs
+          in
+          Surface.validate_program validation_syntax;
+          (match
+             Descriptor_contract.validate_source_structure session.core_env
+               validation_syntax
+           with
+          | Error (d :: _) -> raise (Module_graph.Error d)
+          | _ -> ());
+          let existing =
+            Hashtbl.fold
+              (fun owner syntax names ->
+                if owner = id then names
+                else
+                  source_binding_names session.core_env
+                    (Artifact_context.expressions syntax)
+                  @ names)
+              session.parsed_sources []
+          in
+          ignore
+            (source_binding_names ~existing session.core_env validation_syntax);
+          let public_syntax exprs =
+            let exports =
+              exprs
+              |> List.concat_map (function
+                | Ast.List (_, Ast.Symbol (_, "export") :: names) ->
+                    List.filter_map Module_graph.name names
+                | _ -> [])
+            in
+            let public =
+              List.filter
+                (fun e ->
+                  if
+                    List.mem
+                      (Option.value ~default:"" (Surface.head e))
+                      [ "use"; "import"; "export"; "export-from" ]
+                  then true
+                  else
+                    match Source_bindings.binding_name session.core_env e with
+                    | Some n -> List.mem n exports
+                    | None -> false)
+                exprs
+            in
+            List.map Module_signatures.syntax_json public
+          in
+          let unexported_data syntax =
+            (not (List.exists (fun e -> Surface.head e = Some "export") syntax))
+            && List.exists
+                 (fun e ->
+                   match Surface.head e with
+                   | Some h -> Descriptor.is_form_descriptor session.core_env h
+                   | None -> false)
+                 (Surface_action.program (Artifact_context.expressions syntax))
+          in
+          let public_exports_changed =
+            unexported_data exprs
+            ||
+            match Hashtbl.find_opt session.parsed_sources id with
+            | Some previous ->
+                unexported_data previous
+                || public_syntax previous <> public_syntax exprs
+            | None -> true
+          in
+          Hashtbl.replace session.sources id (Source.make ~id ~text:source ());
+          Hashtbl.replace session.parsed_sources id exprs;
+          let known_source_ids = id :: sorted_hashtbl_keys session.sources in
+          let analysis =
+            Module_decl.analyze ~source_id:id ~known_source_ids exprs
+          in
+          Hashtbl.replace session.source_modules id analysis.decl;
+          Session.remember_source_order session id;
+          Session.invalidate_artifacts_from_source ~public_exports_changed
+            session id;
+          Ok (id, List.length exprs, { Load_phase.zero with parse_ms })
+        with
+        | Module_graph.Error d -> Error [ Type_diagnostic.to_json d ]
+        | exn -> (
+            match Surface.diagnostic_of_exn exn with
+            | Some (span, code, message) ->
+                Error
+                  [
+                    Type_diagnostic.to_json
+                      (Type_diagnostic.make ~span code message);
+                  ]
+            | None -> raise exn))
 
 let store_runtime_input ~kind (session : Session.t) source_id source =
   match source with
@@ -397,7 +412,7 @@ let repl_submit (request : request) =
             ]
       | Some source
         when Abi_session_host_effect.has_host_effects request.host_builtins
-             && source_mentions_host_builtin request.host_builtins source ->
+             && Abi_session_host_effect.source_mentions_host_builtin request.host_builtins source ->
           Abi_session_host_effect.repl_submit session request ~source
       | Some source -> submit_repl_json session request source)
 

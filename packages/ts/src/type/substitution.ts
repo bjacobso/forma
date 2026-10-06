@@ -13,6 +13,7 @@ import {
   RExtend,
   EExtend,
   ftvType,
+  frvType,
   ftvRow,
   fevERow,
   fevType,
@@ -134,8 +135,7 @@ export function freeVarsEnv(env: TypeEnv): {
   for (const scheme of env.values()) {
     // Free vars = all vars in type minus bound vars
     const schemeFtv = ftvType(scheme.type);
-    const schemeRv = new Set<string>();
-    if (scheme.type._tag === "TRow") ftvRow(scheme.type.row, schemeFtv, schemeRv);
+    const schemeRv = frvType(scheme.type);
     const schemeEv = fevType(scheme.type);
     for (const v of scheme.tvars) schemeFtv.delete(v);
     for (const v of scheme.rvars) schemeRv.delete(v);

@@ -1,6 +1,7 @@
 # Basic Action
 
 ```lisp
+(import "./schema.md" [Employee])
 (export mark-active)
 (: mark-active (-> Employee (Action Bool)))
 (define

@@ -1,4 +1,4 @@
 (executable
  (name forma_cli)
  (public_name forma-ocaml)
- (libraries forma_ocaml))
+ (libraries forma_ocaml unix))

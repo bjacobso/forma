@@ -25,12 +25,13 @@ export function mechanicsPackageableDeclarations(
   exprs: readonly SExpr[],
   sourceId: string,
   normalized = false,
+  context?: readonly SExpr[],
 ): MechanicsArtifactResult {
   exprs = normalizeEffectProgram(lowerOntologyOperations(exprs), !normalized);
   const declarations: PackageableDeclaration[] = [];
-  const signatures = operationSignatures(exprs);
-  const serviceMethodEffects = collectServiceMethodEffects(exprs, sourceId);
-  const operationEffects = collectOperationEffects(exprs, sourceId, signatures);
+  const signatures = operationSignatures(context ?? exprs);
+  const serviceMethodEffects = collectServiceMethodEffects(context ?? exprs, sourceId);
+  const operationEffects = collectOperationEffects(context ?? exprs, sourceId, signatures);
 
   for (let formIndex = 0; formIndex < exprs.length; formIndex++) {
     const expr = exprs[formIndex]!;
@@ -996,7 +997,7 @@ function effectCoreExprToJson(context: BodyContext, expr: SExpr): JsonValue {
   }
   if (expr._tag === "List" && expr.items.length > 0) {
     const head = symName(expr.items[0]);
-    if (head?.includes(".") && !head.startsWith(".")) {
+    if (head && context.serviceMethodEffects.has(head)) {
       const [service, method] = head.split(".", 2);
       if (service && method) {
         return {

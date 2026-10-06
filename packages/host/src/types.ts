@@ -1,3 +1,4 @@
+import type { ModuleInterface, LinkedEffectProgram } from "@formalang/ts/modules";
 export interface Span {
   readonly sourceId: string;
   readonly startOffset: number;
@@ -819,6 +820,10 @@ export interface FormSlotsResult {
   readonly unknownSlots: readonly { readonly name: string; readonly nodeId: string }[];
 }
 
+export interface ModuleGraphRequest { readonly sessionId:string; readonly sourceId:string; readonly source?:string|undefined }
+export interface ModuleGraphResult { readonly entry:string; readonly interfaces:readonly ModuleInterface[]; readonly diagnostics:readonly Diagnostic[] }
+export type ModuleLinkResult = LinkedEffectProgram;
+
 export interface LanguageHost {
   readonly name: string;
   version(): Promise<VersionResult>;
@@ -826,6 +831,8 @@ export interface LanguageHost {
   configureSession(request: ConfigureSessionRequest): Promise<ConfigureSessionResult>;
   loadSource(request: LoadSourceRequest): Promise<LoadSourceResult>;
   loadSourceBundle(request: LoadSourceBundleRequest): Promise<LoadSourceBundleResult>;
+  moduleGraph(request:ModuleGraphRequest):Promise<ModuleGraphResult>;
+  linkEffectModules(request:ModuleGraphRequest):Promise<ModuleLinkResult>;
   parse(request: ParseRequest): Promise<ParseResult>;
   expand(request: ExpandRequest): Promise<ExpandResult>;
   typecheck(request: TypecheckRequest): Promise<TypecheckResult>;

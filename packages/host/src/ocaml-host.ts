@@ -1,3 +1,5 @@
+import * as Modules from "@formalang/ts/modules";
+import type { PackageableDeclaration } from "@formalang/ts/artifact";
 import { spawn } from "node:child_process";
 import type { ChildProcessWithoutNullStreams } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -29,6 +31,9 @@ import type {
   ExpressionType,
   HostBuiltinDescriptor,
   LanguageHost,
+  ModuleGraphRequest,
+  ModuleGraphResult,
+  ModuleLinkResult,
   LoadSourceBundleRequest,
   LoadSourceBundleResult,
   LoadSourceRequest,
@@ -106,6 +111,7 @@ export interface NodeOcamlLanguageHostOptions {
 }
 
 export class NodeOcamlLanguageHost implements LanguageHost {
+  readonly #moduleSources=new Map<string,Map<string,Modules.ModuleSource>>();
   readonly name = "ocaml-native";
   readonly #cliPath: string;
   readonly #daemonRequestTimeoutMs: number;
@@ -195,8 +201,9 @@ export class NodeOcamlLanguageHost implements LanguageHost {
     if (request.variables) {
       for (const variable of request.variables) {
         const response = await this.sessionRequest({
-          op: "replSubmit",
+          op: "loadPrelude",
           sessionId: request.sessionId,
+          sourceId: `host-variable/${variable.name}`,
           source: variableDefinitionSource(variable),
         });
         const diagnostics = diagnosticsFromResponse(response, "evaluate");
@@ -235,6 +242,11 @@ export class NodeOcamlLanguageHost implements LanguageHost {
       source: request.source,
     });
     const value = asRecord(response.value);
+    if (response.ok && request.kind !== "prelude") {
+      let sources=this.#moduleSources.get(request.sessionId);
+      if (!sources) {sources=new Map();this.#moduleSources.set(request.sessionId,sources);}
+      const id=Modules.normalizeModuleId(request.sourceId);sources.set(id,{id,source:request.source});
+    }
     return {
       sourceId: readString(value, "id") ?? request.sourceId,
       formCount: readNumber(value, "formCount") ?? 0,
@@ -254,6 +266,10 @@ export class NodeOcamlLanguageHost implements LanguageHost {
     });
     const value = asRecord(response.value);
     const results = Array.isArray(value["results"]) ? value["results"] : [];
+    let files=this.#moduleSources.get(request.sessionId);
+    if (!files) {files=new Map();this.#moduleSources.set(request.sessionId,files);}
+    results.forEach((item,index)=>{const source=request.sources[index];if(asRecord(item)["ok"] && source && source.kind!=="prelude") {const id=Modules.normalizeModuleId(source.sourceId);files!.set(id,{id,source:source.source});}});
+
     return {
       sources: results.map((item, index): LoadSourceResult => {
         const result = asRecord(item);
@@ -267,6 +283,42 @@ export class NodeOcamlLanguageHost implements LanguageHost {
       }),
       diagnostics: diagnosticsFromResponse(response, "parse"),
     };
+  }
+
+  async moduleGraph(request: ModuleGraphRequest): Promise<ModuleGraphResult> {
+    const response = await this.sessionRequest({ op: "moduleGraph", ...request });
+    const value = asRecord(response.value);
+    return {
+      entry: readString(value, "entry") ?? request.sourceId,
+      interfaces: (value["interfaces"] ?? []) as readonly Modules.ModuleInterface[],
+      diagnostics: diagnosticsFromResponse(response, "typecheck"),
+    };
+  }
+  async linkEffectModules(request: ModuleGraphRequest): Promise<ModuleLinkResult> {
+    const response = await this.sessionRequest({ op: "moduleDeclarations", ...request });
+    const diagnostics = diagnosticsFromResponse(response, "emit");
+    if (!response.ok)
+      return {
+        ok: false,
+        entry: request.sourceId,
+        interfaces: [],
+        declarations: [],
+        modules: [],
+        diagnostics,
+      };
+    const files = [...(this.#moduleSources.get(request.sessionId)?.values() ?? [])];
+    const source =
+      request.source ??
+      files.find((s) => s.id === Modules.normalizeModuleId(request.sourceId))?.source;
+    if (source === undefined) throw new Error(`Unknown module ${request.sourceId}`);
+    const graph = Modules.resolveModuleGraph(
+      { id: request.sourceId, source },
+      Modules.sourceModuleResolver(files),
+    );
+    return Modules.linkEffectModules(
+      graph,
+      asRecord(response.value)["declarations"] as readonly PackageableDeclaration[],
+    );
   }
 
   async parse(request: ParseRequest): Promise<ParseResult> {
@@ -353,6 +405,13 @@ export class NodeOcamlLanguageHost implements LanguageHost {
   }
 
   async evaluateInSession(request: EvaluateInSessionRequest): Promise<EvaluationState> {
+    if (request.source && this.#requireSessionConfig(request.sessionId).hostBuiltins.length === 0) {
+      const finishActiveEvaluation = this.#beginActiveEvaluation(request);
+      const response = await this.sessionRequest({op:"evaluateModule", sessionId:request.sessionId, sourceId:request.sourceId ?? "request.forma", source:request.source}).finally(finishActiveEvaluation);
+      const diagnostics = diagnosticsFromResponse(response,"evaluate");
+      if (response.ok === false || diagnostics.length) return {status:"failed",diagnostics};
+      return {status:"completed",result:{value:this.#projectSessionValue(request.sessionId,valueFromOcaml(response.value),request.retainValues,undefined),diagnostics}};
+    }
     if (!request.source) {
       const finishActiveEvaluation = this.#beginActiveEvaluation(request);
       const response = await this.sessionRequest({
@@ -635,6 +694,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
   }
 
   async resetSession(request: ResetSessionRequest): Promise<ResetSessionResult> {
+    this.#moduleSources.delete(request.sessionId);
     this.#requireSessionConfig(request.sessionId);
     const response = await this.sessionRequest({
       op: "resetSession",
@@ -658,6 +718,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
 
   async closeSession(request: CloseSessionRequest): Promise<CloseSessionResult> {
     await this.sessionRequest({ op: "closeSession", sessionId: request.sessionId });
+    this.#moduleSources.delete(request.sessionId);
     this.#sessionConfigs.delete(request.sessionId);
     this.#sessionValueRefs.delete(request.sessionId);
     this.#openSessions = Math.max(0, this.#openSessions - 1);
@@ -705,6 +766,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
     retainValues: EvaluateInSessionRequest["retainValues"] | undefined,
     callSource: string | undefined,
   ): ValueProjection {
+    if (value.kind === "function" && value.valueRef?.startsWith("ocaml-native-value-")) return value;
     if (isOcamlFunctionValue(value)) {
       if (retainValues === "functions" || retainValues === "all") {
         const valueRef = this.#retainProjectedValue(sessionId, value, callSource).valueRef;

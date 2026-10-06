@@ -3,7 +3,7 @@
  */
 import { Effect, Ref } from "effect";
 import type { Type, Scheme, Row, ERow } from "./types.js";
-import { ftvType, ftvRow, fevType, Scheme as mkScheme } from "./types.js";
+import { ftvType, frvType, fevType, Scheme as mkScheme } from "./types.js";
 import { applyType, freeVarsEnv, type TypeEnv, type Subst } from "./substitution.js";
 import { InferContext } from "./context.js";
 import type { PendingConstraint } from "./context.js";
@@ -16,8 +16,7 @@ import type { Origin } from "./errors.js";
 export function generalize(env: TypeEnv, t: Type): Scheme {
   const envFree = freeVarsEnv(env);
   const typeTv = ftvType(t);
-  const typeRv = new Set<string>();
-  if (t._tag === "TRow") ftvRow(t.row, typeTv, typeRv);
+  const typeRv = frvType(t);
   const typeEv = fevType(t);
 
   const tvars: string[] = [];

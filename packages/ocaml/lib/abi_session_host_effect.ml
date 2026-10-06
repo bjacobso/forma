@@ -120,6 +120,27 @@ let host_builtin_names host_builtins =
       | Some _ -> Some descriptor.name
       | None -> None)
 
+let source_mentions_host_builtin host_builtins source =
+  let host_names = host_builtin_names host_builtins in
+  if host_names = [] then false
+  else
+    match Reader.parse_ast ~source_id:"abi-host-effect-scan" source with
+    | Error _ -> true
+    | Ok exprs ->
+        let rec mentions = function
+          | Ast.Symbol (_, name) -> List.mem name host_names
+          | Ast.List (_, exprs) | Ast.Vector (_, exprs) ->
+              List.exists mentions exprs
+          | Ast.Map (_, entries) ->
+              List.exists
+                (fun (key, value) -> mentions key || mentions value)
+                entries
+          | Ast.Nil _ | Ast.Bool _ | Ast.Int _ | Ast.Float _ | Ast.String _
+          | Ast.Keyword _ ->
+              false
+        in
+        List.exists mentions exprs
+
 let rec transform_host_calls host_names expr =
   let transform = transform_host_calls host_names in
   match expr with
@@ -195,23 +216,55 @@ let repl_submit (session : Session.t) (request : request) ~source =
     | None -> Session.fresh_input_id "repl"
   in
   let loaded_source = Source.make ~id ~text:source () in
-  match Reader.parse_ast ~source_id:id (Source.text loaded_source) with
-  | Error diagnostics -> Response.reader_diagnostics_json diagnostics
-  | Ok exprs -> (
+  match
+    Session_module.graph session ~source_id:id
+      ~source:(Some (Source.text loaded_source))
+  with
+  | Error diagnostics -> Response.typecheck_diagnostics_json diagnostics
+  | Ok graph -> (
       let host_names = host_builtin_names request.host_builtins in
-      let host_exprs = List.map (transform_host_calls host_names) exprs in
-      match Eval.expand_program_with_env session.env host_exprs with
-      | Error diagnostics -> Response.eval_diagnostics_json diagnostics
-      | Ok (expanded_exprs, _) ->
-          let effect_env = host_effect_env session.env request.host_builtins in
-          let transformed_exprs =
-            List.map (transform_host_calls host_names) expanded_exprs
+      let graph =
+        {
+          graph with
+          Module_graph.modules =
+            List.map
+              (fun (m : Module_graph.resolved_module) ->
+                {
+                  m with
+                  expressions =
+                    List.map (transform_host_calls host_names) m.expressions;
+                })
+              graph.modules;
+        }
+      in
+      match
+        Module_runtime.initialize ~entry_expressions:false
+          ~core_env:session.core_env ~core_types:session.core_types graph
+          session.module_instances
+      with
+      | Error diagnostics -> Response.typecheck_diagnostics_json diagnostics
+      | Ok (_, instance) -> (
+          let env = instance.Module_runtime.env in
+          let exprs =
+            (List.find
+               (fun (m : Module_graph.resolved_module) -> m.id = graph.entry)
+               graph.modules)
+              .expressions
+            |> List.filter (fun e -> not (Module_runtime.definition e))
           in
-          let evaluation_id = Session.fresh_evaluation_id session in
-          let step =
-            Eval.evaluate_effect_program_step effect_env transformed_exprs
-          in
-          effect_step_response session evaluation_id step)
+          let host_exprs = List.map (transform_host_calls host_names) exprs in
+          match Eval.expand_program_with_env env host_exprs with
+          | Error diagnostics -> Response.eval_diagnostics_json diagnostics
+          | Ok (expanded_exprs, _) ->
+              let effect_env = host_effect_env env request.host_builtins in
+              let transformed_exprs =
+                List.map (transform_host_calls host_names) expanded_exprs
+              in
+              let evaluation_id = Session.fresh_evaluation_id session in
+              let step =
+                Eval.evaluate_effect_program_step effect_env transformed_exprs
+              in
+              effect_step_response session evaluation_id step))
 
 let resume_host_call (request : request) =
   with_session request.session_id (fun session ->

@@ -14,6 +14,7 @@ type t = {
   artifact_declarations : (string, artifact_cache_entry) Hashtbl.t;
   source_bindings : (string, string list) Hashtbl.t;
   source_modules : (string, Module_decl.t) Hashtbl.t;
+  module_instances : (string, Module_runtime.instance) Hashtbl.t;
   source_exports : (string, string list) Hashtbl.t;
   source_dependencies : (string, string list) Hashtbl.t;
   source_order : (string, int) Hashtbl.t;
@@ -23,6 +24,8 @@ type t = {
   mutable next_value_ref_id : int;
   pending_evaluations : (string, pending_evaluation) Hashtbl.t;
   value_refs : (string, Eval.value) Hashtbl.t;
+  mutable core_env : Eval.env;
+  mutable core_types : Type_env.env;
   mutable env : Eval.env;
   mutable type_env : Type_env.env;
 }

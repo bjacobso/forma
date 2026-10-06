@@ -82,6 +82,7 @@ export type ResolvedCall =
   | { readonly kind: "error"; readonly name: string }
   | { readonly kind: "brand"; readonly name: string }
   | { readonly kind: "construct"; readonly name: string }
+  | { readonly kind: "tagged-constructor"; readonly owner: string; readonly name: string; readonly nullary: boolean }
   | { readonly kind: "function"; readonly name: string }
   | { readonly kind: "operation"; readonly name: string }
   | { readonly kind: "service"; readonly service: string; readonly method: string }
@@ -173,6 +174,7 @@ class Checker {
   private readonly errorNames = new Set<string>(builtinErrors.keys());
   private readonly classes = new Map<string, readonly MField[]>();
   private readonly env: TypeEnvironment = { schemas: this.schemas, errors: this.errorNames, classes: this.classes };
+  private readonly functionEnv: TypeEnvironment = {...this.env,variables:new Map()};
   private readonly errorFields = new Map<string, readonly MField[]>();
   private readonly services = new Map<string, Map<string, ServiceMethodSignature>>();
   private readonly operations = new Map<string, CallableSignature & { readonly result: EffectType }>();
@@ -362,8 +364,8 @@ class Checker {
           break;
         case "FunctionDef":
           this.functions.set(name, {
-            params: this.paramsFromJson(payload["params"]),
-            result: typeFromJson(payload["returns"], this.env),
+            params: this.paramsFromJson(payload["params"],this.functionEnv),
+            result: typeFromJson(payload["returns"], this.functionEnv),
           });
           break;
         case "ValueDef":
@@ -557,10 +559,10 @@ class Checker {
     for (const name of data.keys()) visit(name, []);
   }
 
-  private paramsFromJson(value: JsonValue | undefined): readonly { readonly name: string; readonly type: MType }[] {
+  private paramsFromJson(value: JsonValue | undefined, env:TypeEnvironment=this.env): readonly { readonly name: string; readonly type: MType }[] {
     return arrayItems(value).flatMap((param) =>
       isRecord(param) && typeof param["name"] === "string"
-        ? [{ name: param["name"], type: typeFromJson(param["type"], this.env) }]
+        ? [{ name: param["name"], type: typeFromJson(param["type"], env) }]
         : [],
     );
   }
@@ -571,9 +573,9 @@ class Checker {
   }
 
   /** Every name used in a type must be a schema, an error, or a built-in. */
-  private checkTypeReferences(value: JsonValue | undefined, span: JsonValue | undefined): void {
+  private checkTypeReferences(value: JsonValue | undefined, span: JsonValue | undefined, variables = false): void {
     if (Array.isArray(value)) {
-      for (const item of value) this.checkTypeReferences(item, span);
+      for (const item of value) this.checkTypeReferences(item, span, variables);
       return;
     }
     if (!isRecord(value)) return;
@@ -586,7 +588,7 @@ class Checker {
     }
     if (value["kind"] === "Ref" && typeof value["name"] === "string") {
       const name = value["name"];
-      if (!this.schemas.has(name) && !this.errorNames.has(name) && !this.classes.has(name) && name !== "Duration") {
+      if (!this.schemas.has(name) && !this.errorNames.has(name) && !this.classes.has(name) && name !== "Duration" && !(variables && /^[a-z][A-Za-z0-9_]*$/.test(name))) {
         this.error(location, "mechanics/unknown-type", `Unknown type ${name}. Declare it with type or error.`);
       }
     }
@@ -601,7 +603,7 @@ class Checker {
       }
     }
     for (const [key, item] of Object.entries(value)) {
-      if (key !== "span") this.checkTypeReferences(item, location);
+      if (key !== "span") this.checkTypeReferences(item, location, variables);
     }
   }
 
@@ -678,8 +680,8 @@ class Checker {
 
   private checkFunction(payload: JsonRecord, span: JsonValue | undefined): void {
     const name = String(payload["name"]);
-    this.checkTypeReferences(payload["params"], span);
-    this.checkTypeReferences(payload["returns"], span);
+    this.checkTypeReferences(payload["params"], span, true);
+    this.checkTypeReferences(payload["returns"], span, true);
     const signature = this.functions.get(name);
     if (!signature) return;
     const scope: Scope = new Map(signature.params.map((param) => [param.name, param.type]));
@@ -1748,6 +1750,18 @@ class Checker {
     }
   }
 
+  private taggedConstructor(name: string): {owner:string; name:string; fields: MType & {kind:"struct"}} | undefined {
+    const dot=name.lastIndexOf(".");
+    if (dot<0) return undefined;
+    const owner=name.slice(0,dot), tag=name.slice(dot+1);
+    const schema=this.declarations.find(d=>isRecord(d.payload) && d.payload["kind"] === "SchemaDef" && d.payload["name"] === owner)?.payload;
+    const body=isRecord(schema) ? schema["schema"] : undefined;
+    if (!isRecord(body) || body["kind"]!=="TaggedUnion") return undefined;
+    const arm=arrayItems(body["variants"]).find(v=>isRecord(v) && v["tag"]===tag);
+    const fields=isRecord(arm) ? typeFromJson(arm["schema"],this.env) : undefined;
+    return fields?.kind === "struct" ? {owner,name:tag,fields} : undefined;
+  }
+
   private variable(name: string, scope: Scope, expected: MType | undefined, span: JsonValue | undefined, node?: JsonRecord): MType {
     const local = scope.get(name);
     if (local) return local;
@@ -1763,6 +1777,13 @@ class Checker {
       }
       default:
         break;
+    }
+    const constructor=this.taggedConstructor(name);
+    if (constructor) {
+      const nullary=constructor.fields.fields.length===0;
+      if (node) this.info.calls.set(node,{kind:"tagged-constructor",owner:constructor.owner,name:constructor.name,nullary});
+      const result:MType={kind:"named",name:constructor.owner};
+      return nullary ? result : {kind:"function",params:[constructor.fields],result};
     }
     const constant = this.constants.get(name);
     if (constant) return constant;
@@ -2035,6 +2056,12 @@ class Checker {
         break;
     }
 
+    const constructor=this.taggedConstructor(name);
+    if (constructor) {
+      const nullary=constructor.fields.fields.length===0;
+      resolveAs({kind:"tagged-constructor",owner:constructor.owner,name:constructor.name,nullary});
+      return this.callFunction(name,nullary ? [] : [constructor.fields],{kind:"named",name:constructor.owner},args,scope,span);
+    }
     if (name.includes(".") && !name.startsWith(".")) {
       const [service, method] = name.split(".", 2) as [string, string];
       resolveAs({ kind: "service", service, method });
@@ -2224,8 +2251,16 @@ class Checker {
     if (params.length !== args.length) {
       this.error(span, "mechanics/arity", `${name} expects ${params.length} argument(s), received ${args.length}.`);
     }
-    args.forEach((arg, index) => this.value(arg, scope, params[index]));
-    return result;
+    const subst:Substitution=new Map();
+    args.forEach((arg,index)=>{
+      const param=params[index];
+      if (!param) {this.value(arg,scope);return;}
+      const expected=applySubstitution(param,subst);
+      if (!hasVariables(expected)) {this.value(arg,scope,expected);return;}
+      const actual=this.value(arg,scope);
+      if (!isAssignable(actual,expected,this.env,subst)) this.error(spanOf(arg) ?? span,"mechanics/type-mismatch",`${name} expects ${showType(expected)}, received ${showType(actual)}.`);
+    });
+    return applySubstitution(result,subst);
   }
 
   private valueLambda(node: JsonRecord, args: readonly JsonValue[], scope: Scope, expected: MType | undefined): MType {

@@ -123,7 +123,7 @@ pageClass: forma-index forma-effect
 <div class="fh-section__head">
 <p class="fh-label">04 · Output</p>
 <h2 id="output-heading">Plain Effect out. No runtime, no lock-in.</h2>
-<p>The generated module imports only <code>effect</code>. It contains <code>Schema</code> constants, <code>Schema.TaggedError</code> and <code>Schema.Class</code> classes, <code>Context.Service</code> classes, <code>Effect.gen</code> functions, and <code>Layer</code> values that capture their dependencies. It has no <code>any</code>, no casts other than <code>as const</code>, and no non-null assertions. You review it, check it in, and run it like any other Effect code. If you stop using Forma, you keep the TypeScript.</p>
+<p>The single-file generator imports <code>effect</code>; the file-module linker also emits real imports between generated files. It contains <code>Schema</code> constants, <code>Schema.TaggedError</code> and <code>Schema.Class</code> classes, <code>Context.Service</code> classes, <code>Effect.gen</code> functions, and <code>Layer</code> values that capture their dependencies. It has no <code>any</code>, no casts other than <code>as const</code>, and no non-null assertions. You review it, check it in, and run it like any other Effect code. If you stop using Forma, you keep the TypeScript.</p>
 </div>
 <div class="fh-facts">
 <article><h3>Layers that wire themselves</h3><p>A <code>layer</code> captures the services its methods call and becomes <code>Layer.succeed</code> or <code>Layer.effect</code>, with its <code>Layer&lt;Out, E, In&gt;</code> type computed and checked.</p></article>
@@ -173,7 +173,7 @@ pageClass: forma-index forma-effect
 <h3>Fundamental trade-offs</h3>
 <ul>
 <li><strong>The npm ecosystem inside your logic.</strong> Forma code cannot import TypeScript functions or types, call an npm package, or write a JavaScript callback. Anything outside the Forma vocabulary, such as HTTP clients, database drivers, crypto, dates, or <code>Effect.promise</code>, has to be a service implemented in TypeScript and provided as a layer.</li>
-<li><strong>A closed vocabulary.</strong> The combinators and value functions are built into the compiler, in both engines. You cannot write your own <code>Effect.*</code> combinator, generic helper, or macro that expands to one; adding a form means changing the compiler. That contradicts Forma's own pitch that keywords are library code, and it is not resolved.</li>
+<li><strong>A closed vocabulary.</strong> The combinators and value functions are built into the compiler, in both engines. Pure polymorphic helpers and local macros can compose the supported forms. New <code>Effect.*</code> combinators still require compiler support; imported compile-time libraries are a later stage. That contradicts Forma's own pitch that keywords are library code, and it is not resolved.</li>
 <li><strong>Two languages to learn.</strong> Your team reads Lisp, reads Effect, and reviews generated TypeScript. Debugging happens in the generated code.</li>
 <li><strong>Stricter than you may want.</strong> Integral literals are <code>Int</code> (<code>0.0</code> reads as <code>0</code>, so a <code>Number</code> accumulator needs <code>(: 0 Number)</code>). Record literals widen like TypeScript's, so a schema value needs <code>(Member {...})</code>. A function cannot call a service, and <code>let</code> cannot run an effect.</li>
 <li><strong>Generated code you don't style.</strong> Identifiers are camelCased (<code>get-user</code> becomes <code>getUser</code>), dashed fields stay quoted (<code>order["total-cents"]</code>), and the layout is the generator's.</li>
@@ -184,7 +184,7 @@ pageClass: forma-index forma-effect
 <ul>
 <li><strong>Editor support for these forms.</strong> The language server runs the general HM typechecker, which doesn't understand layers, combinators, streams, or multi-clause <code>catch</code>, so editors show false errors on valid Effect programs. There is no go-to-definition from generated code back to Forma.</li>
 <li><strong>Source maps.</strong> Stack traces and breakpoints point at the generated TypeScript, not at the Forma line.</li>
-<li><strong>Modules.</strong> One Forma source produces one TypeScript module, and there are no imports between Forma files. A real application needs them.</li>
+<li><strong>Packages.</strong> Relative file modules with explicit imports, exports, and linked Effect TypeScript are implemented. Package manifests, registries, and compile-time library imports remain proposals. See <a href="/modules">File modules</a>.</li>
 <li><strong>Generics.</strong> Operations and functions have no type parameters.</li>
 <li><strong>Parts of Effect.</strong> Recursive schemas (<code>Schema.suspend</code>), <code>TaggedClass</code>, transformations, <code>Queue</code>, <code>PubSub</code>, <code>Deferred</code>, <code>Semaphore</code>, scoped forks, schedule composition, <code>Effect.fn</code>, spans and tracing, and most of <code>Stream</code>. The <a href="/effect/reference">reference</a> lists what exists.</li>
 <li><strong>Tooling.</strong> There is no CLI or watch mode; you call <code>generateEffectProgram</code> from your own build script. Packages are 0.x, and the output shape changed in this release.</li>

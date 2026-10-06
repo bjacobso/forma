@@ -7,3 +7,4 @@ val failed_artifact_json :
   kind:Artifact_package_metadata.kind ->
   Diagnostic.t list ->
   string
+val declaration_payload_json : Packageable_declaration.t -> Ir_json.t

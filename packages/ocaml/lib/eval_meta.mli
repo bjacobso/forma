@@ -53,3 +53,5 @@ val eval :
 
 val current_environment : unit -> Env.t option
 val with_environment : Env.t -> (unit -> 'a) -> 'a
+
+val builtin_names : string list

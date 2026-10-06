@@ -112,6 +112,8 @@ export interface TypeEnvironment {
   readonly errors: ReadonlySet<string>;
   /** `__class` names: nominal types whose fields live in `classFields`. */
   readonly classes: ReadonlyMap<string, readonly MField[]>;
+  /** Generalized variables in function signatures, allocated per checker instance. */
+  readonly variables?: Map<string, number>;
 }
 
 /** Converts an IR type or schema node into a checker type. */
@@ -125,6 +127,10 @@ export function typeFromJson(json: JsonValue | undefined, env: TypeEnvironment):
       if (env.errors.has(name)) return { kind: "error", name };
       if (env.classes.has(name)) return { kind: "class", name };
       if (env.schemas.has(name)) return { kind: "named", name };
+      if (/^[a-z]/.test(name) && !name.includes("__forma_") && env.variables) {
+        if (!env.variables.has(name)) env.variables.set(name, -(env.variables.size + 1));
+        return {kind:"var",id:env.variables.get(name)!};
+      }
       if (name === "Duration") return prim("Duration");
       return { kind: "named", name };
     }
@@ -404,6 +410,7 @@ export function isAssignable(
 ): boolean {
   const s = subst ? applySubstitution(source, subst) : source;
   const t = subst ? applySubstitution(target, subst) : target;
+  if (s.kind === "var" && t.kind === "var" && s.id === t.id) return true;
   if (s.kind === "var" && subst) {
     if (t.kind === "var" && t.id === s.id) return true;
     subst.set(s.id, widenDeep(t));

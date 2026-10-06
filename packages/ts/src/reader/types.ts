@@ -4,6 +4,7 @@ import { Data } from "effect";
  * Source location for error reporting
  */
 export interface Loc {
+  readonly sourceId?: string;
   readonly start: number;
   readonly end: number;
   readonly line: number;

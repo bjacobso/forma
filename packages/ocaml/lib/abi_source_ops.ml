@@ -301,8 +301,12 @@ let expand_source ~with_session (request : request) =
     ~missing_source_message:
       "expand requires either a source string field or sessionId plus sourceId."
     request (fun session exprs ->
+      let exprs =
+        Session_module.expressions session
+          ~source_id:(request_source_id request) ~source:request.source exprs
+      in
       expand_and_encode
-        (Option.map (fun session -> session.Session.env) session)
+        (Option.map (fun session -> session.Session.core_env) session)
         exprs)
 
 let lower_core_source ~with_session (request : request) =
@@ -320,8 +324,12 @@ let lower_core_source ~with_session (request : request) =
     ~missing_source_message:
       "lowerCore requires either a source string field or sessionId plus \
        sourceId." request (fun session exprs ->
+      let exprs =
+        Session_module.expressions session
+          ~source_id:(request_source_id request) ~source:request.source exprs
+      in
       lower_exprs
-        (Option.map (fun session -> session.Session.env) session)
+        (Option.map (fun session -> session.Session.core_env) session)
         exprs)
 
 let typecheck_typed_core ?(syntax=[]) type_env eval_env program =
@@ -374,10 +382,85 @@ let typecheck_core_source ?(typed = false) ~with_session (request : request) =
     ~missing_source_message:
       "typecheckCore requires either a source string field or sessionId plus \
        sourceId." request (fun session exprs ->
-      typecheck_exprs
-        (Option.map (fun session -> session.Session.type_env) session)
-        (Option.map (fun session -> session.Session.env) session)
-        exprs)
+      match session with
+      | None -> typecheck_exprs None None exprs
+      | Some session -> (
+          match
+            Session_module.graph session
+              ~source_id:(request_source_id request)
+              ~source:request.source
+          with
+          | Error diagnostics -> Response.typecheck_diagnostics_json diagnostics
+          | Ok graph -> (
+              let dependencies =
+                {
+                  graph with
+                  Module_graph.modules =
+                    List.filter
+                      (fun (m : Module_graph.resolved_module) ->
+                        m.id <> graph.entry)
+                      graph.modules;
+                }
+              in
+              match Session_module.check session dependencies with
+              | Error diagnostics ->
+                  Response.typecheck_diagnostics_json diagnostics
+              | Ok checked ->
+                  let root =
+                    List.find
+                      (fun (m : Module_graph.resolved_module) ->
+                        m.id = graph.entry)
+                      graph.modules
+                  in
+                  let types =
+                    Module_runtime.imported_types root checked.environments
+                    @ session.Session.core_types
+                  in
+                  (* Descriptor applications carry declaration data. Build only
+                     this file's data context; no sibling source scope is visible. *)
+                  let local =
+                    Artifact_context.environment session
+                      ~sources:[ (root.id, root.expressions) ]
+                      ()
+                  in
+                  let types =
+                    List.fold_left
+                      (fun types (name, value) ->
+                        match Descriptor.declaration_form value with
+                        | Some _ -> (
+                            let scheme =
+                              Type_env.Forall
+                                ([], Type_expr.TDeclaration, [], Type_env.Plain)
+                            in
+                            let types = Type_env.bind name scheme types in
+                            match List.assoc_opt name root.bindings with
+                            | Some binding ->
+                                Type_env.bind binding.symbol scheme types
+                            | None -> types)
+                        | None -> types)
+                      types
+                      (Env.visible_bindings local)
+                  in
+                  let expressions =
+                    List.filter
+                      (function
+                        | Ast.List
+                            ( _,
+                              [
+                                Ast.Symbol (_, "define");
+                                Ast.Symbol (_, symbol);
+                                Ast.Symbol (_, raw);
+                              ] ) ->
+                            not
+                              (List.exists
+                                 (fun (_, b) ->
+                                   b.Module_graph.symbol = symbol
+                                   && b.name = raw)
+                                 root.bindings)
+                        | _ -> true)
+                      root.expressions
+                  in
+                  typecheck_exprs (Some types) (Some local) expressions)))
 
 let evaluate_source ~with_session (request : request) =
   let evaluate_exprs env exprs =
@@ -453,7 +536,7 @@ let typecheck_source ~with_session (request : request) =
         ]
 
 let emitted_values_exprs (session : Session.t) exprs =
-  match Elaborate.emitted_values session.env exprs with
+  match Elaborate.emitted_values (Artifact_context.environment session ()) (Artifact_context.expressions exprs) with
   | Error diagnostics -> Response.eval_diagnostics_json diagnostics
   | Ok values ->
       Printf.sprintf "{\"ok\":true,\"value\":%s,\"diagnostics\":%s}"

@@ -1,6 +1,11 @@
 import type { SExpr } from "../reader/types.js";
 import { Env } from "../Env.js";
-import { hashSourceText, makeSource, type Source, type SourceInput } from "../source/source.js";
+import {
+  hashSourceText,
+  makeSource,
+  type Source,
+  type SourceInput,
+} from "../source/source.js";
 
 export type SessionSourceKind = "source" | "prelude";
 
@@ -37,6 +42,7 @@ export interface LanguageSessionOptions {
 export class LanguageSession {
   readonly id: string;
   env: Env;
+  configurationEnv: Env;
 
   readonly preludes = new Map<string, SessionSourceRecord>();
   readonly sources = new Map<string, SessionSourceRecord>();
@@ -48,13 +54,15 @@ export class LanguageSession {
   constructor(options: LanguageSessionOptions) {
     this.id = options.id;
     this.env = options.env ?? Env.empty();
+    this.configurationEnv = this.env;
   }
 
   rememberSource(input: SessionSourceInput): SessionSourceRecord {
     const kind = input.kind ?? "source";
     const source = makeSource(input);
     const target = kind === "prelude" ? this.preludes : this.sources;
-    const parsed = kind === "prelude" ? this.parsedPreludes : this.parsedSources;
+    const parsed =
+      kind === "prelude" ? this.parsedPreludes : this.parsedSources;
     const existing = target.get(source.id);
     const record: SessionSourceRecord = {
       source,
@@ -65,13 +73,20 @@ export class LanguageSession {
     return record;
   }
 
-  rememberParsedSource(kind: SessionSourceKind, sourceId: string, parsed: readonly SExpr[]): void {
-    const target = kind === "prelude" ? this.parsedPreludes : this.parsedSources;
+  rememberParsedSource(
+    kind: SessionSourceKind,
+    sourceId: string,
+    parsed: readonly SExpr[],
+  ): void {
+    const target =
+      kind === "prelude" ? this.parsedPreludes : this.parsedSources;
     target.set(sourceId, parsed);
   }
 
   source(sourceId: string): Source | undefined {
-    return this.sources.get(sourceId)?.source ?? this.preludes.get(sourceId)?.source;
+    return (
+      this.sources.get(sourceId)?.source ?? this.preludes.get(sourceId)?.source
+    );
   }
 
   sourceText(sourceId: string): string | undefined {
@@ -87,6 +102,19 @@ export class LanguageSession {
       .sort((left, right) => left.source.id.localeCompare(right.source.id))
       .map((record) => `${record.source.id}:${record.source.hash}`);
     return items.length === 0 ? "empty" : hashSourceText(items.join("|"));
+  }
+
+  coreExpressions(): readonly SExpr[] {
+    return this.orderedSources("prelude")
+      .flatMap((source) => this.parsedPreludes.get(source.id) ?? [])
+      .filter(
+        (expression) =>
+          expression._tag === "List" &&
+          expression.items[0]?._tag === "Sym" &&
+          ["define", ":", "type", "class", "error", "macro"].includes(
+            expression.items[0].name,
+          ),
+      );
   }
 
   info(): SessionInfo {
@@ -107,7 +135,9 @@ export class LanguageSession {
         : kind === "source"
           ? [...this.sources.values()]
           : [...this.preludes.values(), ...this.sources.values()];
-    return records.sort((left, right) => left.order - right.order).map((record) => record.source);
+    return records
+      .sort((left, right) => left.order - right.order)
+      .map((record) => record.source);
   }
 
   joinedSourceText(kind?: SessionSourceKind | undefined): string {
@@ -122,6 +152,7 @@ export class LanguageSession {
     this.parsedPreludes.clear();
     this.parsedSources.clear();
     this.env = Env.empty();
+    this.configurationEnv = this.env;
     this.#nextSourceOrder = 0;
   }
 }

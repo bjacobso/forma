@@ -134,6 +134,7 @@ and annotate_lambda_body callbacks env ty params rest_param body =
   let param_tys =
     match ty with
     | Type_expr.TFn (param_tys, _)
+    | Type_expr.TVariadicFn (param_tys,_,_)
       when List.length param_tys = List.length params ->
         param_tys
     | _ -> List.map (fun _ -> Type_expr.TAny) params
@@ -151,7 +152,7 @@ and annotate_lambda_body callbacks env ty params rest_param body =
         [
           ( param.name,
             Type_env.Forall
-              ([], Type_expr.TList Type_expr.TAny, [], Type_env.Plain) );
+              ([], Type_expr.TList (match ty with Type_expr.TVariadicFn (_,rest,_) -> rest | _ -> Type_expr.TAny), [], Type_env.Plain) );
         ]
   in
   annotate_expr callbacks (rest_binding @ param_bindings @ env) body

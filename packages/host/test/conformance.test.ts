@@ -196,7 +196,7 @@ if [ "$1" = "daemon" ]; then
       *'"op":"openSession"'*)
         printf '{"ok":true,"value":{"sessionId":"abort-session"}}\\n'
         ;;
-      *'"op":"replSubmit"'*)
+      *'"op":"evaluateModule"'*)
         sleep 10
         printf '{"ok":true,"value":{"value":{"kind":"int","value":3},"formCount":1}}\\n'
         ;;
@@ -615,40 +615,16 @@ exit 1
     });
   });
 
-  it("typechecks TS-backed session bindings introduced by prior evaluation", async () => {
-    const { sessionId } = await tsHost.openSession({ defaultStepLimit: 500 });
-
-    const defineState = await tsHost.evaluateInSession({
-      sessionId,
-      source: '(define gatewaySessionValue "persisted") gatewaySessionValue',
-    });
-    expect(defineState).toMatchObject({
-      status: "completed",
-      result: {
-        value: { kind: "string", value: "persisted" },
-        diagnostics: [],
-      },
-    });
-
-    const typecheck = await tsHost.typecheck({
-      sessionId,
-      source: "gatewaySessionValue",
-    });
-    expect(typecheck.diagnostics).toEqual([]);
-
-    const reuseState = await tsHost.evaluateInSession({
-      sessionId,
-      source: "gatewaySessionValue",
-    });
-    expect(reuseState).toMatchObject({
-      status: "completed",
-      result: {
-        value: { kind: "string", value: "persisted" },
-        diagnostics: [],
-      },
-    });
-
-    await tsHost.closeSession({ sessionId });
+  it("keeps prior module evaluations private and reuses explicit imports", async () => {
+    const {sessionId}=await tsHost.openSession({defaultStepLimit:500});
+    try {
+      await tsHost.loadSource({sessionId,sourceId:"value.forma",source:'(export gatewaySessionValue) (define gatewaySessionValue "persisted")'});
+      expect((await tsHost.typecheck({sessionId,sourceId:"private.forma",source:"gatewaySessionValue"})).diagnostics[0]).toMatchObject({code:"typecheck/unbound-symbol",severity:"error"});
+      const source='(import "./value.forma" [gatewaySessionValue]) gatewaySessionValue';
+      expect((await tsHost.typecheck({sessionId,sourceId:"use.forma",source})).diagnostics).toEqual([]);
+      expect(await tsHost.evaluateInSession({sessionId,sourceId:"use.forma",source})).toMatchObject({status:"completed",result:{value:{kind:"string",value:"persisted"},diagnostics:[]}});
+      expect((await tsHost.typecheck({sessionId,sourceId:"still-private.forma",source:"gatewaySessionValue"})).diagnostics[0]).toMatchObject({code:"typecheck/unbound-symbol",severity:"error"});
+    } finally {await tsHost.closeSession({sessionId});}
   });
 
   it("pauses and resumes TS-backed session evaluation for declarative host builtins", async () => {
@@ -2024,7 +2000,7 @@ exit 1
         expect(expanded.ast).toEqual([]);
         expect(expanded.diagnostics.length).toBeGreaterThan(0);
         expect(expanded.diagnostics[0]).toMatchObject({
-          code: expect.stringContaining("source"),
+          code: expect.stringMatching(/source|module\/not-found/),
           phase: "expand",
           severity: "error",
         });
@@ -2039,7 +2015,7 @@ exit 1
         const checked = await host.typecheck({ sessionId, sourceId });
         expect(checked.diagnostics.length).toBeGreaterThan(0);
         expect(checked.diagnostics[0]).toMatchObject({
-          code: expect.stringContaining("source"),
+          code: expect.stringMatching(/source|module\/not-found/),
           phase: "typecheck",
           severity: "error",
         });

@@ -10,6 +10,7 @@ let usage () =
   "Usage:\n\
   \  forma-ocaml request '<json>'\n\
   \  forma-ocaml daemon\n\
+  \  forma-ocaml file <typecheck|evaluate|interface|declarations> <entry.forma>\n\
   \  forma-ocaml repl\n\
   \  forma-ocaml version\n"
 
@@ -219,6 +220,29 @@ let run_repl () =
   in
   loop ()
 
+(* Filesystem resolution is a CLI adapter, outside the universal compiler library. *)
+let run_file operation path =
+  let module Graph = Forma_ocaml.Module_graph in
+  let read path =
+    let id=Unix.realpath path in
+    let channel=open_in_bin id in
+    let source=Fun.protect ~finally:(fun ()->close_in channel) (fun ()->really_input_string channel (in_channel_length channel)) in
+    Graph.{id;source} in
+  try
+    let entry=read path in
+    let resolver ~specifier ~importer =
+      try Some (read (Filename.concat (Filename.dirname importer) specifier)) with Sys_error _ | Unix.Unix_error _ -> None in
+    match Graph.resolve entry resolver with
+    | Error diagnostics -> print_json (Forma_ocaml.Abi_response.typecheck_diagnostics_json diagnostics)
+    | Ok graph ->
+      let session=Session.open_ () in
+      Fun.protect ~finally:(fun ()->Session.close session) (fun ()->
+        List.iter (fun (m : Graph.resolved_module)->Hashtbl.replace session.sources m.id (Forma_ocaml.Source.make ~id:m.id ~text:m.source ())) graph.modules;
+        let op=match operation with "typecheck" -> "typecheckModule" | "evaluate" -> "evaluateModule" | "declarations" -> "moduleDeclarations" | "interface" -> "moduleGraph" | _ -> invalid_arg "file operation must be typecheck, evaluate, interface, or declarations" in
+        print_json (Abi.handle_json (Printf.sprintf "{\"op\":%s,\"sessionId\":%s,\"sourceId\":%s}" (Value.string_json op) (Value.string_json session.id) (Value.string_json entry.id))))
+  with Sys_error message | Invalid_argument message -> print_error message; exit 1
+     | Unix.Unix_error (error,_,_) -> print_error (Unix.error_message error); exit 1
+
 let () =
   let argv = Sys.argv in
   let argc = Array.length argv in
@@ -231,6 +255,7 @@ let () =
           print_json (Abi.handle_json input)
         done
       with End_of_file -> ())
+  | "file" when argc = 4 -> run_file argv.(2) argv.(3)
   | "repl" -> run_repl ()
   | "request" ->
       let input = if argc > 2 then argv.(2) else read_all_stdin () in

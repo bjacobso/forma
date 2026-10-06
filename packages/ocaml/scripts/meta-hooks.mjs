@@ -2176,7 +2176,7 @@ try {
     expectOk(`loadPrelude ${prelude.sourceId}`, response);
   }
 
-  expectOk("load canonical declarations", await request({op:"loadSource",sessionId,sourceId:"meta-hooks/declarations",source:`(entity Department {})\n${entitySource}\n${querySource}`}));
+  expectOk("load canonical declarations", await request({op:"loadPrelude",sessionId,sourceId:"meta-hooks/declarations",source:`(entity Department {})\n${entitySource}\n${querySource}`}));
   for (const testCase of cases) {
     const response = await request({
       op: "evaluate",

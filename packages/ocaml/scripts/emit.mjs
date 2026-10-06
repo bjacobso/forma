@@ -2088,9 +2088,9 @@ try {
   });
   expectOk("emit single module", singleModuleResponse);
   const singleModule = singleModuleResponse.value?.artifacts?.[0]?.content?.modules?.[0];
-  if (singleModule?.exports?.[0]?.localName !== "Standalone") {
+  if (singleModule?.exports?.length !== 0) {
     throw new Error(
-      `Expected single module to export declarations by default:\n${JSON.stringify(
+      `Expected single module declarations to remain private:\n${JSON.stringify(
         singleModuleResponse,
         null,
         2,
@@ -2124,7 +2124,7 @@ try {
   const packageAllModule = packageAllResponse.value?.artifacts?.[0]?.content?.modules?.[0];
   if (
     !packageAllModule?.diagnostics?.some(
-      (diagnostic) => diagnostic.code === "module.import.all-non-local",
+      (diagnostic) => diagnostic.code === "module.import.malformed",
     ) ||
     !packageAllModule?.diagnostics?.some(
       (diagnostic) => diagnostic.code === "module.use.unknown-prelude",
