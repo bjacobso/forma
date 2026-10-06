@@ -8,10 +8,18 @@ class FakeWorker {
   onerror: ((event: ErrorEvent) => void) | null = null;
   requests: WorkerRequest[] = [];
   terminated = false;
-  constructor() { FakeWorker.instances.push(this); }
-  postMessage(request: WorkerRequest) { this.requests.push(request); }
-  terminate() { this.terminated = true; }
-  emit(data: WorkerResponse) { this.onmessage?.({ data } as MessageEvent<WorkerResponse>); }
+  constructor() {
+    FakeWorker.instances.push(this);
+  }
+  postMessage(request: WorkerRequest) {
+    this.requests.push(request);
+  }
+  terminate() {
+    this.terminated = true;
+  }
+  emit(data: WorkerResponse) {
+    this.onmessage?.({ data } as MessageEvent<WorkerResponse>);
+  }
 }
 
 beforeEach(() => {
@@ -20,7 +28,10 @@ beforeEach(() => {
   vi.stubGlobal("window", { setTimeout, clearTimeout });
   vi.stubGlobal("Worker", FakeWorker);
 });
-afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 it("lets a cold worker load before starting the execution watchdog", async () => {
   const client = new EngineClient();
@@ -31,7 +42,12 @@ it("lets a cold worker load before starting the execution watchdog", async () =>
   expect(worker.requests).toEqual([]);
   worker.emit({ kind: "ready" });
   const request = worker.requests[0]!;
-  const completed = { id: request.id, sourceId: request.sourceId, passResults: [], diagnostics: [] };
+  const completed = {
+    id: request.id,
+    sourceId: request.sourceId,
+    passResults: [],
+    diagnostics: [],
+  };
   worker.emit({ kind: "result", result: completed });
   await expect(result).resolves.toEqual(completed);
   vi.advanceTimersByTime(10_000);
@@ -45,8 +61,10 @@ it("still stops execution after two seconds once the worker is ready", async () 
   const worker = FakeWorker.instances[0]!;
   worker.emit({ kind: "ready" });
   vi.advanceTimersByTime(2_000);
-  await expect(result).resolves.toMatchObject({ stoppedAt: "evaluate",
-    diagnostics: [{ code: "WorkerTimeout", details: { timeoutMs: 2_000 } }] });
+  await expect(result).resolves.toMatchObject({
+    stoppedAt: "evaluate",
+    diagnostics: [{ code: "WorkerTimeout", details: { timeoutMs: 2_000 } }],
+  });
   expect(worker.terminated).toBe(true);
 });
 
