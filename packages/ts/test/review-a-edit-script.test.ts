@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import fc from "fast-check";
 
-import { Editor, Syntax } from "../src/index.js";
+import { Editor, Engine, Syntax } from "../src/index.js";
 import { runs } from "./support/runs.js";
 
 // =============================================================================
@@ -604,17 +604,17 @@ describe("review A: sibling bugs", () => {
 
   // Hazard: extract checks binding sites only; quotation and non-expression
   // positions change meaning when the form becomes a call.
-  test.fails("extract inside a quote turns data into a call", () => {
+  test("extract inside a quote is refused", () => {
     expect(refusal("(define (f y) '(a y))", (id) => [{ op: "extract", target: id("(a y)"), name: "h" }])).not.toMatch(
       /^applied/,
     );
   });
-  test.fails("extract inside a quasiquote moves an unquote out of its template", () => {
+  test("extract inside a macro quasiquote is refused", () => {
     expect(
       refusal("(define-macro m [x] `(+ ~x 1))", (id) => [{ op: "extract", target: id("(+ ~x 1)"), name: "h" }]),
     ).not.toMatch(/^applied/);
   });
-  test.fails("extract of a special-form or macro head", () => {
+  test("extract of a special-form or macro head is refused", () => {
     expect(refusal("(define (f y) (let [a y] a))", (id) => [{ op: "extract", target: id("let"), name: "h" }])).not.toMatch(
       /^applied/,
     );
@@ -625,7 +625,7 @@ describe("review A: sibling bugs", () => {
 
   // Hazard: names inside macro expansions have no author node, so rename and
   // extract do not see references and bindings that expansions introduce.
-  test.fails("extract loses a local that a macro binds around the form", () => {
+  test("extract refuses to lose a local that a macro binds around the form", () => {
     // `(f)` is 3 before; after the edit `x` is unbound in `h`.
     expect(
       refusal("(define-macro with-x [body] `(let [x 1] ~body))\n(define (f) (with-x (+ x 2)))", (id) => [
@@ -633,15 +633,17 @@ describe("review A: sibling bugs", () => {
       ]),
     ).not.toMatch(/^applied/);
   });
-  test.fails("extract loses a local that a macro expansion refers to", () => {
-    // `(f)` is 2 before; after the edit `x` is unbound in `h`.
-    expect(
-      refusal("(define-macro get-x [] `x)\n(define (f) (let [x 1] (+ (get-x) 1)))", (id) => [
-        { op: "extract", target: id("(+ (get-x) 1)"), name: "h" },
-      ]),
-    ).not.toMatch(/^applied/);
+  test("extract passes a free local that a macro expansion refers to", async () => {
+    const source = "(define-macro get-x [] `x)\n(define (f) (let [x 1] (+ (get-x) 1)))";
+    const after = applied(source, (id) => [{ op: "extract", target: id("(+ (get-x) 1)"), name: "h" }]);
+    expect(after).toContain("(define (h x)");
+    expect(after).toContain("(h x)");
+    const beforeResult = await Engine.evaluate({ source: `${source}\n(f)` });
+    const afterResult = await Engine.evaluate({ source: `${after}\n(f)` });
+    expect(afterResult.diagnostics).toEqual([]);
+    expect(afterResult.printed).toEqual(beforeResult.printed);
   });
-  test.fails("rename lets a local capture a global that a macro expansion uses", () => {
+  test("rename refuses capture of a global that a macro expansion uses", () => {
     // `(k)` is 101 before; after the edit `(m)` calls the local `helper`, 1.
     expect(
       refusal(

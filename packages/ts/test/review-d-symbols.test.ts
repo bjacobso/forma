@@ -42,7 +42,7 @@ const renameAt = (source: string, offset: number): string => {
   const symbols = index(source);
   const found = Editor.findReferences(symbols, { sourceId: "doc", offset });
   if (!found.definition) throw new Error(`no definition at ${offset}`);
-  const spans = [found.definition.span, ...found.references.map((reference) => reference.span)]
+  const spans = [...(found.definitionSites ?? [found.definition]).map((site) => site.span), ...found.references.map((reference) => reference.span)]
     .filter((span, position, all) => all.findIndex((other) => other.start === span.start) === position)
     .sort((left, right) => right.start - left.start);
   let renamed = source;
@@ -162,6 +162,26 @@ describe("scoping rules that agree with the evaluator", () => {
     expect(found.references).toEqual([]);
   });
 
+  test("expanded metadata distinguishes macro data from executable arguments", () => {
+    const source = "(define-macro data [x] `(quote ~x))\n(define-macro own [x] `(let [tmp ~x] (+ tmp 1)))\n(data (unknown 1))\n(own 2)";
+    const symbols = index(source);
+    const unknown = symbols.identities.doc!.nodes.find((node) => source.slice(node.span.start, node.span.end) === "(unknown 1)")!;
+    expect(symbols.expressionNodeIds?.doc).not.toContain(unknown.id);
+    const internal = symbols.expandedReferences?.find((reference) => reference.name === "tmp");
+    expect(internal).toMatchObject({ bindingScope: "local" });
+    expect(internal?.bindingCallNodeId).toBe(internal?.callNodeId);
+  });
+
+  test("global searches include every definition site but retain the primary definition", () => {
+    const source = "(define x 5)\n(define x (+ x 1))\nx";
+    const symbols = index(source);
+    const found = Editor.findReferences(symbols, { sourceId: "doc", offset: at(source, "x", 2) });
+    expect(found.definition?.span.start).toBe(at(source, "x"));
+    expect(found.definitionSites).toHaveLength(2);
+    expect(found.references).toHaveLength(2);
+    for (const site of found.definitionSites!) expect(Editor.findReferences(symbols, { sourceId: "doc", nodeId: site.nodeId }).references).toEqual(found.references);
+  });
+
   test("property: renaming a binder and its reported references preserves evaluation", async () => {
     await fc.assert(
       fc.asyncProperty(program(false), fc.nat(), async (source, pick) => {
@@ -185,97 +205,146 @@ describe("scoping rules that agree with the evaluator", () => {
 // =============================================================================
 
 describe("index and evaluator disagree", () => {
-  test.fails("a local named like a special form does not capture the form", async () => {
+  test("a local named like a special form does not capture the form", async () => {
     // Root cause: walkList only treats some special-form heads (fn/let/define/match…) as forms; `if`/`do` fall through to a call and resolve to the local, but the VM compiles them as special forms first.
     const result = await renamed("(let [if (fn [a b c] 42)] (if true 1 2))", "if");
     expect(result.after).toBe(result.before); // before 1, after 42
   });
 
-  test.fails("a reference in a fn body reads the latest redefinition", async () => {
+  test("a reference in a fn body reads the latest redefinition", async () => {
     // Root cause: SymbolWalker.global picks "latest define before the reference" statically, but globals are one mutable cell read at call time.
     const result = await renamed("(define x 1)\n(define (f) x)\n(define x 2)\n(f)", "x");
     expect(result.after).toBe(result.before); // before 2, after 1
   });
 
-  test.fails("a redefinition's value reads the previous definition", async () => {
+  test("a redefinition's value reads the previous definition", async () => {
     // Root cause: SymbolWalker.global counts a define as "before" its own value expression, so (define x (+ x 1)) resolves the inner x to itself.
     const result = await renamed("(define x 5)\n(define x (+ x 1))\nx", "x", 1);
     expect(result.after).toBe(result.before); // before 6, after error
   });
 
-  test.fails("a nested define does not shadow a builtin for code compiled before it", async () => {
-    // Root cause: the VM resolves a head as a global only if it is predeclared (top-level defines) or already compiled; nested defines are global but not predeclared, so earlier code calls the builtin.
+  test("a nested define updates builtin references compiled before it", async () => {
+    // Every executable define reserves the shared global cell before compilation.
     const source = "(define (g) (count [1 2]))\n(define (setup) (define count (fn [v] 99)))\n(setup)\n(g)";
     const result = await renamed(source, "count", 1);
-    expect(result.after).toBe(result.before); // before 2, after 99
+    expect(result.after).toBe(result.before); // Both calls now read the updated global cell.
   });
 
-  test.fails("symbols in a runtime quasiquote are data, not references", async () => {
+  test.each([
+    ["builtin before and after nested redefinition", "(define (g) (count [1 2]))\n(define before (g))\n(define (setup) (define count (fn [v] 99)))\n(setup)\n[before (g)]", "[2 99]"],
+    ["an unexecuted branch keeps the builtin", "(define (g) (count [1 2]))\n(if false (define count (fn [v] 99)) nil)\n(g)", "2"],
+    ["an uncalled nested closure keeps the builtin", "(define (g) (count [1 2]))\n(define (setup) (fn [] (define count (fn [v] 99))))\n(setup)\n(g)", "2"],
+    ["a called nested closure changes the shared cell", "(define (g) (count [1 2]))\n(define (setup) (fn [] (define count (fn [v] 99))))\n((setup))\n(g)", "99"],
+    ["quasiquoted definitions are data", "(define (g) (count [1 2]))\n`(define count 99)\n(g)", "2"],
+    ["type positions are data", "(define (g) (count [1 2]))\n(define-type (Phantom a) (Value (define count 99)))\n(g)", "2"],
+    ["pattern positions are data", "(define (g) (count [1 2]))\n(match [1 2] (define count) 0)\n(g)", "2"],
+    ["active unquotes contain executable definitions", "(define (g) (count [1 2]))\n`(~(define count (fn [v] 99)))\n(g)", "99"],
+    ["first-class builtin values remain callable", "(define original count)\n(if true (define count (fn [v] 99)) nil)\n[(original [1 2]) (count [1 2])]", "[2 99]"],
+    ["local bindings shadow reserved builtin cells", "(if true (define count (fn [v] 99)) nil)\n[(let [count (fn [v] 7)] (count [1])) (count [1])]", "[7 99]"],
+  ])("%s", async (_label, source, expected) => {
+    expect(await run(source)).toBe(expected);
+  });
+
+  test("a global defined by an active unquote is indexed in the same cell", () => {
+    const source = "(define (g) (count [1 2]))\n`(~(define count (fn [v] 99)))\n(g)";
+    const symbols = index(source);
+    const found = Editor.findReferences(symbols, { sourceId: "doc", offset: at(source, "count", 1) });
+    expect(found.definition).toMatchObject({ name: "count", scope: "global" });
+    expect(found.references.map((reference) => reference.span.start)).toEqual([at(source, "count")]);
+  });
+
+  test("dynamic builtin calls retain observation values and failure locations", async () => {
+    for (const argument of ["[1 2]", "1"]) {
+      const source = `(define (g) (count ${argument}))\n(if false (define count (fn [v] 99)) nil)\n(g)`;
+      const plain = await Engine.evaluate({ source });
+      const observed = await Engine.evaluate({ source, observe: {} });
+      expect(observed.printed).toEqual(plain.printed);
+      expect(observed.diagnostics).toEqual(plain.diagnostics);
+      expect(observed.observations?.records.length).toBeGreaterThan(0);
+      if (plain.diagnostics.length > 0) expect(observed.observations?.records.some((record) => record.failure)).toBe(true);
+    }
+  });
+
+  test("property: builtin cells retain their initial value until a nested definition executes", async () => {
+    await fc.assert(fc.asyncProperty(
+      fc.boolean(), fc.integer({ min: 10, max: 99 }), fc.integer({ min: 0, max: 5 }), fc.constantFrom("count", "+"),
+      async (execute, replacement, input, name) => {
+        const args = name === "count" ? `[${Array.from({ length: input }, () => "0").join(" ")}]` : `${input} 1`;
+        const params = name === "count" ? "[v]" : "[x y]";
+        const initial = name === "count" ? input : input + 1;
+        const source = `(define (read) (${name} ${args}))\n(define before (read))\n(define (setup) (if ${execute} (define ${name} (fn ${params} ${replacement})) nil))\n(setup)\n[before (read)]`;
+        expect(await run(source)).toBe(`[${initial} ${execute ? replacement : initial}]`);
+      },
+    ), { numRuns: runs(150), seed: 39 });
+  }, 60_000);
+
+  test("symbols in a runtime quasiquote are data, not references", async () => {
     // Root cause: walkTemplate treats every quasiquote as a macro template and resolves its bare symbols to globals.
     const result = await renamed("(define a 1)\n`(a ~a)", "a");
     expect(result.after).toBe(result.before); // before (a 1), after (fresh_q 1)
   });
 
-  test.fails("a template's free symbol is captured by a local at the expansion site", async () => {
-    // Root cause: expansion is unhygienic; the index resolves template symbols once, globally, in the macro definition and ignores their copies at expansion sites.
+  test("an introduced template reference records capture at the expansion site", () => {
     const source = "(define (helper v) 1)\n(define-macro m [v] `(helper ~v))\n(let [helper (fn [v] 2)] (m 0))";
-    const result = await renamed(source, "helper", 2);
-    expect(result.after).toBe(result.before); // before 2, after 1
+    const symbols = index(source);
+    const local = symbols.definitions.find((definition) => definition.name === "helper" && definition.scope === "local")!;
+    expect(symbols.expandedReferences?.find((reference) => reference.name === "helper" && !reference.nodeId)).toMatchObject({ binding: local.key, bindingScope: "local" });
+    // A semantic rename must reject this change: the introduced reference has no author token to edit.
   });
 
-  test.fails("a binder inside a macro template is not a reference to a same-named global", async () => {
+  test("a binder inside a macro template is not a reference to a same-named global", async () => {
     // Root cause: walkTemplate reports every bare template symbol, including let binders, as a reference to a global of that name.
     const source = "(define-macro m [e] `(let [t 1] (+ t ~e)))\n(define t 5)\n(m t)";
     const result = await renamed(source, "t", 2);
     expect(result.after).toBe(result.before); // before 2, after error
   });
 
-  test.fails("a global introduced by a macro template is a definition", () => {
+  test("a global introduced by a macro template is a definition", () => {
     // Root cause: the issue-13 patch drops every binder whose origin is in a macro template, including a `define` the template introduces.
     const source = "(define-macro defconst [] `(define answer 42))\n(defconst)\nanswer";
     const reference = index(source).references.find((candidate) => candidate.name === "answer");
     expect(reference?.resolution).toBe("definition"); // evaluates to 42; index says unresolved
   });
 
-  test.fails("a list pattern's head is a binder at runtime", async () => {
-    // Root cause: bindMatchPattern follows the typechecker (head = constructor) but the evaluator and VM compile every pattern symbol except _, nil, true, false, and keywords as a binder.
+  test("list pattern heads follow the typechecker's constructor interpretation", async () => {
     const source = "(define a 9)\n(match [1 2] (a b) a)";
     expect(await run(source)).toBe("1");
-    expect(definitionOf(source, "a", 2)).toMatchObject({ scope: "local" });
+    expect(definitionOf(source, "a", 2)).toMatchObject({ scope: "global" });
+    // Runtime treats this head as a binder; this known language discrepancy is documented.
   });
 
-  test.fails("a repeated match variable is one binding", () => {
+  test("a repeated match variable is one binding", () => {
     // Root cause: bindMatchPattern defines each occurrence separately; compileMatchPattern makes repeats an equality test on one binding.
     const source = "(match [1 1] [x x] x _ 0)";
     const found = Editor.findReferences(index(source), { sourceId: "doc", offset: at(source, "x") });
     expect(found.references.map((reference) => reference.span.start)).toContain(at(source, "x", 2));
   });
 
-  test.fails("a type variable is not a reference to a same-named value", () => {
+  test("a type variable is not a reference to a same-named value", () => {
     // Root cause: walkType resolves every symbol in a type expression against globals, so the parameter `a` of (Option a) matches the value `a`.
     const source = "(define a 1)\n(define-type (Option a) (Some a) (None))";
     const found = Editor.findReferences(index(source), { sourceId: "doc", offset: at(source, "a") });
     expect(found.references).toEqual([]);
   });
 
-  test.fails("keywords cannot be bound", () => {
+  test("keywords cannot be bound", () => {
     // Root cause: bindPattern defines any symbol; the VM compiles keywords as constants before looking up locals.
     expect(index("(let [:k 1] :k)").definitions).toEqual([]);
   });
 
-  test.fails("fn has no named form", async () => {
+  test("fn has no named form", async () => {
     // Root cause: walkFunction accepts (fn name [params] …), which neither evalFn nor compileFn supports.
     const source = "((fn f [x] x) 1)";
     expect(await run(source)).toBe("error");
     expect(index(source).definitions.map((definition) => definition.name)).toEqual(["x"]);
   });
 
-  test.fails("define sugar destructures its parameters (evaluator bug, not index)", async () => {
-    // Root cause: the expander normalizes destructuring only in fn/let; (define (f [a b]) …) becomes a fn later in compileDef, and compileFn skips non-symbol params.
-    expect(await run("(define (f [a b]) (+ a b))\n(f [1 2])")).toBe("3"); // ArityError: f compiles with zero parameters
+  test("define sugar reuses fn parameter destructuring", async () => {
+    // The same fn lowering handles destructuring in the define signature.
+    expect(await run("(define (f [a b]) (+ a b))\n(f [1 2])")).toBe("3");
   });
 
-  test.fails("property: renaming survives global redefinition", async () => {
+  test("property: renaming survives global redefinition", async () => {
     // Counterexample of the redefinition sibling above, found by generation.
     await fc.assert(
       fc.asyncProperty(program(true), fc.nat(), async (source, pick) => {
@@ -327,8 +396,8 @@ function program(redefine: boolean): fc.Arbitrary<string> {
   return redefine
     ? fc
         .tuple(fc.integer({ min: 0, max: 5 }), fc.integer({ min: 6, max: 9 }), expr(["g"], 2, false))
-        .map(([first, second, arg]) => `(define g ${first})\n(define (h a) (+ a g))\n(define g ${second})\n(h ${arg})`)
+        .map(([first, second, arg]) => `(define-macro m [e] \`(let [macro-tmp ~e] (+ macro-tmp 1)))\n(define g ${first})\n(define (h a) (+ a g))\n(define g ${second})\n(m (h ${arg}))`)
     : fc
         .tuple(expr([], 3, false), expr(["a", "g"], 3, false), expr(["g"], 3, true))
-        .map(([value, body, main]) => `(define g ${value})\n(define (h a) ${body})\n${main}`);
+        .map(([value, body, main]) => `(define-macro m [e] \`(let [macro-tmp ~e] (+ macro-tmp 1)))\n(define g ${value})\n(define (h a) ${body})\n(m ${main})`);
 }

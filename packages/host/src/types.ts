@@ -617,6 +617,8 @@ export interface FindReferencesResult {
   readonly definition?: SymbolDefinition | undefined;
   readonly references: readonly SymbolReference[];
   readonly diagnostics: readonly Diagnostic[];
+  /** Every definition site of the selected global cell. */
+  readonly definitionSites?: readonly SymbolDefinition[] | undefined;
 }
 
 /** Edit operations address nodes by id. The full contract is `editScriptSchema()`. */

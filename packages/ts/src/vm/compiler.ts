@@ -13,6 +13,7 @@
  *   emission.
  */
 
+import { describeBindingForm, expressionPositions, type BindingStep } from "../language/binding-forms.js";
 import type { KernelObserver } from "../evaluator/observation.js";
 import type { SExpr } from "../reader/index.js";
 import { Env } from "../Env.js";
@@ -105,7 +106,7 @@ export function compileProgram(exprs: readonly SExpr[], options: CompileOptions)
     ...(options.observer ? { observer: options.observer } : {}),
   };
 
-  predeclareTopLevelGlobals(normalizedExprs, globals);
+  predeclareGlobals(normalizedExprs, globals);
 
   for (let i = 0; i < normalizedExprs.length; i++) {
     const isLast = i === normalizedExprs.length - 1;
@@ -135,24 +136,25 @@ export function compileProgram(exprs: readonly SExpr[], options: CompileOptions)
 }
 
 // ---------------------------------------------------------------------------
-// predeclareTopLevelGlobals
+// predeclareGlobals
 // ---------------------------------------------------------------------------
 
-function predeclareTopLevelGlobals(exprs: readonly SExpr[], globals: GlobalRegistry): void {
-  for (const expr of exprs) {
-    if (
-      expr._tag === "List" &&
-      expr.items.length >= 3 &&
-      expr.items[0]?._tag === "Sym" &&
-      expr.items[0].name === "define"
-    ) {
-      const nameExpr = expr.items[1]!;
-      if (nameExpr._tag === "Sym") {
-        globals.resolve(nameExpr.name);
-      } else if (nameExpr._tag === "List" && nameExpr.items[0]?._tag === "Sym") {
-        globals.resolve(nameExpr.items[0].name);
+function predeclareGlobals(exprs: readonly SExpr[], globals: GlobalRegistry): void {
+  // Definitions create mutable global cells even inside closures or branches.
+  // The same expression/data boundary used by the index excludes quoted,
+  // template, pattern, and type positions before we look for defining forms.
+  const bindGlobals = (steps: readonly BindingStep[]): void => {
+    for (const step of steps) {
+      if (step.role === "scope") bindGlobals(step.steps);
+      else if (step.role === "bind" && step.global && step.expr._tag === "Sym") {
+        globals.resolve(step.expr.name);
       }
     }
+  };
+  for (const expr of expressionPositions(exprs)) {
+    if (expr._tag !== "List" || expr.items[0]?._tag !== "Sym" || expr.items[0].name !== "define") continue;
+    const description = describeBindingForm(expr);
+    if (description) bindGlobals(description);
   }
 }
 

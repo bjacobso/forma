@@ -154,7 +154,7 @@ function evaluateExpandedRuntimeExprs(
         }),
       catch: toKernelError,
     });
-    const globals = buildVMGlobals(compiled.globals, runtimeEnv);
+    const globals = buildVMGlobals(compiled.globals, runtimeEnv, builtins);
     const globalNames = Array.from({ length: compiled.globals.count }, (_, idx) =>
       compiled.globals.nameAt(idx),
     );

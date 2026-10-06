@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import fc from "fast-check";
 
-import { Editor, Syntax } from "../src/index.js";
+import { Editor, Engine, Syntax } from "../src/index.js";
 import { program } from "./support/programs.js";
 import { runs } from "./support/runs.js";
 
@@ -416,5 +416,63 @@ describe("edit script safety around comments and reader macros", () => {
     });
     const raised = ok(apply({ op: "raise", target: id("a") }));
     expect(raised.identity.nodes.map((node) => node.id)).not.toContain(id("f"));
+  });
+});
+
+describe("semantic edits use expanded binding analysis", () => {
+  test("rename refuses to lose a kernel global's initial value", () => {
+    const { id, apply } = setup("(count [1 2])\n(define (setup) (define count (fn [v] 99)))\n(setup)\n(count [])");
+    expect(apply({ op: "rename", target: id("count", 1), to: "custom-count" })).toMatchObject({
+      ok: false, errors: [{ code: "edit/capture" }],
+    });
+  });
+
+  test("rename edits every site of a global cell and preserves macro references", async () => {
+    await fc.assert(fc.asyncProperty(
+      fc.array(fc.integer({ min: -20, max: 20 }), { minLength: 1, maxLength: 3 }),
+      fc.integer({ min: -20, max: 20 }),
+      async (values, delta) => {
+        const source = `(define-macro get-x [] \`x)\n${values.map((value) => `(define x ${value})`).join("\n")}\n(+ (get-x) ${delta})`;
+        const { id, apply } = setup(source);
+        const after = ok(apply({ op: "rename", target: id("x", 1), to: "renamed-value" }));
+        expect(after.source.match(/\(define renamed-value /g)).toHaveLength(values.length);
+        const beforeResult = await Engine.evaluate({ source });
+        const afterResult = await Engine.evaluate({ source: after.source });
+        expect(beforeResult.diagnostics).toEqual([]);
+        expect(afterResult.diagnostics).toEqual([]);
+        expect(afterResult.printed).toBe(beforeResult.printed);
+      },
+    ), { numRuns: runs(150) });
+  });
+
+  test("extract discovers free locals inside macro expansions", async () => {
+    await fc.assert(fc.asyncProperty(
+      fc.integer({ min: -20, max: 20 }), fc.integer({ min: -20, max: 20 }),
+      async (value, delta) => {
+        const target = `(+ (get-x) ${delta})`;
+        const source = `(define-macro get-x [] \`x)\n(define (f) (let [x ${value}] ${target}))\n(f)`;
+        const { id, apply } = setup(source);
+        const after = ok(apply({ op: "extract", target: id(target), name: "extracted" }));
+        expect(after.source).toContain("(define (extracted x)");
+        const beforeResult = await Engine.evaluate({ source });
+        const afterResult = await Engine.evaluate({ source: after.source });
+        expect(beforeResult.diagnostics).toEqual([]);
+        expect(afterResult.diagnostics).toEqual([]);
+        expect(afterResult.printed).toBe(beforeResult.printed);
+      },
+    ), { numRuns: runs(150) });
+  });
+
+  test("extract refuses quoted, discarded, and shadowed macro arguments", () => {
+    for (const macro of ["(define-macro m [body] (list 'quote body))", "(define-macro m [body] 0)"]) {
+      const { id, apply } = setup(`${macro}\n(define (f) (m (+ 1 2)))`);
+      expect(apply({ op: "extract", target: id("(+ 1 2)"), name: "h" })).toMatchObject({
+        ok: false, errors: [{ code: "edit/not-an-expression" }],
+      });
+    }
+    const { id, apply } = setup("(define-macro m [body] `(let [h 1] ~body))\n(define (f) (m (+ 1 2)))");
+    expect(apply({ op: "extract", target: id("(+ 1 2)"), name: "h" })).toMatchObject({
+      ok: false, errors: [{ code: "edit/capture" }],
+    });
   });
 });

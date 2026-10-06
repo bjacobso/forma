@@ -273,3 +273,12 @@ describe("structural editor services on the TypeScript host", () => {
     await host.closeSession({ sessionId });
   });
 });
+
+
+it("findReferences projects every global definition site additively", async () => {
+  const host = new TsLanguageHost();
+  const result = await host.findReferences({ sourceId: "doc", source: "(define x 1)\n(define x 2)\nx", offset: 8 });
+  expect(result.definitionSites?.map((site) => site.span.startOffset)).toEqual([8, 21]);
+  expect(result.references).toHaveLength(1);
+  expect(result.definition?.span.startOffset).toBe(8);
+});

@@ -41,7 +41,7 @@
     {
       "id": "symbol-index",
       "status": "gap",
-      "reason": "symbolIndex and findReferences are implemented by the TypeScript host only; they use the TypeScript expander and descriptor parser."
+      "reason": "symbolIndex and findReferences are implemented by the TypeScript host only; they use the TypeScript expander and descriptor parser. Shared core binding descriptions, expanded reference metadata, executable expression positions, and the optional definitionSites result are TypeScript-only."
     },
     {
       "id": "expansion-provenance",

@@ -13,11 +13,12 @@ export async function getDefinition(
   params: DefinitionParams,
 ): Promise<Definition | null> {
   const offset = positionToOffset(document, params.position);
+  const indexed = await findIndexedDefinition(session, document, offset);
+  if (indexed) return indexed;
   const response = await session.editorDefinition(document, offset);
   const definition = editorValue(response)["definition"];
   if (!isRecord(definition) || !isSpan(definition["span"])) {
-    // Names introduced by macros and descriptor forms are found by the symbol index.
-    return await findIndexedDefinition(session, document, offset);
+    return null;
   }
 
   const location: Location = {

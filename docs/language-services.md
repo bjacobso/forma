@@ -417,6 +417,16 @@ fused atoms, and a set where a map was all still parse.
   author-written reference. Capture is checked over every reference in the
   expanded program, author-written and macro-introduced, keyed by provenance
   (7.3). Names the kernel provides stay reserved for new definitions.
+  Rename edits every author definition site of a global cell and compares
+  stable binding addresses of expanded references before and after the edit.
+  Extract accepts only author nodes reached in expression positions after
+  expansion; quoted or discarded macro arguments do not qualify. Free locals
+  used by generated code become parameters. A local introduced around the
+  form by a macro has no author parameter to pass, so extraction is refused.
+  The resulting call and moved references are checked for capture as well.
+  Renaming a global that shadows a kernel name is refused: its cell can read
+  the kernel's initial value before the first assignment executes, and a new
+  name would lose that value.
 
 **Guarantees.** A successful operation's result parses as its intended tree.
 A failed one names the rule it broke. Text outside the edited forms is
@@ -570,6 +580,37 @@ asks, and caches the index per set of document versions.
 **Patterns.** Where the evaluator and the typechecker read a pattern
 differently, the index follows the typechecker: the head of a list pattern is
 a constructor reference, and other symbols bind.
+
+**Enforcement boundary.** The shared description drives the index, the
+expression-position query used by extract, and VM global predeclaration. The
+evaluator and VM still resolve local slots and upvalues independently. Differential properties over fn, sequential let,
+destructuring, match, redefinitions, and macro expansions detect drift across
+that boundary. Define signatures with destructured parameters reuse the same
+fn expansion, rather than depending on the VM's later define shortcut.
+
+**Semantic edits.** The index also exposes executable author expression ids and
+expanded references. Each reference has a stable provenance address and a
+binding address, including the binding's scope and author/expansion call id.
+This lets edit consumers check references with no author token, and distinguish
+an internal macro binding from a local captured outside the extracted form.
+Quoted or discarded macro arguments are absent from executable positions.
+Find-references adds optional `definitionSites`; its existing `definition`
+continues to identify the primary site. Rename must update all sites of a cell.
+
+**Runtime cells.** The VM predeclares globals at every executable definition
+site, including nested closures and branches. A reserved cell for a builtin
+starts with that builtin's value until a definition executes, so compiling an
+earlier reference never fixes it to the old builtin. Local bindings still take
+precedence. Quoted, template, pattern, and type data cannot reserve a cell.
+List patterns retain the typechecker's constructor-head interpretation
+described above, although the untyped runtime treats the head as a binder.
+
+**Editor work is bounded.** Expansion for indexing has a total node-work budget
+per author form in addition to the evaluator's per-macro step limit. An
+exhausted budget falls back to indexing the form as written; fallback nodes
+are excluded from executable expression ids. The language server caches the
+index by the ordered source URIs, versions, and text, so disk changes invalidate
+it even when a closed prelude has no document version.
 
 ### 7.5 Reconciliation is tree matching with a stated objective
 

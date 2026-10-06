@@ -2,7 +2,7 @@ import type { SExpr } from "../reader/index.js";
 import type { KernelError } from "../diagnostic/errors.js";
 import { KernelTypeError } from "../diagnostic/errors.js";
 import { Env } from "../Env.js";
-import type { KValue } from "./types.js";
+import { KBuiltin, type BuiltinFn, type KValue } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // VM bridge — evaluator fallback detection and globals bridging
@@ -47,12 +47,16 @@ export function hasEvaluatorOnlyRuntimeNode(expr: SExpr, inQuasiquote: boolean =
 export function buildVMGlobals(
   globals: { count: number; nameAt: (idx: number) => string | undefined },
   env: Env,
+  builtins: Readonly<Record<string, BuiltinFn>> = {},
 ): KValue[] {
   const values = new Array<KValue>(globals.count);
   for (let idx = 0; idx < globals.count; idx++) {
     const name = globals.nameAt(idx);
     if (name !== undefined && env.has(name)) {
       values[idx] = env.lookup(name) ?? null;
+    } else if (name !== undefined && Object.hasOwn(builtins, name)) {
+      // A future definition reserves the cell but has not replaced its builtin yet.
+      values[idx] = KBuiltin(name);
     }
   }
   return values;

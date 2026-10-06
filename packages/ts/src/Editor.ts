@@ -22,6 +22,7 @@ export {
 export {
   findReferences,
   indexSymbols,
+  type ExpandedReference,
   type DefinitionKind,
   type ReferenceResolution,
   type SymbolDefinition,
@@ -62,3 +63,5 @@ export {
   type SlotInsertion,
   type SlotOccurrence,
 } from "./editor/slots.js";
+
+export { CORE_FORMS, describeBindingForm, expressionPositions, type BindingStep } from "./language/binding-forms.js";

@@ -721,16 +721,23 @@ function rename(state: DocumentState, targetId: string, to: string, context: OpC
   }
   if (found.definition.name === to) return state;
   if (kernelNames().has(to)) throw new EditFailure("edit/name-taken", `${to} is a builtin`);
+  if (found.definition.scope === "global" && kernelNames().has(found.definition.name)) {
+    throw new EditFailure("edit/capture", `Renaming ${found.definition.name} would lose the global cell's initial kernel value`);
+  }
   if (
     found.definition.scope === "global" &&
     before.definitions.some((definition) => definition.scope === "global" && definition.name === to)
   ) {
     throw new EditFailure("edit/name-taken", `${to} is already defined`);
   }
-  const occurrences = [found.definition, ...found.references].filter(
+  const sites = found.definitionSites ?? [found.definition];
+  const allOccurrences = [...new Map([...sites, ...found.references].map((occurrence) => [
+    `${occurrence.sourceId}#${occurrence.nodeId}`, occurrence,
+  ])).values()];
+  const occurrences = allOccurrences.filter(
     (occurrence) => occurrence.sourceId === context.sourceId,
   );
-  const external = [found.definition, ...found.references].filter(
+  const external = allOccurrences.filter(
     (occurrence) => occurrence.sourceId !== context.sourceId,
   );
   if (external.length > 0) {
@@ -740,7 +747,13 @@ function rename(state: DocumentState, targetId: string, to: string, context: OpC
     );
   }
   const tree = new Tree(state.source, state.identity);
-  for (const occurrence of occurrences) tree.node(occurrence.nodeId).text = to;
+  for (const occurrence of occurrences) {
+    const node = tree.node(occurrence.nodeId);
+    if (node.kind !== "Symbol") {
+      throw new EditFailure("edit/not-a-binding", "A macro-generated binding cannot be renamed through its call");
+    }
+    node.text = to;
+  }
   const next = commit(
     state,
     tree,
@@ -748,6 +761,16 @@ function rename(state: DocumentState, targetId: string, to: string, context: OpC
   );
   // Renaming must not change what any other name refers to.
   const after = symbolIndexFor(next, context);
+  // Unhygienic macros may introduce names with no author token to rename.
+  // Compare their stable provenance addresses as well as author references.
+  const expandedAfter = new Map((after.expandedReferences ?? []).map((reference) => [reference.key, reference.binding]));
+  const expandedBefore = before.expandedReferences ?? [];
+  if (
+    expandedBefore.length !== expandedAfter.size ||
+    expandedBefore.some((reference) => expandedAfter.get(reference.key) !== reference.binding)
+  ) {
+    throw new EditFailure("edit/capture", `Renaming to ${to} would change a reference in the expanded program`);
+  }
   const renamed = new Set(occurrences.map((occurrence) => occurrence.nodeId));
   const definitionOf = (index: SymbolIndex) =>
     new Map(
@@ -785,10 +808,13 @@ function extract(state: DocumentState, targetId: string, name: string, context: 
   }
   if (target.kind === "Comment") throw new EditFailure("edit/comment", "Cannot extract a comment");
   const tokens = topElements(name);
-  if (tokens.length !== 1 || tokens[0]!.kind !== "Symbol" || name.startsWith(":")) {
+  if (tokens.length !== 1 || tokens[0]!.kind !== "Symbol" || name.trim() !== name || name.startsWith(":")) {
     throw new EditFailure("edit/invalid-name", `"${name}" is not a symbol name`);
   }
   const symbols = symbolIndexFor(state, context);
+  if (!symbols.expressionNodeIds?.[context.sourceId]?.includes(targetId)) {
+    throw new EditFailure("edit/not-an-expression", "Only an executable expression can be extracted");
+  }
   if (
     kernelNames().has(name) ||
     symbols.definitions.some((definition) => definition.scope === "global" && definition.name === name)
@@ -808,11 +834,28 @@ function extract(state: DocumentState, targetId: string, name: string, context: 
   }
   const definitions = new Map(symbols.definitions.map((definition) => [definition.key, definition]));
   const parameters: string[] = [];
-  for (const reference of symbols.references) {
-    if (reference.sourceId !== context.sourceId || !inside.has(reference.nodeId)) continue;
+  const freeBindings = new Map<string, string>();
+  const references = (symbols.expandedReferences ?? []).filter((reference) =>
+    reference.sourceId === context.sourceId &&
+    (reference.nodeId !== undefined && inside.has(reference.nodeId) ||
+      reference.callNodeId !== undefined && inside.has(reference.callNodeId)),
+  );
+  for (const reference of references) {
+    if (reference.bindingScope !== "local" ||
+      reference.bindingNodeId !== undefined && inside.has(reference.bindingNodeId) ||
+      reference.bindingCallNodeId !== undefined && inside.has(reference.bindingCallNodeId)) continue;
     const definition = reference.definition ? definitions.get(reference.definition) : undefined;
-    if (!definition || definition.scope !== "local" || inside.has(definition.nodeId)) continue;
-    if (!parameters.includes(definition.name)) parameters.push(definition.name);
+    // A binding created around the form by a macro has no author parameter
+    // that can be passed at this position. Moving it would lose that scope.
+    if (!definition || definition.sourceId !== context.sourceId) {
+      throw new EditFailure("edit/capture", `Extracting would lose the macro binding of ${reference.name}`);
+    }
+    const other = freeBindings.get(reference.name);
+    if (other !== undefined && other !== reference.binding) {
+      throw new EditFailure("edit/capture", `Extracting would merge distinct bindings of ${reference.name}`);
+    }
+    freeBindings.set(reference.name, reference.binding);
+    if (!parameters.includes(reference.name)) parameters.push(reference.name);
   }
   // The call site must not shadow the new name.
   const shadowing = symbols.definitions.find(
@@ -836,14 +879,35 @@ function extract(state: DocumentState, targetId: string, name: string, context: 
   const tree = new Tree(state.source, state.identity);
   const extracted = tree.node(target.id);
   const parent = tree.parentOf(target.id);
-  tree.splice(parent, tree.childrenOf(parent).indexOf(extracted), 1, tree.forms(call));
+  const callNodes = tree.forms(call);
+  tree.splice(parent, tree.childrenOf(parent).indexOf(extracted), 1, callNodes);
   const [definition] = tree.forms(`(define (${signature}))`);
   definition!.children.push(extracted);
   tree.splice(null, tree.roots.indexOf(tree.node(top.id)), 0, [definition!]);
-  return commit(state, tree, [
+  const next = commit(state, tree, [
     { start: top.span.start, end: top.span.start, text: `${definitionText}${separator}${spaces(topColumn)}` },
     { ...target.span, text: call },
   ]);
+  const after = symbolIndexFor(next, context);
+  const created = after.definitions.find((site) => site.name === name && site.formNodeId === definition!.id);
+  const callHead = callNodes[0]!.children[0]!.id;
+  if (!created || !(after.expandedReferences ?? []).some((reference) =>
+    reference.nodeId === callHead && reference.binding === created.key,
+  )) {
+    throw new EditFailure("edit/capture", `The extracted call to ${name} would be captured or discarded`);
+  }
+  const afterRefs = new Map((after.expandedReferences ?? []).map((reference) => [reference.key, reference]));
+  for (const reference of references) {
+    const now = afterRefs.get(reference.key);
+    const parameter = freeBindings.has(reference.name)
+      ? after.definitions.find((site) => site.name === reference.name && site.kind === "parameter" && site.formNodeId === definition!.id)
+      : undefined;
+    const binding = parameter && freeBindings.get(reference.name) === reference.binding ? parameter.key : reference.binding;
+    if (!now || now.binding !== binding) {
+      throw new EditFailure("edit/capture", `Extracting would change the binding of ${reference.name}`);
+    }
+  }
+  return next;
 }
 
 // =============================================================================

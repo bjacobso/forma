@@ -644,11 +644,11 @@ function executeVM(
               stack.push(null);
             }
             frame = { chunk: vmData.chunk, upvalues: vmData.upvalues, ip: 0, stackBase: newBase };
-          } else if (isKFn(callee) && callee.apply) {
+          } else if (isKBuiltin(callee) || (isKFn(callee) && callee.apply)) {
             const args: KValue[] = [];
             for (let i = 0; i < argc; i++) args.push(stack[calleePos + 1 + i]!);
             stack.length = calleePos;
-            const result = yield* applyKFnValue(callee, args, runtime).pipe(
+            const result = yield* applyCallableValue(callee, args, runtime).pipe(
               Effect.mapError(withStackTrace),
             );
             stack.push(result);
@@ -705,12 +705,12 @@ function executeVM(
               ip: 0,
               stackBase: frame.stackBase,
             };
-          } else if (isKFn(callee) && callee.apply) {
+          } else if (isKBuiltin(callee) || (isKFn(callee) && callee.apply)) {
             // Non-VM tail call: fall back to regular call
             const args: KValue[] = [];
             for (let i = 0; i < argc; i++) args.push(stack[calleePos + 1 + i]!);
             stack.length = calleePos;
-            const result = yield* applyKFnValue(callee, args, runtime).pipe(
+            const result = yield* applyCallableValue(callee, args, runtime).pipe(
               Effect.mapError(withStackTrace),
             );
             stack.push(result);

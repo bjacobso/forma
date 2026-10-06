@@ -7,8 +7,10 @@
  * their declaration identifiers. See docs/language-services.md.
  */
 
+import { CORE_FORMS, describeBindingForm, templateExpressions, type BindingStep } from "../language/binding-forms.js";
 import { defaultBuiltins } from "../builtins/index.js";
 import type { FormDescriptor } from "../descriptor/FormDescriptor.js";
+import { originOf } from "../expander/provenance.js";
 import { sourceOriginsOf } from "../evaluator/source-trace.js";
 import { expandProgramSync, getPreludeEnvSync } from "../expander/expand.js";
 import type { Env } from "../Env.js";
@@ -76,9 +78,30 @@ export interface SymbolReference {
   readonly definition?: string | undefined;
 }
 
+/** References in executable expanded code, including names a macro introduced. */
+export interface ExpandedReference {
+  /** Stable provenance address: author id, or expansion call id plus a tree path. */
+  readonly key: string;
+  readonly name: string;
+  readonly sourceId: string;
+  readonly resolution: ReferenceResolution;
+  /** Stable binding address; globals share the first definition site's key. */
+  readonly binding: string;
+  readonly definition?: string | undefined;
+  readonly nodeId?: string | undefined;
+  readonly callNodeId?: string | undefined;
+  readonly bindingScope?: "global" | "local" | undefined;
+  readonly bindingNodeId?: string | undefined;
+  readonly bindingCallNodeId?: string | undefined;
+}
+
 export interface SymbolIndex {
   readonly definitions: readonly SymbolDefinition[];
   readonly references: readonly SymbolReference[];
+  /** Author node ids reached in executable expression positions after expansion. */
+  readonly expressionNodeIds?: Readonly<Record<string, readonly string[]>> | undefined;
+  /** Executable references used to check macro capture in semantic edits. */
+  readonly expandedReferences?: readonly ExpandedReference[] | undefined;
   /** The identity used for each document. */
   readonly identities: Readonly<Record<string, SyntaxIdentity>>;
 }
@@ -91,6 +114,8 @@ export interface SymbolTarget {
 
 export interface SymbolOccurrences {
   readonly definition?: SymbolDefinition | undefined;
+  /** All definition sites of the same global cell (one site for a local). */
+  readonly definitionSites?: readonly SymbolDefinition[] | undefined;
   readonly references: readonly SymbolReference[];
 }
 
@@ -108,33 +133,7 @@ const FALLBACK_DEFINING_HEADS = new Set([
   "defclass",
 ]);
 
-const SPECIAL_FORMS = new Set([
-  "fn",
-  "let",
-  "if",
-  "do",
-  "match",
-  "define",
-  "quote",
-  "quasiquote",
-  "unquote",
-  "unquote-splicing",
-  "define-macro",
-  "define-type",
-  "define-typeclass",
-  "instance",
-  "define-operation",
-  "define-error",
-  "define-schema",
-  "define-service",
-  "do!",
-  "<-",
-  "fail",
-  "catch",
-  "succeed",
-  ":",
-  "nil",
-]);
+const SPECIAL_FORMS = CORE_FORMS;
 
 interface AuthorNode {
   readonly document: IndexedDocument;
@@ -152,10 +151,14 @@ interface IndexedDocument {
 
 class Scope {
   readonly #bindings = new Map<string, SymbolDefinition | null>();
+  readonly #bindingKeys = new Map<string, string>();
   constructor(readonly parent: Scope | null) {}
-  bind(name: string, definition: SymbolDefinition | null): void {
+  bind(name: string, definition: SymbolDefinition | null, key?: string): void {
     this.#bindings.set(name, definition);
+    if (key ?? definition?.key) this.#bindingKeys.set(name, key ?? definition!.key);
   }
+  bindingKey(name: string): string | undefined { return this.#bindings.has(name) ? this.#bindingKeys.get(name) : this.parent?.bindingKey(name); }
+  hasOwn(name: string): boolean { return this.#bindings.has(name); }
   lookup(name: string): SymbolDefinition | null | undefined {
     if (this.#bindings.has(name)) return this.#bindings.get(name);
     return this.parent?.lookup(name);
@@ -206,7 +209,8 @@ export function indexSymbols(
   const builtinNames = kernelNames();
   const orders = new Map(indexed.map((document) => [document.sourceId, document.order]));
   const walker = new SymbolWalker(authors, descriptors, builtinNames, orders);
-  for (const { document, expr } of expanded.forms) walker.collectGlobals(expr, document);
+  walker.address(expanded.forms);
+  for (const { document, expr } of expanded.forms) walker.collectGlobalsDeep(expr, document);
   for (const { document, expr } of expanded.forms) walker.walk(expr, walker.root, document, null);
 
   const sorted = <T extends { sourceId: string; span: SyntaxSpan }>(items: Iterable<T>) =>
@@ -216,6 +220,8 @@ export function indexSymbols(
         left.span.start - right.span.start,
     );
   return {
+    expressionNodeIds: Object.fromEntries(indexed.map((document) => [document.sourceId, [...(walker.expressionNodeIds.get(document.sourceId) ?? [])]])),
+    expandedReferences: [...walker.expandedReferences.values()],
     definitions: sorted(walker.definitions.values()),
     references: sorted(walker.references.values()),
     identities: Object.fromEntries(indexed.map((document) => [document.sourceId, document.identity])),
@@ -247,9 +253,14 @@ export function findReferences(index: SymbolIndex, target: SymbolTarget): Symbol
       ),
     };
   }
+  const definitionSites = definition.scope === "global"
+    ? index.definitions.filter((site) => site.scope === "global" && site.name === definition.name)
+    : [definition];
+  const keys = new Set(definitionSites.map((site) => site.key));
   return {
     definition,
-    references: index.references.filter((reference) => reference.definition === definition.key),
+    definitionSites,
+    references: index.references.filter((reference) => reference.definition !== undefined && keys.has(reference.definition)),
   };
 }
 
@@ -289,6 +300,7 @@ function expandDocuments(documents: readonly IndexedDocument[]): {
           env,
           includePrelude: false,
           keepMacroDefs: true,
+          maxExpansionNodes: 20_000,
         });
         env = result.env;
         for (const expanded of result.exprs) forms.push({ document, expr: expanded });
@@ -310,6 +322,13 @@ class SymbolWalker {
   readonly definitions = new Map<string, SymbolDefinition>();
   readonly references = new Map<string, SymbolReference>();
   readonly #globals = new Map<string, SymbolDefinition[]>();
+  readonly expandedReferences = new Map<string, ExpandedReference>();
+  readonly #addresses = new Map<SExpr, { key: string; sourceId: string; callNodeId?: string }>();
+  readonly #available = new Map<string, number>();
+  readonly #bindingAddresses = new Map<string, { nodeId?: string; callNodeId?: string }>();
+  #template = false;
+  #macroDefinition = false;
+  readonly expressionNodeIds = new Map<string, Set<string>>();
 
   constructor(
     private readonly authors: ReadonlyMap<SExpr, AuthorNode>,
@@ -331,6 +350,21 @@ class SymbolWalker {
     return undefined;
   }
 
+  /** Address expanded nodes by the author call and a path within that expansion. */
+  address(forms: readonly ExpandedForm[]): void {
+    const visit = (expr: SExpr, document: IndexedDocument, path: string, call?: string): void => {
+      const origin = originOf(expr);
+      const site = origin ? this.authors.get(origin.site) : undefined;
+      if (origin?.role === "expansion" && site && origin.authors.length > 0) { call = site.node.id; path = ""; }
+      const author = this.author(expr);
+      const key = call ? `${document.sourceId}#${call}@${path}` : author ? `${document.sourceId}#${author.node.id}` : `${document.sourceId}@${path}`;
+      this.#addresses.set(expr, { key, sourceId: document.sourceId, ...(call ? { callNodeId: call } : {}) });
+      this.#bindingAddresses.set(key, { ...(author ? { nodeId: author.node.id } : {}), ...(call ? { callNodeId: call } : {}) });
+      children(expr).forEach((child, i) => visit(child, document, `${path}.${i}`, call));
+    };
+    forms.forEach(({ document, expr }, i) => visit(expr, document, String(i)));
+  }
+
   // --- definitions ----------------------------------------------------------
 
   define(
@@ -341,12 +375,14 @@ class SymbolWalker {
     scope: { readonly scope: Scope; readonly node: AuthorNode | undefined } | undefined,
   ): SymbolDefinition | null {
     if (!expr || expr._tag !== "Sym") return null;
-    const author = this.author(expr);
+    const origin = originOf(expr);
+    const direct = this.author(expr);
+    const author = direct ?? (!scope && origin ? this.authors.get(origin.site) : undefined);
     if (!author) {
-      scope?.scope.bind(expr.name, null);
+      scope?.scope.bind(expr.name, null, this.#addresses.get(expr)?.key);
       return null;
     }
-    const key = `${author.document.sourceId}#${author.node.id}`;
+    const key = `${author.document.sourceId}#${author.node.id}${direct ? "" : `:${expr.name}`}`;
     const existing = this.definitions.get(key);
     if (existing) {
       scope?.scope.bind(expr.name, existing);
@@ -385,7 +421,10 @@ class SymbolWalker {
   collectGlobals(expr: SExpr, document: IndexedDocument): void {
     if (expr._tag !== "List") return;
     const head = headName(expr);
-    if (!head) return;
+    if (!head) {
+      for (const item of expr.items) this.collectGlobalsDeep(item, document);
+      return;
+    }
     const items = expr.items;
     const { node, name } = this.formOf(expr, head);
     const defineHead = (target: SExpr | undefined, kind: DefinitionKind) =>
@@ -396,55 +435,23 @@ class SymbolWalker {
         name,
         undefined,
       );
+    const description = describeBindingForm(expr);
+    if (description) {
+      const collect = (steps: readonly BindingStep[]): void => {
+        for (const step of steps) {
+          if (step.role === "scope") collect(step.steps);
+          else if (step.role === "bind" && step.global) {
+            const definition = this.define(step.expr, step.kind, node, name, undefined);
+            if (definition && head === "define") this.#available.set(definition.key, expr.loc.end);
+          }
+          else if (step.role === "expression" && head !== "define-macro") this.collectGlobalsDeep(step.expr, document);
+          else if (step.role === "template") for (const item of templateExpressions(step.expr)) this.collectGlobalsDeep(item, document);
+        }
+      };
+      collect(description);
+      return;
+    }
     switch (head) {
-      case "do":
-        for (const item of items.slice(1)) this.collectGlobals(item, document);
-        return;
-      case "define":
-        defineHead(items[1], isFnForm(items[2]) ? "function" : "value");
-        // `define` in a body still defines a global.
-        for (const item of items.slice(2)) this.collectNestedGlobals(item, document);
-        return;
-      case "define-macro":
-        this.define(items[1], "macro", node, name, undefined);
-        return;
-      case "define-operation":
-        this.define(items[1], "function", node, name, undefined);
-        return;
-      case "define-type":
-        this.define(
-          items[1]?._tag === "List" ? items[1].items[0] : items[1],
-          "type",
-          node,
-          name,
-          undefined,
-        );
-        for (const constructor of items.slice(2)) {
-          this.define(
-            constructor._tag === "List" ? constructor.items[0] : constructor,
-            "constructor",
-            node,
-            name,
-            undefined,
-          );
-        }
-        return;
-      case "define-typeclass":
-        this.define(
-          items[1]?._tag === "List" ? items[1].items[0] : items[1],
-          "type",
-          node,
-          name,
-          undefined,
-        );
-        for (const method of items.slice(2)) {
-          if (method._tag === "List") this.define(method.items[0], "method", node, name, undefined);
-        }
-        return;
-      case "define-error":
-      case "define-schema":
-        this.define(items[1], "type", node, name, undefined);
-        return;
       case "define-service": {
         const service = symName(items[1]);
         this.define(items[1], "type", node, name, undefined);
@@ -477,14 +484,12 @@ class SymbolWalker {
   }
 
   collectNestedGlobals(expr: SExpr, document: IndexedDocument): void {
-    if (expr._tag !== "List") return;
-    const head = headName(expr);
-    if (head === "quote" || head === "quasiquote" || head === "define-macro") return;
-    if (head === "define") {
-      this.collectGlobals(expr, document);
-      return;
-    }
-    for (const item of expr.items) this.collectNestedGlobals(item, document);
+    this.collectGlobalsDeep(expr, document);
+  }
+
+  collectGlobalsDeep(expr: SExpr, document: IndexedDocument): void {
+    if (expr._tag === "List") this.collectGlobals(expr, document);
+    else for (const child of children(expr)) this.collectGlobalsDeep(child, document);
   }
 
   defineQualified(expr: SExpr, qualified: string, form: AuthorNode | undefined, formName: string) {
@@ -515,27 +520,24 @@ class SymbolWalker {
     const name = expr.name;
     if (name.startsWith(":") || name === "&" || name === "_" || name === "nil") return;
     const author = this.author(expr);
-    if (!author) return;
+    const origin = originOf(expr);
+    const site = author ?? (origin ? this.authors.get(origin.site) : undefined);
+    const local = globalsOnly ? undefined : scope.lookup(name);
+    const definition = local !== undefined ? local ?? undefined : site ? this.global(name, site) : undefined;
+    const resolution: ReferenceResolution = local !== undefined || definition ? "definition" : this.builtins.has(name) ? "builtin" : this.descriptors.get(name) ? "form" : "unresolved";
+    const address = this.#addresses.get(expr);
+    if (address && !this.#template && !this.#macroDefinition) {
+      const binding = local !== undefined ? scope.bindingKey(name) ?? `${address.key}:hidden` : definition ? this.#globals.get(name)![0]!.key : `${resolution}:${name}`;
+      this.expandedReferences.set(address.key, {
+        ...address, name, resolution, binding,
+        ...(local !== undefined ? { bindingScope: "local" as const, bindingNodeId: local?.nodeId ?? this.#bindingAddresses.get(binding)?.nodeId, bindingCallNodeId: this.#bindingAddresses.get(binding)?.callNodeId } : definition ? { bindingScope: "global" as const, bindingNodeId: definition.nodeId } : {}),
+        ...(definition ? { definition: definition.key } : {}),
+        ...(author ? { nodeId: author.node.id } : {}),
+      });
+    }
+    if (!author || local === null || (globalsOnly && !definition)) return;
     const key = `${author.document.sourceId}#${author.node.id}`;
     if (this.definitions.has(key) || this.references.has(key)) return;
-    const local = globalsOnly ? undefined : scope.lookup(name);
-    let resolution: ReferenceResolution;
-    let definition: SymbolDefinition | undefined;
-    if (local !== undefined) {
-      if (local === null) return;
-      resolution = "definition";
-      definition = local;
-    } else {
-      definition = this.global(name, author);
-      resolution = definition
-        ? "definition"
-        : this.builtins.has(name)
-          ? "builtin"
-          : this.descriptors.get(name)
-            ? "form"
-            : "unresolved";
-      if (globalsOnly && !definition) return;
-    }
     this.references.set(key, {
       name,
       sourceId: author.document.sourceId,
@@ -554,7 +556,7 @@ class SymbolWalker {
       const order = this.orderOf(definition.sourceId);
       return (
         order < at.document.order ||
-        (order === at.document.order && definition.span.start <= at.node.span.start)
+        (order === at.document.order && (this.#available.get(definition.key) ?? definition.span.start) <= at.node.span.start)
       );
     };
     return candidates.filter(before).at(-1) ?? candidates[0];
@@ -567,6 +569,20 @@ class SymbolWalker {
   // --- walking --------------------------------------------------------------
 
   walk(expr: SExpr, scope: Scope, document: IndexedDocument, form: AuthorNode | null): void {
+    const origin = originOf(expr);
+    if (origin && !this.#macroDefinition && !this.#template && headName(expr) !== "define-macro") {
+      for (const source of sourceOriginsOf(expr)) {
+        const author = this.authors.get(source);
+        if (!author) continue;
+        const ids = this.expressionNodeIds.get(author.document.sourceId) ?? new Set<string>();
+        ids.add(author.node.id);
+        this.expressionNodeIds.set(author.document.sourceId, ids);
+      }
+      if (origin.role === "expansion") {
+        const call = this.authors.get(origin.site)?.expr;
+        if (call?._tag === "List" && call.items[0]) this.reference(call.items[0], this.root, true);
+      }
+    }
     switch (expr._tag) {
       case "Sym":
         this.reference(expr, scope);
@@ -603,101 +619,27 @@ class SymbolWalker {
     const head = headName(expr);
     const formName = (fallback: string) =>
       (form?.expr._tag === "List" ? symName(form.expr.items[0]) : undefined) ?? fallback;
-    const local = (kind: DefinitionKind) => {
-      const inner = new Scope(scope);
-      return {
-        inner,
-        bind: (pattern: SExpr | undefined) =>
-          this.bindPattern(pattern, kind, inner, form ?? undefined, formName(head ?? "fn")),
-      };
-    };
-    switch (head) {
-      case "quote":
-        return;
-      case "quasiquote":
-        this.walkTemplate(items[1], scope, document, form);
-        return;
-      case "define": {
-        const target = items[1];
-        if (target?._tag === "List") {
-          const { inner, bind } = local("parameter");
-          for (const param of target.items.slice(1)) bind(param);
-          this.walkAll(items.slice(2), inner, document, form);
-          return;
-        }
-        this.walkAll(items.slice(2), scope, document, form);
-        return;
+    const description = describeBindingForm(expr);
+    if (description) {
+      const previous = this.#macroDefinition;
+      this.#macroDefinition ||= head === "define-macro";
+      this.walkSteps(description, scope, document, form, formName(head ?? "fn"), head === "define-macro");
+      this.#macroDefinition = previous;
+      return;
+    }
+    if (head === "define-service") {
+      this.walkType(items.slice(2), scope);
+      return;
+    }
+    if (head === "instance") {
+      if (items[1]) this.walkType([items[1]], scope);
+      for (const member of items.slice(2)) {
+        if (headName(member) === "define" && member._tag === "List") {
+          if (member.items[1]) this.reference(member.items[1], scope);
+          this.walkAll(member.items.slice(2), scope, document, form);
+        } else this.walk(member, scope, document, form);
       }
-      case "define-macro":
-      case "define-operation":
-      case "fn": {
-        this.walkFunction(items, head === "fn", scope, document, form, local);
-        return;
-      }
-      case "let":
-      case "do!": {
-        const bindings = items[1];
-        const { inner, bind } = local("local");
-        if (bindings?._tag === "Vector") {
-          for (let index = 0; index < bindings.items.length; index += 2) {
-            const value = bindings.items[index + 1];
-            if (value) this.walk(value, inner, document, form);
-            bind(bindings.items[index]);
-          }
-        }
-        this.walkAll(items.slice(2), inner, document, form);
-        return;
-      }
-      case "match": {
-        if (items[1]) this.walk(items[1], scope, document, form);
-        for (let index = 2; index < items.length; index += 2) {
-          const { inner } = local("local");
-          this.bindMatchPattern(items[index], inner, form ?? undefined, formName("match"));
-          const body = items[index + 1];
-          if (body) this.walk(body, inner, document, form);
-        }
-        return;
-      }
-      case "catch": {
-        if (items[1]) this.walk(items[1], scope, document, form);
-        for (let index = 2; index < items.length; index += 2) {
-          const { inner } = local("local");
-          this.bindMatchPattern(items[index], inner, form ?? undefined, formName("catch"));
-          const body = items[index + 1];
-          if (body) this.walk(body, inner, document, form);
-        }
-        return;
-      }
-      case ":":
-        if (items[1]) this.reference(items[1], scope);
-        this.walkType(items.slice(2), scope);
-        return;
-      case "define-type":
-        for (const constructor of items.slice(2)) {
-          if (constructor._tag === "List") this.walkType(constructor.items.slice(1), scope);
-        }
-        return;
-      case "define-typeclass":
-        for (const method of items.slice(2)) {
-          if (method._tag === "List") this.walkType(method.items.slice(1), scope);
-        }
-        return;
-      case "define-error":
-      case "define-schema":
-      case "define-service":
-        this.walkType(items.slice(2), scope);
-        return;
-      case "instance":
-        if (items[1]) this.walkType([items[1]], scope);
-        for (const member of items.slice(2)) {
-          if (headName(member) === "define" && member._tag === "List") {
-            if (member.items[1]) this.reference(member.items[1], scope);
-            this.walkAll(member.items.slice(2), scope, document, form);
-          } else {
-            this.walk(member, scope, document, form);
-          }
-        }
-        return;
+      return;
     }
     const descriptor = head ? this.descriptors.get(head) : undefined;
     if (descriptor) {
@@ -724,47 +666,69 @@ class SymbolWalker {
     this.walkAll(items, scope, document, form);
   }
 
-  /** `(fn [params] body…)`, `(fn name [params] body…)`, or `(define-x name [params] body…)`. */
-  walkFunction(
-    items: readonly SExpr[],
-    anonymous: boolean,
-    _scope: Scope,
-    document: IndexedDocument,
-    form: AuthorNode | null,
-    local: (kind: DefinitionKind) => { inner: Scope; bind: (pattern: SExpr | undefined) => void },
-  ): void {
-    const named = !anonymous || (items[1]?._tag === "Sym" && items[2]?._tag === "Vector");
-    const params = named ? items[2] : items[1];
-    const { inner, bind } = local("parameter");
-    if (anonymous && named) bind(items[1]);
-    if (params?._tag === "Vector") for (const param of params.items) bind(param);
-    this.walkAll(items.slice(named ? 3 : 2), inner, document, form);
+  walkSteps(steps: readonly BindingStep[], scope: Scope, document: IndexedDocument, form: AuthorNode | null, formName: string, macro = false): void {
+    for (const step of steps) {
+      if (step.role === "scope") {
+        const inner = new Scope(scope);
+        for (const name of step.typeVariables ?? []) inner.bind(name, null);
+        this.walkSteps(step.steps, inner, document, form, formName, macro);
+      } else if (step.role === "bind") {
+        if (step.global) continue;
+        if (step.pattern) this.bindMatchPattern(step.expr, scope, form ?? undefined, formName);
+        else this.bindPattern(step.expr, step.kind, scope, form ?? undefined, formName);
+      } else if (step.role === "expression") {
+        if (macro && headName(step.expr) === "quasiquote" && step.expr._tag === "List") {
+          const previous = this.#template;
+          this.#template = true;
+          this.walkMacroTemplate(step.expr.items[1], scope, document, form);
+          this.#template = previous;
+        } else this.walk(step.expr, scope, document, form);
+      } else if (step.role === "template") this.walkTemplate(step.expr, scope, document, form);
+      else if (step.role === "type") this.walkType([step.expr], scope);
+    }
   }
 
-  /** Symbols in quasiquoted templates refer to globals at the expansion site. */
-  walkTemplate(
-    expr: SExpr | undefined,
-    scope: Scope,
-    document: IndexedDocument,
-    form: AuthorNode | null,
-  ): void {
+  /** Macro templates use core scopes; their binders are data, not author definitions. */
+  walkMacroTemplate(expr: SExpr | undefined, scope: Scope, document: IndexedDocument, form: AuthorNode | null): void {
     if (!expr) return;
     const head = headName(expr);
     if ((head === "unquote" || head === "unquote-splicing") && expr._tag === "List") {
       if (expr.items[1]) this.walk(expr.items[1], scope, document, form);
       return;
     }
-    if (expr._tag === "Sym") {
-      this.reference(expr, scope, true);
-      return;
-    }
-    for (const child of children(expr)) this.walkTemplate(child, scope, document, form);
+    const description = describeBindingForm(expr);
+    if (description) {
+      const visit = (steps: readonly BindingStep[], scope: Scope): void => {
+        for (const step of steps) {
+          if (step.role === "scope") visit(step.steps, new Scope(scope));
+          else if (step.role === "bind") {
+            const names = (expr: SExpr): void => {
+              if (expr._tag === "Sym") scope.bind(expr.name, null);
+              else children(expr).forEach(names);
+            };
+            names(step.expr);
+          } else if (step.role === "expression") this.walkMacroTemplate(step.expr, scope, document, form);
+        }
+      };
+      visit(description, scope);
+    } else if (expr._tag === "Sym") this.reference(expr, scope);
+    else for (const child of children(expr)) this.walkMacroTemplate(child, scope, document, form);
+  }
+
+  /** Runtime template symbols are data; only active unquotes execute. */
+  walkTemplate(
+    expr: SExpr | undefined,
+    scope: Scope,
+    document: IndexedDocument,
+    form: AuthorNode | null,
+  ): void {
+    if (expr) for (const item of templateExpressions(expr)) this.walk(item, scope, document, form);
   }
 
   /** Type expressions refer only to global names; everything else in them is structure. */
   walkType(items: readonly SExpr[], scope: Scope): void {
     for (const item of items) {
-      if (item._tag === "Sym") this.reference(item, scope, true);
+      if (item._tag === "Sym" && scope.lookup(item.name) !== null) this.reference(item, scope, true);
       else for (const child of children(item)) this.walkType([child], scope);
     }
   }
@@ -779,7 +743,7 @@ class SymbolWalker {
     if (!pattern) return;
     switch (pattern._tag) {
       case "Sym":
-        if (pattern.name === "&" || pattern.name === "_") return;
+        if (pattern.name === "&" || pattern.name === "_" || pattern.name === "nil" || pattern.name.startsWith(":")) return;
         this.define(pattern, kind, form, formName, { scope, node: form });
         return;
       case "Vector":
@@ -815,7 +779,8 @@ class SymbolWalker {
           this.reference(pattern, scope, true);
           return;
         }
-        this.define(pattern, "local", form, formName, { scope, node: form });
+        if (scope.hasOwn(pattern.name)) this.reference(pattern, scope);
+        else this.define(pattern, "local", form, formName, { scope, node: form });
         return;
       }
       case "List":

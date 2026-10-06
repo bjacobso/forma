@@ -69,7 +69,7 @@ describe("references across preludes and open documents", () => {
     expect((definition as Location | null)?.uri).toBe(prelude.uri);
   });
 
-  test.fails("15: the same reference, asked from the prelude, gives the same answer", async () => {
+  test("15: the same reference, asked from the prelude, gives the same answer", async () => {
     // Root cause: findSymbolOccurrences always indexes the requesting document last, so load order (and with it SymbolWalker.global's "latest before") depends on where the cursor is.
     const prelude = TextDocument.create("file:///workspace/prelude.lisp", "lisp", 1, "(define x 1)");
     const document = TextDocument.create(docUri, "lisp", 1, "(print x)\n(define x 2)");
@@ -83,7 +83,7 @@ describe("references across preludes and open documents", () => {
 });
 
 describe("definition fallback", () => {
-  test.fails("a definition miss on a builtin does not re-expand every document", async () => {
+  test("a definition miss on a builtin does not re-expand every document", async () => {
     // Root cause: getDefinition falls back to findIndexedDefinition on every miss, which rereads preludes and re-expands all documents synchronously, with no cache, cancellation, or time budget (a 2-line exponential macro costs ~0.65s at depth 12, doubling per level).
     const spy = vi.spyOn(TsLanguageHost.prototype, "findReferences");
     try {
@@ -97,4 +97,21 @@ describe("definition fallback", () => {
       spy.mockRestore();
     }
   });
+});
+
+
+test("symbol indexes are cached across requests and invalidated by document versions", async () => {
+  const spy = vi.spyOn(TsLanguageHost.prototype, "symbolIndex");
+  try {
+    const document = TextDocument.create(docUri, "lisp", 1, "(define x 1)\nx");
+    const session = fakeSession([], [document]);
+    const params = { textDocument: { uri: docUri }, position: document.positionAt(8), context: { includeDeclaration: true } };
+    await getReferences(session, document, params);
+    await getReferences(session, document, params);
+    expect(spy).toHaveBeenCalledTimes(1);
+    const changed = TextDocument.create(docUri, "lisp", 2, "(define x 2)\nx");
+    session.documents.set(docUri, changed);
+    await getReferences(session, changed, params);
+    expect(spy).toHaveBeenCalledTimes(2);
+  } finally { spy.mockRestore(); }
 });

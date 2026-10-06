@@ -16,6 +16,7 @@ const preludeEnvCache = new WeakMap<Record<string, BuiltinFn>, Env>();
 
 interface ExpandState {
   bindingCounter: number;
+  remainingExpansionNodes: number;
   /** Macros defined by the program being expanded. */
   readonly ownMacros: Set<KMacro>;
   readonly onExpansionFailure?: ((call: SExpr) => void) | undefined;
@@ -45,6 +46,8 @@ export interface ExpandProgramOptions {
    */
   readonly keepMacroDefs?: boolean;
   readonly macroStepLimit?: number;
+  /** Optional total expansion work budget, used by editor requests. */
+  readonly maxExpansionNodes?: number;
   /**
    * Called with the macro call whose expansion failed, before the failure is
    * thrown. Observation attributes the failure to that call.
@@ -80,6 +83,7 @@ export function expandProgramSync(
 ): ExpandProgramResult {
   const state: ExpandState = {
     bindingCounter: 0,
+    remainingExpansionNodes: options.maxExpansionNodes ?? Number.POSITIVE_INFINITY,
     ownMacros: new Set(),
     onExpansionFailure: options.onExpansionFailure,
   };
@@ -176,6 +180,7 @@ function expandExpr(
   state: ExpandState,
   inlineCompileTimeCalls: boolean,
 ): SExpr {
+  if (--state.remainingExpansionNodes < 0) throw new Error("Expansion work limit exceeded");
   if (expr._tag === "List" && expr.items.length > 0) {
     const head = expr.items[0]!;
     if (head._tag === "Sym") {
@@ -232,6 +237,22 @@ function expandExpr(
             state,
             inlineCompileTimeCalls,
           );
+        case "define": {
+          const signature = expr.items[1];
+          if (signature?._tag === "List" && signature.items[0]?._tag === "Sym" &&
+              signature.items.slice(1).some((param) => param._tag === "Vector" || param._tag === "Map")) {
+            const fn = desugar(expr, list([
+              desugar(expr, sym("fn", expr.loc)),
+              desugar(signature, vector(signature.items.slice(1), signature.loc)),
+              ...expr.items.slice(2),
+            ], expr.loc));
+            return derive(expr, list([
+              copyTree(head), copyTree(signature.items[0]),
+              expandExpr(fn, macroEnv, builtins, macroStepLimit, state, inlineCompileTimeCalls),
+            ], expr.loc));
+          }
+          break;
+        }
         case "fn":
           return expandFn(expr, macroEnv, builtins, macroStepLimit, state, inlineCompileTimeCalls);
         case "let":

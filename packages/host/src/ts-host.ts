@@ -736,6 +736,7 @@ export class TsLanguageHost implements LanguageHost {
     return {
       sourceId,
       ...(occurrences.definition ? { definition: definitionProjection(occurrences.definition) } : {}),
+      definitionSites: occurrences.definitionSites?.map(definitionProjection),
       references: occurrences.references.map(referenceProjection),
       diagnostics: [],
     };
