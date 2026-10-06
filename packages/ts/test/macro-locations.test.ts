@@ -26,7 +26,7 @@ describe("macro arguments keep their source locations", () => {
     const result = Effect.runSync(analyzeLsp(source));
     expect(result.success).toBe(true);
     const body = result.typedSpans.find((span) => text(source, span.span) === "(* n 2)");
-    expect(body?.typeString).toBe("Number");
+    expect(body?.typeString).toBe("Int");
   });
 
   it("locates errors in nested prelude macros at the call the author wrote", () => {
