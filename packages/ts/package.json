@@ -124,6 +124,10 @@
       "types": "./dist/Ontology.d.mts",
       "import": "./dist/Ontology.mjs"
     },
+    "./modules": {
+      "types": "./dist/Modules.d.mts",
+      "import": "./dist/Modules.mjs"
+    },
     "./node": {
       "types": "./dist/Node.d.mts",
       "import": "./dist/Node.mjs"

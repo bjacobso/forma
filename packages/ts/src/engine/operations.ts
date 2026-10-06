@@ -9,6 +9,9 @@ import * as Evaluator from "../Evaluator.js";
 import * as Reader from "../Reader.js";
 import type { LanguageSession } from "../Session.js";
 import * as Type from "../Type.js";
+import { resolveModuleGraph, sourceModuleResolver, normalizeModuleId, type ModuleGraph } from "../modules/graph.js";
+import { checkModuleGraph, moduleResultDisplay } from "../modules/check.js";
+import { ModuleRuntime } from "../modules/runtime.js";
 
 export interface Span {
   readonly sourceId: string;
@@ -221,7 +224,8 @@ export function parseSource(request: ParseRequest): ParsedSource {
 }
 
 export function expand(request: ExpandRequest): ExpandResult {
-  const sourceId = request.sourceId ?? "source";
+  const sourceId = request.sourceId ?? (!request.source && request.session?.orderedSources("source").length === 1
+    ? request.session.orderedSources("source")[0]!.id : "source");
   const source = sourceFromRequest(request);
   if (source === undefined) {
     return {
@@ -245,7 +249,7 @@ export function expand(request: ExpandRequest): ExpandResult {
   }
 
   try {
-    const exprs = Effect.runSync(Reader.parseManyToSExpr(source));
+    const exprs = request.session || /\((?:import|export|export-from)\s/.test(source) ? graphFromRequest(request,sourceId,source).modules.at(-1)!.expressions : Effect.runSync(Reader.parseManyToSExpr(source));
     const expanded = Evaluator.expandKernelExprsSync(exprs, {
       builtins: Builtins.defaultBuiltins,
       ...(request.session ? { env: request.session.env } : {}),
@@ -261,7 +265,7 @@ export function expand(request: ExpandRequest): ExpandResult {
       sourceId,
       pass: "expand",
       ast: [],
-      diagnostics: [diagnosticFromUnknown(error, "expand", sourceId)],
+      diagnostics: [moduleDiagnostic(error, "expand", sourceId)],
     };
   }
 }
@@ -277,13 +281,23 @@ function formDiagnostics(request: TypecheckRequest, sourceId: string, source: st
   }
   const expressions = toSExprMany(parseSurface(source).redTree);
   if (!expressions.some(e => cached!.prelude.descriptions.get(head(e) ?? "")?.surface || head(e) === "form" || head(e) === ":" && e._tag === "List" && (head(e.items[2]) === "Action" || e.items[2]?._tag === "List" && head(e.items[2]) === "->" && head(e.items[2].items.at(-1)) === "Action"))) return [];
-  const sources = session.orderedSources("source").filter(s=>s.id !== sourceId).map(s=>({sourceId:s.id,source:s.text}));
-  return elaborateSources([...sources,{sourceId,source}], {prelude:cached.prelude}).diagnostics.filter(d=>d.span?.sourceId === sourceId);
+  return elaborateSources([{sourceId,source}], {prelude:cached.prelude}).diagnostics.filter(d=>d.span?.sourceId === sourceId);
 }
 
 export function typecheck(request: TypecheckRequest): TypecheckResult {
-  const sourceId = request.sourceId ?? "source";
+  const sourceId = request.sourceId ?? (!request.source && request.session?.orderedSources("source").length === 1
+    ? request.session.orderedSources("source")[0]!.id : "source");
   const source = sourceFromRequest(request);
+  if (source !== undefined && /\((?:import|export|export-from)\s/.test(source)) {
+    try {
+      const graph = graphFromRequest(request, sourceId, source);
+      const checked = checkModuleGraph(graph,moduleCheckOptions(request));
+      const display = moduleResultDisplay(checked, graph.entry);
+      return { sourceId, pass:"typecheck", display, type:typeProjection(display), diagnostics:checked.diagnostics };
+    } catch (error) {
+      return { sourceId, pass:"typecheck", diagnostics:[moduleDiagnostic(error,"typecheck",sourceId)] };
+    }
+  }
   if (source === undefined) {
     return {
       sourceId,
@@ -394,7 +408,7 @@ export async function evaluate(request: EvaluateRequest): Promise<EvaluateResult
 export async function evaluateInSession(
   request: EvaluateInSessionRequest,
 ): Promise<EvaluateResult> {
-  const sourceId = request.sourceId ?? "session";
+  const sourceId = request.sourceId ?? (request.source ? "session" : request.session.orderedSources("source")[0]?.id ?? "session");
   const source = sourceFromRequest(request);
   if (source === undefined) {
     return {
@@ -412,17 +426,53 @@ export async function evaluateInSession(
     };
   }
 
-  const result = await evaluate({
-    sourceId,
-    source,
-    env: request.env ?? request.session.env,
-    stepLimit: request.stepLimit,
-    observe: request.observe,
-  });
-  if (result.diagnostics.length === 0 && result.env) {
-    request.session.env = result.env;
+  try {
+    const core = request.env ?? request.session.env;
+    let cached = moduleRuntimes.get(request.session);
+    if (!cached || cached.core !== core) {
+      cached = { core, runtime:new ModuleRuntime(core) };
+      moduleRuntimes.set(request.session,cached);
+    }
+    const graph = graphFromRequest(request,sourceId,source);
+    const { result,collector } = await cached.runtime.evaluate(graph,request.stepLimit,request.observe);
+    return { sourceId, pass:"evaluate", value:result.value, env:result.env, printed:Evaluator.printKValue(result.value), steps:result.steps, diagnostics:[], ...(collector ? {observations:observationReport(collector)} : {}) };
+  } catch (error) {
+    return { sourceId, pass:"evaluate", value:null, diagnostics:[moduleDiagnostic(error,"evaluate",sourceId)] };
   }
-  return result;
+}
+
+const moduleRuntimes = new WeakMap<LanguageSession,{core:Env;runtime:ModuleRuntime}>();
+export async function prepareModuleImports(request:EvaluateInSessionRequest,sourceId:string,source:string,core:Env):Promise<{expressions:readonly Reader.SExpr[];env:Env}> {
+  let cached=moduleRuntimes.get(request.session);
+  if (!cached || cached.core!==core) {cached={core,runtime:new ModuleRuntime(core)};moduleRuntimes.set(request.session,cached);}
+  const graph=graphFromRequest(request,sourceId,source);
+  return {expressions:graph.modules.find(m=>m.id===graph.entry)!.expressions,env:await cached.runtime.imports(graph,request.stepLimit)};
+}
+function graphFromRequest(request:{readonly session?:LanguageSession|undefined},sourceId:string,source:string):ModuleGraph {
+  return resolveModuleGraph({id:sourceId,source},sourceModuleResolver(request.session?.orderedSources("source").map(s=>({id:s.id,source:s.text})) ?? []),moduleCoreOptions(request.session));
+}
+/** Only host configuration contributes names to the implicit core. */
+export function moduleCoreOptions(session?:LanguageSession):import("../modules/graph.js").ModuleCoreOptions {
+  const bindings=new Set(session?.env.bindingNames() ?? []),types=new Set<string>();
+  for (const source of session?.orderedSources("prelude") ?? []) {
+    const expressions=Reader.toSExprMany(Reader.parse(source.text).redTree);
+    const typeNames=(e:Reader.SExpr):void=>{
+      if (e._tag === "Sym" && /^[A-Z]/.test(e.name)) types.add(e.name);
+      else if (e._tag === "List" || e._tag === "Vector") e.items.forEach(typeNames);
+      else if (e._tag === "Map") e.pairs.forEach(([,v])=>typeNames(v));
+    };
+    for (const e of expressions) {
+      if (e._tag !== "List") continue;
+      const header=e.items[1],name=header?._tag === "Sym" ? header.name : header?._tag === "List" && header.items[0]?._tag === "Sym" ? header.items[0].name : undefined;
+      if (name && ["define","type","class","error","macro","form",":"].includes(head(e) ?? "")) bindings.add(name);
+      if (name?.startsWith("__type/")) types.add(name.slice(7));
+      if ([":","type","class","error","__sum-type","__type-alias","__record-type"].includes(head(e) ?? "")) e.items.slice(2).forEach(typeNames);
+    }
+  }
+  return {bindings,types};
+}
+function moduleDiagnostic(error:unknown,phase:DiagnosticPhase,sourceId:string):Diagnostic {
+  return error instanceof Error && "diagnostic" in error ? (error as {diagnostic:Diagnostic}).diagnostic : diagnosticFromUnknown(error,phase,sourceId);
 }
 
 /**
@@ -434,9 +484,11 @@ export async function evaluateObserved(
   request: EvaluateRequest,
   observe: Evaluator.ObservationOptions,
   builtins: Record<string, Evaluator.BuiltinFn>,
+  resolvedExpressions?:readonly Reader.SExpr[],
 ): Promise<EvaluateResult> {
   const sourceId = request.sourceId ?? "source";
-  const { collector, evaluation } = Evaluator.observeEvaluation(
+  const prepared=resolvedExpressions ? new Evaluator.ObservationCollector(request.source,resolvedExpressions,observe) : undefined;
+  const { collector, evaluation } = prepared ? {collector:prepared,evaluation:Evaluator.evaluateExprs(resolvedExpressions!,{stepLimit:request.stepLimit ?? 50_000,builtins,...(request.env ? {env:request.env} : {}),observer:prepared})} : Evaluator.observeEvaluation(
     request.source,
     {
       stepLimit: request.stepLimit ?? 50_000,
@@ -538,7 +590,7 @@ export function diagnosticFromUnknown(
       _tag?: string;
       message?: string;
       origin?: { span?: { start?: number; end?: number } };
-      loc?: { start?: number; end?: number; line?: number; col?: number };
+      loc?: { sourceId?: string; start?: number; end?: number; line?: number; col?: number };
       details?: Record<string, unknown>;
     };
     const span: Span | undefined = candidate.origin?.span
@@ -549,7 +601,7 @@ export function diagnosticFromUnknown(
         }
       : candidate.loc
         ? {
-            sourceId,
+            sourceId:candidate.loc.sourceId ?? sourceId,
             startOffset: candidate.loc.start ?? 0,
             endOffset: candidate.loc.end ?? candidate.loc.start ?? 0,
             ...(candidate.loc.line !== undefined ? { startLine: candidate.loc.line } : {}),
@@ -575,7 +627,7 @@ export function diagnosticFromUnknown(
 
 function spanFromLoc(sourceId: string, loc: Reader.Loc): Span {
   return {
-    sourceId,
+    sourceId:loc.sourceId ?? sourceId,
     startOffset: loc.start,
     endOffset: loc.end,
     startLine: loc.line,
@@ -642,9 +694,9 @@ function sourceFromRequest(
   return (
     request.source ??
     (request.sourceId !== undefined
-      ? request.session?.sourceText(request.sourceId)
+      ? request.session?.sourceText(normalizeModuleId(request.sourceId))
       : request.session !== undefined
-        ? request.session.joinedSourceText()
+        ? request.session.orderedSources("source").length === 1 ? request.session.orderedSources("source")[0]?.text : undefined
         : undefined)
   );
 }
@@ -677,6 +729,11 @@ function typePolicyWithSessionBindings(
       })),
     ],
   };
+}
+
+export function moduleCheckOptions(request: TypecheckRequest): import("../modules/check.js").ModuleCheckOptions {
+  return {...typeInferOptions(typecheckRequestWithSession(request)),
+    ...(request.session ? {coreExpressions:request.session.coreExpressions()} : {})};
 }
 
 function typeInferOptions(request: TypecheckRequest): Type.InferOptions {

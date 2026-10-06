@@ -118,10 +118,10 @@ let is_typed_define signatures = function
 let has_mechanics_forms exprs =
   List.exists is_mechanics_form (Surface.effect_program (Surface_action.program exprs))
 
-let projected_form_predicate ?(include_pure=true) exprs =
+let projected_form_predicate ?(include_pure=true) ?(module_mode=false) exprs =
   let normalized = Surface.effect_program (Surface_action.program exprs) in
   let include_pure = include_pure || List.exists (fun e -> List.mem (Option.value ~default:"" (Surface.head e)) ["__operation";"__service";"__layer"]) normalized in
-  let signatures = if not (List.exists is_mechanics_form normalized) then [] else
+  let signatures = if not module_mode && not (List.exists is_mechanics_form normalized) then [] else
     operation_signatures normalized |> List.filter (fun (n,_) -> include_pure || List.exists (function Ast.List (_,Ast.Symbol (_,"__operation") :: Ast.Symbol (_,id) :: _) -> n=id | _ -> false) normalized) in
   let projected_spans = List.filter_map (fun expr -> if is_mechanics_form expr || is_typed_define signatures expr || (match expr with Ast.List (_, [(Ast.Symbol (_,":") | Ast.Keyword (_,":"));Ast.Symbol (_,n);_]) -> List.mem_assoc n signatures | _ -> false) then Some (Ast.expr_span expr) else None) normalized in
   fun expr -> List.mem (Ast.expr_span expr) projected_spans
@@ -388,7 +388,7 @@ let declaration ~source_id ~form_index signatures service_effects operation_effe
         ]
   | _ -> Error []
 
-let declarations ~source_id exprs =
+let declarations ?context ?(module_mode=false) ~source_id exprs =
   let types = List.filter_map (function Ast.List (_, [Ast.Symbol (_,"type");Ast.Symbol (_,n);t]) -> Some (n,t) | _ -> None) exprs in
   let consumed = ref [] in
   let rec visit = function
@@ -404,10 +404,11 @@ let declarations ~source_id exprs =
     | _ -> ()) exprs;
   let consumed_spans = List.filter_map (function Ast.List (s,[Ast.Symbol (_,"type");Ast.Symbol (_,n);_]) when List.mem n !consumed -> Some s | _ -> None) exprs in
   let exprs = Surface.effect_program (Surface_action.program exprs) in
-  let signatures = operation_signatures exprs in
-  let service_effects = service_method_effects exprs in
-  let operation_effects = operation_effects signatures exprs in
-  let is_projected = projected_form_predicate exprs in
+  let context = Option.value ~default:exprs context in
+  let signatures = operation_signatures context in
+  let service_effects = service_method_effects context in
+  let operation_effects = operation_effects signatures context in
+  let is_projected = projected_form_predicate ~module_mode exprs in
   let rec loop acc form_index = function
     | [] -> Ok (List.rev acc)
     | expr :: rest when List.mem (Ast.expr_span expr) consumed_spans -> loop acc (form_index + 1) rest

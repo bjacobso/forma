@@ -54,6 +54,10 @@ export interface MechanicsEffectTypeScriptModule {
 export interface MechanicsEffectTypeScriptOptions {
   /** Check results to reuse; the generator runs the checker when omitted. */
   readonly check?: CheckInfo;
+  /** Resolved names owned by dependency modules; never synthesize their brands. */
+  readonly externalNames?: ReadonlySet<string>;
+  /** Only these resolved declarations are public in a linked file module. */
+  readonly exports?: ReadonlySet<string>;
 }
 
 type JsonRecord = Readonly<Record<string, JsonValue>>;
@@ -85,7 +89,10 @@ export function generateMechanicsEffectTypeScriptModule(
   options: MechanicsEffectTypeScriptOptions = {},
 ): MechanicsEffectTypeScriptModule {
   const info = options.check ?? checkMechanicsDeclarations(declarations).info;
-  return new Generator(declarations, info).module();
+  const generated = new Generator(declarations, info, options.externalNames, options.exports !== undefined).module();
+  if (!options.exports) return generated;
+  const publicNames = new Set([...options.exports].flatMap(name => [typeName(name), camelIdentifier(name), `${typeName(name)}Constructors`]));
+  return { ...generated, code: generated.code.replace(/^export (const|class|type) ([A-Za-z_$][\w$]*)/gm, (line, kind:string, name:string) => publicNames.has(name) ? line : `${kind} ${name}`) };
 }
 
 const Prec = Precedence;
@@ -159,6 +166,7 @@ class Generator {
   private readonly reserved = new Set<string>([...effectModules, ...generatedGlobals]);
   private serviceVars = new Map<string, string>();
   private contextVar: string | undefined;
+  private typeVariables = new Map<number,string>();
   /**
    * Whether the value being rendered has a contextual type in TypeScript
    * (a typed parameter, a function's declared return, or a field of such a
@@ -170,6 +178,8 @@ class Generator {
   constructor(
     private readonly declarations: readonly PackageableDeclaration[],
     private readonly info: CheckInfo,
+    private readonly externalNames: ReadonlySet<string> = new Set(),
+    private readonly linked = false,
   ) {}
 
   module(): MechanicsEffectTypeScriptModule {
@@ -188,7 +198,8 @@ class Generator {
 
     const sections: string[][] = [];
     const declared = new Set([...schemas, ...errors, ...classes].map((payload) => String(payload["name"])));
-    const brands = inlineBrands(payloads).filter((brand) => !declared.has(brand.name));
+    const brands = inlineBrands(payloads).filter((brand) => !declared.has(brand.name) && !this.externalNames.has(brand.name));
+    for (const name of this.externalNames) { this.reserved.add(typeName(name)); this.reserved.add(camelIdentifier(name)); }
     for (const brand of brands) this.reserved.add(typeName(brand.name));
     const data = orderSchemaDeclarations([
       ...brands.map((brand) => ({ name: brand.name, schema: brand.schema, kind: "SchemaDef" })),
@@ -236,7 +247,21 @@ class Generator {
     if (`export const ${constName} = ${expression};`.length > maxWidth && expression.startsWith("Schema.Union([")) {
       expression = breakUnion(expression);
     }
-    return [`export const ${constName} = ${expression};`, `export type ${constName} = typeof ${constName}.Type;`];
+    const tagged=this.linked && isRecord(schema) && schema["kind"] === "TaggedUnion";
+    if (tagged) expression+=`.pipe(Schema.brand(${JSON.stringify(name)}))`;
+    const lines=[`export const ${constName} = ${expression};`, `export type ${constName} = typeof ${constName}.Type;`];
+    if (tagged && isRecord(schema)) {
+      const tag=String(schema["discriminator"] ?? "_tag");
+      lines.push(`export const ${constName}Constructors = {`);
+      for (const arm of arrayItems(schema["variants"]).filter(isRecord)) {
+        const fields=typeFromJson(arm["schema"],this.info.env);
+        const nonempty=fields.kind === "struct" && fields.fields.length>0;
+        const parameter=nonempty ? `value: ${this.typeTs(fields)}` : "";
+        lines.push(`  ${propertyName(String(arm["tag"]))}: (${parameter}): ${constName} => ${constName}.make({ ${nonempty ? "...value, " : ""}${propertyName(tag)}: ${JSON.stringify(arm["tag"])} }),`);
+      }
+      lines.push("};");
+    }
+    return lines;
   }
 
   private fieldLines(fields: readonly JsonRecord[], indent: string): string[] {
@@ -255,8 +280,9 @@ class Generator {
     const head = error
       ? `export class ${className} extends Schema.TaggedError<${className}>()(${JSON.stringify(name)}, {`
       : `export class ${className} extends Schema.Class<${className}>(${JSON.stringify(name)})({`;
-    if (fields.length === 0) return [`${head}}) {}`];
-    return [head, ...this.fieldLines(fields, "  "), "}) {}"];
+    const body=this.linked ? `{ declare private readonly __formaNominal: void; }` : "{}";
+    if (fields.length === 0) return [`${head}}) ${body}`];
+    return [head, ...this.fieldLines(fields, "  "), `}) ${body}`];
   }
 
   private serviceLines(service: JsonRecord): string[] {
@@ -286,6 +312,15 @@ class Generator {
   private functionLines(fn: JsonRecord): string[] {
     const name = String(fn["name"]);
     const signature = this.info.functions.get(name);
+    this.typeVariables = new Map();
+    const variables=(type:MType):void=>{
+      if (type.kind === "var" && !this.typeVariables.has(type.id)) this.typeVariables.set(type.id,`A${this.typeVariables.size}`);
+      for (const value of Object.values(type)) {
+        if (Array.isArray(value)) value.forEach(v=>{if (v && typeof v === "object") {if ("kind" in v) variables(v as MType);else if ("type" in v) variables(v.type as MType);}});
+        else if (value && typeof value === "object" && "kind" in value) variables(value as MType);
+      }
+    };
+    signature?.params.forEach(p=>variables(p.type)); if (signature) variables(signature.result);
     const names = new Names(undefined, this.reserved);
     this.serviceVars = new Map();
     const body = fn["body"];
@@ -293,7 +328,8 @@ class Generator {
       (param) => `${names.bind(param.name, unusedPrefix(param.name, body))}: ${this.typeTs(param.type)}`,
     );
     const returns = signature ? this.typeTs(signature.result) : "unknown";
-    const head = signatureHead(camelIdentifier(name), params, returns);
+    const generics=this.typeVariables.size ? `<${[...this.typeVariables.values()].join(", ")}>` : "";
+    const head = signatureHead(camelIdentifier(name), params, returns,generics);
     const block = this.letBlock(body, names, "  ");
     if (block) return [`${head} {`, ...block, "};"].map((line, index) => (index === 0 ? line.replace(/ =>$/, " =>") : line));
     const rendered = this.contextualValue(body, names, "  ").code;
@@ -986,6 +1022,7 @@ class Generator {
       }
       case "Var": {
         const call = this.info.calls.get(node);
+        if (call?.kind === "tagged-constructor") return atom(`${propertyAccess(`${typeName(call.owner)}Constructors`,call.name)}${call.nullary ? "()" : ""}`);
         if (call?.kind === "builtin") return this.builtinFunction(call.name, call.overload, names, contextual);
         return atom(this.variable(String(node["name"]), names));
       }
@@ -1191,6 +1228,8 @@ class Generator {
         return atom(this.streamCall(node, call.name, args, names, indent));
       case "brand":
         return atom(`${typeName(call.name)}.make(${this.value(args[0], names, indent).code})`);
+      case "tagged-constructor":
+        return atom(layout(`${propertyAccess(`${typeName(call.owner)}Constructors`,call.name)}`,this.argRenders(args,names),indent));
       case "construct":
         this.contextual = contextual;
         return this.value(args[0], names, indent);
@@ -1495,7 +1534,7 @@ class Generator {
       case "layer":
         return this.layerTypeTs({ type: type.layer, contextServices: [] });
       case "var":
-        return "never";
+        return this.typeVariables.get(type.id) ?? "never";
     }
   }
 }
@@ -1511,10 +1550,10 @@ function generic(name: string, ...params: readonly string[]): string {
   return `${name}<${kept.join(", ")}>`;
 }
 
-function signatureHead(name: string, params: readonly string[], returns: string): string {
-  const inline = `export const ${name} = (${params.join(", ")}): ${returns} =>`;
+function signatureHead(name: string, params: readonly string[], returns: string,generics=""): string {
+  const inline = `export const ${name} = ${generics}(${params.join(", ")}): ${returns} =>`;
   if (inline.length <= maxWidth || params.length === 0) return inline;
-  return [`export const ${name} = (`, ...params.map((param) => `  ${param},`), `): ${returns} =>`].join("\n");
+  return [`export const ${name} = ${generics}(`, ...params.map((param) => `  ${param},`), `): ${returns} =>`].join("\n");
 }
 
 /**

@@ -35,6 +35,7 @@
 
 export * as SExpr from "./SExpr.js";
 export * as Reader from "./Reader.js";
+export * as Modules from "./Modules.js";
 export * as Source from "./Source.js";
 export * as Session from "./Session.js";
 export * as Engine from "./Engine.js";

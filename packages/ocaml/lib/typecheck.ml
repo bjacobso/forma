@@ -397,7 +397,10 @@ and infer_effect_do env bindings body =
   loop [] env [] [] bindings
 
 and infer_lambda ?expected env params rest_param body =
-  let param_tys,return_hint=match expected with Some (TFn (args,result)) when List.length args=List.length params -> args,Some result | _ -> List.map (fun _ -> fresh_tyvar ()) params,None in
+  let param_tys,rest_ty,return_hint=match expected with
+    | Some (TFn (args,result)) when List.length args=List.length params -> args,fresh_tyvar (),Some result
+    | Some (TVariadicFn (args,rest,result)) when List.length args=List.length params -> args,rest,Some result
+    | _ -> List.map (fun _ -> fresh_tyvar ()) params,fresh_tyvar (),None in
   let param_bindings =
     List.map2
       (fun (param : Core_ast.param) ty ->
@@ -408,7 +411,7 @@ and infer_lambda ?expected env params rest_param body =
     match rest_param with
     | None -> []
     | Some (param : Core_ast.param) ->
-        [ (param.name, Forall ([], TList TAny, [], Plain)) ]
+        [ (param.name, Forall ([], TList rest_ty, [], Plain)) ]
   in
   let local_env = rest_binding @ param_bindings @ env in
   match (match return_hint with Some expected -> check_expr local_env body expected | None -> infer_expr local_env body) with
@@ -416,9 +419,8 @@ and infer_lambda ?expected env params rest_param body =
   | Ok (body_subst, body_ty) ->
       Ok
         ( body_subst,
-          TFn
-            ( List.map (apply_subst body_subst) param_tys,
-              apply_subst body_subst body_ty ) )
+          (let params=List.map (apply_subst body_subst) param_tys and result=apply_subst body_subst body_ty in
+           match rest_param with None -> TFn (params,result) | Some _ -> TVariadicFn (params,apply_subst body_subst rest_ty,result)) )
 
 and check_expr env value expected =
   let finish (subst,actual) = match assign (apply_subst subst actual) (apply_subst subst expected) with Error _ as e -> e | Ok s -> let subst=compose_subst s subst in Ok (subst,apply_subst subst expected) in
@@ -427,7 +429,7 @@ and check_expr env value expected =
   | Core_ast.Lit (_,lit),expected ->
       let precise=match lit with Core_ast.LInt n -> TNamed (string_of_int n) | Core_ast.LFloat n -> TNamed (string_of_float n) | Core_ast.LString s -> TNamed (Value.string_json s) | Core_ast.LQuoted _ -> TSyntax | Core_ast.LSymbol _ -> TSymbol | Core_ast.LKeyword s -> TNamed s | Core_ast.LBool b -> TNamed (string_of_bool b) | Core_ast.LNil -> TNil in
       (match assign precise expected with Ok s -> Ok (s,apply_subst s expected) | Error _ -> (match infer_expr env value with Error _ as e -> e | Ok result -> finish result))
-  | Core_ast.Lam (_,params,rest,body),TFn _ -> (match infer_lambda ~expected env params rest body with Error _ as e -> e | Ok result -> finish result)
+  | Core_ast.Lam (_,params,rest,body),(TFn _ | TVariadicFn _) -> (match infer_lambda ~expected env params rest body with Error _ as e -> e | Ok result -> finish result)
   | Core_ast.App (_, Core_ast.Var (_,"__dictionary"), [Core_ast.Record (_,fields)]), TNamedApp ("Map",[key;item]) ->
       let rec loop subst = function
         | [] -> Ok (subst,apply_subst subst expected)

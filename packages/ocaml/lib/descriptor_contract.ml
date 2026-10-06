@@ -372,3 +372,54 @@ let descriptor_hooks ?(syntax=[]) env =
               | Ok value -> Form_semantics.resolve_type value |> Result.map Option.some |> Result.map_error (List.map eval_diagnostic_to_type)))
     | _ -> result_type env application in
   Descriptor_protocol.{ bindings=bindings env;typed_slots;result_type;infer=descriptor_infer_type env;check=descriptor_check_type env }
+
+(* Registration checks syntax and descriptor slots. References are checked when
+   the host selects a module/artifact, after its dependencies have been loaded. *)
+let validate_source_structure env syntax =
+  let metadata =
+    Surface.core_program syntax
+    |> List.filter (function
+      | Ast.List
+          ( _,
+            Ast.Symbol
+              ( _,
+                ( "__sum-type" | "__record-type" | "__type-alias"
+                | "__form-descriptor" | "__form-hook" ) )
+            :: _ ) ->
+          true
+      | Ast.List (_, Ast.Symbol (_, "define") :: Ast.Symbol (_, n) :: _) ->
+          List.exists
+            (fun prefix -> String.starts_with ~prefix n)
+            [
+              "__type/";
+              "__type-kind/";
+              "__form/";
+              "__form.ir/";
+              "__form.types/";
+              "__form.options/";
+            ]
+      | _ -> false)
+  in
+  match load_unified_context env metadata with
+  | Error ds -> Error (List.map eval_diagnostic_to_type ds)
+  | Ok local ->
+      let rec validate = function
+        | [] -> Ok ()
+        | Ast.List (span, Ast.Symbol (_, op) :: args) :: rest -> (
+            match Descriptor.form local op with
+            | None -> validate rest
+            | Some form -> (
+                let args =
+                  Surface_form.normalize_application ~span local op args
+                in
+                match Descriptor.validate_application_slots form args with
+                | Ok () -> validate rest
+                | Error ds ->
+                    Error
+                      (List.map
+                         (fun (d : Descriptor.diagnostic) ->
+                           Type_diagnostic.make ?span:d.span d.code d.message)
+                         ds)))
+        | _ :: rest -> validate rest
+      in
+      validate syntax

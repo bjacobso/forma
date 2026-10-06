@@ -24,6 +24,9 @@ import type {
   EvaluationState,
   ExpressionType,
   LanguageHost,
+  ModuleGraphRequest,
+  ModuleGraphResult,
+  ModuleLinkResult,
   LoadSourceBundleRequest,
   LoadSourceBundleResult,
   LoadSourceRequest,
@@ -114,6 +117,13 @@ export class JsOcamlLanguageHost implements LanguageHost {
         },
       ],
     };
+  }
+
+  async moduleGraph(request:ModuleGraphRequest):Promise<ModuleGraphResult> {
+    return {entry:request.sourceId,interfaces:[],diagnostics:[unsupportedDiagnostic("session/unsupported","JS OCaml prototype host does not support persistent module sessions.","typecheck")]};
+  }
+  async linkEffectModules(request:ModuleGraphRequest):Promise<ModuleLinkResult> {
+    return {ok:false,entry:request.sourceId,interfaces:[],declarations:[],modules:[],diagnostics:[unsupportedDiagnostic("session/unsupported","JS OCaml prototype host does not support persistent module sessions.","emit")]};
   }
 
   async parse(request: ParseRequest): Promise<ParseResult> {

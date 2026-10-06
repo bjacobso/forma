@@ -51,6 +51,7 @@ export default defineConfig({
           { text: "Architecture", link: "/architecture" },
           { text: "Design decisions", link: "/design-decisions" },
           { text: "Language services", link: "/language-services" },
+          { text: "File modules", link: "/modules" },
         ],
       },
       {

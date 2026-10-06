@@ -1,3 +1,6 @@
+(* Canonical artifact metadata only. Executable file imports, binding identity,
+   and diagnostics are resolved by Module_graph; this analyzer never rewrites
+   source aliases or publishes source bindings into a session. *)
 type module_use = { prelude : string }
 
 type module_import = {
@@ -111,22 +114,6 @@ let parse_import ~source_id ~known_source_ids args =
               names = [];
             }
       | _ -> Error "alias import expects :as and an alias.")
-  | [ specifier_expr; mode_expr ] when is_keywordish ":all" mode_expr -> (
-      match scalar_name specifier_expr with
-      | Some specifier ->
-          let resolved_path, module_id =
-            resolve_specifier ~source_id ~known_source_ids specifier
-          in
-          Ok
-            {
-              specifier;
-              resolved_path;
-              module_id;
-              mode = "all";
-              alias = None;
-              names = [];
-            }
-      | None -> Error "import expects a path and import mode.")
   | [ specifier_expr; Ast.Vector (_, name_exprs) ] -> (
       match scalar_name specifier_expr with
       | None -> Error "import expects a path and import mode."
@@ -205,43 +192,6 @@ let qualified_alias_reference aliases name =
       if List.mem alias aliases && is_valid_declaration_name local_name then
         Some { alias; local_name }
       else None
-
-let alias_export_names ~resolve_exports imports =
-  imports
-  |> List.filter_map (fun (import : module_import) ->
-      match (import.mode, import.alias, import.module_id) with
-      | "alias", Some alias, Some module_id -> (
-          match resolve_exports module_id with
-          | Some names -> Some (alias, names)
-          | None -> None)
-      | _ -> None)
-
-let alias_reference_is_exported alias_exports reference =
-  match List.assoc_opt reference.alias alias_exports with
-  | None -> false
-  | Some names -> List.mem reference.local_name names
-
-let rec rewrite_alias_references aliases alias_exports = function
-  | Ast.Symbol (span, name) -> (
-      match qualified_alias_reference aliases name with
-      | Some reference when alias_reference_is_exported alias_exports reference ->
-          Ast.Symbol (span, reference.local_name)
-      | Some _ -> Ast.Symbol (span, name)
-      | None -> Ast.Symbol (span, name))
-  | Ast.List (span, exprs) ->
-      Ast.List (span, List.map (rewrite_alias_references aliases alias_exports) exprs)
-  | Ast.Vector (span, exprs) ->
-      Ast.Vector
-        (span, List.map (rewrite_alias_references aliases alias_exports) exprs)
-  | Ast.Map (span, entries) ->
-      Ast.Map
-        ( span,
-          List.map
-            (fun (key, value) ->
-              ( rewrite_alias_references aliases alias_exports key,
-                rewrite_alias_references aliases alias_exports value ))
-            entries )
-  | expr -> expr
 
 let rec collect_alias_references aliases = function
   | Ast.Symbol (_, name) -> (
@@ -327,7 +277,7 @@ let analyze ?(resolve_exports = fun _ -> None) ~source_id ~known_source_ids
     exprs;
   let source_exprs = List.rev !source_exprs in
   let aliases = alias_names !imports in
-  let alias_exports = alias_export_names ~resolve_exports !imports in
+  let _ = resolve_exports in
   {
     decl =
       {
@@ -348,5 +298,5 @@ let analyze ?(resolve_exports = fun _ -> None) ~source_id ~known_source_ids
           |> List.sort_uniq String.compare;
       };
     source_exprs =
-      source_exprs |> List.map (rewrite_alias_references aliases alias_exports);
+      source_exprs;
   }

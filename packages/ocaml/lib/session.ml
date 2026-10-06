@@ -14,6 +14,7 @@ type t = {
   artifact_declarations : (string, artifact_cache_entry) Hashtbl.t;
   source_bindings : (string, string list) Hashtbl.t;
   source_modules : (string, Module_decl.t) Hashtbl.t;
+  module_instances : (string, Module_runtime.instance) Hashtbl.t;
   source_exports : (string, string list) Hashtbl.t;
   source_dependencies : (string, string list) Hashtbl.t;
   source_order : (string, int) Hashtbl.t;
@@ -23,6 +24,8 @@ type t = {
   mutable next_value_ref_id : int;
   pending_evaluations : (string, pending_evaluation) Hashtbl.t;
   value_refs : (string, Eval.value) Hashtbl.t;
+  mutable core_env : Eval.env;
+  mutable core_types : Type_env.env;
   mutable env : Eval.env;
   mutable type_env : Type_env.env;
 }
@@ -50,6 +53,7 @@ let open_ () =
       artifact_declarations = Hashtbl.create 16;
       source_bindings = Hashtbl.create 16;
       source_modules = Hashtbl.create 16;
+      module_instances = Hashtbl.create 16;
       source_exports = Hashtbl.create 16;
       source_dependencies = Hashtbl.create 16;
       source_order = Hashtbl.create 16;
@@ -59,6 +63,8 @@ let open_ () =
       next_value_ref_id = 0;
       pending_evaluations = Hashtbl.create 8;
       value_refs = Hashtbl.create 16;
+      core_env = Env.empty;
+      core_types = [];
       env = Env.empty;
       type_env = [];
     }
@@ -77,6 +83,7 @@ let reset session =
   Hashtbl.clear session.artifact_declarations;
   Hashtbl.clear session.source_bindings;
   Hashtbl.clear session.source_modules;
+  Hashtbl.clear session.module_instances;
   Hashtbl.clear session.source_exports;
   Hashtbl.clear session.source_dependencies;
   Hashtbl.clear session.source_order;
@@ -86,6 +93,8 @@ let reset session =
   session.next_evaluation_id <- 0;
   session.next_call_id <- 0;
   session.next_value_ref_id <- 0;
+  session.core_env <- Env.empty;
+  session.core_types <- [];
   session.env <- Env.empty;
   session.type_env <- []
 
@@ -194,7 +203,7 @@ let source_export_names session source_id declarations =
           (fun (re_export : Module_decl.module_re_export) -> re_export.names)
           module_decl.Module_decl.re_exports
       |> List.sort_uniq String.compare
-  | _ -> declared_names
+  | _ -> []
 
 let exported_names_by_source session source_id =
   Hashtbl.fold
@@ -207,16 +216,42 @@ let exported_names_by_source session source_id =
     session.source_exports []
 
 let source_dependencies session source_id exprs =
-  let exports = exported_names_by_source session source_id in
-  let references =
+  let imports =
     exprs
-    |> List.concat_map expr_reference_atoms
-    |> List.sort_uniq String.compare
+    |> List.filter_map (function
+      | Ast.List
+          ( _,
+            Ast.Symbol (_, ("import" | "export-from"))
+            :: Ast.String (_, specifier)
+            :: _ )
+        when String.starts_with ~prefix:"./" specifier
+             || String.starts_with ~prefix:"../" specifier ->
+          Some (Module_graph.relative_id specifier source_id)
+      | _ -> None)
   in
-  exports
-  |> List.filter_map (fun (name, owner) ->
-      if List.mem name references then Some owner else None)
-  |> List.sort_uniq String.compare
+  (* Artifact data references (including global seed IDs) are separate from
+     lexical imports. Track their cache dependencies without publishing values. *)
+  let references = List.concat_map expr_reference_atoms exprs in
+  let data =
+    Hashtbl.fold
+      (fun owner syntax dependencies ->
+        if owner = source_id then dependencies
+        else
+          let syntax =
+            List.filter (fun e -> not (Module_graph.directive e)) syntax
+            |> Surface_action.program
+            |> List.filter (function
+              | Ast.List (_, Ast.Symbol (_, form) :: _) ->
+                  Descriptor.is_form_descriptor session.core_env form
+              | _ -> false)
+          in
+          let names = Source_bindings.names session.core_env syntax in
+          if List.exists (fun n -> List.mem n references) names then
+            owner :: dependencies
+          else dependencies)
+      session.parsed_sources []
+  in
+  List.sort_uniq String.compare (imports @ data)
 
 let refresh_dependency_graph session =
   Hashtbl.iter

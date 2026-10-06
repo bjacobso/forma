@@ -516,18 +516,14 @@ let module_diagnostics ~resolve_exports declarations_by_name (decl : Module_decl
   @ ambiguous_reference_diagnostics ~resolve_exports declarations_by_name decl.imports
       decl.unqualified_references
 
-let to_json ?(resolve_exports = fun _ -> None) ?(export_all_by_default = false)
+let to_json ?(resolve_exports = fun _ -> None)
     ~source_hash ~declarations (decl : Module_decl.t) =
   let declarations_by_name =
     List.filter_map
       (fun declaration -> Some (declaration.Module_decl.local_name, declaration))
       declarations
   in
-  let export_names =
-    if decl.explicit_exports = [] && decl.re_exports = [] && export_all_by_default
-    then List.map (fun declaration -> declaration.Module_decl.local_name) declarations
-    else decl.explicit_exports
-  in
+  let export_names = decl.explicit_exports in
   Ir_json.Object
     [
       string_field "moduleId" decl.module_id;

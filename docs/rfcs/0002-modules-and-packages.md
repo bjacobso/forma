@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Stage 1 implemented; later stages proposed |
 | Created | 2026-10-06 |
 | Scope | Module isolation, imports and exports, compile-time dependencies, package resolution, compilation, and tooling |
 | Compatibility | Greenfield design; correctness and a consistent module model take precedence over preserving source-loading behavior |
@@ -17,29 +17,31 @@ linker preserves declaration identity across files and generated targets.
 The [unified syntax RFC](./0001-unified-syntax.md) gives individual programs a
 consistent language. This proposal gives those programs a project model: reusable
 libraries, independently checked modules, packages, and application entry points.
-All examples and commands on this page describe proposed behavior.
+Relative file imports, explicit exports, re-exports, isolated scopes, and linked
+Effect TypeScript are implemented in stage 1; see [working file modules](../modules.md).
+Package paths, compile-time library imports, and project commands on this page
+remain proposed.
 
 The examples use the current Effect-value authoring surface.
 [RFC 0003](./0003-direct-style-effects.md) proposes direct-style calls, inferred
 effects, and deferred functions as an alternative surface for the same module model.
 
-## Current foundations
+## Foundations before stage 1
 
 The Native engine already analyzes `use`, `import`, `export`, and `export-from`
 directives in `packages/ocaml/lib/module_decl.ml`. It records dependency metadata,
 checks some export references, and tracks public interface changes for cache
-invalidation. Namespace imports currently rewrite references to local names;
-evaluation still uses shared session bindings.
+invalidation. Before stage 1, namespace imports rewrote references to local names and
+evaluation used shared session bindings. Stage 1 removes both behaviors.
 
-The TypeScript host loads source bundles into a session without an equivalent
-isolated module model. The Effect generator produces individual TypeScript
-modules, but does not link imports between Forma files. Protocol manifests also
+Previously, the TypeScript host loaded source bundles without isolated scopes,
+and the Effect generator emitted individual files without linking them. Protocol manifests also
 describe generated imports; those are consumer metadata rather than language
 module boundaries.
 
-These mechanisms provide useful foundations. Both engines need the same binding,
-visibility, linking, and dependency rules before imports form a complete language
-feature.
+The new module graph, interface, checking, runtime, and linking APIs share
+binding and visibility rules across both engines. The older artifact module
+metadata remains consumer metadata; it does not resolve executable module imports.
 
 ## Authoring syntax
 
@@ -175,6 +177,62 @@ implementation details.
 The first implementation rejects module cycles and reports the complete import
 chain. Recursion inside a module remains supported. Mutually recursive modules
 would require explicit interface and initialization rules in a later extension.
+
+## Stage 1 decisions
+
+Stage 1 implements relative file modules. Package resolution, compile-time library
+imports, opaque types, typeclass coherence, and project commands remain proposals.
+The resolver contract is `(specifier, importerId) -> {id, source} | missing`.
+The host supplies canonical file-instance IDs and source text. The compiler never
+reads the filesystem. In-memory bundles and Node file adapters use normalized
+paths; identity consists of the file-instance ID and declaration name, independent
+of contents, offsets, session IDs, or graph traversal order. Hosts resolving different
+package instances must supply different IDs in a later package implementation.
+
+The initial implicit core is the existing kernel builtins and bundled kernel prelude,
+primitive/container type constructors, and the current `type`, `class`, `error`,
+`service`, `layer`, and Effect-value authoring forms (including `do!`). Host-loaded
+preludes are compiler configuration, applied consistently to each isolated file;
+ordinary loaded sources never become preludes. Making these preludes ordinary
+explicit libraries belongs to stage 2. `use` does not import file declarations.
+
+Types are transparent in stage 1. Exporting a type exports its representation and
+owned constructors; consumers use `Type.Constructor` or `alias/Type.Constructor`.
+Importing a type does not introduce bare constructor names. Brand, class, and error
+construction uses the type name itself. Local tagged constructors may use bare
+names when unambiguous. Services expose members through the exported service name.
+Constructor names cannot be exported independently. Re-exports preserve the original
+owner and never manufacture another type or constructor. Opaque export syntax and
+codecs are deferred. A public signature must not expose a private nominal type;
+export the type as part of the same public interface.
+
+Module interfaces record `moduleId` and sorted exports with `name`, `kind`,
+`identity: {moduleId, declaration}`, the internal resolved `symbol`, and owned
+`constructors`. Checking adds portable generalized `scheme: {parameters, type}`
+syntax; imported schemes are
+instantiated at each use. Internal symbols encode both the module ID and declaration
+name injectively, including names that normalize alike in a target language, and
+preserve declaration capitalization. These symbols are compiler-owned and cannot
+be spelled in authored code. Namespace aliases exist only during resolution.
+
+Named imports may be re-exported with `export`; `export-from` introduces no local
+binding. Duplicate local/import names, namespace aliases, and public export names
+are errors, even if both occurrences refer to the same declaration. There is no
+`:all` mode or import renaming. Cycles are rejected with the complete entry-to-cycle
+chain at the closing import. Modules initialize in dependency order once per runtime
+instance; source changes create a new instance. Kernel evaluation initializes pure
+definitions and runs only the selected entry file's application expressions. Linked
+Effect TypeScript initializes pure values, functions, and lazy Effect values; running
+an Effect requires an explicit runner. Kernel evaluation rejects Effect programs
+with `module/effect-runtime`; it does not emulate the Effect runtime.
+
+The existing domain artifact APIs maintain a separate reference index of
+declaration data, type metadata, and global seed IDs. Their symbolic references
+are data references, not executable imports. This index never publishes source
+functions or bindings into module scopes; its cache tracks data dependencies
+separately. Form-library imports and linking those projections belong to stage 2.
+Imported macros, forms, and typeclasses/instances require stage 2 and are rejected
+with a stage-specific diagnostic; their environments are never implicitly shared.
 
 ## Compile-time modules
 

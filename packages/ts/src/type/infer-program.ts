@@ -38,6 +38,7 @@ export const inferProgram = (
   initialEnv?: TypeEnv,
   dslProvider?: DSLTypeProvider,
   rawExprs?: readonly SExpr[],
+  captureEnv?: (env: TypeEnv) => void,
 ): Effect.Effect<Type, InferenceError, InferContext> =>
   Effect.gen(function* () {
     // Set module-level provider for use by inferDSLForm
@@ -210,6 +211,7 @@ export const inferProgram = (
       }
 
       const sFinal = yield* Ref.get(ctx.subst);
+      captureEnv?.(applyEnv(sFinal, env));
       return applyType(sFinal, lastType);
     } finally {
       setInferDslProvider(prevProvider);

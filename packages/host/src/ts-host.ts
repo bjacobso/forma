@@ -1,3 +1,4 @@
+import * as Modules from "@formalang/ts/modules";
 import { Effect, Ref } from "effect";
 import * as Builtins from "@formalang/ts/builtins";
 import { KernelTypeError, type KernelError } from "@formalang/ts/diagnostic";
@@ -44,6 +45,9 @@ import type {
   HostCallResumeResult,
   HostBuiltinDescriptor,
   LanguageHost,
+  ModuleGraphRequest,
+  ModuleGraphResult,
+  ModuleLinkResult,
   LoadSourceBundleRequest,
   LoadSourceBundleResult,
   LoadSourceRequest,
@@ -278,7 +282,18 @@ export class TsLanguageHost implements LanguageHost {
   async configureSession(request: ConfigureSessionRequest): Promise<ConfigureSessionResult> {
     const session = this.#requireSession(request.sessionId);
     if (request.variables) {
-      session.language.env = session.language.env.extend(variablesToBindings(request.variables));
+      session.language.configurationEnv = session.language.configurationEnv.extend(
+        variablesToBindings(request.variables),
+      );
+      session.language.env = (
+        await Effect.runPromise(
+          Evaluator.evaluateExprs(session.language.coreExpressions(), {
+            env: session.language.configurationEnv,
+            builtins: Builtins.defaultBuiltins,
+            stepLimit: session.defaultStepLimit,
+          }),
+        )
+      ).env;
     }
     if (request.hostBuiltins) {
       session.hostBuiltins = request.hostBuiltins;
@@ -295,14 +310,43 @@ export class TsLanguageHost implements LanguageHost {
 
   async loadSource(request: LoadSourceRequest): Promise<LoadSourceResult> {
     const session = this.#requireSession(request.sessionId);
-    const parsed = Engine.parseSource({ sourceId: request.sourceId, source: request.source });
     const kind = request.kind === "prelude" ? "prelude" : "source";
-    session.language.rememberSource({ id: request.sourceId, text: request.source, kind });
+    const sourceId =
+      kind === "source" ? Modules.normalizeModuleId(request.sourceId) : request.sourceId;
+    const parsed = Engine.parseSource({ sourceId, source: request.source });
+    if (parsed.diagnostics.some((d) => d.severity === "error"))
+      return { sourceId, formCount: parsed.ast.length, diagnostics: parsed.diagnostics };
+    const previousPrelude = session.language.preludes.get(request.sourceId);
+    const previousParsed = session.language.parsedPreludes.get(request.sourceId);
+    session.language.rememberSource({ id: sourceId, text: request.source, kind });
     if (parsed.diagnostics.length === 0) {
-      session.language.rememberParsedSource(kind, request.sourceId, parsed.exprs);
+      session.language.rememberParsedSource(kind, sourceId, parsed.exprs);
+      if (kind === "prelude") {
+        try {
+          session.language.env = (
+            await Effect.runPromise(
+              Evaluator.evaluateExprs(session.language.coreExpressions(), {
+                env: session.language.configurationEnv,
+                builtins: Builtins.defaultBuiltins,
+                stepLimit: session.defaultStepLimit,
+              }),
+            )
+          ).env;
+        } catch (error) {
+          if (previousPrelude) session.language.preludes.set(request.sourceId, previousPrelude);
+          else session.language.preludes.delete(request.sourceId);
+          if (previousParsed) session.language.parsedPreludes.set(request.sourceId, previousParsed);
+          else session.language.parsedPreludes.delete(request.sourceId);
+          return {
+            sourceId: request.sourceId,
+            formCount: parsed.ast.length,
+            diagnostics: [Engine.diagnosticFromUnknown(error, "evaluate", request.sourceId)],
+          };
+        }
+      }
     }
     return {
-      sourceId: request.sourceId,
+      sourceId,
       formCount: parsed.ast.length,
       diagnostics: parsed.diagnostics,
     };
@@ -317,6 +361,68 @@ export class TsLanguageHost implements LanguageHost {
       sources,
       diagnostics: sources.flatMap((source) => source.diagnostics),
     };
+  }
+
+  #moduleGraph(request: ModuleGraphRequest): Modules.ModuleGraph {
+    const session = this.#requireSession(request.sessionId);
+    const source =
+      request.source ?? session.language.sourceText(Modules.normalizeModuleId(request.sourceId));
+    if (source === undefined) throw new Error(`Unknown module ${request.sourceId}`);
+    return Modules.resolveModuleGraph(
+      { id: request.sourceId, source },
+      Modules.sourceModuleResolver(
+        session.language.orderedSources("source").map((s) => ({ id: s.id, source: s.text })),
+      ),
+      Engine.moduleCoreOptions(session.language),
+    );
+  }
+  async moduleGraph(request: ModuleGraphRequest): Promise<ModuleGraphResult> {
+    try {
+      const graph = this.#moduleGraph(request),
+        session = this.#requireSession(request.sessionId),
+        checked = Modules.checkModuleGraph(
+          graph,
+          Engine.moduleCheckOptions({
+            session: session.language,
+            source: request.source ?? "",
+            hostBuiltins: session.hostBuiltins,
+            typePolicy: session.typePolicy,
+          }),
+        );
+      return {
+        entry: graph.entry,
+        interfaces: checked.interfaces,
+        diagnostics: checked.diagnostics,
+      };
+    } catch (error) {
+      return {
+        entry: request.sourceId,
+        interfaces: [],
+        diagnostics: [
+          error instanceof Modules.ModuleError
+            ? error.diagnostic
+            : Engine.diagnosticFromUnknown(error, "typecheck", request.sourceId),
+        ],
+      };
+    }
+  }
+  async linkEffectModules(request: ModuleGraphRequest): Promise<ModuleLinkResult> {
+    try {
+      return Modules.linkEffectModules(this.#moduleGraph(request));
+    } catch (error) {
+      return {
+        ok: false,
+        entry: request.sourceId,
+        interfaces: [],
+        declarations: [],
+        modules: [],
+        diagnostics: [
+          error instanceof Modules.ModuleError
+            ? error.diagnostic
+            : Engine.diagnosticFromUnknown(error, "emit", request.sourceId),
+        ],
+      };
+    }
   }
 
   async parse(request: ParseRequest): Promise<ParseResult> {
@@ -374,11 +480,13 @@ export class TsLanguageHost implements LanguageHost {
 
   async evaluateInSession(request: EvaluateInSessionRequest): Promise<EvaluationState> {
     const session = this.#requireSession(request.sessionId);
+    const sourceId = request.sourceId ?? (!request.source && session.language.orderedSources("source").length === 1
+      ? session.language.orderedSources("source")[0]!.id : "session");
     const source =
       request.source ??
       (request.sourceId !== undefined
-        ? session.language.sourceText(request.sourceId)
-        : session.language.joinedSourceText());
+        ? session.language.sourceText(Modules.normalizeModuleId(request.sourceId))
+        : session.language.orderedSources("source").length === 1 ? session.language.orderedSources("source")[0]?.text : undefined);
     if (source === undefined) {
       return {
         status: "failed",
@@ -396,12 +504,12 @@ export class TsLanguageHost implements LanguageHost {
       ? session.language.env.extend(variablesToBindings(request.variables))
       : session.language.env;
     if (session.hostBuiltins.length > 0) {
-      return this.#evaluateInSessionWithHostBuiltins(session, request, source, env);
+      return this.#evaluateInSessionWithHostBuiltins(session, {...request,sourceId}, source, env);
     }
 
     const result = await Engine.evaluateInSession({
       session: session.language,
-      sourceId: request.sourceId,
+      sourceId,
       source,
       env,
       stepLimit: request.stepLimit ?? session.defaultStepLimit,
@@ -409,7 +517,7 @@ export class TsLanguageHost implements LanguageHost {
     });
     const observations = this.#observations(
       session,
-      request.sourceId ?? "session",
+      sourceId,
       request,
       result,
       request.retainValues,
@@ -849,13 +957,16 @@ export class TsLanguageHost implements LanguageHost {
     return session;
   }
 
-  #evaluateInSessionWithHostBuiltins(
+  async #evaluateInSessionWithHostBuiltins(
     session: TsSession,
     request: EvaluateInSessionRequest,
     source: string,
     env: Env,
   ): Promise<EvaluationState> {
     const sourceId = request.sourceId ?? "session";
+    let expressions:readonly Reader.SExpr[];
+    try {const prepared=await Engine.prepareModuleImports({session:session.language,sourceId,source,env,stepLimit:request.stepLimit ?? session.defaultStepLimit},sourceId,source,env);expressions=prepared.expressions;env=prepared.env;}
+    catch(error) {return {status:"failed",diagnostics:[error instanceof Modules.ModuleError ? error.diagnostic : Engine.diagnosticFromUnknown(error,"evaluate",sourceId)]};}
     const evaluationId = `ts-eval-${this.#nextEvaluationId++}`;
     const evaluation = createPendingEvaluation(session, evaluationId, sourceId);
     const builtins = {
@@ -868,6 +979,7 @@ export class TsLanguageHost implements LanguageHost {
         { sourceId, source, env, stepLimit: request.stepLimit ?? session.defaultStepLimit },
         engineObservation(observe),
         builtins,
+        expressions,
       ).then((result): EvaluationState => {
         const observations = this.#observations(
           session,
@@ -882,9 +994,6 @@ export class TsLanguageHost implements LanguageHost {
             diagnostics: result.diagnostics,
             ...(observations ? { observations } : {}),
           };
-        }
-        if (!evaluation.aborted && result.env) {
-          session.language.env = result.env;
         }
         return {
           status: "completed",
@@ -903,7 +1012,7 @@ export class TsLanguageHost implements LanguageHost {
     }
     const completion = Effect.runPromise(
       Effect.provide(
-        Evaluator.evaluate(source, {
+        Evaluator.evaluateExprs(expressions, {
           stepLimit: request.stepLimit ?? session.defaultStepLimit,
           builtins,
           env,
@@ -912,9 +1021,6 @@ export class TsLanguageHost implements LanguageHost {
       ),
     )
       .then((result): EvaluationState => {
-        if (!evaluation.aborted) {
-          session.language.env = result.env;
-        }
         return {
           status: "completed",
           result: {

@@ -276,6 +276,21 @@ export function fevType(t: Type, out: Set<string> = new Set()): Set<string> {
   }
 }
 
+/** Free row variables also occur inside function parameters and type applications. */
+export function frvType(t: Type, out: Set<string> = new Set()): Set<string> {
+  const row = (r: Row): void => {
+    if (r._tag === "RVar") out.add(r.id);
+    else if (r._tag === "RExtend") { frvType(r.type, out); row(r.tail); }
+  };
+  switch (t._tag) {
+    case "TFun": frvType(t.arg, out); frvType(t.res, out); if (t.rest) frvType(t.rest, out); break;
+    case "TVariadic": frvType(t.rest, out); frvType(t.res, out); break;
+    case "TApp": frvType(t.con, out); t.args.forEach(a => frvType(a, out)); break;
+    case "TRow": row(t.row); break;
+  }
+  return out;
+}
+
 export function ftvRow(r: Row, tvOut: Set<string>, rvOut: Set<string>): void {
   switch (r._tag) {
     case "REmpty":
@@ -301,8 +316,7 @@ export function freeVarsScheme(s: Scheme): {
   evars: Set<string>;
 } {
   const tvars = ftvType(s.type);
-  const rvars = new Set<string>();
-  if (s.type._tag === "TRow") ftvRow(s.type.row, tvars, rvars);
+  const rvars = frvType(s.type);
   const evars = fevType(s.type);
   for (const v of s.tvars) tvars.delete(v);
   for (const v of s.rvars) rvars.delete(v);

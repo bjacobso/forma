@@ -5,3 +5,5 @@ val required_declaration_summary_of_emitted_value :
 
 val descriptor_hooks : ?syntax:Ast.expr list -> Env.t -> Descriptor_protocol.descriptor_hooks
 val validate_unified_forms : Env.t -> Ast.expr list -> (unit, Type_diagnostic.t list) result
+val load_unified_context : Env.t -> Ast.expr list -> (Env.t, Eval.diagnostic list) result
+val validate_source_structure : Env.t -> Ast.expr list -> (unit, Type_diagnostic.t list) result

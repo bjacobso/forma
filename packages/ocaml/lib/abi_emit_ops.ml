@@ -43,7 +43,7 @@ let parsed_prelude_exprs (session : Session.t) =
       | None -> [])
 
 let validate_emit_preludes (session : Session.t) =
-  Descriptor_metacheck.validate_artifact_hooks session.env
+  Descriptor_metacheck.validate_artifact_hooks session.core_env
     (parsed_prelude_exprs session)
 
 let requested_source_ids (session : Session.t) (request : request) =
@@ -61,7 +61,7 @@ let resolve_source (session : Session.t) source_id =
   match Hashtbl.find_opt session.parsed_sources source_id with
   | None -> Missing_source source_id
   | Some exprs -> (
-      match Elaborate.emitted_declarations session.env exprs with
+      match Elaborate.emitted_declarations (Artifact_context.environment session ()) (Artifact_context.expressions exprs) with
       | Error diagnostics -> Emitted_declaration_error diagnostics
       | Ok declarations -> Resolved_source declarations)
 
@@ -69,7 +69,7 @@ let resolve_source_values (session : Session.t) source_id =
   match Hashtbl.find_opt session.parsed_sources source_id with
   | None -> Missing_value_source source_id
   | Some exprs -> (
-      match Elaborate.emitted_values session.env exprs with
+      match Elaborate.emitted_values (Artifact_context.environment session ()) (Artifact_context.expressions exprs) with
       | Error diagnostics -> Emitted_value_error diagnostics
       | Ok values -> Resolved_values values)
 
@@ -85,8 +85,9 @@ let resolve_typed_artifact_declarations ~source_id = function
       | Ok declarations -> Artifact_typed_declarations declarations)
 
 let resolve_typed_artifact_declarations_for_exprs env ~source_id exprs =
+  let exprs=Artifact_context.expressions exprs in
   match
-    ( Elaborate.emitted_declarations env exprs,
+    ( Elaborate.emitted_declarations env (Artifact_context.expressions exprs),
       Mechanics_artifact.declarations ~source_id exprs )
   with
   | Error diagnostics, _ | _, Error diagnostics ->
@@ -123,13 +124,13 @@ let resolve_cached_typed_artifact_declarations (session : Session.t) source_id =
       | _
         when (match Hashtbl.find_opt session.parsed_sources source_id with
              | Some exprs ->
-                 Mechanics_artifact.has_mechanics_forms exprs
+                 Mechanics_artifact.has_mechanics_forms (Artifact_context.expressions exprs)
              | None -> false) ->
           let resolution =
             match Hashtbl.find_opt session.parsed_sources source_id with
             | None -> Artifact_missing_source source_id
             | Some exprs ->
-                resolve_typed_artifact_declarations_for_exprs session.env
+                resolve_typed_artifact_declarations_for_exprs (Artifact_context.environment session ())
                   ~source_id exprs
           in
           {
@@ -141,7 +142,7 @@ let resolve_cached_typed_artifact_declarations (session : Session.t) source_id =
           let resolution =
             match Hashtbl.find_opt session.parsed_sources source_id with
             | Some exprs ->
-                resolve_typed_artifact_declarations_for_exprs session.env
+                resolve_typed_artifact_declarations_for_exprs (Artifact_context.environment session ())
                   ~source_id exprs
             | None ->
                 resolve_typed_artifact_declarations ~source_id
@@ -521,7 +522,7 @@ let emit_source ~with_session ~engine_name ~engine_version (request : request) =
                     Response.eval_diagnostics_json diagnostics
                 | Ok () -> (
                     match
-                      resolve_typed_artifact_declarations_for_exprs session.env
+                      resolve_typed_artifact_declarations_for_exprs (Artifact_context.environment session ())
                         ~source_id:id exprs
                     with
                     | Artifact_emitted_declaration_error diagnostics
