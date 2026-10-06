@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of Value.closure
   | VMacro of Value.closure
 
@@ -93,7 +94,7 @@ let rec eval_cond callbacks env = function
           else eval_cond callbacks env rest)
 
 let rec eval_match_clauses callbacks env value = function
-  | [] -> Ok VNil
+  | [] -> Error [diagnostic "eval/match-failed" "No pattern matched the value."]
   | [ _ ] ->
       Error
         [
@@ -102,7 +103,7 @@ let rec eval_match_clauses callbacks env value = function
   | Reader.Keyword (_, ":else") :: expr :: _ -> callbacks.eval_expr env expr
   | Reader.Symbol (_, "else") :: expr :: _ -> callbacks.eval_expr env expr
   | pattern :: expr :: rest -> (
-      match Pattern.match_value pattern value with
+      match Pattern.match_value ~constructor_spec:(fun n -> Env.lookup ("__constructor/" ^ n) env) pattern value with
       | Some bindings -> callbacks.eval_expr (Env.extend bindings env) expr
       | None -> eval_match_clauses callbacks env value rest)
 

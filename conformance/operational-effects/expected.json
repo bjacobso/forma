@@ -1,6 +1,6 @@
 {
   "types": {
-    "ocaml": "Str -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>",
+    "ocaml": "String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>",
     "typescript": "String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>"
   },
   "serviceCapability": "Console.print",

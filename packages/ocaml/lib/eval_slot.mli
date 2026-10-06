@@ -5,6 +5,9 @@ val declaration_args : value -> value list
 val declaration_form : value -> string option
 val declaration_name : value -> string option
 
+val slot_spec_with_lookup :
+  lookup:(string -> value option) -> value -> string -> Descriptor.typed_slot option
+
 val slot_values_with_lookup :
   lookup:(string -> value option) -> value -> value -> value list
 

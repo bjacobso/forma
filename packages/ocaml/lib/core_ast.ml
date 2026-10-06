@@ -7,6 +7,8 @@ type literal =
   | LFloat of float
   | LString of string
   | LKeyword of string
+  | LSymbol of string
+  | LQuoted of Ast.expr
 
 type type_expr =
   | TESym of Ast.span * string
@@ -15,7 +17,7 @@ type type_expr =
   | TERow of Ast.span * (string * type_expr) list * string option
 
 type param = { node : node; name : string }
-type pattern = PCon of string * string list | PWild
+type pattern = PCon of string * string list | PWild | PData of Ast.expr
 
 type binding = { node : node; name : string; expr : expr }
 and field = { node : node; label : string; value : expr }
@@ -134,6 +136,9 @@ let literal_to_json = function
       Printf.sprintf "{\"kind\":\"float\",\"value\":%s}" (string_of_float value)
   | LString value ->
       Printf.sprintf "{\"kind\":\"string\",\"value\":%s}" (string_json value)
+  | LQuoted value -> Printf.sprintf "{\"kind\":\"quoted\",\"value\":%s}" (Value.to_json (Quote.value_of_syntax value))
+  | LSymbol value ->
+      Printf.sprintf "{\"kind\":\"symbol\",\"value\":%s}" (string_json value)
   | LKeyword value ->
       Printf.sprintf "{\"kind\":\"keyword\",\"value\":%s}" (string_json value)
 
@@ -143,6 +148,7 @@ let param_to_json (param : param) =
 
 let pattern_to_json = function
   | PWild -> "{\"kind\":\"wildcard\"}"
+  | PData syntax -> Printf.sprintf "{\"kind\":\"data\",\"syntax\":%s}" (Ast.expr_to_json syntax)
   | PCon (name, vars) ->
       Printf.sprintf "{\"kind\":\"constructor\",%s,\"vars\":%s}"
         (string_field_json "name" name)

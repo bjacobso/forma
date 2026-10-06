@@ -6,10 +6,10 @@
       "severity": "error",
       "code": "mechanics/let-effect",
       "message": "let binds values; use do! to run Clock.now and bind its result.",
-      "line": 8,
+      "line": 7,
       "column": 13,
-      "endLine": 8,
-      "endColumn": 24
+      "endLine": 7,
+      "endColumn": 22
     }
   ]
 }

@@ -26,8 +26,6 @@ let rec syntax_of_value = function
   | Value.VBool value -> Ok (Reader.Bool (generated_span, value))
   | Value.VInt value -> Ok (Reader.Int (generated_span, value))
   | Value.VFloat value -> Ok (Reader.Float (generated_span, value))
-  | Value.VString value when String.length value > 0 && value.[0] = ':' ->
-      Ok (Reader.Keyword (generated_span, value))
   | Value.VString value -> Ok (Reader.String (generated_span, value))
   | Value.VSymbol value -> Ok (Reader.Symbol (generated_span, value))
   | Value.VKeyword value -> Ok (Reader.Keyword (generated_span, value))
@@ -39,7 +37,7 @@ let rec syntax_of_value = function
       match syntax_list values with
       | Error _ as error -> error
       | Ok items -> Ok (Reader.Vector (generated_span, items)))
-  | Value.VMap entries ->
+  | (Value.VMap entries | Value.VDictionary entries) ->
       let rec loop acc = function
         | [] -> Ok (Reader.Map (generated_span, List.rev acc))
         | (key, value) :: rest -> (

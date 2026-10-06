@@ -34,6 +34,8 @@ const daemon = spawn(nativeCli, ["daemon"], { cwd: packageDir, stdio: ["pipe", "
 const lines = createInterface({ input: daemon.stdout });
 const responses = [];
 const waiters = [];
+const daemonExit = new Promise((resolveExit) => daemon.on("close", resolveExit));
+
 let stderr = "";
 
 daemon.stderr.on("data", (chunk) => {
@@ -151,7 +153,7 @@ try {
   daemon.stdin.end();
 }
 
-const exitCode = await new Promise((resolveExit) => daemon.on("close", resolveExit));
+const exitCode = await daemonExit;
 if (exitCode !== 0) throw new Error(`Forma daemon exited with ${exitCode}: ${stderr}`);
 if (failure) throw failure;
 

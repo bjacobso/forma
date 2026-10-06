@@ -1,3 +1,4 @@
+import { checkExpr } from "./check-expr.js";
 /**
  * Inference for DSL forms and type ascription.
  */
@@ -5,6 +6,7 @@ import { Effect, Ref } from "effect";
 import type { Type, Row } from "./types.js";
 import { tUnknown } from "./types.js";
 import { applyType, applyEnv, type TypeEnv } from "./substitution.js";
+import { assignType } from "./assign.js";
 import { unify } from "./unify.js";
 import { InferContext } from "./context.js";
 import { InferenceError } from "./errors.js";
@@ -76,19 +78,14 @@ export const inferAscribe = (
     const ctx = yield* InferContext;
 
     // Infer the type of the inner expression
-    const inferredT = yield* inferExpr(env, expr.expr);
+
 
     // Convert the type annotation to a Type
     const tvarMap = new Map<string, Type>();
     const rvarMap = new Map<string, Row>();
     const declaredT = yield* typeExprToType(expr.typeExpr, tvarMap, rvarMap);
 
-    // Unify inferred type with declared type
-    yield* unify(
-      applyType(yield* Ref.get(ctx.subst), inferredT),
-      applyType(yield* Ref.get(ctx.subst), declaredT),
-      originOf(expr, "ascribe"),
-    );
+    yield* checkExpr(env,expr.expr,declaredT);
 
     // Return the declared type (after substitution)
     const s = yield* Ref.get(ctx.subst);

@@ -10,38 +10,19 @@ preludes:
 Small team topology example in canonical ontology syntax.
 
 ```lisp
-(define-entity Team
-  (:field [team/name String {:required true}])
-  (:field [team/focus String]))
-
-(define-entity Member
-  (:field [member/name String {:required true}])
-  (:field [member/role String])
-  (:field [member/team (Ref Team)]))
+(entity Team {:name String :focus (Option String)})
+(entity Member {:name String :role (Option String) :team (Option (Id Team))})
 ```
 
 ```lisp
-(define-record "team:platform" Team
-  (:field [team/name "Platform"])
-  (:field [team/focus "Developer infrastructure"]))
-
-(define-record "team:growth" Team
-  (:field [team/name "Growth"])
-  (:field [team/focus "Lifecycle experiments"]))
-
-(define-record "member:alex" Member
-  (:field [member/name "Alex Kim"])
-  (:field [member/role "Staff Engineer"])
-  (:field [member/team "team:platform"]))
-
-(define-record "member:jordan" Member
-  (:field [member/name "Jordan Lee"])
-  (:field [member/role "Product Manager"])
-  (:field [member/team "team:growth"]))
+(seed Team "team:platform" {:name "Platform" :focus "Developer infrastructure"})
+(seed Team "team:growth" {:name "Growth" :focus "Lifecycle experiments"})
+(seed Member "member:alex"
+  {:name "Alex Kim" :role "Staff Engineer" :team "team:platform"})
+(seed Member "member:jordan"
+  {:name "Jordan Lee" :role "Product Manager" :team "team:growth"})
 ```
 
 ```lisp
-(define-query team-members
-  (:from Member)
-  (:select [member/name member/role member/team]))
+(query team-members :from Member :select [name role team])
 ```

@@ -10,6 +10,8 @@ const daemon = spawn(nativeCli, ["daemon"], {
   stdio: ["pipe", "pipe", "pipe"],
 });
 
+const daemonExit = new Promise((resolveExit) => daemon.on("close", resolveExit));
+
 let stderr = "";
 daemon.stderr.on("data", (chunk) => {
   stderr += chunk;
@@ -81,27 +83,23 @@ const preludes = readPreludes();
 const schemaSourceId = "emit/schema";
 const dataSourceId = "emit/data";
 const schemaSource = `
-(define-entity Department
-  (:field [department/name String {:required true}]))
+(entity Department {:name String})
 
-(define-entity Employee
-  (:field [employee/name String {:required true}])
-  (:field [employee/department (Ref Department)])
-  (:field [employee/active Bool]))
+(entity Employee {:name String
+    :department (Option (Id Department))
+    :active (Option Bool)})
 
-(define-query employee-directory
-  (:from Employee)
-  (:where employee/active)
-  (:select [employee/name employee/department]))
+(query employee-directory
+  :from Employee
+  :where (= active (Some true))
+  :select [name department])
 `;
 
 const dataSource = `
-(define-record "department:platform" Department
-  (:field [department/name "Platform"]))
+(seed Department "department:platform" {:name "Platform"})
 
-(define-record "employee:ada" Employee
-  (:field [employee/name "Ada Lovelace"])
-  (:field [employee/department "department:platform"]))
+(seed Employee "employee:ada" {:name "Ada Lovelace"
+  :department "department:platform"})
 `;
 
 const peopleModuleSourceId = "people.md";
@@ -109,8 +107,7 @@ const hiringModuleSourceId = "hiring.md";
 const peopleModuleSource = `
 (export Person)
 
-(define-entity Person
-  (:field [person/name String]))
+(entity Person {:name (Option String)})
 `;
 
 const hiringModuleSource = `
@@ -118,17 +115,16 @@ const hiringModuleSource = `
 (import "./people.md" :as people)
 (export Candidate)
 
-(define-entity Candidate
-  (:field [candidate/name String]))
+(entity Candidate {:name (Option String)})
 `;
 
 const invalidIrSourceId = "emit/invalid-ir";
 const invalidIrSource = `
-(define-form define-invalid-ir
+(__form-descriptor define-invalid-ir
   (:identifier name)
   (:construct-fn invalid-ir/construct))
 
-(meta-fn invalid-ir/construct
+(__form-hook invalid-ir/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output InvalidIr)
@@ -147,12 +143,12 @@ const invalidIrSource = `
 
 const invalidSummarySourceId = "emit/invalid-summary";
 const invalidSummarySource = `
-(define-form define-invalid-summary
+(__form-descriptor define-invalid-summary
   (:identifier name)
   (:construct-fn invalid-summary/construct)
   (:result-type (constant List)))
 
-(meta-fn invalid-summary/construct
+(__form-hook invalid-summary/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output InvalidSummary)
@@ -167,12 +163,12 @@ const invalidSummarySource = `
 
 const invalidSummaryNameSourceId = "emit/invalid-summary-name";
 const invalidSummaryNameSource = `
-(define-form define-invalid-summary-name
+(__form-descriptor define-invalid-summary-name
   (:identifier name)
   (:construct-fn invalid-summary-name/construct)
   (:result-type (constant List)))
 
-(meta-fn invalid-summary-name/construct
+(__form-hook invalid-summary-name/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output InvalidSummaryName)
@@ -187,12 +183,12 @@ const invalidSummaryNameSource = `
 
 const invalidSummaryResultTypeSourceId = "emit/invalid-summary-result-type";
 const invalidSummaryResultTypeSource = `
-(define-form define-invalid-summary-result-type
+(__form-descriptor define-invalid-summary-result-type
   (:identifier name)
   (:construct-fn invalid-summary-result-type/construct)
   (:result-type (constant List)))
 
-(meta-fn invalid-summary-result-type/construct
+(__form-hook invalid-summary-result-type/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output InvalidSummaryResultType)
@@ -209,12 +205,12 @@ const invalidSummaryResultTypeSource = `
 
 const invalidMaskedSummarySourceId = "emit/invalid-masked-summary";
 const invalidMaskedSummarySource = `
-(define-form define-invalid-masked-summary
+(__form-descriptor define-invalid-masked-summary
   (:identifier name)
   (:construct-fn invalid-masked-summary/construct)
   (:result-type (constant MaskedSummaryDef)))
 
-(meta-fn invalid-masked-summary/construct
+(__form-hook invalid-masked-summary/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output InvalidMaskedSummary)
@@ -229,12 +225,12 @@ const invalidMaskedSummarySource = `
 
 const implicitSummarySourceId = "emit/implicit-summary";
 const implicitSummarySource = `
-(define-form define-implicit-summary
+(__form-descriptor define-implicit-summary
   (:identifier name)
   (:construct-fn implicit-summary/construct)
   (:result-type (constant ImplicitSummaryDef)))
 
-(meta-fn implicit-summary/construct
+(__form-hook implicit-summary/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output ImplicitSummary)
@@ -248,12 +244,12 @@ const implicitSummarySource = `
 
 const mismatchedSummarySourceId = "emit/mismatched-summary";
 const mismatchedSummarySource = `
-(define-form define-mismatched-summary
+(__form-descriptor define-mismatched-summary
   (:identifier name)
   (:construct-fn mismatched-summary/construct)
   (:result-type (constant MismatchedSummaryDef)))
 
-(meta-fn mismatched-summary/construct
+(__form-hook mismatched-summary/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output MismatchedSummary)
@@ -271,13 +267,13 @@ const mismatchedSummarySource = `
 
 const mismatchedDescriptorKindSourceId = "emit/mismatched-descriptor-kind";
 const mismatchedDescriptorKindSource = `
-(define-form define-mismatched-descriptor-kind
+(__form-descriptor define-mismatched-descriptor-kind
   (:identifier name)
   (:construct-fn mismatched-descriptor-kind/construct)
   (:construct [kind "DescriptorSummaryKind"])
   (:result-type (constant DescriptorSummaryDef)))
 
-(meta-fn mismatched-descriptor-kind/construct
+(__form-hook mismatched-descriptor-kind/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output DescriptorSummaryDef)
@@ -295,7 +291,7 @@ const mismatchedDescriptorKindSource = `
 
 const mismatchedDescriptorNameSourceId = "emit/mismatched-descriptor-name";
 const mismatchedDescriptorNameSource = `
-(define-form define-mismatched-descriptor-name
+(__form-descriptor define-mismatched-descriptor-name
   (:identifier name)
   (:construct-fn mismatched-descriptor-name/construct)
   (:construct
@@ -303,7 +299,7 @@ const mismatchedDescriptorNameSource = `
     [name declaration-name])
   (:result-type (constant DescriptorNameDef)))
 
-(meta-fn mismatched-descriptor-name/construct
+(__form-hook mismatched-descriptor-name/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output DescriptorNameDef)
@@ -321,12 +317,12 @@ const mismatchedDescriptorNameSource = `
 
 const mismatchedSummaryResultTypeSourceId = "emit/mismatched-summary-result-type";
 const mismatchedSummaryResultTypeSource = `
-(define-form define-mismatched-summary-result-type
+(__form-descriptor define-mismatched-summary-result-type
   (:identifier name)
   (:construct-fn mismatched-summary-result-type/construct)
   (:result-type (constant ActualSummaryResultDef)))
 
-(meta-fn mismatched-summary-result-type/construct
+(__form-hook mismatched-summary-result-type/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output ActualSummaryResultDef)
@@ -344,12 +340,12 @@ const mismatchedSummaryResultTypeSource = `
 
 const payloadResultTypeSourceId = "emit/payload-result-type";
 const payloadResultTypeSource = `
-(define-form define-payload-result-type
+(__form-descriptor define-payload-result-type
   (:identifier name)
   (:construct-fn payload-result-type/construct)
   (:result-type (constant SummaryOnlyDef)))
 
-(meta-fn payload-result-type/construct
+(__form-hook payload-result-type/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output SummaryOnlyDef)
@@ -368,7 +364,7 @@ const payloadResultTypeSource = `
 
 const unknownValidatorSourceId = "emit/unknown-validator";
 const unknownValidatorSource = `
-(define-form define-unknown-validator
+(__form-descriptor define-unknown-validator
   (:identifier name)
   (:extensions
     (:artifact
@@ -376,7 +372,7 @@ const unknownValidatorSource = `
   (:construct-fn unknown-validator/construct)
   (:result-type (constant UnknownValidatorDef)))
 
-(meta-fn unknown-validator/construct
+(__form-hook unknown-validator/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output UnknownValidatorDef)
@@ -394,7 +390,7 @@ const unknownValidatorSource = `
 
 const malformedValidatorSourceId = "emit/malformed-validator";
 const malformedValidatorSource = `
-(define-form define-malformed-validator
+(__form-descriptor define-malformed-validator
   (:identifier name)
   (:extensions
     (:artifact
@@ -402,7 +398,7 @@ const malformedValidatorSource = `
   (:construct-fn malformed-validator/construct)
   (:result-type (constant MalformedValidatorDef)))
 
-(meta-fn malformed-validator/construct
+(__form-hook malformed-validator/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output MalformedValidatorDef)
@@ -420,7 +416,7 @@ const malformedValidatorSource = `
 
 const duplicateValidatorSourceId = "emit/duplicate-validator";
 const duplicateValidatorSource = `
-(define-form define-duplicate-validator
+(__form-descriptor define-duplicate-validator
   (:identifier name)
   (:extensions
     (:artifact
@@ -428,7 +424,7 @@ const duplicateValidatorSource = `
   (:construct-fn duplicate-validator/construct)
   (:result-type (constant DuplicateValidatorDef)))
 
-(meta-fn duplicate-validator/construct
+(__form-hook duplicate-validator/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output DuplicateValidatorDef)
@@ -446,7 +442,7 @@ const duplicateValidatorSource = `
 
 const malformedPayloadContractSourceId = "emit/malformed-payload-contract";
 const malformedPayloadContractSource = `
-(define-form define-malformed-payload-contract
+(__form-descriptor define-malformed-payload-contract
   (:identifier name)
   (:extensions
     (:artifact
@@ -454,7 +450,7 @@ const malformedPayloadContractSource = `
   (:construct-fn malformed-payload-contract/construct)
   (:result-type (constant MalformedPayloadContractDef)))
 
-(meta-fn malformed-payload-contract/construct
+(__form-hook malformed-payload-contract/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output MalformedPayloadContractDef)
@@ -472,7 +468,7 @@ const malformedPayloadContractSource = `
 
 const missingPayloadFieldSourceId = "emit/missing-payload-field";
 const missingPayloadFieldSource = `
-(define-form define-missing-payload-field
+(__form-descriptor define-missing-payload-field
   (:identifier name)
   (:extensions
     (:artifact
@@ -480,7 +476,7 @@ const missingPayloadFieldSource = `
   (:construct-fn missing-payload-field/construct)
   (:result-type (constant MissingPayloadFieldDef)))
 
-(meta-fn missing-payload-field/construct
+(__form-hook missing-payload-field/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output MissingPayloadFieldDef)
@@ -498,7 +494,7 @@ const missingPayloadFieldSource = `
 
 const objectPayloadFieldSourceId = "emit/object-payload-field";
 const objectPayloadFieldSource = `
-(define-form define-object-payload-field
+(__form-descriptor define-object-payload-field
   (:identifier name)
   (:extensions
     (:artifact
@@ -506,7 +502,7 @@ const objectPayloadFieldSource = `
   (:construct-fn object-payload-field/construct)
   (:result-type (constant ObjectPayloadFieldDef)))
 
-(meta-fn object-payload-field/construct
+(__form-hook object-payload-field/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output ObjectPayloadFieldDef)
@@ -525,7 +521,7 @@ const objectPayloadFieldSource = `
 
 const typedPayloadFieldSourceId = "emit/typed-payload-field";
 const typedPayloadFieldSource = `
-(define-form define-typed-payload-field
+(__form-descriptor define-typed-payload-field
   (:identifier name)
   (:extensions
     (:artifact
@@ -538,7 +534,7 @@ const typedPayloadFieldSource = `
   (:construct-fn typed-payload-field/construct)
   (:result-type (constant TypedPayloadFieldDef)))
 
-(meta-fn typed-payload-field/construct
+(__form-hook typed-payload-field/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output TypedPayloadFieldDef)
@@ -558,15 +554,15 @@ const typedPayloadFieldSource = `
 
 const malformedQueryPayloadSourceId = "emit/malformed-query-payload";
 const malformedQueryPayloadSource = `
-(define-form define-malformed-query-payload
+(__form-descriptor define-malformed-query-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract QueryPayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-query-payload/construct)
   (:result-type (constant List)))
 
-(meta-fn malformed-query-payload/construct
+(__form-hook malformed-query-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output QueryDef)
@@ -586,15 +582,15 @@ const malformedQueryPayloadSource = `
 
 const malformedRecordPayloadSourceId = "emit/malformed-record-payload";
 const malformedRecordPayloadSource = `
-(define-form define-malformed-record-payload
+(__form-descriptor define-malformed-record-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract RecordPayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-record-payload/construct)
   (:result-type (constant RecordDef)))
 
-(meta-fn malformed-record-payload/construct
+(__form-hook malformed-record-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output RecordDef)
@@ -614,15 +610,15 @@ const malformedRecordPayloadSource = `
 
 const malformedEntityPayloadSourceId = "emit/malformed-entity-payload";
 const malformedEntityPayloadSource = `
-(define-form define-malformed-entity-payload
+(__form-descriptor define-malformed-entity-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract EntityPayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-entity-payload/construct)
   (:result-type (constant SchemaDecl)))
 
-(meta-fn malformed-entity-payload/construct
+(__form-hook malformed-entity-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output SchemaDecl)
@@ -642,15 +638,15 @@ const malformedEntityPayloadSource = `
 
 const malformedEdgePayloadSourceId = "emit/malformed-edge-payload";
 const malformedEdgePayloadSource = `
-(define-form define-malformed-edge-payload
+(__form-descriptor define-malformed-edge-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract RelationPayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-edge-payload/construct)
   (:result-type (constant RelationDef)))
 
-(meta-fn malformed-edge-payload/construct
+(__form-hook malformed-edge-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output RelationDef)
@@ -671,15 +667,15 @@ const malformedEdgePayloadSource = `
 
 const malformedLinkPayloadSourceId = "emit/malformed-link-payload";
 const malformedLinkPayloadSource = `
-(define-form define-malformed-link-payload
+(__form-descriptor define-malformed-link-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract LinkPayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-link-payload/construct)
   (:result-type (constant LinkDef)))
 
-(meta-fn malformed-link-payload/construct
+(__form-hook malformed-link-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output LinkDef)
@@ -700,15 +696,15 @@ const malformedLinkPayloadSource = `
 
 const malformedOperationPayloadSourceId = "emit/malformed-operation-payload";
 const malformedOperationPayloadSource = `
-(define-form define-malformed-operation-payload
+(__form-descriptor define-malformed-operation-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract ActionPayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-operation-payload/construct)
   (:result-type (constant ActionDef)))
 
-(meta-fn malformed-operation-payload/construct
+(__form-hook malformed-operation-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output ActionDef)
@@ -728,15 +724,15 @@ const malformedOperationPayloadSource = `
 
 const malformedSurfacePayloadSourceId = "emit/malformed-surface-payload";
 const malformedSurfacePayloadSource = `
-(define-form define-malformed-surface-payload
+(__form-descriptor define-malformed-surface-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract ViewPayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-surface-payload/construct)
   (:result-type (constant ViewDef)))
 
-(meta-fn malformed-surface-payload/construct
+(__form-hook malformed-surface-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output ViewDef)
@@ -755,15 +751,15 @@ const malformedSurfacePayloadSource = `
 
 const malformedWorkspacePayloadSourceId = "emit/malformed-workspace-payload";
 const malformedWorkspacePayloadSource = `
-(define-form define-malformed-workspace-payload
+(__form-descriptor define-malformed-workspace-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract WorkspacePayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-workspace-payload/construct)
   (:result-type (constant WorkspaceDef)))
 
-(meta-fn malformed-workspace-payload/construct
+(__form-hook malformed-workspace-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output WorkspaceDef)
@@ -782,15 +778,15 @@ const malformedWorkspacePayloadSource = `
 
 const malformedRulePayloadSourceId = "emit/malformed-rule-payload";
 const malformedRulePayloadSource = `
-(define-form define-malformed-rule-payload
+(__form-descriptor define-malformed-rule-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract ConstraintPayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-rule-payload/construct)
   (:result-type (constant ConstraintDef)))
 
-(meta-fn malformed-rule-payload/construct
+(__form-hook malformed-rule-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output ConstraintDef)
@@ -813,15 +809,15 @@ const malformedRulePayloadSource = `
 
 const malformedWorkflowPayloadSourceId = "emit/malformed-workflow-payload";
 const malformedWorkflowPayloadSource = `
-(define-form define-malformed-workflow-payload
+(__form-descriptor define-malformed-workflow-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract ProcessPayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-workflow-payload/construct)
   (:result-type (constant ProcessDef)))
 
-(meta-fn malformed-workflow-payload/construct
+(__form-hook malformed-workflow-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output ProcessDef)
@@ -842,15 +838,15 @@ const malformedWorkflowPayloadSource = `
 
 const malformedTaskPayloadSourceId = "emit/malformed-task-payload";
 const malformedTaskPayloadSource = `
-(define-form define-malformed-task-payload
+(__form-descriptor define-malformed-task-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract TaskPayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-task-payload/construct)
   (:result-type (constant TaskDefinitionDef)))
 
-(meta-fn malformed-task-payload/construct
+(__form-hook malformed-task-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output TaskDefinitionDef)
@@ -870,15 +866,15 @@ const malformedTaskPayloadSource = `
 
 const malformedContentPayloadSourceId = "emit/malformed-content-payload";
 const malformedContentPayloadSource = `
-(define-form define-malformed-content-payload
+(__form-descriptor define-malformed-content-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract DocumentPayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-content-payload/construct)
   (:result-type (constant DocumentDef)))
 
-(meta-fn malformed-content-payload/construct
+(__form-hook malformed-content-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output DocumentDef)
@@ -897,15 +893,15 @@ const malformedContentPayloadSource = `
 
 const malformedContentLocalePayloadSourceId = "emit/malformed-content-locale-payload";
 const malformedContentLocalePayloadSource = `
-(define-form define-malformed-content-locale-payload
+(__form-descriptor define-malformed-content-locale-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract DocumentLocalePayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-content-locale-payload/construct)
   (:result-type (constant DocumentLocaleDef)))
 
-(meta-fn malformed-content-locale-payload/construct
+(__form-hook malformed-content-locale-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output DocumentLocaleDef)
@@ -927,15 +923,15 @@ const malformedContentLocalePayloadSource = `
 
 const malformedContentLocalizedPayloadSourceId = "emit/malformed-content-localized-payload";
 const malformedContentLocalizedPayloadSource = `
-(define-form define-malformed-content-localized-payload
+(__form-descriptor define-malformed-content-localized-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract DocumentLocalizedPayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-content-localized-payload/construct)
   (:result-type (constant DocumentLocalizedDef)))
 
-(meta-fn malformed-content-localized-payload/construct
+(__form-hook malformed-content-localized-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output DocumentLocalizedDef)
@@ -954,15 +950,15 @@ const malformedContentLocalizedPayloadSource = `
 
 const malformedContentMappingPayloadSourceId = "emit/malformed-content-mapping-payload";
 const malformedContentMappingPayloadSource = `
-(define-form define-malformed-content-mapping-payload
+(__form-descriptor define-malformed-content-mapping-payload
   (:identifier name)
   (:extensions
     (:artifact
-      (:payload (:contract PdfMappingPayload))))
+      (:payload (:required-fields [kind]) (:string-fields [kind]))))
   (:construct-fn malformed-content-mapping-payload/construct)
   (:result-type (constant PdfMappingDef)))
 
-(meta-fn malformed-content-mapping-payload/construct
+(__form-hook malformed-content-mapping-payload/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output PdfMappingDef)
@@ -987,7 +983,7 @@ const malformedContentMappingPayloadSource = `
 
 const mismatchedPayloadKindSourceId = "emit/mismatched-payload-kind";
 const mismatchedPayloadKindSource = `
-(define-form define-mismatched-payload-kind
+(__form-descriptor define-mismatched-payload-kind
   (:identifier name)
   (:extensions
     (:artifact
@@ -997,7 +993,7 @@ const mismatchedPayloadKindSource = `
   (:construct-fn mismatched-payload-kind/construct)
   (:result-type (constant MismatchedPayloadKindDef)))
 
-(meta-fn mismatched-payload-kind/construct
+(__form-hook mismatched-payload-kind/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output MismatchedPayloadKindDef)
@@ -1015,7 +1011,7 @@ const mismatchedPayloadKindSource = `
 
 const mismatchedPayloadFieldKindSourceId = "emit/mismatched-payload-field-kind";
 const mismatchedPayloadFieldKindSource = `
-(define-form define-mismatched-payload-field-kind
+(__form-descriptor define-mismatched-payload-field-kind
   (:identifier name)
   (:extensions
     (:artifact
@@ -1025,7 +1021,7 @@ const mismatchedPayloadFieldKindSource = `
   (:construct-fn mismatched-payload-field-kind/construct)
   (:result-type (constant MismatchedPayloadFieldKindDef)))
 
-(meta-fn mismatched-payload-field-kind/construct
+(__form-hook mismatched-payload-field-kind/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output MismatchedPayloadFieldKindDef)
@@ -1044,7 +1040,7 @@ const mismatchedPayloadFieldKindSource = `
 
 const conflictingPayloadFieldKindSourceId = "emit/conflicting-payload-field-kind";
 const conflictingPayloadFieldKindSource = `
-(define-form define-conflicting-payload-field-kind
+(__form-descriptor define-conflicting-payload-field-kind
   (:identifier name)
   (:extensions
     (:artifact
@@ -1055,7 +1051,7 @@ const conflictingPayloadFieldKindSource = `
   (:construct-fn conflicting-payload-field-kind/construct)
   (:result-type (constant ConflictingPayloadFieldKindDef)))
 
-(meta-fn conflicting-payload-field-kind/construct
+(__form-hook conflicting-payload-field-kind/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output ConflictingPayloadFieldKindDef)
@@ -1074,7 +1070,7 @@ const conflictingPayloadFieldKindSource = `
 
 const literalPayloadObjectFieldSourceId = "emit/literal-payload-object-field";
 const literalPayloadObjectFieldSource = `
-(define-form define-literal-payload-object-field
+(__form-descriptor define-literal-payload-object-field
   (:identifier name)
   (:extensions
     (:artifact
@@ -1085,7 +1081,7 @@ const literalPayloadObjectFieldSource = `
   (:construct-fn literal-payload-object-field/construct)
   (:result-type (constant LiteralPayloadObjectFieldDef)))
 
-(meta-fn literal-payload-object-field/construct
+(__form-hook literal-payload-object-field/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output LiteralPayloadObjectFieldDef)
@@ -1104,7 +1100,7 @@ const literalPayloadObjectFieldSource = `
 
 const unknownPayloadClauseSourceId = "emit/unknown-payload-clause";
 const unknownPayloadClauseSource = `
-(define-form define-unknown-payload-clause
+(__form-descriptor define-unknown-payload-clause
   (:identifier name)
   (:extensions
     (:artifact
@@ -1114,7 +1110,7 @@ const unknownPayloadClauseSource = `
   (:construct-fn unknown-payload-clause/construct)
   (:result-type (constant UnknownPayloadClauseDef)))
 
-(meta-fn unknown-payload-clause/construct
+(__form-hook unknown-payload-clause/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output UnknownPayloadClauseDef)
@@ -1132,23 +1128,23 @@ const unknownPayloadClauseSource = `
 
 const payloadContractAliasSourceId = "emit/payload-contract-alias";
 const payloadContractAliasSource = `
-(define-payload-contract BasePayloadContract
+(__payload-contract BasePayloadContract
   (:required-fields [kind name])
   (:string-fields [kind name]))
 
-(define-payload-contract MetadataPayloadContract
+(__payload-contract MetadataPayloadContract
   (:required-fields [metadata])
   (:object-fields [metadata]))
 
-(define-payload-contract TagsPayloadContract
+(__payload-contract TagsPayloadContract
   (:required-fields [tags])
   (:array-fields [tags]))
 
-(define-payload-contract SharedPayloadContract
+(__payload-contract SharedPayloadContract
   (:contract [BasePayloadContract MetadataPayloadContract])
   (:literal-fields [[kind "SharedPayload"]]))
 
-(define-form define-payload-contract-alias
+(__form-descriptor define-payload-contract-alias
   (:identifier name)
   (:extensions
     (:artifact
@@ -1157,7 +1153,7 @@ const payloadContractAliasSource = `
   (:construct-fn payload-contract-alias/construct)
   (:result-type (constant PayloadContractAliasDef)))
 
-(meta-fn payload-contract-alias/construct
+(__form-hook payload-contract-alias/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output PayloadContractAliasDef)
@@ -1177,7 +1173,7 @@ const payloadContractAliasSource = `
 
 const unknownPayloadContractSourceId = "emit/unknown-payload-contract";
 const unknownPayloadContractSource = `
-(define-form define-unknown-payload-contract
+(__form-descriptor define-unknown-payload-contract
   (:identifier name)
   (:extensions
     (:artifact
@@ -1185,7 +1181,7 @@ const unknownPayloadContractSource = `
   (:construct-fn unknown-payload-contract/construct)
   (:result-type (constant UnknownPayloadContractDef)))
 
-(meta-fn unknown-payload-contract/construct
+(__form-hook unknown-payload-contract/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output UnknownPayloadContractDef)
@@ -1203,12 +1199,12 @@ const unknownPayloadContractSource = `
 
 const recursivePayloadContractSourceId = "emit/recursive-payload-contract";
 const recursivePayloadContractSource = `
-(define-payload-contract RecursivePayloadContract
+(__payload-contract RecursivePayloadContract
   (:contract RecursivePayloadContract)
   (:required-fields [kind name])
   (:string-fields [kind name]))
 
-(define-form define-recursive-payload-contract
+(__form-descriptor define-recursive-payload-contract
   (:identifier name)
   (:extensions
     (:artifact
@@ -1216,7 +1212,7 @@ const recursivePayloadContractSource = `
   (:construct-fn recursive-payload-contract/construct)
   (:result-type (constant RecursivePayloadContractDef)))
 
-(meta-fn recursive-payload-contract/construct
+(__form-hook recursive-payload-contract/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output RecursivePayloadContractDef)
@@ -1234,11 +1230,11 @@ const recursivePayloadContractSource = `
 
 const duplicatePayloadContractReferenceSourceId = "emit/duplicate-payload-contract-reference";
 const duplicatePayloadContractReferenceSource = `
-(define-payload-contract DuplicatePayloadBase
+(__payload-contract DuplicatePayloadBase
   (:required-fields [kind name])
   (:string-fields [kind name]))
 
-(define-form define-duplicate-payload-contract-reference
+(__form-descriptor define-duplicate-payload-contract-reference
   (:identifier name)
   (:extensions
     (:artifact
@@ -1246,7 +1242,7 @@ const duplicatePayloadContractReferenceSource = `
   (:construct-fn duplicate-payload-contract-reference/construct)
   (:result-type (constant DuplicatePayloadContractReferenceDef)))
 
-(meta-fn duplicate-payload-contract-reference/construct
+(__form-hook duplicate-payload-contract-reference/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output DuplicatePayloadContractReferenceDef)
@@ -1264,15 +1260,15 @@ const duplicatePayloadContractReferenceSource = `
 
 const conflictingInheritedPayloadContractSourceId = "emit/conflicting-inherited-payload-contract";
 const conflictingInheritedPayloadContractSource = `
-(define-payload-contract StringMetadataPayload
+(__payload-contract StringMetadataPayload
   (:required-fields [kind name metadata])
   (:string-fields [kind name metadata]))
 
-(define-payload-contract ObjectMetadataPayload
+(__payload-contract ObjectMetadataPayload
   (:required-fields [metadata])
   (:object-fields [metadata]))
 
-(define-form define-conflicting-inherited-payload-contract
+(__form-descriptor define-conflicting-inherited-payload-contract
   (:identifier name)
   (:extensions
     (:artifact
@@ -1280,7 +1276,7 @@ const conflictingInheritedPayloadContractSource = `
   (:construct-fn conflicting-inherited-payload-contract/construct)
   (:result-type (constant ConflictingInheritedPayloadContractDef)))
 
-(meta-fn conflicting-inherited-payload-contract/construct
+(__form-hook conflicting-inherited-payload-contract/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output ConflictingInheritedPayloadContractDef)
@@ -1299,10 +1295,10 @@ const conflictingInheritedPayloadContractSource = `
 
 const malformedPayloadContractAliasSourceId = "emit/malformed-payload-contract-alias";
 const malformedPayloadContractAliasSource = `
-(define-payload-contract MalformedPayloadContract
+(__payload-contract MalformedPayloadContract
   not-a-payload-clause)
 
-(define-form define-malformed-payload-contract-alias
+(__form-descriptor define-malformed-payload-contract-alias
   (:identifier name)
   (:extensions
     (:artifact
@@ -1310,7 +1306,7 @@ const malformedPayloadContractAliasSource = `
   (:construct-fn malformed-payload-contract-alias/construct)
   (:result-type (constant MalformedPayloadContractAliasDef)))
 
-(meta-fn malformed-payload-contract-alias/construct
+(__form-hook malformed-payload-contract-alias/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output MalformedPayloadContractAliasDef)
@@ -1328,12 +1324,12 @@ const malformedPayloadContractAliasSource = `
 
 const unvalidatedHttpShapeSourceId = "emit/unvalidated-http-shape";
 const unvalidatedHttpShapeSource = `
-(define-form define-unvalidated-http-schema
+(__form-descriptor define-unvalidated-http-schema
   (:identifier name)
   (:construct-fn unvalidated-http-schema/construct)
   (:result-type (constant SchemaDecl)))
 
-(meta-fn unvalidated-http-schema/construct
+(__form-hook unvalidated-http-schema/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output SchemaDecl)
@@ -1354,7 +1350,7 @@ const unvalidatedHttpShapeSource = `
 
 const descriptorValidatedHttpShapeSourceId = "emit/descriptor-validated-http-shape";
 const descriptorValidatedHttpShapeSource = `
-(define-form define-descriptor-validated-http-schema
+(__form-descriptor define-descriptor-validated-http-schema
   (:identifier name)
   (:extensions
     (:artifact
@@ -1362,7 +1358,7 @@ const descriptorValidatedHttpShapeSource = `
   (:construct-fn descriptor-validated-http-schema/construct)
   (:result-type (constant SchemaDecl)))
 
-(meta-fn descriptor-validated-http-schema/construct
+(__form-hook descriptor-validated-http-schema/construct
   (:kind construct)
   (:input FormMetaInput)
   (:output SchemaDecl)
@@ -1826,20 +1822,20 @@ try {
     content?.sourceIds?.join(",") !== `${schemaSourceId},${dataSourceId}` ||
     typeof content?.sourceHashes?.[schemaSourceId] !== "string" ||
     typeof content?.sourceHashes?.[dataSourceId] !== "string" ||
-    !content?.preludeIds?.includes("preludes/ontology-compiler.lisp") ||
-    typeof content?.preludeHashes?.["preludes/ontology-compiler.lisp"] !== "string" ||
+    !content?.preludeIds?.includes("preludes/ontology.lisp") ||
+    typeof content?.preludeHashes?.["preludes/ontology.lisp"] !== "string" ||
     content?.declarationCount !== 5 ||
     typeof content?.declarationsHash !== "string" ||
     content?.typeSummary?.declarationCount !== 5 ||
     content?.typeSummary?.resultTypes?.SchemaDecl !== 2 ||
-    content?.typeSummary?.resultTypes?.List !== 1 ||
+    content?.typeSummary?.resultTypes?.["List<{:department Option<Id<Department>> :name String}>"] !== 1 ||
     content?.typeSummary?.resultTypes?.RecordDef !== 2 ||
     !Array.isArray(content?.derivedArtifacts) ||
     content.derivedArtifacts[0]?.kind !== "DerivedManifest" ||
     content.derivedArtifacts[0]?.target !== "manifest" ||
     content.derivedArtifacts[0]?.sourceIrVersion !== "1" ||
     content.derivedArtifacts[0]?.declarationCount !== 5 ||
-    content.derivedArtifacts[0]?.declarations?.[2]?.resultType !== "List" ||
+    content.derivedArtifacts[0]?.declarations?.[2]?.resultType !== "List<{:department Option<Id<Department>> :name String}>" ||
     content.derivedArtifacts[0]?.declarations?.some(
       (declaration) => declaration?.kind === "Unknown" || declaration?.resultType == null,
     ) ||
@@ -1853,7 +1849,7 @@ try {
     content.declarationProvenance[0]?.sourceId !== schemaSourceId ||
     content.declarationProvenance[0]?.formIndex !== 0 ||
     content.declarationProvenance[0]?.span?.startOffset !==
-      schemaSource.indexOf("(define-entity Department") ||
+      schemaSource.indexOf("(entity Department") ||
     content.declarationProvenance[0]?.span?.startLine !== 2 ||
     content.declarationProvenance[0]?.span?.startColumn !== 1 ||
     content.declarationProvenance[0]?.span?.endOffset <=
@@ -1862,7 +1858,7 @@ try {
     content.declarationProvenance[2]?.formIndex !== 2 ||
     content.declarationProvenance[3]?.sourceId !== dataSourceId ||
     content.declarationProvenance[3]?.formIndex !== 0 ||
-    content.declarationProvenance[3]?.span?.startOffset !== dataSource.indexOf("(define-record") ||
+    content.declarationProvenance[3]?.span?.startOffset !== dataSource.indexOf("(seed Department") ||
     content.declarationProvenance[3]?.span?.startLine !== 2 ||
     content.declarationProvenance[3]?.span?.startColumn !== 1 ||
     !Array.isArray(content?.declarations) ||
@@ -1889,28 +1885,21 @@ try {
   if (
     departmentType?.resultType !== "SchemaDecl" ||
     employeeType?.resultType !== "SchemaDecl" ||
-    queryType?.resultType !== "List" ||
+    queryType?.resultType !== "List<{:department Option<Id<Department>> :name String}>" ||
     departmentRecordType?.resultType !== "RecordDef" ||
     employeeRecordType?.resultType !== "RecordDef"
   ) {
     throw new Error(`Unexpected declaration type summaries:\n${JSON.stringify(content, null, 2)}`);
   }
   if (
-    employee.fieldTypes?.["employee/name"] !== "String" ||
-    employee.fieldTypes?.["employee/department"]?.[0] !== "Ref" ||
-    employee.fieldTypes?.["employee/department"]?.[1] !== "Department"
+    employee.fields?.find(field=>field.name==="employee/name")?.type !== "String" ||
+    employee.fields?.find(field=>field.name==="employee/department")?.type?.[0] !== "Id" ||
+    employee.fields?.find(field=>field.name==="employee/department")?.type?.[1] !== "Department"
   ) {
     throw new Error(`Unexpected entity field types:\n${JSON.stringify(employee, null, 2)}`);
   }
-  if (
-    query.typeAnnotations?.where?.kind !== "type" ||
-    query.typeAnnotations?.where?.name !== "Bool" ||
-    query.typeAnnotations?.select?.["employee/name"]?.kind !== "type" ||
-    query.typeAnnotations?.select?.["employee/name"]?.name !== "String" ||
-    query.typeAnnotations?.select?.["employee/department"]?.kind !== "type-ref" ||
-    query.typeAnnotations?.select?.["employee/department"]?.name !== "Department"
-  ) {
-    throw new Error(`Unexpected query type annotations:\n${JSON.stringify(query, null, 2)}`);
+  if (query.where?.kind !== "raw-expr" || query.where.expr?.[0] !== "=" || query.select?.join(",") !== "employee/name,employee/department") {
+    throw new Error(`Unexpected checked query: ${JSON.stringify(query)}`);
   }
 
   const moduleResponse = await request({
@@ -1958,8 +1947,7 @@ try {
 (import "./people.md" :as people)
 (export Candidate)
 
-(define-entity Candidate
-  (:field [candidate/person (Ref people/Employee)]))
+(entity Candidate {:person (Option (Id people/Employee))})
 `,
     }),
   );
@@ -1996,8 +1984,7 @@ try {
       source: `
 (import "./people.md" [Employee])
 
-(define-entity Candidate
-  (:field [candidate/person (Ref Employee)]))
+(entity Candidate {:person (Option (Id Employee))})
 `,
     }),
   );
@@ -2037,8 +2024,7 @@ try {
       source: `
 (export Person)
 
-(define-entity Person
-  (:field [person/vendor String]))
+(entity Person {:vendor (Option String)})
 `,
     }),
   );
@@ -2053,8 +2039,7 @@ try {
 (import "./people.md" [Person])
 (import "./contractors.md" [Person])
 
-(define-entity Candidate
-  (:field [candidate/person (Ref Person)]))
+(entity Candidate {:person (Option (Id Person))})
 `,
     }),
   );
@@ -2091,8 +2076,7 @@ try {
       sessionId,
       sourceId: singleModuleSourceId,
       source: `
-(define-entity Standalone
-  (:field [standalone/name String]))
+(entity Standalone {:name (Option String)})
 `,
     }),
   );
@@ -2126,8 +2110,7 @@ try {
 (import "@company/hr" :all)
 (export Candidate)
 
-(define-entity Candidate
-  (:field [candidate/name String]))
+(entity Candidate {:name (Option String)})
 `,
     }),
   );
@@ -2169,8 +2152,7 @@ try {
 (export)
 (export-from "./people.md" Person)
 
-(define-entity Candidate
-  (:field [candidate/name String]))
+(entity Candidate {:name (Option String)})
 `,
     }),
   );
@@ -3213,7 +3195,7 @@ try {
   daemon.stdin.end();
 }
 
-const exitCode = await new Promise((resolveExit) => daemon.on("close", resolveExit));
+const exitCode = await daemonExit;
 if (exitCode !== 0) {
   throw new Error(`Daemon exited with ${exitCode}: ${stderr}`);
 }

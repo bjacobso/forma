@@ -1,6 +1,5 @@
-(define-typeclass (Eq a)
-  (eq (-> a a Bool)))
+(typeclass (Eq a) (: eq (-> a a Bool)))
 (instance (Eq Num)
-  (define eq (fn [a b] (= a b))))
+  (define eq  [a b] (= a b)))
 (define same eq)
 (same (fn [n] n) (fn [n] n))

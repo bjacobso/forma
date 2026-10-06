@@ -26,11 +26,11 @@ const items = [
 
 export default async function check(): Promise<void> {
   assert.equal(subtotal(items), 660);
-  assert.deepEqual(discountFor(ada), { type: "percent", rate: 10 });
-  assert.deepEqual(discountFor(linus), { type: "none" });
-  assert.equal(applyDiscount({ type: "percent", rate: 10 }, 655), 590);
-  assert.equal(applyDiscount({ type: "fixed", cents: 500 }, 300), 0);
-  assert.equal(applyDiscount({ type: "none" }, 300), 300);
+  assert.deepEqual(discountFor(ada), { type: "Percent", rate: 10 });
+  assert.deepEqual(discountFor(linus), { type: "None" });
+  assert.equal(applyDiscount({ type: "Percent", rate: 10 }, 655), 590);
+  assert.equal(applyDiscount({ type: "Fixed", cents: 500 }, 300), 0);
+  assert.equal(applyDiscount({ type: "None" }, 300), 300);
   assert.equal(tierLabel("enterprise"), "Enterprise");
   assert.equal(contact(ada), "Ada <ada@example.com>");
   assert.equal(contact(linus), "Linus");

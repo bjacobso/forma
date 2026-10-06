@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of closure
   | VMacro of closure
 
@@ -31,6 +32,7 @@ type context = {
   eval_required_builtin :
     Env.t -> string -> Reader.expr list -> (value, diagnostic list) result;
   current_lookup_declaration : unit -> (string -> value option) option;
+  current_environment : unit -> Env.t option;
 }
 
 let diagnostic = Eval_common.diagnostic
@@ -314,13 +316,53 @@ let eval ctx env op args =
           [ diagnostic "eval/arity" "view/compile-expr-record expects expr." ]
   in
   let eval_compile_descriptor_tree env args =
+    let env=Env.extend (Env.visible_bindings env)
+      (Option.value ~default:env (ctx.current_environment ())) in
+    let validate_layout layout_expr =
+      let has_binding hole name =
+        let fields=match Env.lookup hole env with
+          | Some (VMap fields) -> Some fields
+          | Some (VList fields | VVector fields) -> Some (List.filter_map (function VList [key;value] | VVector [key;value] -> Some (key,value) | _ -> None) fields)
+          | Some _ -> Some []
+          | None -> None in
+        Option.fold ~none:true ~some:(List.exists (fun (key,_) -> let key=Value.to_str_part key in (if String.starts_with ~prefix:":" key then String.sub key 1 (String.length key-1) else key)=Value.to_str_part name)) fields in
+      let rec walk = function
+        | VList [VSymbol (("state" | "query" | "input") as reference); ((VSymbol _ | VKeyword _) as name)] ->
+            let hole=match reference with "query" -> "queries" | "input" -> "input" | _ -> "state" in
+            if has_binding hole name then [] else ["Reference to undeclared " ^ reference ^ " " ^ Value.to_str_part name]
+        | VList [VSymbol "use"; name] ->
+            if has_binding "defs" name then [] else ["use references unknown def " ^ Value.to_str_part name]
+        | VList (VSymbol component :: args) ->
+            let holes=match Env.lookup ("__form.types/" ^ component) env with Some (VMap holes) -> holes | _ -> [] in
+            let validate key value =
+              match Value.lookup_map holes key with
+              | Some schema -> (match Quote.syntax_of_value schema with
+                  | Ok schema when not (Type_syntax.valid_literal schema value) -> Some ("Invalid option " ^ Value.to_str_part key ^ " on " ^ component)
+                  | _ -> None)
+              | _ -> None in
+            let rec options = function
+              | VMap props :: rest -> List.filter_map (fun (key,value) -> validate key value) props @ options rest
+              | (VKeyword _ as key) :: value :: rest -> Option.to_list (validate key value) @ options rest
+              | _ :: rest -> options rest
+              | [] -> [] in
+            let errors=options args in
+            errors @ List.concat_map walk args
+        | VList items | VVector items -> List.concat_map walk items
+        | VMap fields -> List.concat_map (fun (_,value)->walk value) fields
+        | _ -> [] in
+      match ctx.eval_expr env layout_expr with
+      | Error _ as error -> error
+      | Ok layout -> (match walk layout with [] -> Ok () | errors -> Error [diagnostic "elaborate/hole-type" (String.concat "; " errors)]) in
     let registry_for hosted_dsl_name =
       Eval_meta_protocol_metadata.protocol_registries env
       |> List.find_opt (fun registry ->
           registry.Eval_meta_protocol_metadata.header.hosted_dsl_name
           = hosted_dsl_name)
     in
-    match args with
+    let layout_expr = match List.rev args with layout :: _ -> Some layout | _ -> None in
+    match Option.fold ~none:(Ok ()) ~some:validate_layout layout_expr with
+    | Error _ as error -> error
+    | Ok () -> match args with
     | [ hosted_dsl_name; layout_expr ] -> (
         match ctx.eval_expr env hosted_dsl_name with
         | Error _ as error -> error

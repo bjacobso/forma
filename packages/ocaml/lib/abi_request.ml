@@ -407,87 +407,35 @@ let find_type_policy_field json =
         }
 
 let find_source_bundle_field json =
-  let len = String.length json in
-  let skip_ws i =
-    let rec loop j =
-      if j >= len then j
-      else
-        match json.[j] with ' ' | '\n' | '\r' | '\t' -> loop (j + 1) | _ -> j
-    in
-    loop i
-  in
-  let find_literal literal start =
-    let literal_len = String.length literal in
-    let rec loop i =
-      if i + literal_len > len then None
-      else if String.sub json i literal_len = literal then Some (i + literal_len)
-      else loop (i + 1)
-    in
-    loop start
-  in
-  let parse_string start =
-    let start = skip_ws start in
-    if start >= len || json.[start] <> '"' then None
-    else
-      let buffer = Buffer.create 128 in
-      let rec loop i =
-        if i >= len then None
-        else
-          match json.[i] with
-          | '"' -> Some (Buffer.contents buffer, i + 1)
-          | '\\' when i + 1 < len ->
-              let escaped =
-                match json.[i + 1] with
-                | '"' -> '"'
-                | '\\' -> '\\'
-                | '/' -> '/'
-                | 'b' -> '\b'
-                | 'f' -> '\012'
-                | 'n' -> '\n'
-                | 'r' -> '\r'
-                | 't' -> '\t'
-                | other -> other
-              in
-              Buffer.add_char buffer escaped;
-              loop (i + 2)
-          | c ->
-              Buffer.add_char buffer c;
-              loop (i + 1)
-      in
-      loop (start + 1)
-  in
-  let parse_field name start =
-    match find_literal ("\"" ^ name ^ "\"") start with
-    | None -> None
-    | Some after_name ->
-        let colon = skip_ws after_name in
-        if colon >= len || json.[colon] <> ':' then None
-        else parse_string (colon + 1)
-  in
-  let rec parse_items acc start =
-    match parse_field "kind" start with
-    | None -> List.rev acc
-    | Some (kind, after_kind) -> (
-        match parse_field "sourceId" after_kind with
-        | None -> List.rev acc
-        | Some (source_id, after_source_id) -> (
-            match parse_field "source" after_source_id with
-            | None -> List.rev acc
-            | Some (source, after_source) ->
-                parse_items ({ kind; source_id; source } :: acc) after_source))
-  in
-  match find_literal "\"sources\"" 0 with
-  | None -> None
-  | Some after_name ->
-      let colon = skip_ws after_name in
-      if colon >= len || json.[colon] <> ':' then None
-      else
-        let array_start = skip_ws (colon + 1) in
-        if array_start >= len || json.[array_start] <> '[' then None
-        else Some (parse_items [] (array_start + 1))
+  match find_array_field "sources" json with
+  | None -> Ok None
+  | Some array ->
+      let invalid () = Error [diagnostic_json ~code:"abi/invalid-sources" ~message:"sources must be an array of objects with kind (source or prelude), a nonempty sourceId, and a source string."] in
+      let rec loop acc seen offset =
+        let offset=Abi_json_scan.skip_ws array offset in
+        if offset >= String.length array then invalid ()
+        else if array.[offset]=']' then Ok (Some (List.rev acc))
+        else if array.[offset]<>'{' then invalid ()
+        else match Abi_json_scan.find_matching array ~open_char:'{' ~close_char:'}' offset with
+        | None -> invalid ()
+        | Some finish ->
+            let item=String.sub array offset (finish-offset+1) in
+            match find_string_field "kind" item,find_string_field "sourceId" item,find_string_field "source" item with
+            | Some (("source" | "prelude") as kind),Some source_id,Some source when source_id<>"" && not (List.mem source_id seen) ->
+                let next=Abi_json_scan.skip_ws array (finish+1) in
+                if next>=String.length array then invalid ()
+                else if array.[next]=']' then Ok (Some (List.rev ({kind;source_id;source} :: acc)))
+                else if array.[next]<>',' then invalid ()
+                else let next=Abi_json_scan.skip_ws array (next+1) in
+                  if next>=String.length array || array.[next]=']' then invalid ()
+                  else loop ({kind;source_id;source} :: acc) (source_id :: seen) next
+            | _ -> invalid () in
+      loop [] [] 1
 
 let decode json =
-  match find_string_field "op" json with
+  match find_source_bundle_field json with
+  | Error _ as error -> error
+  | Ok source_bundle -> match find_string_field "op" json with
   | Some op ->
       Ok
         {
@@ -496,7 +444,7 @@ let decode json =
           source_id = find_string_field "sourceId" json;
           source_ids = find_string_array_field "sourceIds" json;
           source = find_string_field "source" json;
-          source_bundle = find_source_bundle_field json;
+          source_bundle;
           session_id = find_string_field "sessionId" json;
           backend = find_string_field "backend" json;
           token = find_int_field "token" json;

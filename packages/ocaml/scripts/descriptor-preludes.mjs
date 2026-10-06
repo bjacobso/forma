@@ -10,6 +10,8 @@ const daemon = spawn(nativeCli, ["daemon"], {
   stdio: ["pipe", "pipe", "pipe"],
 });
 
+const daemonExit = new Promise((resolveExit) => daemon.on("close", resolveExit));
+
 let stderr = "";
 daemon.stderr.on("data", (chunk) => {
   stderr += chunk;
@@ -87,7 +89,7 @@ const invalidPreludes = [
     includes: "missing-validator",
     sourceId: "descriptor-metacheck/unknown-validator",
     source: `
-(define-form define-unknown-validator
+(__form-descriptor define-unknown-validator
   (:identifier name)
   (:extensions
     (:artifact
@@ -102,7 +104,7 @@ const invalidPreludes = [
     includes: "MissingPayloadContract",
     sourceId: "descriptor-metacheck/unknown-payload-contract",
     source: `
-(define-form define-unknown-payload-contract
+(__form-descriptor define-unknown-payload-contract
   (:identifier name)
   (:extensions
     (:artifact
@@ -117,7 +119,7 @@ const invalidPreludes = [
     includes: "payload clauses with textual clause names",
     sourceId: "descriptor-metacheck/malformed-payload-contract",
     source: `
-(define-payload-contract MalformedPayloadContract
+(__payload-contract MalformedPayloadContract
   not-a-payload-clause)
 `,
   },
@@ -127,7 +129,7 @@ const invalidPreludes = [
     includes: "Descriptor :extensions entries",
     sourceId: "descriptor-metacheck/malformed-extensions",
     source: `
-(define-form define-malformed-extensions
+(__form-descriptor define-malformed-extensions
   (:identifier name)
   (:extensions not-an-extension-entry))
 `,
@@ -138,7 +140,7 @@ const invalidPreludes = [
     includes: "must be a map of clauses",
     sourceId: "descriptor-metacheck/malformed-artifact-payload",
     source: `
-(define-form define-malformed-artifact-payload
+(__form-descriptor define-malformed-artifact-payload
   (:identifier name)
   (:extensions
     (:artifact
@@ -153,7 +155,7 @@ const invalidPreludes = [
     includes: "must declare :construct-fn",
     sourceId: "descriptor-metacheck/missing-artifact-summary",
     source: `
-(define-form define-missing-artifact-summary
+(__form-descriptor define-missing-artifact-summary
   (:identifier name)
   (:extensions
     (:artifact
@@ -165,13 +167,12 @@ const invalidPreludes = [
 const invalidSources = [
   {
     label: "unknown descriptor slot",
-    code: "descriptor/unknown-slot",
-    includes: "Did you mean ':field'?",
+    code: "surface/invalid-form",
+    includes: "Available options: :doc",
     sourceId: "descriptor-metacheck/unknown-slot",
     source: `
-(define-entity Employee
-  (:field [employee/name String])
-  (:fieldd [employee/email String]))
+(entity Employee {:name (Option String)}
+  :dco "Employee record")
 `,
   },
 ];
@@ -179,7 +180,7 @@ const invalidSources = [
 const unresolvedHookPrelude = {
   sourceId: "descriptor-metacheck/unresolved-artifact-hook-prelude",
   source: `
-(define-form define-unresolved-artifact-hook
+(__form-descriptor define-unresolved-artifact-hook
   (:identifier name)
   (:extensions
     (:artifact
@@ -313,7 +314,7 @@ try {
   daemon.stdin.end();
 }
 
-const exitCode = await new Promise((resolveExit) => daemon.on("close", resolveExit));
+const exitCode = await daemonExit;
 if (exitCode !== 0) {
   throw new Error(`Daemon exited with ${exitCode}: ${stderr}`);
 }

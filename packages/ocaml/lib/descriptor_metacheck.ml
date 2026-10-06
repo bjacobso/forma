@@ -11,12 +11,12 @@ let diagnostic span code message = { span = Some span; code; message }
 let top_level_items exprs =
   exprs
   |> List.filter_map (function
-    | Ast.List (span, Ast.Symbol (_, "define-form") :: Ast.Symbol (_, name) :: _)
+    | Ast.List (span, Ast.Symbol (_, "__form-descriptor") :: Ast.Symbol (_, name) :: _)
       ->
         Some (Form (name, span))
     | Ast.List
         ( span,
-          Ast.Symbol (_, "define-payload-contract") :: Ast.Symbol (_, name) :: _
+          Ast.Symbol (_, "__payload-contract") :: Ast.Symbol (_, name) :: _
         ) ->
         Some (Payload_contract (name, span))
     | _ -> None)

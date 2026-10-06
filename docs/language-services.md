@@ -162,13 +162,13 @@ spans, node ids, and the defining form. It works from three sources:
 
 - **Expanded core forms.** The program is expanded with the same expander
   the evaluator uses, and a scope walker resolves `define`, `fn`, `let`,
-  `match`, `define-type`, `define-typeclass`, and `instance` in the expanded
+  `match`, `type`, `typeclass`, and `instance` in the expanded
   program. Results map back to author nodes through origins. A macro that
   expands to a `define` defines the author's symbol, and macro-introduced
   temporaries are never reported.
-- **Descriptors.** For forms registered with `define-form`, identifiers
+- **Descriptors.** For forms registered with `form`, identifiers
   marked `(:declaration true)` define global names. Descriptors come from the
-  session's preludes, from `define-form`s in the indexed documents, and from
+  session's preludes, from `form`s in the indexed documents, and from
   callers.
 - **A fallback** for heads that are neither macros nor descriptors keeps the
   language server's existing behavior: `(define-* name …)` defines `name`.

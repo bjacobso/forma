@@ -1,4 +1,5 @@
 type collected_declaration = {
+  syntax : Ast.expr option;
   hook : string;
   declaration : Eval.value;
   summary_expectation : Artifact_summary_expectation.t;
@@ -10,6 +11,7 @@ type collected_declaration = {
 
 type emitted_value = {
   value : Eval.value;
+  diagnostics : Diagnostic.t list;
   summary_expectation : Artifact_summary_expectation.t;
   payload_contract : Artifact_payload_descriptor.contract;
   validator_names : string list;
@@ -19,6 +21,7 @@ type emitted_value = {
 
 type emitted_declaration = {
   value : Eval.value;
+  diagnostics : Diagnostic.t list;
   summary : Artifact_summary_types.declaration_summary;
   payload_contract : Artifact_payload_descriptor.contract;
   validator_names : string list;
@@ -108,6 +111,7 @@ let expr_span = function
 
 let collect_declarations_with_timings env exprs =
   let is_projected = Mechanics_artifact.projected_form_predicate exprs in
+  let authored_indices = List.mapi (fun i e -> Ast.expr_span e,i) exprs in
   let rec loop timings form_index env declarations = function
     | [] -> Ok ((List.rev declarations, env), timings)
     | expr :: rest when ignored_toplevel_form expr ->
@@ -180,12 +184,13 @@ let collect_declarations_with_timings env exprs =
                             in
                             loop timings (form_index + 1) env
                               ({
+                                 syntax = List.find_opt (fun e -> Ast.expr_span e = span) exprs;
                                  hook;
                                  declaration = value;
                                  summary_expectation;
                                  payload_contract;
                                  validator_names;
-                                 form_index;
+                                 form_index = Option.value ~default:form_index (List.assoc_opt span authored_indices);
                                  span;
                                }
                               :: declarations)
@@ -199,7 +204,11 @@ let collect_declarations_with_timings env exprs =
   let timings = { zero_phase_timings with expand_ms } in
   match expanded with
   | Error _ as error -> error
-  | Ok (exprs, _) -> loop timings 0 env [] exprs
+  | Ok (exprs, _) ->
+      let type_definitions = List.concat_map (fun expr -> match Surface.runtime_constructors expr with Some definitions -> definitions | None -> []) exprs in
+      (match Eval.evaluate_program_with_env env type_definitions with
+       | Error _ as error -> error
+       | Ok (_,env) -> loop timings 0 env [] exprs)
 
 let collect_declarations env exprs =
   match collect_declarations_with_timings env exprs with
@@ -212,10 +221,10 @@ let emitted_values_with_timings env exprs =
   | Ok ((declarations, env), timings) ->
       let rec loop timings emitted = function
         | [] -> Ok (List.rev emitted, timings)
-        | declaration :: rest -> (
+        | (declaration : collected_declaration) :: rest -> (
             let applied, apply_hook_ms =
               timed_ms (fun () ->
-                  Eval.apply_named env declaration.hook declaration.declaration)
+                  match Form_semantics.validate ?syntax:declaration.syntax ~span:declaration.span env declaration.declaration with Error _ as e -> e | Ok diagnostics -> Eval.apply_named env declaration.hook declaration.declaration |> Result.map (fun value -> value,diagnostics) |> Result.map_error (List.map (fun (d:Eval_common.diagnostic) -> match d.span with Some span when span.source_id=declaration.span.source_id -> d | _ -> {d with span=Some declaration.span})))
             in
             let timings =
               add_hook_timing
@@ -225,10 +234,22 @@ let emitted_values_with_timings env exprs =
             match applied with
             | Error diagnostics ->
                 Error (Eval.with_span declaration.span diagnostics)
-            | Ok value ->
+            | Ok (value,diagnostics) ->
+                let value = match Descriptor.declaration_form declaration.declaration,value with
+                  | Some form,Value.VMap fields when Option.is_some (Env.lookup ("__form/" ^ form) env) ->
+                      let fields = match Env.lookup ("__form.ir/" ^ form) env with Some schema -> (match Quote.syntax_of_value schema with Ok schema -> (match Surface_contract.project env value schema with Value.VMap fields -> fields | _ -> fields) | _ -> fields) | None -> fields in
+                      let kind = Option.value ~default:form (Option.bind (Descriptor.value_keyword ":kind" value) Descriptor.value_text) in
+                      let name = Option.bind (Descriptor.value_keyword ":name" value) Descriptor.value_text in
+                      let result_type = match Descriptor.result_type_hook env form with
+                        | Some hook -> (match Eval.apply_named env hook declaration.declaration with Ok value -> (match Form_semantics.resolve_type value with Ok t -> Type_expr.ty_to_string t | _ -> "Unit") | _ -> "Unit")
+                        | None -> Option.value ~default:"Unit" (Option.bind (Descriptor.result_type env form) Descriptor.value_text) in
+                      let summary = Value.VMap ([Value.VKeyword ":kind",Value.VString kind;Value.VKeyword ":resultType",Value.VString result_type] @ (match name with Some n -> [Value.VKeyword ":name",Value.VString n] | None -> [])) in
+                      Value.VMap ((Value.VKeyword ":$summary",summary) :: fields)
+                  | _ -> value in
                 loop timings
                   ({
                      value;
+                     diagnostics;
                      summary_expectation = declaration.summary_expectation;
                      payload_contract = declaration.payload_contract;
                      validator_names = declaration.validator_names;
@@ -284,6 +305,7 @@ let emitted_declarations_with_timings env exprs =
                     loop timings
                       ({
                          value = emitted.value;
+                         diagnostics = emitted.diagnostics;
                          summary;
                          payload_contract = emitted.payload_contract;
                          validator_names = emitted.validator_names;
@@ -335,7 +357,7 @@ let typed_artifact_declarations_of_emitted ~source_id declarations =
         | Error _ as error -> error
         | Ok (payload, validator_value) ->
             loop
-              (Packageable_declaration.make ~payload
+              (Packageable_declaration.make ~diagnostics:declaration.diagnostics ~payload
                  ~payload_contract:declaration.payload_contract
                  ~validators:
                    (validators declaration.validator_names validator_value)
@@ -362,3 +384,5 @@ let emitted_declarations_json declarations =
 
 let emitted_values_json values =
   values |> List.map (fun (value : emitted_value) -> value.value) |> values_json
+
+let emitted_values_diagnostics values = List.concat_map (fun (value:emitted_value) -> value.diagnostics) values

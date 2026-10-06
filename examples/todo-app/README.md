@@ -15,9 +15,7 @@ A simple todo list application with support for adding, listing, and marking tas
 Represents a task item in the todo list.
 
 ```lisp
-(define-entity Todo
-  (:field [todo/title String {:required true}])
-  (:field [todo/completed Boolean {:default false}]))
+(entity Todo {:title String :completed (Option Bool :default false)})
 ```
 
 ## Queries
@@ -27,9 +25,7 @@ Represents a task item in the todo list.
 Returns all todo items in the system.
 
 ```lisp
-(define-query list-todos
-  (:from Todo)
-  (:select [todo/title todo/completed]))
+(query list-todos :from Todo :select [title completed])
 ```
 
 ### List Incomplete Todos
@@ -37,10 +33,10 @@ Returns all todo items in the system.
 Returns only todos that haven't been completed yet.
 
 ```lisp
-(define-query list-incomplete-todos
-  (:from Todo)
-  (:where (= (get it :todo/completed) false))
-  (:select [todo/title]))
+(query list-incomplete-todos
+  :from Todo
+  :where (match completed (Some __completed) (= __completed false) None false)
+  :select [title])
 ```
 
 ## Actions
@@ -50,13 +46,8 @@ Returns only todos that haven't been completed yet.
 Creates a new todo item with the given title and returns its entity id.
 
 ```lisp
-(define-action add-todo
-  (:input [title String])
-  (:returns String)
-  (:do
-    (create! "Todo"
-      :todo/title title
-      :todo/completed false)))
+(: add-todo (-> String (Action (Id Todo))))
+(define add-todo [title] (create! Todo {:title title :completed false}))
 ```
 
 ### Mark Todo as Done
@@ -64,13 +55,8 @@ Creates a new todo item with the given title and returns its entity id.
 Updates a todo item to mark it as completed.
 
 ```lisp
-(define-action mark-done
-  (:input [todo Todo])
-  (:returns Boolean)
-  (:do
-    (do
-      (set-field todo :todo/completed true)
-      true)))
+(: mark-done (-> (Id Todo) (Action Bool)))
+(define mark-done [todo] (do! [_ (update! Todo todo {:completed true})] true))
 ```
 
 ### Delete Todo
@@ -78,15 +64,8 @@ Updates a todo item to mark it as completed.
 Retracts the current todo facts from the system while preserving time-travel history.
 
 ```lisp
-(define-action delete-todo
-  (:input [todo Todo])
-  (:returns Boolean)
-  (:do
-    (do
-      (retract! (id todo) ":todo/title")
-      (retract! (id todo) ":todo/completed")
-      (retract! (id todo) ":_schema/type")
-      true)))
+(: delete-todo (-> (Id Todo) (Action Bool)))
+(define delete-todo [todo] (do! [_ (retract! Todo todo)] true))
 ```
 
 ## View: Todo List Manager
@@ -94,43 +73,57 @@ Retracts the current todo facts from the system while preserving time-travel his
 A comprehensive view for managing the todo list with add, complete, and delete capabilities.
 
 ```lisp
-(define-view todo-list-manager
-  (:query list-todos)
-  (:title "Todo List Manager")
-  (:description "Add todos, inspect all tasks, and run completion or delete actions.")
-  (:subject session)
-  (:state newTitle "" (:type string))
-  (:state selectedTodo nil)
-  (:named-query todos (:ref list-todos))
-  (:layout
+(view todo-list-manager
+  :query list-todos
+  :subject session
+  :title "Todo List Manager"
+  :description
+    "Add todos, inspect all tasks, and run completion or delete actions."
+  :layout
     (rows
       (heading "Todo List Manager")
       (columns
-        (input {:name "newTitle"
-                :label "Task"
-                :placeholder "What needs to be done?"})
-        (action-button {:action-ref "add-todo"
-                        :label "Add Todo"
-                        :parameters {:title (state newTitle)}
-                        :variant "default"}))
-      (table {:bind (query todos)
-              :columns [{:key "?title" :label "Task"}
-                        {:key "?completed" :label "Done" :kind "boolean"}
-                        {:key "?id" :label "ID" :kind "mono"}]
-              :empty-state "No todos yet."})
+        (input
+          {:name "newTitle" :label "Task" :placeholder "What needs to be done?"})
+        (action-button
+          {
+            :action-ref "add-todo"
+            :label "Add Todo"
+            :parameters {:title (state newTitle)}
+            :variant "default"}))
+      (table
+        {
+          :bind (query todos)
+          :columns
+            [
+              {:key "?title" :label "Task"}
+              {:key "?completed" :label "Done" :kind "boolean"}
+              {:key "?id" :label "ID" :kind "mono"}]
+          :empty-state "No todos yet."})
       (columns
-        (entity-picker {:name "selectedTodo"
-                        :label "Todo"
-                        :entity-type "Todo"
-                        :placeholder "Select todo"})
-        (action-button {:action-ref "mark-done"
-                        :label "Mark Complete"
-                        :parameters {:todo (get (state selectedTodo) :entityId)}
-                        :variant "secondary"
-                        :visible (not (nil? (state selectedTodo)))})
-        (action-button {:action-ref "delete-todo"
-                        :label "Delete"
-                        :parameters {:todo (get (state selectedTodo) :entityId)}
-                        :variant "destructive"
-                        :visible (not (nil? (state selectedTodo)))})))))
+        (entity-picker
+          {
+            :name "selectedTodo"
+            :label "Todo"
+            :entity-type "Todo"
+            :placeholder "Select todo"})
+        (action-button
+          {
+            :action-ref "mark-done"
+            :label "Mark Complete"
+            :parameters {:todo (get (state selectedTodo) :entityId)}
+            :variant "secondary"
+            :visible (not (nil? (state selectedTodo)))})
+        (action-button
+          {
+            :action-ref "delete-todo"
+            :label "Delete"
+            :parameters {:todo (get (state selectedTodo) :entityId)}
+            :variant "destructive"
+            :visible (not (nil? (state selectedTodo)))})))
+  :state
+    {
+      :newTitle {:initial "" :kind "string"}
+      :selectedTodo {:initial nil :kind "null"}}
+  :queries {:todos {:ref "list-todos"}})
 ```

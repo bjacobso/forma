@@ -236,7 +236,9 @@ let rule_of_declaration declaration =
       optional_string_field "doc" declaration,
       required_string_field "entity" declaration,
       required_string_field "severity" declaration,
-      required_payload "when" declaration,
+      (match Canonical_ir_decl.payload_field "when" declaration, Canonical_ir_decl.payload_field "query" declaration with
+       | Some value,None | None,Some value when value<>Ir_json.Null -> Ok value
+       | _ -> Error [diagnostic "$.when" "A constraint requires exactly one of when or query."]),
       required_payload "message" declaration,
       optional_array_items "taskAssignments" assignment_of_json declaration,
       array_items "resolutions" resolution_of_json declaration,

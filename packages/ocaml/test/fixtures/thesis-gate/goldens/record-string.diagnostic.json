@@ -2,14 +2,14 @@
   "diagnostic": {
     "span": {
       "sourceId": "thesis-gate/record-string.lisp",
-      "startOffset": 158,
-      "endOffset": 163
+      "startOffset": 97,
+      "endOffset": 128
     },
     "severity": "error",
-    "code": "typecheck/type-mismatch",
-    "message": "Expected Bool to match String.",
+    "code": "elaborate/form-check",
+    "message": "fields.employee/active must be Bool",
     "notes": [],
     "fixes": []
   },
-  "spannedText": "\"yes\""
+  "spannedText": "{:active \"yes\"\n  :name \"Alice\"}"
 }

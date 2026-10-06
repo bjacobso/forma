@@ -19,7 +19,7 @@ export class StorageError extends Schema.TaggedError<StorageError>()("StorageErr
 export class Storage extends Context.Service<
   Storage,
   {
-    readonly read: (user: string, key: string) => Effect.Effect<string, NotFound | Forbidden | RateLimited>;
+    readonly read: (arg0: string, arg1: string) => Effect.Effect<string, NotFound | Forbidden | RateLimited>;
   }
 >()("Storage") {}
 

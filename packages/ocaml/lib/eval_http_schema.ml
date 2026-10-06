@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of closure
   | VMacro of closure
 
@@ -173,7 +174,7 @@ let schema_body_from_decl input =
       Error
         [
           diagnostic "http/schema-kind"
-            "define-schema expects a (:kind ...) slot.";
+            "__schema expects a (:kind ...) slot.";
         ]
 
 let apply_schema_modifiers input schema =
@@ -198,7 +199,7 @@ let schema_decl ctx env = function
               Error
                 [
                   diagnostic "http/schema-name"
-                    "define-schema expects a schema name.";
+                    "__schema expects a schema name.";
                 ]
           | Some name -> (
               match schema_body_from_decl input with
@@ -222,7 +223,7 @@ let error_decl ctx env = function
           match declaration_name input with
           | None ->
               Error
-                [ diagnostic "http/error-name" "define-error expects a name." ]
+                [ diagnostic "http/error-name" "__error expects a name." ]
           | Some name -> (
               match
                 schema_fields_to_ir

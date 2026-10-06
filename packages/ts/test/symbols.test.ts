@@ -69,8 +69,7 @@ describe("indexSymbols", () => {
   });
 
   test("finds definitions made by macros and ignores macro temporaries", () => {
-    const source = `(define-macro defstep [name system]
-  \`(define ~name {:system ~system}))
+    const source = `(macro (defstep name system) \`(define ~name {:system ~system}))
 (defstep verify "Persona")
 (and verify (or true verify))`;
     const symbols = index(source);
@@ -90,29 +89,26 @@ describe("indexSymbols", () => {
   });
 
   test("uses descriptors for domain forms", () => {
-    const source = `(define-entity Employee
-  (:field [employee/name String {:required true}]))
-(define-query directory
-  (:from Employee)
-  (:select [employee/name]))`;
+    const source = `(entity Employee {:name String})
+(query directory
+  :from Employee
+  :select [employee/name])`;
     const symbols = index(source, { descriptors: bootstrapOntologyPreludes().descriptions });
     expect(
       symbols.definitions.map((definition) => [definition.name, definition.kind, definition.form]),
     ).toEqual([
-      ["Employee", "declaration", "define-entity"],
-      ["directory", "declaration", "define-query"],
+      ["Employee", "declaration", "entity"],
+      ["directory", "declaration", "query"],
     ]);
     expect(occurrences(source, symbols, at(source, "Employee", 1)).references).toEqual([
       at(source, "Employee", 1),
     ]);
   });
 
-  test("learns descriptors from define-form in the indexed documents", () => {
-    const prelude = `(define-form defworkflow
-  (:phase domain)
-  (:identifiers (identifier name Symbol (:declaration true)))
-  (:slots (slot steps value (:many true))))`;
-    const source = "(defworkflow onboarding (:steps verify))\n(run onboarding)";
+  test("learns descriptors from form in the indexed documents", () => {
+    const prelude = `(type WorkflowIR {:kind "Workflow" :name Symbol :steps (Option Syntax)})
+(form (defworkflow name {:keys [steps]}) :types {:name (Declares Workflow) :steps (Option Syntax)} :ir WorkflowIR {:kind "Workflow" :name name :steps steps})`;
+    const source = "(defworkflow onboarding :steps verify)\n(run onboarding)";
     const symbols = Editor.indexSymbols([
       { sourceId: "prelude", source: prelude },
       { sourceId: "doc", source },
@@ -124,7 +120,7 @@ describe("indexSymbols", () => {
     ).toBe(onboarding?.key);
     expect(
       symbols.definitions.find((definition) => definition.name === "defworkflow"),
-    ).toMatchObject({ sourceId: "prelude", form: "define-form" });
+    ).toMatchObject({ sourceId: "prelude", form: "form" });
   });
 
   test("resolves references across documents in load order", () => {
@@ -150,7 +146,7 @@ describe("indexSymbols", () => {
   });
 
   test("binds match and catch patterns and references constructors", () => {
-    const source = `(define-type (Option a) (Some a) (None))
+    const source = `(type (Option a) (Tagged (Some a) None))
 (define (unwrap opt) (match opt (Some v) v (None) 0))`;
     const symbols = index(source);
     expect(
@@ -173,7 +169,7 @@ describe("indexSymbols", () => {
 
   test("resolves template symbols in macros to globals", () => {
     const source = `(define (helper x) x)
-(define-macro call-helper [y] \`(helper ~y))`;
+(macro (call-helper y) \`(helper ~y))`;
     const symbols = index(source);
     expect(occurrences(source, symbols, at(source, "helper")).references).toEqual([
       at(source, "helper", 1),
@@ -202,7 +198,7 @@ describe("indexSymbols", () => {
   });
 
   test("does not take binders in a macro template for definitions at expansion sites", () => {
-    const source = "(define-macro m [a] `(let [tmp ~a] tmp))\n(define tmp 5)\n(m tmp)";
+    const source = "(macro (m a) `(let [tmp ~a] tmp))\n(define tmp 5)\n(m tmp)";
     const symbols = index(source);
     expect(symbols.definitions.map((definition) => [definition.name, definition.scope])).toEqual([
       ["m", "global"],

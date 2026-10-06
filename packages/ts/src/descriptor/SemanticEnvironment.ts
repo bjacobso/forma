@@ -6,6 +6,7 @@
  * compiler phases and meta hooks can ask the same scoped semantic questions.
  */
 
+import { lowerMembers } from "../surface/members.js";
 import { Effect, Layer } from "effect";
 import type { SExpr } from "../reader/types.js";
 import { InferContext, makeInferContext } from "../type/context.js";
@@ -186,7 +187,7 @@ export class SimpleSemanticEnvironment implements SemanticEnvironment {
   inferExpression(expr: SExpr): ExpressionTypeResult {
     try {
       resetNodeIds();
-      const coreExprs = lowerProgram([expr]);
+      const coreExprs = lowerProgram([lowerMembers(expr,new Set(this.getVisibleBindings().keys()))]);
       const initialEnv = new Map(
         [...this.getVisibleBindings()].map(([name, type]) => [name, mono(type)] as const),
       );

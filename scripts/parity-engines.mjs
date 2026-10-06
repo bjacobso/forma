@@ -44,7 +44,7 @@ const matrix = readJson(resolve(suiteDir, "matrix.json"));
 function validateFixtures() {
   if (casesManifest.version !== 1 || matrix.version !== 1) throw new Error("Unsupported engine parity manifest version");
   const ids = new Set();
-  const passes = new Set(["parse", "expand", "typecheck", "evaluate", "effect-ir"]);
+  const passes = new Set(["parse", "expand", "typecheck", "evaluate", "effect-ir", "canonical-ir"]);
   for (const fixture of casesManifest.cases) {
     if (!fixture.id || ids.has(fixture.id)) throw new Error(`Duplicate or missing fixture id: ${fixture.id}`);
     ids.add(fixture.id);
@@ -97,10 +97,11 @@ function projectTsEffectIr(sourceId, source, ts) {
   return normalizeTsDeclarations(projected.declarations);
 }
 
-async function emitOcamlEffectIr(sourceId, source, daemon) {
+async function emitOcamlEffectIr(sourceId, source, daemon, preludes = []) {
   const opened = checkOk("openSession", await daemon.request({ op: "openSession" }));
   const sessionId = opened.sessionId;
   try {
+    for (const filename of preludes) checkOk(`loadPrelude ${filename}`, await daemon.request({op: "loadPrelude", sessionId, sourceId: `preludes/${filename.replace(/\.lisp$/, "")}.lisp`, source: readFileSync(resolve(repoRoot, `preludes/${filename.replace(/\.lisp$/, "")}.lisp`), "utf8")}));
     checkOk("loadSource", await daemon.request({ op: "loadSource", sessionId, sourceId, source }));
     const emitted = checkOk("emit", await daemon.request({ op: "emit", sessionId, sourceId, backend: "canonical-ir" }));
     const content = emitted.artifacts?.[0]?.content;
@@ -131,6 +132,7 @@ async function compareFormaZero(report, ts, daemon) {
   const sessionId = opened.sessionId;
   try {
     for (const [index, form] of preludeForms(prelude, ts).entries()) {
+      if (process.env.FORMA_PARITY_TRACE) console.error(`forma-zero/prelude-${index}`);
       checkOk(`forma-zero prelude ${index}`, await daemon.request({
         op: "loadPrelude", sessionId, sourceId: `parity/forma-zero-prelude-${index}`, source: form,
       }));
@@ -139,6 +141,7 @@ async function compareFormaZero(report, ts, daemon) {
     const evaluationOptions = { stepLimit: 500_000, builtins: ts.Builtins.defaultBuiltins };
     for (const name of names) {
       const id = `forma-zero/${name}`;
+      if (process.env.FORMA_PARITY_TRACE) console.error(id);
       if (!selected(id)) continue;
       const source = readFileSync(resolve(suite, "cases", `${name}.lisp`), "utf8");
       const typescript = await capture(async () => {
@@ -222,6 +225,22 @@ async function main() {
       const source = fixture.source ?? readFileSync(resolve(suiteDir, fixture.sourceFile), "utf8");
       const sourceId = `engine-parity/${fixture.id}`;
       for (const pass of fixture.passes) {
+        if (process.env.FORMA_PARITY_TRACE) console.error(`${fixture.id}/${pass}`);
+        if (pass === "canonical-ir") {
+          const [typescript, ocaml] = await Promise.all([
+            capture(() => {
+              const read = n => readFileSync(resolve(repoRoot, `preludes/${n.replace(/\.lisp$/, "")}.lisp`), "utf8");
+              const selectedPreludes = (fixture.preludes ?? ["kernel", "compiler", "ontology"]).map(name => name.replace(/\.lisp$/, ""));
+              const prelude = ts.Descriptor.bootstrapFromSources(selectedPreludes.includes("compiler") ? read("compiler") : "", selectedPreludes.includes("ontology") ? read("ontology") : "", ...selectedPreludes.filter(name => !["kernel", "compiler", "ontology"].includes(name)).map(read));
+              const result = ts.Descriptor.elaborateProgram(source, {sourceId, prelude});
+              if (!result.ok) throw new Error(`TS domain projection failed: ${JSON.stringify(result.diagnostics)}`);
+              return normalizeTsDeclarations(result.declarations);
+            }),
+            capture(() => emitOcamlEffectIr(sourceId, source, daemon, fixture.preludes ?? ["kernel", "compiler", "ontology"])),
+          ]);
+          addComparison(report, fixture.id, pass, typescript, ocaml);
+          continue;
+        }
         if (pass === "effect-ir") {
           const [typescript, ocaml] = await Promise.all([
             capture(() => projectTsEffectIr(sourceId, source, ts)),

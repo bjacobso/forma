@@ -75,6 +75,35 @@ export interface DescriptorTreeCheckResult {
   readonly hasErrors: boolean;
 }
 
+/** Check literal options even when a hosted tree has no expression scope. */
+export function validateDescriptorTreeLiteralOptions(layout: SExpr, descriptors: readonly FormDescriptor[], extensionKey: string): readonly DescriptorTreeDiagnostic[] {
+  const schemas = buildDescriptorTreeComponentSchemas(descriptors, extensionKey);
+  const diagnostics: DescriptorTreeDiagnostic[] = [];
+  const walk = (node: SExpr): void => {
+    if (node._tag === "List") {
+      const schema = schemas[headSym(node) ?? ""];
+      if (schema) {
+        const pairs: (readonly [SExpr, SExpr])[] = node.items.slice(1).flatMap(props => props._tag === "Map" ? props.pairs : []);
+        for (let i=1;i+1<node.items.length;i++) {
+          const key = node.items[i]!;
+          if (key._tag === "Sym" && key.name.startsWith(":")) pairs.push([key, node.items[++i]!]);
+        }
+        for (const [key, value] of pairs) {
+          const name = key._tag === "Sym" ? key.name.replace(/^:/, "") : key._tag === "Str" ? key.value : "";
+          const prop = schema.props[toCamelCase(name)];
+          if (prop?.values && (value._tag !== "Str" || !prop.values.includes(value.value))) {
+            diagnostics.push({severity: "error", component: headSym(node)!, message: `${name} must be one of ${prop.values.join(", ")}`});
+          }
+        }
+      }
+      node.items.slice(1).forEach(walk);
+    } else if (node._tag === "Vector") node.items.forEach(walk);
+    else if (node._tag === "Map") node.pairs.forEach(([, value]) => walk(value));
+  };
+  walk(layout);
+  return diagnostics;
+}
+
 export { readDescriptorTreeComponentSpec } from "./descriptor-tree-metadata.js";
 
 export function buildDescriptorTreeComponentSchemas(
@@ -92,7 +121,10 @@ export function buildDescriptorTreeComponentSchemas(
 
     for (const slot of descriptor.slots) {
       const propName = toCamelCase(slot.name);
-      const values = deriveAllowedValues(descriptor.validation, slot.name);
+      const surfaceType = descriptor.surface?.holes.get(slot.name);
+      const unwrapped = surfaceType?._tag === "List" && surfaceType.items[0]?._tag === "Sym" && surfaceType.items[0].name === "Option" ? surfaceType.items[1] : surfaceType;
+      const literals = unwrapped?._tag === "List" && unwrapped.items[0]?._tag === "Sym" && unwrapped.items[0].name === "Union" ? unwrapped.items.slice(1) : undefined;
+      const values = literals?.every(value => value._tag === "Str") ? literals.map(value => (value as Extract<SExpr, {_tag: "Str"}>).value) : deriveAllowedValues(descriptor.validation, slot.name);
       props[propName] = {
         type: propTypeFromSlot(slot),
         ...(slot.required ? { required: true } : {}),
@@ -404,8 +436,12 @@ function validatePropValue(
   componentPath: string,
 ): void {
   const propSchema = schema.props[propName];
-  if (!propSchema) return;
+  if (!propSchema) {inferNestedExpressions(value,ctx,componentPath);return;}
 
+  if (propSchema.values) {
+    const literal=literalPropValue(value);
+    if (!literal || !propSchema.values.includes(literal)) ctx.diagnostics.push({severity:"error",message:`Prop '${propName}' must be one of ${propSchema.values.join(", ")}`,component:componentPath});
+  }
   if (propSchema.type === "expression" || propSchema.type === "any") {
     inferNestedExpressions(value, ctx, componentPath);
     return;
@@ -450,16 +486,7 @@ function validatePropValue(
     return;
   }
 
-  if (propSchema.type === "string") {
-    const literal = literalPropValue(value);
-    if (literal && propSchema.values && !propSchema.values.includes(literal)) {
-      ctx.diagnostics.push({
-        severity: "error",
-        message: `Prop '${propName}' must be one of ${propSchema.values.join(", ")} (received '${literal}')`,
-        component: componentPath,
-      });
-    }
-  }
+
 }
 
 function validateSlotContent(
@@ -648,7 +675,13 @@ function validateNode(expr: SExpr, ctx: TreeContext, path: string, parentType?: 
     bindExpr: undefined,
   };
 
-  for (const item of items) {
+  for (let index=0;index<items.length;index++) {
+    const item=items[index]!;
+    if (item._tag === "Sym" && item.name.startsWith(":")) {
+      const value=items[++index];
+      if (value) validatePropEntry(item.name.slice(1),value,schema,ctx,componentType,componentPath,foundProps,literalProps,propState);
+      continue;
+    }
     if (item._tag === "Str" || item._tag === "Num" || item._tag === "Bool" || item._tag === "Sym") {
       const positional = schema.treeSpec.positionalProp;
       if (positional) {

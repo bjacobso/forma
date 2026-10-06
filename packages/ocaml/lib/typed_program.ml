@@ -34,7 +34,9 @@ let rec core_expr_value expr =
             | Core_ast.LInt value -> Value.VInt value
             | Core_ast.LFloat value -> Value.VFloat value
             | Core_ast.LString value -> Value.VString value
-            | Core_ast.LKeyword value -> Value.VKeyword value );
+            | Core_ast.LKeyword value -> Value.VKeyword value
+            | Core_ast.LSymbol value -> Value.VSymbol value
+            | Core_ast.LQuoted value -> Quote.value_of_syntax value );
         ]
   | Core_ast.Var (_, name) ->
       base "variable" [ (Value.VKeyword ":name", Value.VSymbol name) ]
@@ -75,7 +77,9 @@ and descriptor_value_of_core_expr expr =
       | Core_ast.LInt value -> Value.VInt value
       | Core_ast.LFloat value -> Value.VFloat value
       | Core_ast.LString value -> Value.VString value
-      | Core_ast.LKeyword value -> Value.VKeyword value)
+      | Core_ast.LKeyword value -> Value.VKeyword value
+            | Core_ast.LSymbol value -> Value.VSymbol value
+            | Core_ast.LQuoted value -> Quote.value_of_syntax value)
   | Core_ast.Var (_, name) -> Value.VSymbol name
   | Core_ast.App (_, Core_ast.Var (_, "__vector"), args) ->
       Value.VVector (List.map descriptor_value_of_core_expr args)

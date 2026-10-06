@@ -17,8 +17,46 @@ export type KValue =
   | KBuiltin
   | KFn
   | KSExpr
+  | KKeyword
+  | KSymbol
   | KMacro
   | KMeta;
+
+/** A homogeneous dictionary preserves optional lookup independently of record access. */
+export class KDictionary extends Map<string, KValue> {}
+export const isKDictionary = (value: KValue): value is KDictionary => value instanceof KDictionary;
+
+export interface KKeyword { readonly _tag: "KKeyword"; readonly name: string; }
+export interface KSymbol { readonly _tag: "KSymbol"; readonly name: string; }
+const keywords = new Map<string,KKeyword>();
+class Atom {
+  constructor(readonly _tag: "KKeyword" | "KSymbol", readonly name: string) {}
+  toString(): string { return this.name; }
+}
+export const KKeyword = (name: string): KKeyword => {
+  name = name.startsWith(":") ? name : `:${name}`;
+  const existing = keywords.get(name);
+  if (existing) return existing;
+  const value = Object.freeze(new Atom("KKeyword",name)) as KKeyword;
+  keywords.set(name,value); return value;
+};
+export const KSymbol = (name: string): KSymbol => Object.freeze(new Atom("KSymbol",name)) as KSymbol;
+export const isKKeyword = (v: KValue): v is KKeyword => v !== null && typeof v === "object" && "_tag" in v && v._tag === "KKeyword";
+export const isKSymbol = (v: KValue): v is KSymbol => v !== null && typeof v === "object" && "_tag" in v && v._tag === "KSymbol";
+/** Internal map labels distinguish keywords, strings and quoted symbols. */
+export function mapKey(v: KValue): string | undefined {
+  return isKKeyword(v) ? v.name : isKSymbol(v) ? `\0sym:${v.name}` : typeof v === "string" ? v.startsWith(":") || v.startsWith("\0") ? `\0str:${v}` : v : undefined;
+}
+export function mapKeyValue(k: string): KValue { return k.startsWith("\0str:") ? k.slice(5) : k.startsWith("\0sym:") ? KSymbol(k.slice(5)) : k.startsWith(":") ? KKeyword(k) : k; }
+export function quotedDatum(e: SExpr): KValue {
+  switch (e._tag) {
+    case "Num": case "Str": case "Bool": return e.value;
+    case "Sym": return e.name === "nil" ? null : e.name.startsWith(":") ? KKeyword(e.name) : KSymbol(e.name);
+    case "List": case "Vector": return e.items.map(quotedDatum);
+    case "Map": return new Map(e.pairs.map(([k,v])=>[mapKey(quotedDatum(k)) ?? "",quotedDatum(v)]));
+    default: throw new TypeError("Invalid quoted datum");
+  }
+}
 
 /**
  * First-class builtin function reference.
@@ -53,7 +91,7 @@ export interface KSExpr {
 }
 
 /**
- * A macro captured from `(define-macro name [params] body)`.
+ * A macro captured from `(__macro name [params] body)`.
  * Like KFn but receives unevaluated forms as KSExpr arguments.
  */
 export interface KMacro {
@@ -170,6 +208,8 @@ export function asKFn(v: KValue, context: string): KFn {
 
 export function describeType(v: KValue): string {
   if (v === null) return "nil";
+  if (isKKeyword(v)) return "keyword";
+  if (isKSymbol(v)) return "symbol";
   if (typeof v === "string") return "string";
   if (typeof v === "number") return "number";
   if (typeof v === "boolean") return "boolean";
@@ -234,6 +274,7 @@ export function kEquals(a: KValue, b: KValue): boolean {
   if (typeof a === "number" || typeof a === "string" || typeof a === "boolean") {
     return a === b;
   }
+  if (isKKeyword(a) && isKKeyword(b) || isKSymbol(a) && isKSymbol(b)) return a.name === b.name;
   if (isKBuiltin(a) && isKBuiltin(b)) return a.name === b.name;
   if (isKBuiltin(a) || isKBuiltin(b)) return false;
   if (isKFn(a) || isKFn(b)) return false; // functions are never equal

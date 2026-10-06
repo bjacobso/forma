@@ -30,6 +30,15 @@ vocabulary first, domain forms second). After editing `preludes/*.lisp`, run
 `pnpm --filter @formalang/ts preludes:generate`; a test fails if the embedded
 copies drift.
 
+`bootstrapFromSources` from `@formalang/ts/descriptor` works in Node and browsers.
+Filesystem bootstrapping is available from the Node-only entry point:
+
+```typescript
+import { bootstrapFromFiles } from "@formalang/ts/node";
+
+const prelude = bootstrapFromFiles("preludes/compiler.lisp", "preludes/ontology.lisp");
+```
+
 ## Elaborating a DSL program
 
 `elaborateProgram` runs a source file through a bootstrapped prelude in one

@@ -10,38 +10,24 @@ preludes:
 Core company org example in canonical ontology syntax.
 
 ```lisp
-(define-entity Department
-  (:field [department/name String {:required true}])
-  (:field [department/cost-center String]))
-
-(define-entity Employee
-  (:field [employee/name String {:required true}])
-  (:field [employee/title String])
-  (:field [employee/department (Ref Department)]))
+(entity Department {:name String :cost-center (Option String)})
+(entity Employee
+  {:name String :title (Option String) :department (Option (Id Department))})
 ```
 
 ```lisp
-(define-record "department:engineering" Department
-  (:field [department/name "Engineering"])
-  (:field [department/cost-center "1001"]))
-
-(define-record "department:finance" Department
-  (:field [department/name "Finance"])
-  (:field [department/cost-center "2001"]))
-
-(define-record "employee:alice" Employee
-  (:field [employee/name "Alice Chen"])
-  (:field [employee/title "VP Engineering"])
-  (:field [employee/department "department:engineering"]))
-
-(define-record "employee:mario" Employee
-  (:field [employee/name "Mario Ruiz"])
-  (:field [employee/title "Controller"])
-  (:field [employee/department "department:finance"]))
+(seed Department "department:engineering"
+  {:name "Engineering" :cost-center "1001"})
+(seed Department "department:finance" {:name "Finance" :cost-center "2001"})
+(seed Employee "employee:alice"
+  {
+    :name "Alice Chen"
+    :title "VP Engineering"
+    :department "department:engineering"})
+(seed Employee "employee:mario"
+  {:name "Mario Ruiz" :title "Controller" :department "department:finance"})
 ```
 
 ```lisp
-(define-query employee-directory
-  (:from Employee)
-  (:select [employee/name employee/title employee/department]))
+(query employee-directory :from Employee :select [name title department])
 ```

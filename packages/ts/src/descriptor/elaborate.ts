@@ -1,3 +1,6 @@
+import { typeDefinition } from "../surface/type-alias.js";
+import { projectContractValue } from "../surface/contract.js";
+import { isKKeyword, isKSymbol, mapKeyValue, type KValue } from "../evaluator/types.js";
 /**
  * Source-to-declaration elaboration for descriptor-defined DSLs.
  *
@@ -7,11 +10,16 @@
  * construct hook, and return JSON payloads with located diagnostics. Failures
  * are reported per form, so one bad declaration does not hide the others.
  *
- * Top-level calls to macros defined in the same source with `define-macro` are
+ * Top-level calls to macros defined in the same source with `__macro` are
  * expanded first. Each declaration records whether it was authored or
  * expanded, and carries a source map from payload paths to authored spans.
  */
 
+import { parsePrelude } from "./meta-fn-decl.js";
+import { lowerActionProgram } from "../surface/action.js";
+import { matchFormSyntax, unifiedFormHooks } from "../surface/form.js";
+import { head, name as surfaceName } from "../surface/effect.js";
+import { TCon } from "../type/types.js";
 import { Effect, Exit } from "effect";
 import type {
   DeclarationOrigin,
@@ -102,9 +110,27 @@ export function elaborateSources(
     });
   };
 
-  const { descriptions, elaboration } = options.prelude;
+  const descriptions = options.prelude.descriptions.fork();
+  const elaboration = options.prelude.elaboration.fork();
+  const authorForms = sources.flatMap(({source})=>toSExprMany(parse(source).redTree));
+  const typeDefinitions = new Map<string,SExpr>();
+  for (const descriptor of descriptions.list()) for (const [n,t] of descriptor.surface?.types ?? []) typeDefinitions.set(n,t);
+  for (const e of authorForms) { const definition=typeDefinition(e); if (definition) typeDefinitions.set(...definition); }
+  for (const {source,sourceId} of sources) {
+    try {
+      for (const descriptor of parsePrelude(source,typeDefinitions,authorForms.filter(e=>head(e)==="define" || head(e)==="macro")).forms) {
+        if (descriptor.surface && descriptions.has(descriptor.name)) throw new Error(`Form '${descriptor.name}' is already declared`);
+        descriptions.register(descriptor);
+      }
+    } catch (error) { report(sourceLocator(source,sourceId),"elaborate/form-definition",errorMessage(error),undefined); }
+  }
+  for (const descriptor of descriptions.list()) for (const hook of unifiedFormHooks(descriptor,descriptions,options.prelude.formBuiltins,options.prelude.hostedDsls)) elaboration.registerHook(hook);
   const accepted = options.forms ? new Set(options.forms) : undefined;
   const semanticEnv = options.semanticEnv ?? new SimpleSemanticEnvironment();
+  for (const expression of authorForms) if (["type", "error", "class"].includes(head(expression) ?? "") && expression._tag === "List") {
+    const definition=typeDefinition(expression);
+    if (definition) semanticEnv.setFact("type-kind", definition[0], head(expression)!);
+  }
   const declared = new Map<string, string>();
   const forms: {
     readonly form: NormalizedForm;
@@ -123,7 +149,11 @@ export function elaborateSources(
     for (const error of parsed.errors) at("parse/syntax", error.message, error.loc);
     if (parsed.errors.length > 0) continue;
 
-    for (const { expr, formIndex, loc, origin } of expandTopLevel(toSExprMany(parsed.redTree), locate, at)) {
+    let authored: readonly SExpr[];
+    try {authored=lowerActionProgram(toSExprMany(parsed.redTree), new Set(authorForms.flatMap(e => head(e)===":" && e._tag==="List" && surfaceName(e.items[1]) && (head(e.items[2])==="Action" || e.items[2]?._tag==="List" && head(e.items[2])==="->" && head(e.items[2].items.at(-1))==="Action") ? [surfaceName(e.items[1])!] : [])));}
+    catch (error) {at("elaborate/action-definition",errorMessage(error),toSExprMany(parsed.redTree)[0]?.loc);continue;}
+    for (const { expr, formIndex, loc, origin } of expandTopLevel(authored, locate, at)) {
+      if (["type","form","define",":","do","class","error","service","layer","macro","typeclass","instance"].includes(head(expr) ?? "")) continue;
       const recognized = recognizeForm(expr, descriptions);
       if (!recognized) {
         const head = headName(expr);
@@ -153,8 +183,20 @@ export function elaborateSources(
             });
             continue;
           }
+          if (form.descriptor.surface) {
+            const holes = matchFormSyntax(form.descriptor.surface,form.rawExpr);
+            semanticEnv.setFact("declaration-hole-values",name,new Map(holes));
+            const fields = new Map<string,unknown>();
+            for (const [hole,t] of form.descriptor.surface.holes) {
+              if (head(t)==="Record" && t._tag==="List" && surfaceName(t.items[1])==="Type") {
+                const record=holes.get(hole);
+                if (record?._tag==="Map") for (const [key,value] of record.pairs) fields.set(surfaceName(key)!.replace(/^:/,""),value);
+              }
+            }
+            if (fields.size) semanticEnv.setFact("declaration-field-syntax",name,fields);
+          }
           declared.set(name, form.formName);
-          semanticEnv.declareGlobal(name, form.formName);
+          semanticEnv.declareGlobal(name, form.formName, form.descriptor.surface && form.descriptor.resultType.kind === "constant" ? TCon(form.descriptor.resultType.type) : undefined);
         }
         forms.push({
           form,
@@ -189,6 +231,17 @@ export function elaborateSources(
     for (const problem of problems) at(problem.code, problem.message, loc, details);
     if (problems.length > 0) continue;
 
+    if (form.descriptor.surface && form.descriptor.validation.kind === "hook") {
+      const checked = Effect.runSyncExit(elaboration.validate(form.descriptor.validation.fn, input));
+      if (Exit.isFailure(checked)) { at("elaborate/validation-failed", failureMessage(checked), loc, details); continue; }
+      for (const problem of checked.value) diagnostics.push({code:problem.code ?? "elaborate/hole-type",severity:problem.severity,message:problem.message,phase:"elaborate",span:locate(problem.loc ?? loc),details});
+      if (checked.value.some(p => p.severity === "error")) continue;
+    }
+    if (form.descriptor.resultType.kind === "hook") {
+      const computed = Effect.runSyncExit(elaboration.computeResultType(form.descriptor.resultType.fn,input));
+      if (Exit.isFailure(computed)) { at("elaborate/result-type-failed",failureMessage(computed),loc,details); continue; }
+      if (name) semanticEnv.declareGlobal(name,form.formName,computed.value);
+    }
     const strategy = form.descriptor.elaboration;
     if (strategy.kind !== "hook" && strategy.kind !== "composite") {
       at("elaborate/no-construct-hook", `Form '${form.formName}' has no construct hook`, loc, details);
@@ -200,7 +253,8 @@ export function elaborateSources(
       continue;
     }
 
-    const payload = toJsonValue(exit.value);
+    const surface = form.descriptor.surface;
+    const payload = toJsonValue(surface?.ir ? projectContractValue(exit.value as import("../evaluator/types.js").KValue,surface.ir,surface.types) : exit.value);
     const span = locate(loc);
     const contract = payloadContract(form);
     declarations.push({
@@ -318,14 +372,20 @@ export function sourceLocator(source: string, sourceId: string): (loc: Loc) => S
  * become arrays and symbols strings, while string literals keep their marker
  * object so they remain distinguishable from symbols.
  */
+function wireMapKey(key: string): string {
+  const decoded = mapKeyValue(key);
+  return isKKeyword(decoded) ? decoded.name.slice(1) : String(decoded);
+}
+
 export function toJsonValue(value: unknown): JsonValue {
   if (value === null || value === undefined) return null;
+  if (isKKeyword(value as KValue) || isKSymbol(value as KValue)) return String(value);
   if (typeof value === "string" || typeof value === "boolean") return value;
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (typeof value === "bigint") return value.toString();
   if (Array.isArray(value) || value instanceof Set) return [...value].map(toJsonValue);
   if (value instanceof Map) {
-    return Object.fromEntries([...value].map(([key, item]) => [String(key), toJsonValue(item)]));
+    return Object.fromEntries([...value].map(([key, item]) => [wireMapKey(String(key)), toJsonValue(item)]));
   }
   if (isSExprLike(value) && "loc" in value) {
     return toJsonValue(canonicalExprValue(value));
@@ -362,7 +422,7 @@ interface TopLevelForm {
 const authored: DeclarationOrigin = { kind: "authored" };
 
 /**
- * Drop `define-macro` forms and expand top-level calls to those macros, so a
+ * Drop `__macro` forms and expand top-level calls to those macros, so a
  * source may abbreviate its own declarations. A `(do ...)` expansion yields
  * several forms. Other forms pass through untouched.
  */
@@ -371,13 +431,16 @@ const expandTopLevel = (
   locate: (loc: Loc) => Span,
   at: (code: string, message: string, loc: Loc | undefined, details?: Record<string, unknown>) => void,
 ): readonly TopLevelForm[] => {
-  const macroDefs = exprs.filter((expr) => headName(expr) === "define-macro");
+  const macroDefs = exprs.filter((expr) => ["macro","__macro"].includes(headName(expr) ?? ""));
   const macroNames = new Set(
-    macroDefs.flatMap((expr) => (expr._tag === "List" && expr.items[1]?._tag === "Sym" ? [expr.items[1].name] : [])),
+    macroDefs.flatMap((expr) => (expr._tag === "List" && expr.items[1]?._tag === "Sym" ? [expr.items[1].name] : expr._tag === "List" && expr.items[1]?._tag === "List" && surfaceName(expr.items[1].items[0]) ? [surfaceName(expr.items[1].items[0])!] : [])),
   );
   return exprs.flatMap((expr, formIndex): readonly TopLevelForm[] => {
     const head = headName(expr);
-    if (head === "define-macro") return [];
+    if (head === "__macro" || head === "macro") return [];
+    if (head === "do" && expr._tag === "List") {
+      return expandTopLevel([...macroDefs, ...expr.items.slice(1)], locate, at).map(node => ({ ...node, formIndex }));
+    }
     if (head === undefined || !macroNames.has(head)) return [{ expr, formIndex, loc: expr.loc, origin: authored }];
     try {
       const [expanded] = expandProgramSync([...macroDefs, expr], { builtins: defaultBuiltins }).exprs;
@@ -422,6 +485,21 @@ const sourceMapOf = (
   const record = jsonObject(payload);
   if (!record) return entries;
   for (const slot of form.descriptor.slots) {
+    const syntax = form.slots.getExpr(slot.name);
+    const body = form.descriptor.surface?.body;
+    const mentions = (expression: SExpr): boolean => expression._tag === "Sym" ? expression.name === slot.name
+      : expression._tag === "List" || expression._tag === "Vector" ? expression.items.some(mentions)
+      : expression._tag === "Map" ? expression.pairs.some(([, value]) => mentions(value)) : false;
+    const projectedKey = Array.isArray(record[slot.name]) ? slot.name : body?._tag === "Map"
+      ? body.pairs.find(([key, value]) => mentions(value) && Array.isArray(record[surfaceName(key)?.replace(/^:/, "") ?? ""]))?.[0] : undefined;
+    const outputKey = typeof projectedKey === "string" ? projectedKey : projectedKey ? surfaceName(projectedKey)?.replace(/^:/, "") : undefined;
+    const projected = outputKey ? record[outputKey] : undefined;
+    if (form.descriptor.surface && syntax?._tag === "Map" && outputKey && Array.isArray(projected) && projected.length === syntax.pairs.length) {
+      syntax.pairs.forEach(([key, value], index) => entries.push({
+        path: `/${jsonPointerToken(outputKey)}/${index}`,
+        span: locate({...key.loc, end: Math.max(key.loc.end, value.loc.end)}),
+      }));
+    }
     const children = form.slots.getChildForms(slot.name);
     if (children.length === 0) continue;
     const key = [slot.name, `${slot.name}s`, `${slot.name}es`].find((candidate) => {

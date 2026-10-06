@@ -45,6 +45,7 @@ export class OcamlDaemon {
       const timeout = setTimeout(() => {
         const index = this.#pending.indexOf(pending);
         if (index >= 0) this.#pending.splice(index, 1);
+        this.#child.kill();
         reject(new Error(`OCaml daemon timed out on ${payload.op}: ${this.#stderr}`));
       }, 30_000);
       pending.resolve = (value) => { clearTimeout(timeout); resolve(value); };

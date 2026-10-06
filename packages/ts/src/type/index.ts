@@ -21,6 +21,7 @@ import { inferProgram, inferProgramAll } from "./infer.js";
 import { InferContext, makeInferContext, type NodeTypeMap } from "./context.js";
 import type { BuiltinSchemeProvider } from "./builtin-schemes.js";
 import { InferenceError } from "./errors.js";
+import { unifiedFormProvider } from "./unified-form-provider.js";
 import { lowerProgram } from "./lower.js";
 import { resetNodeIds } from "./core-expr.js";
 
@@ -194,8 +195,11 @@ export function inferSource(
   options?: InferOptions,
 ): Effect.Effect<InferResult, InferenceError | ParseError> {
   return Effect.gen(function* () {
-    const dslProvider = options?.dslProvider;
     const exprs = yield* parseManyToSExpr(source);
+    const dslProvider = yield* Effect.try({
+      try: () => unifiedFormProvider(source, exprs, options?.dslProvider),
+      catch: e => e instanceof InferenceError ? e : new InferenceError({message:String(e)}),
+    });
     if (exprs.length === 0) {
       return { type: tNil, nodeTypes: new Map(), diagnostics: [] };
     }
@@ -251,8 +255,11 @@ export function inferSourceAll(
   options?: InferOptions,
 ): Effect.Effect<InferAllResult, InferenceError | ParseError> {
   return Effect.gen(function* () {
-    const dslProvider = options?.dslProvider;
     const exprs = yield* parseManyToSExpr(source);
+    const dslProvider = yield* Effect.try({
+      try: () => unifiedFormProvider(source, exprs, options?.dslProvider),
+      catch: e => e instanceof InferenceError ? e : new InferenceError({message:String(e)}),
+    });
     if (exprs.length === 0) {
       return { types: [], nodeTypes: new Map(), diagnostics: [] };
     }

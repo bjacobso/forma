@@ -1,977 +1,895 @@
 # Documents
 
 ```lisp
-(export i-9-employment-eligibility w-4-federal-tax-withholding employee-handbook-acknowledgement direct-deposit-authorization state-tax-withholding background-check-consent identity-document-verification)
+(export
+  i-9-employment-eligibility
+  w-4-federal-tax-withholding
+  employee-handbook-acknowledgement
+  direct-deposit-authorization
+  state-tax-withholding
+  background-check-consent
+  identity-document-verification)
 
 ;; =============================================================================
 ;; I-9 Employment Eligibility Verification - Canonical Document
 ;; =============================================================================
-
-(define-document i-9-employment-eligibility
-  (:description "Verify identity and employment authorization of new employees")
-
-  (:page
-    (page
-      (:section-id "employee-information")
-      (:assignee employee)
-      (:completion-action (completion-action "start-i9-section-2" "Employee"))
-      (:description "Employee Information and Attestation")
-      (:field
-        (field content :i9.section1_intro
-          (:content "# Section 1: Employee Information and Attestation\n\n**Employees must complete and sign Section 1 no later than the first day of employment.**\n\nEnter your full legal name and other information exactly as it appears on your identity and employment authorization documents. You may use a preparer/translator to assist you.\n\n---")))
-      (:field
-        (field text :i9.last_name
-          (:label "Last Name")
-          (:required true)
-          (:bind :employee/last-name)))
-      (:field
-        (field text :i9.first_name
-          (:label "First Name")
-          (:required true)
-          (:bind :employee/first-name)))
-      (:field (field text :i9.middle_initial (:label "Middle Initial")))
-      (:field (field text :i9.other_last_names (:label "Other Last Names Used")))
-      (:field (field text :i9.address (:label "Address") (:required true)))
-      (:field
-        (field date :i9.date_of_birth
-          (:label "Date of Birth")
-          (:required true)
-          (:bind :employee/date-of-birth :transform string)))
-      (:field
-        (field text :i9.ssn
-          (:label "Social Security Number")
-          (:required true)
-          (:bind :employee/ssn)))
-      (:field
-        (field text :i9.email
-          (:label "Email Address")
-          (:required true)
-          (:bind :employee/email)))
-      (:field
-        (field text :i9.phone
-          (:label "Phone Number")
-          (:bind :employee/phone)))
-      (:field
-        (field content :i9.citizenship_intro
-          (:content "## Citizenship/Immigration Status\n\nCheck one of the following boxes to attest to your citizenship or immigration status:")))
-      (:field
-        (field select :i9.citizenship_status
-          (:label "Citizenship Status")
-          (:required true)
-          (:bind :employee/i9-citizenship-status)
-          (:option (option "citizen" "A citizen of the United States"))
-          (:option (option "noncitizen_national" "A noncitizen national of the United States"))
-          (:option (option "permanent_resident" "A lawful permanent resident"))
-          (:option (option "authorized_alien" "An alien authorized to work"))))
-      (:field
-        (field text :i9.alien_number
-          (:label "Alien Registration Number/USCIS Number")))
-      (:field (field text :i9.i94_number (:label "Form I-94 Admission Number")))
-      (:field
-        (field date :i9.work_auth_expiry
-          (:label "Work Authorization Expiration Date")))
-      (:field
-        (field content :i9.attestation_notice
-          (:content "## Attestation\n\nBy signing below, you attest under penalty of perjury that:\n- You are aware that federal law provides for imprisonment and/or fines for false statements\n- All information provided is true and correct\n- You are authorized to work in the United States")))
-      (:field
-        (field boolean :i9.employee_signature
-          (:label "Employee Signature")
-          (:required true)
-          (:bind :employee/i9-section-1-signed)))))
-
-  (:page
-    (page
-      (:section-id "employer-review")
-      (:assignee employer)
-      (:depends-on "employee-information")
-      (:completion-action (completion-action "generate-i9-pdf" "Employee"))
-      (:description "Employer Review and Verification")
-      (:field
-        (field content :i9.section2_intro
-          (:content "# Section 2: Employer Review and Verification\n\n**Employers must complete Section 2 within 3 business days of the employee's first day of employment.**\n\nExamine one document from **List A** (which establishes both identity and employment authorization) OR examine one document from **List B** (identity) AND one from **List C** (employment authorization).\n\n---\n\n## Acceptable Documents\n\n### List A (Identity AND Employment Authorization)\n- U.S. Passport or U.S. Passport Card\n- Permanent Resident Card (Form I-551)\n- Foreign passport with Form I-94 and endorsement\n- Employment Authorization Document (Form I-766)\n\n### List B (Identity Only)\n- Driver's license or state ID card\n- School ID card with photograph\n- Voter registration card\n- U.S. military card or draft record\n\n### List C (Employment Authorization Only)\n- Social Security card (unrestricted)\n- Birth certificate\n- U.S. Citizen ID Card (Form I-197)\n- Native American tribal document\n\n---")))
-      (:field
-        (field content :i9.list_a_header
-          (:content "## List A Document\n*Complete this section if the employee presented a List A document.*")))
-      (:field (field text :i9.list_a_document (:label "List A Document Title")))
-      (:field (field text :i9.list_a_doc_number (:label "Document Number")))
-      (:field (field date :i9.list_a_expiry (:label "Expiration Date")))
-      (:field
-        (field text :i9.list_a_issuing_authority
-          (:label "Issuing Authority")))
-      (:field
-        (field content :i9.list_bc_header
-          (:content "## List B + List C Documents\n*Complete this section if the employee did NOT present a List A document.*")))
-      (:field (field text :i9.list_b_document (:label "List B Document Title")))
-      (:field (field text :i9.list_b_doc_number (:label "Document Number")))
-      (:field (field date :i9.list_b_expiry (:label "Expiration Date")))
-      (:field
-        (field text :i9.list_b_issuing_authority
-          (:label "Issuing Authority")))
-      (:field (field text :i9.list_c_document (:label "List C Document Title")))
-      (:field (field text :i9.list_c_doc_number (:label "Document Number")))
-      (:field (field date :i9.list_c_expiry (:label "Expiration Date")))
-      (:field
-        (field text :i9.list_c_issuing_authority
-          (:label "Issuing Authority")))
-      (:field
-        (field content :i9.employer_certification
-          (:content "---\n\n## Employer Certification\n\nBy signing below, you certify that:\n- You have examined the documents presented by the employee\n- The documents appear to be genuine and relate to the employee\n- The employee is authorized to work in the United States")))
-      (:field
-        (field date :i9.employee_first_day
-          (:label "Employee's First Day of Employment")
-          (:required true)))
-      (:field
-        (field boolean :i9.employer_signature
-          (:label "Employer Signature")
-          (:required true)))
-      (:field
-        (field text :i9.employer_name
-          (:label "Name of Employer or Authorized Representative")
-          (:required true)))
-      (:field (field text :i9.employer_title (:label "Title") (:required true)))
-      (:field
-        (field text :i9.employer_org_name
-          (:label "Employer's Business or Organization Name")
-          (:required true)))
-      (:field
-        (field text :i9.employer_org_address
-          (:label "Employer's Business Address")
-          (:required true))))))
+(document i-9-employment-eligibility
+  :description "Verify identity and employment authorization of new employees"
+  (page
+    employee-information
+    :assignee
+    employee
+    :description
+    "Employee Information and Attestation"
+    :completion
+    (completion start-i9-section-2 :entity Employee)
+    (content
+      :i9.section1_intro
+      "# Section 1: Employee Information and Attestation\n\n**Employees must complete and sign Section 1 no later than the first day of employment.**\n\nEnter your full legal name and other information exactly as it appears on your identity and employment authorization documents. You may use a preparer/translator to assist you.\n\n---")
+    (text :i9.last_name "Last Name" :required true :bind Employee.last-name)
+    (text :i9.first_name "First Name" :required true :bind Employee.first-name)
+    (text :i9.middle_initial "Middle Initial")
+    (text :i9.other_last_names "Other Last Names Used")
+    (text :i9.address "Address" :required true)
+    (date
+      :i9.date_of_birth
+      "Date of Birth"
+      :required
+      true
+      :bind
+      Employee.date-of-birth
+      :transform
+      :string)
+    (text :i9.ssn "Social Security Number" :required true :bind Employee.ssn)
+    (text :i9.email "Email Address" :required true :bind Employee.email)
+    (text :i9.phone "Phone Number" :bind Employee.phone)
+    (content
+      :i9.citizenship_intro
+      "## Citizenship/Immigration Status\n\nCheck one of the following boxes to attest to your citizenship or immigration status:")
+    (select
+      :i9.citizenship_status "Citizenship Status"
+      :required true
+      :bind Employee.i9-citizenship-status
+      (option "citizen" "A citizen of the United States")
+      (option
+        "noncitizen_national"
+        "A noncitizen national of the United States")
+      (option "permanent_resident" "A lawful permanent resident")
+      (option "authorized_alien" "An alien authorized to work"))
+    (text :i9.alien_number "Alien Registration Number/USCIS Number")
+    (text :i9.i94_number "Form I-94 Admission Number")
+    (date :i9.work_auth_expiry "Work Authorization Expiration Date")
+    (content
+      :i9.attestation_notice
+      "## Attestation\n\nBy signing below, you attest under penalty of perjury that:\n- You are aware that federal law provides for imprisonment and/or fines for false statements\n- All information provided is true and correct\n- You are authorized to work in the United States")
+    (checkbox
+      :i9.employee_signature "Employee Signature"
+      :required true
+      :bind Employee.i9-section-1-signed))
+  (page
+    employer-review
+    :assignee
+    employer
+    :description
+    "Employer Review and Verification"
+    :depends-on
+    [employee-information]
+    :completion
+    (completion generate-i9-pdf :entity Employee)
+    (content
+      :i9.section2_intro
+      "# Section 2: Employer Review and Verification\n\n**Employers must complete Section 2 within 3 business days of the employee's first day of employment.**\n\nExamine one document from **List A** (which establishes both identity and employment authorization) OR examine one document from **List B** (identity) AND one from **List C** (employment authorization).\n\n---\n\n## Acceptable Documents\n\n### List A (Identity AND Employment Authorization)\n- U.S. Passport or U.S. Passport Card\n- Permanent Resident Card (Form I-551)\n- Foreign passport with Form I-94 and endorsement\n- Employment Authorization Document (Form I-766)\n\n### List B (Identity Only)\n- Driver's license or state ID card\n- School ID card with photograph\n- Voter registration card\n- U.S. military card or draft record\n\n### List C (Employment Authorization Only)\n- Social Security card (unrestricted)\n- Birth certificate\n- U.S. Citizen ID Card (Form I-197)\n- Native American tribal document\n\n---")
+    (content
+      :i9.list_a_header
+      "## List A Document\n*Complete this section if the employee presented a List A document.*")
+    (text :i9.list_a_document "List A Document Title")
+    (text :i9.list_a_doc_number "Document Number")
+    (date :i9.list_a_expiry "Expiration Date")
+    (text :i9.list_a_issuing_authority "Issuing Authority")
+    (content
+      :i9.list_bc_header
+      "## List B + List C Documents\n*Complete this section if the employee did NOT present a List A document.*")
+    (text :i9.list_b_document "List B Document Title")
+    (text :i9.list_b_doc_number "Document Number")
+    (date :i9.list_b_expiry "Expiration Date")
+    (text :i9.list_b_issuing_authority "Issuing Authority")
+    (text :i9.list_c_document "List C Document Title")
+    (text :i9.list_c_doc_number "Document Number")
+    (date :i9.list_c_expiry "Expiration Date")
+    (text :i9.list_c_issuing_authority "Issuing Authority")
+    (content
+      :i9.employer_certification
+      "---\n\n## Employer Certification\n\nBy signing below, you certify that:\n- You have examined the documents presented by the employee\n- The documents appear to be genuine and relate to the employee\n- The employee is authorized to work in the United States")
+    (date
+      :i9.employee_first_day
+      "Employee's First Day of Employment"
+      :required
+      true)
+    (checkbox :i9.employer_signature "Employer Signature" :required true)
+    (text :i9.employer_name
+      "Name of Employer or Authorized Representative"
+      :required true)
+    (text :i9.employer_title "Title" :required true)
+    (text :i9.employer_org_name
+      "Employer's Business or Organization Name"
+      :required true)
+    (text :i9.employer_org_address "Employer's Business Address" :required true)))
 ```
 
 ```lisp
 ;; =============================================================================
 ;; I-9 Employment Eligibility - English Locale
 ;; =============================================================================
-
-(define-document-locale i-9-employment-eligibility-en
-    (:document i-9-employment-eligibility)
-    (:locale en)
-  (:role
-    (role "employee"
-      (:label "Employee")
-      (:description "The new hire completing Section 1")))
-  (:role
-    (role "employer"
-      (:label "Employer/Authorized Representative")
-      (:description "Reviews identity and employment authorization documents")))
-
-  (:section
-    (section "employee-information"
-      (:label "Employee Information and Attestation")))
-  (:section
-    (section "employer-review"
-      (:label "Employer or Authorized Representative Review")))
-
-  (:field (locale-field :i9.last_name (:label "Last Name")))
-  (:field (locale-field :i9.first_name (:label "First Name")))
-  (:field (locale-field :i9.middle_initial (:label "Middle Initial")))
-  (:field (locale-field :i9.other_last_names (:label "Other Last Names Used")))
-  (:field (locale-field :i9.address (:label "Address")))
-  (:field (locale-field :i9.date_of_birth (:label "Date of Birth")))
-  (:field (locale-field :i9.ssn (:label "Social Security Number")))
-  (:field (locale-field :i9.email (:label "Email Address")))
-  (:field (locale-field :i9.phone (:label "Phone Number")))
-  (:field
-    (locale-field :i9.citizenship_status
-      (:label "Citizenship Status")
-      (:option (option "citizen" "A citizen of the United States"))
-      (:option (option "noncitizen_national" "A noncitizen national of the United States"))
-      (:option (option "permanent_resident" "A lawful permanent resident"))
-      (:option (option "authorized_alien" "An alien authorized to work"))))
-  (:field
-    (locale-field :i9.alien_number
-      (:label "Alien Registration Number/USCIS Number")
-      (:description "Required for permanent residents and authorized aliens")))
-  (:field
-    (locale-field :i9.i94_number
-      (:label "Form I-94 Admission Number")
-      (:description "Required for certain authorized aliens")))
-  (:field
-    (locale-field :i9.work_auth_expiry
-      (:label "Work Authorization Expiration Date")
-      (:description "Required for authorized aliens")))
-  (:field
-    (locale-field :i9.employee_signature
-      (:label "Employee Signature")
-      (:description "I attest, under penalty of perjury, that the information provided is true and correct")))
-  (:field
-    (locale-field :i9.list_a_document
-      (:label "List A Document Title")
-      (:description "e.g., U.S. Passport, Permanent Resident Card")))
-  (:field (locale-field :i9.list_a_doc_number (:label "Document Number")))
-  (:field (locale-field :i9.list_a_expiry (:label "Expiration Date")))
-  (:field (locale-field :i9.list_a_issuing_authority (:label "Issuing Authority")))
-  (:field
-    (locale-field :i9.list_b_document
-      (:label "List B Document Title (Identity)")
-      (:description "e.g., Driver's License, State ID")))
-  (:field (locale-field :i9.list_b_doc_number (:label "Document Number")))
-  (:field (locale-field :i9.list_b_expiry (:label "Expiration Date")))
-  (:field (locale-field :i9.list_b_issuing_authority (:label "Issuing Authority")))
-  (:field
-    (locale-field :i9.list_c_document
-      (:label "List C Document Title (Employment)")
-      (:description "e.g., Social Security Card, Birth Certificate")))
-  (:field (locale-field :i9.list_c_doc_number (:label "Document Number")))
-  (:field (locale-field :i9.list_c_expiry (:label "Expiration Date")))
-  (:field (locale-field :i9.list_c_issuing_authority (:label "Issuing Authority")))
-  (:field
-    (locale-field :i9.employee_first_day
-      (:label "Employee's First Day of Employment")))
-  (:field
-    (locale-field :i9.employer_signature
-      (:label "Employer Signature")
-      (:description "I attest that I have examined the documents and they appear genuine")))
-  (:field
-    (locale-field :i9.employer_name
-      (:label "Name of Employer or Authorized Representative")))
-  (:field (locale-field :i9.employer_title (:label "Title")))
-  (:field
-    (locale-field :i9.employer_org_name
-      (:label "Employer's Business or Organization Name")))
-  (:field
-    (locale-field :i9.employer_org_address
-      (:label "Employer's Business Address"))))
+(document-locale i-9-employment-eligibility "en"
+  (role
+    employee
+    :label
+    "Employee"
+    :description
+    "The new hire completing Section 1")
+  (role
+    employer
+    :label
+    "Employer/Authorized Representative"
+    :description
+    "Reviews identity and employment authorization documents")
+  (section employee-information :label "Employee Information and Attestation")
+  (section
+    employer-review
+    :label
+    "Employer or Authorized Representative Review")
+  (field :i9.last_name :label "Last Name")
+  (field :i9.first_name :label "First Name")
+  (field :i9.middle_initial :label "Middle Initial")
+  (field :i9.other_last_names :label "Other Last Names Used")
+  (field :i9.address :label "Address")
+  (field :i9.date_of_birth :label "Date of Birth")
+  (field :i9.ssn :label "Social Security Number")
+  (field :i9.email :label "Email Address")
+  (field :i9.phone :label "Phone Number")
+  (field
+    :i9.citizenship_status
+    :label
+    "Citizenship Status"
+    (option "citizen" "A citizen of the United States")
+    (option "noncitizen_national" "A noncitizen national of the United States")
+    (option "permanent_resident" "A lawful permanent resident")
+    (option "authorized_alien" "An alien authorized to work"))
+  (field
+    :i9.alien_number
+    :label
+    "Alien Registration Number/USCIS Number"
+    :description
+    "Required for permanent residents and authorized aliens")
+  (field
+    :i9.i94_number
+    :label
+    "Form I-94 Admission Number"
+    :description
+    "Required for certain authorized aliens")
+  (field
+    :i9.work_auth_expiry
+    :label
+    "Work Authorization Expiration Date"
+    :description
+    "Required for authorized aliens")
+  (field
+    :i9.employee_signature
+    :label
+    "Employee Signature"
+    :description
+    "I attest, under penalty of perjury, that the information provided is true and correct")
+  (field
+    :i9.list_a_document
+    :label
+    "List A Document Title"
+    :description
+    "e.g., U.S. Passport, Permanent Resident Card")
+  (field :i9.list_a_doc_number :label "Document Number")
+  (field :i9.list_a_expiry :label "Expiration Date")
+  (field :i9.list_a_issuing_authority :label "Issuing Authority")
+  (field
+    :i9.list_b_document
+    :label
+    "List B Document Title (Identity)"
+    :description
+    "e.g., Driver's License, State ID")
+  (field :i9.list_b_doc_number :label "Document Number")
+  (field :i9.list_b_expiry :label "Expiration Date")
+  (field :i9.list_b_issuing_authority :label "Issuing Authority")
+  (field
+    :i9.list_c_document
+    :label
+    "List C Document Title (Employment)"
+    :description
+    "e.g., Social Security Card, Birth Certificate")
+  (field :i9.list_c_doc_number :label "Document Number")
+  (field :i9.list_c_expiry :label "Expiration Date")
+  (field :i9.list_c_issuing_authority :label "Issuing Authority")
+  (field :i9.employee_first_day :label "Employee's First Day of Employment")
+  (field
+    :i9.employer_signature
+    :label
+    "Employer Signature"
+    :description
+    "I attest that I have examined the documents and they appear genuine")
+  (field
+    :i9.employer_name
+    :label
+    "Name of Employer or Authorized Representative")
+  (field :i9.employer_title :label "Title")
+  (field
+    :i9.employer_org_name
+    :label
+    "Employer's Business or Organization Name")
+  (field :i9.employer_org_address :label "Employer's Business Address"))
 ```
 
 ```lisp
 ;; =============================================================================
 ;; I-9 Employment Eligibility - Spanish Locale
 ;; =============================================================================
-
-(define-document-locale i-9-employment-eligibility-es
-    (:document i-9-employment-eligibility)
-    (:locale es)
-  (:role
-    (role "employee"
-      (:label "Empleado")
-      (:description "El nuevo empleado que completa la Seccion 1")))
-  (:role
-    (role "employer"
-      (:label "Empleador/Representante Autorizado")
-      (:description "Revisa documentos de identidad y autorizacion de empleo")))
-
-  (:section
-    (section "employee-information"
-      (:label "Informacion del Empleado y Declaracion")))
-  (:section
-    (section "employer-review"
-      (:label "Revision del Empleador o Representante Autorizado")))
-
-  (:field (locale-field :i9.last_name (:label "Apellido")))
-  (:field (locale-field :i9.first_name (:label "Nombre")))
-  (:field (locale-field :i9.middle_initial (:label "Inicial del Segundo Nombre")))
-  (:field (locale-field :i9.other_last_names (:label "Otros Apellidos Usados")))
-  (:field (locale-field :i9.address (:label "Direccion")))
-  (:field (locale-field :i9.date_of_birth (:label "Fecha de Nacimiento")))
-  (:field (locale-field :i9.ssn (:label "Numero de Seguro Social")))
-  (:field (locale-field :i9.email (:label "Correo Electronico")))
-  (:field (locale-field :i9.phone (:label "Numero de Telefono")))
-  (:field
-    (locale-field :i9.citizenship_status
-      (:label "Estado de Ciudadania")
-      (:option (option "citizen" "Ciudadano de los Estados Unidos"))
-      (:option (option "noncitizen_national" "Nacional no ciudadano de los Estados Unidos"))
-      (:option (option "permanent_resident" "Residente permanente legal"))
-      (:option (option "authorized_alien" "Extranjero autorizado para trabajar"))))
-  (:field
-    (locale-field :i9.alien_number
-      (:label "Numero de Registro de Extranjero/USCIS")
-      (:description "Requerido para residentes permanentes y extranjeros autorizados")))
-  (:field
-    (locale-field :i9.i94_number
-      (:label "Numero de Admision del Formulario I-94")
-      (:description "Requerido para ciertos extranjeros autorizados")))
-  (:field
-    (locale-field :i9.work_auth_expiry
-      (:label "Fecha de Vencimiento de Autorizacion de Trabajo")
-      (:description "Requerido para extranjeros autorizados")))
-  (:field
-    (locale-field :i9.employee_signature
-      (:label "Firma del Empleado")
-      (:description "Declaro, bajo pena de perjurio, que la informacion proporcionada es verdadera y correcta")))
-  (:field
-    (locale-field :i9.list_a_document
-      (:label "Titulo del Documento de Lista A")
-      (:description "ej., Pasaporte de EE.UU., Tarjeta de Residente Permanente")))
-  (:field (locale-field :i9.list_a_doc_number (:label "Numero de Documento")))
-  (:field (locale-field :i9.list_a_expiry (:label "Fecha de Vencimiento")))
-  (:field (locale-field :i9.list_a_issuing_authority (:label "Autoridad Emisora")))
-  (:field
-    (locale-field :i9.list_b_document
-      (:label "Titulo del Documento de Lista B (Identidad)")
-      (:description "ej., Licencia de Conducir, Identificacion Estatal")))
-  (:field (locale-field :i9.list_b_doc_number (:label "Numero de Documento")))
-  (:field (locale-field :i9.list_b_expiry (:label "Fecha de Vencimiento")))
-  (:field (locale-field :i9.list_b_issuing_authority (:label "Autoridad Emisora")))
-  (:field
-    (locale-field :i9.list_c_document
-      (:label "Titulo del Documento de Lista C (Empleo)")
-      (:description "ej., Tarjeta de Seguro Social, Certificado de Nacimiento")))
-  (:field (locale-field :i9.list_c_doc_number (:label "Numero de Documento")))
-  (:field (locale-field :i9.list_c_expiry (:label "Fecha de Vencimiento")))
-  (:field (locale-field :i9.list_c_issuing_authority (:label "Autoridad Emisora")))
-  (:field
-    (locale-field :i9.employee_first_day
-      (:label "Primer Dia de Trabajo del Empleado")))
-  (:field
-    (locale-field :i9.employer_signature
-      (:label "Firma del Empleador")
-      (:description "Certifico que he examinado los documentos y parecen ser genuinos")))
-  (:field
-    (locale-field :i9.employer_name
-      (:label "Nombre del Empleador o Representante Autorizado")))
-  (:field (locale-field :i9.employer_title (:label "Titulo")))
-  (:field
-    (locale-field :i9.employer_org_name
-      (:label "Nombre de la Empresa u Organizacion del Empleador")))
-  (:field
-    (locale-field :i9.employer_org_address
-      (:label "Direccion de la Empresa del Empleador"))))
-
-(define-document-localized i-9-employment-eligibility-localized
-    (:document i-9-employment-eligibility)
-  (:locales en es)
-  (:default-locale en))
+(document-locale i-9-employment-eligibility "es"
+  (role
+    employee
+    :label
+    "Empleado"
+    :description
+    "El nuevo empleado que completa la Seccion 1")
+  (role
+    employer
+    :label
+    "Empleador/Representante Autorizado"
+    :description
+    "Revisa documentos de identidad y autorizacion de empleo")
+  (section employee-information :label "Informacion del Empleado y Declaracion")
+  (section
+    employer-review
+    :label
+    "Revision del Empleador o Representante Autorizado")
+  (field :i9.last_name :label "Apellido")
+  (field :i9.first_name :label "Nombre")
+  (field :i9.middle_initial :label "Inicial del Segundo Nombre")
+  (field :i9.other_last_names :label "Otros Apellidos Usados")
+  (field :i9.address :label "Direccion")
+  (field :i9.date_of_birth :label "Fecha de Nacimiento")
+  (field :i9.ssn :label "Numero de Seguro Social")
+  (field :i9.email :label "Correo Electronico")
+  (field :i9.phone :label "Numero de Telefono")
+  (field
+    :i9.citizenship_status
+    :label
+    "Estado de Ciudadania"
+    (option "citizen" "Ciudadano de los Estados Unidos")
+    (option "noncitizen_national" "Nacional no ciudadano de los Estados Unidos")
+    (option "permanent_resident" "Residente permanente legal")
+    (option "authorized_alien" "Extranjero autorizado para trabajar"))
+  (field
+    :i9.alien_number
+    :label
+    "Numero de Registro de Extranjero/USCIS"
+    :description
+    "Requerido para residentes permanentes y extranjeros autorizados")
+  (field
+    :i9.i94_number
+    :label
+    "Numero de Admision del Formulario I-94"
+    :description
+    "Requerido para ciertos extranjeros autorizados")
+  (field
+    :i9.work_auth_expiry
+    :label
+    "Fecha de Vencimiento de Autorizacion de Trabajo"
+    :description
+    "Requerido para extranjeros autorizados")
+  (field
+    :i9.employee_signature
+    :label
+    "Firma del Empleado"
+    :description
+    "Declaro, bajo pena de perjurio, que la informacion proporcionada es verdadera y correcta")
+  (field
+    :i9.list_a_document
+    :label
+    "Titulo del Documento de Lista A"
+    :description
+    "ej., Pasaporte de EE.UU., Tarjeta de Residente Permanente")
+  (field :i9.list_a_doc_number :label "Numero de Documento")
+  (field :i9.list_a_expiry :label "Fecha de Vencimiento")
+  (field :i9.list_a_issuing_authority :label "Autoridad Emisora")
+  (field
+    :i9.list_b_document
+    :label
+    "Titulo del Documento de Lista B (Identidad)"
+    :description
+    "ej., Licencia de Conducir, Identificacion Estatal")
+  (field :i9.list_b_doc_number :label "Numero de Documento")
+  (field :i9.list_b_expiry :label "Fecha de Vencimiento")
+  (field :i9.list_b_issuing_authority :label "Autoridad Emisora")
+  (field
+    :i9.list_c_document
+    :label
+    "Titulo del Documento de Lista C (Empleo)"
+    :description
+    "ej., Tarjeta de Seguro Social, Certificado de Nacimiento")
+  (field :i9.list_c_doc_number :label "Numero de Documento")
+  (field :i9.list_c_expiry :label "Fecha de Vencimiento")
+  (field :i9.list_c_issuing_authority :label "Autoridad Emisora")
+  (field :i9.employee_first_day :label "Primer Dia de Trabajo del Empleado")
+  (field
+    :i9.employer_signature
+    :label
+    "Firma del Empleador"
+    :description
+    "Certifico que he examinado los documentos y parecen ser genuinos")
+  (field
+    :i9.employer_name
+    :label
+    "Nombre del Empleador o Representante Autorizado")
+  (field :i9.employer_title :label "Titulo")
+  (field
+    :i9.employer_org_name
+    :label
+    "Nombre de la Empresa u Organizacion del Empleador")
+  (field
+    :i9.employer_org_address
+    :label
+    "Direccion de la Empresa del Empleador"))
+(document-localized i-9-employment-eligibility ["en" "es"] :default-locale "en")
 ```
 
 ```lisp
 ;; =============================================================================
 ;; W-4 Federal Tax Withholding - Canonical Form
 ;; =============================================================================
-
-(define-document w-4-federal-tax-withholding
-  (:description "Complete this form to determine federal income tax withholding")
-
-  (:page
-    (page
-      (:section-id "personal-information")
-      (:assignee employee)
-      (:description "Personal Information")
-      (:field
-        (field content :w4.intro
-          (:content "# Form W-4: Employee's Withholding Certificate\n\nComplete this form so your employer can withhold the correct federal income tax from your pay.\n\n---\n\n## Step 1: Personal Information")))
-      (:field (field text :w4.first_name (:label "First Name") (:required true)))
-      (:field (field text :w4.last_name (:label "Last Name") (:required true)))
-      (:field
-        (field text :w4.ssn
-          (:label "Social Security Number")
-          (:required true)))
-      (:field (field text :w4.address (:label "Home Address") (:required true)))
-      (:field
-        (field select :w4.filing_status
-          (:label "Filing Status")
-          (:required true)
-          (:option (option "single" "Single or Married filing separately"))
-          (:option
-            (option "married" "Married filing jointly or Qualifying surviving spouse"))
-          (:option (option "head_of_household" "Head of household"))))))
-
-  (:page
-    (page
-      (:section-id "multiple-jobs")
-      (:assignee employee)
-      (:description "Multiple Jobs or Spouse Works")
-      (:field
-        (field content :w4.step2_intro
-          (:content "## Step 2: Multiple Jobs or Spouse Works\n\nComplete this step if you:\n- Hold more than one job at a time, **OR**\n- Are married filing jointly and your spouse also works")))
-      (:field
-        (field boolean :w4.multiple_jobs_checkbox
-          (:label "Multiple jobs checkbox")))))
-
-  (:page
-    (page
-      (:section-id "claim-dependents")
-      (:assignee employee)
-      (:description "Claim Dependents")
-      (:field
-        (field content :w4.step3_intro
-          (:content "## Step 3: Claim Dependents\n\nIf your total income will be $200,000 or less ($400,000 or less if married filing jointly), you may claim dependents.")))
-      (:field
-        (field text :w4.qualifying_children
-          (:label "Number of qualifying children under age 17")))
-      (:field
-        (field text :w4.other_dependents
-          (:label "Number of other dependents")))
-      (:field
-        (field text :w4.total_dependents_credit
-          (:label "Total amount for dependents")))))
-
-  (:page
-    (page
-      (:section-id "other-adjustments")
-      (:assignee employee)
-      (:description "Other Adjustments")
-      (:field
-        (field content :w4.step4_intro
-          (:content "## Step 4: Other Adjustments (Optional)\n\nUse this section for more accurate withholding or if you prefer to have more or less tax withheld.")))
-      (:field (field text :w4.other_income (:label "Other income")))
-      (:field (field text :w4.deductions (:label "Deductions")))
-      (:field
-        (field text :w4.extra_withholding
-          (:label "Extra withholding per pay period")))))
-
-  (:page
-    (page
-      (:section-id "sign-here")
-      (:assignee employee)
-      (:completion-action (completion-action "complete-w4-task" "Employee"))
-      (:description "Sign Here")
-      (:field
-        (field content :w4.step5_intro
-          (:content "## Step 5: Sign Here\n\nUnder penalties of perjury, I declare that this certificate, to the best of my knowledge and belief, is true, correct, and complete.")))
-      (:field
-        (field boolean :w4.signature
-          (:label "Employee Signature")
-          (:required true))))))
-
-(define-document-locale w-4-federal-tax-withholding-en
-    (:document w-4-federal-tax-withholding)
-    (:locale en)
-  (:role (role "employee" (:label "Employee")))
-  (:section (section "personal-information" (:label "Personal Information")))
-  (:section (section "multiple-jobs" (:label "Multiple Jobs or Spouse Works")))
-  (:section (section "claim-dependents" (:label "Claim Dependents")))
-  (:section (section "other-adjustments" (:label "Other Adjustments")))
-  (:section (section "sign-here" (:label "Sign Here")))
-  (:field (locale-field :w4.first_name (:label "First Name and Middle Initial")))
-  (:field (locale-field :w4.last_name (:label "Last Name")))
-  (:field (locale-field :w4.ssn (:label "Social Security Number")))
-  (:field
-    (locale-field :w4.address
-      (:label "Home Address (number, street, apt. no.)")))
-  (:field
-    (locale-field :w4.filing_status
-      (:label "Filing Status")
-      (:option (option "single" "Single or Married filing separately"))
-      (:option
-        (option "married" "Married filing jointly or Qualifying surviving spouse"))
-      (:option (option "head_of_household" "Head of household"))))
-  (:field
-    (locale-field :w4.multiple_jobs_checkbox
-      (:label "Check here if: You hold more than one job, OR you are married filing jointly and your spouse also works")
-      (:description "Only check this box if there are only two jobs total.")))
-  (:field
-    (locale-field :w4.qualifying_children
-      (:label "Number of qualifying children under age 17")
-      (:description "Multiply by $2,000")))
-  (:field
-    (locale-field :w4.other_dependents
-      (:label "Number of other dependents")
-      (:description "Multiply by $500")))
-  (:field
-    (locale-field :w4.total_dependents_credit
-      (:label "Total amount for dependents")
-      (:description "Add qualifying children amount plus other dependents amount")))
-  (:field
-    (locale-field :w4.other_income
-      (:label "Other income (not from jobs)")
-      (:description "Income from interest, dividends, retirement, etc.")))
-  (:field
-    (locale-field :w4.deductions
-      (:label "Deductions")
-      (:description "Estimated deductions other than the standard deduction")))
-  (:field
-    (locale-field :w4.extra_withholding
-      (:label "Extra withholding per pay period")
-      (:description "Any additional tax you want withheld each pay period")))
-  (:field
-    (locale-field :w4.signature
-      (:label "Employee Signature")
-      (:description "Under penalties of perjury, I declare that this certificate is complete and correct"))))
-
-(define-document-localized w-4-federal-tax-withholding-localized
-    (:document w-4-federal-tax-withholding)
-  (:locales en)
-  (:default-locale en))
+(document w-4-federal-tax-withholding
+  :description "Complete this form to determine federal income tax withholding"
+  (page
+    personal-information
+    :assignee
+    employee
+    :description
+    "Personal Information"
+    (content
+      :w4.intro
+      "# Form W-4: Employee's Withholding Certificate\n\nComplete this form so your employer can withhold the correct federal income tax from your pay.\n\n---\n\n## Step 1: Personal Information")
+    (text :w4.first_name "First Name" :required true)
+    (text :w4.last_name "Last Name" :required true)
+    (text :w4.ssn "Social Security Number" :required true)
+    (text :w4.address "Home Address" :required true)
+    (select
+      :w4.filing_status "Filing Status"
+      :required true
+      (option "single" "Single or Married filing separately")
+      (option "married" "Married filing jointly or Qualifying surviving spouse")
+      (option "head_of_household" "Head of household")))
+  (page
+    multiple-jobs
+    :assignee
+    employee
+    :description
+    "Multiple Jobs or Spouse Works"
+    (content
+      :w4.step2_intro
+      "## Step 2: Multiple Jobs or Spouse Works\n\nComplete this step if you:\n- Hold more than one job at a time, **OR**\n- Are married filing jointly and your spouse also works")
+    (checkbox :w4.multiple_jobs_checkbox "Multiple jobs checkbox"))
+  (page
+    claim-dependents
+    :assignee
+    employee
+    :description
+    "Claim Dependents"
+    (content
+      :w4.step3_intro
+      "## Step 3: Claim Dependents\n\nIf your total income will be $200,000 or less ($400,000 or less if married filing jointly), you may claim dependents.")
+    (text :w4.qualifying_children "Number of qualifying children under age 17")
+    (text :w4.other_dependents "Number of other dependents")
+    (text :w4.total_dependents_credit "Total amount for dependents"))
+  (page
+    other-adjustments
+    :assignee
+    employee
+    :description
+    "Other Adjustments"
+    (content
+      :w4.step4_intro
+      "## Step 4: Other Adjustments (Optional)\n\nUse this section for more accurate withholding or if you prefer to have more or less tax withheld.")
+    (text :w4.other_income "Other income")
+    (text :w4.deductions "Deductions")
+    (text :w4.extra_withholding "Extra withholding per pay period"))
+  (page
+    sign-here
+    :assignee
+    employee
+    :description
+    "Sign Here"
+    :completion
+    (completion complete-w4-task :entity Employee)
+    (content
+      :w4.step5_intro
+      "## Step 5: Sign Here\n\nUnder penalties of perjury, I declare that this certificate, to the best of my knowledge and belief, is true, correct, and complete.")
+    (checkbox :w4.signature "Employee Signature" :required true)))
+(document-locale w-4-federal-tax-withholding "en"
+  (role employee :label "Employee")
+  (section personal-information :label "Personal Information")
+  (section multiple-jobs :label "Multiple Jobs or Spouse Works")
+  (section claim-dependents :label "Claim Dependents")
+  (section other-adjustments :label "Other Adjustments")
+  (section sign-here :label "Sign Here")
+  (field :w4.first_name :label "First Name and Middle Initial")
+  (field :w4.last_name :label "Last Name")
+  (field :w4.ssn :label "Social Security Number")
+  (field :w4.address :label "Home Address (number, street, apt. no.)")
+  (field
+    :w4.filing_status
+    :label
+    "Filing Status"
+    (option "single" "Single or Married filing separately")
+    (option "married" "Married filing jointly or Qualifying surviving spouse")
+    (option "head_of_household" "Head of household"))
+  (field
+    :w4.multiple_jobs_checkbox
+    :label
+    "Check here if: You hold more than one job, OR you are married filing jointly and your spouse also works"
+    :description
+    "Only check this box if there are only two jobs total.")
+  (field
+    :w4.qualifying_children
+    :label
+    "Number of qualifying children under age 17"
+    :description
+    "Multiply by $2,000")
+  (field
+    :w4.other_dependents
+    :label
+    "Number of other dependents"
+    :description
+    "Multiply by $500")
+  (field
+    :w4.total_dependents_credit
+    :label
+    "Total amount for dependents"
+    :description
+    "Add qualifying children amount plus other dependents amount")
+  (field
+    :w4.other_income
+    :label
+    "Other income (not from jobs)"
+    :description
+    "Income from interest, dividends, retirement, etc.")
+  (field
+    :w4.deductions
+    :label
+    "Deductions"
+    :description
+    "Estimated deductions other than the standard deduction")
+  (field
+    :w4.extra_withholding
+    :label
+    "Extra withholding per pay period"
+    :description
+    "Any additional tax you want withheld each pay period")
+  (field
+    :w4.signature
+    :label
+    "Employee Signature"
+    :description
+    "Under penalties of perjury, I declare that this certificate is complete and correct"))
+(document-localized w-4-federal-tax-withholding ["en"] :default-locale "en")
 ```
 
 ```lisp
 ;; =============================================================================
 ;; Employee Handbook Acknowledgement - Canonical Form
 ;; =============================================================================
-
-(define-document employee-handbook-acknowledgement
-  (:description "Confirm you have received and reviewed the employee handbook")
-  (:page
-    (page
-      (:section-id "handbook-acknowledgement")
-      (:assignee employee)
-      (:completion-action (completion-action "complete-handbook-task" "Employee"))
-      (:description "Handbook Acknowledgement")
-      (:field
-        (field content :handbook.intro
-          (:content "# Employee Handbook Acknowledgement\n\nWelcome to the team! As part of your onboarding process, please review and acknowledge receipt of the Employee Handbook.\n\nThe Employee Handbook contains important information about:\n\n- **Company Policies** - Workplace conduct, dress code, attendance\n- **Benefits** - Health insurance, PTO, retirement plans\n- **Safety Procedures** - Emergency protocols, reporting incidents\n- **Employment Terms** - At-will employment, termination procedures\n\nPlease read the handbook carefully before completing this acknowledgement.\n\n---\n\n## Acknowledgements\n\nPlease check each box to confirm your understanding:")))
-      (:field
-        (field boolean :handbook.received
-          (:label "I have received the employee handbook")
-          (:required true)))
-      (:field
-        (field boolean :handbook.read
-          (:label "I have read the employee handbook")
-          (:required true)))
-      (:field
-        (field boolean :handbook.agree_to_comply
-          (:label "I agree to comply with handbook policies")
-          (:required true)))
-      (:field
-        (field content :handbook.at_will_notice
-          (:content "---\n\n## Important Notice\n\n> **At-Will Employment:** Your employment with the company is at-will. This means that either you or the company may terminate the employment relationship at any time, with or without cause, and with or without notice.\n>\n> The Employee Handbook is not an employment contract and does not guarantee employment for any specific period of time.")))
-      (:field
-        (field boolean :handbook.understand_at_will
-          (:label "I understand the at-will employment notice")
-          (:required true)))
-      (:field
-        (field boolean :handbook.understand_changes
-          (:label "I understand the handbook may be updated")
-          (:required true)))
-      (:field
-        (field content :handbook.questions_section
-          (:content "---\n\n## Questions?\n\nIf you have any questions about the handbook or company policies, please note them below or contact Human Resources directly.")))
-      (:field (field text :handbook.questions (:label "Questions")))
-      (:field
-        (field content :handbook.signature_section
-          (:content "---\n\n## Signature\n\nBy signing below, you confirm all of the acknowledgements above.")))
-      (:field
-        (field boolean :handbook.signature
-          (:label "Employee Signature")
-          (:required true))))))
-
-(define-document-locale employee-handbook-acknowledgement-en
-    (:document employee-handbook-acknowledgement)
-    (:locale en)
-  (:role (role "employee" (:label "Employee")))
-  (:section (section "handbook-acknowledgement" (:label "Handbook Acknowledgement")))
-  (:field
-    (locale-field :handbook.received
-      (:label "I have received a copy of the Employee Handbook")))
-  (:field
-    (locale-field :handbook.read
-      (:label "I have read and understand the Employee Handbook")))
-  (:field
-    (locale-field :handbook.agree_to_comply
-      (:label "I agree to comply with all policies in the Employee Handbook")))
-  (:field
-    (locale-field :handbook.understand_at_will
-      (:label "I understand the at-will employment relationship")))
-  (:field
-    (locale-field :handbook.understand_changes
-      (:label "I understand the handbook may be changed at any time at the company's discretion")))
-  (:field
-    (locale-field :handbook.questions
-      (:label "Questions or Comments")))
-  (:field
-    (locale-field :handbook.signature
-      (:label "Employee Signature")
-      (:description "By signing, you confirm all of the acknowledgements above"))))
-
-(define-document-localized employee-handbook-acknowledgement-localized
-    (:document employee-handbook-acknowledgement)
-  (:locales en)
-  (:default-locale en))
+(document employee-handbook-acknowledgement
+  :description "Confirm you have received and reviewed the employee handbook"
+  (page
+    handbook-acknowledgement
+    :assignee
+    employee
+    :description
+    "Handbook Acknowledgement"
+    :completion
+    (completion complete-handbook-task :entity Employee)
+    (content
+      :handbook.intro
+      "# Employee Handbook Acknowledgement\n\nWelcome to the team! As part of your onboarding process, please review and acknowledge receipt of the Employee Handbook.\n\nThe Employee Handbook contains important information about:\n\n- **Company Policies** - Workplace conduct, dress code, attendance\n- **Benefits** - Health insurance, PTO, retirement plans\n- **Safety Procedures** - Emergency protocols, reporting incidents\n- **Employment Terms** - At-will employment, termination procedures\n\nPlease read the handbook carefully before completing this acknowledgement.\n\n---\n\n## Acknowledgements\n\nPlease check each box to confirm your understanding:")
+    (checkbox
+      :handbook.received "I have received the employee handbook"
+      :required true)
+    (checkbox :handbook.read "I have read the employee handbook" :required true)
+    (checkbox
+      :handbook.agree_to_comply "I agree to comply with handbook policies"
+      :required true)
+    (content
+      :handbook.at_will_notice
+      "---\n\n## Important Notice\n\n> **At-Will Employment:** Your employment with the company is at-will. This means that either you or the company may terminate the employment relationship at any time, with or without cause, and with or without notice.\n>\n> The Employee Handbook is not an employment contract and does not guarantee employment for any specific period of time.")
+    (checkbox
+      :handbook.understand_at_will "I understand the at-will employment notice"
+      :required true)
+    (checkbox
+      :handbook.understand_changes "I understand the handbook may be updated"
+      :required true)
+    (content
+      :handbook.questions_section
+      "---\n\n## Questions?\n\nIf you have any questions about the handbook or company policies, please note them below or contact Human Resources directly.")
+    (text :handbook.questions "Questions")
+    (content
+      :handbook.signature_section
+      "---\n\n## Signature\n\nBy signing below, you confirm all of the acknowledgements above.")
+    (checkbox :handbook.signature "Employee Signature" :required true)))
+(document-locale employee-handbook-acknowledgement "en"
+  (role employee :label "Employee")
+  (section handbook-acknowledgement :label "Handbook Acknowledgement")
+  (field
+    :handbook.received
+    :label
+    "I have received a copy of the Employee Handbook")
+  (field
+    :handbook.read
+    :label
+    "I have read and understand the Employee Handbook")
+  (field
+    :handbook.agree_to_comply
+    :label
+    "I agree to comply with all policies in the Employee Handbook")
+  (field
+    :handbook.understand_at_will
+    :label
+    "I understand the at-will employment relationship")
+  (field
+    :handbook.understand_changes
+    :label
+    "I understand the handbook may be changed at any time at the company's discretion")
+  (field :handbook.questions :label "Questions or Comments")
+  (field
+    :handbook.signature
+    :label
+    "Employee Signature"
+    :description
+    "By signing, you confirm all of the acknowledgements above"))
+(document-localized employee-handbook-acknowledgement ["en"]
+  :default-locale "en")
 ```
 
 ```lisp
 ;; =============================================================================
 ;; Direct Deposit Authorization - Canonical Form
 ;; =============================================================================
-
-(define-document direct-deposit-authorization
-  (:description "Authorize direct deposit of payroll funds to employee bank account")
-
-  (:page
-    (page
-      (:section-id "bank-information")
-      (:assignee employee)
-      (:description "Bank Information")
-      (:field
-        (field content :dd.intro
-          (:content "# Direct Deposit Authorization\n\nPlease provide your bank account information below to set up direct deposit for your payroll. Your information is encrypted and stored securely.\n\n---")))
-      (:field (field text :dd.bank_name (:label "Bank Name") (:required true)))
-      (:field
-        (field text :dd.routing_number
-          (:label "Routing Number")
-          (:required true)))
-      (:field
-        (field text :dd.account_number
-          (:label "Account Number")
-          (:required true)))
-      (:field
-        (field select :dd.account_type
-          (:label "Account Type")
-          (:required true)
-          (:option (option "checking" "Checking"))
-          (:option (option "savings" "Savings"))))
-      (:field
-        (field content :dd.authorization_notice
-          (:content "---\n\n## Authorization\n\nBy signing below, I authorize my employer to deposit my pay directly into the bank account specified above. I understand that this authorization will remain in effect until I provide written notice of cancellation.")))
-      (:field
-        (field boolean :dd.employee_signature
-          (:label "Employee Signature")
-          (:required true)))))
-
-  (:page
-    (page
-      (:section-id "employer-verification")
-      (:assignee employer)
-      (:depends-on "bank-information")
-      (:completion-action (completion-action "complete-direct-deposit-task" "Employee"))
-      (:description "Employer Verification")
-      (:field
-        (field content :dd.verification_intro
-          (:content "# Employer Verification\n\nVerify the employee's bank information and confirm prenote status.\n\n---")))
-      (:field (field text :dd.verified_by (:label "Verified By") (:required true)))
-      (:field
-        (field date :dd.verification_date
-          (:label "Verification Date")
-          (:required true)))
-      (:field
-        (field select :dd.prenote_status
-          (:label "Prenote Status")
-          (:required true)
-          (:option (option "pending" "Pending"))
-          (:option (option "verified" "Verified"))
-          (:option (option "failed" "Failed"))))
-      (:field (field text :dd.notes (:label "Notes"))))))
-
-(define-document-locale direct-deposit-authorization-en
-    (:document direct-deposit-authorization)
-    (:locale en)
-  (:role (role "employee" (:label "Employee")))
-  (:role (role "employer" (:label "Employer/Payroll")))
-  (:section (section "bank-information" (:label "Bank Information")))
-  (:section (section "employer-verification" (:label "Employer Verification")))
-  (:field
-    (locale-field :dd.bank_name
-      (:label "Bank or Financial Institution Name")))
-  (:field
-    (locale-field :dd.routing_number
-      (:label "Routing Number (9 digits)")))
-  (:field (locale-field :dd.account_number (:label "Account Number")))
-  (:field
-    (locale-field :dd.account_type
-      (:label "Account Type")
-      (:option (option "checking" "Checking Account"))
-      (:option (option "savings" "Savings Account"))))
-  (:field
-    (locale-field :dd.employee_signature
-      (:label "Employee Signature")
-      (:description "I authorize direct deposit to the account specified above")))
-  (:field (locale-field :dd.verified_by (:label "Verified By")))
-  (:field (locale-field :dd.verification_date (:label "Verification Date")))
-  (:field
-    (locale-field :dd.prenote_status
-      (:label "Prenote Status")
-      (:option (option "pending" "Pending Verification"))
-      (:option (option "verified" "Verified"))
-      (:option (option "failed" "Verification Failed"))))
-  (:field (locale-field :dd.notes (:label "Notes"))))
-
-(define-document-localized direct-deposit-authorization-localized
-    (:document direct-deposit-authorization)
-  (:locales en)
-  (:default-locale en))
+(document direct-deposit-authorization
+  :description
+    "Authorize direct deposit of payroll funds to employee bank account"
+  (page
+    bank-information
+    :assignee
+    employee
+    :description
+    "Bank Information"
+    (content
+      :dd.intro
+      "# Direct Deposit Authorization\n\nPlease provide your bank account information below to set up direct deposit for your payroll. Your information is encrypted and stored securely.\n\n---")
+    (text :dd.bank_name "Bank Name" :required true)
+    (text :dd.routing_number "Routing Number" :required true)
+    (text :dd.account_number "Account Number" :required true)
+    (select
+      :dd.account_type "Account Type"
+      :required true
+      (option "checking" "Checking")
+      (option "savings" "Savings"))
+    (content
+      :dd.authorization_notice
+      "---\n\n## Authorization\n\nBy signing below, I authorize my employer to deposit my pay directly into the bank account specified above. I understand that this authorization will remain in effect until I provide written notice of cancellation.")
+    (checkbox :dd.employee_signature "Employee Signature" :required true))
+  (page
+    employer-verification
+    :assignee
+    employer
+    :description
+    "Employer Verification"
+    :depends-on
+    [bank-information]
+    :completion
+    (completion complete-direct-deposit-task :entity Employee)
+    (content
+      :dd.verification_intro
+      "# Employer Verification\n\nVerify the employee's bank information and confirm prenote status.\n\n---")
+    (text :dd.verified_by "Verified By" :required true)
+    (date :dd.verification_date "Verification Date" :required true)
+    (select
+      :dd.prenote_status "Prenote Status"
+      :required true
+      (option "pending" "Pending")
+      (option "verified" "Verified")
+      (option "failed" "Failed"))
+    (text :dd.notes "Notes")))
+(document-locale direct-deposit-authorization "en"
+  (role employee :label "Employee")
+  (role employer :label "Employer/Payroll")
+  (section bank-information :label "Bank Information")
+  (section employer-verification :label "Employer Verification")
+  (field :dd.bank_name :label "Bank or Financial Institution Name")
+  (field :dd.routing_number :label "Routing Number (9 digits)")
+  (field :dd.account_number :label "Account Number")
+  (field
+    :dd.account_type
+    :label
+    "Account Type"
+    (option "checking" "Checking Account")
+    (option "savings" "Savings Account"))
+  (field
+    :dd.employee_signature
+    :label
+    "Employee Signature"
+    :description
+    "I authorize direct deposit to the account specified above")
+  (field :dd.verified_by :label "Verified By")
+  (field :dd.verification_date :label "Verification Date")
+  (field
+    :dd.prenote_status
+    :label
+    "Prenote Status"
+    (option "pending" "Pending Verification")
+    (option "verified" "Verified")
+    (option "failed" "Verification Failed"))
+  (field :dd.notes :label "Notes"))
+(document-localized direct-deposit-authorization ["en"] :default-locale "en")
 ```
 
 ```lisp
 ;; =============================================================================
 ;; State Tax Withholding - Canonical Form
 ;; =============================================================================
-
-(define-document state-tax-withholding
-  (:description "Employee state income tax withholding elections")
-  (:page
-    (page
-      (:section-id "state-tax-info")
-      (:assignee employee)
-      (:completion-action (completion-action "complete-state-tax-task" "Employee"))
-      (:description "State Tax Information")
-      (:field
-        (field content :st.intro
-          (:content "# State Tax Withholding\n\nComplete this form to indicate your state income tax withholding preferences. This information will be used to calculate state tax deductions from your paycheck.\n\n---")))
-      (:field
-        (field select :st.state
-          (:label "State")
-          (:required true)
-          (:option (option "AL" "Alabama"))
-          (:option (option "AK" "Alaska"))
-          (:option (option "AZ" "Arizona"))
-          (:option (option "AR" "Arkansas"))
-          (:option (option "CA" "California"))
-          (:option (option "CO" "Colorado"))
-          (:option (option "CT" "Connecticut"))
-          (:option (option "DE" "Delaware"))
-          (:option (option "FL" "Florida"))
-          (:option (option "GA" "Georgia"))
-          (:option (option "HI" "Hawaii"))
-          (:option (option "ID" "Idaho"))
-          (:option (option "IL" "Illinois"))
-          (:option (option "IN" "Indiana"))
-          (:option (option "IA" "Iowa"))
-          (:option (option "KS" "Kansas"))
-          (:option (option "KY" "Kentucky"))
-          (:option (option "LA" "Louisiana"))
-          (:option (option "ME" "Maine"))
-          (:option (option "MD" "Maryland"))
-          (:option (option "MA" "Massachusetts"))
-          (:option (option "MI" "Michigan"))
-          (:option (option "MN" "Minnesota"))
-          (:option (option "MS" "Mississippi"))
-          (:option (option "MO" "Missouri"))
-          (:option (option "MT" "Montana"))
-          (:option (option "NE" "Nebraska"))
-          (:option (option "NV" "Nevada"))
-          (:option (option "NH" "New Hampshire"))
-          (:option (option "NJ" "New Jersey"))
-          (:option (option "NM" "New Mexico"))
-          (:option (option "NY" "New York"))
-          (:option (option "NC" "North Carolina"))
-          (:option (option "ND" "North Dakota"))
-          (:option (option "OH" "Ohio"))
-          (:option (option "OK" "Oklahoma"))
-          (:option (option "OR" "Oregon"))
-          (:option (option "PA" "Pennsylvania"))
-          (:option (option "RI" "Rhode Island"))
-          (:option (option "SC" "South Carolina"))
-          (:option (option "SD" "South Dakota"))
-          (:option (option "TN" "Tennessee"))
-          (:option (option "TX" "Texas"))
-          (:option (option "UT" "Utah"))
-          (:option (option "VT" "Vermont"))
-          (:option (option "VA" "Virginia"))
-          (:option (option "WA" "Washington"))
-          (:option (option "WV" "West Virginia"))
-          (:option (option "WI" "Wisconsin"))
-          (:option (option "WY" "Wyoming"))))
-      (:field
-        (field select :st.filing_status
-          (:label "Filing Status")
-          (:required true)
-          (:option (option "single" "Single"))
-          (:option (option "married" "Married"))
-          (:option (option "married_separate" "Married Filing Separately"))
-          (:option (option "head_of_household" "Head of Household"))))
-      (:field
-        (field text :st.allowances
-          (:label "Number of Allowances")
-          (:required true)))
-      (:field
-        (field text :st.additional_withholding
-          (:label "Additional Withholding")))
-      (:field
-        (field boolean :st.exempt
-          (:label "Exempt from state withholding")))
-      (:field
-        (field content :st.certification_notice
-          (:content "---\n\n## Certification\n\nUnder penalties of perjury, I certify that the information on this form is true, correct, and complete.")))
-      (:field
-        (field boolean :st.employee_signature
-          (:label "Employee Signature")
-          (:required true))))))
-
-(define-document-locale state-tax-withholding-en
-    (:document state-tax-withholding)
-    (:locale en)
-  (:role (role "employee" (:label "Employee")))
-  (:section (section "state-tax-info" (:label "State Tax Information")))
-  (:field (locale-field :st.state (:label "Work State")))
-  (:field
-    (locale-field :st.filing_status
-      (:label "State Filing Status")
-      (:option (option "single" "Single"))
-      (:option (option "married" "Married Filing Jointly"))
-      (:option (option "married_separate" "Married Filing Separately"))
-      (:option (option "head_of_household" "Head of Household"))))
-  (:field
-    (locale-field :st.allowances
-      (:label "Number of Allowances")
-      (:description "Enter the number of withholding allowances")))
-  (:field
-    (locale-field :st.additional_withholding
-      (:label "Additional Withholding Amount")
-      (:description "Additional amount to withhold per pay period")))
-  (:field
-    (locale-field :st.exempt
-      (:label "Claim Exemption")
-      (:description "Check if you are exempt from state income tax withholding")))
-  (:field
-    (locale-field :st.employee_signature
-      (:label "Employee Signature")
-      (:description "Under penalties of perjury, I certify this information is correct"))))
-
-(define-document-localized state-tax-withholding-localized
-    (:document state-tax-withholding)
-  (:locales en)
-  (:default-locale en))
+(document state-tax-withholding
+  :description "Employee state income tax withholding elections"
+  (page
+    state-tax-info
+    :assignee
+    employee
+    :description
+    "State Tax Information"
+    :completion
+    (completion complete-state-tax-task :entity Employee)
+    (content
+      :st.intro
+      "# State Tax Withholding\n\nComplete this form to indicate your state income tax withholding preferences. This information will be used to calculate state tax deductions from your paycheck.\n\n---")
+    (select
+      :st.state "State"
+      :required true
+      (option "AL" "Alabama")
+      (option "AK" "Alaska")
+      (option "AZ" "Arizona")
+      (option "AR" "Arkansas")
+      (option "CA" "California")
+      (option "CO" "Colorado")
+      (option "CT" "Connecticut")
+      (option "DE" "Delaware")
+      (option "FL" "Florida")
+      (option "GA" "Georgia")
+      (option "HI" "Hawaii")
+      (option "ID" "Idaho")
+      (option "IL" "Illinois")
+      (option "IN" "Indiana")
+      (option "IA" "Iowa")
+      (option "KS" "Kansas")
+      (option "KY" "Kentucky")
+      (option "LA" "Louisiana")
+      (option "ME" "Maine")
+      (option "MD" "Maryland")
+      (option "MA" "Massachusetts")
+      (option "MI" "Michigan")
+      (option "MN" "Minnesota")
+      (option "MS" "Mississippi")
+      (option "MO" "Missouri")
+      (option "MT" "Montana")
+      (option "NE" "Nebraska")
+      (option "NV" "Nevada")
+      (option "NH" "New Hampshire")
+      (option "NJ" "New Jersey")
+      (option "NM" "New Mexico")
+      (option "NY" "New York")
+      (option "NC" "North Carolina")
+      (option "ND" "North Dakota")
+      (option "OH" "Ohio")
+      (option "OK" "Oklahoma")
+      (option "OR" "Oregon")
+      (option "PA" "Pennsylvania")
+      (option "RI" "Rhode Island")
+      (option "SC" "South Carolina")
+      (option "SD" "South Dakota")
+      (option "TN" "Tennessee")
+      (option "TX" "Texas")
+      (option "UT" "Utah")
+      (option "VT" "Vermont")
+      (option "VA" "Virginia")
+      (option "WA" "Washington")
+      (option "WV" "West Virginia")
+      (option "WI" "Wisconsin")
+      (option "WY" "Wyoming"))
+    (select
+      :st.filing_status "Filing Status"
+      :required true
+      (option "single" "Single")
+      (option "married" "Married")
+      (option "married_separate" "Married Filing Separately")
+      (option "head_of_household" "Head of Household"))
+    (text :st.allowances "Number of Allowances" :required true)
+    (text :st.additional_withholding "Additional Withholding")
+    (checkbox :st.exempt "Exempt from state withholding")
+    (content
+      :st.certification_notice
+      "---\n\n## Certification\n\nUnder penalties of perjury, I certify that the information on this form is true, correct, and complete.")
+    (checkbox :st.employee_signature "Employee Signature" :required true)))
+(document-locale state-tax-withholding "en"
+  (role employee :label "Employee")
+  (section state-tax-info :label "State Tax Information")
+  (field :st.state :label "Work State")
+  (field
+    :st.filing_status
+    :label
+    "State Filing Status"
+    (option "single" "Single")
+    (option "married" "Married Filing Jointly")
+    (option "married_separate" "Married Filing Separately")
+    (option "head_of_household" "Head of Household"))
+  (field
+    :st.allowances
+    :label
+    "Number of Allowances"
+    :description
+    "Enter the number of withholding allowances")
+  (field
+    :st.additional_withholding
+    :label
+    "Additional Withholding Amount"
+    :description
+    "Additional amount to withhold per pay period")
+  (field
+    :st.exempt
+    :label
+    "Claim Exemption"
+    :description
+    "Check if you are exempt from state income tax withholding")
+  (field
+    :st.employee_signature
+    :label
+    "Employee Signature"
+    :description
+    "Under penalties of perjury, I certify this information is correct"))
+(document-localized state-tax-withholding ["en"] :default-locale "en")
 ```
 
 ```lisp
 ;; =============================================================================
 ;; Background Check Consent - Canonical Form
 ;; =============================================================================
-
-(define-document background-check-consent
-  (:description "Employee authorization for background check verification")
-  (:page
-    (page
-      (:section-id "consent-and-authorization")
-      (:assignee employee)
-      (:completion-action (completion-action "complete-bgc-task" "Employee"))
-      (:description "Consent and Authorization")
-      (:field
-        (field text :bgc.full_name
-          (:label "Full Legal Name")
-          (:required true)))
-      (:field (field text :bgc.email (:label "Email Address") (:required true)))
-      (:field
-        (field boolean :bgc.consent_acknowledgment
-          (:label "I consent to a background check being performed")
-          (:required true)))
-      (:field
-        (field boolean :bgc.fcra_acknowledgment
-          (:label "I acknowledge my rights under the FCRA")
-          (:required true)))
-      (:field (field boolean :bgc.signature (:label "Signature") (:required true))))))
-
-(define-document-locale background-check-consent-en
-    (:document background-check-consent)
-    (:locale en)
-  (:section (section "consent-and-authorization" (:label "Consent and Authorization")))
-  (:field (locale-field :bgc.full_name (:label "Full Legal Name")))
-  (:field (locale-field :bgc.email (:label "Email Address")))
-  (:field
-    (locale-field :bgc.consent_acknowledgment
-      (:label "I consent to a background check being performed")))
-  (:field
-    (locale-field :bgc.fcra_acknowledgment
-      (:label "I acknowledge my rights under the Fair Credit Reporting Act (FCRA)")))
-  (:field (locale-field :bgc.signature (:label "Signature"))))
-
-(define-document-localized background-check-consent-localized
-    (:document background-check-consent)
-  (:locales en)
-  (:default-locale en))
+(document background-check-consent
+  :description "Employee authorization for background check verification"
+  (page
+    consent-and-authorization
+    :assignee
+    employee
+    :description
+    "Consent and Authorization"
+    :completion
+    (completion complete-bgc-task :entity Employee)
+    (text :bgc.full_name "Full Legal Name" :required true)
+    (text :bgc.email "Email Address" :required true)
+    (checkbox
+      :bgc.consent_acknowledgment
+        "I consent to a background check being performed"
+      :required true)
+    (checkbox
+      :bgc.fcra_acknowledgment "I acknowledge my rights under the FCRA"
+      :required true)
+    (checkbox :bgc.signature "Signature" :required true)))
+(document-locale background-check-consent "en"
+  (section consent-and-authorization :label "Consent and Authorization")
+  (field :bgc.full_name :label "Full Legal Name")
+  (field :bgc.email :label "Email Address")
+  (field
+    :bgc.consent_acknowledgment
+    :label
+    "I consent to a background check being performed")
+  (field
+    :bgc.fcra_acknowledgment
+    :label
+    "I acknowledge my rights under the Fair Credit Reporting Act (FCRA)")
+  (field :bgc.signature :label "Signature"))
+(document-localized background-check-consent ["en"] :default-locale "en")
 ```
 
 ```lisp
 ;; =============================================================================
 ;; Identity Document Verification - Canonical Form
 ;; =============================================================================
-
-(define-document identity-document-verification
-  (:description "Upload and verify identity documents with HR review")
-
-  (:page
-    (page
-      (:section-id "document-upload")
-      (:assignee employee)
-      (:description "Document Upload")
-      (:field
-        (field select :idv.primary_doc_type
-          (:label "Primary Document Type")
-          (:required true)
-          (:option (option "passport" "Passport"))
-          (:option (option "drivers_license" "Driver's License"))
-          (:option (option "state_id" "State ID"))
-          (:option (option "national_id" "National ID"))))
-      (:field
-        (field text :idv.primary_doc_file
-          (:label "Primary Document Upload")
-          (:required true)))
-      (:field
-        (field select :idv.secondary_doc_type
-          (:label "Secondary Document Type")
-          (:option (option "utility_bill" "Utility Bill"))
-          (:option (option "bank_statement" "Bank Statement"))
-          (:option (option "tax_document" "Tax Document"))))
-      (:field
-        (field text :idv.secondary_doc_file
-          (:label "Secondary Document Upload")))))
-
-  (:page
-    (page
-      (:section-id "verification-results")
-      (:assignee system)
-      (:depends-on "document-upload")
-      (:description "Verification Results")
-      (:field
-        (field text :idv.verification_status
-          (:label "Verification Status")))
-      (:field
-        (field text :idv.confidence_score
-          (:label "Confidence Score")))
-      (:field
-        (field text :idv.verification_details
-          (:label "Verification Details")))))
-
-  (:page
-    (page
-      (:section-id "hr-review")
-      (:assignee hr-admin)
-      (:depends-on "verification-results")
-      (:completion-action (completion-action "complete-idv-task" "Employee"))
-      (:description "HR Review")
-      (:field
-        (field select :idv.review_decision
-          (:label "Review Decision")
-          (:required true)
-          (:option (option "approved" "Approved"))
-          (:option (option "rejected" "Rejected"))
-          (:option (option "additional_docs_required" "Additional Documents Required"))))
-      (:field (field text :idv.review_notes (:label "Review Notes"))))))
-
-(define-document-locale identity-document-verification-en
-    (:document identity-document-verification)
-    (:locale en)
-  (:section (section "document-upload" (:label "Document Upload")))
-  (:section (section "verification-results" (:label "Verification Results")))
-  (:section (section "hr-review" (:label "HR Review")))
-  (:field
-    (locale-field :idv.primary_doc_type
-      (:label "Primary Document Type")
-      (:option (option "passport" "Passport"))
-      (:option (option "drivers_license" "Driver's License"))
-      (:option (option "state_id" "State ID"))
-      (:option (option "national_id" "National ID"))))
-  (:field
-    (locale-field :idv.primary_doc_file
-      (:label "Primary Document Upload")))
-  (:field
-    (locale-field :idv.secondary_doc_type
-      (:label "Secondary Document Type")
-      (:option (option "utility_bill" "Utility Bill"))
-      (:option (option "bank_statement" "Bank Statement"))
-      (:option (option "tax_document" "Tax Document"))))
-  (:field
-    (locale-field :idv.secondary_doc_file
-      (:label "Secondary Document Upload")))
-  (:field
-    (locale-field :idv.verification_status
-      (:label "Verification Status")))
-  (:field
-    (locale-field :idv.confidence_score
-      (:label "Confidence Score")))
-  (:field
-    (locale-field :idv.verification_details
-      (:label "Verification Details")))
-  (:field
-    (locale-field :idv.review_decision
-      (:label "Review Decision")
-      (:option (option "approved" "Approved"))
-      (:option (option "rejected" "Rejected"))
-      (:option (option "additional_docs_required" "Additional Documents Required"))))
-  (:field (locale-field :idv.review_notes (:label "Review Notes"))))
-
-(define-document-localized identity-document-verification-localized
-    (:document identity-document-verification)
-  (:locales en)
-  (:default-locale en))
+(document identity-document-verification
+  :description "Upload and verify identity documents with HR review"
+  (page
+    document-upload
+    :assignee
+    employee
+    :description
+    "Document Upload"
+    (select
+      :idv.primary_doc_type "Primary Document Type"
+      :required true
+      (option "passport" "Passport")
+      (option "drivers_license" "Driver's License")
+      (option "state_id" "State ID")
+      (option "national_id" "National ID"))
+    (text :idv.primary_doc_file "Primary Document Upload" :required true)
+    (select
+      :idv.secondary_doc_type "Secondary Document Type"
+      (option "utility_bill" "Utility Bill")
+      (option "bank_statement" "Bank Statement")
+      (option "tax_document" "Tax Document"))
+    (text :idv.secondary_doc_file "Secondary Document Upload"))
+  (page
+    verification-results
+    :assignee
+    system
+    :description
+    "Verification Results"
+    :depends-on
+    [document-upload]
+    (text :idv.verification_status "Verification Status")
+    (text :idv.confidence_score "Confidence Score")
+    (text :idv.verification_details "Verification Details"))
+  (page
+    hr-review
+    :assignee
+    hr-admin
+    :description
+    "HR Review"
+    :depends-on
+    [verification-results]
+    :completion
+    (completion complete-idv-task :entity Employee)
+    (select
+      :idv.review_decision "Review Decision"
+      :required true
+      (option "approved" "Approved")
+      (option "rejected" "Rejected")
+      (option "additional_docs_required" "Additional Documents Required"))
+    (text :idv.review_notes "Review Notes")))
+(document-locale identity-document-verification "en"
+  (section document-upload :label "Document Upload")
+  (section verification-results :label "Verification Results")
+  (section hr-review :label "HR Review")
+  (field
+    :idv.primary_doc_type
+    :label
+    "Primary Document Type"
+    (option "passport" "Passport")
+    (option "drivers_license" "Driver's License")
+    (option "state_id" "State ID")
+    (option "national_id" "National ID"))
+  (field :idv.primary_doc_file :label "Primary Document Upload")
+  (field
+    :idv.secondary_doc_type
+    :label
+    "Secondary Document Type"
+    (option "utility_bill" "Utility Bill")
+    (option "bank_statement" "Bank Statement")
+    (option "tax_document" "Tax Document"))
+  (field :idv.secondary_doc_file :label "Secondary Document Upload")
+  (field :idv.verification_status :label "Verification Status")
+  (field :idv.confidence_score :label "Confidence Score")
+  (field :idv.verification_details :label "Verification Details")
+  (field
+    :idv.review_decision
+    :label
+    "Review Decision"
+    (option "approved" "Approved")
+    (option "rejected" "Rejected")
+    (option "additional_docs_required" "Additional Documents Required"))
+  (field :idv.review_notes :label "Review Notes"))
+(document-localized identity-document-verification ["en"] :default-locale "en")
 ```
 
 ```lisp
 ;; =============================================================================
 ;; PDF Mapping Definitions - Canonical Form
 ;; =============================================================================
-
 ```

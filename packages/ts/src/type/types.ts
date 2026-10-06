@@ -196,7 +196,7 @@ export const mono = (type: Type): Scheme => Scheme([], [], type, [], []);
 
 export const tNum = TCon("Number");
 export const tStr = TCon("String");
-export const tBool = TCon("Boolean");
+export const tBool = TCon("Bool");
 export const tNil = TCon("Unit");
 export const tList = TCon("List");
 
@@ -334,8 +334,8 @@ function showPublicTypeName(name: string): string {
       return "Number";
     case "Str":
       return "String";
-    case "Bool":
-      return "Boolean";
+    case "Boolean":
+      return "Bool";
     case "Nil":
       return "Unit";
     default:
@@ -371,22 +371,14 @@ export function showType(t: Type): string {
   }
 }
 
-export function showRow(r: Row): string {
-  switch (r._tag) {
-    case "REmpty":
-      return "";
-    case "RVar":
-      return `| ${r.id}`;
-    case "RExtend": {
-      const rest =
-        r.tail._tag === "REmpty"
-          ? ""
-          : r.tail._tag === "RVar"
-            ? ` | ${r.tail.id}`
-            : `, ${showRow(r.tail)}`;
-      return `${r.label}: ${showType(r.type)}${rest}`;
-    }
-  }
+export function showRow(row: Row): string {
+  const {fields, tail} = flattenRow(row);
+  const labels = [...fields].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([label, type]) => {
+    const key = label.startsWith(":") ? label : JSON.stringify(label.startsWith("\0str:") ? label.slice(5) : label);
+    return `${key} ${showType(type)}`;
+  });
+  if (tail._tag === "RVar") labels.push(`& ${tail.id}`);
+  return labels.join(" ");
 }
 
 export function showERow(e: ERow): string {

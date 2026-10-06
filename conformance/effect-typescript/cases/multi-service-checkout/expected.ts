@@ -37,43 +37,43 @@ export class InvalidOrder extends Schema.TaggedError<InvalidOrder>()("InvalidOrd
 export class Clock extends Context.Service<
   Clock,
   {
-    readonly now: () => Effect.Effect<number>;
+    readonly now: Effect.Effect<number>;
   }
 >()("Clock") {}
 
 export class Catalog extends Context.Service<
   Catalog,
   {
-    readonly price: (sku: Sku) => Effect.Effect<Option.Option<number>>;
+    readonly price: (arg0: Sku) => Effect.Effect<Option.Option<number>>;
   }
 >()("Catalog") {}
 
 export class Inventory extends Context.Service<
   Inventory,
   {
-    readonly reserve: (sku: Sku, quantity: number) => Effect.Effect<void, OutOfStock>;
-    readonly release: (sku: Sku, quantity: number) => Effect.Effect<void>;
+    readonly reserve: (arg0: Sku, arg1: number) => Effect.Effect<void, OutOfStock>;
+    readonly release: (arg0: Sku, arg1: number) => Effect.Effect<void>;
   }
 >()("Inventory") {}
 
 export class Payments extends Context.Service<
   Payments,
   {
-    readonly charge: (customer: string, amountCents: number) => Effect.Effect<string, PaymentDeclined>;
+    readonly charge: (arg0: string, arg1: number) => Effect.Effect<string, PaymentDeclined>;
   }
 >()("Payments") {}
 
 export class Notifier extends Context.Service<
   Notifier,
   {
-    readonly send: (customer: string, message: string) => Effect.Effect<void>;
+    readonly send: (arg0: string, arg1: string) => Effect.Effect<void>;
   }
 >()("Notifier") {}
 
 export class Checkout extends Context.Service<
   Checkout,
   {
-    readonly place: (request: OrderRequest) => Effect.Effect<Receipt, InvalidOrder | OutOfStock | PaymentDeclined>;
+    readonly place: (arg0: OrderRequest) => Effect.Effect<Receipt, InvalidOrder | OutOfStock | PaymentDeclined>;
   }
 >()("Checkout") {}
 
@@ -166,7 +166,7 @@ export const CheckoutLive: Layer.Layer<Checkout, never, Catalog | Clock | Invent
               return yield* Effect.fail(declined);
             }),
           );
-          const placedAt = yield* clock.now();
+          const placedAt = yield* clock.now;
           yield* notifier.send(request.customer, `charged ${total} cents`);
           return { "charge-id": chargeId, "total-cents": total, "placed-at": placedAt };
         }),

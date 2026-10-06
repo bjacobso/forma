@@ -94,6 +94,7 @@ export type MatchShape =
   | { readonly kind: "tagged"; readonly discriminator: string };
 
 export interface ServiceMethodSignature {
+  readonly value?: boolean;
   readonly name: string;
   readonly params: readonly { readonly name: string; readonly type: MType }[];
   readonly effect: EffectType;
@@ -341,6 +342,7 @@ class Checker {
             const own = `${name}.${method["name"]}`;
             methods.set(method["name"], {
               name: method["name"],
+              ...(method["value"] === true ? { value: true } : {}),
               params: this.paramsFromJson(method["params"]),
               effect: effectOf(
                 effect.success,
@@ -454,6 +456,14 @@ class Checker {
       }
       if (!isRecord(node)) return;
       const location = node["span"] ?? span;
+      if (node["kind"] === "Annotated" && isRecord(node["metadata"])) {
+        for (const key of Object.keys(node["metadata"])) if (!["doc", "description", "title", "identifier", "pattern"].includes(key)) this.error(location, "mechanics/schema-metadata", `Unknown schema metadata :${key}.`);
+      }
+      if (node["kind"] === "Map" && node["key"] !== undefined) {
+        const key = resolve(typeFromJson(node["key"], this.env), this.env);
+        const valid = (t: MType): boolean => t.kind === "prim" && t.name === "String" || t.kind === "brand" && valid(t.base) || t.kind === "literal" && typeof t.value === "string" || t.kind === "union" && t.members.every(valid);
+        if (!valid(key)) this.error(location, "mechanics/map-key", "Map keys must be String, a String brand, or a union of string or keyword literals.");
+      }
       if (node["kind"] === "Struct") {
         const names = new Set<string>();
         for (const field of arrayItems(node["fields"])) {
@@ -577,13 +587,13 @@ class Checker {
     if (value["kind"] === "Ref" && typeof value["name"] === "string") {
       const name = value["name"];
       if (!this.schemas.has(name) && !this.errorNames.has(name) && !this.classes.has(name) && name !== "Duration") {
-        this.error(location, "mechanics/unknown-type", `Unknown type ${name}. Define it with define-schema or define-error.`);
+        this.error(location, "mechanics/unknown-type", `Unknown type ${name}. Declare it with type or error.`);
       }
     }
     if (value["kind"] === "Effect") {
       for (const error of stringItems(value["errors"])) {
         if (!this.errorNames.has(error)) {
-          this.error(location, "mechanics/unknown-error", `Unknown error type ${error} in an Effect type. Define it with define-error.`);
+          this.error(location, "mechanics/unknown-error", `Unknown error type ${error} in an Effect type. Declare it with error.`);
         }
       }
       for (const requirement of stringItems(value["requirements"])) {
@@ -678,7 +688,7 @@ class Checker {
     const type = this.value(payload["body"], scope, signature.result);
     this.pureOwner = undefined;
     if (type.kind === "effect") {
-      this.error(spanOf(payload["body"]) ?? span, "mechanics/function-effect", `Function ${name} returns an effect; write it with define-operation.`);
+      this.error(spanOf(payload["body"]) ?? span, "mechanics/function-effect", `Function ${name} returns an effect; give its define an Effect return signature.`);
     }
   }
 
@@ -691,7 +701,7 @@ class Checker {
     if (existing) return existing;
     const entry = this.layerPayloads.get(name);
     if (!entry) {
-      this.error(useSpan, "mechanics/unknown-layer", `Unknown layer ${name}. Define it with define-layer.`);
+      this.error(useSpan, "mechanics/unknown-layer", `Unknown layer ${name}. Define it with layer.`);
       return undefined;
     }
     if (this.layersInProgress.has(name)) {
@@ -947,7 +957,7 @@ class Checker {
       case "Fail":
         return this.fail(node["error"], scope, span);
       case "ServiceCall": {
-        const type = this.serviceCall(String(node["service"]), String(node["method"]), arrayItems(node["args"]), scope, span);
+        const type = this.serviceCall(String(node["service"]), String(node["method"]), arrayItems(node["args"]), scope, span, node["value"] === true);
         this.expectSuccess(type, expected, node);
         return type;
       }
@@ -1030,6 +1040,10 @@ class Checker {
           `let binds values; use do! to run ${describeEffectNode(value)} and bind its result.`,
         );
       }
+      if (binding["pure"] === true && isRecord(value)) {
+        const pureType = this.value(value["value"], current);
+        if (pureType.kind === "effect") this.error(value["span"] ?? binding["span"], "mechanics/pure-binding", ":let binds pure values; bind effects directly in do!.");
+      }
       const effect = this.effect(value, current);
       errors = unionSets(errors, effect.errors);
       requirements = unionSets(requirements, effect.requirements);
@@ -1109,7 +1123,7 @@ class Checker {
     const type = this.value(error, scope);
     const names = errorNamesOf(type, this.env);
     if (!names) {
-      this.error(spanOf(error) ?? span, "mechanics/fail-value", `fail expects an error built with define-error, but this is ${showType(type)}.`);
+      this.error(spanOf(error) ?? span, "mechanics/fail-value", `fail expects an error declared with error, but this is ${showType(type)}.`);
       return effectOf(tNever);
     }
     return effectOf(tNever, setOf(names, spanOf(error) ?? span));
@@ -1121,18 +1135,19 @@ class Checker {
     args: readonly JsonValue[],
     scope: Scope,
     span: JsonValue | undefined,
+    asValue = false,
   ): EffectType {
     if (this.pureOwner) {
       this.error(
         span,
         "mechanics/pure-service",
-        `${this.pureOwner} cannot call ${service}.${method}: functions and constants have no services in scope. Write it with define-operation.`,
+        `${this.pureOwner} cannot call ${service}.${method}: functions and constants have no services in scope. Give its define an Effect return signature.`,
       );
     }
     const methods = this.services.get(service);
     const signature = methods?.get(method);
     if (!methods) {
-      this.error(span, "mechanics/unknown-service", `Unknown service ${service}. Define it with define-service.`);
+      this.error(span, "mechanics/unknown-service", `Unknown service ${service}. Declare it with service.`);
       args.forEach((arg) => this.value(arg, scope));
       return effectOf(tUnknown);
     }
@@ -1140,6 +1155,11 @@ class Checker {
       this.error(span, "mechanics/unknown-method", `Service ${service} has no method ${method}.`);
       args.forEach((arg) => this.value(arg, scope));
       return effectOf(tUnknown);
+    }
+    if (Boolean(signature.value) !== asValue) {
+      this.error(span, "mechanics/service-member-use", signature.value
+        ? `${service}.${method} is an effect value; access it without parentheses.`
+        : `${service}.${method} is a function; call it with parentheses.`);
     }
     this.arguments(`${service}.${method}`, signature.params, args, scope, span);
     return effectOf(
@@ -1261,7 +1281,7 @@ class Checker {
     const covered = new Set<string>();
     let wildcard = false;
     const bindings = patterns.map((pattern): readonly (readonly [string, MType])[] => {
-      const parsed = parsePattern(pattern);
+      const parsed = parsePattern(pattern,shape.kind);
       const patternSpan = spanOf(pattern) ?? span;
       if (!parsed) {
         this.error(patternSpan, "mechanics/match-pattern", "Match patterns are a tag, (tag binding), a string, or _.");
@@ -1275,7 +1295,7 @@ class Checker {
           this.error(patternSpan, "mechanics/unreachable-pattern", "This _ is unreachable: every case is already matched.");
         }
         wildcard = true;
-        return [];
+        return parsed.binding ? [[parsed.binding, scrutinee]] : [];
       }
       if (open) {
         if (parsed.binding !== undefined || parsed.value === undefined || !isAssignable({ kind: "literal", value: parsed.value }, open, this.env)) {
@@ -1330,9 +1350,20 @@ class Checker {
     const body = this.effect(node["body"], scope, expected);
     let remaining = new Map(body.errors);
     const handled: EffectType[] = [];
+    const seen = new Set<string>();
     for (const handler of handlers) {
+      if (seen.has(handler.errorType)) this.error(handler.span,"mechanics/duplicate-catch",`Duplicate catch for ${handler.errorType}.`);
+      seen.add(handler.errorType);
+      if (handler.errorType === "_") {
+        if (remaining.size === 0) this.error(handler.span,"mechanics/impossible-catch","Impossible catch: all errors are already handled.");
+        const errorType=union([...remaining.keys()].map(name=>({kind:"error" as const,name})));
+        const handlerScope=handler.binding==="_" ? scope : extend(scope,handler.binding,errorType);
+        handled.push(this.effect(handler.handler,handlerScope,expected));
+        remaining.clear();
+        continue;
+      }
       if (!this.errorNames.has(handler.errorType)) {
-        this.error(handler.span, "mechanics/unknown-error", `Unknown error type ${handler.errorType}. Define it with define-error.`);
+        this.error(handler.span, "mechanics/unknown-error", `Unknown error type ${handler.errorType}. Declare it with error.`);
       } else if (!body.errors.has(handler.errorType)) {
         const errors = [...body.errors.keys()];
         this.error(
@@ -1506,7 +1537,7 @@ class Checker {
         const result = mapped.kind === "function" ? mapped.result : tUnknown;
         const names = errorNamesOf(result, this.env);
         if (!names && result.kind !== "unknown") {
-          this.error(spanOf(args[1]) ?? span, "mechanics/fail-value", `map-error must return an error built with define-error, but returns ${showType(result)}.`);
+          this.error(spanOf(args[1]) ?? span, "mechanics/fail-value", `map-error must return an error declared with error, but returns ${showType(result)}.`);
         }
         return effectOf(body.success, setOf(names ?? [], spanOf(args[1]) ?? span), body.requirements);
       }
@@ -1541,7 +1572,7 @@ class Checker {
         const layerNode = args[1];
         const layerName = isRecord(layerNode) && layerNode["kind"] === "Var" ? String(layerNode["name"]) : undefined;
         if (!layerName) {
-          this.error(spanOf(layerNode) ?? span, "mechanics/provide", "provide expects the name of a layer defined with define-layer.");
+          this.error(spanOf(layerNode) ?? span, "mechanics/provide", "provide expects the name of a layer defined with layer.");
           return body;
         }
         const layer = this.layerInfo(layerName, spanOf(layerNode) ?? span);
@@ -1595,7 +1626,7 @@ class Checker {
       case "decode": {
         const type = this.typeArg(args[0]);
         if (type.kind !== "named" || !this.schemas.has(type.name)) {
-          this.error(spanOf(args[0]) ?? span, "mechanics/decode-schema", "decode expects the name of a schema defined with define-schema.");
+          this.error(spanOf(args[0]) ?? span, "mechanics/decode-schema", "decode expects the name of a schema defined with type.");
         }
         this.value(args[1], scope);
         return effectOf(type, setOf(["SchemaError"], span));
@@ -1738,7 +1769,10 @@ class Checker {
     const fn = this.functions.get(name);
     if (fn) return { kind: "function", params: fn.params.map((param) => param.type), result: fn.result };
     const operation = this.operations.get(name);
-    if (operation) return { kind: "function", params: operation.params.map((param) => param.type), result: operation.result };
+    if (operation) {
+      const value = this.declarations.some(d => isRecord(d.payload) && d.payload["kind"] === "EffectDef" && d.payload["name"] === name && d.payload["value"] === true);
+      return value ? operation.result : { kind: "function", params: operation.params.map((param) => param.type), result: operation.result };
+    }
     if (this.layerPayloads.has(name)) {
       const layer = this.layerInfo(name, span);
       return layer ? { kind: "layer", layer: layer.type } : tUnknown;
@@ -1780,6 +1814,9 @@ class Checker {
         }
         if (key === "__proto__") {
           this.error(spanOf(entry["key"]) ?? node["span"], "mechanics/record-key", "__proto__ cannot be a map key: JavaScript treats it as the prototype.");
+        }
+        if (key !== undefined && target.key && !isAssignable({kind: "literal", value: key}, target.key, this.env)) {
+          this.error(spanOf(entry["key"]) ?? node["span"], "mechanics/map-key", `Map key ${JSON.stringify(key)} is not ${showType(target.key)}.`);
         }
         if (key !== undefined) seen.add(key);
         this.value(entry["value"], scope, target.value);
@@ -2204,6 +2241,9 @@ class Checker {
     }
     this.checkParamNames(names.filter((name) => name !== "_"), "This fn", node["span"]);
     const target = expected ? resolve(expected, this.env) : undefined;
+    if (target?.kind !== "function" && names.length === 0) {
+      return {kind: "function", params: [], result: this.value(body, scope)};
+    }
     if (target?.kind !== "function") {
       this.error(
         node["span"],
@@ -2403,7 +2443,7 @@ class Checker {
 
   private constructError(name: string, args: readonly JsonValue[], scope: Scope, span: JsonValue | undefined): MType {
     if (!this.errorNames.has(name)) {
-      this.error(span, "mechanics/unknown-error", `Unknown error type ${name}. Define it with define-error before using fail.`);
+      this.error(span, "mechanics/unknown-error", `Unknown error type ${name}. Declare it with error before using fail.`);
       return tUnknown;
     }
     if (builtinErrors.has(name)) {
@@ -2690,7 +2730,14 @@ export interface Pattern {
   readonly binding?: string;
 }
 
-export function parsePattern(pattern: JsonValue | undefined): Pattern | undefined {
+export function parsePattern(pattern: JsonValue | undefined, kind?: string): Pattern | undefined {
+  const parsed = parseRawPattern(pattern);
+  if (!parsed) return undefined;
+  const standard: Record<string,string> = kind === "option" ? {Some:"some",None:"none","Option.Some":"some","Option.None":"none"} : kind === "result" ? {Ok:"success",Err:"failure","Result.Ok":"success","Result.Err":"failure"} : {};
+  if (standard[parsed.tag]) return {...parsed,tag:standard[parsed.tag]!};
+  return parsed;
+}
+function parseRawPattern(pattern: JsonValue | undefined): Pattern | undefined {
   if (!isRecord(pattern)) return undefined;
   switch (pattern["kind"]) {
     case "Var": {
@@ -2823,7 +2870,7 @@ function mapType(type: MType, f: (type: MType) => MType): MType {
     case "ref":
       return { kind: "ref", item: mapType(type.item, f) };
     case "map":
-      return { kind: "map", value: mapType(type.value, f) };
+      return { ...type, value: mapType(type.value, f), ...(type.key ? {key: mapType(type.key, f)} : {}) };
     case "tuple":
       return { kind: "tuple", items: type.items.map((item) => mapType(item, f)) };
     case "union":
@@ -2853,6 +2900,10 @@ export function typeFromValueSyntax(node: JsonValue | undefined, env: TypeEnviro
   const items = arrayItems(node["items"]);
   const head = items[0];
   const headName = calleeName(head);
+  if (headName === "Map" && keywordName(items[2]) === "key") {
+    const value = typeFromValueSyntax(items[1],env);
+    return value ? {kind:"map",value} : undefined;
+  }
   const parts = items.slice(1).map((item) => typeFromValueSyntax(item, env));
   if (parts.some((part) => part === undefined)) return undefined;
   const [first, second] = parts as MType[];

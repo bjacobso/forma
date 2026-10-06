@@ -72,7 +72,9 @@ let rec parse_param_types acc = function
             "service method params must be [name Type ...] pairs.";
         ]
 
-let parse_method service_name = function
+let rec parse_method service_name = function
+  | Ast.List (s,[n;params;result;Ast.Keyword (_,":value")]) ->
+      parse_method service_name (Ast.List (s,[n;params;result])) |> Result.map (function n,Core_ast.TEFun (_,[],result) -> n,result | pair -> pair)
   | Ast.List
       ( span,
         [
@@ -116,7 +118,7 @@ let parse_methods service_name = function
       Error
         [
           diagnostic ~span:(Ast.expr_span bad) "typecheck/define-service"
-            "define-service expects a (:methods ...) block.";
+            "__service expects a (:methods ...) block.";
         ]
 
 let bind env service_name methods_expr =

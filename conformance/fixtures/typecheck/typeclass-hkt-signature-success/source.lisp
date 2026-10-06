@@ -1,3 +1,2 @@
-(define-typeclass (Functor (f : (-> * *)))
-  (fmap (-> (-> a b) (f a) (f b))))
+(typeclass (Functor (f : (-> * *))) (: fmap (-> (-> a b) (f a) (f b))))
 nil

@@ -1,3 +1,7 @@
+import { bootstrapFromSources, type BootstrappedPrelude } from "../descriptor/bootstrap.js";
+import { elaborateSources } from "../descriptor/elaborate.js";
+import { head } from "../surface/effect.js";
+import { parse as parseSurface, toSExprMany } from "../reader/index.js";
 import { Effect } from "effect";
 import * as Builtins from "../Builtins.js";
 import type { Env } from "../Env.js";
@@ -262,6 +266,21 @@ export function expand(request: ExpandRequest): ExpandResult {
   }
 }
 
+const typecheckPreludes = new WeakMap<LanguageSession, {fingerprint: string; prelude: BootstrappedPrelude}>();
+function formDiagnostics(request: TypecheckRequest, sourceId: string, source: string): readonly Diagnostic[] {
+  if (!request.session) return [];
+  const session = request.session, fingerprint = session.preludeFingerprint();
+  let cached = typecheckPreludes.get(session);
+  if (!cached || cached.fingerprint !== fingerprint) {
+    cached = {fingerprint, prelude: bootstrapFromSources("", "", {additionalSources: session.orderedSources("prelude").map(source=>source.text)})};
+    typecheckPreludes.set(session, cached);
+  }
+  const expressions = toSExprMany(parseSurface(source).redTree);
+  if (!expressions.some(e => cached!.prelude.descriptions.get(head(e) ?? "")?.surface || head(e) === "form" || head(e) === ":" && e._tag === "List" && (head(e.items[2]) === "Action" || e.items[2]?._tag === "List" && head(e.items[2]) === "->" && head(e.items[2].items.at(-1)) === "Action"))) return [];
+  const sources = session.orderedSources("source").filter(s=>s.id !== sourceId).map(s=>({sourceId:s.id,source:s.text}));
+  return elaborateSources([...sources,{sourceId,source}], {prelude:cached.prelude}).diagnostics.filter(d=>d.span?.sourceId === sourceId);
+}
+
 export function typecheck(request: TypecheckRequest): TypecheckResult {
   const sourceId = request.sourceId ?? "source";
   const source = sourceFromRequest(request);
@@ -287,6 +306,8 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
   const mergedRequest = typecheckRequestWithSession(request);
   const mergedSource = mergedRequest.source ?? source;
   try {
+    const formErrors = formDiagnostics(request, sourceId, source);
+    if (formErrors.some(d=>d.severity === "error")) return {sourceId, pass:"typecheck", diagnostics:formErrors};
     const inferOptions = typeInferOptions(mergedRequest);
     const result =
       mergedRequest.result === "per-expression"
@@ -319,7 +340,7 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
       pass: "typecheck",
       type: typeProjection(display),
       display,
-      diagnostics,
+      diagnostics: [...formErrors, ...diagnostics],
       ...(mergedRequest.result === "per-expression"
         ? {
             expressionTypes: expressionTypesFromSource(sourceId, displays),
@@ -536,7 +557,7 @@ export function diagnosticFromUnknown(
           }
         : undefined;
     return {
-      code: candidate._tag ?? `${phase}/error`,
+      code: typeof candidate.details?.["code"] === "string" ? candidate.details["code"] : candidate._tag ?? `${phase}/error`,
       severity: "error",
       message: candidate.message ?? String(error),
       phase,
@@ -565,6 +586,7 @@ function spanFromLoc(sourceId: string, loc: Reader.Loc): Span {
 function astFromSExpr(sourceId: string, expr: Reader.SExpr): AstNode {
   switch (expr._tag) {
     case "Sym":
+      if (expr.name === "nil") return {kind:"nil",span:spanFromLoc(sourceId,expr.loc)};
       return expr.name.startsWith(":")
         ? { kind: "keyword", value: expr.name, span: spanFromLoc(sourceId, expr.loc) }
         : { kind: "symbol", value: expr.name, span: spanFromLoc(sourceId, expr.loc) };

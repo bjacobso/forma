@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of Value.closure
   | VMacro of Value.closure
 

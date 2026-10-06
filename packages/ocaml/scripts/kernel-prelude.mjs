@@ -75,6 +75,9 @@ const expectValue = (label, response, expected) => {
 };
 
 const cases = [
+  {name:"false boolean fallback",source:"(or false false)",expected:{kind:"bool",value:false}},
+  {name:"named recursion",source:"(define length [items] (if (empty? items) 0 (+ 1 (length (rest items))))) (length [1 2 3])",expected:{kind:"int",value:3}},
+  {name:"quoted type syntax",source:"(first '(-> String Unit))",expected:{kind:"symbol",value:"->"}},
   {
     name: "not macro",
     source: "(not false)",

@@ -6,19 +6,19 @@
       "severity": "error",
       "code": "mechanics/undeclared-requirement",
       "message": "Layer AppLive requires Clock, but its signature does not declare it.",
-      "line": 10,
-      "column": 18,
-      "endLine": 10,
-      "endColumn": 29
+      "line": 9,
+      "column": 35,
+      "endLine": 9,
+      "endColumn": 44
     },
     {
       "phase": "check",
       "severity": "error",
       "code": "mechanics/undeclared-requirement",
       "message": "Operation greet-everyone requires Clock, but its signature declares no requirements.",
-      "line": 18,
+      "line": 17,
       "column": 33,
-      "endLine": 18,
+      "endLine": 17,
       "endColumn": 44
     }
   ]

@@ -16,7 +16,9 @@ let rec infer_expr env expr =
     | Core_ast.Lit (_, Core_ast.LInt _) -> Ok ([], TInt)
     | Core_ast.Lit (_, Core_ast.LFloat _) -> Ok ([], TFloat)
     | Core_ast.Lit (_, Core_ast.LString _) -> Ok ([], TString)
-    | Core_ast.Lit (_, Core_ast.LKeyword _) -> Ok ([], TString)
+    | Core_ast.Lit (_, Core_ast.LKeyword name) -> Ok ([], TNamed name)
+    | Core_ast.Lit (_, Core_ast.LQuoted _) -> Ok ([], TSyntax)
+    | Core_ast.Lit (_, Core_ast.LSymbol _) -> Ok ([], TSymbol)
     | Core_ast.Var (node, symbol) -> (
         match Type_env.lookup_scheme symbol env with
         | Some scheme ->
@@ -45,6 +47,9 @@ let rec infer_expr env expr =
         match infer_expr env record with
         | Error _ as error -> error
         | Ok (subst, record_ty) ->
+            let record_ty=match Type_expr.apply_subst subst record_ty with
+              | Type_expr.TNamed n -> Option.value ~default:record_ty (Type_env.lookup ("__record/" ^ n) env)
+              | _ -> record_ty in
             Typed_record_builtin.infer_get_field subst record_ty label)
     | Core_ast.Lam (_, params, rest_param, body) ->
         infer_lambda env params rest_param body
@@ -53,7 +58,7 @@ let rec infer_expr env expr =
     | Core_ast.App (node, Core_ast.Var (_, op), args) ->
         infer_typeclass_named_application env node.Core_ast.span op args
     | Core_ast.App (_, callee, args) ->
-        Typed_apply.infer_application Typed_apply.{ infer_expr } env callee args
+        Typed_apply.infer_application Typed_apply.{ infer_expr; check_expr } env callee args
     | Core_ast.Let (_, bindings, body) -> infer_let env bindings body
     | Core_ast.EffectDo (_, bindings, body) -> infer_effect_do env bindings body
     | Core_ast.EffectFail (node, error_name, payload) ->
@@ -81,10 +86,13 @@ and infer_typeclass_named_application env span op args =
       Typed_builtin.infer_named_application
         Typed_builtin.
           {
-            infer_expr;
-            infer_apply = Typed_apply.infer_apply Typed_apply.{ infer_expr };
+            infer_expr; check_expr;
+            infer_apply = Typed_apply.infer_apply Typed_apply.{ infer_expr; check_expr };
           }
         env op args
+  | Some scheme when args = [] && Surface.is_upper op -> (
+      let ty = Type_env.instantiate scheme in
+      match ty with TFn ([],result) -> Ok ([],result) | _ -> Ok ([],ty))
   | Some scheme -> (
       let callee_span =
         {
@@ -97,7 +105,7 @@ and infer_typeclass_named_application env span op args =
         Type_env.instantiate_with_subst_at callee_span scheme
       in
       match
-        Typed_apply.infer_apply Typed_apply.{ infer_expr } env [] callee_ty args
+        Typed_apply.infer_apply Typed_apply.{ infer_expr; check_expr } env [] callee_ty args
       with
       | Error _ as error -> error
       | Ok (subst, ty) -> Type_env.discharge_and_return env subst (subst, ty))
@@ -105,8 +113,8 @@ and infer_typeclass_named_application env span op args =
       Typed_builtin.infer_named_application
         Typed_builtin.
           {
-            infer_expr;
-            infer_apply = Typed_apply.infer_apply Typed_apply.{ infer_expr };
+            infer_expr; check_expr;
+            infer_apply = Typed_apply.infer_apply Typed_apply.{ infer_expr; check_expr };
           }
         env op args
   | _ ->
@@ -119,7 +127,8 @@ and infer_typeclass_named_application env span op args =
 and infer_if env condition consequent alternate =
   match infer_expr env condition with
   | Error _ as error -> error
-  | Ok (condition_subst, _) -> (
+  | Ok (condition_subst, condition_ty) -> (
+      match assign condition_ty TBool with Error _ as e -> e | Ok bool_subst -> let condition_subst=compose_subst bool_subst condition_subst in
       let env = apply_subst_env condition_subst env in
       match infer_expr env consequent with
       | Error _ as error -> error
@@ -144,11 +153,11 @@ and infer_if env condition consequent alternate =
                   let alternate_effect = effect_parts alternate_ty in
                   match (consequent_effect, alternate_effect) with
                   | None, None -> (
-                      match unify consequent_ty alternate_ty with
+                      match join consequent_ty alternate_ty with
                       | Error _ as error -> error
-                      | Ok unify_subst ->
+                      | Ok (unify_subst,joined) ->
                           let subst = compose_subst unify_subst subst in
-                          Ok (subst, apply_subst subst consequent_ty))
+                          Ok (subst, apply_subst subst joined))
                   | _ -> (
                       let consequent_success, consequent_errors, consequent_req =
                         match consequent_effect with
@@ -258,6 +267,9 @@ and infer_effect_fail env span error_name payload =
       match infer_expr env payload with
       | Error _ as error -> error
       | Ok (payload_subst, payload_ty) -> (
+          let expected_payload = match Type_env.lookup ("__record/" ^ error_name) env with
+            | Some (TRecord fields) -> TRecord (List.remove_assoc ":_tag" fields)
+            | _ -> expected_payload in
           let expected_payload = apply_subst payload_subst expected_payload in
           let payload_ty = apply_subst payload_subst payload_ty in
           match unify expected_payload payload_ty with
@@ -303,6 +315,7 @@ and infer_effect_catch env span body error_name binding handler =
                       (Printf.sprintf "Unknown error type %s." error_name);
                   ]
             | Some error_payload -> (
+                let error_payload = match Type_env.lookup ("__type/" ^ error_name) env with Some t -> t | None -> error_payload in
                 let handler_env =
                   Type_env.bind binding.Core_ast.name
                     (Forall
@@ -383,8 +396,8 @@ and infer_effect_do env bindings body =
   in
   loop [] env [] [] bindings
 
-and infer_lambda env params rest_param body =
-  let param_tys = List.map (fun _ -> fresh_tyvar ()) params in
+and infer_lambda ?expected env params rest_param body =
+  let param_tys,return_hint=match expected with Some (TFn (args,result)) when List.length args=List.length params -> args,Some result | _ -> List.map (fun _ -> fresh_tyvar ()) params,None in
   let param_bindings =
     List.map2
       (fun (param : Core_ast.param) ty ->
@@ -398,7 +411,7 @@ and infer_lambda env params rest_param body =
         [ (param.name, Forall ([], TList TAny, [], Plain)) ]
   in
   let local_env = rest_binding @ param_bindings @ env in
-  match infer_expr local_env body with
+  match (match return_hint with Some expected -> check_expr local_env body expected | None -> infer_expr local_env body) with
   | Error _ as error -> error
   | Ok (body_subst, body_ty) ->
       Ok
@@ -407,42 +420,41 @@ and infer_lambda env params rest_param body =
             ( List.map (apply_subst body_subst) param_tys,
               apply_subst body_subst body_ty ) )
 
+and check_expr env value expected =
+  let finish (subst,actual) = match assign (apply_subst subst actual) (apply_subst subst expected) with Error _ as e -> e | Ok s -> let subst=compose_subst s subst in Ok (subst,apply_subst subst expected) in
+  let result = match value,expected with
+  | _,TVar _ -> (match infer_expr env value with Error _ as e -> e | Ok result -> finish result)
+  | Core_ast.Lit (_,lit),expected ->
+      let precise=match lit with Core_ast.LInt n -> TNamed (string_of_int n) | Core_ast.LFloat n -> TNamed (string_of_float n) | Core_ast.LString s -> TNamed (Value.string_json s) | Core_ast.LQuoted _ -> TSyntax | Core_ast.LSymbol _ -> TSymbol | Core_ast.LKeyword s -> TNamed s | Core_ast.LBool b -> TNamed (string_of_bool b) | Core_ast.LNil -> TNil in
+      (match assign precise expected with Ok s -> Ok (s,apply_subst s expected) | Error _ -> (match infer_expr env value with Error _ as e -> e | Ok result -> finish result))
+  | Core_ast.Lam (_,params,rest,body),TFn _ -> (match infer_lambda ~expected env params rest body with Error _ as e -> e | Ok result -> finish result)
+  | Core_ast.App (_, Core_ast.Var (_,"__dictionary"), [Core_ast.Record (_,fields)]), TNamedApp ("Map",[key;item]) ->
+      let rec loop subst = function
+        | [] -> Ok (subst,apply_subst subst expected)
+        | (field:Core_ast.field) :: rest ->
+            let label=field.label in
+            let literal=if String.starts_with ~prefix:":" label then TNamed label else TNamed (Value.string_json (if String.starts_with ~prefix:"\000str:" label then String.sub label 5 (String.length label-5) else label)) in
+            (match assign literal (apply_subst subst key) with Error _ as e -> e | Ok ks ->
+              let subst=compose_subst ks subst in
+              match check_expr (apply_subst_env subst env) field.value (apply_subst subst item) with Error _ as e -> e | Ok (s,_) -> loop (compose_subst s subst) rest) in
+      loop [] fields
+  | Core_ast.Record (_,fields),(TRecord expected_fields | TOpenRecord (expected_fields,_)) ->
+      let rec loop subst acc = function [] -> finish (subst,TRecord acc) | (field:Core_ast.field) :: rest ->
+        let inferred=match List.assoc_opt field.label expected_fields with Some t -> check_expr (apply_subst_env subst env) field.value (apply_subst subst t) | None -> infer_expr (apply_subst_env subst env) field.value in
+        match inferred with Error _ as e -> e | Ok (s,t) -> loop (compose_subst s subst) ((field.label,t) :: acc) rest in loop [] [] fields
+  | Core_ast.If (_,condition,yes,no),expected -> (match check_expr env condition TBool with Error _ as e -> e | Ok (s,_) -> match check_expr (apply_subst_env s env) yes expected with Error _ as e -> e | Ok (ys,_) -> let subst=compose_subst ys s in match check_expr (apply_subst_env subst env) no (apply_subst subst expected) with Error _ as e -> e | Ok (ns,t) -> Ok (compose_subst ns subst,t))
+  | _ -> (match infer_expr env value with Error _ as e -> e | Ok result -> finish result)
+
+  in Result.map_error (Type_diagnostic.with_span (Core_ast.expr_span value)) result
+
 and infer_definition env _name signature value =
-  match infer_expr env value with
-  | Error _ as error -> error
-  | Ok (value_subst, value_ty) -> (
-      let subst = value_subst in
-      let env = apply_subst_env subst env in
-      let inferred_ty = apply_subst subst value_ty in
-      let checked_ty =
-        match signature with
-        | None -> Ok (subst, inferred_ty)
-        | Some signature -> (
-            match Type_resolve.resolve env signature with
-            | Error _ as error -> error
-            | Ok expected -> (
-                match unify inferred_ty expected with
-                | Error _ as error -> error
-                | Ok signature_subst ->
-                    let subst = compose_subst signature_subst subst in
-                    Ok (subst, apply_subst subst expected)))
-      in
-      match checked_ty with
-      | Error _ as error -> error
-      | Ok (subst, ty) -> Ok (subst, ty))
+  match signature with None -> infer_expr env value | Some signature -> (match Type_resolve.resolve_polymorphic env signature with Error _ as e -> e | Ok (env,expected) -> check_expr env value expected)
 
 and infer_ascription env value type_expr =
-  match (infer_expr env value, Type_resolve.resolve env type_expr) with
-  | Error diagnostics, _ | _, Error diagnostics -> Error diagnostics
-  | Ok (subst, actual), Ok expected -> (
-      match unify (apply_subst subst actual) expected with
-      | Error _ as error -> error
-      | Ok ascription_subst ->
-          let subst = compose_subst ascription_subst subst in
-          Ok (subst, apply_subst subst expected))
+  match Type_resolve.resolve env type_expr with Error _ as e -> e | Ok expected -> check_expr env value expected
 
 let typed_analysis_callbacks =
-  Typed_analysis.{ infer_expr; pattern_bindings = Typed_match.pattern_bindings }
+  Typed_analysis.{ infer_expr; check_expr; pattern_bindings = Typed_match.pattern_bindings }
 
 let infer_toplevel_core env expr =
   Typed_analysis.infer_toplevel_core typed_analysis_callbacks env expr
@@ -463,13 +475,15 @@ let typecheck_core_program_typed_with_descriptor_infer
     descriptor_hooks env program
 
 let typecheck_program_with_env env exprs =
-  Type_env.with_pending_reset (fun () ->
+  try Type_env.with_pending_reset (fun () ->
       Typed_toplevel.typecheck_program_with_env
         Typed_toplevel.{ infer_toplevel_core; infer_core_expr }
-        env exprs)
+        env (Surface.type_program (Surface_form.program exprs)))
+  with Constructor_scope.Ambiguous (span,message) -> Error [Type_diagnostic.make ~span "surface/ambiguous-constructor" message]
 
 let typecheck_program_with_env_all env exprs =
-  Type_env.with_pending_reset (fun () ->
+  try Type_env.with_pending_reset (fun () ->
       Typed_toplevel.typecheck_program_with_env_all
         Typed_toplevel.{ infer_toplevel_core; infer_core_expr }
-        env exprs)
+        env (Surface.type_program (Surface_form.program exprs)))
+  with Constructor_scope.Ambiguous (span,message) -> Error [Type_diagnostic.make ~span "surface/ambiguous-constructor" message]

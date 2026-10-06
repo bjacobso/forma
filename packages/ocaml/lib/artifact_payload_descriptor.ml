@@ -126,13 +126,13 @@ let payload_contract_descriptor_value form_name name value =
           Error
             (Printf.sprintf
                "Descriptor artifact payload contract reference %S for form %S \
-                must name a define-payload-contract declaration."
+                must name a __payload-contract declaration."
                name form_name))
   | _ ->
       Error
         (Printf.sprintf
            "Descriptor artifact payload contract reference %S for form %S must \
-            name a define-payload-contract declaration."
+            name a __payload-contract declaration."
            name form_name)
 
 let payload_contract_name form_name acc value =

@@ -123,7 +123,7 @@ let resolve_cached_typed_artifact_declarations (session : Session.t) source_id =
       | _
         when (match Hashtbl.find_opt session.parsed_sources source_id with
              | Some exprs ->
-                 List.exists Mechanics_artifact.is_mechanics_form exprs
+                 Mechanics_artifact.has_mechanics_forms exprs
              | None -> false) ->
           let resolution =
             match Hashtbl.find_opt session.parsed_sources source_id with
@@ -183,9 +183,9 @@ let source_diagnostic_error_result ~source_id ~phase diagnostics =
 
 let source_emitted_values_result source_id declarations =
   source_result_json source_id
-    (Printf.sprintf "\"ok\":true,\"valueCount\":%d,\"value\":%s"
+    (Printf.sprintf "\"ok\":true,\"valueCount\":%d,\"value\":%s,\"diagnostics\":%s"
        (List.length declarations)
-       (Elaborate.emitted_values_json declarations))
+       (Elaborate.emitted_values_json declarations) (Response.diagnostic_array (Elaborate.emitted_values_diagnostics declarations)))
 
 let source_artifact_result source_id declarations artifact =
   source_result_json source_id
@@ -221,7 +221,7 @@ let emit_success_json ?(cache_hit_count = 0) ?(cache_miss_count = 0)
       Printf.sprintf "\"cacheMissCount\":%d" cache_miss_count;
       cache_sources_json cache_sources;
       Printf.sprintf "\"artifacts\":[%s]" (Artifact.artifact_json artifact);
-      "\"diagnostics\":[]";
+      Printf.sprintf "\"diagnostics\":%s" (Response.diagnostic_array (Artifact_types.package_diagnostics (Artifact_types.artifact_content artifact)));
     ]
 
 let emit_many_success_json ~source_count ~emitted_count ~declaration_count

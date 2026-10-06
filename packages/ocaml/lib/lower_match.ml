@@ -9,27 +9,10 @@ let mk_node expr = Core_ast.node (Ast.expr_span expr)
 
 let lower_pattern = function
   | Ast.Symbol (_, "_") -> Ok Core_ast.PWild
-  | Ast.Symbol (_, name) | Ast.Keyword (_, name) ->
-      Ok (Core_ast.PCon (name, []))
-  | Ast.List (_, Ast.Symbol (_, name) :: vars)
-  | Ast.Vector (_, Ast.Symbol (_, name) :: vars) ->
-      let rec loop acc = function
-        | [] -> Ok (Core_ast.PCon (name, List.rev acc))
-        | Ast.Symbol (_, var) :: rest -> loop (var :: acc) rest
-        | bad :: _ ->
-            Error
-              [
-                diagnostic ~span:(Ast.expr_span bad) "lower/match-pattern"
-                  "Constructor pattern bindings must be symbols.";
-              ]
-      in
-      loop [] vars
-  | bad ->
-      Error
-        [
-          diagnostic ~span:(Ast.expr_span bad) "lower/match-pattern"
-            "Unsupported match pattern.";
-        ]
+  | Ast.Symbol (_, name) when Surface.is_upper name -> Ok (Core_ast.PCon (name, []))
+  | Ast.List (_, Ast.Symbol (_, name) :: vars) when Surface.is_upper name && List.for_all (function Ast.Symbol (_,n) -> Surface.is_lower n | _ -> false) vars ->
+      Ok (Core_ast.PCon (name, List.map (function Ast.Symbol (_,n) -> n | _ -> assert false) vars))
+  | syntax -> Ok (Core_ast.PData syntax)
 
 let lower_match lower_expr expr args =
   let rec lower_match_arms acc = function

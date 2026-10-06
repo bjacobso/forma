@@ -3,7 +3,7 @@
  */
 import { Effect, Ref } from "effect";
 import type { Type, Row } from "./types.js";
-import { TVar, TCon, TApp, tNil, Scheme as mkScheme, fnType } from "./types.js";
+import { TVar, TCon, TApp, tNil, Scheme as mkScheme, fnType, TRow, RExtend } from "./types.js";
 import { applyType, applyEnv, type TypeEnv } from "./substitution.js";
 import { unify } from "./unify.js";
 import { InferContext } from "./context.js";
@@ -29,10 +29,29 @@ export const inferTypeDef = (
 ): Effect.Effect<Type, InferenceError, InferContext> =>
   Effect.gen(function* () {
     const ctx = yield* InferContext;
+    if (expr.source === "form") {
+      const type = TCon("FormDescriptor");
+      getAdtConstructorSchemes().set(expr.name, mkScheme([], [], type));
+      return type;
+    }
 
     // Type alias
     if (expr.typeExpr) {
-      if (expr.source === "schema" || expr.source === "error") {
+      if (expr.source === "error" || expr.source === "class") {
+        const fields = yield* typeExprToType(expr.typeExpr, new Map(), new Map());
+        if (fields._tag !== "TRow") return yield* ctx.fail(originOf(expr, "named-record"), {message: "Named record types require record fields"});
+        const nominal = TCon(expr.name);
+        const shape = expr.source === "error" ? TRow(RExtend(":_tag", TCon(JSON.stringify(expr.name)), fields.row)) : fields;
+        yield* Ref.update(ctx.nominalRecords, records => new Map(records).set(expr.name, shape));
+        getAdtConstructorSchemes().set(expr.name, mkScheme([], [], fnType([fields], nominal)));
+        yield* Ref.update(ctx.constructorToType, constructors => new Map(constructors).set(expr.name, expr.name));
+        yield* Ref.update(ctx.adtRegistry, registry => new Map(registry).set(expr.name, {typeParams: [], constructors: new Map([[expr.name, 1]])}));
+        if (expr.source === "error") yield* Ref.update(ctx.errorTypes, errors => new Set(errors).add(expr.name));
+        return tNil;
+      }
+      yield* typeExprToType(expr.typeExpr, new Map(), new Map());
+      yield* Ref.update(ctx.typeAliasParams, params => new Map(params).set(expr.name, expr.typeParams ?? []));
+      if (expr.source === "schema") {
         yield* validateMechanicsTypeRefs(expr.name, expr.typeExpr);
       }
       yield* Ref.update(ctx.typeAliases, (m) => {
@@ -40,8 +59,10 @@ export const inferTypeDef = (
         next.set(expr.name, expr.typeExpr!);
         return next;
       });
-      if (expr.source === "error") {
-        yield* Ref.update(ctx.errorTypes, (names) => new Set(names).add(expr.name));
+      if (expr.typeExpr._tag === "TEApp" && expr.typeExpr.con._tag === "TESym" && expr.typeExpr.con.name === "Brand") {
+        const base = yield* typeExprToType(expr.typeExpr.args.at(-1)!, new Map(), new Map());
+        const branded = yield* typeExprToType(expr.typeExpr, new Map(), new Map());
+        getAdtConstructorSchemes().set(expr.name, mkScheme([], [], fnType([base], branded)));
       }
       return tNil;
     }
@@ -67,6 +88,7 @@ export const inferTypeDef = (
         const next = new Map(m);
         for (const con of expr.constructors!) {
           next.set(con.name, expr.name);
+          next.set(`${expr.name}.${con.name}`,expr.name);
         }
         return next;
       });
@@ -108,6 +130,7 @@ export const inferTypeDef = (
 
         // Store in _adtConstructorSchemes for inferProgram to register
         _adtConstructorSchemes.set(con.name, scheme);
+        _adtConstructorSchemes.set(`${expr.name}.${con.name}`,scheme);
       }
     }
 
@@ -170,7 +193,7 @@ const validateMechanicsTypeRefs = (
             }
             if (uppercaseInitial(name)) {
               return yield* ctx.fail(
-                { nodeId: `mechanics-schema-ref:${name}`, span: expr.span, kind: "define-schema" },
+                { nodeId: `mechanics-schema-ref:${name}`, span: expr.span, kind: "__schema" },
                 { message: `Unknown schema reference: ${name}` },
               );
             }

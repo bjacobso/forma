@@ -2,9 +2,9 @@ import type { SExpr } from "../reader/types.js";
 import { headSym, tail, trySym } from "../reader/types.js";
 
 /**
- * `define-elaboration` describes the structural projection from a form
+ * `__projection-plan` describes the structural projection from a form
  * descriptor to canonical IR. During migration, descriptors coexist with
- * Lisp `meta-fn .../construct` bodies and the parity gate compares both
+ * Lisp `__form-hook .../construct` bodies and the parity gate compares both
  * paths. Once a hook body is deleted, the descriptor is the sole construct
  * implementation for that hook.
  */
@@ -87,7 +87,7 @@ export class ElaborationDescriptorSyntaxError extends Error {
 }
 
 export function parseElaborationDescriptor(expr: SExpr): ElaborationDescriptor | undefined {
-  if (headSym(expr) !== "define-elaboration") return undefined;
+  if (headSym(expr) !== "__projection-plan") return undefined;
 
   const args = tail(expr);
   const name = args[0] ? trySym(args[0]) : undefined;
@@ -95,7 +95,7 @@ export function parseElaborationDescriptor(expr: SExpr): ElaborationDescriptor |
     throw new ElaborationDescriptorSyntaxError(
       "<anonymous>",
       ":name",
-      "define-elaboration is missing its symbol name",
+      "__projection-plan is missing its symbol name",
     );
   }
 
@@ -111,7 +111,7 @@ export function parseElaborationDescriptor(expr: SExpr): ElaborationDescriptor |
     throw new ElaborationDescriptorSyntaxError(
       name,
       ":hook",
-      `define-elaboration '${name}' must not bind the hook name '${hook}'`,
+      `__projection-plan '${name}' must not bind the hook name '${hook}'`,
     );
   }
 
@@ -137,7 +137,7 @@ function parseNameSpec(
     throw new ElaborationDescriptorSyntaxError(
       elaborationName,
       ":name",
-      `define-elaboration '${elaborationName}' has malformed ':name' section`,
+      `__projection-plan '${elaborationName}' has malformed ':name' section`,
     );
   }
 
@@ -147,7 +147,7 @@ function parseNameSpec(
     throw new ElaborationDescriptorSyntaxError(
       elaborationName,
       ":name",
-      `define-elaboration '${elaborationName}' has malformed ':name' section`,
+      `__projection-plan '${elaborationName}' has malformed ':name' section`,
     );
   }
 
@@ -170,7 +170,7 @@ function singleTextClause(
     throw new ElaborationDescriptorSyntaxError(
       elaborationName,
       `:${name}`,
-      `define-elaboration '${elaborationName}' is missing required section ':${name}'`,
+      `__projection-plan '${elaborationName}' is missing required section ':${name}'`,
     );
   }
   return value;
@@ -309,7 +309,7 @@ function parseAssignments(
     throw new ElaborationDescriptorSyntaxError(
       elaborationName,
       ":assignments",
-      `define-elaboration '${elaborationName}' has malformed ':assignments' field '${output}'`,
+      `__projection-plan '${elaborationName}' has malformed ':assignments' field '${output}'`,
     );
   }
   const defaultValue = parseOption("default", values.slice(1));
@@ -335,7 +335,7 @@ function parseObjectField(
     throw new ElaborationDescriptorSyntaxError(
       elaborationName,
       ":children",
-      `define-elaboration '${elaborationName}' has malformed child ':field'`,
+      `__projection-plan '${elaborationName}' has malformed child ':field'`,
     );
   }
   return { output, source };
@@ -353,7 +353,7 @@ function parseChildren(
     throw new ElaborationDescriptorSyntaxError(
       elaborationName,
       ":children",
-      `define-elaboration '${elaborationName}' has malformed ':children' field '${output}'`,
+      `__projection-plan '${elaborationName}' has malformed ':children' field '${output}'`,
     );
   }
   return {
@@ -376,7 +376,7 @@ function parseField(elaborationName: string, expr: SExpr): ElaborationField | un
     throw new ElaborationDescriptorSyntaxError(
       elaborationName,
       ":field",
-      `define-elaboration '${elaborationName}' has malformed ':field'`,
+      `__projection-plan '${elaborationName}' has malformed ':field'`,
     );
   }
 

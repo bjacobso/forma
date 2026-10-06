@@ -9,6 +9,8 @@
 import type { PackageableDeclaration } from "../artifact/artifact.js";
 import { parse } from "../reader/parser.js";
 import { toSExprMany } from "../reader/to-sexpr.js";
+import { lowerOntologyOperations } from "../surface/ontology-effect.js";
+import { normalizeEffectProgram } from "../surface/effect.js";
 import type { SExpr } from "../reader/types.js";
 import { isMechanicsArtifactForm, mechanicsPackageableDeclarations, type MechanicsArtifactDiagnostic } from "./artifact.js";
 import { checkMechanicsDeclarations, type CheckInfo, type MechanicsCheckDiagnostic } from "./check.js";
@@ -106,7 +108,21 @@ export function elaborateEffectProgram(
     };
   }
 
-  const exprs = toSExprMany(redTree);
+  let exprs: readonly SExpr[];
+  const authored = toSExprMany(redTree);
+  const surfaceDiagnostic = (error: unknown, expression?: SExpr): EffectProgramDiagnostic => {
+    const loc = error instanceof Error && "loc" in error ? error.loc as SExpr["loc"] : expression?.loc;
+    return {phase:"project",severity:"error",code:"mechanics/ontology-operation",message:error instanceof Error ? error.message : String(error), ...(loc ? {span:locate(loc.start,loc.end)} : {})};
+  };
+  const surfaceErrors: EffectProgramDiagnostic[] = [];
+  for (const expression of authored) {
+    if (expression._tag !== "List" || expression.items[0]?._tag !== "Sym" || !["type", "class", "error", "service"].includes(expression.items[0].name)) continue;
+    try { normalizeEffectProgram([expression]); }
+    catch (error) { surfaceErrors.push(surfaceDiagnostic(error, expression)); }
+  }
+  if (surfaceErrors.length) return {ok:false,declarations:[],diagnostics:surfaceErrors};
+  try { exprs = normalizeEffectProgram(lowerOntologyOperations(authored)); }
+  catch (error) { return {ok:false, declarations:[], diagnostics:[surfaceDiagnostic(error, authored[0])]}; }
   const stray = strayForms(exprs);
   if (stray.length > 0) {
     return {
@@ -121,7 +137,7 @@ export function elaborateEffectProgram(
       })),
     };
   }
-  const projected = mechanicsPackageableDeclarations(exprs, sourceId);
+  const projected = mechanicsPackageableDeclarations(exprs, sourceId, true);
   if (!projected.ok) {
     return {
       ok: false,
@@ -177,10 +193,10 @@ function checkDiagnostic(
 }
 
 const formUsage: ReadonlyMap<string, string> = new Map([
-  ["define-schema", "(define-schema Name SchemaExpr)"],
-  ["define-error", "(define-error Name (:fields (field name Type) ...))"],
-  ["define-class", "(define-class Name (:fields (field name Type) ...))"],
-  ["define-service", "(define-service Name (:methods (method [param Type ...] (Effect A [E...] [R...])) ...))"],
+  ["__schema", "(type Name Type)"],
+  ["__error", "(error Name {:field Type ...})"],
+  ["__class", "(class Name {:field Type ...})"],
+  ["__service", "(service Name (: method (-> Type (Effect Result))) ...)"],
 ]);
 
 function isParseError(error: unknown): error is { readonly message: string; readonly loc?: { readonly start: number; readonly end: number } } {
@@ -200,7 +216,7 @@ function strayForms(exprs: readonly SExpr[]): readonly { readonly expr: SExpr; r
     const head = expr.items[0]?._tag === "Sym" ? expr.items[0].name : undefined;
     const name = expr.items[1]?._tag === "Sym" ? expr.items[1].name : undefined;
     if (head === ":" && name && expr.items.length === 3) signatures.set(name, expr);
-    if ((head === "define" || head === "define-operation" || head === "define-layer") && name) defined.add(name);
+    if ((head === "define" || head === "__operation" || head === "__layer") && name) defined.add(name);
   }
   const stray: { readonly expr: SExpr; readonly message: string }[] = [];
   for (const expr of exprs) {
@@ -210,7 +226,7 @@ function strayForms(exprs: readonly SExpr[]): readonly { readonly expr: SExpr; r
       if (!name || expr._tag !== "List" || expr.items.length !== 3) {
         stray.push({ expr, message: "A signature is (: name Type)." });
       } else if (!defined.has(name)) {
-        stray.push({ expr, message: `The signature for ${name} has no matching define, define-operation, or define-layer.` });
+        stray.push({ expr, message: `The signature for ${name} has no matching define or layer.` });
       }
       continue;
     }
@@ -226,14 +242,14 @@ function strayForms(exprs: readonly SExpr[]): readonly { readonly expr: SExpr; r
     if (isMechanicsArtifactForm(expr)) continue;
     const usage = head ? formUsage.get(head) : undefined;
     if (usage) {
-      stray.push({ expr, message: `${head} is malformed; expected ${usage}.` });
+      stray.push({ expr, message: `${({__schema:"type",__service:"service",__error:"error",__class:"class"} as Record<string,string>)[head!] ?? head} is malformed; expected ${usage}.` });
       continue;
     }
     stray.push({
       expr,
       message: head?.startsWith("define")
-        ? `${head} is not an Effect program form; expected define-schema, define-error, define-class, define-service, define-operation, define-layer, define, or a (: name Type) signature.`
-        : "Top-level expressions are not part of an Effect program; put them in a define or define-operation.",
+        ? `${head} is not an Effect program form; expected type, error, class, service, layer, define, or a (: name Type) signature.`
+        : "Top-level expressions are not part of an Effect program; put them in a define.",
     });
   }
   return stray;

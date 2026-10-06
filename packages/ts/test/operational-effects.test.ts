@@ -115,7 +115,7 @@ describe("operational Effect contract", () => {
 
   test("rejects impossible catches and legacy resumable forms", async () => {
     const impossible = `
-      (define-error Missing (:fields (field id String)))
+      (error Missing {:id String})
       (catch (succeed 1) (Missing error) (succeed 0))
     `;
     await expect(Effect.runPromise(Type.inferSourceStr(impossible))).rejects.toThrow(

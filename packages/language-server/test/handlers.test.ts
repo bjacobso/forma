@@ -86,7 +86,7 @@ describe("OCaml LSP handlers", () => {
       "file:///workspace/steps.lisp",
       "lisp",
       1,
-      "(define-macro defstep [name] `(define ~name {:step true}))\n(defstep verify)",
+      "(macro (defstep name) `(define ~name {:step true}))\n(defstep verify)",
     );
     const document = TextDocument.create(uri, "lisp", 1, "(run verify)\n(log verify)");
     const session = {

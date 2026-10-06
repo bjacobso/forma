@@ -137,7 +137,7 @@ export const ontologyScalarTypes: ReadonlySet<string> = new Set([
   "Duration",
   "Json",
   "Any",
-  "Ref",
+  "Id",
 ]);
 
 let sharedPrelude: BootstrappedPrelude | undefined;
@@ -247,7 +247,7 @@ export function parseOntologyType(value: JsonValue | undefined): OntologyType {
   if (Array.isArray(value) && typeof value[0] === "string") {
     const [constructor, ...rest] = value as readonly JsonValue[];
     const args = rest.map(parseOntologyType);
-    if (constructor === "Ref" && args[0]?.kind === "scalar") return { kind: "ref", target: args[0].name };
+    if (constructor === "Id" && args[0]?.kind === "scalar") return { kind: "ref", target: args[0].name };
     if ((constructor === "List" || constructor === "Set") && args.length === 1) {
       return { kind: constructor === "List" ? "list" : "set", item: args[0]! };
     }

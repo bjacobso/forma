@@ -1,5 +1,5 @@
 ; layer 1 — negation-as-absence: the employee who has NOT submitted an i9
-(get (first (without (concat ["e"] [])
+(binding-value (first (without (concat ["e"] [])
                      (concat [["e" "type" "employee"]] [])
                      (concat [["e" "submitted" "i9"]] [])
                      (concat [["ben" "type" "employee"]

@@ -1,3 +1,4 @@
+import { normalizeCoreProgram } from "../surface/core.js";
 import { Effect } from "effect";
 import type { SExpr, Loc } from "../reader/index.js";
 import { parseManyToSExpr } from "../reader/index.js";
@@ -34,7 +35,7 @@ export interface ExpandProgramOptions {
    */
   readonly inlineCompileTimeCalls?: boolean;
   /**
-   * Keep top-level `define-macro` forms in the returned program.
+   * Keep top-level `__macro` forms in the returned program.
    *
    * Runtime entry points leave this off so the expanded program contains only
    * runtime forms. Compile-time tooling can opt in when it needs the original
@@ -54,12 +55,12 @@ export interface ExpandProgramResult {
  *
  * This pass:
  * - injects the prelude macro environment unless disabled
- * - evaluates top-level `define-macro` forms in the compile-time evaluator
+ * - evaluates top-level `__macro` forms in the compile-time evaluator
  * - expands user and prelude macros recursively
  * - normalizes destructuring in `fn` / `let`
  *
  * It does not lower every surface form to the VM subset. Forms such as
- * `match`, `define-type`, and type ascriptions may still remain for non-VM
+ * `match`, `__sum-type`, and type ascriptions may still remain for non-VM
  * consumers after expansion.
  */
 export function expandProgramSync(
@@ -72,7 +73,7 @@ export function expandProgramSync(
   const inlineCompileTimeCalls = options.inlineCompileTimeCalls === true;
   const expanded: SExpr[] = [];
 
-  for (const expr of exprs) {
+  for (const expr of normalizeCoreProgram(exprs)) {
     if (isTopLevelDefMacro(expr)) {
       macroEnv = evalTopLevel(expr, macroEnv, options.builtins, macroStepLimit);
       if (options.keepMacroDefs === true) {
@@ -106,7 +107,7 @@ export function getPreludeEnvSync(builtins: Record<string, BuiltinFn>): Env {
 
   const env = Effect.runSync(
     Effect.gen(function* () {
-      const exprs = yield* parseManyToSExpr(PRELUDE_SOURCE);
+      const exprs = normalizeCoreProgram(yield* parseManyToSExpr(PRELUDE_SOURCE));
       const result = yield* evaluateCompileTimeExprs(exprs, {
         stepLimit: DEFAULT_MACRO_STEP_LIMIT,
         builtins,
@@ -167,7 +168,7 @@ function expandExpr(
         tagExpandedExpr(result, { macroName: binding.name, loc: expr.loc });
         const expanded = markExpansion(expr, result);
         return expandExpr(
-          expanded,
+          normalizeCoreProgram([expanded])[0]!,
           macroEnv,
           builtins,
           macroStepLimit,
@@ -177,11 +178,12 @@ function expandExpr(
       }
 
       switch (head.name) {
+        case "quote":
         case "quasiquote":
-        case "define-macro":
+        case "__macro":
         case "::":
-        case "define-type":
-        case "define-typeclass":
+        case "__sum-type":
+        case "__typeclass":
           return expr;
         case ":":
           return expandAscribe(
@@ -712,6 +714,6 @@ function isTopLevelDefMacro(expr: SExpr): expr is SExpr & { _tag: "List" } {
     expr._tag === "List" &&
     expr.items.length >= 4 &&
     expr.items[0]?._tag === "Sym" &&
-    expr.items[0].name === "define-macro"
+    expr.items[0].name === "__macro"
   );
 }

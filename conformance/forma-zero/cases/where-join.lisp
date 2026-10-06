@@ -1,5 +1,5 @@
 ; layer 1 — conjunction joins on the shared variable
-(get (first (where (concat ["e"] [])
+(binding-value (first (where (concat ["e"] [])
                    (concat [["e" "type" "employee"]
                         ["e" "submitted" "i9"]] [])
                    (concat [["ben" "type" "employee"]

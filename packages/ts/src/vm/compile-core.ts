@@ -1,7 +1,9 @@
+import { KKeyword, mapKey, quotedDatum } from "../evaluator/types.js";
 /**
  * Core compilation — recursive descent dispatch for SExpr → bytecode.
  */
 
+import { runtimeTypeDefinitions } from "../surface/core.js";
 import type { SExpr } from "../reader/index.js";
 import type { SourceTrace } from "../evaluator/source-trace.js";
 import { sourceTraceOf } from "../evaluator/source-trace.js";
@@ -158,7 +160,7 @@ function compileSymbol(
 ): void {
   // Keywords are self-evaluating strings
   if (name.startsWith(":")) {
-    const idx = addConstant(chunk, name);
+    const idx = addConstant(chunk, KKeyword(name));
     emit(chunk, Op.CONST, trace);
     emitU16(chunk, idx, trace);
     return;
@@ -203,6 +205,11 @@ function compileSymbol(
     return;
   }
 
+  if (name==="None" || name==="Option.None") {
+    emit(chunk,Op.CONST,trace);
+    emitU16(chunk,addConstant(chunk,new Map([[":_tag","None"]])),trace);
+    return;
+  }
   if (builtins.resolve(name) !== -1) {
     const idx = addConstant(chunk, KBuiltin(name));
     emit(chunk, Op.CONST, trace);
@@ -276,8 +283,28 @@ function compileList(
         compileDef(items, chunk, scope, globals, builtins, context, trace, compileSExpr);
         return;
 
-      case "define-typeclass":
-      case "define-type":
+      case "__record-type":
+      case "__type-alias":
+      case "__sum-type": {
+        const defs = runtimeTypeDefinitions({ _tag: "List", items, loc: trace.loc }) ?? [];
+        for (const def of defs) {
+          compileSExpr(def, chunk, scope, globals, builtins, context, false, false);
+          emit(chunk, Op.POP, trace);
+        }
+        emit(chunk, Op.NIL, trace);
+        return;
+      }
+      case ":":
+        if (items[1]) compileSExpr(items[1],chunk,scope,globals,builtins,context,isTailPos,false);
+        else emit(chunk,Op.NIL,trace);
+        return;
+      case "quote": {
+        if (items.length !== 2) throw new Error("quote expects one datum");
+        emit(chunk, Op.CONST, trace);
+        emitU16(chunk, addConstant(chunk, quotedDatum(items[1]!)), trace);
+        return;
+      }
+      case "__typeclass":
         emit(chunk, Op.NIL, trace);
         return;
 
@@ -319,6 +346,13 @@ function compileList(
     }
   }
 
+  if (items.length === 1 && head._tag === "Sym"
+    && (head.name === "None" || head.name === "Option.None"
+      || (context.env?.lookup(`__constructor/${head.name}`) instanceof Map
+        && (context.env.lookup(`__constructor/${head.name}`) as Map<string, unknown>).get(":arity") === 0))) {
+    compileSymbol(head.name, chunk, scope, globals, builtins, context, trace);
+    return;
+  }
   // General function call: compile callee, compile args, CALL/TAIL_CALL
   compileSExpr(head, chunk, scope, globals, builtins, context, false, false);
   for (let i = 1; i < items.length; i++) {

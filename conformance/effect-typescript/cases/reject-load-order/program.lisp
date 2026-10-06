@@ -4,7 +4,7 @@
 (define base (bump 1))
 
 (: bump (-> Int Int))
-(define bump (fn [n] (+ n base)))
+(define bump  [n] (+ n base))
 
 (: describe (-> Bool String))
-(define describe (fn [flag] (match flag true "on" false "off" _ "unknown")))
+(define describe  [flag] (match flag true "on" false "off" _ "unknown"))

@@ -12,6 +12,13 @@ export class FormDescriptorRegistry {
   private readonly descriptors = new Map<string, FormDescriptor>();
   private readonly aliases = new Map<string, string>();
 
+  fork(): FormDescriptorRegistry {
+    const child = new FormDescriptorRegistry();
+    for (const [name, descriptor] of this.descriptors) child.descriptors.set(name,descriptor);
+    for (const [name, target] of this.aliases) child.aliases.set(name,target);
+    return child;
+  }
+
   register(desc: FormDescriptor): void {
     this.descriptors.set(desc.name, desc);
   }
@@ -22,7 +29,7 @@ export class FormDescriptorRegistry {
   }
 
   get(name: string): FormDescriptor | undefined {
-    return this.descriptors.get(this.aliases.get(name) ?? "") ?? this.descriptors.get(name);
+    return this.descriptors.get(name) ?? this.descriptors.get(this.aliases.get(name) ?? "");
   }
 
   has(name: string): boolean {

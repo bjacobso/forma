@@ -4,84 +4,575 @@
     {
       "id": "arithmetic",
       "source": "(+ 1 2)",
-      "passes": ["parse", "expand", "typecheck", "evaluate"]
+      "passes": [
+        "parse",
+        "expand",
+        "typecheck",
+        "evaluate"
+      ]
     },
     {
       "id": "boolean",
       "source": "(= 1 1)",
-      "passes": ["parse", "typecheck", "evaluate"]
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
     },
     {
       "id": "keyword-map",
       "source": "(get {:name \"Ada\"} :name)",
-      "passes": ["parse", "evaluate"]
+      "passes": [
+        "parse",
+        "evaluate"
+      ]
     },
     {
       "id": "unbound-symbol",
       "source": "unknownVar",
-      "passes": ["typecheck"]
+      "passes": [
+        "typecheck"
+      ]
     },
     {
       "id": "operational-effects",
       "sourceFile": "../operational-effects/program.lisp",
-      "passes": ["parse", "typecheck", "effect-ir"],
-      "typeAliases": { "Str": "String" }
+      "passes": [
+        "parse",
+        "typecheck",
+        "effect-ir"
+      ],
+      "typeAliases": {
+        "Str": "String"
+      }
     },
     {
       "id": "effect-typescript/crud-users",
       "sourceFile": "../effect-typescript/cases/crud-users/program.lisp",
-      "passes": ["parse", "effect-ir"]
+      "passes": [
+        "parse",
+        "effect-ir"
+      ]
     },
     {
       "id": "effect-typescript/multi-service-checkout",
       "sourceFile": "../effect-typescript/cases/multi-service-checkout/program.lisp",
-      "passes": ["parse", "effect-ir"]
+      "passes": [
+        "parse",
+        "effect-ir"
+      ]
     },
     {
       "id": "effect-typescript/resource-scope",
       "sourceFile": "../effect-typescript/cases/resource-scope/program.lisp",
-      "passes": ["parse", "effect-ir"]
+      "passes": [
+        "parse",
+        "effect-ir"
+      ]
     },
     {
       "id": "effect-typescript/concurrent-workflow",
       "sourceFile": "../effect-typescript/cases/concurrent-workflow/program.lisp",
-      "passes": ["parse", "effect-ir"]
+      "passes": [
+        "parse",
+        "effect-ir"
+      ]
     },
     {
       "id": "effect-typescript/typed-errors",
       "sourceFile": "../effect-typescript/cases/typed-errors/program.lisp",
-      "passes": ["parse", "effect-ir"]
+      "passes": [
+        "parse",
+        "effect-ir"
+      ]
     },
     {
       "id": "effect-typescript/schemas-and-decoding",
       "sourceFile": "../effect-typescript/cases/schemas-and-decoding/program.lisp",
-      "passes": ["parse", "effect-ir"]
+      "passes": [
+        "parse",
+        "effect-ir"
+      ]
     },
     {
       "id": "effect-typescript/config-and-logging",
       "sourceFile": "../effect-typescript/cases/config-and-logging/program.lisp",
-      "passes": ["parse", "effect-ir"]
+      "passes": [
+        "parse",
+        "effect-ir"
+      ]
     },
     {
       "id": "effect-typescript/operational-effects",
       "sourceFile": "../effect-typescript/cases/operational-effects/program.lisp",
-      "passes": ["parse", "typecheck", "effect-ir"],
-      "typeAliases": { "Str": "String" }
+      "passes": [
+        "parse",
+        "typecheck",
+        "effect-ir"
+      ],
+      "typeAliases": {
+        "Str": "String"
+      }
     },
     {
       "id": "effect-typescript/pure-domain-logic",
       "sourceFile": "../effect-typescript/cases/pure-domain-logic/program.lisp",
-      "passes": ["parse", "effect-ir"]
+      "passes": [
+        "parse",
+        "effect-ir"
+      ]
     },
     {
       "id": "effect-typescript/stream-pipeline",
       "sourceFile": "../effect-typescript/cases/stream-pipeline/program.lisp",
-      "passes": ["parse", "effect-ir"]
+      "passes": [
+        "parse",
+        "effect-ir"
+      ]
     },
     {
       "id": "effect-typescript/edge-cases",
       "sourceFile": "../effect-typescript/cases/edge-cases/program.lisp",
-      "passes": ["parse", "effect-ir"]
+      "passes": [
+        "parse",
+        "effect-ir"
+      ]
+    },
+    {
+      "id": "canonical-int-number",
+      "source": "[(+ 1 2) (/ 1 2) (floor 1.5)]",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-literal-union",
+      "source": "(type Plan (Union :free :pro)) (: choose (-> Plan Plan)) (define choose [plan] plan) (choose :pro)",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-option-record",
+      "source": "(type Person {:name String :nickname (Option String)}) (: person Person) (define person {:name \"Ada\"}) (match person.nickname (Some nick) nick None person.name)",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-qualified-constructor",
+      "source": "(type Shape (Tagged :tag kind (Circle {:radius Number}) Point)) (match (Shape.Circle {:radius 2}) (Shape.Circle {:radius radius}) radius Shape.Point 0)",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-brand",
+      "source": "(type UserId (Brand String)) (: id UserId) (define id (UserId \"user:1\")) id",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-open-row",
+      "source": "(: read (-> {:name String & r} String)) (define read [person] person.name) (read {:name \"Ada\" :age 37})",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-domain-forms",
+      "source": "(entity Employee {:name String :active Bool :plan (Union :free :pro)}) (seed Employee \"emp:1\" {:name \"Ada\" :active true :plan :pro}) (query people :from Employee :where active :select [name])",
+      "passes": [
+        "canonical-ir"
+      ]
+    },
+    {
+      "id": "canonical-map-key-identity",
+      "source": "(let [record {:x 1 \":x\" \"two\"}] [(get record :x) (get record \":x\")])",
+      "passes": [
+        "parse",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-dynamic-get",
+      "source": "(let [key :x record {:x 1 :y 2}] (get record key))",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-expected-constructor",
+      "source": "(type A (Tagged Empty)) (type B (Tagged Empty)) (: make (-> Int A)) (define make [n] Empty) (: use (-> B Int)) (define use [b] (match b Empty 7)) (use Empty)",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-variable-ascription",
+      "source": "(: identity (-> Int Int)) (define identity [x] (: x Int)) (identity 42)",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-generic-record-alias",
+      "source": "(type (Box a) {:value a}) (: read (-> (Box Int) Int)) (define read [box] box.value) (read {:value 42})",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-dictionary-lookup",
+      "source": "(: names (Map String Int)) (define names {\"Ada\" 1}) [(get names \"Ada\") (get names \"missing\")]",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-option-value-field",
+      "source": "(type Row {:name (Option String)}) (: make (-> (Option String) Row)) (define make [name] {:name name}) (make (Some \"Ada\"))",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-child-projections",
+      "source": "(type LeafIR {:kind \"Leaf\" :value Int}) (type TreeIR {:kind \"Tree\" :total Int}) (form (leaf value) :types {:value Int} :ir LeafIR {:kind \"Leaf\" :value value}) (form (tree child ...) :types {:child (List leaf)} :ir TreeIR {:kind \"Tree\" :total (reduce (fn [sum leaf] (+ sum leaf.value)) 0 child)}) (tree (leaf 2) (leaf 3))",
+      "passes": [
+        "canonical-ir"
+      ]
+    },
+    {
+      "id": "canonical-child-scopes",
+      "source": "(type LeafIR {:kind \"Leaf\" :value Syntax}) (type TreeIR {:kind \"Tree\" :children (List LeafIR)}) (form (leaf value) :types {:value (Expr Int)} :ir LeafIR {:kind \"Leaf\" :value value}) (form (tree child ...) :types {:child (List leaf)} :scope {:child (fn [holes] {:local (quote Int)})} :ir TreeIR {:kind \"Tree\" :children child}) (tree (leaf (+ local 1)))",
+      "passes": [
+        "canonical-ir"
+      ]
+    },
+    {
+      "id": "canonical-map-operations",
+      "source": "(: scores (Map String Int)) (define scores {\"Ada\" 4}) (define changed (assoc scores \"Grace\" 9)) (define selected (select-keys changed [\"Grace\"])) {:value (get selected \"Grace\") :count (count (dissoc changed \"Ada\")) :present (contains? selected \"Grace\") :keys (keys selected)}",
+      "passes": [
+        "evaluate",
+        "typecheck"
+      ]
+    },
+    {
+      "id": "canonical-nominal-records",
+      "source": "(class Customer {:name String :nickname (Option String)}) (error Missing {:id String}) (define customer (Customer {:name \"Ada\"})) {:name customer.name :error (Missing {:id \"42\"})}",
+      "passes": [
+        "evaluate",
+        "typecheck"
+      ]
+    },
+    {
+      "id": "canonical-class-pattern",
+      "source": "(class Customer {:name String}) (match (Customer {:name \"Ada\"}) (Customer {:name name}) name)",
+      "passes": [
+        "evaluate",
+        "typecheck"
+      ]
+    },
+    {
+      "id": "canonical-record-update",
+      "source": "(define with-active [record] (assoc record :active true)) (get (with-active {:name \"Ada\"}) :name)",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-mixed-dictionary-keys",
+      "source": "(: values (Map (Union :a \"b\") Int)) (define values {:a 1 \"b\" 2}) (count (select-keys values [:a \"b\"]))",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "canonical-seed-defaults",
+      "source": "(entity Employee {:name (String :default \"Ada\") :active (Bool :default false) :nickname (Option String)}) (seed Employee \"e:1\" {:employee/nickname \"A\"})",
+      "passes": [
+        "canonical-ir"
+      ]
+    },
+    {
+      "id": "canonical-child-families",
+      "source": "(type TextIR {:kind \"Text\" :content String}) (type CountIR {:kind \"Count\" :value Int}) (type component (Union TextIR CountIR)) (type PanelIR {:kind \"Panel\" :children (List component)}) (form (text content) :types {:content String} :ir TextIR {:kind \"Text\" :content content}) (form (count value) :types {:value Int} :ir CountIR {:kind \"Count\" :value value}) (form (panel child ...) :types {:child (List component)} :ir PanelIR {:kind \"Panel\" :children child}) (panel (text \"hello\") (count 3))",
+      "passes": [
+        "canonical-ir"
+      ],
+      "preludes": [
+        "kernel.lisp",
+        "compiler.lisp"
+      ]
+    },
+    {
+      "id": "canonical-document",
+      "source": "(entity Employee {:name String}) (document i9 :description \"Employment form\" (page employee-information :assignee employee (content :i9/intro \"Welcome\") (text :i9/name \"Name\" :required true :bind Employee.name)))",
+      "passes": [
+        "canonical-ir"
+      ],
+      "preludes": [
+        "kernel.lisp",
+        "compiler.lisp",
+        "ontology.lisp"
+      ]
+    },
+    {
+      "id": "canonical-process",
+      "source": "(entity Employee {:name String}) (process onboarding :trigger (on-create Employee) (node welcome) (edge start welcome))",
+      "passes": [
+        "canonical-ir"
+      ],
+      "preludes": [
+        "kernel.lisp",
+        "compiler.lisp",
+        "ontology.lisp"
+      ]
+    },
+    {
+      "id": "canonical-pdf",
+      "source": "(pdf-mapping example :template-blob \"blob:1\" (direct :document/name \"Name\") (computed (str \"Hello\") \"Greeting\") (switch :document/status (case \"active\" (set \"Status\" true))))",
+      "passes": [
+        "canonical-ir"
+      ],
+      "preludes": [
+        "kernel.lisp",
+        "compiler.lisp",
+        "ontology.lisp"
+      ]
+    },
+    {
+      "id": "canonical-meta-entity-default",
+      "source": "(entity Catalog {:label (Option String :default \"entry\")} :tier :meta) (seed Catalog \"catalog:1\" {})",
+      "passes": [
+        "canonical-ir"
+      ],
+      "preludes": [
+        "kernel.lisp",
+        "compiler.lisp",
+        "ontology.lisp"
+      ]
+    },
+    {
+      "id": "canonical-present-null",
+      "source": "(type NullIR {:kind \"Null\" :value (Option Unit)}) (form (present) :types {} :ir NullIR {:kind \"Null\" :value (Some nil)}) (form (absent) :types {} :ir NullIR {:kind \"Null\" :value None}) (present) (absent)",
+      "passes": [
+        "canonical-ir"
+      ],
+      "preludes": [
+        "kernel.lisp",
+        "compiler.lisp"
+      ]
+    },
+    {
+      "id": "canonical-signed-action",
+      "source": "(entity Candidate {:name String}) (entity Employee {:name String :active Bool}) (: hire (-> Candidate (Action (Id Employee)))) (define hire [candidate] (create! Employee {:name candidate.name :active true}))",
+      "passes": [
+        "canonical-ir"
+      ],
+      "preludes": [
+        "kernel.lisp",
+        "compiler.lisp",
+        "ontology.lisp"
+      ]
+    },
+    {
+      "id": "canonical-constraint",
+      "source": "(entity Employee {:name String :active Bool}) (constraint active-employee :entity Employee :severity :warning :when active :message (str \"Inactive \" name))",
+      "passes": [
+        "canonical-ir"
+      ],
+      "preludes": [
+        "kernel.lisp",
+        "compiler.lisp",
+        "ontology.lisp"
+      ]
+    },
+    {
+      "id": "canonical-query-preset",
+      "source": "(entity Employee {:name String}) (query staff :from Employee) (query-preset names staff {:search \"Ada\"} :merge-policy :preset-overrides)",
+      "passes": [
+        "canonical-ir"
+      ],
+      "preludes": [
+        "kernel.lisp",
+        "compiler.lisp",
+        "ontology.lisp"
+      ]
+    },
+    {
+      "id": "canonical-view",
+      "source": "(entity Employee {:name String}) (query staff :from Employee) (view staff-table :query staff :fragment true (column :employee/name :label \"Name\"))",
+      "passes": [
+        "canonical-ir"
+      ],
+      "preludes": [
+        "kernel.lisp",
+        "compiler.lisp",
+        "ontology.lisp"
+      ]
+    },
+    {
+      "id": "review-keyword-match",
+      "source": "(define f [k] (match k :a 1 :b 2 _ 3)) (f :b)",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-number-equality",
+      "source": "(= (/ 4 2) 2)",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-numeric-parameters",
+      "source": "(define f [x] (+ x 1)) (f 2.5)",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-double-option",
+      "source": "(type R {:value (Option String)}) (: r R) (define r {:value (if true (Some \"x\") None)}) (match r.value (Some x) x None \"absent\")",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-dictionary-pattern",
+      "source": "(: m (Map String Int)) (define m {\"a\" 1}) (match m {\"a\" x} x _ 0)",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-computed-get-default",
+      "source": "(let [r {:x 1} k :absent] (get r k 0))",
+      "passes": [
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-macro-definition",
+      "source": "(macro (make name) `(define ~name [r] r.count)) (make read) (read {:count 7})",
+      "passes": [
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-class-pattern",
+      "source": "(class Box {:value Int}) (match {} (Box box) 1 _ 0)",
+      "passes": [
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-type-error",
+      "source": "(: x Int) (define x \"no\")",
+      "passes": [
+        "typecheck"
+      ]
+    },
+    {
+      "id": "review-unknown-constructor",
+      "source": "(match 1 (Unknown x) x _ 0)",
+      "passes": [
+        "typecheck"
+      ]
+    },
+    {
+      "id": "effect-typescript/surface-review",
+      "sourceFile": "../effect-typescript/cases/surface-review/program.lisp",
+      "passes": [
+        "effect-ir"
+      ]
+    },
+    {
+      "id": "review-stateless-form-definition",
+      "source": "(type GreetingIR {:text String}) (form (greet text) :types {:text String} :ir GreetingIR {:text text})",
+      "passes": [
+        "typecheck"
+      ]
+    },
+    {
+      "id": "review-stateless-form-application",
+      "source": "(type GreetingIR {:text String}) (form (greet text) :types {:text String} :ir GreetingIR {:text text}) (greet \"Hello\")",
+      "passes": [
+        "typecheck"
+      ]
+    },
+    {
+      "id": "review-stateless-form-error",
+      "source": "(type GreetingIR {:text String}) (form (greet text) :types {:text String} :ir GreetingIR {:text text}) (greet 42)",
+      "passes": [
+        "typecheck"
+      ]
+    },
+    {
+      "id": "review-string-record-pattern",
+      "source": "(match {:a 1 \":a\" \"text\"} {\":a\" text :a value} text)",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-string-map-pattern",
+      "source": "(: data (Map String String)) (define data {\":a\" \"text\"}) (match data {\":a\" text} text)",
+      "passes": [
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "review-stateless-form-helper",
+      "source": "(type GreetingIR {:text String}) (define decorate [text] (str \"Hello \" text)) (form (greet text) :types {:text String} :ir GreetingIR {:text (decorate text)}) (greet \"world\")",
+      "passes": [
+        "typecheck"
+      ]
+    },
+    {
+      "id": "review-higher-kinded-numeric",
+      "sourceFile": "../fixtures/typecheck/typeclass-hkt-instance-success/source.lisp",
+      "passes": [
+        "typecheck"
+      ]
     }
   ]
 }

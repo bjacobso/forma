@@ -6,9 +6,9 @@
       "severity": "error",
       "code": "mechanics/non-exhaustive-match",
       "message": "match does not handle closed.",
-      "line": 13,
+      "line": 12,
       "column": 9,
-      "endLine": 15,
+      "endLine": 14,
       "endColumn": 43
     }
   ]

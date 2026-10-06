@@ -1,5 +1,7 @@
+import { lowerOntologyOperations } from "../surface/ontology-effect.js";
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
 import type { Span } from "../engine/operations.js";
+import { normalizeEffectProgram, serviceValues } from "../surface/effect.js";
 import type { SExpr } from "../reader/types.js";
 
 export interface MechanicsArtifactDiagnostic {
@@ -22,7 +24,9 @@ type OperationEffects = ReadonlyMap<string, JsonValue>;
 export function mechanicsPackageableDeclarations(
   exprs: readonly SExpr[],
   sourceId: string,
+  normalized = false,
 ): MechanicsArtifactResult {
+  exprs = normalizeEffectProgram(lowerOntologyOperations(exprs), !normalized);
   const declarations: PackageableDeclaration[] = [];
   const signatures = operationSignatures(exprs);
   const serviceMethodEffects = collectServiceMethodEffects(exprs, sourceId);
@@ -48,6 +52,7 @@ export function mechanicsPackageableDeclarations(
 }
 
 export function isMechanicsArtifactForm(expr: SExpr): boolean {
+  expr = normalizeEffectProgram([expr], false)[0]!;
   return (
     isDefineSchemaForm(expr) ||
     isDefineErrorForm(expr) ||
@@ -59,7 +64,7 @@ export function isMechanicsArtifactForm(expr: SExpr): boolean {
 }
 
 function isDefineLayerForm(expr: SExpr): boolean {
-  return expr._tag === "List" && symName(expr.items[0]) === "define-layer";
+  return expr._tag === "List" && symName(expr.items[0]) === "__layer";
 }
 
 /**
@@ -78,7 +83,7 @@ function isTypedFunctionForm(expr: SExpr, signatures: ReadonlyMap<string, SExpr>
 function isDefineSchemaForm(expr: SExpr): boolean {
   return (
     expr._tag === "List" &&
-    symName(expr.items[0]) === "define-schema" &&
+    symName(expr.items[0]) === "__schema" &&
     expr.items.length === 3 &&
     isSchemaProjectionExpr(expr.items[2]!)
   );
@@ -87,8 +92,8 @@ function isDefineSchemaForm(expr: SExpr): boolean {
 function isDefineClassForm(expr: SExpr): boolean {
   return (
     expr._tag === "List" &&
-    symName(expr.items[0]) === "define-class" &&
-    expr.items.length === 3 &&
+    symName(expr.items[0]) === "__class" &&
+    expr.items.length >= 3 &&
     isFieldsBlock(expr.items[2]!)
   );
 }
@@ -96,8 +101,8 @@ function isDefineClassForm(expr: SExpr): boolean {
 function isDefineErrorForm(expr: SExpr): boolean {
   return (
     expr._tag === "List" &&
-    symName(expr.items[0]) === "define-error" &&
-    expr.items.length === 3 &&
+    symName(expr.items[0]) === "__error" &&
+    expr.items.length >= 3 &&
     isFieldsBlock(expr.items[2]!)
   );
 }
@@ -105,14 +110,14 @@ function isDefineErrorForm(expr: SExpr): boolean {
 function isDefineServiceForm(expr: SExpr): boolean {
   return (
     expr._tag === "List" &&
-    symName(expr.items[0]) === "define-service" &&
+    symName(expr.items[0]) === "__service" &&
     expr.items.length === 3 &&
     isMethodsBlock(expr.items[2]!)
   );
 }
 
 function isDefineOperationForm(expr: SExpr): boolean {
-  return expr._tag === "List" && symName(expr.items[0]) === "define-operation";
+  return expr._tag === "List" && symName(expr.items[0]) === "__operation";
 }
 
 function isSchemaProjectionExpr(expr: SExpr): boolean {
@@ -123,6 +128,7 @@ function isSchemaProjectionExpr(expr: SExpr): boolean {
     head === "Struct" ||
     head === "Array" ||
     head === "Optional" ||
+    head === "Option" ||
     head === "Map" ||
     head === "Ref" ||
     head === "Brand" ||
@@ -164,15 +170,15 @@ function declaration(
   }
 
   switch (symName(expr.items[0])) {
-    case "define-schema":
+    case "__schema":
       return schemaDeclaration(expr, sourceId, formIndex);
-    case "define-error":
+    case "__error":
       return errorDeclaration(expr, sourceId, formIndex);
-    case "define-class":
+    case "__class":
       return errorDeclaration(expr, sourceId, formIndex, "ClassDef");
-    case "define-service":
+    case "__service":
       return serviceDeclaration(expr, sourceId, formIndex);
-    case "define-operation":
+    case "__operation":
       return operationDeclaration(
         expr,
         sourceId,
@@ -183,7 +189,7 @@ function declaration(
       );
     case "define":
       return functionDeclaration(expr, sourceId, formIndex, signatures);
-    case "define-layer":
+    case "__layer":
       return layerDeclaration(
         expr,
         sourceId,
@@ -273,7 +279,7 @@ function schemaDeclaration(
           sourceId,
           expr,
           "artifact/schema",
-          "define-schema expects a schema name and schema expression.",
+          "type expects a schema name and schema expression.",
         ),
       ],
     };
@@ -288,7 +294,7 @@ function schemaDeclaration(
           sourceId,
           expr.items[1]!,
           "artifact/schema",
-          "define-schema expects a schema name.",
+          "type expects a schema name.",
         ),
       ],
     };
@@ -315,7 +321,7 @@ function schemaDeclaration(
   };
 }
 
-/** `define-error` and `define-class` share the `(Name (:fields ...))` shape. */
+/** `__error` and `__class` share the `(Name (:fields ...))` shape. */
 function errorDeclaration(
   expr: SExpr,
   sourceId: string,
@@ -324,7 +330,7 @@ function errorDeclaration(
 ):
   | { readonly ok: true; readonly declaration: PackageableDeclaration }
   | { readonly ok: false; readonly diagnostics: readonly MechanicsArtifactDiagnostic[] } {
-  if (expr._tag !== "List" || expr.items.length !== 3) {
+  if (expr._tag !== "List" || expr.items.length < 3) {
     return {
       ok: false,
       diagnostics: [
@@ -332,12 +338,17 @@ function errorDeclaration(
           sourceId,
           expr,
           "artifact/error",
-          "define-error expects an error name and (:fields ...) block.",
+          `${kind === "ClassDef" ? "class" : "error"} expects a name and record type.`,
         ),
       ],
     };
   }
 
+  for (let i=3;i<expr.items.length;i+=2) {
+    const value=expr.items[i+1];
+    if (kind!=="ErrorDef" || symName(expr.items[i])!==":status" || value?._tag!=="Num" || !Number.isInteger(value.value) || value.value<400 || value.value>599) return {ok:false,diagnostics:[diagnostic(sourceId,expr,"artifact/error-option","error supports :status with an HTTP error status (400–599)")]};
+    if (i>3) return {ok:false,diagnostics:[diagnostic(sourceId,expr,"artifact/error-option","Duplicate error option :status")]};
+  }
   const name = symName(expr.items[1]);
   if (!name) {
     return {
@@ -347,7 +358,7 @@ function errorDeclaration(
           sourceId,
           expr.items[1]!,
           "artifact/error",
-          "define-error expects an error name.",
+          `${kind === "ClassDef" ? "class" : "error"} expects a name.`,
         ),
       ],
     };
@@ -362,7 +373,7 @@ function errorDeclaration(
           sourceId,
           fieldsBlock,
           "artifact/error",
-          "define-error expects a (:fields ...) block.",
+          `${kind === "ClassDef" ? "class" : "error"} expects a record type.`,
         ),
       ],
     };
@@ -383,6 +394,7 @@ function errorDeclaration(
         kind,
         name,
         schema: { kind: "Struct", fields },
+        ...(expr.items.length > 3 ? {status:(expr.items[4] as Extract<SExpr,{_tag:"Num"}>).value} : {}),
       },
       payloadContract: kind === "ErrorDef" ? "mechanics/error-def/v0" : "mechanics/class-def/v0",
       validators: ["payload-contract"],
@@ -408,7 +420,7 @@ function serviceDeclaration(
           sourceId,
           expr,
           "artifact/service",
-          "define-service expects a service name and (:methods ...) block.",
+          "service expects a service name and member signatures.",
         ),
       ],
     };
@@ -423,7 +435,7 @@ function serviceDeclaration(
           sourceId,
           expr.items[1]!,
           "artifact/service",
-          "define-service expects a service name.",
+          "service expects a service name.",
         ),
       ],
     };
@@ -438,7 +450,7 @@ function serviceDeclaration(
           sourceId,
           methodsBlock,
           "artifact/service",
-          "define-service expects a (:methods ...) block.",
+          "service expects member signatures.",
         ),
       ],
     };
@@ -487,7 +499,7 @@ function operationDeclaration(
           sourceId,
           expr,
           "artifact/effect",
-          "define-operation expects a name, parameter vector, and body.",
+          "__operation expects a name, parameter vector, and body.",
         ),
       ],
     };
@@ -502,7 +514,7 @@ function operationDeclaration(
           sourceId,
           expr.items[1]!,
           "artifact/effect",
-          "define-operation expects an operation name.",
+          "__operation expects an operation name.",
         ),
       ],
     };
@@ -517,7 +529,7 @@ function operationDeclaration(
           sourceId,
           paramsExpr,
           "artifact/effect",
-          "define-operation expects a parameter vector.",
+          "__operation expects a parameter vector.",
         ),
       ],
     };
@@ -532,7 +544,7 @@ function operationDeclaration(
           sourceId,
           expr,
           "artifact/effect",
-          "define-operation requires a preceding type signature.",
+          "__operation requires a preceding type signature.",
         ),
       ],
     };
@@ -557,6 +569,7 @@ function operationDeclaration(
       payload: {
         kind: "EffectDef",
         name,
+        ...(signature._tag === "List" && symName(signature.items[0]) === "Effect" ? { value: true } : {}),
         params: signatureJson.value.params,
         effect: signatureJson.value.effect,
         authority: { capabilities },
@@ -587,7 +600,7 @@ function failed(
 /**
  * `(: name (-> A B R))` + `(define name (fn [a b] body))`: a pure helper
  * function. The body is a value expression; effects belong in
- * `define-operation`.
+ * `__operation`.
  */
 function functionDeclaration(
   expr: SExpr,
@@ -650,7 +663,7 @@ function functionDeclaration(
       sourceId,
       expr,
       "artifact/function",
-      `${name} returns an Effect; write it with define-operation so its body is an effect program.`,
+      `${name} returns an Effect; write it with __operation so its body is an effect program.`,
     );
   }
   const bodyForms = fnExpr.items.slice(2);
@@ -678,8 +691,8 @@ function functionDeclaration(
 }
 
 /**
- * `(define-layer Name (:provides Service) (:setup [x eff ...]) (:methods (m [p] body) ...))`
- * implements a service; `(define-layer Name LayerExpr)` composes layers with
+ * `(__layer Name (:provides Service) (:setup [x eff ...]) (:methods (m [p] body) ...))`
+ * implements a service; `(__layer Name LayerExpr)` composes layers with
  * `layer-merge`, `layer-provide`, and `layer-provide-merge`. An optional
  * `(: Name (Layer [Provides...] [Errors...] [Requirements...]))` signature is
  * checked against the inferred layer type.
@@ -693,10 +706,10 @@ function layerDeclaration(
   operationEffects: OperationEffects,
 ): DeclarationResult {
   if (expr._tag !== "List" || expr.items.length < 3) {
-    return failed(sourceId, expr, "artifact/layer", "define-layer expects a name and a layer body.");
+    return failed(sourceId, expr, "artifact/layer", "layer expects a name and a layer body.");
   }
   const name = symName(expr.items[1]);
-  if (!name) return failed(sourceId, expr.items[1]!, "artifact/layer", "define-layer expects a layer name.");
+  if (!name) return failed(sourceId, expr.items[1]!, "artifact/layer", "layer expects a layer name.");
 
   let signature: JsonValue | undefined;
   const signatureExpr = signatures.get(name);
@@ -977,6 +990,10 @@ function effectBodyFormsToJson(context: BodyContext, bodyForms: readonly SExpr[]
 
 function effectCoreExprToJson(context: BodyContext, expr: SExpr): JsonValue {
   const { sourceId, effect } = context;
+  if (expr._tag === "Sym" && context.serviceMethodEffects.has(expr.name)) {
+    const [service, method] = expr.name.split(".", 2);
+    return { kind: "ServiceCall", service: service!, method: method!, args: [], value: true, effect: context.serviceMethodEffects.get(expr.name)!, span: spanJson(sourceId, expr) };
+  }
   if (expr._tag === "List" && expr.items.length > 0) {
     const head = symName(expr.items[0]);
     if (head?.includes(".") && !head.startsWith(".")) {
@@ -1258,6 +1275,23 @@ function bindingPairsToJson(
     return bindings;
   }
   for (let index = 0; index + 1 < items.length; index += 2) {
+    if (symName(items[index]) === ":let") {
+      const pure = items[index + 1];
+      if (pure?._tag !== "Vector" || pure.items.length % 2 !== 0) {
+        report(context, pure ?? items[index]!, "artifact/effect-body", ":let expects [name value ...].");
+        continue;
+      }
+      for (let j = 0; j < pure.items.length; j += 2) {
+        const binding = pure.items[j]!;
+        const value = pure.items[j + 1]!;
+        if (binding._tag !== "Sym" || binding.name.startsWith(":")) {
+          report(context, binding, "artifact/effect-body", ":let binding names must be symbols.");
+          continue;
+        }
+        bindings.push({ name: binding.name, pure: true, value: { kind: "Pure", value: valueExprToCoreJson(context.sourceId, value), effect: context.effect, span: spanJson(context.sourceId, value) }, span: spanJson(context.sourceId, value) });
+      }
+      continue;
+    }
     const name = items[index]?._tag === "Sym" ? scalarName(items[index]) : undefined;
     if (!name) {
       report(context, items[index]!, "artifact/effect-body", "binding names must be symbols.");
@@ -1344,8 +1378,8 @@ function effectCatchToJson(context: BodyContext, expr: Extract<SExpr, { readonly
       span: spanJson(context.sourceId, expr),
     };
   }
-  if (handlers.some((handler) => (handler as Record<string, JsonValue>)["errorType"] === "_")) {
-    return report(context, expr, "artifact/effect-body", "a (_ binding) catch-all must be the only catch clause.");
+  if (handlers.slice(0,-1).some((handler) => (handler as Record<string, JsonValue>)["errorType"] === "_")) {
+    return report(context, expr, "artifact/effect-body", "A catch-all must be the last catch clause.");
   }
   if (handlers.length === 1) {
     return {
@@ -1434,6 +1468,9 @@ function operationSignatureToJson(
       };
     }
   | { readonly ok: false; readonly diagnostics: readonly MechanicsArtifactDiagnostic[] } {
+  if (signature._tag === "List" && symName(signature.items[0]) === "Effect") {
+    signature = { ...signature, items: [{ _tag: "Sym", name: "->", loc: signature.loc }, signature] };
+  }
   if (
     signature._tag !== "List" ||
     symName(signature.items[0]) !== "->" ||
@@ -1461,7 +1498,7 @@ function operationSignatureToJson(
           sourceId,
           paramsExpr,
           "artifact/effect",
-          "operation signature arity must match define-operation parameters.",
+          "operation signature arity must match __operation parameters.",
         ),
       ],
     };
@@ -1538,6 +1575,7 @@ function methodToJson(sourceId: string, serviceName: string, expr: SExpr): Mecha
     value: {
       name,
       params: params.value,
+      ...(serviceValues.has(expr) ? { value: true } : {}),
       effect: effect.value,
     },
   };
@@ -1601,7 +1639,7 @@ function typeExprToJson(sourceId: string, expr: SExpr): MechanicsJsonResult {
         }
         const item = typeExprToJson(sourceId, expr.items[1]!);
         if (!item.ok) return item;
-        // In signatures `(Ref T)` is an Effect `Ref`; inside define-schema it
+        // In signatures `(Ref T)` is an Effect `Ref`; inside __schema it
         // stays a schema reference.
         return { ok: true, value: { kind: head === "Ref" ? "RefCell" : head, item: item.value } };
       }
@@ -1669,6 +1707,13 @@ function typeExprToJson(sourceId: string, expr: SExpr): MechanicsJsonResult {
         return { ok: true, value: { kind: "Array", item: item.value } };
       }
       case "Map": {
+        if (expr.items.length === 4 && symName(expr.items[2]) === ":key") {
+          const key = schemaExprToJson(sourceId, expr.items[3]!);
+          const value = typeExprToJson(sourceId, expr.items[1]!);
+          if (!key.ok) return key;
+          if (!value.ok) return value;
+          return { ok: true, value: { kind: "Map", key: key.value, value: value.value } };
+        }
         if (expr.items.length !== 2) {
           return {
             ok: false,
@@ -1835,6 +1880,7 @@ function schemaExprToJson(sourceId: string, expr: SExpr): MechanicsJsonResult {
       return { ok: true, value: { kind: "Struct", fields, span: spanJson(sourceId, expr) } };
     }
     case "Array":
+    case "Option":
     case "Optional": {
       const metadata = metadataPairs(expr.items.slice(2));
       if (!metadata.ok) {
@@ -1894,15 +1940,14 @@ function schemaExprToJson(sourceId: string, expr: SExpr): MechanicsJsonResult {
       }
       const value = schemaExprToJson(sourceId, expr.items[1]!);
       if (!value.ok) return value;
-      return {
-        ok: true,
-        value: applyMetadata(
-          { kind: "Map", value: value.value, span: spanJson(sourceId, expr) },
-          metadata.pairs,
-          spanJson(sourceId, expr),
-        ),
-      };
+      const keyExpr = metadata.pairs.find(([k]) => k === "key")?.[1];
+      const key = keyExpr ? schemaExprToJson(sourceId,keyExpr) : undefined;
+      if (key && !key.ok) return key;
+      return { ok: true, value: applyMetadata(
+        {kind: "Map", value:value.value, ...(key?.ok ? {key:key.value} : {}),span:spanJson(sourceId,expr)},
+        metadata.pairs.filter(([k])=>k !== "key"), spanJson(sourceId,expr)) };
     }
+
     case "Ref": {
       const target = scalarName(expr.items[1]);
       const metadata = metadataPairs(expr.items.slice(2));

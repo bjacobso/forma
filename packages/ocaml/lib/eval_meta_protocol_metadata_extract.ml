@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of Value.closure
   | VMacro of Value.closure
 
@@ -454,14 +455,6 @@ let expr_source_metadata_of_form (expr_fields : Metadata.expr_registry_fields)
   else Some (expr_fields.expr_source_enum, { forms; sigils })
 
 let build_expr_source_config_from_forms forms expr_fields =
-  match
-    Util.collect_unique_form_specs
-      (expr_source_metadata_of_form expr_fields)
-      forms
-  with
-  | [] -> { Eval_meta_protocol_lowering.forms = []; sigils = [] }
-  | (_, metadata) :: _ ->
-      {
-        Eval_meta_protocol_lowering.forms = metadata.forms;
-        sigils = metadata.sigils;
-      }
+  let specs = List.filter_map (expr_source_metadata_of_form expr_fields) forms in
+  { Eval_meta_protocol_lowering.forms = List.find_map (fun (_,metadata) -> if metadata.forms=[] then None else Some metadata.forms) specs |> Option.value ~default:[];
+    sigils = List.find_map (fun (_,metadata) -> if metadata.sigils=[] then None else Some metadata.sigils) specs |> Option.value ~default:[] }

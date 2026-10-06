@@ -18,7 +18,7 @@ import {
 
 const IdsTest = Layer.sync(Ids, () => {
   let next = 0;
-  return Ids.of({ next: () => Effect.sync(() => UserId.make(`user-${++next}`)) });
+  return Ids.of({ next: Effect.sync(() => UserId.make(`user-${++next}`)) });
 });
 
 const AppTest = Layer.mergeAll(UserRepoMemory, IdsTest);
@@ -44,11 +44,11 @@ export default async function check(): Promise<void> {
     assert.deepEqual(yield* getUser(UserId.make("user-1")), ada);
     const renamed = yield* renameUser(UserId.make("user-1"), "Ada Lovelace");
     assert.equal(renamed.name, "Ada Lovelace");
-    assert.deepEqual(yield* adminNames(), ["Ada Lovelace <ada@example.com>", "Grace <grace@example.com>"]);
+    assert.deepEqual(yield* adminNames, ["Ada Lovelace <ada@example.com>", "Grace <grace@example.com>"]);
 
     const repo = yield* UserRepo;
     yield* repo.save({ ...renamed, nickname: "Countess" });
-    assert.deepEqual(yield* adminNames(), ["Countess <ada@example.com>", "Grace <grace@example.com>"]);
+    assert.deepEqual(yield* adminNames, ["Countess <ada@example.com>", "Grace <grace@example.com>"]);
 
     yield* deleteUser(UserId.make("user-2"));
     const missing = yield* Effect.flip(getUser(UserId.make("user-2")));

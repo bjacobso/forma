@@ -117,6 +117,8 @@ interface TsPendingEvaluation {
 }
 
 function valueProjection(value: KValue): ValueProjection {
+  if (Evaluator.isKKeyword(value)) return {kind:"keyword",value:value.name};
+  if (Evaluator.isKSymbol(value)) return {kind:"symbol",value:value.name};
   if (value === null) return { kind: "nil" };
   if (typeof value === "boolean") return { kind: "bool", value };
   if (typeof value === "number") {
@@ -128,7 +130,7 @@ function valueProjection(value: KValue): ValueProjection {
     return {
       kind: "map",
       entries: [...value.entries()].map(([key, nested]) => ({
-        key: { kind: "string", value: key },
+        key: Evaluator.isKKeyword(Evaluator.mapKeyValue(key)) ? {kind:"keyword",value:key} : {kind:"string",value:String(Evaluator.mapKeyValue(key))},
         value: valueProjection(nested),
       })),
     };
@@ -995,6 +997,9 @@ export class TsLanguageHost implements LanguageHost {
     retainValues: EvaluateInSessionRequest["retainValues"] | undefined,
     apply?: ((args: readonly KValue[]) => Effect.Effect<KValue, KernelError>) | undefined,
   ): ValueProjection {
+    if (Evaluator.isKKeyword(value) || Evaluator.isKSymbol(value)) {
+      return this.#maybeRetainProjectedValue(session,value,{kind:Evaluator.isKKeyword(value) ? "keyword" : "symbol",value:value.name},retainValues);
+    }
     if (value === null) {
       return this.#maybeRetainProjectedValue(session, value, { kind: "nil" }, retainValues);
     }
@@ -1038,7 +1043,7 @@ export class TsLanguageHost implements LanguageHost {
             key: this.#maybeRetainProjectedValue(
               session,
               key,
-              { kind: "string", value: key },
+              Evaluator.isKKeyword(Evaluator.mapKeyValue(key)) ? {kind:"keyword",value:key} : {kind:"string",value:String(Evaluator.mapKeyValue(key))},
               retainValues,
             ),
             value: this.#projectValue(session, nested, retainValues),
@@ -1277,10 +1282,9 @@ function kValueFromProjection(value: ValueProjection): KValue {
     case "bool":
     case "int":
     case "float":
-    case "string":
-    case "keyword":
-    case "symbol":
-      return value.value;
+    case "string": return value.value;
+    case "keyword": return Evaluator.KKeyword(value.value);
+    case "symbol": return Evaluator.KSymbol(value.value);
     case "list":
     case "vector":
       return value.items.map(kValueFromProjection);

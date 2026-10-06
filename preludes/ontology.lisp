@@ -1,1402 +1,2144 @@
-; ontology.lisp
-; -----------------------------------------------------------------------------
-; Domain ontology prelude — defines the ontology language constructs.
+; Ontology forms are typed functions from authored syntax to canonical IR.
+; Types define payload contracts; form patterns define bindings and editor shapes.
+; Ordinary helpers supply scopes, validation and projections.
 ;
-; This file uses the compiler's meta forms (define-form, meta-fn) to define
-; the domain-specific constructs that ontology authors use.
-;
-; See ontology-compiler.lisp for the elaboration hooks (meta-fn implementations).
-;
-; Forms defined here:
-;
-; HTTP APIs:  define-schema, define-error, define-api-group, endpoint, param
-; Structure:  define-entity, define-relation, define-record, define-link
-; Queries:    define-query, define-view
-; Navigation: define-workspace
-; Compliance: define-constraint, resolution
-; Operations: define-action, define-mutation
-; Processes:  define-process, trigger, node, edge, guard
-; Documents:  define-document, page, field, completion-mutation, option
-; L10n:       define-document-locale, role, section, locale-field, define-document-localized
-; PDF:        define-pdf-mapping, direct, computed, switch, case, set
-;
-; Depends on: compiler.lisp (define-form, meta-fn, etc.)
-;
-; Authoring rules for humans and agents:
-; - Use the canonical `define-*` forms. Older forms such as `def-entity`,
-;   `def-action`, `def-rule`, bare `entity`, and bare `query` are legacy
-;   spellings and should be rewritten.
-; - Field names are usually namespace-qualified symbols such as
-;   `employee/name`, which lower to runtime attributes like `:employee/name`.
-; - Type references use symbols (`String`, `Bool`, `Employee`) or compound
-;   type forms such as `(Ref Department)`.
-; - Runtime behavior for `:do`, `:where`, and ViewSpec bindings is ordinary
-;   Lisp checked by the compiler hooks in ontology-compiler.lisp.
-;
-; Minimal authoring example:
-;
-;   (define-entity Employee
-;     (:field [employee/name String {:required true}])
-;     (:field [employee/department (Ref Department)]))
-;
-;   (define-record "emp:alice" Employee
-;     (:field [employee/name "Alice"]))
-;
-;   (define-query employees
-;     (:from Employee)
-;     (:select [employee/name employee/department]))
-;
-; Status: executable (parsed by lisp-v2, meta-fn bodies run at compile time)
-; -----------------------------------------------------------------------------
-
-; =============================================================================
-; SECTION 2 — ONTOLOGY CORE FORMS
-; =============================================================================
-;
-; These are roughly the current canonical forms, but expressed as the desired
-; end-state authoring model: descriptor-first, meta-hook-aware, and all in one
-; file.
-;
-; Unclear point:
-; - some of these might eventually factor through reusable form families
-;   instead of each spelling out all structure.
-
-(define-payload-contract KindPayload
-  (:required-fields [kind])
-  (:string-fields [kind]))
-
-(define-payload-contract NamedKindPayload
-  (:contract KindPayload)
-  (:required-fields [name])
-  (:string-fields [name]))
-
-(define-payload-contract ArrayFieldsPayload
-  (:required-fields [fields])
-  (:array-fields [fields]))
-
-(define-payload-contract ObjectFieldsPayload
-  (:required-fields [fields])
-  (:object-fields [fields]))
-
-(define-payload-contract SourceTargetPayload
-  (:required-fields [source target])
-  (:string-fields [source target]))
-
-(define-payload-contract NamedSourceTargetFieldsPayload
-  (:contract [NamedKindPayload SourceTargetPayload ArrayFieldsPayload]))
-
-(define-payload-contract SchemaPayload
-  (:contract NamedKindPayload)
-  (:literal-fields [[kind "Schema"]]))
-
-(define-payload-contract HttpApiPayload
-  (:contract NamedKindPayload)
-  (:literal-fields [[kind "HttpApi"]]))
-
-(define-payload-contract IdentityDeclarationPayload
-  (:contract NamedKindPayload)
-  (:required-fields [identityKind])
-  (:literal-fields [[kind "IdentityDeclaration"]])
-  (:string-fields [identityKind]))
-
-(define-payload-contract RoleIdentityPayload
-  (:contract IdentityDeclarationPayload)
-  (:literal-fields [[identityKind "role"]]))
-
-(define-payload-contract GroupIdentityPayload
-  (:contract IdentityDeclarationPayload)
-  (:literal-fields [[identityKind "group"]]))
-
-(define-payload-contract MembershipIdentityPayload
-  (:contract IdentityDeclarationPayload)
-  (:required-fields [member group])
-  (:literal-fields [[identityKind "membership"]])
-  (:string-fields [member group]))
-
-(define-payload-contract ContextualRoleIdentityPayload
-  (:contract IdentityDeclarationPayload)
-  (:literal-fields [[identityKind "contextual-role"]]))
-
-(define-payload-contract FieldSchemaPayload
-  (:contract [NamedKindPayload ArrayFieldsPayload]))
-
-(define-payload-contract EntityPayload
-  (:contract FieldSchemaPayload)
-  (:literal-fields [[kind "Entity"]]))
-
-(define-payload-contract MetaEntityPayload
-  (:contract FieldSchemaPayload)
-  (:literal-fields [[kind "MetaEntity"]]))
-
-(define-payload-contract RelationPayload
-  (:contract NamedSourceTargetFieldsPayload)
-  (:literal-fields [[kind "Relation"]]))
-
-(define-payload-contract RecordPayload
-  (:contract [KindPayload ObjectFieldsPayload])
-  (:required-fields [id entity])
-  (:literal-fields [[kind "Record"]])
-  (:string-fields [id entity]))
-
-(define-payload-contract LinkPayload
-  (:contract [KindPayload SourceTargetPayload ArrayFieldsPayload])
-  (:required-fields [relation])
-  (:literal-fields [[kind "Link"]])
-  (:string-fields [relation]))
-
-(define-payload-contract QueryPayload
-  (:contract NamedKindPayload)
-  (:required-fields [from])
-  (:literal-fields [[kind "Query"]]))
-
-(define-payload-contract DatalogQueryPayload
-  (:contract QueryPayload)
-  (:required-fields [datalog])
-  (:string-fields [from])
-  (:object-fields [datalog]))
-
-(define-payload-contract QueryPresetPayload
-  (:contract NamedKindPayload)
-  (:required-fields [queryRef defaults])
-  (:literal-fields [[kind "QueryPreset"]])
-  (:object-fields [queryRef])
-  (:array-fields [defaults]))
-
-(define-payload-contract ViewPayload
-  (:contract NamedKindPayload)
-  (:required-fields [columns])
-  (:literal-fields [[kind "View"]])
-  (:array-fields [columns]))
-
-(define-payload-contract WorkspacePayload
-  (:contract NamedKindPayload)
-  (:required-fields [views])
-  (:literal-fields [[kind "Workspace"]])
-  (:array-fields [views]))
-
-(define-payload-contract PermissionPayload
-  (:contract NamedKindPayload)
-  (:required-fields [principal action resource effect])
-  (:literal-fields [[kind "PermissionDeclaration"]])
-  (:string-fields [principal action resource effect]))
-
-(define-payload-contract ConstraintPayload
-  (:contract NamedKindPayload)
-  (:required-fields [entity severity when message resolutions])
-  (:literal-fields [[kind "Constraint"]])
-  (:string-fields [entity severity])
-  (:array-fields [resolutions]))
-
-(define-payload-contract OperationPayload
-  (:contract NamedKindPayload)
-  (:required-fields [inputs do])
-  (:array-fields [inputs]))
-
-(define-payload-contract ActionPayload
-  (:contract OperationPayload)
-  (:literal-fields [[kind "Action"]]))
-
-(define-payload-contract MutationPayload
-  (:contract OperationPayload)
-  (:literal-fields [[kind "Mutation"]]))
-
-(define-payload-contract ProcessPayload
-  (:contract NamedKindPayload)
-  (:required-fields [trigger nodes edges])
-  (:literal-fields [[kind "Process"]])
-  (:object-fields [trigger])
-  (:array-fields [nodes edges]))
-
-(define-payload-contract TaskPayload
-  (:contract NamedKindPayload)
-  (:required-fields [title inputs])
-  (:literal-fields [[kind "TaskDefinition"]])
-  (:string-fields [title])
-  (:array-fields [inputs]))
-
-(define-payload-contract DocumentPayload
-  (:contract NamedKindPayload)
-  (:required-fields [pages])
-  (:literal-fields [[kind "Document"]])
-  (:array-fields [pages]))
-
-(define-payload-contract DocumentLocalePayload
-  (:contract KindPayload)
-  (:required-fields [documentName locale roles sections fields])
-  (:literal-fields [[kind "DocumentLocale"]])
-  (:string-fields [documentName locale])
-  (:array-fields [roles sections fields]))
-
-(define-payload-contract DocumentLocalizedPayload
-  (:contract KindPayload)
-  (:required-fields [documentName locales])
-  (:literal-fields [[kind "DocumentLocalized"]])
-  (:string-fields [documentName])
-  (:array-fields [locales]))
-
-(define-payload-contract PdfMappingPayload
-  (:contract NamedKindPayload)
-  (:required-fields [templateBlob mappings])
-  (:literal-fields [[kind "PdfMapping"]])
-  (:string-fields [templateBlob])
-  (:array-fields [mappings]))
-
-; HTTP API authoring forms are the declarative slice of the API DSL. They lower
-; to canonical HttpApi IR while handlers still live in TypeScript.
-(define-form define-schema
-  (:phase domain)
-  (:doc "Named schema declaration for generated HTTP API contracts.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot kind value (:required true))
-    (slot identifier value)
-    (slot doc value)
-    (slot brand value)
-    (slot pattern value)
-    (slot fields value (:many true))
-    (slot field value (:many true))
-    (slot variants value (:many true))
-    (slot items value)
-    (slot value value))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type SchemaDecl)))
-  (:extensions
-    (:artifact
-      (:validators [http])
-      (:payload (:contract SchemaPayload))))
-  (:construct-fn http-schema/construct)
-  (:result-type (constant SchemaDecl)))
-
-(define-form define-error
-  (:phase domain)
-  (:doc "Tagged error schema declaration with transport annotations.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot fields value (:many true))
-    (slot field value (:many true))
-    (slot status value (:required true))
-    (slot identifier value)
-    (slot doc value))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type SchemaDecl)))
-  (:extensions
-    (:artifact
-      (:validators [http])
-      (:payload (:contract SchemaPayload))))
-  (:construct-fn http-error/construct)
-  (:result-type (constant SchemaDecl)))
-
-(define-form param
-  (:phase domain)
-  (:doc "HTTP path parameter declaration.")
-  (:identifiers
-    (identifier name Symbol)
-    (identifier type Symbol)))
-
-(define-form endpoint
-  (:phase domain)
-  (:doc "HTTP endpoint declaration nested inside define-api-group.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot method value (:required true))
-    (slot path value (:required true))
-    (slot payload value)
-    (slot query value (:many true))
-    (slot headers value (:many true))
-    (slot success value (:required true))
-    (slot errors value (:many true))
-    (slot openapi value (:many true))))
-
-(define-form define-api-group
-  (:phase domain)
-  (:doc "Declarative HTTP API group that emits canonical HttpApi IR.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot path-params value (:many true))
-    (slot openapi value (:many true)))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type HttpApiDecl)))
-  (:extensions
-    (:artifact
-      (:validators [http])
-      (:payload (:contract HttpApiPayload))))
-  (:construct-fn http-api-group/construct)
-  (:result-type (constant HttpApiDecl)))
-
-; System attributes are platform-level facts shared across entity types.
-; They are not usually authored in application ontologies, but they use the
-; same descriptor machinery as user-facing forms.
-(define-form define-system-attribute
-  (:phase domain)
-  (:doc "Cross-cutting platform attribute declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot doc value)
-    (slot value-type value (:required true))
-    (slot required value)
-    (slot enum value))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type SchemaDecl)))
-  (:construct-fn system-attribute/construct)
-  (:construct
-    [kind "SystemAttribute"]
-    [name (or declaration-name "anonymous-system-attribute")]
-    [loc loc])
-  (:result-type (constant SchemaDecl)))
-
-; Entity definitions declare the shape of facts that can be asserted for a
-; type. The `field` slot is repeated and normally uses vector shorthand:
-;   (:field [employee/name String {:required true}])
-; The first vector item is the attribute name, the second is the type, and the
-; optional map carries field metadata.
-(define-form define-entity
-  (:phase domain)
-  (:doc "Canonical entity/schema declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot doc value)
-    (slot role value)
-    (slot id-pattern value)
-    (slot field value
-      (:many true)
-      (:required true)
-      (:child-form field)
-      (:child-identifier name Value)
-      (:child-slot type expr (:positional true))
-      (:child-slot required value)
-      (:child-slot indexed value)))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type SchemaDecl)))
-  (:bindings-fn entity/bindings)
-  (:extensions
-    (:artifact
-      (:payload (:contract EntityPayload))))
-  (:construct-fn entity/construct)
-  (:construct
-    [kind "Entity"]
-    [name (or declaration-name "anonymous-entity")]
-    [fields (entity-fields field)]
-    [loc loc])
-  (:declaration-type (row))
-  (:result-type (constant SchemaDecl)))
-
-; Meta entities are compiler/runtime bootstrap declarations. Application
-; ontologies should prefer `define-entity`; this form exists so the system can
-; describe its own internal catalog with the same machinery.
-(define-form define-meta-entity
-  (:phase domain)
-  (:doc "Bootstrap-tier meta-schema declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot doc value)
-    (slot role value)
-    (slot id-pattern value)
-    (slot field value
-      (:many true)
-      (:required true)
-      (:child-form field)
-      (:child-identifier name Value)
-      (:child-slot type expr (:positional true))
-      (:child-slot required value)
-      (:child-slot indexed value)))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type SchemaDecl)))
-  (:bindings-fn entity/bindings)
-  (:extensions
-    (:artifact
-      (:payload (:contract MetaEntityPayload))))
-  (:construct-fn meta-entity/construct)
-  (:construct
-    [kind "MetaEntity"]
-    [name (or declaration-name "anonymous-meta-entity")]
-    [fields (entity-fields field)]
-    [loc loc])
-  (:declaration-type (row))
-  (:result-type (constant SchemaDecl)))
-
-; Relations declare typed edges between two entity types. Relation instances
-; are authored separately with `define-link`, while relation fields describe
-; metadata about the edge itself.
-(define-form define-relation
-  (:phase domain)
-  (:doc "Canonical relationship type declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true))
-    (identifier source Symbol)
-    (identifier target Symbol))
-  (:slots
-    (slot field value
-      (:many true)
-      (:child-form field)
-      (:child-identifier name Value)
-      (:child-slot type expr (:positional true))
-      (:child-slot required value)
-      (:child-slot indexed value)))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type RelationDef)))
-  (:extensions
-    (:artifact
-      (:payload (:contract RelationPayload))))
-  (:construct-fn relation/construct)
-  (:construct
-    [kind "Relation"]
-    [name (or declaration-name "anonymous-relation")]
-    [source (identifier source)]
-    [target (identifier target)]
-    [sourceRef (identifier-ref Entity source)]
-    [targetRef (identifier-ref Entity target)]
-    [fields (entity-fields field)]
-    [loc loc])
-  (:result-type (constant RelationDef)))
-
-; Records are seed data. They assert one entity id, its entity type, and a
-; repeated set of field values.
-(define-form define-record
-  (:phase domain)
-  (:doc "Canonical entity assertion/seed record.")
-  (:identifiers
-    (identifier id String (:declaration true))
-    (identifier entity Symbol))
-  (:slots
-    (slot field value
-      (:many true)
-      (:child-form field)
-      (:child-identifier name Value)
-      (:child-slot type expr (:positional true))
-      (:child-slot required value)
-      (:child-slot indexed value)))
-  (:bindings
-    (bind bind-declaration-name (:identifier id) (:type RecordDef)))
-  (:check-fn record/check)
-  (:extensions
-    (:artifact
-      (:payload (:contract RecordPayload))))
-  (:construct-fn record/construct)
-  (:construct
-    [kind "Record"]
-    [id (or declaration-name (identifier id))]
-    [entity (identifier entity)]
-    [entityRef (identifier-ref Entity entity)]
-    [fields (assignments field)]
-    [loc loc])
-  (:result-type (constant RecordDef)))
-
-; Links are seed relationship instances. Source and target are entity ids,
-; not entity type names.
-(define-form define-link
-  (:phase domain)
-  (:doc "Canonical relationship assertion/link instance.")
-  (:identifiers
-    (identifier relation Symbol)
-    (identifier source String)
-    (identifier target String))
-  (:slots
-    (slot field value
-      (:many true)
-      (:child-form field)
-      (:child-identifier name Value)
-      (:child-slot type expr (:positional true))
-      (:child-slot required value)
-      (:child-slot indexed value)))
-  (:extensions
-    (:artifact
-      (:payload (:contract LinkPayload))))
-  (:construct-fn link/construct)
-  (:construct
-    [kind "Link"]
-    [relation (identifier relation)]
-    [relationRef (identifier-ref Relation relation)]
-    [sourceId (identifier source)]
-    [targetId (identifier target)]
-    [fields (assignments field)]
-    [loc loc])
-  (:result-type (constant LinkDef)))
-
-; Queries are saved typed query declarations. `:from` chooses the row type,
-; optional `:where` must evaluate to Bool, and optional `:select` projects
-; fields from the row.
-(define-form define-query
-  (:phase domain)
-  (:doc "Canonical query declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot from value (:required true))
-    (slot where expr)
-    (slot select value))
-  (:bindings-fn query/bindings)
-  (:result-type-fn query/result-type)
-  (:infer-fn query/infer)
-  (:validate-fn query/validate)
-  (:extensions
-    (:artifact
-      (:payload
-        (:contract QueryPayload))))
-  (:construct-fn query/construct)
-  )
-
-; Raw Datalog queries are saved query declarations for cross-entity joins and
-; graph traversals that are not expressible through the typed row-oriented
-; `define-query` surface yet.
-(define-form define-datalog-query
-  (:phase domain)
-  (:doc "Canonical raw Datalog saved query declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot query expr (:required true)))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type QueryDef)))
-  (:result-type (constant QueryDef))
-  (:extensions
-    (:artifact
-      (:payload (:contract DatalogQueryPayload))))
-  (:construct-fn datalog-query/construct))
-
-; Query presets are named partial applications of query parameters. They allow
-; product surfaces to reuse one query with different default inputs.
-(define-form define-query-preset
-  (:phase domain)
-  (:doc "Canonical named partial parameter application over a query.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot query value (:required true))
-    (slot merge-policy value)
-    (slot param value
-      (:many true)
-      (:child-form param)
-      (:child-identifier name Symbol)
-      (:child-slot value expr (:positional true))))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type QueryPresetDef)))
-  (:extensions
-    (:artifact
-      (:payload (:contract QueryPresetPayload))))
-  (:construct-fn query-preset/construct)
-  (:result-type (constant QueryPresetDef)))
-
-(define-form define-role
-  (:phase domain)
-  (:doc "Canonical principal role declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot description value))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type IdentityDef)))
-  (:extensions
-    (:artifact
-      (:payload (:contract RoleIdentityPayload))))
-  (:construct-fn role/identity-construct)
-  (:result-type (constant IdentityDef)))
-
-(define-form define-group
-  (:phase domain)
-  (:doc "Canonical principal group declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot description value))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type IdentityDef)))
-  (:extensions
-    (:artifact
-      (:payload (:contract GroupIdentityPayload))))
-  (:construct-fn group/identity-construct)
-  (:result-type (constant IdentityDef)))
-
-(define-form define-membership
-  (:phase domain)
-  (:doc "Canonical membership declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot member value (:required true))
-    (slot group value (:required true))
-    (slot description value))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type IdentityDef)))
-  (:extensions
-    (:artifact
-      (:payload (:contract MembershipIdentityPayload))))
-  (:construct-fn membership/identity-construct)
-  (:result-type (constant IdentityDef)))
-
-(define-form define-contextual-role
-  (:phase domain)
-  (:doc "Canonical contextual role resolver declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot principal value)
-    (slot resource value)
-    (slot resolver expr)
-    (slot description value))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type IdentityDef)))
-  (:extensions
-    (:artifact
-      (:payload (:contract ContextualRoleIdentityPayload))))
-  (:construct-fn contextual-role/identity-construct)
-  (:result-type (constant IdentityDef)))
-
-(define-form define-permission
-  (:phase domain)
-  (:doc "Canonical permission declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot principal value (:required true))
-    (slot action value (:required true))
-    (slot resource value (:required true))
-    (slot effect value)
-    (slot condition expr)
-    (slot description value))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type PermissionDef)))
-  (:extensions
-    (:artifact
-      (:payload (:contract PermissionPayload))))
-  (:construct-fn permission/construct)
-  (:result-type (constant PermissionDef)))
-
-(define-form define-view
-  (:phase domain)
-  (:doc "Canonical query-backed view declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot query value)
-    (slot title value)
-    (slot description value)
-    (slot subject value)
-    (slot mode value)
-    (slot column value
-      (:many true)
-      (:child-form column)
-      (:child-identifier name Value))
-    (slot default-sort value)
-    (slot row-action expr)
-    (slot empty-state value)
-    (slot where expr (:type Bool))
-    ;; Extended ViewSpec slots
-    (slot state value (:many true)
-      (:child-form state)
-      (:child-identifier name Symbol)
-      (:child-slot initial expr (:positional true))
-      (:child-slot type value))
-    (slot input-param value (:many true)
-      (:child-form input-param)
-      (:child-identifier name Symbol)
-      (:child-slot type value (:positional true)))
-    (slot named-query value (:many true)
-      (:child-form named-query)
-      (:child-identifier name Symbol)
-      (:child-slot ref value)
-      (:child-slot params expr)
-      (:child-slot depends-on value (:many true)))
-    (slot def value (:many true)
-      (:child-form def)
-      (:child-identifier name Symbol)
-      (:child-slot layout expr (:positional true)))
-    (slot layout expr))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type ViewDef))
-    (bind bind-slot-declaration-result (:slot query) (:as row)))
-  (:elaborates
-    (elaborate resolve-slot-declaration-result (:slot query) (:declaration-kind Query) (:binding-name row)))
-  (:validate-fn view/validate)
-  (:extensions
-    (:artifact
-      (:payload
-        (:contract ViewPayload))))
-  (:construct-fn view/construct)
-  (:construct
-    [kind "View"]
-    [name (or declaration-name "anonymous-view")]
-    [query (named-text query)]
-    [queryRef (slot-ref query)]
-    [where (slot-expr where) {:optional true}]
-    [resultType (query-ref-result-type query)]
-    [loc loc])
-  (:result-type (declaration-ref-result query)))
-
-(define-form define-view-component
-  (:phase domain)
-  (:doc "Reusable embeddable view fragment declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot query value)
-    (slot title value)
-    (slot description value)
-    (slot subject value)
-    (slot mode value)
-    (slot column value
-      (:many true)
-      (:child-form column)
-      (:child-identifier name Value))
-    (slot default-sort value)
-    (slot row-action expr)
-    (slot empty-state value)
-    (slot where expr (:type Bool))
-    (slot state value (:many true)
-      (:child-form state)
-      (:child-identifier name Symbol)
-      (:child-identifier initial Value))
-    (slot input-param value (:many true)
-      (:child-form input-param)
-      (:child-identifier name Symbol)
-      (:child-slot type value (:positional true)))
-    (slot named-query value (:many true)
-      (:child-form named-query)
-      (:child-identifier name Symbol)
-      (:child-slot ref value)
-      (:child-slot params expr)
-      (:child-slot depends-on value (:many true)))
-    (slot layout expr))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type ViewDef))
-    (bind bind-slot-declaration-result (:slot query) (:as row)))
-  (:elaborates
-    (elaborate resolve-slot-declaration-result (:slot query) (:declaration-kind Query) (:binding-name row)))
-  (:validate-fn view/validate)
-  (:extensions
-    (:artifact
-      (:payload
-        (:contract ViewPayload))))
-  (:construct-fn view/construct)
-  (:construct
-    [kind "View"]
-    [name (or declaration-name "anonymous-view-component")]
-    [query (named-text query)]
-    [queryRef (slot-ref query)]
-    [where (slot-expr where) {:optional true}]
-    [resultType (query-ref-result-type query)]
-    [loc loc])
-  (:result-type (declaration-ref-result query)))
-
-(define-form define-workspace
-  (:phase domain)
-  (:doc "Canonical workspace declaration. Pure metadata + view references.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot title value)
-    (slot persona value)
-    (slot subject value)
-    (slot home value)
-    (slot view value (:many true)))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type WorkspaceDef)))
-  (:extensions
-    (:artifact
-      (:payload (:contract WorkspacePayload))))
-  (:construct-fn workspace/construct)
-  (:result-type (constant WorkspaceDef)))
-
-(define-form resolution
-  (:phase domain)
-  (:doc "Constraint resolution path attached to a canonical constraint.")
-  (:slots
-    (slot label value (:required true))
-    (slot action value (:required true) (:alias mutation))
-    (slot auto value)
-    (slot input value
-      (:many true)
-      (:child-form input)
-      (:child-identifier name Value)
-      (:child-slot type expr (:positional true))
-      (:child-slot required value)))
-  (:construct-fn resolution/construct)
-  (:construct
-    [label (slot-string label)]
-    [action (slot-string action)]
-    [actionRef (slot-ref action)]
-    [autoInvoke (slot-bool auto)]
-    [inputs (resolution-inputs input)]
-    [loc loc])
-  (:result-type (constant ConstraintResolutionDef)))
-
-(define-form define-constraint
-  (:phase domain)
-  (:doc "Canonical invariant/validation constraint.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot entity value (:required true))
-    (slot severity value (:required true))
-    (slot description value)
-    (slot category value)
-    (slot violation-query expr (:required true))
-    (slot message expr (:required true))
-    (slot assigns-task-to value
-      (:many true)
-      (:child-form assigns-task-to)
-      (:child-identifier role Symbol)
-      (:child-slot priority value)
-      (:child-slot title expr)
-      (:child-slot body expr))
-    (slot resolution form (:many true)))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type ConstraintDef)))
-  (:validation
-    (validate validate-one-of (:slot severity) (:values [error warning info])))
-  (:extensions
-    (:artifact
-      (:payload (:contract ConstraintPayload))))
-  (:construct-fn constraint/construct)
-  (:construct
-    [kind "Constraint"]
-    [name (or declaration-name "anonymous-constraint")]
-    [entity (slot-string entity)]
-    [entityRef (slot-ref entity)]
-    [severity (slot-string severity)]
-    [description (slot-string description) {:optional true}]
-    [category (slot-string category) {:optional true}]
-    [resolutions (children resolution)]
-    [loc loc])
-  (:result-type (constant ConstraintDef)))
-
-; Actions are named side-effectful operations. They declare typed inputs,
-; a return type, and a `:do` expression. Use actions for external effects,
-; notifications, document generation, or orchestrating runtime services.
-(define-form define-action
-  (:phase domain)
-  (:doc "Canonical side-effectful action declaration with typed inputs and a Lisp do body.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot input value
-      (:many true)
-      (:required true)
-      (:child-form input)
-      (:child-identifier name Value)
-      (:child-slot type expr (:positional true))
-      (:child-slot required value))
-    (slot returns value (:required true))
-    (slot do expr (:required true) (:type-from returns)))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type ActionDef)))
-  (:extensions
-    (:artifact
-      (:payload (:contract ActionPayload))))
-  (:construct-fn action/construct)
-  (:construct
-    [kind "Action"]
-    [name (or declaration-name "anonymous-action")]
-    [inputs (action-inputs input)]
-    [loc loc])
-  (:result-type (slot-type returns)))
-
-; Mutations have the same surface as actions but represent state-changing
-; operations owned by the ontology rather than external side effects.
-(define-form define-mutation
-  (:phase domain)
-  (:doc "Canonical state-changing mutation declaration with typed inputs and a Lisp do body.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot input value
-      (:many true)
-      (:required true)
-      (:child-form input)
-      (:child-identifier name Value)
-      (:child-slot type expr (:positional true))
-      (:child-slot required value))
-    (slot returns value (:required true))
-    (slot do expr (:required true) (:type-from returns)))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type MutationDef)))
-  (:extensions
-    (:artifact
-      (:payload (:contract MutationPayload))))
-  (:construct-fn mutation/construct)
-  (:construct
-    [kind "Mutation"]
-    [name (or declaration-name "anonymous-mutation")]
-    [inputs (action-inputs input)]
-    [loc loc])
-  (:result-type (slot-type returns)))
-
-(define-form trigger
-  (:phase domain)
-  (:doc "Process trigger declaration.")
-  (:identifiers
-    (identifier kind Symbol)
-    (identifier entity Symbol))
-  (:construct-fn trigger/construct)
-  (:construct
-    [kind (identifier kind)]
-    [entity (identifier entity) {:optional true}]
-    [entityRef (slot-ref entity) {:optional true}]
-    [loc loc])
-  (:result-type (constant ProcessTriggerDef)))
-
-(define-form node
-  (:phase domain)
-  (:doc "Process node definition.")
-  (:identifiers
-    (identifier id Symbol))
-  (:slots
-    (slot action value)
-    (slot mutation value)
-    (slot join value)
-    (slot fan-out value)
-    (slot input value
-      (:many true)
-      (:child-form input)
-      (:child-identifier name Value)
-      (:child-slot type expr (:positional true))
-      (:child-slot required value)))
-  (:construct-fn node/construct)
-  (:construct
-    [id (identifier id)]
-    [action (slot-string action) {:optional true}]
-    [actionRef (slot-ref action) {:optional true}]
-    [mutation (slot-string mutation) {:optional true}]
-    [mutationRef (slot-ref mutation) {:optional true}]
-    [join (slot-string join) {:optional true}]
-    [fanOut (slot-string fan-out) {:optional true}]
-    [inputs (workflow-inputs input)]
-    [loc loc])
-  (:result-type (constant ProcessNodeDef)))
-
-(define-form guard
-  (:phase domain)
-  (:doc "Process edge guard.")
-  (:identifiers
-    (identifier kind Symbol)
-    (identifier value Value))
-  (:validation
-    (validate validate-one-of (:slot kind) (:values [expr not-expr])))
-  (:construct-fn guard/construct)
-  (:construct
-    [kind (identifier kind)]
-    [expr (lower-runtime-expr (identifier-expr value))]
-    [loc loc])
-  (:result-type (constant ProcessGuardDef)))
-
-(define-form edge
-  (:phase domain)
-  (:doc "Process edge definition.")
-  (:identifiers
-    (identifier from Symbol)
-    (identifier to Symbol))
-  (:slots
-    (slot guard form))
-  (:construct-fn edge/construct)
-  (:construct
-    [from (identifier from)]
-    [to (identifier to)]
-    [guard (first-child guard) {:optional true}]
-    [loc loc])
-  (:result-type (constant ProcessEdgeDef)))
-
-(define-form define-process
-  (:phase domain)
-  (:doc "Canonical process definition.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot description value)
-    (slot trigger form (:required true))
-    (slot node form (:many true))
-    (slot edge form (:many true)))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type ProcessDef)))
-  (:validate-fn process/validate)
-  (:extensions
-    (:artifact
-      (:payload (:contract ProcessPayload))))
-  (:construct-fn process/construct)
-  (:construct
-    [kind "Process"]
-    [name (or declaration-name "anonymous-process")]
-    [description (slot-string description) {:optional true}]
-    [trigger (first-child trigger)]
-    [nodes (children node)]
-    [edges (children edge)]
-    [loc loc])
-  (:result-type (constant ProcessDef)))
-
-(define-form define-task
-  (:phase domain)
-  (:doc "Reusable task definition declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot title value (:required true))
-    (slot description value)
-    (slot document value)
-    (slot section value (:many true))
-    (slot assignee value)
-    (slot guidance value)
-    (slot input value
-      (:many true)
-      (:child-form input)
-      (:child-identifier name Value)
-      (:child-slot type expr (:positional true))
-      (:child-slot required value))
-    (slot scope value))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type TaskDefinitionDef)))
-  (:extensions
-    (:artifact
-      (:payload (:contract TaskPayload))))
-  (:construct-fn task-definition/construct)
-  (:construct
-    [kind "TaskDefinition"]
-    [name (or declaration-name "anonymous-task-definition")]
-    [title (slot-string title)]
-    [description (slot-string description) {:optional true}]
-    [documentRef (slot-ref document) {:optional true}]
-    [sectionRefs (slot-string-list section) {:optional true}]
-    [guidanceRef (slot-string guidance) {:optional true}]
-    [inputs (action-inputs input)]
-    [loc loc])
-  (:result-type (constant TaskDefinitionDef)))
-
-; =============================================================================
-; SECTION 3 — DOCUMENT / LOCALIZATION / PDF FORMS
-; =============================================================================
-
-(define-form define-document
-  (:phase domain)
-  (:doc "Canonical document template declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot description value)
-    (slot page form (:many true)))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type DocumentDef)))
-  (:extensions
-    (:artifact
-      (:payload (:contract DocumentPayload))))
-  (:construct-fn document/construct)
-  (:construct
-    [kind "Document"]
-    [name (or declaration-name "anonymous-document")]
-    [description (slot-string description) {:optional true}]
-    [pages (children page)]
-    [loc loc])
-  (:result-type (constant DocumentDef)))
-
-(define-form page
-  (:phase domain)
-  (:doc "Document page/section definition.")
-  (:slots
-    (slot section-id value)
-    (slot assignee value (:required true))
-    (slot depends-on value (:many true))
-    (slot description value (:alias page-description))
-    (slot completion-mutation form (:alias completion-action))
-    (slot field form (:many true)))
-  (:construct-fn page/construct)
-  (:construct
-    [sectionId (slot-string section-id) {:optional true}]
-    [assignee (slot-string assignee)]
-    [description (slot-string description) {:optional true}]
-    [dependsOn (slot-string-list depends-on)]
-    [completion (first-child completion-mutation) {:optional true}]
-    [fields (children field)]
-    [loc loc])
-  (:result-type (constant DocumentPageDef)))
-
-(define-form field
-  (:phase domain)
-  (:doc "Document field definition.")
-  (:identifiers
-    (identifier type Symbol)
-    (identifier path Symbol))
-  (:slots
-    (slot label value)
-    (slot description value)
-    (slot content value)
-    (slot required value (:alias document-required))
-    (slot bind value (:many true))
-    (slot option form (:many true)))
-  (:construct-fn field/construct)
-  (:construct
-    [type (canonical-identifier type)]
-    [path (canonical-identifier path)]
-    [label (slot-string label) {:optional true}]
-    [description (slot-string description) {:optional true}]
-    [content (slot-string content) {:optional true}]
-    [required (slot-bool required)]
-    [binding (attribute-binding bind) {:optional true}]
-    [options (children option)]
-    [loc loc])
-  (:result-type (constant DocumentFieldDef)))
-
-(define-form completion-mutation
-  (:phase domain)
-  (:doc "Document section completion mutation.")
-  (:identifiers
-    (identifier mutation String)
-    (identifier entity String))
-  (:construct-fn completion-mutation/construct)
-  (:construct
-    [mutation (identifier mutation)]
-    [mutationRef (slot-ref mutation)]
-    [entity (identifier entity) {:optional true}]
-    [entityRef (slot-ref entity) {:optional true}]
-    [loc loc])
-  (:result-type (constant DocumentCompletionDef)))
-
-(define-form option
-  (:phase domain)
-  (:doc "Select option.")
-  (:identifiers
-    (identifier value String)
-    (identifier label String))
-  (:construct-fn option/construct)
-  (:construct
-    [value (identifier value)]
-    [label (identifier label)])
-  (:result-type (constant DocumentOptionDef)))
-
-(define-form define-document-locale
-  (:phase domain)
-  (:doc "Translations for a document locale.")
-  (:slots
-    (slot document value (:required true) (:alias form))
-    (slot locale value (:required true))
-    (slot role form (:many true))
-    (slot section form (:many true))
-    (slot field form (:many true)))
-  (:construct-fn document-locale/construct)
-  (:extensions
-    (:artifact
-      (:payload (:contract DocumentLocalePayload))))
-  (:construct
-    [kind "DocumentLocale"]
-    [documentName (slot-string document)]
-    [documentRef (slot-ref document)]
-    [locale (slot-string locale)]
-    [roles (children role)]
-    [sections (children section)]
-    [fields (children field)]
-    [loc loc])
-  (:result-type (constant DocumentLocaleDef)))
-
-(define-form role
-  (:phase domain)
-  (:doc "Localized role translation.")
-  (:identifiers
-    (identifier name String))
-  (:slots
-    (slot label value)
-    (slot description value))
-  (:constructed-by document-locale-elaboration)
-  (:construct
-    [role (identifier name)]
-    [label (slot-string label) {:optional true}]
-    [description (slot-string description) {:optional true}]
-    [loc loc])
-  (:result-type (constant DocumentRoleLocaleDef)))
-
-(define-form section
-  (:phase domain)
-  (:doc "Localized section translation.")
-  (:identifiers
-    (identifier name String))
-  (:slots
-    (slot label value)
-    (slot description value))
-  (:validation
-    (validate validate-membership (:slot name) (:collection document.sections)))
-  (:constructed-by document-locale-elaboration)
-  (:construct
-    [sectionId (identifier name)]
-    [label (slot-string label) {:optional true}]
-    [description (slot-string description) {:optional true}]
-    [loc loc])
-  (:result-type (constant DocumentSectionLocaleDef)))
-
-(define-form locale-field
-  (:phase domain)
-  (:doc "Localized field translation.")
-  (:identifiers
-    (identifier path Symbol))
-  (:slots
-    (slot label value)
-    (slot description value)
-    (slot option form (:many true)))
-  (:validation
-    (validate validate-membership (:slot path) (:collection document.fields)))
-  (:constructed-by document-locale-elaboration :child field)
-  (:construct
-    [path (canonical-identifier path)]
-    [label (slot-string label) {:optional true}]
-    [description (slot-string description) {:optional true}]
-    [options (children option)]
-    [loc loc])
-  (:result-type (constant DocumentFieldLocaleDef)))
-
-(define-form define-document-localized
-  (:phase domain)
-  (:doc "Document locale composition.")
-  (:slots
-    (slot document value (:required true) (:alias form))
-    (slot locales value (:many true))
-    (slot default-locale value))
-  (:validate-fn document-localized/validate)
-  (:validation
-    (validate validate-list-membership (:slot locales) (:collection document.locales))
-    (validate validate-default-in-list (:default-slot default-locale) (:list-slot locales)))
-  (:extensions
-    (:artifact
-      (:payload (:contract DocumentLocalizedPayload))))
-  (:construct-fn document-localized/construct)
-  (:construct
-    [kind "DocumentLocalized"]
-    [documentName (slot-string document)]
-    [documentRef (slot-ref document)]
-    [locales (slot-string-list locales)]
-    [defaultLocale (slot-string default-locale) {:optional true}]
-    [loc loc])
-  (:result-type (constant DocumentLocalizedDef)))
-
-(define-form define-pdf-mapping
-  (:phase domain)
-  (:doc "PDF field mapping definition.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot display-name value)
-    (slot description value)
-    (slot template-blob value (:required true))
-    (slot template-file value)
-    (slot template-filename value)
-    (slot document-ref value (:alias form-ref))
-    (slot direct form (:many true))
-    (slot computed form (:many true))
-    (slot switch form (:many true)))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type PdfMappingDef)))
-  (:extensions
-    (:artifact
-      (:payload (:contract PdfMappingPayload))))
-  (:construct-fn pdf-mapping/construct)
-  (:construct
-    [kind "PdfMapping"]
-    [name (or declaration-name "anonymous-pdf-mapping")]
-    [displayName (slot-string display-name) {:optional true}]
-    [description (slot-string description) {:optional true}]
-    [templateBlob (slot-string template-blob)]
-    [templateFile (slot-string template-file) {:optional true}]
-    [templateFilename (slot-string template-filename) {:optional true}]
-    [documentName (slot-string document-ref) {:optional true}]
-    [documentRef (slot-ref document-ref) {:optional true}]
-    [mappings (concat (children direct) (children computed) (children switch))]
-    [loc loc])
-  (:result-type (constant PdfMappingDef)))
-
-(define-form direct
-  (:phase domain)
-  (:doc "Direct PDF mapping.")
-  (:identifiers
-    (identifier source String)
-    (identifier pdf-field String))
-  (:slots
-    (slot transform value))
-  (:construct-fn direct/construct)
-  (:construct
-    [kind "direct"]
-    [source (identifier source)]
-    [pdfField (identifier pdf-field)]
-    [transform (slot-string transform) {:optional true}]
-    [loc loc])
-  (:result-type (constant PdfDirectDef)))
-
-(define-form computed
-  (:phase domain)
-  (:doc "Computed PDF mapping.")
-  (:identifiers
-    (identifier expression Value)
-    (identifier pdf-field String))
-  (:slots
-    (slot transform value))
-  (:construct-fn computed/construct)
-  (:construct
-    [kind "computed"]
-    [expr (lower-runtime-expr (identifier-expr expression))]
-    [pdfField (identifier pdf-field)]
-    [transform (slot-string transform) {:optional true}]
-    [loc loc])
-  (:result-type (constant PdfComputedDef)))
-
-(define-form switch
-  (:phase domain)
-  (:doc "Switch PDF mapping.")
-  (:identifiers
-    (identifier source String))
-  (:slots
-    (slot case form (:many true)))
-  (:construct-fn switch/construct)
-  (:construct
-    [kind "switch"]
-    [source (identifier source)]
-    [cases (children case)]
-    [loc loc])
-  (:result-type (constant PdfSwitchDef)))
-
-(define-form case
-  (:phase domain)
-  (:doc "Switch case for a PDF mapping.")
-  (:identifiers
-    (identifier when String))
-  (:slots
-    (slot set form (:many true)))
-  (:construct-fn case/construct)
-  (:construct
-    [when (identifier when)]
-    [assignments (children set)]
-    [loc loc])
-  (:result-type (constant PdfCaseDef)))
-
-(define-form set
-  (:phase domain)
-  (:doc "PDF field assignment.")
-  (:identifiers
-    (identifier pdf-field String)
-    (identifier value Value))
-  (:construct-fn set/construct)
-  (:construct
-    [pdfField (identifier pdf-field)]
-    [value (identifier-scalar value)])
-  (:result-type (constant PdfSetDef)))
-
-
-; =============================================================================
-; SECTION 6 — OPEN QUESTIONS
-; =============================================================================
-;
-; 1. Name conflict between meta `(form ...)` and domain document declarations.
-;    - maybe phase-qualified heads solve this better.
-;
-; 2. Should static :bindings / :elaborates / :construct remain author-facing?
-;    - they are useful as readable canonical IR today.
-;    - but long-term they may be compiled output from higher-level meta forms.
-;
-; 3. Should meta-fn bodies be ordinary Lisp?
-;    - probably not fully.
-;    - likely a restricted compile-time Lisp subset or structured meta AST.
-;
-; 4. What is the smallest kernel bootstrap seed?
-;    - enough to parse + validate `form` and `meta-fn`
-;    - then ontology.lisp bootstraps the rest.
-;
-; 5. Can some PDF forms be raised to richer shared reusable families
-;    instead of plain descriptor repetition?
-;    - likely yes, but deferred here.
+; (entity Employee {:name String :department (Id Department) :active (Option Bool)})
+; (seed Employee "employee:ada" {:name "Ada" :department "department:engineering"})
+; (query employees :from Employee :select [name department])
+; Canonical domain forms. Their type and projection definitions are the source of truth.
+(type
+  EntityFieldIR
+  {
+    :name Keyword
+    :type Type
+    :required Bool
+    :indexed Bool
+    :description (Option String)
+    :default (Option Json)})
+(type
+  EntityIR
+  {
+    :kind "Entity"
+    :name Symbol
+    :fields (List EntityFieldIR)
+    :doc (Option String)
+    :role (Option String)
+    :idPattern (Option String)})
+(type
+  RelationIR
+  {
+    :kind "Relation"
+    :name Symbol
+    :source Symbol
+    :target Symbol
+    :fields (List EntityFieldIR)})
+(type
+  RecordIR
+  {
+    :kind "Record"
+    :name String
+    :id String
+    :entity Symbol
+    :fields (Map String Json)})
+(type
+  LinkIR
+  {
+    :kind "Link"
+    :name String
+    :relation Symbol
+    :source String
+    :target String
+    :sourceId String
+    :targetId String
+    :fields (Map String Json)})
+(type
+  SystemAttributeIR
+  {
+    :kind "SystemAttribute"
+    :name Symbol
+    :valueType Type
+    :required Bool
+    :doc (Option String)})
+(define optional-type? [t] (and (list? t) (= (str (first t)) "Option")))
+(define field-base-type [t] (type/base (if (optional-type? t) (nth t 1) t)))
+(define
+  fields->ir
+  [owner fields]
+  (map
+    (fn
+      [[key t]]
+      {
+        :name (keyword owner key)
+        :type (field-base-type t)
+        :required (not (optional-type? t))
+        :indexed (meta t :indexed false)
+        :description (meta t :doc nil)
+        :default
+          (if
+            (contains? (type/metadata t) :default)
+            (Some (meta t :default nil))
+            None)})
+    fields))
+(define
+  assignments->ir
+  [owner fields]
+  (reduce
+    (fn
+      [record [key value]]
+      (assoc record (keyword/name (keyword owner key)) value))
+    {}
+    fields))
+(type
+  MetaEntityIR
+  {
+    :kind "MetaEntity"
+    :name Symbol
+    :fields (List EntityFieldIR)
+    :doc (Option String)
+    :role (Option String)
+    :idPattern (Option String)})
+(type EntityDeclarationIR (Union EntityIR MetaEntityIR))
+(form
+  (entity name fields {:keys [doc role id-pattern tier]})
+  "A named record of attributes."
+  :types
+    {
+      :name (Declares SchemaDecl)
+      :fields (Record Type)
+      :doc (Option String)
+      :role (Option String)
+      :id-pattern (Option String)
+      :tier (Option (Union :user :meta))}
+  :ir EntityDeclarationIR
+  {
+    :kind (if (= tier :meta) "MetaEntity" "Entity")
+    :name name
+    :fields (fields->ir name fields)
+    :doc doc
+    :role role
+    :idPattern id-pattern})
+(form
+  (relation name source target fields)
+  "A typed relation between entities."
+  :types
+    {
+      :name (Declares RelationDef)
+      :source (Refers SchemaDecl)
+      :target (Refers SchemaDecl)
+      :fields (Record Type)}
+  :ir RelationIR
+  {
+    :kind "Relation"
+    :name name
+    :source source
+    :target target
+    :fields (fields->ir name fields)})
+(define
+  seed-row
+  [owner]
+  (reduce
+    (fn
+      [row key]
+      (assoc
+        row
+        (keyword owner key)
+        (type/base (meta/get (declaration-fields owner) key))))
+    {}
+    (keys (declaration-fields owner))))
+(define
+  seed-values
+  [owner fields]
+  (let
+    [
+      provided
+      (reduce
+        (fn [record [key value]] (assoc record (keyword owner key) value))
+        {}
+        fields)
+      schema
+      (declaration-fields owner)]
+    (reduce
+      (fn
+        [record key]
+        (let
+          [
+            metadata
+            (type/metadata (meta/get schema key))
+            attribute
+            (keyword owner key)]
+          (if
+            (and
+              (= (contains? record attribute) false)
+              (contains? metadata :default))
+            (assoc record attribute (get metadata :default))
+            record)))
+      provided
+      (keys schema))))
+(define
+  seed-assignments
+  [owner fields]
+  (let
+    [values (seed-values owner fields)]
+    (reduce
+      (fn [record key] (assoc record (keyword/name key) (meta/get values key)))
+      {}
+      (keys values))))
+(form
+  (seed entity id fields)
+  "Seed data for an entity."
+  :types
+    {
+      :entity (Refers SchemaDecl)
+      :id (Declares RecordDef String)
+      :fields (Record Json)}
+  :ir RecordIR
+  :check
+    (fn
+      [{:keys [entity fields]}]
+      (schema/validate-record (seed-row entity) (seed-values entity fields)))
+  :type RecordDef
+  {
+    :kind "Record"
+    :name id
+    :id id
+    :entity entity
+    :fields (seed-assignments entity fields)})
+(form
+  (link relation source target fields)
+  "A relation instance."
+  :types
+    {
+      :relation (Refers RelationDef)
+      :source String
+      :target String
+      :fields (Record Json)}
+  :ir LinkIR
+  :check
+    (fn
+      [{:keys [relation source target fields]}]
+      (concat
+        (schema/validate-record
+          (seed-row relation)
+          (seed-values relation fields))
+        (schema/validate-record
+          {
+            :source
+              (quasiquote (Id (unquote (declaration-hole relation :source))))
+            :target
+              (quasiquote (Id (unquote (declaration-hole relation :target))))}
+          {:source source :target target})))
+  :type LinkDef
+  {
+    :kind "Link"
+    :name (str relation ":" source ":" target)
+    :relation relation
+    :source source
+    :target target
+    :sourceId source
+    :targetId target
+    :fields (seed-assignments relation fields)})
+(form
+  (attribute name value-type {:keys [doc]})
+  "A shared attribute."
+  :types {:name (Declares SchemaDecl) :value-type Type :doc (Option String)}
+  :ir SystemAttributeIR
+  {
+    :kind "SystemAttribute"
+    :name name
+    :valueType (field-base-type value-type)
+    :required (not (optional-type? value-type))
+    :doc doc})
+(type
+  QueryIR
+  {
+    :kind "Query"
+    :name Symbol
+    :from Symbol
+    :where (Option RuntimeExpr)
+    :datalog (Option RuntimeExpr)
+    :select (List Keyword)})
+(define
+  entity-fields
+  [entity]
+  (let
+    [
+      fields
+      (declaration-fields entity)
+      row
+      (reduce
+        (fn
+          [row key]
+          (assoc row (keyword key) (type/base (meta/get fields key))))
+        {}
+        (keys fields))]
+    (assoc
+      (assoc
+        (reduce
+          (fn [scope key] (assoc scope key (type/base (meta/get fields key))))
+          {}
+          (keys fields))
+        (str entity)
+        row)
+      :it
+      row)))
+(form
+  (query name {:keys [from where select]})
+  "A named read over one entity."
+  :types
+    {
+      :name (Declares QueryDef)
+      :from (Refers SchemaDecl)
+      :where (Option (Expr Bool))
+      :select (Option (List Symbol))}
+  :scope {:where (fn [{:keys [from]}] (entity-fields from))}
+  :type (fn [{:keys [from select]}] (List (row-of from select)))
+  :ir QueryIR
+  {
+    :kind "Query"
+    :name name
+    :from from
+    :where where
+    :select (map (fn [field] (keyword from field)) (or select []))})
+
+; Domain projections are ordinary functions over typed syntax holes.
+(type
+  WorkspaceIR
+  {
+    :kind "Workspace"
+    :name Symbol
+    :title (Option String)
+    :persona (Option String)
+    :subject (Option Symbol)
+    :home (Option Symbol)
+    :views (List Symbol)})
+(form
+  (workspace name {:keys [title persona subject home views]})
+  :types
+    {
+      :name (Declares WorkspaceDef)
+      :title (Option String)
+      :persona (Option String)
+      :subject (Option Symbol)
+      :home (Option (Refers ViewDef))
+      :views (Option (List (Refers ViewDef)))}
+  :ir WorkspaceIR
+  {
+    :kind "Workspace"
+    :name name
+    :title title
+    :persona persona
+    :subject subject
+    :home home
+    :views (or views [])})
+(type
+  IdentityDeclarationIR
+  {
+    :kind "IdentityDeclaration"
+    :identityKind String
+    :name Symbol
+    :description (Option String)
+    :member (Option Symbol)
+    :group (Option Symbol)
+    :principal (Option Symbol)
+    :resource (Option Symbol)
+    :resolver (Option RuntimeExpr)})
+(form
+  (identity name
+    {:keys [kind description member group principal resource resolver]})
+  :types
+    {
+      :name (Declares IdentityDef)
+      :kind (Option (Union :role :group :membership :contextual-role))
+      :description (Option String)
+      :member (Option Symbol)
+      :group (Option (Refers IdentityDef))
+      :principal (Option (Refers IdentityDef))
+      :resource (Option (Refers SchemaDecl))
+      :resolver (Option Syntax)}
+  :ir IdentityDeclarationIR
+  {
+    :kind "IdentityDeclaration"
+    :identityKind (keyword/name (or kind :role))
+    :name name
+    :description description
+    :member member
+    :group group
+    :principal principal
+    :resource resource
+    :resolver resolver})
+(type
+  PermissionDeclarationIR
+  {
+    :kind "PermissionDeclaration"
+    :name Symbol
+    :principal Symbol
+    :action Symbol
+    :resource Symbol
+    :effect String
+    :condition (Option RuntimeExpr)
+    :description (Option String)})
+(form
+  (permission name
+    {:keys [principal action resource effect condition description]})
+  :types
+    {
+      :name (Declares PermissionDef)
+      :principal (Refers IdentityDef)
+      :action (Refers ActionDef)
+      :resource (Refers SchemaDecl)
+      :effect (Option (Union :allow :deny))
+      :condition (Option (Expr Bool))
+      :description (Option String)}
+  :ir PermissionDeclarationIR
+  {
+    :kind "PermissionDeclaration"
+    :name name
+    :principal principal
+    :action action
+    :resource resource
+    :effect (keyword/name (or effect :allow))
+    :condition condition
+    :description description})
+(type TriggerIR {:kind "Trigger" :triggerKind String :entity Symbol})
+(type process-trigger TriggerIR)
+(form
+  (process-trigger/on-create entity)
+  :types {:entity (Refers SchemaDecl)}
+  :ir TriggerIR
+  {:kind "Trigger" :triggerKind "on-create" :entity entity})
+(form
+  (process-trigger/on-update entity)
+  :types {:entity (Refers SchemaDecl)}
+  :ir TriggerIR
+  {:kind "Trigger" :triggerKind "on-update" :entity entity})
+(form
+  (process-trigger/on-delete entity)
+  :types {:entity (Refers SchemaDecl)}
+  :ir TriggerIR
+  {:kind "Trigger" :triggerKind "on-delete" :entity entity})
+(type ProcessInputIR {:name String :expr RuntimeExpr})
+(type
+  ProcessNodeIR
+  {
+    :kind "Node"
+    :id Symbol
+    :action (Option Symbol)
+    :actionRef (Option {:kind "Action" :name Symbol})
+    :join (Option String)
+    :fanOut (Option String)
+    :inputs (List ProcessInputIR)})
+(type
+  ProcessEdgeIR
+  {:kind "Edge" :from Symbol :to Symbol :guard (Option RuntimeExpr)})
+(type process-child (Union ProcessNodeIR ProcessEdgeIR))
+(define
+  expression-entries
+  [fields]
+  (map (fn [[key value]] {:name (keyword/name key) :expr value}) (or fields [])))
+(define reference [kind name] (if (nil? name) nil {:kind kind :name name}))
+(form
+  (process-child/node id {:keys [action join fan-out input]})
+  :types
+    {
+      :id Symbol
+      :action (Option (Refers ActionDef))
+      :join (Option String)
+      :fan-out (Option String)
+      :input (Option (Record Syntax))}
+  :ir ProcessNodeIR
+  {
+    :kind "Node"
+    :id id
+    :action action
+    :actionRef (reference "Action" action)
+    :join join
+    :fanOut fan-out
+    :inputs (expression-entries input)})
+(form
+  (process-child/edge from to {:keys [guard]})
+  :types {:from Symbol :to Symbol :guard (Option (Expr Bool))}
+  :ir ProcessEdgeIR
+  {:kind "Edge" :from from :to to :guard guard})
+(type
+  ProcessIR
+  {
+    :kind "Process"
+    :name Symbol
+    :description (Option String)
+    :trigger TriggerIR
+    :nodes (List ProcessNodeIR)
+    :edges (List ProcessEdgeIR)})
+(define
+  children-of-kind
+  [kind children]
+  (filter (fn [child] (= child.kind kind)) children))
+(define
+  unique-values
+  [values]
+  (reduce
+    (fn [unique value] (if (contains? unique value) unique (conj unique value)))
+    []
+    values))
+(define
+  graph/reachable?
+  [edges from to visited]
+  (if
+    (= from to)
+    true
+    (if
+      (contains? visited from)
+      false
+      (reduce
+        (fn
+          [found edge]
+          (or
+            found
+            (and
+              (= edge.from from)
+              (graph/reachable? edges edge.to to (conj visited from)))))
+        false
+        edges))))
+(define
+  graph/cycle-diagnostics
+  [edges]
+  (reduce
+    (fn
+      [diagnostics edge]
+      (if
+        (graph/reachable? edges edge.to edge.from [])
+        (conj
+          diagnostics
+          {
+            :severity :error
+            :message
+              (str "Dependency cycle involving " edge.from " and " edge.to)})
+        diagnostics))
+    []
+    edges))
+(define
+  process/check
+  [children]
+  (let
+    [
+      nodes
+      (map (fn [node] node.id) (children-of-kind "Node" children))
+      edges
+      (children-of-kind "Edge" children)
+      duplicates
+      (if
+        (= (count nodes) (count (unique-values nodes)))
+        []
+        [{:severity :error :message "Duplicate process node id"}])]
+    (reduce
+      (fn
+        [diagnostics edge]
+        (concat
+          diagnostics
+          (if
+            (or (= edge.from (quote start)) (contains? nodes edge.from))
+            []
+            [
+              {
+                :severity :error
+                :message (str "Unknown process node " edge.from)}])
+          (if
+            (contains? nodes edge.to)
+            []
+            [{:severity :error :message (str "Unknown process node " edge.to)}])))
+      (concat duplicates (graph/cycle-diagnostics edges))
+      edges)))
+(form
+  (process name {:keys [description trigger]} child ...)
+  :types
+    {
+      :name (Declares ProcessDef)
+      :description (Option String)
+      :trigger process-trigger
+      :child (List process-child)}
+  :check (fn [{:keys [child]}] (process/check child))
+  :scope {:child (fn [{:keys [child]}] (process/scope child))}
+  :ir ProcessIR
+  {
+    :kind "Process"
+    :name name
+    :description description
+    :trigger trigger
+    :nodes (children-of-kind "Node" child)
+    :edges (children-of-kind "Edge" child)})
+(type DocumentOptionIR {:kind "Option" :value String :label String})
+(type document-option DocumentOptionIR)
+(form
+  (document-option/option value label)
+  :types {:value String :label String}
+  :ir DocumentOptionIR
+  {:kind "Option" :value value :label label})
+(type
+  AttributeBindingIR
+  {
+    :kind "AttributeBinding"
+    :attribute Keyword
+    :entity Symbol
+    :transform (Option String)
+    :cardinality (Option String)})
+(define
+  binding/key
+  [owner field]
+  (first
+    (filter
+      (fn
+        [key]
+        (or
+          (= (str key) field)
+          (=
+            (nth (split (str key) "/") (- (count (split (str key) "/")) 1))
+            field)))
+      (keys (declaration-fields owner)))))
+(define
+  binding/check
+  [binding]
+  (if
+    (nil? binding)
+    []
+    (let
+      [
+        parts
+        (split (str binding) ".")
+        owner
+        (sym (first parts))
+        field
+        (nth parts 1)]
+      (if
+        (and (= (count parts) 2) (not (nil? (binding/key owner field))))
+        []
+        [
+          {
+            :severity :error
+            :slot :bind
+            :message (str "Unknown entity attribute " binding)}]))))
+(define
+  attribute-binding
+  [binding transform cardinality]
+  (if
+    (nil? binding)
+    nil
+    (let
+      [
+        parts
+        (split (str binding) ".")
+        owner
+        (sym (first parts))
+        field
+        (binding/key owner (nth parts 1))]
+      {
+        :kind "AttributeBinding"
+        :entity owner
+        :attribute (keyword owner field)
+        :transform (if (nil? transform) nil (keyword/name transform))
+        :cardinality (if (nil? cardinality) nil (keyword/name cardinality))})))
+(type
+  DocumentFieldIR
+  {
+    :kind "Field"
+    :type String
+    :path Keyword
+    :label (Option String)
+    :description (Option String)
+    :content (Option String)
+    :required Bool
+    :binding (Option AttributeBindingIR)
+    :options (List DocumentOptionIR)})
+(type document-field DocumentFieldIR)
+(form
+  (document-field/text path label
+    {:keys [description required bind transform cardinality]}
+    option
+    ...)
+  :types
+    {
+      :path Keyword
+      :label String
+      :description (Option String)
+      :required (Option Bool)
+      :bind (Option Symbol)
+      :transform
+        (Option
+          (Union :identity :string :number :boolean :date :datetime :json :ref))
+      :cardinality (Option (Union :one :many))
+      :option (List document-option)}
+  :check (fn [{:keys [bind]}] (binding/check bind))
+  :ir DocumentFieldIR
+  {
+    :kind "Field"
+    :type "text"
+    :path path
+    :label label
+    :description description
+    :required (or required false)
+    :binding (attribute-binding bind transform cardinality)
+    :options option})
+(form
+  (document-field/date path label
+    {:keys [description required bind transform cardinality]}
+    option
+    ...)
+  :types
+    {
+      :path Keyword
+      :label String
+      :description (Option String)
+      :required (Option Bool)
+      :bind (Option Symbol)
+      :transform
+        (Option
+          (Union :identity :string :number :boolean :date :datetime :json :ref))
+      :cardinality (Option (Union :one :many))
+      :option (List document-option)}
+  :check (fn [{:keys [bind]}] (binding/check bind))
+  :ir DocumentFieldIR
+  {
+    :kind "Field"
+    :type "date"
+    :path path
+    :label label
+    :description description
+    :required (or required false)
+    :binding (attribute-binding bind transform cardinality)
+    :options option})
+(form
+  (document-field/number path label
+    {:keys [description required bind transform cardinality]}
+    option
+    ...)
+  :types
+    {
+      :path Keyword
+      :label String
+      :description (Option String)
+      :required (Option Bool)
+      :bind (Option Symbol)
+      :transform
+        (Option
+          (Union :identity :string :number :boolean :date :datetime :json :ref))
+      :cardinality (Option (Union :one :many))
+      :option (List document-option)}
+  :check (fn [{:keys [bind]}] (binding/check bind))
+  :ir DocumentFieldIR
+  {
+    :kind "Field"
+    :type "number"
+    :path path
+    :label label
+    :description description
+    :required (or required false)
+    :binding (attribute-binding bind transform cardinality)
+    :options option})
+(form
+  (document-field/checkbox path label
+    {:keys [description required bind transform cardinality]}
+    option
+    ...)
+  :types
+    {
+      :path Keyword
+      :label String
+      :description (Option String)
+      :required (Option Bool)
+      :bind (Option Symbol)
+      :transform
+        (Option
+          (Union :identity :string :number :boolean :date :datetime :json :ref))
+      :cardinality (Option (Union :one :many))
+      :option (List document-option)}
+  :check (fn [{:keys [bind]}] (binding/check bind))
+  :ir DocumentFieldIR
+  {
+    :kind "Field"
+    :type "checkbox"
+    :path path
+    :label label
+    :description description
+    :required (or required false)
+    :binding (attribute-binding bind transform cardinality)
+    :options option})
+(form
+  (document-field/select path label
+    {:keys [description required bind transform cardinality]}
+    option
+    ...)
+  :types
+    {
+      :path Keyword
+      :label String
+      :description (Option String)
+      :required (Option Bool)
+      :bind (Option Symbol)
+      :transform
+        (Option
+          (Union :identity :string :number :boolean :date :datetime :json :ref))
+      :cardinality (Option (Union :one :many))
+      :option (List document-option)}
+  :check (fn [{:keys [bind]}] (binding/check bind))
+  :ir DocumentFieldIR
+  {
+    :kind "Field"
+    :type "select"
+    :path path
+    :label label
+    :description description
+    :required (or required false)
+    :binding (attribute-binding bind transform cardinality)
+    :options option})
+(form
+  (document-field/textarea path label
+    {:keys [description required bind transform cardinality]}
+    option
+    ...)
+  :types
+    {
+      :path Keyword
+      :label String
+      :description (Option String)
+      :required (Option Bool)
+      :bind (Option Symbol)
+      :transform
+        (Option
+          (Union :identity :string :number :boolean :date :datetime :json :ref))
+      :cardinality (Option (Union :one :many))
+      :option (List document-option)}
+  :check (fn [{:keys [bind]}] (binding/check bind))
+  :ir DocumentFieldIR
+  {
+    :kind "Field"
+    :type "textarea"
+    :path path
+    :label label
+    :description description
+    :required (or required false)
+    :binding (attribute-binding bind transform cardinality)
+    :options option})
+(form
+  (document-field/signature path label
+    {:keys [description required bind transform cardinality]}
+    option
+    ...)
+  :types
+    {
+      :path Keyword
+      :label String
+      :description (Option String)
+      :required (Option Bool)
+      :bind (Option Symbol)
+      :transform
+        (Option
+          (Union :identity :string :number :boolean :date :datetime :json :ref))
+      :cardinality (Option (Union :one :many))
+      :option (List document-option)}
+  :check (fn [{:keys [bind]}] (binding/check bind))
+  :ir DocumentFieldIR
+  {
+    :kind "Field"
+    :type "signature"
+    :path path
+    :label label
+    :description description
+    :required (or required false)
+    :binding (attribute-binding bind transform cardinality)
+    :options option})
+(form
+  (document-field/file path label
+    {:keys [description required bind transform cardinality]}
+    option
+    ...)
+  :types
+    {
+      :path Keyword
+      :label String
+      :description (Option String)
+      :required (Option Bool)
+      :bind (Option Symbol)
+      :transform
+        (Option
+          (Union :identity :string :number :boolean :date :datetime :json :ref))
+      :cardinality (Option (Union :one :many))
+      :option (List document-option)}
+  :check (fn [{:keys [bind]}] (binding/check bind))
+  :ir DocumentFieldIR
+  {
+    :kind "Field"
+    :type "file"
+    :path path
+    :label label
+    :description description
+    :required (or required false)
+    :binding (attribute-binding bind transform cardinality)
+    :options option})
+(form
+  (document-field/email path label
+    {:keys [description required bind transform cardinality]}
+    option
+    ...)
+  :types
+    {
+      :path Keyword
+      :label String
+      :description (Option String)
+      :required (Option Bool)
+      :bind (Option Symbol)
+      :transform
+        (Option
+          (Union :identity :string :number :boolean :date :datetime :json :ref))
+      :cardinality (Option (Union :one :many))
+      :option (List document-option)}
+  :check (fn [{:keys [bind]}] (binding/check bind))
+  :ir DocumentFieldIR
+  {
+    :kind "Field"
+    :type "email"
+    :path path
+    :label label
+    :description description
+    :required (or required false)
+    :binding (attribute-binding bind transform cardinality)
+    :options option})
+(form
+  (document-field/phone path label
+    {:keys [description required bind transform cardinality]}
+    option
+    ...)
+  :types
+    {
+      :path Keyword
+      :label String
+      :description (Option String)
+      :required (Option Bool)
+      :bind (Option Symbol)
+      :transform
+        (Option
+          (Union :identity :string :number :boolean :date :datetime :json :ref))
+      :cardinality (Option (Union :one :many))
+      :option (List document-option)}
+  :check (fn [{:keys [bind]}] (binding/check bind))
+  :ir DocumentFieldIR
+  {
+    :kind "Field"
+    :type "phone"
+    :path path
+    :label label
+    :description description
+    :required (or required false)
+    :binding (attribute-binding bind transform cardinality)
+    :options option})
+(form
+  (document-field/radio path label
+    {:keys [description required bind transform cardinality]}
+    option
+    ...)
+  :types
+    {
+      :path Keyword
+      :label String
+      :description (Option String)
+      :required (Option Bool)
+      :bind (Option Symbol)
+      :transform
+        (Option
+          (Union :identity :string :number :boolean :date :datetime :json :ref))
+      :cardinality (Option (Union :one :many))
+      :option (List document-option)}
+  :check (fn [{:keys [bind]}] (binding/check bind))
+  :ir DocumentFieldIR
+  {
+    :kind "Field"
+    :type "radio"
+    :path path
+    :label label
+    :description description
+    :required (or required false)
+    :binding (attribute-binding bind transform cardinality)
+    :options option})
+(form
+  (document-field/hidden path label
+    {:keys [description required bind transform cardinality]}
+    option
+    ...)
+  :types
+    {
+      :path Keyword
+      :label String
+      :description (Option String)
+      :required (Option Bool)
+      :bind (Option Symbol)
+      :transform
+        (Option
+          (Union :identity :string :number :boolean :date :datetime :json :ref))
+      :cardinality (Option (Union :one :many))
+      :option (List document-option)}
+  :check (fn [{:keys [bind]}] (binding/check bind))
+  :ir DocumentFieldIR
+  {
+    :kind "Field"
+    :type "hidden"
+    :path path
+    :label label
+    :description description
+    :required (or required false)
+    :binding (attribute-binding bind transform cardinality)
+    :options option})
+(form
+  (document-field/content path content)
+  :types {:path Keyword :content String}
+  :ir DocumentFieldIR
+  {
+    :kind "Field"
+    :type "content"
+    :path path
+    :content content
+    :required false
+    :options []})
+(type
+  DocumentCompletionIR
+  {
+    :kind "CompletionMutation"
+    :mutation Symbol
+    :mutationRef {:kind "Action" :name Symbol}
+    :entity (Option Symbol)
+    :entityRef (Option {:kind "Entity" :name Symbol})})
+(type document-completion DocumentCompletionIR)
+(form
+  (document-completion/completion action {:keys [entity]})
+  :types {:action (Refers ActionDef) :entity (Option (Refers SchemaDecl))}
+  :ir DocumentCompletionIR
+  {
+    :kind "CompletionMutation"
+    :mutation action
+    :mutationRef (reference "Action" action)
+    :entity entity
+    :entityRef (reference "Entity" entity)})
+(type
+  DocumentPageIR
+  {
+    :kind "Page"
+    :sectionId Symbol
+    :assignee Symbol
+    :description (Option String)
+    :dependsOn (List Symbol)
+    :completion (Option DocumentCompletionIR)
+    :fields (List DocumentFieldIR)})
+(type document-page DocumentPageIR)
+(form
+  (document-page/page name
+    {:keys [assignee description depends-on completion]}
+    child
+    ...)
+  :types
+    {
+      :name Symbol
+      :assignee Symbol
+      :description (Option String)
+      :depends-on (Option (List Symbol))
+      :completion (Option document-completion)
+      :child (List document-field)}
+  :ir DocumentPageIR
+  {
+    :kind "Page"
+    :sectionId name
+    :assignee assignee
+    :description description
+    :dependsOn (or depends-on [])
+    :completion completion
+    :fields child})
+(define
+  document/check
+  [pages]
+  (let
+    [
+      sections
+      (map (fn [page] page.sectionId) pages)
+      fields
+      (flat-map (fn [page] (map (fn [field] field.path) page.fields)) pages)
+      edges
+      (flat-map
+        (fn
+          [page]
+          (map
+            (fn [dependency] {:from dependency :to page.sectionId})
+            page.dependsOn))
+        pages)
+      duplicates
+      (concat
+        (if
+          (= (count sections) (count (unique-values sections)))
+          []
+          [{:severity :error :message "Duplicate document section id"}])
+        (if
+          (= (count fields) (count (unique-values fields)))
+          []
+          [{:severity :error :message "Duplicate document field path"}]))]
+    (reduce
+      (fn
+        [diagnostics edge]
+        (if
+          (contains? sections edge.from)
+          diagnostics
+          (conj
+            diagnostics
+            {
+              :severity :error
+              :message (str "Unknown document dependency " edge.from)})))
+      (concat duplicates (graph/cycle-diagnostics edges))
+      edges)))
+(type
+  DocumentIR
+  {
+    :kind "Document"
+    :name Symbol
+    :description (Option String)
+    :pages (List DocumentPageIR)})
+(form
+  (document name {:keys [description]} page ...)
+  :types
+    {
+      :name (Declares DocumentDef)
+      :description (Option String)
+      :page (List document-page)}
+  :check (fn [{:keys [page]}] (document/check page))
+  :ir DocumentIR
+  {:kind "Document" :name name :description description :pages page})
+(type TaskInputIR {:name Keyword :type Type :required Bool})
+(type
+  TaskDefinitionIR
+  {
+    :kind "TaskDefinition"
+    :name Symbol
+    :title String
+    :description (Option String)
+    :documentRef (Option {:kind "Document" :name Symbol})
+    :sectionRefs (List Symbol)
+    :defaultAssignee (Option Json)
+    :guidanceRef (Option Symbol)
+    :inputs (List TaskInputIR)
+    :scope (Option Json)})
+(form
+  (task name fields
+    {
+      :keys
+        [title description document sections default-assignee guidance scope]})
+  :types
+    {
+      :name (Declares TaskDef)
+      :fields (Record Type)
+      :title String
+      :description (Option String)
+      :document (Option (Refers DocumentDef))
+      :sections (Option (List Symbol))
+      :default-assignee (Option Json)
+      :guidance (Option Symbol)
+      :scope (Option Json)}
+  :ir TaskDefinitionIR
+  {
+    :kind "TaskDefinition"
+    :name name
+    :title title
+    :description description
+    :documentRef (reference "Document" document)
+    :sectionRefs (or sections [])
+    :defaultAssignee default-assignee
+    :guidanceRef guidance
+    :inputs
+      (map
+        (fn
+          [[key t]]
+          {
+            :name key
+            :type (field-base-type t)
+            :required (not (optional-type? t))})
+        fields)
+    :scope scope})
+(type
+  DocumentRoleLocaleIR
+  {
+    :kind "Role"
+    :name Symbol
+    :label (Option String)
+    :description (Option String)})
+(type
+  DocumentSectionLocaleIR
+  {
+    :kind "Section"
+    :name Symbol
+    :label (Option String)
+    :description (Option String)})
+(type
+  DocumentFieldLocaleIR
+  {
+    :kind "LocaleField"
+    :path Keyword
+    :label (Option String)
+    :description (Option String)
+    :options (List DocumentOptionIR)})
+(type
+  document-locale-child
+  (Union DocumentRoleLocaleIR DocumentSectionLocaleIR DocumentFieldLocaleIR))
+(form
+  (document-locale-child/role name {:keys [label description]})
+  :types {:name Symbol :label (Option String) :description (Option String)}
+  :ir DocumentRoleLocaleIR
+  {:kind "Role" :name name :label label :description description})
+(form
+  (document-locale-child/section name {:keys [label description]})
+  :types {:name Symbol :label (Option String) :description (Option String)}
+  :ir DocumentSectionLocaleIR
+  {:kind "Section" :name name :label label :description description})
+(form
+  (document-locale-child/field path {:keys [label description]} option ...)
+  :types
+    {
+      :path Keyword
+      :label (Option String)
+      :description (Option String)
+      :option (List document-option)}
+  :ir DocumentFieldLocaleIR
+  {
+    :kind "LocaleField"
+    :path path
+    :label label
+    :description description
+    :options option})
+(type
+  DocumentLocaleIR
+  {
+    :kind "DocumentLocale"
+    :documentName Symbol
+    :documentRef {:kind "Document" :name Symbol}
+    :locale String
+    :roles (List DocumentRoleLocaleIR)
+    :sections (List DocumentSectionLocaleIR)
+    :fields (List DocumentFieldLocaleIR)})
+(define
+  document/raw-option
+  [items key]
+  (if
+    (empty? items)
+    nil
+    (if
+      (= (first items) key)
+      (nth items 1)
+      (document/raw-option (rest items) key))))
+(define
+  document/locale-check
+  [document children]
+  (let
+    [
+      pages
+      (declaration-hole document :page)
+      sections
+      (map (fn [page] (nth page 1)) pages)
+      roles
+      (map (fn [page] (document/raw-option page :assignee)) pages)
+      fields
+      (flat-map
+        (fn
+          [page]
+          (map
+            (fn [field] (nth field 1))
+            (filter
+              (fn
+                [field]
+                (if
+                  (list? field)
+                  (if (> (count field) 1) (keyword? (nth field 1)) false)
+                  false))
+              page)))
+        pages)]
+    (flat-map
+      (fn
+        [child]
+        (let
+          [
+            value
+            (if (= child.kind "LocaleField") child.path child.name)
+            members
+            (if
+              (= child.kind "Role")
+              roles
+              (if (= child.kind "Section") sections fields))]
+          (if
+            (contains? members value)
+            []
+            [
+              {
+                :severity :error
+                :message (str "Unknown document " child.kind " " value)}])))
+      children)))
+(form
+  (document-locale document locale child ...)
+  :type DocumentLocaleDef
+  :types
+    {
+      :document (Refers DocumentDef)
+      :locale String
+      :child (List document-locale-child)}
+  :check (fn [{:keys [document child]}] (document/locale-check document child))
+  :ir DocumentLocaleIR
+  {
+    :kind "DocumentLocale"
+    :documentName document
+    :documentRef (reference "Document" document)
+    :locale locale
+    :roles (children-of-kind "Role" child)
+    :sections (children-of-kind "Section" child)
+    :fields (children-of-kind "LocaleField" child)})
+(type
+  DocumentLocalizedIR
+  {
+    :kind "DocumentLocalized"
+    :documentName Symbol
+    :documentRef {:kind "Document" :name Symbol}
+    :locales (List String)
+    :defaultLocale (Option String)})
+(form
+  (document-localized document locales {:keys [default-locale]})
+  :type DocumentLocalizedDef
+  :types
+    {
+      :document (Refers DocumentDef)
+      :locales (List String)
+      :default-locale (Option String)}
+  :ir DocumentLocalizedIR
+  :check
+    (fn
+      [{:keys [locales default-locale]}]
+      (if
+        (or (nil? default-locale) (contains? locales default-locale))
+        []
+        [
+          {
+            :severity :error
+            :slot :default-locale
+            :message "Default locale must belong to locales"}]))
+  {
+    :kind "DocumentLocalized"
+    :documentName document
+    :documentRef (reference "Document" document)
+    :locales locales
+    :defaultLocale default-locale})
+(type PdfSetIR {:kind "Set" :pdfField String :value Json})
+(type pdf-set PdfSetIR)
+(form
+  (pdf-set/set field value)
+  :types {:field String :value Json}
+  :ir PdfSetIR
+  {:kind "Set" :pdfField field :value value})
+(type PdfCaseIR {:kind "Case" :when String :assignments (List PdfSetIR)})
+(type pdf-case PdfCaseIR)
+(form
+  (pdf-case/case value assignment ...)
+  :types {:value String :assignment (List pdf-set)}
+  :ir PdfCaseIR
+  {:kind "Case" :when value :assignments assignment})
+(type
+  PdfDirectIR
+  {:kind "Direct" :source Keyword :pdfField String :transform (Option Symbol)})
+(type
+  PdfComputedIR
+  {
+    :kind "Computed"
+    :expr RuntimeExpr
+    :pdfField String
+    :transform (Option Symbol)})
+(type PdfSwitchIR {:kind "Switch" :source Keyword :cases (List PdfCaseIR)})
+(type PdfMappingEntryIR (Union PdfDirectIR PdfComputedIR PdfSwitchIR))
+(type pdf-entry PdfMappingEntryIR)
+(form
+  (pdf-entry/direct source field {:keys [transform]})
+  :types {:source Keyword :field String :transform (Option Symbol)}
+  :ir PdfDirectIR
+  {:kind "Direct" :source source :pdfField field :transform transform})
+(form
+  (pdf-entry/computed expression field {:keys [transform]})
+  :types {:expression Syntax :field String :transform (Option Symbol)}
+  :ir PdfComputedIR
+  {:kind "Computed" :expr expression :pdfField field :transform transform})
+(form
+  (pdf-entry/switch source case ...)
+  :types {:source Keyword :case (List pdf-case)}
+  :ir PdfSwitchIR
+  {:kind "Switch" :source source :cases case})
+(type
+  PdfMappingIR
+  {
+    :kind "PdfMapping"
+    :name Symbol
+    :displayName (Option String)
+    :description (Option String)
+    :templateBlob String
+    :templateFile (Option String)
+    :templateFilename (Option String)
+    :documentName (Option Symbol)
+    :documentRef (Option {:kind "Document" :name Symbol})
+    :mappings (List PdfMappingEntryIR)})
+(form
+  (pdf-mapping name
+    {
+      :keys
+        [
+          display-name
+          description
+          template-blob
+          template-file
+          template-filename
+          document]}
+    mapping
+    ...)
+  :types
+    {
+      :name (Declares PdfMappingDef)
+      :display-name (Option String)
+      :description (Option String)
+      :template-blob String
+      :template-file (Option String)
+      :template-filename (Option String)
+      :document (Option (Refers DocumentDef))
+      :mapping (List pdf-entry)}
+  :ir PdfMappingIR
+  {
+    :kind "PdfMapping"
+    :name name
+    :displayName display-name
+    :description description
+    :templateBlob template-blob
+    :templateFile template-file
+    :templateFilename template-filename
+    :documentName document
+    :documentRef (reference "Document" document)
+    :mappings mapping})
+
+; Constraints share entity scope with queries. Resolution parameters are records.
+(type ResolutionInputIR {:param String :runtimeSource RuntimeExpr})
+(type
+  ResolutionIR
+  {
+    :kind "Resolution"
+    :label String
+    :action Symbol
+    :actionRef {:kind "Action" :name Symbol}
+    :autoInvoke Bool
+    :inputs (List ResolutionInputIR)})
+(type constraint-child (Union ResolutionIR ConstraintTaskAssignmentIR))
+(form
+  (constraint-child/resolution label action {:keys [auto input]})
+  :types
+    {
+      :label String
+      :action (Refers ActionDef)
+      :auto (Option Bool)
+      :input (Option (Record Syntax))}
+  :ir ResolutionIR
+  {
+    :kind "Resolution"
+    :label label
+    :action action
+    :actionRef (reference "Action" action)
+    :autoInvoke (or auto false)
+    :inputs
+      (map
+        (fn
+          [[key expression]]
+          {:param (keyword/name key) :runtimeSource expression})
+        (or input []))})
+(type
+  ConstraintTaskAssignmentIR
+  {
+    :kind "TaskAssignment"
+    :role Symbol
+    :priority (Option String)
+    :title (Option RuntimeExpr)
+    :body (Option RuntimeExpr)})
+(form
+  (constraint-child/assigns-task-to role {:keys [priority title body]})
+  :types
+    {
+      :role Symbol
+      :priority (Option String)
+      :title (Option (Expr String))
+      :body (Option (Expr String))}
+  :ir ConstraintTaskAssignmentIR
+  {:kind "TaskAssignment" :role role :priority priority :title title :body body})
+(define
+  scope/merge
+  [left right]
+  (reduce
+    (fn [scope [key type]] (assoc scope key type))
+    left
+    (meta/entries right)))
+(define
+  datalog/scope
+  [query]
+  (let
+    [items (sexpr-items query)]
+    (if
+      (or (= (str (first items)) "not") (= (str (first items)) "not-join"))
+      {}
+      (reduce
+        (fn
+          [scope clause]
+          (let
+            [
+              scope
+              (scope/merge scope (datalog/scope clause))
+              items
+              (sexpr-items clause)]
+            (if
+              (and (= (count items) 3) (keyword? (nth items 1)))
+              (let
+                [
+                  subject
+                  (first items)
+                  attribute
+                  (nth items 1)
+                  value
+                  (nth items 2)
+                  type
+                  (if
+                    (= attribute :_schema/type)
+                    (quote String)
+                    (attribute-type attribute))]
+                (if
+                  (= attribute :_schema/type)
+                  (assoc scope (str subject) (list (quote Id) (sym value)))
+                  (if
+                    (and (symbol? value) (starts-with? (str value) "?"))
+                    (assoc scope (str value) (field-base-type type))
+                    scope)))
+              scope)))
+        {}
+        items))))
+(type
+  ConstraintIR
+  {
+    :kind "Constraint"
+    :name Symbol
+    :entity Symbol
+    :entityRef {:kind "Entity" :name Symbol}
+    :severity String
+    :description (Option String)
+    :category (Option String)
+    :when (Option RuntimeExpr)
+    :query (Option RuntimeExpr)
+    :message RuntimeExpr
+    :taskAssignments (List ConstraintTaskAssignmentIR)
+    :resolutions (List ResolutionIR)})
+(form
+  (constraint name
+    {:keys [entity severity description category when query message]}
+    child
+    ...)
+  :types
+    {
+      :name (Declares ConstraintDef)
+      :entity (Refers SchemaDecl)
+      :severity (Union :error :warning :info)
+      :description (Option String)
+      :category (Option String)
+      :when (Option (Expr Bool))
+      :query (Option Syntax)
+      :message (Expr String)
+      :child (List constraint-child)}
+  :scope
+    {
+      :when (fn [{:keys [entity]}] (entity-fields entity))
+      :message
+        (fn
+          [{:keys [entity query]}]
+          (scope/merge (entity-fields entity) (datalog/scope query)))
+      :child
+        (fn
+          [{:keys [entity query]}]
+          (scope/merge (entity-fields entity) (datalog/scope query)))}
+  :check
+    (fn
+      [{:keys [when query]}]
+      (if
+        (= (nil? when) (nil? query))
+        [
+          {
+            :severity :error
+            :message "A constraint requires exactly one of :when or :query"}]
+        []))
+  :ir ConstraintIR
+  {
+    :kind "Constraint"
+    :name name
+    :entity entity
+    :entityRef (reference "Entity" entity)
+    :severity (keyword/name severity)
+    :description description
+    :category category
+    :when when
+    :query query
+    :message message
+    :taskAssignments (children-of-kind "TaskAssignment" child)
+    :resolutions (children-of-kind "Resolution" child)})
+(type QueryPresetParamIR {:name String :value RuntimeExpr})
+(type
+  QueryPresetIR
+  {
+    :kind "QueryPreset"
+    :name Symbol
+    :queryRef {:kind "Query" :name Symbol}
+    :defaults (List QueryPresetParamIR)
+    :mergePolicy String})
+(form
+  (query-preset name query defaults {:keys [merge-policy]})
+  :types
+    {
+      :name (Declares QueryPresetDef)
+      :query (Refers QueryDef)
+      :defaults (Record Syntax)
+      :merge-policy (Option (Union :caller-overrides :preset-overrides))}
+  :ir QueryPresetIR
+  {
+    :kind "QueryPreset"
+    :name name
+    :queryRef (reference "Query" query)
+    :defaults
+      (map (fn [[key value]] {:name (keyword/name key) :value value}) defaults)
+    :mergePolicy (keyword/name (or merge-policy :caller-overrides))})
+(form
+  (datalog-query name expression)
+  :types {:name (Declares QueryDef) :expression Syntax}
+  :ir QueryIR
+  {:kind "Query" :name name :from (quote *) :datalog expression :select []})
+
+; A view and an embeddable fragment have one shape. State and inputs use records.
+(type
+  ViewColumnIR
+  {:name Keyword :label (Option String) :expr (Option RuntimeExpr)})
+(type view-column ViewColumnIR)
+(form
+  (view-column/column name {:keys [label expr]})
+  :types {:name Keyword :label (Option String) :expr (Option Syntax)}
+  :ir ViewColumnIR
+  {:name name :label label :expr expr})
+(type ViewSortIR {:field Keyword :direction String})
+(type
+  ViewIR
+  {
+    :kind "View"
+    :name Symbol
+    :doc (Option String)
+    :query (Option Symbol)
+    :queryRef (Option {:kind "Query" :name Symbol})
+    :title (Option String)
+    :subject (Option Symbol)
+    :mode (Option String)
+    :fragment Bool
+    :emptyState (Option String)
+    :where (Option RuntimeExpr)
+    :defaultSort (Option ViewSortIR)
+    :rowAction (Option RuntimeExpr)
+    :columns (List ViewColumnIR)
+    :state (Option Json)
+    :input (Option Json)
+    :queries (Option Json)
+    :defs (Option Json)
+    :root (Option Json)
+    :layout (Option Json)})
+(define
+  optional-record
+  [entries]
+  (if
+    (nil? entries)
+    nil
+    (reduce
+      (fn [record [key value]] (assoc record (keyword/name key) value))
+      {}
+      entries)))
+(define
+  view/sort
+  [sort]
+  (if
+    (nil? sort)
+    nil
+    {
+      :field (keyword (first sort))
+      :direction (keyword/name (or (nth sort 1) :asc))}))
+(define
+  view/defs
+  [defs state queries input]
+  (if
+    (nil? defs)
+    nil
+    (reduce
+      (fn
+        [record [key value]]
+        (assoc
+          record
+          (keyword/name key)
+          (meta/compile-descriptor-tree "viewspec" value)))
+      {}
+      defs)))
+(form
+  (view name
+    {
+      :keys
+        [
+          query
+          title
+          description
+          subject
+          mode
+          fragment
+          empty-state
+          where
+          default-sort
+          row-action
+          state
+          input
+          queries
+          defs
+          layout]}
+    column
+    ...)
+  :types
+    {
+      :name (Declares ViewDef)
+      :query (Option (Refers QueryDef))
+      :title (Option String)
+      :description (Option String)
+      :subject (Option Symbol)
+      :mode (Option String)
+      :fragment (Option Bool)
+      :empty-state (Option String)
+      :where (Option Syntax)
+      :default-sort (Option (List Json))
+      :row-action (Option Syntax)
+      :state (Option (Record Json))
+      :input (Option (Record Type))
+      :queries (Option (Record Json))
+      :defs (Option (Record Syntax))
+      :layout (Option Syntax)
+      :column (List view-column)}
+  :ir ViewIR
+  (let
+    [
+      definition
+      (view/defs defs state queries input)
+      root
+      (meta/compile-descriptor-tree "viewspec" layout)
+      root
+      (if (or (nil? definition) (nil? root)) root (assoc root :defs definition))]
+    {
+      :kind "View"
+      :name name
+      :doc description
+      :query query
+      :queryRef (reference "Query" query)
+      :title title
+      :subject subject
+      :mode mode
+      :fragment (or fragment false)
+      :emptyState empty-state
+      :where where
+      :defaultSort (view/sort default-sort)
+      :rowAction row-action
+      :columns column
+      :state (optional-record state)
+      :input (optional-record input)
+      :queries (optional-record queries)
+      :defs definition
+      :root root
+      :layout root}))
+
+; Internal action projection. Public operations are a signature plus an ordinary define.
+(type ActionInputIR {:name String :type Type :required Bool})
+(type
+  ActionIR
+  {
+    :kind "Action"
+    :name Symbol
+    :inputs (List ActionInputIR)
+    :returns Type
+    :do RuntimeExpr})
+(type (Action a) (Effect a [] [OntologyRuntime]))
+(define
+  action/effect
+  [result]
+  (quasiquote (Effect (unquote result) [] [OntologyRuntime])))
+(form
+  (__action name fields returns effect body checked entities relations documents
+    calls)
+  :types
+    {
+      :name (Declares ActionDef)
+      :fields (Record Type)
+      :returns Type
+      :effect Type
+      :body Syntax
+      :checked (Expr effect)
+      :entities (List (Refers SchemaDecl))
+      :relations (List (Refers RelationDef))
+      :documents (List (Refers DocumentDef))
+      :calls (List (Refers ActionDef))}
+  :scope
+    {
+      :checked
+        (fn
+          [{:keys [fields entities relations calls]}]
+          (action/scope fields entities relations calls))}
+  :ir ActionIR
+  {
+    :kind "Action"
+    :name name
+    :inputs
+      (map
+        (fn
+          [[key type]]
+          {
+            :name (keyword/name key)
+            :type (field-base-type type)
+            :required (not (optional-type? type))})
+        fields)
+    :returns returns
+    :do body})
+(define
+  action/record
+  [entity optional]
+  (reduce
+    (fn
+      [record key]
+      (let
+        [type (meta/get (declaration-fields entity) key)]
+        (assoc
+          record
+          (keyword key)
+          (if
+            optional
+            (list (quote Option) (field-base-type type))
+            (type/base type)))))
+    {}
+    (keys (declaration-fields entity))))
+(define
+  action/input-type
+  [type]
+  (if
+    (not (empty? (declaration-fields type)))
+    (quasiquote
+      (unquote (assoc (action/record type false) :id (list (quote Id) type))))
+    (quasiquote (unquote type))))
+(define
+  action/scope
+  [fields entities relations calls]
+  (let
+    [
+      inputs
+      (reduce
+        (fn [scope [key type]] (assoc scope key (action/input-type type)))
+        {"emit!" (quote (-> String (Effect Unit [] [OntologyRuntime])))}
+        fields)
+      inputs
+      (reduce
+        (fn
+          [scope name]
+          (let
+            [
+              fields
+              (declaration-hole name :fields)
+              returns
+              (declaration-hole name :returns)]
+            (assoc
+              scope
+              (str name)
+              (concat
+                [(quasiquote ->)]
+                (map
+                  (fn [[key type]] (action/input-type type))
+                  (meta/entries fields))
+                [(action/effect returns)]))))
+        inputs
+        calls)
+      inputs
+      (reduce
+        (fn
+          [scope relation]
+          (assoc
+            scope
+            (str "__action.link/" relation)
+            (quasiquote
+              (->
+                (Id (unquote (declaration-hole relation :source)))
+                (Id (unquote (declaration-hole relation :target)))
+                (unquote (action/record relation false))
+                (Effect Unit [] [OntologyRuntime])))))
+        inputs
+        relations)]
+    (reduce
+      (fn
+        [scope entity]
+        (let
+          [
+            scope
+            (assoc
+              (assoc
+                (assoc
+                  scope
+                  (str "__action.create/" entity)
+                  (quasiquote
+                    (->
+                      (unquote (action/record entity false))
+                      (Effect (Id (unquote entity)) [] [OntologyRuntime]))))
+                (str "__action.update/" entity)
+                (quasiquote
+                  (->
+                    (Id (unquote entity))
+                    (unquote (action/record entity true))
+                    (Effect Unit [] [OntologyRuntime]))))
+              (str "__action.retract/" entity)
+              (quasiquote
+                (-> (Id (unquote entity)) (Effect Unit [] [OntologyRuntime]))))]
+          (assoc
+            (assoc
+              scope
+              (str "__action.instantiate/" entity)
+              (quasiquote
+                (->
+                  Symbol
+                  (Id (unquote entity))
+                  (Effect String [] [OntologyRuntime]))))
+            (str "__action.task/" entity)
+            (quasiquote
+              (->
+                {
+                  :title String
+                  :type String
+                  :priority String
+                  :entity-id (Id (unquote entity))
+                  :entity-type String
+                  :document-ref String
+                  :document-instance-ref String
+                  :section-refs (List String)
+                  :assignee-role String}
+                (Effect String [] [OntologyRuntime]))))))
+      inputs
+      entities)))
+(define
+  syntax-option
+  [syntax key]
+  (let
+    [
+      state
+      (reduce
+        (fn
+          [state value]
+          (if
+            state.found
+            state
+            (if
+              state.next
+              {:found true :next false :value (Some value)}
+              {:found false :next (= value key) :value None})))
+        {:found false :next false :value None}
+        syntax)]
+    state.value))
+(define
+  process/scope
+  [children]
+  {
+    :outputs
+      (reduce
+        (fn
+          [outputs node]
+          (if
+            (= (str (first node)) "node")
+            (let
+              [
+                returns
+                (match
+                  (syntax-option node :action)
+                  (Some action)
+                  (or (declaration-hole action :returns) (quote Unit))
+                  None
+                  (quote Unit))]
+              (assoc outputs (keyword (nth node 1)) {:action returns}))
+            outputs))
+        {}
+        children)})
+
+; Datalog introduces the variables bound by positive attribute clauses.
+(type
+  HttpEndpointIR
+  {
+    :kind "Endpoint"
+    :name Symbol
+    :method String
+    :path String
+    :payload (Option Type)
+    :query (Map String Type)
+    :headers (Map String Type)
+    :success Type
+    :errors (List Type)
+    :openapi (Option Json)})
+(type http-endpoint HttpEndpointIR)
+(form
+  (http-endpoint/endpoint name
+    {:keys [method path payload query headers success errors openapi]})
+  :types
+    {
+      :name Symbol
+      :method (Union :get :post :put :patch :delete :head :options)
+      :path String
+      :payload (Option Type)
+      :query (Option (Record Type))
+      :headers (Option (Record Type))
+      :success Type
+      :errors (Option (List Type))
+      :openapi (Option Json)}
+  :ir HttpEndpointIR
+  {
+    :kind "Endpoint"
+    :name name
+    :method (upper (keyword/name method))
+    :path path
+    :payload payload
+    :query (or (optional-record query) {})
+    :headers (or (optional-record headers) {})
+    :success success
+    :errors (or errors [])
+    :openapi openapi})
+(: http/type-check (-> Any (List Any)))
+(define
+  http/type-check
+  [t]
+  (if
+    (symbol? t)
+    (if
+      (or
+        (contains?
+          [
+            "String"
+            "Int"
+            "Number"
+            "Bool"
+            "Unit"
+            "Json"
+            "Bytes"
+            "DateTime"
+            "Duration"]
+          (str t))
+        (not (nil? (type/kind t))))
+      []
+      [
+        {
+          :severity :error
+          :code "http/unknown-schema-ref"
+          :message (str "Unknown HTTP type " t)}])
+    (if
+      (map? t)
+      (flat-map (fn [[key value]] (http/type-check value)) (meta/entries t))
+      (if
+        (list? t)
+        (if
+          (contains? ["List" "Option" "Map" "Union" "Brand"] (str (first t)))
+          (flat-map http/type-check (rest t))
+          [
+            {
+              :severity :error
+              :code "http/unsupported-type"
+              :message (str "Unsupported HTTP type " t)}])
+        []))))
+(define
+  http/path-parameters
+  [path]
+  (map (fn [part] (first (split part "}"))) (rest (split path "{"))))
+(define
+  http/api-check
+  [path-params endpoints]
+  (let
+    [
+      declared
+      (map (fn [[key t]] (keyword/name key)) (or path-params []))
+      names
+      (map (fn [endpoint] endpoint.name) endpoints)
+      routes
+      (map (fn [endpoint] (str endpoint.method " " endpoint.path)) endpoints)]
+    (concat
+      (if
+        (= (count names) (count (unique-values names)))
+        []
+        [
+          {
+            :severity :error
+            :code "http/duplicate-endpoint"
+            :message "Duplicate endpoint name"}])
+      (if
+        (= (count routes) (count (unique-values routes)))
+        []
+        [
+          {
+            :severity :error
+            :code "http/duplicate-route"
+            :message "Duplicate HTTP method and path"}])
+      (flat-map (fn [[key t]] (http/type-check t)) (or path-params []))
+      (flat-map
+        (fn
+          [endpoint]
+          (concat
+            (flat-map
+              (fn
+                [parameter]
+                (if
+                  (contains? declared parameter)
+                  []
+                  [
+                    {
+                      :severity :error
+                      :code "http/undeclared-path-param"
+                      :message (str "Undeclared path parameter " parameter)}]))
+              (http/path-parameters endpoint.path))
+            (http/type-check endpoint.success)
+            (if (nil? endpoint.payload) [] (http/type-check endpoint.payload))
+            (flat-map
+              (fn [[key t]] (http/type-check t))
+              (meta/entries endpoint.query))
+            (flat-map
+              (fn [[key t]] (http/type-check t))
+              (meta/entries endpoint.headers))
+            (flat-map
+              (fn
+                [error]
+                (if
+                  (= (type/kind error) :error)
+                  []
+                  [
+                    {
+                      :severity :error
+                      :code "http/undeclared-error"
+                      :message
+                        (str "HTTP errors require an error declaration: " error)}]))
+              endpoint.errors)))
+        endpoints))))
+(type
+  HttpApiIR
+  {
+    :kind "HttpApi"
+    :name Symbol
+    :pathParams (Map String Type)
+    :endpoints (List HttpEndpointIR)
+    :openapi (Option Json)})
+(form
+  (api name {:keys [path-params openapi]} endpoint ...)
+  :types
+    {
+      :name (Declares HttpApiDecl)
+      :path-params (Option (Record Type))
+      :openapi (Option Json)
+      :endpoint (List http-endpoint)}
+  :check
+    (fn [{:keys [path-params endpoint]}] (http/api-check path-params endpoint))
+  :ir HttpApiIR
+  {
+    :kind "HttpApi"
+    :name name
+    :pathParams (or (optional-record path-params) {})
+    :endpoints endpoint
+    :openapi openapi})

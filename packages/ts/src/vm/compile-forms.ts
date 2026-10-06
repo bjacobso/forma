@@ -5,7 +5,7 @@
 import type { SExpr } from "../reader/index.js";
 import { trySym, headSym } from "../reader/types.js";
 import { KernelTypeError } from "../diagnostic/errors.js";
-import { compileMatchPattern } from "../evaluator/match.js";
+import { compileMatchPattern, type MatchPattern } from "../evaluator/match.js";
 import type { SourceTrace } from "../evaluator/source-trace.js";
 import {
   Op,
@@ -190,6 +190,7 @@ export function compileLet(
       const slot = scope.addLocal(letBindName);
       emit(chunk, Op.STORE_LOCAL, trace);
       emitU8(chunk, slot, trace);
+      emit(chunk, Op.POP, trace);
     } else {
       // Unsupported destructuring in bytecode — emit store to a dummy slot
       emit(chunk, Op.POP, trace);
@@ -333,6 +334,17 @@ export function compileMatch(
     const bodyExpr = items[i + 1]!;
     const localsBeforeArm = scope.locals.length;
     const compiledPattern = compileMatchPattern(patternExpr, traceOf(patternExpr));
+    const registerConstructors = (pattern: MatchPattern): void => {
+      if (pattern._tag === "Constructor") globals.resolve(`__constructor/${pattern.name}`);
+      if (pattern._tag === "Constructor" || pattern._tag === "Seq") {
+        pattern.items.forEach(registerConstructors);
+        if (pattern._tag === "Seq" && pattern.rest) registerConstructors(pattern.rest);
+      } else if (pattern._tag === "Map") {
+        pattern.entries.forEach(entry => registerConstructors(entry.pattern));
+        if (pattern.as) registerConstructors(pattern.as);
+      }
+    };
+    registerConstructors(compiledPattern.pattern);
     const bindingSlots = compiledPattern.bindingNames.map((name) => scope.addLocal(name));
 
     emit(chunk, Op.LOAD_LOCAL, traceOf(patternExpr));
@@ -351,7 +363,7 @@ export function compileMatch(
     scope.locals.length = localsBeforeArm;
   }
 
-  emit(chunk, Op.NIL, trace);
+  emit(chunk, Op.MATCH_FAILURE, trace);
   for (const offset of jumpToEndOffsets) {
     patchJump(chunk, offset);
   }

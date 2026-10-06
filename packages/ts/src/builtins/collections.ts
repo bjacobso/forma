@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 import type { BuiltinFn, KValue } from "../evaluator/types.js";
-import { asList, asKFn, asNumber, isKList, isKMap } from "../evaluator/types.js";
-import { ArityError } from "../diagnostic/errors.js";
+import { asList, asKFn, asNumber, isKList, isKMap, mapKey, TypeCheckError } from "../evaluator/types.js";
+import { KernelTypeError, ArityError } from "../diagnostic/errors.js";
 
 export const list: BuiltinFn = (args) => {
   return Effect.succeed(args);
@@ -131,7 +131,8 @@ export const groupBy: BuiltinFn = (args, apply) => {
     const groups = new Map<string, KValue[]>();
     for (const item of coll) {
       const key = yield* apply(fn, [item]);
-      const keyStr = typeof key === "string" ? key : String(key);
+      const keyStr = mapKey(key);
+      if (keyStr === undefined) throw new TypeCheckError("group-by","keyword or string key",typeof key);
       const arr = groups.get(keyStr);
       if (arr) {
         arr.push(item);
@@ -230,10 +231,10 @@ export const into: BuiltinFn = (args) => {
   const result = new Map<string, KValue>();
   for (const pair of pairs) {
     const p = asList(pair, "into pair");
-    if (p.length !== 2) continue;
-    const k = p[0]!;
-    if (typeof k !== "string") continue;
-    result.set(k, p[1]!);
+    if (p.length !== 2) return Effect.fail(new KernelTypeError({message:"into expects key/value pairs",expected:"pair",got:String(p.length)}));
+    const key = mapKey(p[0]!);
+    if (key === undefined) return Effect.fail(new KernelTypeError({message:"into keys must be strings, keywords or symbols",expected:"map key",got:typeof p[0]}));
+    result.set(key, p[1]!);
   }
   return Effect.succeed(result as ReadonlyMap<string, KValue>);
 };

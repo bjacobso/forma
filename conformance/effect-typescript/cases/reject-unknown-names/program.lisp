@@ -1,8 +1,8 @@
 ;; Unknown functions, services, and types are located precisely.
-(: total (-> (Array Int) (Effect Int [] [])))
-(define-operation total [items]
+(: total (-> (List Int) (Effect Int [] [])))
+(define total [items]
   (succeed (summ items)))
 
 (: lookup (-> String (Effect Customer [] [Customers.find])))
-(define-operation lookup [id]
+(define lookup [id]
   (Customers.find id))

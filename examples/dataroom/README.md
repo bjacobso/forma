@@ -10,29 +10,20 @@ preludes:
 Secure deal room example in canonical ontology syntax.
 
 ```lisp
-(define-entity Room
-  (:field [room/name String {:required true}])
-  (:field [room/stage String {:required true}]))
-
-(define-entity Document
-  (:field [document/title String {:required true}])
-  (:field [document/classification String])
-  (:field [document/room (Ref Room)]))
+(entity Room {:name String :stage String})
+(entity Document
+  {:title String :classification (Option String) :room (Option (Id Room))})
 ```
 
 ```lisp
-(define-record "room:series-b" Room
-  (:field [room/name "Series B"])
-  (:field [room/stage "due-diligence"]))
-
-(define-record "document:financials" Document
-  (:field [document/title "FY25 Financials"])
-  (:field [document/classification "confidential"])
-  (:field [document/room "room:series-b"]))
+(seed Room "room:series-b" {:name "Series B" :stage "due-diligence"})
+(seed Document "document:financials"
+  {
+    :title "FY25 Financials"
+    :classification "confidential"
+    :room "room:series-b"})
 ```
 
 ```lisp
-(define-query room-documents
-  (:from Document)
-  (:select [document/title document/classification document/room]))
+(query room-documents :from Document :select [title classification room])
 ```

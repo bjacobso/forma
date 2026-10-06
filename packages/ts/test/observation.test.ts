@@ -35,7 +35,7 @@ describe("observed evaluation", () => {
   });
 
   test("maps macro expansions back to the call and its arguments", async () => {
-    const source = "(define-macro twice [x] `(do ~x ~x))\n(twice (+ 1 2))\n(cond (> 1 2) :a :else 7)";
+    const source = "(macro (twice x) `(do ~x ~x))\n(twice (+ 1 2))\n(cond (> 1 2) :a :else 7)";
     const { records, at } = await observe(source);
     expect(printed(at("(twice (+ 1 2))"))).toBe("3");
     expect(at("(+ 1 2)")).toMatchObject({ count: 2 });
@@ -52,7 +52,7 @@ describe("observed evaluation", () => {
   });
 
   test("keeps calls of a macro that returns a template node apart", async () => {
-    const source = "(define-macro k [] `y)\n(let [y 1] (k))\n(let [y 2] (k))\n(define-macro p [n] `(+ ~n 100))\n(p 1)";
+    const source = "(macro (k ) `y)\n(let [y 1] (k))\n(let [y 2] (k))\n(macro (p n) `(+ ~n 100))\n(p 1)";
     const { records, at } = await observe(source);
     expect(at("(k)", 0)).toMatchObject({ count: 1 });
     expect(printed(at("(k)", 0))).toBe("1");

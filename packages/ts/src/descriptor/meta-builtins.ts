@@ -1,5 +1,8 @@
+import { syntaxForDatum } from "../surface/datum.js";
+import { kValueToSExpr } from "../evaluator/quasiquote.js";
+import { isKKeyword, isKSymbol } from "../evaluator/types.js";
 /**
- * Meta-builtins — helper vocabulary available inside meta-fn bodies.
+ * Meta-builtins — helper vocabulary available inside __form-hook bodies.
  *
  * These functions operate on KValue representations of HookInput, BindingMap,
  * Type, Diagnostic, etc. The HookInput is passed as a KMap
@@ -17,9 +20,10 @@ import type { KValue } from "../evaluator/types.js";
 import type { SemanticEnvironment, NormalizedChildForm } from "./ElaborationHook.js";
 import type { FormDescriptor, IdentifierSpec } from "./FormDescriptor.js";
 import { headSym, tail, type SExpr } from "../reader/types.js";
+import { KernelTypeError } from "../diagnostic/errors.js";
 import { showType, type Row, type Type, TCon, TApp, TRow, REmpty, RExtend } from "../type/types.js";
 import { SimpleNormalizedSlots, type SlotValue } from "./NormalizedSlots.js";
-import { typeCheckDescriptorTree } from "./descriptor-tree-check.js";
+import { typeCheckDescriptorTree, validateDescriptorTreeLiteralOptions } from "./descriptor-tree-check.js";
 import { normalizeRuntimeExprObject, runtimeExpr } from "./runtime-expr.js";
 import {
   buildDescriptorTreeLayoutAliases,
@@ -616,8 +620,9 @@ export function createMetaBuiltins(
           const diag = new Map<string, KValue>();
           diag.set("severity", "error");
           for (let i = 0; i < args.length; i += 2) {
-            const key = args[i] as string;
+            const key = String(args[i]);
             const val = args[i + 1] as KValue;
+            if (key === ":code") diag.set("code", val);
             if (key === ":message") diag.set("message", val);
             if (key === ":slot") diag.set("slot", val);
             if (key === ":form") diag.set("form", val);
@@ -652,11 +657,11 @@ export function createMetaBuiltins(
         (() => {
           const obj = new Map<string, KValue>();
           for (let i = 0; i < args.length; i += 2) {
-            const key = args[i] as string;
+            const key = args[i];
             const val = args[i + 1] as KValue;
-            if (typeof key === "string") {
-              if (key.startsWith(":")) obj.set(key.slice(1), val);
-              else obj.set(key, val);
+            if (typeof key === "string" || key !== undefined && isKKeyword(key)) {
+              const text = String(key);
+              obj.set(text.replace(/^:/, ""), val);
             }
           }
           return obj as unknown as KValue;
@@ -917,11 +922,11 @@ export function createMetaBuiltins(
         (() => {
           const obj = new Map<string, KValue>();
           for (let i = 0; i < args.length; i += 2) {
-            const key = args[i] as string;
+            const key = args[i];
             const val = args[i + 1] as KValue;
-            if (typeof key === "string") {
-              if (key.startsWith(":")) obj.set(key.slice(1), val);
-              else obj.set(key, val);
+            if (typeof key === "string" || key !== undefined && isKKeyword(key)) {
+              const text = String(key);
+              obj.set(text.replace(/^:/, ""), val);
             }
           }
           return obj as unknown as KValue;
@@ -929,7 +934,7 @@ export function createMetaBuiltins(
       ),
 
     // =========================================================================
-    // String helpers (needed by meta-fn bodies)
+    // String helpers (needed by __form-hook bodies)
     // =========================================================================
 
     str: (args) =>
@@ -1159,8 +1164,9 @@ export function createMetaBuiltins(
 
           const explicitExtensionKey = typeof args[1] === "string" ? args[1] : undefined;
           const layoutArgIndex = explicitExtensionKey ? 2 : 1;
-          const layoutExpr = args[layoutArgIndex] as unknown as SExpr | undefined;
-          if (!layoutExpr || !("_tag" in layoutExpr)) return [];
+          const raw = args[layoutArgIndex];
+          if (raw === undefined || raw === null) return [];
+          const layoutExpr = syntaxForDatum(raw) ?? (typeof raw === "object" && "_tag" in raw && ["List", "Vector", "Map"].includes(raw._tag) ? raw as unknown as SExpr : kValueToSExpr(raw));
 
           const hostedDsl = hostedDsls.get(hostedDslName);
           if (!hostedDsl) {
@@ -1230,6 +1236,9 @@ export function createMetaBuiltins(
         if (layoutExpr === undefined || layoutExpr === null) return null;
 
         const extensionKey = explicitExtensionKey ?? protocolRegistry.componentExtension;
+        const syntax = syntaxForDatum(layoutExpr) ?? kValueToSExpr(layoutExpr);
+        const problems = validateDescriptorTreeLiteralOptions(syntax, hostedDsl.descriptors, extensionKey);
+        if (problems.length) return yield* new KernelTypeError({message: problems.map(problem => problem.message).join("; "), expected: "declared component options", got: "invalid layout", loc: syntax.loc});
         return yield* apply({ _tag: "KBuiltin", name: protocolRegistry.compileLayoutTreeOp }, [
           hostedDslName,
           extensionKey,
@@ -1252,7 +1261,7 @@ function constructObject(args: readonly KValue[]): KValue {
   const obj = new Map<string, KValue>();
   for (let i = 0; i < args.length; i += 2) {
     const key = args[i];
-    if (typeof key === "string") obj.set(key.startsWith(":") ? key.slice(1) : key, args[i + 1]!);
+    if (typeof key === "string" || key !== undefined && isKKeyword(key)) { const text = String(key); obj.set(text.replace(/^:/,""),args[i+1]!); }
   }
   return normalizeRuntimeExprObject(obj);
 }

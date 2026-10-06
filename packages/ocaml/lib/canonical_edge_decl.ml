@@ -153,7 +153,7 @@ let link_field_of_json index = function
       let name = field_name name_path "Link" entries in
       let value =
         match List.assoc_opt "value" entries with
-        | Some value -> non_null value_path "Link" "value" value
+        | Some value -> Ok value
         | None ->
             Error [ diagnostic value_path "Link field must include a value." ]
       in
@@ -175,7 +175,12 @@ let link_field_of_json index = function
         ]
 
 let required_fields label parse declaration =
-  match Canonical_ir_decl.payload_field "fields" declaration with
+  let fields=Canonical_ir_decl.payload_field "fields" declaration in
+  let fields=match label,fields with
+    | "Link",Some (Ir_json.Object entries) -> Some (Ir_json.Array
+        (List.map (fun (name,value) -> Ir_json.Object ["name",Ir_json.String name;"value",value]) entries))
+    | _ -> fields in
+  match fields with
   | Some (Ir_json.Array values) ->
       let rec loop acc diagnostics index = function
         | [] ->

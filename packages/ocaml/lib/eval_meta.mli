@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of closure
   | VMacro of closure
 
@@ -49,3 +50,6 @@ val eval :
   string ->
   Reader.expr list ->
   (value option, diagnostic list) result
+
+val current_environment : unit -> Env.t option
+val with_environment : Env.t -> (unit -> 'a) -> 'a

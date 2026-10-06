@@ -10,6 +10,8 @@ const daemon = spawn(nativeCli, ["daemon"], {
   stdio: ["pipe", "pipe", "pipe"],
 });
 
+const daemonExit = new Promise((resolveExit) => daemon.on("close", resolveExit));
+
 let stderr = "";
 daemon.stderr.on("data", (chunk) => {
   stderr += chunk;
@@ -63,42 +65,28 @@ const preludes = readPreludes();
 
 const sourceId = "elaborate/basic";
 const source = `
-(define-entity Employee
-  (:field [employee/name String {:required true}])
-  (:field [employee/status String])
-  (:field [employee/department (Ref Department)]))
+(entity Employee {:name String
+    :status (Option String)
+    :department (Option (Id Department))})
 
-(define-relation works-at Employee Department
-  (:field [works-at/start-date Number])
-  (:field [works-at/status String]))
+(relation works-at Employee Department {:start-date (Option Number)
+    :status (Option String)})
 
-(define-query employee-directory
-  (:from Employee)
-  (:select [employee/name employee/status]))
+(query employee-directory
+  :from Employee
+  :select [name status])
 
-(define-record "employee:ada" Employee
-  (:field [employee/name "Ada Lovelace"])
-  (:field [employee/status "active"])
-  (:field [employee/department "department:platform"]))
+(seed Employee "employee:ada" {:name "Ada Lovelace"
+  :status "active"
+  :department "department:platform"})
 
-(define-link works-at "employee:ada" "department:platform"
-  (:field [works-at/status "active"]))
+(link works-at "employee:ada" "department:platform" {:status "active"})
 
-(define-action mark-active
-  (:input [employee Employee {:required true}])
-  (:returns Boolean)
-  (:do
-    (do
-      (set-field employee :employee/status "active")
-      (= (get employee :employee/status) "active"))))
+(: mark-active (-> Employee (Action Bool)))
+(define mark-active [employee] (do
+      (do! [_ (update! Employee employee.id {:status "active"})] true)))
 
-(define-workspace people-ops
-  (:title "People Ops")
-  (:persona "Operations")
-  (:subject session)
-  (:home employee-directory-view)
-  (:view employee-directory-view)
-  (:view department-directory-view))
+(workspace people-ops :title "People Ops" :persona "Operations" :subject session :home employee-directory-view :views [employee-directory-view department-directory-view])
 `;
 
 let sessionId;
@@ -118,6 +106,11 @@ try {
     expectOk(`loadPrelude ${prelude.sourceId}`, response);
   }
 
+  expectOk("load dependencies", await request({op: "loadSource", sessionId, sourceId: "elaborate/dependencies", source: `
+(entity Department {:name String})
+(seed Department "department:platform" {:name "Platform"})
+(view employee-directory-view :title "Employees" :subject session :query employee-directory)
+(view department-directory-view :title "Departments" :subject session :query employee-directory)`}));
   const loaded = await request({ op: "loadSource", sessionId, sourceId, source });
   expectOk("loadSource", loaded);
 
@@ -206,7 +199,7 @@ try {
   daemon.stdin.end();
 }
 
-const exitCode = await new Promise((resolveExit) => daemon.on("close", resolveExit));
+const exitCode = await daemonExit;
 if (exitCode !== 0) {
   throw new Error(`Daemon exited with ${exitCode}: ${stderr}`);
 }

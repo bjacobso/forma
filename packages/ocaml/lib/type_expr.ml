@@ -13,6 +13,7 @@ type ty =
   | TVector of ty
   | TMap
   | TRecord of (string * ty) list
+  | TOpenRecord of (string * ty) list * ty
   | TFn of ty list * ty
   | TVariadicFn of ty list * ty * ty
   | TMacro
@@ -33,21 +34,26 @@ let fresh_tyvar () =
   incr next_tyvar;
   TVar id
 
+let record_label label =
+  if String.starts_with ~prefix:":" label then label
+  else Value.string_json (if String.starts_with ~prefix:"\000str:" label then String.sub label 5 (String.length label-5) else label)
+
 let rec ty_to_string = function
   | TVar id -> Printf.sprintf "'%d" id
   | TInt -> "Int"
-  | TFloat -> "Float"
+  | TFloat -> "Number"
   | TBool -> "Bool"
-  | TString -> "Str"
+  | TString -> "String"
   | TNil -> "Unit"
   | TKeyword -> "Keyword"
   | TSymbol -> "Symbol"
   | TSyntax -> "Syntax"
   | TAny -> "Any"
-  | TList _ -> "List"
-  | TVector _ -> "Vector"
+  | TList item -> "List<" ^ ty_to_string item ^ ">"
+  | TVector item -> "List<" ^ ty_to_string item ^ ">"
   | TMap -> "Map"
-  | TRecord _ -> "Map"
+  | TOpenRecord (fields,tail) -> "{" ^ String.concat " " (List.map (fun (k,t)->record_label k ^ " " ^ ty_to_string t) fields) ^ " & " ^ ty_to_string tail ^ "}"
+  | TRecord fields -> "{" ^ String.concat " " (List.map (fun (k,t)->record_label k ^ " " ^ ty_to_string t) fields) ^ "}"
   | TFn (params, result) ->
       let param_string param =
         match param with
@@ -98,9 +104,9 @@ let rec to_json ty =
       Printf.sprintf "{\"kind\":\"var\",\"id\":%d,\"display\":%s}" id
         (string_json display)
   | TInt -> named_json "Int"
-  | TFloat -> named_json "Float"
+  | TFloat -> named_json "Number"
   | TBool -> named_json "Bool"
-  | TString -> named_json "Str"
+  | TString -> named_json "String"
   | TNil -> named_json "Unit"
   | TKeyword -> named_json "Keyword"
   | TSymbol -> named_json "Symbol"
@@ -124,18 +130,21 @@ let rec to_json ty =
   | TFormDescriptor -> named_json "FormDescriptor"
   | TProtocolDescriptor -> named_json "ProtocolDescriptor"
   | TList item ->
-      Printf.sprintf "{\"kind\":\"list\",\"item\":%s,\"display\":\"List\"}"
-        (to_json item)
+      Printf.sprintf "{\"kind\":\"list\",\"item\":%s,\"display\":%s}"
+        (to_json item) (string_json (ty_to_string ty))
   | TVector item ->
-      Printf.sprintf "{\"kind\":\"vector\",\"item\":%s,\"display\":\"Vector\"}"
-        (to_json item)
+      Printf.sprintf "{\"kind\":\"list\",\"item\":%s,\"display\":%s}"
+        (to_json item) (string_json (ty_to_string ty))
+  | TOpenRecord (fields,tail) ->
+      let field_json (label,t) = Printf.sprintf "{\"label\":%s,\"type\":%s}" (string_json label) (to_json t) in
+      Printf.sprintf "{\"kind\":\"record\",\"fields\":%s,\"tail\":%s,\"display\":%s}" (list_json field_json fields) (to_json tail) (string_json (ty_to_string ty))
   | TRecord fields ->
       let field_json (label, ty) =
         Printf.sprintf "{\"label\":%s,\"type\":%s}" (string_json label)
           (to_json ty)
       in
-      Printf.sprintf "{\"kind\":\"record\",\"fields\":%s,\"display\":\"Map\"}"
-        (list_json field_json fields)
+      Printf.sprintf "{\"kind\":\"record\",\"fields\":%s,\"display\":%s}"
+        (list_json field_json fields) (string_json (ty_to_string ty))
   | TFn (params, result) ->
       Printf.sprintf
         "{\"kind\":\"function\",\"params\":%s,\"return\":%s,\"display\":%s}"
@@ -150,6 +159,7 @@ let rec to_json ty =
 let rec free_ty = function
   | TVar id -> [ id ]
   | TList item | TVector item -> free_ty item
+  | TOpenRecord (fields,tail) -> List.concat_map (fun (_,t)->free_ty t) fields @ free_ty tail |> List.sort_uniq Int.compare
   | TRecord fields ->
       fields
       |> List.concat_map (fun (_, ty) -> free_ty ty)
@@ -174,10 +184,18 @@ let rec apply_subst subst ty =
   match ty with
   | TVar id -> (
       match List.assoc_opt id subst with
+      | Some (TVar other) when other = id -> TVar id
       | Some replacement -> apply_subst subst replacement
       | None -> ty)
   | TList item -> TList (apply_subst subst item)
   | TVector item -> TVector (apply_subst subst item)
+  | TOpenRecord (fields,tail) ->
+      let fields=List.map (fun (k,t)->k,apply_subst subst t) fields in
+      let merge extra=List.sort (fun (a,_) (b,_) -> String.compare a b) (fields @ extra) in
+      (match apply_subst subst tail with
+       | TRecord extra -> TRecord (merge extra)
+       | TOpenRecord (extra,tail) -> TOpenRecord (merge extra,tail)
+       | tail -> TOpenRecord (fields,tail))
   | TRecord fields ->
       TRecord
         (List.map (fun (label, ty) -> (label, apply_subst subst ty)) fields)
@@ -197,7 +215,8 @@ let rec apply_subst subst ty =
       ty
 
 let compose_subst newer older =
-  List.map (fun (var, ty) -> (var, apply_subst newer ty)) older @ newer
+  List.filter (fun (var,ty) -> ty <> TVar var)
+    (List.map (fun (var, ty) -> (var, apply_subst newer ty)) older @ newer)
 
 let sort_record_fields fields =
   List.sort (fun (left, _) (right, _) -> String.compare left right) fields

@@ -1,16 +1,14 @@
-(define-schema Money
-  (Struct
-    (field amount Int)
-    (field currency String)))
+(type Money {:amount Int
+ :currency String})
 
 (: same-price? (-> Money Money Bool))
-(define same-price? (fn [a b] (= a b)))
+(define same-price?  [a b] (= a b))
 
 (: label (-> Money String))
-(define label (fn [price] (str "price: " price)))
+(define label  [price] (str "price: " price))
 
 (: half (-> Int Int))
-(define half (fn [n] (/ n 2)))
+(define half  [n] (/ n 2))
 
 (: describe (-> Int String))
-(define describe (fn [count] (if count "some" "none")))
+(define describe  [count] (if count "some" "none"))

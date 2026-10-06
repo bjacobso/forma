@@ -9,7 +9,7 @@
       "line": 7,
       "column": 1,
       "endLine": 7,
-      "endColumn": 27
+      "endColumn": 23
     },
     {
       "phase": "check",
@@ -19,7 +19,7 @@
       "line": 9,
       "column": 1,
       "endLine": 9,
-      "endColumn": 50
+      "endColumn": 27
     },
     {
       "phase": "check",
@@ -38,18 +38,8 @@
       "message": "Service Inventory has methods get-count and getCount, which both become getCount.",
       "line": 14,
       "column": 1,
-      "endLine": 18,
-      "endColumn": 66
-    },
-    {
-      "phase": "check",
-      "severity": "error",
-      "code": "mechanics/name-collision",
-      "message": "Inventory.move has parameters from-bin and fromBin, which both become fromBin in TypeScript.",
-      "line": 14,
-      "column": 1,
-      "endLine": 18,
-      "endColumn": 66
+      "endLine": 17,
+      "endColumn": 51
     }
   ]
 }

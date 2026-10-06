@@ -1,32 +1,111 @@
 export const corpusGolden = {
-  sourceCount: 59,
-  emittedCount: 59,
-  declarationCount: 548,
-  kindCounts: {
-    Action: 49,
-    Constraint: 23,
-    Document: 10,
-    DocumentLocale: 11,
-    DocumentLocalized: 7,
-    Entity: 62,
-    HttpApi: 1,
-    Link: 97,
-    PdfMapping: 1,
-    Process: 5,
-    Query: 61,
-    Record: 138,
-    Relation: 28,
-    Schema: 4,
-    TaskDefinition: 4,
-    View: 38,
-    Workspace: 9,
+  "moduleCounts": {
+    "bizops": {
+      "sourceCount": 1,
+      "declarationCount": 5
+    },
+    "bookstore": {
+      "sourceCount": 1,
+      "declarationCount": 5
+    },
+    "chronicle": {
+      "sourceCount": 1,
+      "declarationCount": 5
+    },
+    "company": {
+      "sourceCount": 1,
+      "declarationCount": 7
+    },
+    "compiler-debug": {
+      "sourceCount": 8,
+      "declarationCount": 15
+    },
+    "dataroom": {
+      "sourceCount": 1,
+      "declarationCount": 5
+    },
+    "dnd": {
+      "sourceCount": 1,
+      "declarationCount": 5
+    },
+    "family": {
+      "sourceCount": 1,
+      "declarationCount": 5
+    },
+    "fantasy": {
+      "sourceCount": 1,
+      "declarationCount": 5
+    },
+    "hr": {
+      "sourceCount": 1,
+      "declarationCount": 6
+    },
+    "insurance": {
+      "sourceCount": 1,
+      "declarationCount": 5
+    },
+    "labor-union": {
+      "sourceCount": 11,
+      "declarationCount": 106
+    },
+    "law-firm": {
+      "sourceCount": 10,
+      "declarationCount": 165
+    },
+    "movies": {
+      "sourceCount": 1,
+      "declarationCount": 5
+    },
+    "performance-reviews": {
+      "sourceCount": 1,
+      "declarationCount": 5
+    },
+    "real-estate": {
+      "sourceCount": 1,
+      "declarationCount": 5
+    },
+    "staffing": {
+      "sourceCount": 14,
+      "declarationCount": 180
+    },
+    "teams": {
+      "sourceCount": 1,
+      "declarationCount": 7
+    },
+    "todo-app": {
+      "sourceCount": 1,
+      "declarationCount": 7
+    }
   },
-  manifestHash: "508325251b7f05413732dfdf19f2c95df4f3eb3e05217c98878c6c17c039809b",
+  "sourceCount": 58,
+  "emittedCount": 58,
+  "declarationCount": 548,
+  "kindCounts": {
+    "Action": 49,
+    "Constraint": 23,
+    "Document": 10,
+    "DocumentLocale": 11,
+    "DocumentLocalized": 7,
+    "Entity": 62,
+    "ErrorDef": 3,
+    "HttpApi": 1,
+    "Link": 97,
+    "PdfMapping": 1,
+    "Process": 5,
+    "Query": 60,
+    "Record": 138,
+    "Relation": 28,
+    "SchemaDef": 2,
+    "TaskDefinition": 4,
+    "View": 38,
+    "Workspace": 9
+  },
+  "manifestHash": "65acd85f3dd1580573a2774c7129773d45a34ebc246317667c7b44d70e05c06b"
 };
 
 export const architectureThresholds = {
-  expectedSourceCount: corpusGolden.sourceCount,
-  expectedDeclarationCount: corpusGolden.declarationCount,
+  expectedSourceCount: corpusGolden.moduleCounts.staffing.sourceCount + 1,
+  expectedDeclarationCount: corpusGolden.moduleCounts.staffing.declarationCount + 33,
   maxDiagnosticCount: 0,
   maxWasmBrotliBytes: 8 * 1024 * 1024,
   maxJsGzipBytes: 600_000,

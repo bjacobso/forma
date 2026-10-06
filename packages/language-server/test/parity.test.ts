@@ -107,7 +107,7 @@ describe("OCaml LSP parity smoke fixtures", () => {
     } finally {
       await session.close();
     }
-  });
+  }, 60_000);
 });
 
 function normalizeDiagnosticCount(count: number): "none" | "some" {

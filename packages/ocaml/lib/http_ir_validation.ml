@@ -174,8 +174,8 @@ let validate_schema_references (declarations : declaration list) =
           (diagnostic_for_ref declarations ~path ~code:"http/unknown-schema-ref"
              ~message:
                (Printf.sprintf
-                  "Unknown schema reference %S. Define it with define-schema \
-                   or define-error before using it in an HTTP API."
+                  "Unknown schema reference %S. Define it with type \
+                   or __error before using it in an HTTP API."
                   target)))
 
 let validate_endpoint_error_references (declarations : declaration list) =
@@ -224,7 +224,7 @@ let validate_endpoint_error_references (declarations : declaration list) =
           (diagnostic_for_ref declarations ~path ~code:"http/undeclared-error"
              ~message:
                (Printf.sprintf
-                  "Endpoint error %S must be declared with define-error before \
+                  "Endpoint error %S must be declared with __error before \
                    using it in :errors."
                   target)))
 

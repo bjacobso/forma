@@ -1,4 +1,3 @@
-(define-entity Employee
-  (:field [employee/status String]))
+(entity Employee {:status String})
 
-employee/status
+status

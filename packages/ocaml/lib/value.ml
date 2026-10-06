@@ -9,6 +9,7 @@ type t =
   | VList of t list
   | VVector of t list
   | VMap of (t * t) list
+  | VDictionary of (t * t) list
   | VClosure of closure
   | VMacro of closure
 
@@ -57,7 +58,7 @@ let rec to_json = function
   | VVector items ->
       Printf.sprintf "{\"kind\":\"vector\",\"items\":[%s]}"
         (String.concat "," (List.map to_json items))
-  | VMap entries ->
+  | (VMap entries | VDictionary entries) ->
       let entry_to_json (key, value) =
         Printf.sprintf "{\"key\":%s,\"value\":%s}" (to_json key) (to_json value)
       in
@@ -68,18 +69,24 @@ let rec to_json = function
 
 let truthy = function VNil | VBool false -> false | _ -> true
 
+(* Runtime equality, shared with the TypeScript engine: numbers compare by
+   value (1 equals 1.0), lists and vectors are one sequence representation,
+   and a function equals only itself. Never use polymorphic equality on
+   values: closures may hold cyclic environments. *)
 let rec equal left right =
   match (left, right) with
   | VNil, VNil -> true
   | VBool left, VBool right -> left = right
   | VInt left, VInt right -> left = right
   | VFloat left, VFloat right -> left = right
+  | VInt left, VFloat right | VFloat right, VInt left -> Float.of_int left = right
+  | (VClosure _ | VMacro _), (VClosure _ | VMacro _) -> left == right
   | VString left, VString right -> left = right
   | VSymbol left, VSymbol right -> left = right
   | VKeyword left, VKeyword right -> left = right
-  | VList left, VList right | VVector left, VVector right ->
+  | (VList left | VVector left), (VList right | VVector right) ->
       List.length left = List.length right && List.for_all2 equal left right
-  | VMap left, VMap right ->
+  | (VMap left | VDictionary left), (VMap right | VDictionary right) ->
       List.length left = List.length right
       && List.for_all
            (fun (left_key, left_value) ->
@@ -103,7 +110,7 @@ let to_str_part = function
   | VKeyword value -> value
   | VList _ -> "<list>"
   | VVector _ -> "<vector>"
-  | VMap _ -> "<map>"
+  | (VMap _ | VDictionary _) -> "<map>"
   | VClosure _ -> "<function>"
   | VMacro _ -> "<macro>"
 
@@ -146,8 +153,8 @@ let length_key = function
 
 let lookup_path_segment value key =
   match (value, key) with
-  | VMap entries, key -> (
-      match lookup_map entries key with Some value -> value | None -> VNil)
+  | (VMap entries | VDictionary entries), key -> (
+      match List.find_opt (fun (k,_) -> equal k key) entries with Some (_,value) -> value | None -> VNil)
   | VList values, VInt index | VVector values, VInt index ->
       if index < 0 || index >= List.length values then VNil
       else List.nth values index

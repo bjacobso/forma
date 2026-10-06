@@ -1,5 +1,5 @@
 /**
- * Type definition forms: define-type, define-typeclass, instance, and mechanics services.
+ * Type definition forms: __sum-type, __typeclass, instance, and mechanics services.
  */
 import type { SExpr } from "../reader/index.js";
 import { asSym, trySym, headSym, asList, asVector } from "../reader/types.js";
@@ -28,45 +28,55 @@ import { parseTypeExpr } from "./type-parser.js";
 
 export function lowerTypeDef(span: Span, items: readonly SExpr[]): CoreExpr {
   if (items.length < 3) {
-    throw new InferenceError({ message: "(define-type ...) requires at least 2 arguments" });
+    throw new InferenceError({ message: "(type ...) requires at least 2 arguments" });
   }
 
   const nameExpr = items[1]!;
 
-  // ADT: (define-type (Name params...) (Con1 fields...) (Con2 fields...) ...)
+  // ADT: (__sum-type (Name params...) (Con1 fields...) (Con2 fields...) ...)
   if (nameExpr._tag === "List") {
     const typeName = headSym(nameExpr);
     if (!typeName) {
-      throw new InferenceError({ message: "define-type type name must be a symbol" });
+      throw new InferenceError({ message: "A type name must be a symbol" });
     }
-    const typeParams = nameExpr.items.slice(1).map((p) => asSym(p, "define-type type parameter"));
+    const typeParams = nameExpr.items.slice(1).map((p) => asSym(p, "type parameter"));
+    if (asSym(items[0]!, "type declaration") === "__type-alias") {
+      if (items.length !== 3) throw new InferenceError({message: "A type alias requires one body"});
+      if (new Set(typeParams).size !== typeParams.length || typeParams.some(p => !/^[a-z]/.test(p)))
+        throw new InferenceError({message: "Type parameters must be distinct lowercase symbols"});
+      return CTypeDef(span, typeName, parseTypeExpr(items[2]!), typeParams);
+    }
 
-    const constructors = items.slice(2).map((con) => {
+    const constructors = items.slice(2).filter(con=>headSym(con) !== ":tag").map((con) => {
       const conName = headSym(con);
       if (!conName) {
-        throw new InferenceError({ message: "define-type constructor must be (Name fields...)" });
+        throw new InferenceError({ message: "type constructor must be (Name fields...)" });
       }
       return {
         name: conName,
-        fields: asList(con, "define-type constructor").slice(1).map(parseTypeExpr),
+        fields: asList(con, "__sum-type constructor").slice(1).map(parseTypeExpr),
       };
     });
 
     if (constructors.length === 0) {
-      throw new InferenceError({ message: "define-type requires at least one constructor" });
+      throw new InferenceError({ message: "type requires at least one constructor" });
     }
 
     return CTypeDef(span, typeName, undefined, typeParams, constructors);
   }
 
-  // Alias: (define-type Name TypeExpr)
-  const aliasName = asSym(nameExpr, "define-type name");
+  // Alias: (__sum-type Name TypeExpr)
+  const aliasName = asSym(nameExpr, "type name");
   if (items.length !== 3) {
     throw new InferenceError({
-      message: "(define-type Name Type) requires exactly 2 arguments for aliases",
+      message: "(type Name Type) requires exactly 2 arguments for aliases",
     });
   }
-  const typeExpr = parseTypeExpr(items[2]!);
+  let typeExpr = parseTypeExpr(items[2]!);
+  if (typeExpr._tag === "TEApp" && typeExpr.con._tag === "TESym" && typeExpr.con.name === "Brand") {
+    if (typeExpr.args.length !== 1) throw new InferenceError({message: "Brand expects one base type and derives its name from the declaration"});
+    typeExpr = TEApp(typeExpr.span, typeExpr.con, [TESym(span, aliasName), typeExpr.args[0]!]);
+  }
   return CTypeDef(span, aliasName, typeExpr);
 }
 
@@ -77,7 +87,7 @@ export function lowerTypeDef(span: Span, items: readonly SExpr[]): CoreExpr {
 export function lowerDefineService(span: Span, items: readonly SExpr[]): CoreExpr {
   if (items.length !== 3) {
     throw new InferenceError({
-      message: "define-service expects a service name and (:methods ...) block.",
+      message: "__service expects a service name and (:methods ...) block.",
     });
   }
 
@@ -93,7 +103,7 @@ function parseServiceMethods(
   const items = asList(expr, "service methods");
   if (trySym(items[0]!) !== ":methods") {
     throw new InferenceError({
-      message: "define-service expects a (:methods ...) block.",
+      message: "__service expects a (:methods ...) block.",
     });
   }
 
@@ -194,11 +204,11 @@ function appendServiceRequirement(operationRequirement: string, typeExpr: TypeEx
 export function lowerDefineSchema(span: Span, items: readonly SExpr[]): CoreExpr {
   if (items.length !== 3) {
     throw new InferenceError({
-      message: "(define-schema Name SchemaExpr) requires exactly a name and schema expression",
+      message: "(__schema Name SchemaExpr) requires exactly a name and schema expression",
     });
   }
 
-  const schemaName = asSym(items[1]!, "define-schema name");
+  const schemaName = asSym(items[1]!, "__schema name");
   const typeExpr = schemaExprToTypeExpr(items[2]!);
   return CTypeDef(span, schemaName, typeExpr, undefined, undefined, "schema");
 }
@@ -206,11 +216,11 @@ export function lowerDefineSchema(span: Span, items: readonly SExpr[]): CoreExpr
 export function lowerDefineError(span: Span, items: readonly SExpr[]): CoreExpr {
   if (items.length !== 3) {
     throw new InferenceError({
-      message: "(define-error Name (:fields ...)) requires a name and fields block",
+      message: "(error Name {...}) requires a name and field record",
     });
   }
 
-  const errorName = asSym(items[1]!, "define-error name");
+  const errorName = asSym(items[1]!, "error name");
   const fields = parseErrorFields(items[2]!);
   return CTypeDef(span, errorName, TERow(spanOf(items[2]!), fields), undefined, undefined, "error");
 }
@@ -580,33 +590,33 @@ function parseErrorFields(
   const items = asList(expr, "error fields");
   if (trySym(items[0]!) !== ":fields") {
     throw new InferenceError({
-      message: "define-error expects a (:fields ...) block.",
+      message: "error expects a field record.",
     });
   }
   return items.slice(1).map((field) => schemaFieldToRowField(field));
 }
 
 /**
- * Lower (define-typeclass (ClassName params...) [supers...]? (method-name type) ...)
+ * Lower (__typeclass (ClassName params...) [supers...]? (method-name type) ...)
  *
  * Examples:
- *   (define-typeclass (Eq a) (eq (-> a a Bool)))
- *   (define-typeclass (Functor (f : * -> *)) (fmap (-> (-> a b) (f a) (f b))))
- *   (define-typeclass (Ord a) [(Eq a)] (compare (-> a a Num)))
+ *   (__typeclass (Eq a) (eq (-> a a Bool)))
+ *   (__typeclass (Functor (f : * -> *)) (fmap (-> (-> a b) (f a) (f b))))
+ *   (__typeclass (Ord a) [(Eq a)] (compare (-> a a Num)))
  */
 export function lowerDefineTypeclass(span: Span, items: readonly SExpr[]): CoreExpr {
   if (items.length < 3) {
     throw new InferenceError({
-      message: "(define-typeclass ...) requires class header and methods",
+      message: "(__typeclass ...) requires class header and methods",
     });
   }
 
   const headerExpr = items[1]!;
   const className = headSym(headerExpr);
   if (!className) {
-    throw new InferenceError({ message: "define-typeclass header must be (ClassName params...)" });
+    throw new InferenceError({ message: "__typeclass header must be (ClassName params...)" });
   }
-  const headerItems = asList(headerExpr, "define-typeclass header");
+  const headerItems = asList(headerExpr, "__typeclass header");
 
   // Parse type parameters (possibly with kind annotations)
   const typeParams: ClassTypeParam[] = [];
@@ -623,12 +633,12 @@ export function lowerDefineTypeclass(span: Span, items: readonly SExpr[]): CoreE
         typeParams.push({ name, kindAnnotation: parseTypeExpr(p.items[2]!) });
       } else {
         throw new InferenceError({
-          message: "define-typeclass param must be symbol or (name : kind)",
+          message: "__typeclass param must be symbol or (name : kind)",
         });
       }
     } else {
       throw new InferenceError({
-        message: "define-typeclass param must be symbol or (name : kind)",
+        message: "__typeclass param must be symbol or (name : kind)",
       });
     }
   }
@@ -637,7 +647,7 @@ export function lowerDefineTypeclass(span: Span, items: readonly SExpr[]): CoreE
   let startIdx = 2;
   const supers: ClassConstraint[] = [];
   if (items[2]?._tag === "Vector") {
-    const supersItems = asVector(items[2]!, "define-typeclass supers");
+    const supersItems = asVector(items[2]!, "__typeclass supers");
     for (const s of supersItems) {
       const superName = headSym(s);
       if (superName) {
@@ -657,7 +667,7 @@ export function lowerDefineTypeclass(span: Span, items: readonly SExpr[]): CoreE
   for (let i = startIdx; i < items.length; i++) {
     const m = items[i]!;
     if (m._tag !== "List" || m.items.length !== 2) {
-      throw new InferenceError({ message: "define-typeclass method must be (name type)" });
+      throw new InferenceError({ message: "__typeclass method must be (name type)" });
     }
     methods.push({ name: asSym(m.items[0]!, "method name"), typeExpr: parseTypeExpr(m.items[1]!) });
   }

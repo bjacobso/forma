@@ -10,29 +10,17 @@ preludes:
 Tabletop campaign example in canonical ontology syntax.
 
 ```lisp
-(define-entity Campaign
-  (:field [campaign/name String {:required true}])
-  (:field [campaign/tier String]))
-
-(define-entity Character
-  (:field [character/name String {:required true}])
-  (:field [character/class String])
-  (:field [character/campaign (Ref Campaign)]))
+(entity Campaign {:name String :tier (Option String)})
+(entity Character
+  {:name String :class (Option String) :campaign (Option (Id Campaign))})
 ```
 
 ```lisp
-(define-record "campaign:shattered-sea" Campaign
-  (:field [campaign/name "Shattered Sea"])
-  (:field [campaign/tier "mid"]))
-
-(define-record "character:orin" Character
-  (:field [character/name "Orin Vale"])
-  (:field [character/class "bard"])
-  (:field [character/campaign "campaign:shattered-sea"]))
+(seed Campaign "campaign:shattered-sea" {:name "Shattered Sea" :tier "mid"})
+(seed Character "character:orin"
+  {:name "Orin Vale" :class "bard" :campaign "campaign:shattered-sea"})
 ```
 
 ```lisp
-(define-query party
-  (:from Character)
-  (:select [character/name character/class character/campaign]))
+(query party :from Character :select [name class campaign])
 ```

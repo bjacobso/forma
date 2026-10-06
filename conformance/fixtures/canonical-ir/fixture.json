@@ -26,13 +26,6 @@
       "text": {
         "repoFile": "preludes/ontology.lisp"
       }
-    },
-    {
-      "kind": "prelude",
-      "sourceId": "preludes/ontology-compiler.lisp",
-      "text": {
-        "repoFile": "preludes/ontology-compiler.lisp"
-      }
     }
   ],
   "setup": {
@@ -49,7 +42,10 @@
   "operation": {
     "kind": "emit",
     "backend": "canonical-ir",
-    "sourceIds": ["emit/canonical-schema", "emit/canonical-data"]
+    "sourceIds": [
+      "emit/canonical-schema",
+      "emit/canonical-data"
+    ]
   },
   "comparison": {
     "mode": "artifact"

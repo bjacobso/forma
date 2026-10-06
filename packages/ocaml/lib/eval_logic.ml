@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of closure
   | VMacro of closure
 
@@ -43,15 +44,15 @@ let eval_and ctx env exprs =
   loop (VBool true) exprs
 
 let eval_or ctx env exprs =
-  let rec loop = function
-    | [] -> Ok VNil
+  let rec loop last = function
+    | [] -> Ok last
     | expr :: rest -> (
         match ctx.eval_expr env expr with
         | Error _ as error -> error
         | Ok value when Value.truthy value -> Ok value
-        | Ok _ -> loop rest)
+        | Ok value -> loop value rest)
   in
-  loop exprs
+  loop VNil exprs
 
 let eval_not ctx env = function
   | [ expr ] -> (

@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of closure
   | VMacro of closure
 
@@ -25,7 +26,7 @@ let rec scalar_string = function
   | VInt value -> Some (string_of_int value)
   | VFloat value -> Some (string_of_float value)
   | VBool value -> Some (string_of_bool value)
-  | VMap entries -> (
+  | (VMap entries | VDictionary entries) -> (
       match Value.lookup_map entries (VKeyword ":kind") with
       | Some (VString "variable") -> (
           match Value.lookup_map entries (VKeyword ":name") with
@@ -46,7 +47,7 @@ let normalize_slot_name name =
   else name
 
 let normalized_form_entries = function
-  | VMap entries -> (
+  | (VMap entries | VDictionary entries) -> (
       match Value.lookup_map entries (VKeyword ":kind") with
       | Some (VString "normalized-form") -> Some entries
       | _ -> None)
@@ -66,14 +67,14 @@ let declaration_args input =
       | _ -> [])
   | None -> (
       match input with
-      | VMap entries -> (
+      | (VMap entries | VDictionary entries) -> (
           match Value.lookup_map entries (VKeyword ":args") with
           | Some (VList args) | Some (VVector args) -> args
           | _ -> [])
       | _ -> [])
 
 let declaration_form = function
-  | VMap entries -> (
+  | (VMap entries | VDictionary entries) -> (
       match Value.lookup_map entries (VKeyword ":form") with
       | Some value -> scalar_string value
       | None -> None)
@@ -115,7 +116,8 @@ let slot_values_with_lookup ~lookup input slot =
     slot_spec_with_lookup ~lookup input (Option.value ~default:"" wanted_slot)
   in
   let slot_mode =
-    Option.map (fun (slot : Descriptor.typed_slot) -> slot.mode) slot_spec
+    Option.map (fun (slot : Descriptor.typed_slot) ->
+      if slot.child_identifiers <> [] || slot.child_slots <> [] then Descriptor.Form else slot.mode) slot_spec
   in
   let slot_names =
     match (wanted_slot, slot_spec) with
@@ -144,7 +146,7 @@ let slot_values_with_lookup ~lookup input slot =
           entries)
   in
   let application_slot_values = function
-    | VMap entries -> (
+    | (VMap entries | VDictionary entries) -> (
         match
           ( Value.lookup_map entries (VKeyword ":kind"),
             Value.lookup_map entries (VKeyword ":form"),
@@ -277,7 +279,7 @@ let child_form_args = function
   | VList (VSymbol _ :: values) ->
       unwrap_single_child_form values
   | VList values | VVector values -> unwrap_single_child_form values
-  | VMap entries -> (
+  | (VMap entries | VDictionary entries) -> (
       match
         ( Value.lookup_map entries (VKeyword ":kind"),
           Value.lookup_map entries (VKeyword ":args") )
@@ -295,7 +297,7 @@ let child_form_value_with_lookup ~lookup input slot_name = function
       let child_identifiers = child_identifier_specs ~lookup input slot_name in
       let child_slots = child_slot_specs ~lookup input slot_name in
       match base with
-      | VMap entries ->
+      | (VMap entries | VDictionary entries) ->
           let entries =
             if child_identifiers = [] then entries
             else
@@ -358,7 +360,7 @@ let positional_arg input index =
 
 let option_map_lookup options key =
   match options with
-  | VMap entries -> Value.lookup_map entries (VKeyword (":" ^ key))
+  | (VMap entries | VDictionary entries) -> Value.lookup_map entries (VKeyword (":" ^ key))
   | _ -> None
 
 let identifier_name = function
@@ -377,12 +379,12 @@ let identifier_index_with_lookup ~lookup form wanted =
 
 let child_identifier_index input wanted =
   match input with
-  | VMap entries -> (
+  | (VMap entries | VDictionary entries) -> (
       match Value.lookup_map entries (VKeyword ":child-identifiers") with
       | Some (VList identifiers) | Some (VVector identifiers) ->
           identifiers
           |> List.find_map (function
-            | VMap entries -> (
+            | (VMap entries | VDictionary entries) -> (
                 match
                   ( Value.lookup_map entries (VKeyword ":name"),
                     Value.lookup_map entries (VKeyword ":positional-index") )
@@ -399,12 +401,12 @@ let child_identifier_index input wanted =
 
 let child_slot_index input wanted =
   match input with
-  | VMap entries -> (
+  | (VMap entries | VDictionary entries) -> (
       match Value.lookup_map entries (VKeyword ":child-slots") with
       | Some (VList slots) | Some (VVector slots) ->
           slots
           |> List.find_map (function
-            | VMap entries -> (
+            | (VMap entries | VDictionary entries) -> (
                 match Value.lookup_map entries (VKeyword ":name") with
                 | Some name -> (
                     match scalar_string name with
@@ -432,7 +434,13 @@ let identifier_value_with_lookup ~lookup input name =
       | Some index -> Some index
       | None -> identifier_index_with_lookup ~lookup form wanted
     in
-    match index with Some index -> positional_arg input index | None -> VNil
+    match index with
+    | Some index ->
+        let arguments = declaration_args input |> List.filter (function
+          | VList (VKeyword _ :: _) | VVector (VKeyword _ :: _) -> false
+          | _ -> true) in
+        Option.value ~default:VNil (List.nth_opt arguments index)
+    | None -> VNil
   in
   match normalized_lookup_map input ":identifiers" with
   | Some entries -> (

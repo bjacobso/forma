@@ -5,8 +5,9 @@
     "fields": [
       {
         "name": "department/name",
-        "required": "true",
-        "type": "String"
+        "type": "String",
+        "required": true,
+        "indexed": false
       }
     ]
   },
@@ -16,21 +17,24 @@
     "fields": [
       {
         "name": "employee/name",
-        "required": "true",
-        "type": "String"
+        "type": "String",
+        "required": true,
+        "indexed": false
       },
       {
         "name": "employee/department",
-        "required": null,
         "type": [
-          "Ref",
+          "Id",
           "Department"
-        ]
+        ],
+        "required": false,
+        "indexed": false
       },
       {
         "name": "employee/active",
-        "required": null,
-        "type": "Bool"
+        "type": "Bool",
+        "required": true,
+        "indexed": false
       }
     ]
   },
@@ -38,10 +42,13 @@
     "kind": "Query",
     "name": "employee-directory",
     "from": "Employee",
+    "where": {
+      "kind": "raw-expr",
+      "expr": "active"
+    },
     "select": [
       "employee/name",
       "employee/department"
-    ],
-    "where": "employee/active"
+    ]
   }
 ]

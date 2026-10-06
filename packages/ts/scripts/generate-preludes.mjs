@@ -1,5 +1,6 @@
 // Embed the repository preludes as strings so `@formalang/ts/preludes` works in
 // any runtime without file-system access. Run after editing `preludes/*.lisp`.
+import "./derive-domain-protocol.mjs";
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 

@@ -439,6 +439,8 @@ export function tsProtocolType(type: ProtocolTypeDescriptor): string {
       return `readonly ${wrapTsProtocolType(type.item)}[]`;
     case "record":
       return `Record<string, ${tsProtocolType(type.value)}>`;
+    case "object":
+      return `{ ${type.fields.map(field => `readonly ${safeProtocolFieldName(field.name)}${field.required ? "" : "?"}: ${tsProtocolType(field.type)}`).join("; ")} }`;
     case "union":
       return type.variants.map(wrapTsProtocolType).join(" | ");
   }
@@ -471,6 +473,8 @@ export function schemaProtocolType(
       return `Schema.Array(${schemaProtocolType(type.item, options)})`;
     case "record":
       return `Schema.Record(Schema.String, ${schemaProtocolType(type.value, options)})`;
+    case "object":
+      return `Schema.Struct({ ${type.fields.map(field => `${safeProtocolFieldName(field.name)}: ${field.required ? schemaProtocolType(field.type, options) : `Schema.optionalKey(${schemaProtocolType(field.type, options)})`}`).join(", ")} })`;
     case "union":
       return `Schema.Union(${type.variants.map((variant) => schemaProtocolType(variant, options)).join(", ")})`;
   }

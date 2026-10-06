@@ -1,2 +1,2 @@
-orders.lisp:29:24 error mechanics/undeclared-error
+orders.lisp:25:24 error mechanics/undeclared-error
   Operation pay can fail with PaymentDeclined, but its signature declares only [OrderNotFound].

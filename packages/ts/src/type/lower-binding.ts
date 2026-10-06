@@ -218,6 +218,17 @@ export function lowerEffectDo(lower: LowerFn, span: Span, items: readonly SExpr[
   if (items.length < 3) {
     throw new InferenceError({ message: "do! requires bindings and body" });
   }
+  const vector=items[1];
+  if (vector?._tag === "Vector") {
+    const pureAt=vector.items.findIndex((value,index)=>index%2===0 && value._tag==="Sym" && value.name===":let");
+    if (pureAt>=0) {
+      const pure=vector.items[pureAt+1];
+      if (pure?._tag!=="Vector" || pure.items.length%2) throw new InferenceError({message:":let requires binding/value pairs"});
+      const rest:SExpr={_tag:"List",loc:vector.loc,items:[items[0]!,{...vector,items:vector.items.slice(pureAt+2)},...items.slice(2)]};
+      const scoped:SExpr={_tag:"List",loc:pure.loc,items:[{_tag:"Sym",loc:pure.loc,name:"let"},pure,rest]};
+      return lowerEffectDo(lower,span,[items[0]!,{...vector,items:vector.items.slice(0,pureAt)},scoped]);
+    }
+  }
   const pairs = bindingPairs(items[1]!, "do!");
   const bindings = pairs.map(({ name: nameSym, value }) => {
     if (nameSym._tag !== "Sym") {

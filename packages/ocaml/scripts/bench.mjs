@@ -2,6 +2,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { brotliCompressSync, gzipSync } from "node:zlib";
+import { corpusGolden } from "./gates.mjs";
 import { readExampleSources, readPreludes } from "./corpus.mjs";
 
 const cwd = new URL("..", import.meta.url);
@@ -57,17 +58,20 @@ const gzipBytes = (paths) =>
 
 const corpusSummary = async (nativePath) => {
   const preludes = readPreludes({ kind: "prelude" });
-  const sources = readExampleSources({
+  const examples = readExampleSources({
     kind: "source",
     canonicalOnly: true,
     dropOntologyManifest: true,
-  });
+  }).filter(source=>source.sourceId.startsWith("examples/staffing/"));
+  const sources=[{kind:"source",sourceId:"preludes/system.lisp",source:readFileSync(new URL("../../preludes/system.lisp",cwd),"utf8")},...examples];
 
   const daemon = spawn(nativePath.pathname, ["daemon"], {
     cwd,
     stdio: ["pipe", "pipe", "pipe"],
   });
-  let stderr = "";
+  const daemonExit = new Promise((resolveExit) => daemon.on("close", resolveExit));
+
+let stderr = "";
   daemon.stderr.on("data", (chunk) => {
     stderr += chunk;
   });
@@ -163,7 +167,7 @@ const corpusSummary = async (nativePath) => {
   await request({ op: "closeSession", sessionId });
   daemon.stdin.end();
 
-  const exitCode = await new Promise((resolveExit) => daemon.on("close", resolveExit));
+  const exitCode = await daemonExit;
   if (exitCode !== 0) {
     throw new Error(`Daemon exited with ${exitCode}: ${stderr}`);
   }
@@ -185,6 +189,7 @@ const corpusSummary = async (nativePath) => {
     editedSourceId: editedSource.sourceId,
     preludeCount: preludes.length,
     sourceCount: sources.length,
+    module:"staffing",
     loadedCount: loadedPreludes.value.loadedCount + loadedSources.value.loadedCount,
     preludeLoadPhaseTimings: loadedPreludes.value.phaseTimings,
     sourceLoadPhaseTimings: loadedSources.value.phaseTimings,

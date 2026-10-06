@@ -42,10 +42,10 @@ and infer_match_arms callbacks env scrutinee_ty arms =
               let rest_effect = effect_parts rest_ty in
               match (arm_effect, rest_effect) with
               | None, None -> (
-                  match unify rest_ty arm_ty with
-                  | Ok unify_subst ->
+                  match join rest_ty arm_ty with
+                  | Ok (unify_subst,joined) ->
                       let subst = compose_subst unify_subst subst in
-                      Ok (subst, apply_subst subst arm_ty)
+                      Ok (subst, apply_subst subst joined)
                   | Error _ as error -> error)
               | _ -> (
                   let arm_success, arm_errors, arm_req =
@@ -81,8 +81,9 @@ and infer_match_arm callbacks env scrutinee_ty arm =
 
 and infer_pattern env scrutinee_ty = function
   | Core_ast.PWild -> Ok ([], [])
+  | Core_ast.PData syntax -> infer_data_pattern env scrutinee_ty syntax
   | Core_ast.PCon (name, vars) -> (
-      match Type_env.lookup name env with
+      match (match Type_env.lookup name env with Some _ as t -> t | None -> Typed_builtin.builtin_value_type name) with
       | Some (TFn (param_tys, result_ty)) -> (
           if List.length vars <> List.length param_tys then
             Error
@@ -116,10 +117,85 @@ and infer_pattern env scrutinee_ty = function
             match unify ty scrutinee_ty with
             | Error _ as error -> error
             | Ok subst -> Ok (subst, []))
-      | None -> Ok ([], pattern_bindings (Core_ast.PCon (name, vars))))
+      | None -> Error [diagnostic "typecheck/pattern-constructor" ("Unknown constructor: " ^ name)])
+
+and infer_data_pattern env expected syntax =
+  let bind n ty = (n, Forall ([],ty,[],Plain)) in
+  let combine fields =
+    let rec loop subst bindings = function
+      | [] -> Ok (subst, bindings)
+      | (syntax,ty) :: rest -> (match infer_data_pattern (bindings @ apply_subst_env subst env) (apply_subst subst ty) syntax with
+        | Error _ as error -> error | Ok (next,bs) -> loop (compose_subst next subst) (bs @ bindings) rest)
+    in loop [] [] fields in
+  match syntax with
+  | Ast.Symbol (_,"_") -> Ok ([],[])
+  | Ast.Symbol (_,n) when Surface.is_lower n && n <> "nil" -> Ok ([],[bind n expected])
+  | Ast.Map (_,pairs) when (match expected with TNamedApp ("Map",[_;_]) -> true | _ -> false) ->
+      let key,item = match expected with TNamedApp ("Map",[key;item]) -> key,item | _ -> assert false in
+      let rec loop subst children = function
+        | [] -> Result.map (fun (s,bindings) -> compose_subst s subst,bindings) (combine children)
+        | (Ast.Keyword (_,":as"),p)::rest -> loop subst ((p,expected)::children) rest
+        | (k,p)::rest ->
+            let actual = match k with Ast.Keyword (_,n) -> TNamed n | Ast.String (_,n) -> TNamed (Value.string_json n) | _ -> TAny in
+            (match assign actual (apply_subst subst key) with Error _ as e -> e | Ok s -> loop (compose_subst s subst) ((p,item)::children) rest) in
+      loop [] [] pairs
+  | Ast.Map (_,pairs) ->
+      let as_pattern=List.find_map (function Ast.Keyword (_,":as"),p -> Some p | _ -> None) pairs in
+      let pairs=List.concat_map (function
+        | Ast.Keyword (_,":as"),_ -> []
+        | Ast.Keyword (_,":keys"), Ast.Vector (_,keys) -> List.map (fun k -> match k with Ast.Symbol (s,n) -> Ast.Keyword (s,":" ^ n),k | _ -> k,k) keys
+        | p -> [p]) pairs in
+      let label = function Ast.String (_,s) -> if String.starts_with ~prefix:":" s || String.starts_with ~prefix:"\000" s then "\000str:" ^ s else s | k -> Option.value ~default:"" (Surface.name k) in
+      let fields=List.map (fun (k,v) -> label k,v,fresh_tyvar ()) pairs in
+      let required=TOpenRecord (List.map (fun (n,_,ty) -> n,ty) fields,fresh_tyvar ()) in
+      (match unify expected required with
+       | Error _ as error -> error
+       | Ok subst ->
+           let children=List.map (fun (_,v,ty) -> v,apply_subst subst ty) fields in
+           let children=match as_pattern with Some p -> (p,apply_subst subst expected)::children | None -> children in
+           Result.map (fun (next,bs) -> compose_subst next subst,bs) (combine children))
+  | Ast.Vector (_,items) ->
+      let element = fresh_tyvar () in
+      let list_ty = match expected with TVector _ -> TVector element | _ -> TList element in
+      (match unify expected list_ty with
+       | Error _ as error -> error
+       | Ok subst ->
+          let rec parts = function
+            | [] -> Ok []
+            | [Ast.Symbol (_,"&");rest] -> Ok [rest,apply_subst subst list_ty]
+            | Ast.Symbol (_,"&") :: _ -> Error [diagnostic "typecheck/pattern-rest" "Rest pattern requires one final binder."]
+            | p :: rest -> Result.map (fun ps -> (p,apply_subst subst element) :: ps) (parts rest) in
+          match parts items with Error _ as error -> error | Ok ps -> Result.map (fun (next,bs) -> compose_subst next subst,bs) (combine ps))
+  | Ast.List (_,Ast.Symbol (_,n) :: args) when Surface.is_upper n ->
+      (match (match Type_env.lookup n env with Some _ as t -> t | None -> Typed_builtin.builtin_value_type n) with
+       | Some (TFn (fields,result)) when List.length fields = List.length args ->
+           (match unify expected result with Error _ as error -> error | Ok subst -> Result.map (fun (next,bs) -> compose_subst next subst,bs) (combine (List.map2 (fun p t -> p,apply_subst subst t) args fields)))
+       | Some result when args = [] -> Result.map (fun subst -> subst,[]) (unify expected result)
+       | _ -> Error [diagnostic "typecheck/pattern-constructor" ("Invalid constructor pattern " ^ n)])
+  | Ast.Symbol (_,n) when Surface.is_upper n -> infer_pattern env expected (Core_ast.PCon (n,[]))
+  | literal ->
+      let ty = match literal with
+        | Ast.Int (_,n) -> TNamed (string_of_int n)
+        | Ast.Float (_,n) -> TNamed (string_of_float n)
+        | Ast.Bool (_,b) -> TNamed (string_of_bool b)
+        | Ast.String (_,s) -> TNamed (Value.string_json s)
+        | Ast.Keyword (_,n) -> TNamed n
+        | Ast.Nil _ -> TNil | _ -> TAny in
+      let ty = match expected,ty with
+        | TVar _,TNamed literal -> Option.value ~default:ty (Type_unify.literal_base literal)
+        | _ -> ty in
+      Result.map (fun subst -> subst,[]) (assign ty expected)
 
 and pattern_bindings = function
   | Core_ast.PWild -> []
+  | Core_ast.PData syntax ->
+      let rec names = function
+        | Ast.Symbol (_,n) when Surface.is_lower n && n<>"nil" && n<>"_" -> [n]
+        | Ast.List (_,Ast.Symbol (_,n)::args) when Surface.is_upper n -> List.concat_map names args
+        | Ast.Map (_,pairs) -> List.concat_map (fun (_,v) -> names v) pairs
+        | Ast.Vector (_,items) -> List.concat_map names items
+        | _ -> [] in
+      List.sort_uniq String.compare (names syntax) |> List.map (fun n -> n,Forall ([],fresh_tyvar (),[],Plain))
   | Core_ast.PCon (_, vars) ->
       List.map (fun name -> (name, Forall ([], TAny, [], Plain))) vars
 

@@ -2,12 +2,9 @@
 
 ```lisp
 (export mark-active)
-
-(define-action mark-active
-  (:input [employee Employee])
-  (:returns Boolean)
-  (:do
-    (do
-      (set-field employee :employee/status "active")
-      (= (get employee :employee/status) "active"))))
+(: mark-active (-> Employee (Action Bool)))
+(define
+  mark-active
+  [employee]
+  (do! [_ (update! Employee employee.id {:status "active"})] true))
 ```

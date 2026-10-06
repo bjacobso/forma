@@ -129,7 +129,7 @@ const cases = [
     request: {
       op: "evaluate",
       sourceId: "parity/eval-macro",
-      source: "(defmacro unless [test body] `(if ~test nil ~body)) (unless false 7)",
+      source: "(macro (unless test body) `(if ~test nil ~body)) (unless false 7)",
     },
     expect: [
       [["ok"], true],
@@ -142,7 +142,7 @@ const cases = [
     request: {
       op: "expand",
       sourceId: "parity/expand-macro",
-      source: "(defmacro unless [test body] `(if ~test nil ~body)) (unless false 7)",
+      source: "(macro (unless test body) `(if ~test nil ~body)) (unless false 7)",
     },
     expect: [
       [["ok"], true],
@@ -297,7 +297,7 @@ const cases = [
     },
     expect: [
       [["ok"], true],
-      [["type"], "Float"],
+      [["type"], "Number"],
     ],
   },
   {
@@ -309,7 +309,7 @@ const cases = [
     },
     expect: [
       [["ok"], true],
-      [["type"], "List"],
+      [["type"], "List<Int>"],
     ],
   },
   {

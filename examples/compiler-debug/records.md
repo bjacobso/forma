@@ -1,17 +1,9 @@
 # Records
 
 ```lisp
-(define-record "department:platform" Department
-  (:field [department/name "Platform"])
-  (:field [department/code "PLAT"]))
-
-(define-record "employee:ada" Employee
-  (:field [employee/name "Ada Lovelace"])
-  (:field [employee/status "active"])
-  (:field [employee/department "department:platform"]))
-
-(define-record "employee:grace" Employee
-  (:field [employee/name "Grace Hopper"])
-  (:field [employee/status "onboarding"])
-  (:field [employee/department "department:platform"]))
+(seed Department "department:platform" {:name "Platform" :code "PLAT"})
+(seed Employee "employee:ada"
+  {:name "Ada Lovelace" :status "active" :department "department:platform"})
+(seed Employee "employee:grace"
+  {:name "Grace Hopper" :status "onboarding" :department "department:platform"})
 ```

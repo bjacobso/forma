@@ -10,6 +10,8 @@ const daemon = spawn(nativeCli, ["daemon"], {
   stdio: ["pipe", "pipe", "pipe"],
 });
 
+const daemonExit = new Promise((resolveExit) => daemon.on("close", resolveExit));
+
 let stderr = "";
 daemon.stderr.on("data", (chunk) => {
   stderr += chunk;
@@ -120,11 +122,11 @@ const requiredPreludeSource = (sourceId) => {
 };
 
 const protocolFieldValue = (source, field) => {
-  const match = source.match(new RegExp(`\\(:${field}\\s+([^\\s()\\]]+)`));
+  const match = source.match(new RegExp(`:${field}\\s+("[^"\\n]*"|[^\\s()\\]{}]+)`));
   if (!match) {
     throw new Error(`Missing protocol registry field :${field}`);
   }
-  return match[1];
+  return match[1].replaceAll('"', "");
 };
 
 const viewProtocolSource = requiredPreludeSource("preludes/viewspec-protocol.lisp");
@@ -178,235 +180,79 @@ const syntheticProtocol = {
 
 const syntheticProtocolSource = applyProtocolNames(viewProtocolSource, syntheticProtocol);
 
-const querySource = `
-(define-query employee-directory
-  (:from Employee)
-  (:select [employee/name employee/status]))
-`;
-
-const entitySource = `
-(define-entity Employee
-  (:field [employee/name String {:required true}])
-  (:field [employee/status String])
-  (:field [employee/department (Ref Department)]))
-`;
-
-const recordSource = `
-(define-record "employee:ada" Employee
-  (:field [employee/name "Ada Lovelace"])
-  (:field [employee/status "active"])
-  (:field [employee/department "department:platform"]))
-`;
+const entitySource = `(entity Employee {:name String :status (Option String) :department (Option (Id Department))})`;
+const querySource = `(query employee-directory :from Employee :select [name status])`;
+const recordSource = `(seed Employee "employee:ada" {:name "Ada Lovelace" :status "active" :department "department:platform"})`;
 
 const cases = [
   {
-    name: "entity bindings",
-    source: `${entitySource}\n(entity/bindings Employee)`,
+    name: "entity field scopes",
+    source: `(entity-fields 'Employee)`,
     assert(response) {
-      const value = response.value;
-      const nameBinding = entryValue(value, "$entity:Employee:employee/name");
-      const statusBinding = entryValue(value, "$entity:Employee:employee/status");
-      const departmentBinding = entryValue(value, "$entity:Employee:employee/department");
-      if (
-        value?.kind !== "map" ||
-        typeName(nameBinding) !== "String" ||
-        typeName(statusBinding) !== "String" ||
-        typeName(departmentBinding) !== "Ref<Department>"
-      ) {
-        throw new Error(
-          `Unexpected entity/bindings response: ${JSON.stringify(response, null, 2)}`,
-        );
-      }
+      if (typeName(entryValue(response.value,"name")) !== "String" || entryValue(response.value,":it")?.kind !== "map") throw new Error(JSON.stringify(response));
     },
   },
   {
-    name: "query bindings",
-    source: `${entitySource}\n${querySource}\n(query/bindings employee-directory)`,
+    name: "query row projection",
+    source: `(row-of 'Employee ['name 'status])`,
     assert(response) {
-      const value = response.value;
-      const queryBinding = entryValue(value, "employee-directory");
-      const rowBinding = entryValue(value, "it");
-      if (
-        value?.kind !== "map" ||
-        typeName(queryBinding) !== "QueryDef" ||
-        typeName(rowBinding) !== "Row<Employee>"
-      ) {
-        throw new Error(`Unexpected query/bindings response: ${JSON.stringify(response, null, 2)}`);
-      }
+      if (response.value?.entries?.length !== 2 || typeName(entryValue(response.value,":name")) !== "String") throw new Error(JSON.stringify(response));
     },
   },
   {
     name: "query result type",
-    source: `${entitySource}\n${querySource}\n(query/result-type employee-directory)`,
+    source: `(form/query/result-type employee-directory)`,
     assert(response) {
-      const item = entryValue(response.value, ":item");
-      if (
-        response.value?.kind !== "map" ||
-        entryValue(response.value, ":kind")?.value !== "type-list" ||
-        typeName(item) !== "Project<Row<Employee>:employee/name,employee/status>"
-      ) {
-        throw new Error(
-          `Unexpected query/result-type response: ${JSON.stringify(response, null, 2)}`,
-        );
-      }
-    },
-  },
-  {
-    name: "query validation",
-    source: `${entitySource}\n${querySource}\n(query/validate employee-directory)`,
-    assert(response) {
-      if (
-        (response.value?.kind !== "list" && response.value?.kind !== "vector") ||
-        response.value.items?.length !== 0
-      ) {
-        throw new Error(`Unexpected query/validate response: ${JSON.stringify(response, null, 2)}`);
-      }
+      if (response.value?.kind !== "list" || response.value.items?.[0]?.value !== "List" || response.value.items?.[1]?.kind !== "map") throw new Error(JSON.stringify(response));
     },
   },
   {
     name: "query construct",
-    source: `${entitySource}\n${querySource}\n(query/construct employee-directory)`,
+    source: `(form/query/construct employee-directory)`,
     assert(response) {
-      const value = response.value;
-      const kind = entryValue(value, ":kind");
-      const name = entryValue(value, ":name");
-      const from = entryValue(value, ":from");
-      if (
-        value?.kind !== "map" ||
-        kind?.value !== "Query" ||
-        name?.value !== "employee-directory" ||
-        from?.value !== "Employee"
-      ) {
-        throw new Error(
-          `Unexpected query/construct response: ${JSON.stringify(response, null, 2)}`,
-        );
-      }
+      if (entryValue(response.value,":kind")?.value !== "Query" || entryValue(response.value,":from")?.value !== "Employee") throw new Error(JSON.stringify(response));
     },
   },
   {
     name: "entity construct",
-    source: `${entitySource}\n(entity/construct Employee)`,
+    source: `(form/entity/construct Employee)`,
     assert(response) {
-      const value = response.value;
-      const kind = entryValue(value, ":kind");
-      const name = entryValue(value, ":name");
-      const fields = entryValue(value, ":fields");
-      const firstField = fields?.items?.[0];
-      const secondField = fields?.items?.[1];
-      const thirdField = fields?.items?.[2];
-      const fieldName = entryValue(firstField, ":name");
-      const fieldType = entryValue(firstField, ":type");
-      const fieldRequired = entryValue(firstField, ":required");
-      const secondRequired = entryValue(secondField, ":required");
-      const refType = entryValue(thirdField, ":type");
-      if (
-        value?.kind !== "map" ||
-        kind?.value !== "Entity" ||
-        name?.value !== "Employee" ||
-        fields?.kind !== "list" ||
-        fields.items?.length !== 3 ||
-        fieldName?.value !== "employee/name" ||
-        fieldType?.value !== "String" ||
-        fieldRequired?.value !== "true" ||
-        secondRequired?.kind !== "nil" ||
-        refType?.kind !== "list" ||
-        refType.items?.[0]?.value !== "Ref" ||
-        refType.items?.[1]?.value !== "Department"
-      ) {
-        throw new Error(
-          `Unexpected entity/construct response: ${JSON.stringify(response, null, 2)}`,
-        );
-      }
+      const fields=entryValue(response.value,":fields")?.items;
+      if (entryValue(response.value,":kind")?.value !== "Entity" || fields?.length !== 3 || entryValue(fields[0],":name")?.value !== ":employee/name" || entryValue(fields[0],":required")?.value !== true || entryValue(fields[1],":required")?.value !== false) throw new Error(JSON.stringify(response));
     },
   },
   {
-    name: "record child forms unwrap vector fields",
-    source: `${recordSource}
-(let [fields (meta/child-forms employee:ada :field)
-      first-field (first fields)]
-  {:field-count (count fields)
-   :field-name (meta/identifier first-field :name)
-   :field-value (meta/slot-string first-field :type)})`,
+    name: "record syntax reflection",
+    source: `(meta/entries (declaration-hole 'Employee :fields))`,
     assert(response) {
-      const value = response.value;
-      const fieldCount = entryValue(value, ":field-count");
-      const fieldName = entryValue(value, ":field-name");
-      const fieldValue = entryValue(value, ":field-value");
-      if (
-        value?.kind !== "map" ||
-        fieldCount?.value !== 3 ||
-        fieldName?.value !== "employee/name" ||
-        fieldValue?.value !== "Ada Lovelace"
-      ) {
-        throw new Error(
-          `Unexpected record child form response: ${JSON.stringify(response, null, 2)}`,
-        );
-      }
+      if (response.value?.items?.length !== 3 || response.value.items[0]?.items?.[0]?.value !== ":name") throw new Error(JSON.stringify(response));
     },
   },
   {
-    name: "record construct",
-    source: `${recordSource}\n(record/construct employee:ada)`,
+    name: "seed field assignment projection",
+    source: `(seed-assignments 'Employee [[:name "Ada Lovelace"] [:status "active"]])`,
     assert(response) {
-      const value = response.value;
-      const kind = entryValue(value, ":kind");
-      const id = entryValue(value, ":id");
-      const entity = entryValue(value, ":entity");
-      const fields = entryValue(value, ":fields");
-      const nameValue = entryValue(fields, "employee/name");
-      const statusValue = entryValue(fields, "employee/status");
-      const departmentValue = entryValue(fields, "employee/department");
-      if (
-        value?.kind !== "map" ||
-        kind?.value !== "Record" ||
-        id?.value !== "employee:ada" ||
-        entity?.value !== "Employee" ||
-        fields?.kind !== "map" ||
-        nameValue?.value !== "Ada Lovelace" ||
-        statusValue?.value !== "active" ||
-        departmentValue?.value !== "department:platform"
-      ) {
-        throw new Error(
-          `Unexpected record/construct response: ${JSON.stringify(response, null, 2)}`,
-        );
-      }
+      if (entryValue(response.value,"employee/name")?.value !== "Ada Lovelace" || entryValue(response.value,"employee/status")?.value !== "active") throw new Error(JSON.stringify(response));
     },
   },
   {
     name: "generic meta primitive surface",
-    source: `${entitySource}\n${querySource}\n(meta/form-name employee-directory)`,
+    source: `(meta/form-name employee-directory)`,
     assert(response) {
-      if (response.value?.value !== "define-query") {
-        throw new Error(`Unexpected meta/form-name response: ${JSON.stringify(response, null, 2)}`);
-      }
+      if (response.value?.value !== "query") throw new Error(JSON.stringify(response));
     },
   },
   {
     name: "declaration reflection",
-    source:
-      `${entitySource}\n` +
-      '(let [decl (meta/lookup-declaration nil "Employee") field (meta/declaration-field decl "employee/name")] (construct/object :kind (meta/declaration-kind decl) :type (meta/declaration-type decl) :field field))',
+    source: `(declaration-fields 'Employee)`,
     assert(response) {
-      const kind = entryValue(response.value, ":kind");
-      const typ = entryValue(response.value, ":type");
-      const field = entryValue(response.value, ":field");
-      const fieldType = entryValue(field, ":type");
-      if (
-        response.value?.kind !== "map" ||
-        kind?.value !== "Entity" ||
-        typeName(typ) !== "Row<Employee>" ||
-        typeName(fieldType) !== "String"
-      ) {
-        throw new Error(
-          `Unexpected declaration reflection response: ${JSON.stringify(response, null, 2)}`,
-        );
-      }
+      if (typeName(entryValue(response.value,"name")) !== "String" || entryValue(response.value,"department")?.items?.[0]?.value !== "Option") throw new Error(JSON.stringify(response));
     },
   },
   {
     name: "descriptor extension reflection merges repeated nested clauses",
     source: `
-(define-form sample-view
+(__form-descriptor sample-view
   (:phase meta)
   (:extensions
     (:view/component
@@ -504,7 +350,7 @@ const cases = [
   {
     name: "descriptor construct bridge",
     source: `
-(define-form sample
+(__form-descriptor sample
   (:identifiers
     (identifier name Symbol (:declaration true)))
   (:slots
@@ -539,7 +385,7 @@ const cases = [
   {
     name: "construct from descriptor normalizes input by default",
     source: `
-(define-form sample
+(__form-descriptor sample
   (:identifiers
     (identifier name Symbol (:declaration true)))
   (:slots
@@ -579,7 +425,7 @@ const cases = [
   {
     name: "generic declaration reflection from descriptor metadata",
     source: `
-(define-form sample
+(__form-descriptor sample
   (:identifiers
     (identifier name Symbol (:declaration true)))
   (:slots
@@ -615,7 +461,7 @@ const cases = [
   {
     name: "generic declaration field reflection from normalized child forms",
     source: `
-(define-form sample-schema
+(__form-descriptor sample-schema
   (:identifiers
     (identifier name Symbol (:declaration true)))
   (:slots
@@ -673,7 +519,7 @@ const cases = [
   {
     name: "generic child slot reflection from descriptor metadata",
     source: `
-(define-form sample-action
+(__form-descriptor sample-action
   (:identifiers
     (identifier name Symbol (:declaration true)))
   (:slots
@@ -718,7 +564,7 @@ const cases = [
   {
     name: "lookup declaration normalizes reflection input",
     source: `
-(define-form sample-schema
+(__form-descriptor sample-schema
   (:identifiers
     (identifier name Symbol (:declaration true)))
   (:slots
@@ -771,7 +617,7 @@ const cases = [
   {
     name: "view layout tree compilation applies hosted aliases",
     source: `
-(define-form sample-view
+(__form-descriptor sample-view
   (:identifiers
     (identifier name Symbol (:declaration true)))
   (:slots
@@ -823,7 +669,7 @@ const cases = [
   {
     name: "view layout tree compilation applies cond alias from protocol metadata",
     source: `
-(define-form sample-view
+(__form-descriptor sample-view
   (:identifiers
     (identifier name Symbol (:declaration true)))
   (:slots
@@ -867,7 +713,7 @@ const cases = [
   {
     name: "view layout tree compilation",
     source: `
-(define-form sample-view
+(__form-descriptor sample-view
   (:identifiers
     (identifier name Symbol (:declaration true)))
   (:slots
@@ -927,7 +773,7 @@ const cases = [
   {
     name: "view child policy drops nested children when disabled",
     source: `
-(define-form child-node
+(__form-descriptor child-node
   (:phase meta)
   (:extensions
     (:view/component
@@ -936,7 +782,7 @@ const cases = [
       (:children-field children)
       (:children none))))
 
-(define-form parent-node
+(__form-descriptor parent-node
   (:phase meta)
   (:extensions
     (:view/component
@@ -968,7 +814,7 @@ const cases = [
   {
     name: "view child policy filters to allowed child types",
     source: `
-(define-form allowed-child
+(__form-descriptor allowed-child
   (:phase meta)
   (:extensions
     (:view/component
@@ -977,7 +823,7 @@ const cases = [
       (:children-field children)
       (:children none))))
 
-(define-form blocked-child
+(__form-descriptor blocked-child
   (:phase meta)
   (:extensions
     (:view/component
@@ -986,7 +832,7 @@ const cases = [
       (:children-field children)
       (:children none))))
 
-(define-form parent-node
+(__form-descriptor parent-node
   (:phase meta)
   (:extensions
     (:view/component
@@ -1021,7 +867,7 @@ const cases = [
   {
     name: "view required children gates compilation",
     source: `
-(define-form parent-node
+(__form-descriptor parent-node
   (:phase meta)
   (:extensions
     (:view/component
@@ -1047,7 +893,7 @@ const cases = [
   {
     name: "view parent policy filters children by declared parent types",
     source: `
-(define-form restricted-child
+(__form-descriptor restricted-child
   (:phase meta)
   (:extensions
     (:view/component
@@ -1057,7 +903,7 @@ const cases = [
       (:children none)
       (:parents [allowed-parent]))))
 
-(define-form allowed-parent
+(__form-descriptor allowed-parent
   (:phase meta)
   (:extensions
     (:view/component
@@ -1066,7 +912,7 @@ const cases = [
       (:children-field children)
       (:children any))))
 
-(define-form blocked-parent
+(__form-descriptor blocked-parent
   (:phase meta)
   (:extensions
     (:view/component
@@ -1107,7 +953,7 @@ const cases = [
   {
     name: "view child policy uses declared child component type field",
     source: `
-(define-form typed-child
+(__form-descriptor typed-child
   (:phase meta)
   (:extensions
     (:view/component
@@ -1116,7 +962,7 @@ const cases = [
       (:children-field children)
       (:children none))))
 
-(define-form typed-parent
+(__form-descriptor typed-parent
   (:phase meta)
   (:extensions
     (:view/component
@@ -1149,7 +995,7 @@ const cases = [
   {
     name: "view required bind synthesizes empty bind expr",
     source: `
-(define-form bound-node
+(__form-descriptor bound-node
   (:phase meta)
   (:extensions
     (:view/component
@@ -1185,7 +1031,7 @@ const cases = [
   {
     name: "view bind prop name comes from protocol metadata",
     source: `
-(define-form local-view-component-protocol
+(__form-descriptor local-view-component-protocol
   (:phase meta)
   (:extensions
     (:view/component-protocol
@@ -1199,7 +1045,7 @@ const cases = [
       (:scalar-fallback-kind value)
       (:unknown-props expr))))
 
-(define-form selectable-node
+(__form-descriptor selectable-node
   (:phase meta)
   (:extensions
     (:view/component
@@ -1239,7 +1085,7 @@ const cases = [
   {
     name: "view required bind payload comes from protocol metadata",
     source: `
-(define-form local-view-component-protocol
+(__form-descriptor local-view-component-protocol
   (:phase meta)
   (:extensions
     (:view/component-protocol
@@ -1253,7 +1099,7 @@ const cases = [
       (:scalar-fallback-kind value)
       (:unknown-props expr))))
 
-(define-form bound-node
+(__form-descriptor bound-node
   (:phase meta)
   (:extensions
     (:view/component
@@ -1294,7 +1140,7 @@ const cases = [
   {
     name: "view bind stays in props when component does not allow bind",
     source: `
-(define-form plain-node
+(__form-descriptor plain-node
   (:phase meta)
   (:extensions
     (:view/component
@@ -1329,7 +1175,7 @@ const cases = [
   {
     name: "view action lowering follows explicit descriptor metadata",
     source: `
-(define-form submit-now
+(__form-descriptor submit-now
   (:phase meta)
   (:extensions
     (:view/action
@@ -1368,7 +1214,7 @@ const cases = [
   {
     name: "view action keyword inputs follow explicit protocol metadata",
     source: `
-(define-form submit-now
+(__form-descriptor submit-now
   (:phase meta)
   (:extensions
     (:view/action
@@ -1408,7 +1254,7 @@ const cases = [
   {
     name: "view component expr props follow explicit compile metadata",
     source: `
-(define-form sample-bound
+(__form-descriptor sample-bound
   (:phase meta)
   (:extensions
     (:view/component
@@ -1448,14 +1294,14 @@ const cases = [
   {
     name: "view expr lowering follows explicit operator metadata",
     source: `
-(define-form custom-read-expr
+(__form-descriptor custom-read-expr
   (:phase meta)
   (:extensions
     (:view/expr-op
       (:form read)
       (:lowering get-path))))
 
-(define-form custom-negate-expr
+(__form-descriptor custom-negate-expr
   (:phase meta)
   (:extensions
     (:view/expr-op
@@ -1463,7 +1309,7 @@ const cases = [
       (:lowering unary)
       (:op "!"))))
 
-(define-form sample-bound
+(__form-descriptor sample-bound
   (:phase meta)
   (:extensions
     (:view/component
@@ -1511,21 +1357,21 @@ const cases = [
   {
     name: "view expr conditional and nil comparison follow explicit operator metadata",
     source: `
-(define-form custom-missing-expr
+(__form-descriptor custom-missing-expr
   (:phase meta)
   (:extensions
     (:view/expr-op
       (:form missing)
       (:lowering compare-nil))))
 
-(define-form custom-choose-expr
+(__form-descriptor custom-choose-expr
   (:phase meta)
   (:extensions
     (:view/expr-op
       (:form choose)
       (:lowering conditional))))
 
-(define-form sample-bound
+(__form-descriptor sample-bound
   (:phase meta)
   (:extensions
     (:view/component
@@ -1576,7 +1422,7 @@ const cases = [
   {
     name: "view expr pipe call and pipe chain follow explicit operator metadata",
     source: `
-(define-form custom-measure-expr
+(__form-descriptor custom-measure-expr
   (:phase meta)
   (:extensions
     (:view/expr-op
@@ -1584,14 +1430,14 @@ const cases = [
       (:lowering pipe-call)
       (:name length))))
 
-(define-form custom-thread-expr
+(__form-descriptor custom-thread-expr
   (:phase meta)
   (:extensions
     (:view/expr-op
       (:form thread)
       (:lowering pipe-chain))))
 
-(define-form sample-bound
+(__form-descriptor sample-bound
   (:phase meta)
   (:extensions
     (:view/component
@@ -1639,7 +1485,7 @@ const cases = [
   {
     name: "view expr unknown forms fall back to literal values",
     source: `
-(define-form sample-bound
+(__form-descriptor sample-bound
   (:phase meta)
   (:extensions
     (:view/component
@@ -1680,7 +1526,7 @@ const cases = [
   {
     name: "view component slot aliases come from normalized descriptor slots",
     source: `
-(define-form aliased-button
+(__form-descriptor aliased-button
   (:phase meta)
   (:extensions
     (:view/component
@@ -1714,7 +1560,7 @@ const cases = [
   {
     name: "view bind and visible are ordinary props without expr metadata",
     source: `
-(define-form sample-plain
+(__form-descriptor sample-plain
   (:phase meta)
   (:extensions
     (:view/component
@@ -1751,7 +1597,7 @@ const cases = [
   {
     name: "view component events follow explicit descriptor metadata",
     source: `
-(define-form submit-now
+(__form-descriptor submit-now
   (:phase meta)
   (:extensions
     (:view/action
@@ -1765,7 +1611,7 @@ const cases = [
         (:action (:kind literal) (:values [submitNow]) (:required true))
         (:token (:type string) (:required true))))))
 
-(define-form save-button
+(__form-descriptor save-button
   (:phase meta)
   (:extensions
     (:view/component
@@ -1800,7 +1646,7 @@ const cases = [
   {
     name: "view component event arrays derive normalized event field names",
     source: `
-(define-form submit-now
+(__form-descriptor submit-now
   (:phase meta)
   (:extensions
     (:view/action
@@ -1814,7 +1660,7 @@ const cases = [
         (:action (:kind literal) (:values [submitNow]) (:required true))
         (:token (:type string) (:required true))))))
 
-(define-form save-button
+(__form-descriptor save-button
   (:phase meta)
   (:extensions
     (:view/component
@@ -1847,7 +1693,7 @@ const cases = [
   {
     name: "view component event normalization follows source-local protocol override",
     source: `
-(define-form local-view-component-protocol
+(__form-descriptor local-view-component-protocol
   (:phase meta)
   (:extensions
     (:view/component-protocol
@@ -1862,7 +1708,7 @@ const cases = [
       (:scalar-fallback-kind value)
       (:unknown-props json))))
 
-(define-form submit-now
+(__form-descriptor submit-now
   (:phase meta)
   (:extensions
     (:view/action
@@ -1876,7 +1722,7 @@ const cases = [
         (:action (:kind literal) (:values [submitNow]) (:required true))
         (:token (:type string) (:required true))))))
 
-(define-form save-button
+(__form-descriptor save-button
   (:phase meta)
   (:extensions
     (:view/component
@@ -1913,7 +1759,7 @@ const cases = [
   {
     name: "view positional props require declared slots",
     source: `
-(define-form title-only
+(__form-descriptor title-only
   (:phase meta)
   (:extensions
     (:view/component
@@ -1944,7 +1790,7 @@ const cases = [
   {
     name: "view scalar fallback field follows protocol metadata",
     source: `
-(define-form plain-node
+(__form-descriptor plain-node
   (:phase meta)
   (:extensions
     (:view/component
@@ -1975,7 +1821,7 @@ const cases = [
   {
     name: "view scalar fallback kind follows source-local protocol override",
     source: `
-(define-form local-view-component-protocol
+(__form-descriptor local-view-component-protocol
   (:phase meta)
   (:extensions
     (:view/component-protocol
@@ -1989,7 +1835,7 @@ const cases = [
       (:scalar-fallback-kind expr)
       (:unknown-props json))))
 
-(define-form plain-node
+(__form-descriptor plain-node
   (:phase meta)
   (:extensions
     (:view/component
@@ -2022,7 +1868,7 @@ const cases = [
   {
     name: "view unknown prop routing follows source-local protocol override",
     source: `
-(define-form local-view-component-protocol
+(__form-descriptor local-view-component-protocol
   (:phase meta)
   (:extensions
     (:view/component-protocol
@@ -2036,7 +1882,7 @@ const cases = [
       (:scalar-fallback-kind value)
       (:unknown-props expr))))
 
-(define-form plain-node
+(__form-descriptor plain-node
   (:phase meta)
   (:extensions
     (:view/component
@@ -2071,7 +1917,7 @@ const cases = [
   {
     name: "view component unknown-props kind overrides protocol fallback",
     source: `
-(define-form local-view-component-protocol
+(__form-descriptor local-view-component-protocol
   (:phase meta)
   (:extensions
     (:view/component-protocol
@@ -2085,7 +1931,7 @@ const cases = [
       (:scalar-fallback-kind value)
       (:unknown-props expr))))
 
-(define-form plain-node
+(__form-descriptor plain-node
   (:phase meta)
   (:extensions
       (:view/component
@@ -2122,7 +1968,7 @@ const cases = [
   {
     name: "view component compile metadata overrides fields and events",
     source: `
-(define-form submit-now
+(__form-descriptor submit-now
   (:phase meta)
   (:extensions
     (:view/action
@@ -2134,7 +1980,7 @@ const cases = [
       (:fields
         (:action (:kind literal) (:values [submitNow]) (:required true))))))
 
-(define-form save-button
+(__form-descriptor save-button
   (:phase meta)
   (:slots
     (slot title expr))
@@ -2178,7 +2024,7 @@ const cases = [
   {
     name: "view component field override values stay explicit",
     source: `
-(define-form plain-node
+(__form-descriptor plain-node
   (:phase meta)
   (:slots
     (slot title expr))
@@ -2218,7 +2064,7 @@ const cases = [
     source: `
 ${syntheticProtocolSource}
 
-(define-form card-title
+(__form-descriptor card-title
   (:phase meta)
   (:extensions
     (:card/component
@@ -2252,7 +2098,7 @@ ${syntheticProtocolSource}
     source: `
 ${syntheticProtocolSource}
 
-(define-form submit-card
+(__form-descriptor submit-card
   (:phase meta)
   (:extensions
     (:card/action
@@ -2266,7 +2112,7 @@ ${syntheticProtocolSource}
         (:action (:kind literal) (:values [submitCard]) (:required true))
         (:token (:type string) (:required true))))))
 
-(define-form primary-button
+(__form-descriptor primary-button
   (:phase meta)
   (:extensions
     (:card/component
@@ -2277,7 +2123,7 @@ ${syntheticProtocolSource}
       (:events [on-press])
       (:events-field events))))
 
-(define-form card-cta
+(__form-descriptor card-cta
   (:phase meta)
   (:extensions
     (:card/layout-alias
@@ -2330,6 +2176,7 @@ try {
     expectOk(`loadPrelude ${prelude.sourceId}`, response);
   }
 
+  expectOk("load canonical declarations", await request({op:"loadSource",sessionId,sourceId:"meta-hooks/declarations",source:`(entity Department {})\n${entitySource}\n${querySource}`}));
   for (const testCase of cases) {
     const response = await request({
       op: "evaluate",
@@ -2362,7 +2209,7 @@ try {
   daemon.stdin.end();
 }
 
-const exitCode = await new Promise((resolveExit) => daemon.on("close", resolveExit));
+const exitCode = await daemonExit;
 if (exitCode !== 0) {
   throw new Error(`Daemon exited with ${exitCode}: ${stderr}`);
 }

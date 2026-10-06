@@ -2,14 +2,14 @@
   "diagnostic": {
     "span": {
       "sourceId": "thesis-gate/query-scope-global.lisp",
-      "startOffset": 62,
-      "endOffset": 77
+      "startOffset": 36,
+      "endOffset": 42
     },
     "severity": "error",
     "code": "typecheck/unbound-symbol",
-    "message": "Unbound symbol \"employee/status\".",
+    "message": "Unbound symbol \"status\".",
     "notes": [],
     "fixes": []
   },
-  "spannedText": "employee/status"
+  "spannedText": "status"
 }

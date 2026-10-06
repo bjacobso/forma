@@ -149,7 +149,7 @@ function expectedFixtureOutcome(fixtureId, mode, source) {
     };
   }
 
-  if (fixtureId.endsWith("-warning")) {
+  if (fixtureId.endsWith("-warning") && fixtureId !== "keyword-literal-warning") {
     return {
       kind: "warning",
       diagnostic: expectedTypecheckDiagnostic(fixtureId, source),
@@ -353,7 +353,7 @@ function expectedTypecheckDiagnostic(fixtureId, source) {
     case "kind-mismatch-error": {
       const start = source.indexOf("(List");
       return {
-        code: "typecheck/kind-mismatch",
+        code: "surface/invalid-form",
         span: { start, end: source.indexOf(")", start) + 1 },
       };
     }

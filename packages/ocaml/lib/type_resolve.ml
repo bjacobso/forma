@@ -12,16 +12,20 @@ let make_type_application callee args =
   match (callee, args) with
   | TNamed "List", [ item ] -> Ok (TList item)
   | TNamed "Vector", [ item ] -> Ok (TVector item)
-  | TNamed "Map", _ -> Ok TMap
+  | TNamed "Map", [key;value] ->
+      let rec valid_key = function TVar _ | TString -> true | TNamed n -> String.starts_with ~prefix:":" n || String.starts_with ~prefix:"\"" n | TNamedApp ("Brand",[_;TString]) -> true | TNamedApp ("Union",xs) -> xs<>[] && List.for_all (function TNamed n -> String.starts_with ~prefix:":" n || String.starts_with ~prefix:"\"" n | _ -> false) xs | _ -> false in
+      if valid_key key then Ok (TNamedApp ("Map",[key;value])) else Error [diagnostic "typecheck/map-key" "Map keys must be String, a String brand, or a union of keyword or string literals."]
+  | TNamed "Map", _ -> Error [diagnostic "typecheck/kind-mismatch" "Map expects two type arguments."]
   | TNamed name, args -> Ok (TNamedApp (name, args))
   | _ -> Ok (TApp (callee, args))
 
 let rec resolve env = function
   | Core_ast.TESym (_, name) -> (
       match name with
-      | "Int" | "Num" -> Ok TInt
+      | "Int" -> Ok TInt
+      | "Num" | "Number" -> Ok TFloat
       | "Float" -> Ok TFloat
-      | "Bool" -> Ok TBool
+      | "Bool" | "Boolean" -> Ok TBool
       | "Str" | "String" -> Ok TString
       | "Nil" | "Unit" -> Ok TNil
       | "Keyword" -> Ok TKeyword
@@ -29,8 +33,9 @@ let rec resolve env = function
       | "Syntax" -> Ok TSyntax
       | "Any" | "_" -> Ok TAny
       | name -> (
-          match Type_env.lookup name env with
+          match (match Type_env.lookup ("__type/" ^ name) env with Some t -> Some t | None -> Type_env.lookup name env) with
           | Some ty -> Ok ty
+          | None when Option.is_some (Type_unify.literal_base name) -> Ok (TNamed name)
           | None when uppercase_initial name -> Ok (TNamed name)
           | None ->
               Error
@@ -65,17 +70,21 @@ let rec resolve env = function
             | Ok typ -> loop (typ :: acc) rest)
       in
       loop [] args
+  | Core_ast.TEApp (span, Core_ast.TESym (_, name), args) when Option.is_some (Type_env.lookup ("__alias/" ^ name) env) ->
+      (match Type_env.lookup ("__alias/" ^ name) env, resolve_many env args with
+      | Some (TFn (params, result)), Ok args when List.length params = List.length args ->
+          Type_unify.unify_many params args |> Result.map (fun subst -> apply_subst subst result)
+      | _, Error ds -> Error ds
+      | _ -> Error [diagnostic ~span "typecheck/kind-mismatch" (name ^ " has an incorrect number of type arguments.")])
   | Core_ast.TEApp (_, callee, args) -> (
       match (resolve env callee, resolve_many env args) with
       | Error diagnostics, _ | _, Error diagnostics -> Error diagnostics
       | Ok callee, Ok args -> make_type_application callee args)
   | Core_ast.TERow (_, fields, None) -> resolve_record_type_fields env fields
-  | Core_ast.TERow (span, _, Some _) ->
-      Error
-        [
-          diagnostic ~span "typecheck/unsupported-type"
-            "Open row type expressions are not supported yet.";
-        ]
+  | Core_ast.TERow (span, fields, Some row) ->
+      (match resolve_record_type_fields env fields,resolve env (Core_ast.TESym (span,row)) with
+       | Ok (TRecord fields),Ok tail -> Ok (TOpenRecord (fields,tail))
+       | Error ds,_ | _,Error ds -> Error ds | _ -> assert false)
 
 and resolve_many env exprs =
   let rec loop acc = function
@@ -96,3 +105,8 @@ and resolve_record_type_fields env fields =
         | Ok typ -> loop ((label, typ) :: acc) rest)
   in
   loop [] fields
+
+let resolve_polymorphic env expression =
+  let env = Typed_toplevel_typevars.collect_implicit [] expression |> List.sort_uniq String.compare
+    |> List.fold_left (fun env n -> Type_env.bind n (Type_env.Forall ([],Type_expr.fresh_tyvar (),[],Type_env.Plain)) env) env in
+  resolve env expression |> Result.map (fun t -> env,t)

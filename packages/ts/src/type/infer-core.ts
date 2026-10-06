@@ -1,3 +1,5 @@
+import { collectionOperations, inferCollectionOperation } from "./infer-collections.js";
+import { checkExpr } from "./check-expr.js";
 /**
  * Core inference dispatch: inferExpr, inferExprInner (the switch), inferLit, inferVar,
  * inferApp, inferLam. Also helper functions used across inference modules.
@@ -24,14 +26,15 @@ import {
   fnType,
   variadicFnType,
   showType,
+  flattenRow,
 } from "./types.js";
 import { applyType, applyEnv, type TypeEnv, applyERow } from "./substitution.js";
+import { assignType, joinType } from "./assign.js";
 import { unify } from "./unify.js";
 import { InferContext } from "./context.js";
 import type { Origin } from "./errors.js";
 import { InferenceError } from "./errors.js";
 import type { CoreExpr, TypeExpr } from "./core-expr.js";
-import { WELL_KNOWN_KEYWORDS } from "./builtin-schemes.js";
 import { instantiate, instantiateWithConstraints } from "./scheme-ops.js";
 import { emitAmbientEffect, withAmbientEffectScope } from "./effect-helpers.js";
 import { inferLet } from "./infer-binding.js";
@@ -114,6 +117,7 @@ export function attachEffectToOperationType(opType: Type, effectName: string): T
 const typeConNames = new Set([
   // Canonical internal names
   "Number",
+  "Int",
   "String",
   "Boolean",
   "Unit",
@@ -124,6 +128,8 @@ const typeConNames = new Set([
   "Nil",
   "List",
   "Map",
+  "true",
+  "false",
 ]);
 
 /** Check if a name is a type variable (lowercase first letter) or type constant */
@@ -188,10 +194,11 @@ export const typeExprToType = (
             const aliases = yield* Ref.get(ctx.typeAliases);
             const alias = aliases.get(name);
             if (alias) {
+              if (tvarMap.has(`__resolvingAlias:${name}`)) return TCon(name);
               if (alias._tag === "TESym" && alias.name === name) {
                 return TCon(name);
               }
-              return yield* typeExprToType(alias, tvarMap, rvarMap);
+              return yield* typeExprToType(alias, new Map(tvarMap).set(`__resolvingAlias:${name}`, TCon(name)), rvarMap);
             }
             // Treat as a type constructor (e.g., custom types in the future)
             return TCon(name);
@@ -211,8 +218,21 @@ export const typeExprToType = (
       }
 
       case "TEApp": {
+        if (texpr.con._tag === "TESym") {
+          const alias = (yield* Ref.get(ctx.typeAliases)).get(texpr.con.name);
+          const params = (yield* Ref.get(ctx.typeAliasParams)).get(texpr.con.name);
+          if (alias && params) {
+            if (params.length !== texpr.args.length) return yield* ctx.fail({nodeId:`alias:${texpr.span.start}`,span:texpr.span,kind:"type-application"}, {message:`${texpr.con.name} expects ${params.length} type arguments`});
+            if (tvarMap.has(`__resolvingAlias:${texpr.con.name}`)) return TApp(TCon(texpr.con.name), yield* Effect.forEach(texpr.args, arg => typeExprToType(arg, tvarMap, rvarMap)));
+            const variables = new Map(tvarMap).set(`__resolvingAlias:${texpr.con.name}`, TCon(texpr.con.name));
+            for (let i = 0; i < params.length; i++) variables.set(params[i]!, yield* typeExprToType(texpr.args[i]!, tvarMap, rvarMap));
+            return yield* typeExprToType(alias, variables, new Map());
+          }
+        }
         if (texpr.con._tag === "TESym" && texpr.con.name === "Brand" && texpr.args.length === 2) {
-          return yield* typeExprToType(texpr.args[1]!, tvarMap, rvarMap);
+          const nominal = texpr.args[0]!;
+          if (nominal._tag !== "TESym") return yield* ctx.fail({nodeId: `brand:${texpr.span.start}`, span: texpr.span, kind: "Brand"}, {message: "Brand name must be a symbol"});
+          return TApp(TCon("Brand"), [TCon(nominal.name), yield* typeExprToType(texpr.args[1]!, tvarMap, rvarMap)]);
         }
 
         if (
@@ -225,12 +245,17 @@ export const typeExprToType = (
           );
         }
 
+        if (texpr.con._tag === "TESym") {
+          const arity = new Map([["List", 1], ["Option", 1], ["Id", 1], ["Map", 2], ["Result", 2], ["Brand", 2], ["Effect", 3]]).get(texpr.con.name);
+          if (arity !== undefined && arity !== texpr.args.length) return yield* ctx.fail({nodeId:`kind:${texpr.span.start}`,span:texpr.span,kind:"type-application"}, {message:`${texpr.con.name} expects ${arity} type arguments`});
+        }
         // (List Num), (Map Str Num)
         const con = yield* typeExprToType(texpr.con, tvarMap, rvarMap);
         const args: Type[] = [];
         for (const arg of texpr.args) {
           args.push(yield* typeExprToType(arg, tvarMap, rvarMap));
         }
+        if (con._tag === "TCon" && con.name === "Map" && !validMapKey(args[0]!)) return yield* ctx.fail({nodeId:`map:${texpr.span.start}`,span:texpr.span,kind:"map-key"}, {message:"Map keys must be String, a String brand, or a union of keyword or string literals"});
         return TApp(con, args);
       }
 
@@ -476,25 +501,12 @@ const inferEffectDo = (
 
 const inferLit = (expr: CoreExpr & { _tag: "Lit" }): Effect.Effect<Type, never, InferContext> =>
   Effect.gen(function* () {
-    // Warn when a non-namespaced keyword (no "/") appears as a bare literal.
-    // These are often accidental value literals rather than variable references.
-    // Well-known keywords like :else are excluded.
-    if (expr.lit._tag === "LKeyword") {
-      const kw = expr.lit.value;
-      if (!kw.includes("/") && !WELL_KNOWN_KEYWORDS.has(kw)) {
-        const ctx = yield* InferContext;
-        yield* ctx.addDiagnostic({
-          message: `Keyword ${kw} used as a value. Keywords are self-evaluating literals, not variable references.`,
-          span: expr.span,
-          severity: "warning",
-          source: "hm",
-        });
-      }
-      return tStr;
-    }
+    if (expr.lit._tag === "LQuoted") return TCon("Syntax");
+    if (expr.lit._tag === "LSymbol") return TCon("Symbol");
+    if (expr.lit._tag === "LKeyword") return TCon(expr.lit.value);
 
     return expr.lit._tag === "LInt"
-      ? tNum
+      ? Number.isInteger(expr.lit.value) ? TCon("Int") : tNum
       : expr.lit._tag === "LString"
         ? tStr
         : expr.lit._tag === "LBool"
@@ -526,6 +538,7 @@ const inferVar = (
 
     return yield* ctx.fail(originOf(expr, "var"), {
       message: `Unbound variable: ${expr.name}`,
+      code: "typecheck/unbound-symbol",
     });
   });
 
@@ -533,9 +546,10 @@ const inferVar = (
 // Lam
 // ---------------------------------------------------------------------------
 
-const inferLam = (
+export const inferLam = (
   env: TypeEnv,
   expr: CoreExpr & { _tag: "Lam" },
+  expected?: Type,
 ): Effect.Effect<Type, InferenceError, InferContext> =>
   Effect.gen(function* () {
     const ctx = yield* InferContext;
@@ -543,8 +557,10 @@ const inferLam = (
     const lamEnv = new Map(env);
     let restElemType: Type | undefined;
 
+    let parameterHint = expected;
     for (const param of expr.params) {
-      const tv = yield* ctx.freshTVar;
+      const tv = parameterHint?._tag === "TFun" ? parameterHint.arg : yield* ctx.freshTVar;
+      parameterHint = parameterHint?._tag === "TFun" ? parameterHint.res : undefined;
       paramTypes.push(tv);
       lamEnv.set(param.name, mono(tv));
     }
@@ -554,7 +570,7 @@ const inferLam = (
     }
 
     const { value: bodyT, effect: bodyEffect } = yield* withAmbientEffectScope(
-      inferExpr(lamEnv, expr.body),
+      parameterHint ? checkExpr(lamEnv,expr.body,parameterHint) : inferExpr(lamEnv, expr.body),
     );
     const s = yield* Ref.get(ctx.subst);
     const resolvedParams = paramTypes.map((p) => applyType(s, p));
@@ -585,6 +601,28 @@ const inferApp = (
   Effect.gen(function* () {
     const ctx = yield* InferContext;
 
+    if (expr.fn._tag === "Var" && !env.has(expr.fn.name) && ctx.builtinScheme(expr.fn.name) && ["=","!="].includes(expr.fn.name) && expr.args.length === 2) {
+      const left=yield* inferExpr(env,expr.args[0]!), right=yield* inferExpr(env,expr.args[1]!);
+      const keyword=(t:Type):boolean => t._tag === "TCon" && (t.name === "Keyword" || t.name.startsWith(":")) || t._tag === "TApp" && t.con._tag === "TCon" && t.con.name === "Union" && t.args.every(keyword);
+      if (!(keyword(left) && keyword(right))) yield* joinType(left,right,originOf(expr,"equality"));
+      return TCon("Bool");
+    }
+    if (expr.fn._tag === "Var" && !env.has(expr.fn.name) && collectionOperations.has(expr.fn.name)) {
+      return yield* inferCollectionOperation(env, expr, expr.fn.name, inferExpr);
+    }
+
+    if (expr.fn._tag === "Var" && expr.fn.name === "__dictionary") {
+      if (expr.args.length !== 1) return yield* ctx.fail(originOf(expr,"map-construction"),{message:"Map construction expects one record"});
+      const record = yield* inferExpr(env, expr.args[0]!);
+      if (record._tag === "TApp" && record.con._tag === "TCon" && record.con.name === "Map") return record;
+      if (record._tag !== "TRow") return yield* ctx.fail(originOf(expr,"map-construction"),{message:"Map construction requires a record"});
+      const fields = [...flattenRow(record.row).fields];
+      let value = fields.length ? fields[0]![1] : yield* ctx.freshTVar;
+      for (const [,type] of fields.slice(1)) value = yield* joinType(value,type,originOf(expr,"map-values"));
+      const keys = fields.map(([label]) => TCon(label.startsWith(":") ? label : JSON.stringify(label.startsWith("\0str:") ? label.slice(5) : label)));
+      const key = keys.length > 1 ? TApp(TCon("Union"), keys) : keys[0] ?? (yield* ctx.freshTVar);
+      return TApp(TCon("Map"),[key,value]);
+    }
     // Special: __vector(args) → List<elemType>
     if (expr.fn._tag === "Var" && expr.fn.name === "__vector") {
       return yield* inferVector(env, expr);
@@ -595,71 +633,65 @@ const inferApp = (
     if (expr.fn._tag === "Var" && expr.fn.name === "apply") {
       return yield* inferApply(env, expr);
     }
-    if (expr.fn._tag === "Var" && expr.fn.name === "meta") {
+
+    if (expr.fn._tag === "Var" && !env.has(expr.fn.name) && ctx.builtinScheme(expr.fn.name) && ["+","-","*","/","mod","pow","min","max","abs","sqrt","floor","ceil","round","<","<=",">",">="].includes(expr.fn.name)) {
+      const op = expr.fn.name;
+      const args: Type[] = [];
       for (const arg of expr.args) {
-        const s = yield* Ref.get(ctx.subst);
-        const envN = applyEnv(s, env);
-        yield* inferExpr(envN, arg);
+        const t = yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst),env),arg);
+        yield* assignType(t,op === "mod" ? TCon("Int") : tNum,originOf(expr,"numeric-argument"));
+        args.push(applyType(yield* Ref.get(ctx.subst),t));
       }
-      return tMeta;
+      const count=expr.args.length;
+      const minimum=["+","*"].includes(op) ? 0 : op==="/" ? 2 : 1;
+      const exact=["abs","sqrt","floor","ceil","round"].includes(op) ? 1 : ["mod","pow","<","<=",">",">="].includes(op) ? 2 : undefined;
+      if (count<minimum || exact!==undefined && count!==exact) return yield* ctx.fail(originOf(expr,"numeric-arity"),{message:`${op} expects ${exact ?? `${minimum}+`} argument(s)`});
+      if (["<","<=",">",">="].includes(op)) return tBool;
+      if (["floor","ceil","round","mod"].includes(op)) return TCon("Int");
+      if (["/","pow","sqrt"].includes(op)) return tNum;
+      return args.every(t=>t._tag === "TCon" && t.name === "Int") ? TCon("Int") : tNum;
     }
-
     let fnT = yield* inferExpr(env, expr.fn);
-    const argTypes: Type[] = [];
-
-    for (const arg of expr.args) {
-      const s = yield* Ref.get(ctx.subst);
-      const envN = applyEnv(s, env);
-      argTypes.push(yield* inferExpr(envN, arg));
+    // Solve repeated unconstrained parameters together, using their common
+    // supertype rather than letting the first argument narrow the variable.
+    const parameters: Type[] = [];
+    let cursor = fnT;
+    while (cursor._tag === "TFun" && parameters.length < expr.args.length) {
+      parameters.push(cursor.arg); cursor = cursor.res;
     }
-
-    for (let i = 0; i < argTypes.length; i++) {
-      const argT = argTypes[i]!;
+    const repeated = new Map<string, Type>();
+    for (const [i, parameter] of parameters.entries()) {
+      if (parameter._tag !== "TVar" || parameters.filter(p => p._tag === "TVar" && p.id === parameter.id).length < 2) continue;
+      const actual = yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[i]!);
+      const previous = repeated.get(parameter.id);
+      repeated.set(parameter.id, previous ? yield* joinType(previous, actual, originOf(expr, "argument-join")) : actual);
+    }
+    for (const [id, actual] of repeated) yield* unify({ _tag: "TVar", id }, actual, originOf(expr, "argument-join"));
+    for (let i = 0; i < expr.args.length; i++) {
       const sBefore = yield* Ref.get(ctx.subst);
       const current = applyType(sBefore, fnT);
-      const currentArg = applyType(sBefore, argT);
-
+      const envN = applyEnv(sBefore,env);
       if (current._tag === "TFun") {
-        yield* unify(current.arg, currentArg, originOf(expr, "app"));
-        const sAfter = yield* Ref.get(ctx.subst);
-        yield* emitAmbientEffect(
-          applyERow(sAfter, current.effect ?? EEmpty),
-          originOf(expr, "app"),
-        );
-
+        yield* checkExpr(envN,expr.args[i]!,current.arg);
+        const sAfter=yield* Ref.get(ctx.subst);
+        yield* emitAmbientEffect(applyERow(sAfter,current.effect ?? EEmpty),originOf(expr,"app"));
         if (current.rest) {
-          const restT = applyType(sAfter, current.rest);
-          for (let j = i + 1; j < argTypes.length; j++) {
-            const restArgS = yield* Ref.get(ctx.subst);
-            yield* unify(restT, applyType(restArgS, argTypes[j]!), originOf(expr, "app"));
-          }
-          const sFinal = yield* Ref.get(ctx.subst);
-          return applyType(sFinal, current.res);
+          for (let j=i+1;j<expr.args.length;j++) yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst),env),expr.args[j]!,current.rest);
+          return applyType(yield* Ref.get(ctx.subst),current.res);
         }
-
-        fnT = applyType(sAfter, current.res);
-        continue;
+        fnT=applyType(sAfter,current.res);
+      } else if (current._tag === "TVariadic") {
+        for (let j=i;j<expr.args.length;j++) yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst),env),expr.args[j]!,current.rest);
+        const subst=yield* Ref.get(ctx.subst);
+        yield* emitAmbientEffect(applyERow(subst,current.effect ?? EEmpty),originOf(expr,"app"));
+        return applyType(subst,current.res);
+      } else {
+        const argT=yield* inferExpr(envN,expr.args[i]!);
+        const applied=yield* applyFnWithEffect(current,argT,originOf(expr,"app"));
+        yield* emitAmbientEffect(applied.effect,originOf(expr,"app"));
+        fnT=applied.result;
       }
-
-      if (current._tag === "TVariadic") {
-        yield* unify(current.rest, currentArg, originOf(expr, "app"));
-        for (let j = i + 1; j < argTypes.length; j++) {
-          const restArgS = yield* Ref.get(ctx.subst);
-          yield* unify(current.rest, applyType(restArgS, argTypes[j]!), originOf(expr, "app"));
-        }
-        const sAfter = yield* Ref.get(ctx.subst);
-        yield* emitAmbientEffect(
-          applyERow(sAfter, current.effect ?? EEmpty),
-          originOf(expr, "app"),
-        );
-        return applyType(sAfter, current.res);
-      }
-
-      const applied = yield* applyFnWithEffect(current, currentArg, originOf(expr, "app"));
-      yield* emitAmbientEffect(applied.effect, originOf(expr, "app"));
-      fnT = applied.result;
     }
-
     const sFinal = yield* Ref.get(ctx.subst);
     const resolved = applyType(sFinal, fnT);
     return resolved._tag === "TVariadic" ? applyType(sFinal, resolved.res) : resolved;
@@ -683,11 +715,7 @@ const inferVector = (
       const s = yield* Ref.get(ctx.subst);
       const envN = applyEnv(s, env);
       const argT = yield* inferExpr(envN, expr.args[i]!);
-      yield* unify(
-        applyType(yield* Ref.get(ctx.subst), elemT),
-        applyType(yield* Ref.get(ctx.subst), argT),
-        originOf(expr, "vector"),
-      );
+      elemT = yield* joinType(elemT,argT,originOf(expr,"vector"));
     }
 
     const s = yield* Ref.get(ctx.subst);
@@ -730,7 +758,7 @@ const inferApply = (
       const current = applyType(sBefore, fnT);
       const currentArg = applyType(sBefore, prefixArgT);
       if (current._tag === "TFun") {
-        yield* unify(current.arg, currentArg, originOf(expr, "app"));
+        yield* assignType(currentArg,current.arg,originOf(expr,"app"));
         const sAfter = yield* Ref.get(ctx.subst);
         yield* emitAmbientEffect(
           applyERow(sAfter, current.effect ?? EEmpty),
@@ -742,7 +770,7 @@ const inferApply = (
         continue;
       }
       if (current._tag === "TVariadic") {
-        yield* unify(current.rest, currentArg, originOf(expr, "app"));
+        yield* assignType(currentArg,current.rest, originOf(expr, "app"));
         fnT = applyType(yield* Ref.get(ctx.subst), current);
         continue;
       }
@@ -786,3 +814,13 @@ const inferApply = (
       return current;
     }
   });
+
+function validMapKey(type: Type): boolean {
+  if (type._tag === "TVar") return true;
+  if (type._tag === "TCon") return type.name === "String" || type.name.startsWith(":") || type.name.startsWith('"');
+  if (type._tag === "TApp" && type.con._tag === "TCon") {
+    if (type.con.name === "Brand") return type.args[1]?._tag === "TCon" && type.args[1].name === "String";
+    if (type.con.name === "Union") return type.args.length > 0 && type.args.every(value => value._tag === "TCon" && (value.name.startsWith(":") || value.name.startsWith('"')));
+  }
+  return false;
+}

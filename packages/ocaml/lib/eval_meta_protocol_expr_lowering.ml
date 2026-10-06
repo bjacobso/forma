@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of Value.closure
   | VMacro of Value.closure
 
@@ -231,7 +232,7 @@ let rec normalize_literal_value = function
       else VString name
   | VList values | VVector values ->
       VList (List.map normalize_literal_value values)
-  | VMap entries ->
+  | (VMap entries | VDictionary entries) ->
       object_value
         (List.map
            (fun (key, value) ->
@@ -256,7 +257,7 @@ let path_segment = function
 let merge_var_path base segment =
   let shape = current_shape () in
   match base with
-  | VMap entries -> (
+  | (VMap entries | VDictionary entries) -> (
       match Value.lookup_map entries (keyword (":" ^ shape.kind_field)) with
       | Some (VString kind) when kind = shape.var_kind ->
           let current =
@@ -374,7 +375,7 @@ and compile_expr_node expr =
   | VFloat value -> Some (literal_expr (VFloat value))
   | VBool value -> Some (literal_expr (VBool value))
   | VVector _ -> Some (literal_expr (normalize_literal_value expr))
-  | VMap _ -> Some (literal_expr (normalize_literal_value expr))
+  | (VMap _ | VDictionary _) -> Some (literal_expr (normalize_literal_value expr))
   | VKeyword name | VSymbol name ->
       let name = normalize_name name in
       if name = "nil" || name = "null" then Some (literal_expr VNil)
@@ -464,7 +465,7 @@ let rec compile_json_value expr =
   | (VBool _ | VInt _ | VFloat _ | VString _) as value -> value
   | VKeyword _ | VSymbol _ -> normalize_literal_value expr
   | VVector values | VList values -> VList (List.map compile_json_value values)
-  | VMap entries ->
+  | (VMap entries | VDictionary entries) ->
       object_value
         (List.map
            (fun (key, value) ->

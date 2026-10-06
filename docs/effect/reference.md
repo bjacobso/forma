@@ -36,49 +36,55 @@ exact generated module, typechecks it, and runs it.
 
 | Forma | Effect TypeScript |
 | --- | --- |
-| `(define-schema User (Struct (field id UserId) (field nick (Optional String))))` | `export const User = Schema.Struct({ id: UserId, nick: Schema.optionalKey(Schema.String) })` and `export type User = typeof User.Type` |
-| `(define-schema UserId (Brand UserId String))` | `Schema.String.pipe(Schema.brand("UserId"))`; build values with `(UserId "u-1")` |
-| `(define-schema Role (Enum admin member))` | `Schema.Literals(["admin", "member"])` |
-| `(Tuple A B)`, `(Union A B)`, `(Array T)`, `(Map T)` | `Schema.Tuple([...])`, `Schema.Union([...])`, `Schema.Array`, `Schema.Record(Schema.String, ...)` |
-| `(TaggedUnion kind [circle (Struct ...)] ...)` | a `Schema.Union` of structs with a literal `kind` field |
-| `(define-class Customer (:fields (field name String)))` | `class Customer extends Schema.Class<Customer>("Customer")({...})`; build with `(Customer {...})` |
-| `(define-error NotFound (:fields (field id String)))` | `class NotFound extends Schema.TaggedError<NotFound>()("NotFound", {...})` |
-| `(define-service Users (:methods (find [id String] (Effect (Option User) [] []))))` | `class Users extends Context.Service<Users, {...}>()("Users")` |
-| `(: f (-> A B)) (define f (fn [a] ...))` | `export const f = (a: A): B => ...` |
-| `(: rates (Map Int)) (define rates {...})` | `export const rates: { readonly [key: string]: number } = {...}` |
-| `(: op (-> A (Effect S [E] [R]))) (define-operation op [a] ...)` | `export const op = (a: A): Effect.Effect<S, E, R> => Effect.gen(...)` |
-| `(define-layer UsersLive (:provides Users) (:setup [...]) (:methods ...))` | `Layer.effect(Users, Effect.gen(...))`, or `Layer.succeed` when nothing runs at construction |
-| `(define-layer AppLive (layer-provide A (layer-merge B C)))` | `Layer.provide(A, Layer.mergeAll(B, C))` |
+| `(type User {:id UserId :nick (Option String)})` | `Schema.Struct({ id: UserId, nick: Schema.optionalKey(Schema.String) })` and `export type User = typeof User.Type` |
+| `(type UserId (Brand String))` | `Schema.String.pipe(Schema.brand("UserId"))`; construct with `(UserId "u-1")` |
+| `(type Role (Union :admin :member))` | `Schema.Literals(["admin", "member"])` |
+| `(Tuple A B)`, `(Union A B)`, `(List T)`, `(Map String T)` | tuple, union, array, and dictionary schemas |
+| `(type Shape (Tagged :tag kind (Circle {:radius Number}) (Square {:side Number})))` | a union of records with a literal `kind` field |
+| `(class Customer {:name String})` | `class Customer extends Schema.Class<Customer>("Customer")({...})`; construct with `(Customer {:name "Ada"})` |
+| `(error NotFound {:id String})` | `class NotFound extends Schema.TaggedError<NotFound>()("NotFound", {...})` |
+| `(service Users (: find (-> String (Effect (Option User)))))` | `Context.Service` with a typed `find` method |
+| `(: f (-> String String)) (define f [name] (str "Hello " name))` | an ordinary typed function |
+| `(: rates (Map String Int)) (define rates {"standard" 10})` | a typed dictionary constant |
+| `(: find-user (-> String (Effect User [NotFound] [Users.find]))) (define find-user [id] ...)` | an `Effect.gen` function |
+| `(layer UsersLive :provides Users (define find [id] ...))` | a layer implementing service methods |
+| `(layer AppLive (layer-provide A (layer-merge B C)))` | composition of layers |
 
-Operation signatures name their success type, a set of errors, and a set of
-requirements. A requirement can name a single capability (`Users.find`) or
-a whole service (`Users`). `Scope` is the requirement added by resources. A
-zero-argument operation is written `(-> (Effect ...))`. A layer can declare
-its type with `(: AppLive (Layer [Provides...] [Errors...] [Requirements...]))`.
+Signatures may appear anywhere in their module. An Effect type names its success
+value and optional finite sets of errors and requirements: `(Effect User)`,
+`(Effect User [NotFound])`, or `(Effect User [NotFound] [Users.find])`.
+Requirements name individual capabilities or whole services. `Scope` is the
+requirement introduced by resources.
 
-Inside `define-schema`, `(Ref Name)` refers to another schema. In signatures,
-`(Ref T)` is an Effect `Ref`, and `(Option T)`, `(Result A E)`,
-`(Fiber A [E])`, `(Stream A [E] [R])`, and `(-> A B)` are the corresponding
-Effect and function types.
+A zero-argument effect is a value: `(: ready (Effect Bool)) (define ready
+(succeed true))`. Refer to it as `ready`. Layer signatures use
+`(Layer [Provides...] [Errors...] [Requirements...])`.
+
+Records require fields by default. `(Option T)` fields may be absent and generate
+optional wire keys. Class and error types are nominal. Refer to other schemas
+by their declared names. In expressions, `(Ref T)` is an Effect reference, and
+`(Option T)`, `(Result A E)`, `(Fiber A [E])`, `(Stream A [E] [R])`, and
+`(-> A B)` are the corresponding value types.
 
 ## Effect bodies
 
 | Forma | Effect TypeScript |
 | --- | --- |
 | `(do! [x eff _ eff2] body)` | `const x = yield* eff; yield* eff2; ...` |
+| `(do! [x eff :let [y value]] body)` | mixes effects with lexical pure bindings |
 | `(let [x value] body)` | `const x = value` (`let` binds values; running an effect needs `do!`) |
 | `(succeed v)`, a plain value | `return v` |
 | `(fail (NotFound {:id id}))` | `yield* Effect.fail(new NotFound({ id }))` |
 | `(Users.find id)`, `(other-op x)` | `users.find(id)`, `otherOp(x)` |
 | `(if c a b)`, `(when c ...)`, `(unless c ...)`, `(cond c a ... :else z)` | `if` statements; conditions must be `Bool` |
-| `(match opt (some x) a none b)` | `Option.isSome` with the payload bound |
-| `(match res (success v) a (failure e) b)` | `Result.isSuccess` |
-| `(match shape (circle c) a (square s) b)` | `switch (shape.kind)` with narrowing |
+| `(match opt (Some x) a None b)` | `Option.isSome` with the payload bound |
+| `(match res (Ok v) a (Err e) b)` | `Result.isSuccess` |
+| `(match shape (Shape.Circle c) a (Shape.Square s) b)` | `switch (shape.kind)` with narrowing |
 | `(match code 200 a 404 b _ c)`, `(match flag true a false b)` | `switch` on the value; strings and numbers need a final `_` |
 | `(match error (NotFound e) a (Forbidden f) b)` | `switch (error._tag)` over a union of tagged errors |
 | `(catch eff (NotFound e) handler)` | `Effect.catchTag` |
 | `(catch eff (A a) h1 (B b) h2)` | `Effect.catchTags` |
-| `(catch eff (_ e) handler)` | `Effect.catch` |
+| `(catch eff error handler)` | `Effect.catch` |
 | `(map-error eff f)`, `(or-else-succeed eff v)`, `(or-die eff)` | `Effect.mapError`, `Effect.orElseSucceed`, `Effect.orDie` |
 | `(option eff)`, `(result eff)` | `Effect.option`, `Effect.result` |
 | `(acquire-release acquire (fn [r] release))`, `(scoped eff)` | `Effect.acquireRelease`, `Effect.scoped` |
@@ -102,7 +108,7 @@ Values use ordinary Forma expressions:
 
 - records `{:id id}` and vectors;
 - `get` and `assoc` for fields, `Map` keys, and classes;
-- `str`, `fn`, `if`, `cond`, `let`, `match`, and `some`/`none`;
+- `str`, `fn`, `if`, `cond`, `let`, `match`, and `Some`/`None`;
 - arithmetic: `+ - * / quot mod max min abs round floor`;
 - comparisons, `and`/`or`/`not`, and `=`/`!=`;
 - collections: `map filter reduce find any? every? count empty? concat conj first sum`;
@@ -111,7 +117,7 @@ Values use ordinary Forma expressions:
 - options: `get-or-else is-some is-none`;
 - durations: `millis seconds minutes`.
 
-Getting an `(Optional T)` field or a `Map` key produces `(Option T)`. Map
+Getting an `(Option T)` field or a `Map` key produces `(Option T)`. Map
 functions use Effect's `Record` module, which only sees own keys. A builtin
 with one signature can be passed as a function, as in `(map upcase names)`.
 
@@ -154,7 +160,7 @@ consumes. It rejects a program when:
   `_tag`);
 - a function or constant calls a service;
 - a top-level form is not part of an Effect program (an untyped `define`, a
-  misspelled `define-...`, a bare expression, or an orphan signature).
+  misspelled declaration head, a bare expression, or an orphan signature).
 
 TypeScript would also reject most of these mistakes once the code is
 generated. Forma reports them first, against the Forma source. Some checks

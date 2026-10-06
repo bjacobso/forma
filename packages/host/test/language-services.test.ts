@@ -254,22 +254,32 @@ describe("structural editor services on the TypeScript host", () => {
       sessionId,
       sourceId: "workflow.lisp",
       kind: "prelude",
-      source: `(define-form workflow
-  (:phase domain)
-  (:identifiers (identifier name Symbol (:declaration true)))
-  (:slots (slot trigger value (:required true)) (slot steps value (:many true))))`,
+      source: `(type WorkflowIR {:kind "Workflow" :name Symbol :trigger Syntax :steps (Option Syntax)})
+(form (workflow name {:keys [trigger steps]})
+  :types {:name (Declares Workflow) :trigger Syntax :steps (Option Syntax)}
+  :ir WorkflowIR {:kind "Workflow" :name name :trigger trigger :steps steps})`
     });
-    const source = "(workflow onboarding\n  (:steps verify))";
+    const source = "(workflow onboarding\n  :steps verify)";
     const result = await host.formSlots({ sessionId, sourceId: "main", source, offset: source.indexOf("verify") });
     expect(result.form).toMatchObject({ name: "workflow", span: { sourceId: "main", startOffset: 0 } });
     expect(result.activeSlot).toBe("steps");
     expect(result.slots.map((slot) => [slot.placeholder, slot.missing, slot.available])).toEqual([
       ["+ trigger", true, true],
-      ["+ steps", false, true],
+      ["+ steps", false, false],
     ]);
     expect(result.slots[1]!.occurrences[0]!.values[0]!.span).toMatchObject({ sourceId: "main" });
     const none = await host.formSlots({ source: "(+ 1 2)", offset: 1 });
     expect(none.form).toBeUndefined();
     await host.closeSession({ sessionId });
   });
+  it("typechecks authored expression holes through the session's form definitions", async () => {
+    const {sessionId}=await host.openSession();
+    try {
+      await host.loadSource({sessionId,sourceId:"predicate-prelude",kind:"prelude",source:`(type PredicateIR {:kind "Predicate" :value RuntimeExpr})
+(form (predicate value) :types {:value (Expr Bool)} :ir PredicateIR {:kind "Predicate" :value value})`});
+      const result=await host.typecheck({sessionId,sourceId:"bad-predicate",source:'(predicate "wrong")'});
+      expect(result.diagnostics).toEqual(expect.arrayContaining([expect.objectContaining({severity:"error",message:expect.stringContaining("Bool"),span:expect.objectContaining({sourceId:"bad-predicate",startOffset:11,endOffset:18})})]));
+    } finally {await host.closeSession({sessionId});}
+  });
+
 });

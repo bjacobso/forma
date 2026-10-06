@@ -1,16 +1,7 @@
 {
   "normalized": {
-    "diagnostics": [
-      {
-        "code": "typecheck/keyword-literal",
-        "message": "Keyword :foo used as a value. Keywords are self-evaluating literals, not variable references.",
-        "span": {
-          "end": 4,
-          "start": 0
-        }
-      }
-    ],
-    "type": "String"
+    "diagnostics": [],
+    "type": ":foo"
   },
   "success": true
 }

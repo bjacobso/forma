@@ -34,16 +34,6 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/duplicate-key",
-      "message": "The map has the key \"a\" twice.",
-      "line": 9,
-      "column": 38,
-      "endLine": 9,
-      "endColumn": 41
-    },
-    {
-      "phase": "check",
-      "severity": "error",
       "code": "mechanics/unit-collection",
       "message": "(Map Unit) cannot tell a stored nil from a missing value; use Bool or an Option.",
       "line": 12,
@@ -57,19 +47,19 @@
       "code": "mechanics/error-tag",
       "message": "Errors get their _tag from their name; a field cannot be called _tag.",
       "line": 14,
-      "column": 31,
+      "column": 22,
       "endLine": 14,
-      "endColumn": 50
+      "endColumn": 28
     },
     {
       "phase": "check",
       "severity": "error",
       "code": "mechanics/discriminator-field",
-      "message": "Variant circle has a field named kind, which is the union's tag.",
-      "line": 18,
-      "column": 5,
-      "endLine": 18,
-      "endColumn": 64
+      "message": "Variant Circle has a field named kind, which is the union's tag.",
+      "line": 16,
+      "column": 31,
+      "endLine": 17,
+      "endColumn": 18
     }
   ]
 }

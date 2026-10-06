@@ -34,8 +34,8 @@ export const preludeSource = (name: PreludeName): string => preludeSources[name]
 export const ontologyPreludeStack = [
   "compiler.lisp",
   "ontology.lisp",
-  "ontology-compiler.lisp",
-  "viewspec-compiler.lisp",
+  "ui.lisp",
+  "viewspec.lisp",
 ] as const satisfies readonly PreludeName[];
 
 /**
@@ -54,6 +54,6 @@ export function bootstrapPreludes(
   return bootstrapFromSources(compiler, domain, ...additional, options);
 }
 
-/** Bootstrap the bundled ontology DSL (`define-entity`, `define-action`, ...). */
+/** Bootstrap the bundled ontology DSL (`entity`, `query`, and operations). */
 export const bootstrapOntologyPreludes = (options: BootstrapOptions = {}): BootstrappedPrelude =>
   bootstrapPreludes(ontologyPreludeStack, options);

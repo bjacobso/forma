@@ -1,5 +1,4 @@
-(define-typeclass (Eq a)
-  (eq (-> a a Bool)))
-(define-typeclass (Ord a) [(Eq a)]
-  (compare (-> a a Num)))
+(typeclass (Eq a) (: eq (-> a a Bool)))
+(typeclass (Ord a) :extends [(Eq a)]
+  (: compare (-> a a Number)))
 (compare 1 2)

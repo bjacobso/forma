@@ -6,6 +6,7 @@ expression {
   List |
   Vector |
   Map |
+  Quote |
   Quasiquote |
   Unquote |
   UnquoteSplicing |
@@ -16,6 +17,7 @@ List { "(" expression* ")" }
 Vector { "[" expression* "]" }
 Map { "{" expression* "}" }
 
+Quote { Apostrophe expression }
 Quasiquote { Backtick expression }
 Unquote { Tilde expression }
 UnquoteSplicing { TildeAt expression }
@@ -32,9 +34,9 @@ atom {
 
 specialForm {
   @specialize<Symbol,
-    "define" | "define-type" | "define-macro" | "define-effect" | "define-typeclass" |
-    "fn" | "let" | "if" | "do" | "when" | "cond" | "match" | "quote" |
-    "entity" | "relation" | "record" | "link" | "query" | "rule" |
+    "define" | "type" | "error" | "class" | "macro" | "service" | "layer" | "typeclass" | "instance" |
+    "fn" | "let" | "if" | "do" | "do!" | "unless" | "when" | "cond" | "match" | "quote" |
+    "entity" | "attribute" | "relation" | "seed" | "link" | "query" | "rule" |
     "action" | "process" | "form" | "view" | "nav" | "lens" |
     "require" | "import" | "export" |
     "try" | "catch" | "throw" |
@@ -60,6 +62,7 @@ specialForm {
 
   Symbol { $[a-zA-Z\-_?!*+/<>=$.&] $[a-zA-Z0-9\-_:?!*+/<>=$.&]* }
 
+  Apostrophe { "'" }
   Backtick { "`" }
   TildeAt { "~@" }
   Tilde { "~" }

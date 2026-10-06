@@ -60,7 +60,7 @@ describe("contracts pipeline", () => {
     ["failure", undeclaredFailureSource],
   ])("rejects an undeclared %s at the operation", (_, source) => {
     const [diagnostic, ...rest] = check(source).diagnostics;
-    const operationStart = source.indexOf("(define-operation log");
+    const operationStart = source.indexOf("(do!");
 
     expect(rest).toEqual([]);
     expect(diagnostic).toMatchObject({ severity: "error", phase: "typecheck" });

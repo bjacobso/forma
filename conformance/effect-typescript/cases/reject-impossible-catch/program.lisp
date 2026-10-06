@@ -1,12 +1,11 @@
 ;; Catching an error the effect cannot raise is a mistake Forma reports.
-(define-error Timeout (:fields (field after Int)))
-(define-error NotFound (:fields (field id String)))
+(error Timeout {:after Int})
+(error NotFound {:id String})
 
-(define-service Store
-  (:methods
-    (get [id String] (Effect String [NotFound] []))))
+(service Store
+  (: get (-> String (Effect String [NotFound] []))))
 
 (: fetch (-> String (Effect String [NotFound] [Store.get])))
-(define-operation fetch [id]
+(define fetch [id]
   (catch (Store.get id)
     (Timeout error) (succeed "slow")))

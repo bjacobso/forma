@@ -105,6 +105,8 @@ export interface InferContextService {
   readonly diagnostics: Ref.Ref<DiagnosticList>;
   /** Type alias registry: maps alias names to their type expressions */
   readonly typeAliases: Ref.Ref<Map<string, TypeExpr>>;
+  readonly nominalRecords: Ref.Ref<Map<string, Type>>;
+  readonly typeAliasParams: Ref.Ref<Map<string, readonly string[]>>;
   /** Schema-backed error names that may appear in Effect error sets. */
   readonly errorTypes: Ref.Ref<Set<string>>;
   /** ADT registry: maps type name to its constructor info */
@@ -160,9 +162,11 @@ export function makeInferContext(
     const subst = yield* Ref.make<Subst>(emptySubst);
     const nodeTypes = yield* Ref.make<NodeTypeMap>(new Map());
     const diagnostics = yield* Ref.make<DiagnosticList>([]);
+    const nominalRecords = yield* Ref.make<Map<string, Type>>(new Map());
     const typeAliases = yield* Ref.make<Map<string, TypeExpr>>(new Map());
+    const typeAliasParams = yield* Ref.make<Map<string, readonly string[]>>(new Map());
     const errorTypes = yield* Ref.make<Set<string>>(new Set());
-    const adtRegistry = yield* Ref.make<Map<string, ADTInfo>>(new Map());
+    const adtRegistry = yield* Ref.make<Map<string, ADTInfo>>(new Map([["Option",{typeParams:["a"],constructors:new Map([["Some",1],["None",0]])}],["Result",{typeParams:["a","e"],constructors:new Map([["Ok",1],["Err",1]])}]]));
     const constructorToType = yield* Ref.make<Map<string, string>>(new Map());
     const classRegistry = yield* Ref.make<Map<string, ClassInfo>>(new Map());
     const instanceRegistry = yield* Ref.make<Map<string, InstanceInfo[]>>(new Map());
@@ -181,6 +185,8 @@ export function makeInferContext(
       nodeTypes,
       diagnostics,
       typeAliases,
+      nominalRecords,
+      typeAliasParams,
       errorTypes,
       adtRegistry,
       constructorToType,

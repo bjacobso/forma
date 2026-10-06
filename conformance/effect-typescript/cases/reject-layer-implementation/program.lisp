@@ -1,16 +1,12 @@
 ;; A layer must implement every method with the service's declared types.
-(define-error Unavailable (:fields (field reason String)))
-(define-error Corrupt (:fields (field key String)))
+(error Unavailable {:reason String})
+(error Corrupt {:key String})
 
-(define-service Cache
-  (:methods
-    (read [key String] (Effect (Option String) [Unavailable] []))
-    (write [key String value String] (Effect Unit [Unavailable] []))))
+(service Cache
+  (: read (-> String (Effect (Option String) [Unavailable] [])))
+  (: write (-> String String (Effect Unit [Unavailable] []))))
 
-(define-layer CacheBroken
-  (:provides Cache)
-  (:methods
-    (read [key]
-      (if (= key "")
+(layer CacheBroken :provides Cache
+  (define read [key] (if (= key "")
         (fail (Corrupt {:key key}))
-        (succeed none)))))
+        (succeed None))))

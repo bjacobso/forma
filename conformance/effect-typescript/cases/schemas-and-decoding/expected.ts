@@ -10,9 +10,9 @@ export const Point = Schema.Tuple([Schema.Number, Schema.Number]);
 export type Point = typeof Point.Type;
 
 export const Shape = Schema.Union([
-  Schema.Struct({ kind: Schema.Literal("circle"), radius: Schema.Number }),
-  Schema.Struct({ kind: Schema.Literal("rectangle"), width: Schema.Number, height: Schema.Number }),
-  Schema.Struct({ kind: Schema.Literal("polygon"), points: Schema.Array(Point) }),
+  Schema.Struct({ kind: Schema.Literal("Circle"), radius: Schema.Number }),
+  Schema.Struct({ kind: Schema.Literal("Rectangle"), width: Schema.Number, height: Schema.Number }),
+  Schema.Struct({ kind: Schema.Literal("Polygon"), points: Schema.Array(Point) }),
 ]);
 export type Shape = typeof Shape.Type;
 
@@ -35,7 +35,7 @@ export class InvalidDrawing extends Schema.TaggedError<InvalidDrawing>()("Invali
 
 export const makeCircle = (id: string, radius: number): Drawing => ({
   id: ShapeId.make(id),
-  shape: { kind: "circle", radius },
+  shape: { kind: "Circle", radius },
   color: "red",
   tags: {},
   title: `circle ${id}`,
@@ -44,15 +44,15 @@ export const makeCircle = (id: string, radius: number): Drawing => ({
 export const area = (shape: Shape): Effect.Effect<number> =>
   Effect.gen(function* () {
     switch (shape.kind) {
-      case "circle": {
+      case "Circle": {
         const c = shape;
         return 3.14 * c.radius * c.radius;
       }
-      case "rectangle": {
+      case "Rectangle": {
         const r = shape;
         return r.width * r.height;
       }
-      case "polygon": {
+      case "Polygon": {
         const p = shape;
         return p.points.length;
       }

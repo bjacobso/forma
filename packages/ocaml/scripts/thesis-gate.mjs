@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { packageDir, readPreludes } from "./corpus.mjs";
@@ -12,6 +12,8 @@ const daemon = spawn(nativeCli, ["daemon"], {
   cwd: packageDir,
   stdio: ["pipe", "pipe", "pipe"],
 });
+
+const daemonExit = new Promise((resolveExit) => daemon.on("close", resolveExit));
 
 let stderr = "";
 daemon.stderr.on("data", (chunk) => {
@@ -61,7 +63,7 @@ const expectResultType = (label, response, type) => {
   if (
     response?.type !== type ||
     response?.typedCore?.resultType !== type ||
-    response?.typedCore?.resultTypeExpr?.name !== type
+    response?.typedCore?.resultTypeExpr?.display !== type
   ) {
     throw new Error(`${label} expected result type ${type}:\n${JSON.stringify(response, null, 2)}`);
   }
@@ -71,7 +73,7 @@ const expectDescriptorAnnotation = (label, response, formName, type) => {
   const annotation = response?.typedCore?.annotations?.find(
     (annotation) => annotation?.expr?.callee?.name === formName,
   );
-  if (annotation?.type !== type || annotation?.typeExpr?.name !== type) {
+  if (annotation?.type !== type || annotation?.typeExpr?.display !== type) {
     throw new Error(
       `${label} expected ${formName} annotation ${type}:\n${JSON.stringify(response, null, 2)}`,
     );
@@ -129,6 +131,7 @@ const expectDiagnosticGolden = ({ label, response, source, goldenName }) => {
   }
 
   const actual = diagnosticSnapshot({ response, source });
+  if (process.env.FORMA_UPDATE_GOLDEN === "1") writeFileSync(resolve(fixtureDir, "goldens", goldenName), `${JSON.stringify(actual, null, 2)}\n`);
   const expected = readGolden(goldenName);
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {
     throw new Error(
@@ -147,6 +150,7 @@ const expectDiagnosticsGolden = ({ label, response, source, goldenName }) => {
   }
 
   const actual = diagnosticsSnapshot({ response, source });
+  if (process.env.FORMA_UPDATE_GOLDEN === "1") writeFileSync(resolve(fixtureDir, "goldens", goldenName), `${JSON.stringify(actual, null, 2)}\n`);
   const expected = readGolden(goldenName);
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {
     throw new Error(
@@ -205,7 +209,7 @@ try {
   });
   expectOk("typecheckCoreTyped typed thesis gate", typed);
 
-  if (typed.type !== "Str" || typed.typedCore?.resultType !== "Str") {
+  if (typed.type !== "String" || typed.typedCore?.resultType !== "String") {
     throw new Error(`Unexpected typed thesis gate response: ${JSON.stringify(typed, null, 2)}`);
   }
 
@@ -291,12 +295,12 @@ try {
     source: inferredStringSource,
   });
   expectOk("typecheckCoreTyped inferred string thesis gate", inferredString);
-  expectResultType("typecheckCoreTyped inferred string thesis gate", inferredString, "Str");
+  expectResultType("typecheckCoreTyped inferred string thesis gate", inferredString, "String");
   expectDescriptorAnnotation(
     "typecheckCoreTyped inferred string thesis gate",
     inferredString,
     "inferred-type",
-    "Str",
+    "String",
   );
 
   const expandedBool = await request({
@@ -405,7 +409,6 @@ try {
   });
 
   for (const prelude of readPreludes({
-    names: ["kernel.lisp", "compiler.lisp", "ontology.lisp", "ontology-compiler.lisp"],
   })) {
     const response = await request({
       op: "loadPrelude",
@@ -422,18 +425,18 @@ try {
     source: queryBoolSource,
   });
   expectOk("typecheckCoreTyped query bool thesis gate", queryBool);
-  expectResultType("typecheckCoreTyped query bool thesis gate", queryBool, "QueryDef");
+  expectResultType("typecheckCoreTyped query bool thesis gate", queryBool, "List<{:name String}>");
   expectDescriptorAnnotation(
     "typecheckCoreTyped query bool thesis gate",
     queryBool,
-    "define-entity",
+    "entity",
     "SchemaDecl",
   );
   expectDescriptorAnnotation(
     "typecheckCoreTyped query bool thesis gate",
     queryBool,
-    "define-query",
-    "QueryDef",
+    "query",
+    "List<{:name String}>",
   );
 
   const queryString = await request({
@@ -447,7 +450,7 @@ try {
     response: queryString,
     source: queryStringSource,
     sourceId: "thesis-gate/query-string.lisp",
-    spanText: "employee/name",
+    spanText: "name",
     goldenName: "query-string.diagnostic.json",
   });
 
@@ -483,13 +486,13 @@ try {
   expectDescriptorAnnotation(
     "typecheckCoreTyped record bool thesis gate",
     recordBool,
-    "define-entity",
+    "entity",
     "SchemaDecl",
   );
   expectDescriptorAnnotation(
     "typecheckCoreTyped record bool thesis gate",
     recordBool,
-    "define-record",
+    "seed",
     "RecordDef",
   );
 
@@ -499,7 +502,9 @@ try {
     sourceId: "thesis-gate/record-string.lisp",
     source: recordStringSource,
   });
-  expectMismatch({
+  const recordDiagnostic = diagnosticSnapshot({ response: recordString, source: recordStringSource });
+  if (recordDiagnostic.diagnostic?.code !== "elaborate/form-check" || !recordDiagnostic.diagnostic.message.includes("Bool") || !recordDiagnostic.spannedText.includes('"yes"')) throw new Error(`Unexpected record validation: ${JSON.stringify(recordString)}`);
+  expectDiagnosticGolden({
     label: "record string thesis gate",
     response: recordString,
     source: recordStringSource,
@@ -520,7 +525,7 @@ try {
   daemon.stdin.end();
 }
 
-const exitCode = await new Promise((resolveExit) => daemon.on("close", resolveExit));
+const exitCode = await daemonExit;
 if (exitCode !== 0) {
   throw new Error(`Daemon exited with ${exitCode}: ${stderr}`);
 }

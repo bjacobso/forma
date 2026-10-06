@@ -9,6 +9,7 @@ type value = Value.t =
   | VList of value list
   | VVector of value list
   | VMap of (value * value) list
+  | VDictionary of (value * value) list
   | VClosure of Value.closure
   | VMacro of Value.closure
 
@@ -57,9 +58,11 @@ let evaluate_expanded_program_with_env callbacks env exprs =
   let rec loop env last = function
     | [] -> Ok (last, env)
     | expr :: rest -> (
-        match callbacks.eval_toplevel env expr with
+        match Surface.runtime_constructors expr with
+        | Some constructors -> loop env last (constructors @ rest)
+        | None -> match callbacks.eval_toplevel env expr with
         | Error _ as error -> error
-        | Ok (value, env) -> loop env value rest)
+        | Ok (value, env) -> let value = match expr with Ast.List (_,Ast.Symbol (_,"define") :: Ast.Symbol (_,n) :: _) when String.starts_with ~prefix:"__descriptor/" n -> last | _ -> value in loop env value rest)
   in
   loop env VNil exprs
 

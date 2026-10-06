@@ -12,7 +12,7 @@ import {
   type OrderRequest,
 } from "./expected.js";
 
-const ClockFixed = Layer.succeed(Clock, Clock.of({ now: () => Effect.succeed(1_700_000_000) }));
+const ClockFixed = Layer.succeed(Clock, Clock.of({ now: Effect.succeed(1_700_000_000) }));
 
 const makeAdapters = Effect.gen(function* () {
   const stock = yield* Ref.make(new Map<string, number>([["apple", 10], ["pear", 1], ["fig", 5]]));

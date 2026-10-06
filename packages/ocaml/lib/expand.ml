@@ -147,6 +147,10 @@ let rec expand_expr ~eval_body env expr =
     | Ast.List (_, []) -> Ok expr
     | Ast.List (_, Ast.Symbol (_, "quote") :: _) -> Ok expr
     | Ast.List (_, Ast.Symbol (_, "quasiquote") :: _) -> Ok expr
+    | Ast.List (_, Ast.Symbol (_, op) :: _) when Env.lookup ("__form/" ^ op) env <> None ->
+        (* Form holes are authored syntax. Their declared checks expand expressions
+           separately; projection must retain the original, stable syntax. *)
+        Ok expr
     | Ast.List (span, Ast.Symbol (op_span, op) :: args) -> (
         match Env.lookup op env with
         | Some (Value.VMacro closure) -> (
@@ -154,7 +158,7 @@ let rec expand_expr ~eval_body env expr =
             | Error _ as error -> error
             | Ok expanded ->
                 expand_expr ~eval_body env
-                  (replace_generated_spans span expanded))
+                  (match Surface.core_program [replace_generated_spans span expanded] with [expanded] -> expanded | _ -> expanded))
         | _ ->
             map_result (expand_expr ~eval_body env) [] args
             |> Result.map (fun args ->
@@ -173,7 +177,7 @@ let expand_toplevel ~eval_body env expr =
   match expr with
   | Ast.List
       ( _,
-        Ast.Symbol (_, ("defmacro" | "define-macro"))
+        Ast.Symbol (_, ("defmacro" | "__macro"))
         :: Ast.Symbol (_, name)
         :: Ast.Vector (_, params)
         :: body ) -> (
@@ -184,7 +188,7 @@ let expand_toplevel ~eval_body env expr =
             Value.VMacro { params; rest_param; body; env = Env.bindings env }
           in
           Ok (expr, Env.bind name value env))
-  | Ast.List (_, Ast.Symbol (_, ("defmacro" | "define-macro")) :: _) as
+  | Ast.List (_, Ast.Symbol (_, ("defmacro" | "__macro")) :: _) as
     macro_form -> (
       match expand_expr ~eval_body env macro_form with
       | Error _ as error -> error
@@ -193,7 +197,7 @@ let expand_toplevel ~eval_body env expr =
             [
               diagnostic ~span:(Ast.expr_span macro_form)
                 "expand/define-macro-form"
-                "define-macro expects a symbol name, parameter vector, and \
+                "macro expects a symbol name, parameter vector, and \
                  body forms.";
             ])
   | _ -> (
@@ -209,4 +213,10 @@ let expand_program ~eval_body env exprs =
         | Error _ as error -> error
         | Ok (expr, env) -> loop env (expr :: acc) rest)
   in
-  loop env [] exprs
+  let known_actions=Env.visible_bindings env |> List.filter_map (fun (n,value) ->
+    if Descriptor.declaration_form value=Some "__action" then Some n else None) in
+  try loop env [] (Surface.core_program (Surface_protocol.program (Surface_form.program (Surface_action.program ~known_actions exprs)))) with
+  | exn -> (
+      match Surface.diagnostic_of_exn exn with
+      | Some (span, code, message) -> Error [diagnostic ~span code message]
+      | None -> raise exn)

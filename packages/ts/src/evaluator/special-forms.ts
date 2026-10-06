@@ -274,7 +274,7 @@ export function evalMatch(
         }
         throw error;
       }
-      const bindings = matchCompiledPattern(compiledPattern, scrutinee);
+      const bindings = matchCompiledPattern(compiledPattern, scrutinee, name => env.lookup(`__constructor/${name}`));
       if (bindings === null) {
         continue;
       }
@@ -296,7 +296,7 @@ export function evalMatch(
     }
 
     setTcoTail(prevTail);
-    return null;
+    return yield* new KernelTypeError({message:"No pattern matched the value",expected:"matching pattern",got:"unmatched value",loc});
   });
 }
 

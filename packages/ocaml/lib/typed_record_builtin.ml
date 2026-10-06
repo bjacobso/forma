@@ -20,7 +20,7 @@ let ensure_map_like subst record_ty =
   let record_ty = apply_subst subst record_ty in
   match record_ty with
   | TVar _ -> (
-      match unify record_ty TMap with
+      match unify record_ty (TOpenRecord ([],fresh_tyvar ())) with
       | Ok map_subst ->
           let subst = compose_subst map_subst subst in
           Ok (subst, apply_subst subst record_ty)
@@ -49,26 +49,26 @@ let infer_record callbacks env fields =
   loop [] env fields
 
 let infer_get_field subst record_ty label =
-  match ensure_map_like subst record_ty with
-  | Error _ as error -> error
-  | Ok (subst, record_ty) -> (
-      match record_ty with
-      | TRecord fields -> (
-          match List.assoc_opt label fields with
-          | Some ty -> Ok (subst, apply_subst subst ty)
-          | None ->
-              Error
-                [
-                  diagnostic "typecheck/missing-field"
-                    (Printf.sprintf "Record has no field %S." label);
-                ])
-      | TMap | TAny -> Ok (subst, TAny)
-      | other -> Error [ map_type_mismatch other ])
+  let record_ty=apply_subst subst record_ty in
+  match record_ty with
+  | TVar _ ->
+      let field=fresh_tyvar () and tail=fresh_tyvar () in
+      unify record_ty (TOpenRecord ([label,field],tail)) |> Result.map (fun s -> let subst=compose_subst s subst in subst,apply_subst subst field)
+  | TNamedApp ("Map",[key;item]) ->
+      let literal=TNamed (if String.starts_with ~prefix:":" label then label else Value.string_json (if String.starts_with ~prefix:"\000str:" label then String.sub label 5 (String.length label-5) else label)) in
+      assign literal key |> Result.map (fun s -> let subst=compose_subst s subst in subst,TNamedApp ("Option",[apply_subst subst item]))
+  | TRecord fields | TOpenRecord (fields,_) -> (match List.assoc_opt label fields with
+      | Some ty -> Ok (subst,apply_subst subst ty)
+      | None -> (match record_ty with
+          | TOpenRecord (_,tail) -> let field=fresh_tyvar () in
+              unify tail (TOpenRecord ([label,field],fresh_tyvar ())) |> Result.map (fun s -> let subst=compose_subst s subst in subst,apply_subst subst field)
+          | _ -> Error [diagnostic "typecheck/missing-field" (Printf.sprintf "Record has no field %S." label)]))
+  | TMap | TAny -> Ok (subst,TAny)
+  | other -> Error [map_type_mismatch other]
 
 let record_label_of_key = function
-  | Core_ast.Lit (_, Core_ast.LKeyword label)
-  | Core_ast.Lit (_, Core_ast.LString label) ->
-      Some label
+  | Core_ast.Lit (_, Core_ast.LKeyword label) -> Some label
+  | Core_ast.Lit (_, Core_ast.LString label) -> Some (if String.starts_with ~prefix:":" label || String.starts_with ~prefix:"\000" label then "\000str:" ^ label else label)
   | _ -> None
 
 let record_labels_of_keys keys =
@@ -94,7 +94,7 @@ let rec infer_record_path subst record_ty labels =
       | Error _ as error -> error
       | Ok (subst, record_ty) -> (
           match record_ty with
-          | TRecord fields -> (
+          | TRecord fields | TOpenRecord (fields,_) -> (
               match List.assoc_opt label fields with
               | Some ty -> infer_record_path subst ty rest
               | None ->
@@ -150,15 +150,15 @@ let infer_assoc_result subst record_ty key value_ty =
   | Error _ as error -> error
   | Ok (subst, record_ty) -> (
       match record_ty with
-      | TRecord fields -> (
+      | TRecord fields | TOpenRecord (fields,_) -> (
           match record_label_of_key key with
+          | Some label when (match record_ty with TOpenRecord _ -> not (List.mem_assoc label fields) | _ -> false) ->
+              Error [diagnostic "typecheck/open-record" "Updating an unknown field requires a closed record or a typed Map."]
           | Some label ->
               Ok
                 ( subst,
-                  TRecord
-                    (upsert_record_field label
-                       (apply_subst subst value_ty)
-                       fields) )
+                  (let fields=upsert_record_field label (apply_subst subst value_ty) fields in
+                   match record_ty with TOpenRecord (_,tail) -> TOpenRecord (fields,tail) | _ -> TRecord fields) )
           | None -> Ok (subst, TMap))
       | TMap | TAny -> Ok (subst, TMap)
       | other -> Error [ map_type_mismatch other ])
@@ -184,33 +184,22 @@ let infer_assoc callbacks env = function
         [ diagnostic "typecheck/arity" "assoc expects a map, key, and value." ]
 
 let infer_merge callbacks env args =
-  let rec loop subst env fields = function
-    | [] ->
-        let ty =
-          match fields with
-          | Some fields -> TRecord (sort_record_fields fields)
-          | None -> TMap
-        in
-        Ok (subst, ty)
-    | expr :: rest -> (
-        match callbacks.infer_expr env expr with
+  let rec loop subst env fields tail = function
+    | [] -> Ok (subst,match tail with Some tail -> TOpenRecord (sort_record_fields fields,apply_subst subst tail) | None -> TRecord (sort_record_fields fields))
+    | expr :: rest -> (match callbacks.infer_expr env expr with
         | Error _ as error -> error
-        | Ok (expr_subst, ty) -> (
-            let subst = compose_subst expr_subst subst in
+        | Ok (s,ty) -> let subst=compose_subst s subst in
             match ensure_map_like subst ty with
             | Error _ as error -> error
-            | Ok (subst, ty) -> (
-                let env = apply_subst_env subst env in
-                match (fields, apply_subst subst ty) with
-                | Some fields, TRecord next_fields ->
-                    loop subst env
-                      (Some (merge_record_fields fields next_fields))
-                      rest
-                | (Some _ | None), (TRecord _ | TMap | TAny) ->
-                    loop subst env None rest
-                | _, other -> Error [ map_type_mismatch other ])))
-  in
-  loop [] env (Some []) args
+            | Ok (subst,ty) -> let env=apply_subst_env subst env in
+                match ty with
+                | TRecord next -> loop subst env (merge_record_fields fields next) tail rest
+                | TOpenRecord _ when List.length args > 1 -> Error [diagnostic "typecheck/row-merge" "Merging records requires closed records or typed Maps."]
+                | TOpenRecord (next,next_tail) when tail=None -> loop subst env (merge_record_fields fields next) (Some next_tail) rest
+                | TOpenRecord _ -> Error [diagnostic "typecheck/row-merge" "Merging two open records requires a known shared row."]
+                | TMap | TAny -> Ok (subst,TMap)
+                | other -> Error [map_type_mismatch other]) in
+  loop [] env [] None args
 
 let infer_sequence callbacks env exprs =
   let rec loop subst env last = function
@@ -229,10 +218,12 @@ let infer_dissoc_result subst record_ty keys =
   | Error _ as error -> error
   | Ok (subst, record_ty) -> (
       match record_ty with
-      | TRecord fields -> (
+      | TRecord fields | TOpenRecord (fields,_) -> (
           match record_labels_of_keys keys with
+          | Some _ when (match record_ty with TOpenRecord _ -> true | _ -> false) ->
+              Error [diagnostic "typecheck/open-record" "Removing fields requires a closed record or a typed Map."]
           | Some labels ->
-              Ok (subst, TRecord (remove_record_fields labels fields))
+              Ok (subst, (let fields=remove_record_fields labels fields in match record_ty with TOpenRecord (_,tail) -> TOpenRecord (fields,tail) | _ -> TRecord fields))
           | None -> Ok (subst, TMap))
       | TMap | TAny -> Ok (subst, TMap)
       | other -> Error [ map_type_mismatch other ])
@@ -256,8 +247,10 @@ let infer_select_keys_result subst record_ty keys =
   | Error _ as error -> error
   | Ok (subst, record_ty) -> (
       match record_ty with
-      | TRecord fields -> (
+      | TRecord fields | TOpenRecord (fields,_) -> (
           match record_labels_of_key_collection keys with
+          | Some labels when (match record_ty with TOpenRecord _ -> List.exists (fun key -> not (List.mem_assoc key fields)) labels | _ -> false) ->
+              Error [diagnostic "typecheck/open-record" "Selecting an unknown field requires a closed record or a typed Map."]
           | Some labels ->
               Ok (subst, TRecord (select_record_fields labels fields))
           | None -> Ok (subst, TMap))
@@ -291,23 +284,19 @@ let infer_keys callbacks env = function
           | Error _ as error -> error
           | Ok (subst, record_ty) -> (
               match record_ty with
-              | TRecord _ | TMap | TAny -> Ok (subst, TList TKeyword)
+              | TOpenRecord _ -> Error [diagnostic "typecheck/open-record" "keys requires a closed record or a typed Map."]
+              | TRecord fields ->
+                  let keys=List.map (fun (label,_) -> TNamed (if String.starts_with ~prefix:":" label then label else Value.string_json (if String.starts_with ~prefix:"\000str:" label then String.sub label 5 (String.length label-5) else label))) fields in
+                  Ok (subst,TList (match keys with [] -> TNamed "Never" | [key] -> key | keys -> TNamedApp ("Union",keys)))
+              | TMap | TAny -> Ok (subst, TList TKeyword)
               | other -> Error [ map_type_mismatch other ])))
   | _ -> Error [ diagnostic "typecheck/arity" "keys expects one argument." ]
 
 let record_values_item_type subst fields =
-  match fields with
-  | [] -> TAny
-  | (_, first_ty) :: rest ->
-      let first_ty = apply_subst subst first_ty in
-      let rec loop = function
-        | [] -> first_ty
-        | (_, ty) :: rest -> (
-            match unify first_ty (apply_subst subst ty) with
-            | Ok _ -> loop rest
-            | Error _ -> TAny)
-      in
-      loop rest
+  match List.sort_uniq compare (List.map (fun (_,ty) -> apply_subst subst ty) fields) with
+  | [] -> TNamed "Never"
+  | [ty] -> ty
+  | types -> TNamedApp ("Union",types)
 
 let infer_values callbacks env = function
   | [ record ] -> (
@@ -318,6 +307,7 @@ let infer_values callbacks env = function
           | Error _ as error -> error
           | Ok (subst, record_ty) -> (
               match record_ty with
+              | TOpenRecord _ -> Error [diagnostic "typecheck/open-record" "values requires a closed record or a typed Map."]
               | TRecord fields ->
                   Ok (subst, TList (record_values_item_type subst fields))
               | TMap | TAny -> Ok (subst, TList TAny)

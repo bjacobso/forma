@@ -33,7 +33,7 @@ export interface SymbolDocument {
 }
 
 export interface SymbolIndexOptions {
-  /** Descriptors in addition to the `define-form`s found in the documents. */
+  /** Descriptors in addition to the `__form-descriptor`s found in the documents. */
   readonly descriptors?: DescriptorSource | undefined;
 }
 
@@ -99,12 +99,12 @@ const FALLBACK_DEFINING_HEADS = new Set([
   "def",
   "defn",
   "defmacro",
-  "define-form",
-  "meta-fn",
-  "define-elaboration",
-  "define-elaboration-primitive",
-  "define-protocol",
-  "define-payload-contract",
+  "__form-descriptor",
+  "__form-hook",
+  "__projection-plan",
+  "__projection-primitive",
+  "__protocol-descriptor",
+  "__payload-contract",
   "defclass",
 ]);
 
@@ -119,14 +119,14 @@ const SPECIAL_FORMS = new Set([
   "quasiquote",
   "unquote",
   "unquote-splicing",
-  "define-macro",
-  "define-type",
-  "define-typeclass",
+  "__macro",
+  "__sum-type",
+  "__typeclass",
   "instance",
-  "define-operation",
-  "define-error",
-  "define-schema",
-  "define-service",
+  "__operation",
+  "__error",
+  "__schema",
+  "__service",
   "do!",
   "<-",
   "fail",
@@ -201,8 +201,9 @@ export function indexSymbols(
         if (inMacro) macroNodes.add(expr);
       }
       // A macro's name and parameters are ordinary; its body is template.
-      const definesMacro = headName(expr) === "define-macro";
-      children(expr).forEach((child, position) => visit(child, inMacro || (definesMacro && position > 2)));
+      const macroHead = headName(expr);
+      const definesMacro = macroHead === "__macro" || macroHead === "macro";
+      children(expr).forEach((child, position) => visit(child, inMacro || (definesMacro && position >= (macroHead === "macro" ? 2 : 3))));
     };
     exprs.forEach((expr) => visit(expr, false));
     return result;
@@ -325,7 +326,7 @@ class SymbolWalker {
     private readonly orders: ReadonlyMap<string, number>,
   ) {}
 
-  /** True while a `define-macro` form itself is walked. */
+  /** True while a `__macro` form itself is walked. */
   #inMacroDefinition = false;
 
   author(expr: SExpr): AuthorNode | undefined {
@@ -412,13 +413,16 @@ class SymbolWalker {
         // `define` in a body still defines a global.
         for (const item of items.slice(2)) this.collectNestedGlobals(item, document);
         return;
-      case "define-macro":
+      case "form":
+        this.define(items[1]?._tag === "List" ? items[1].items[0] : undefined, "declaration", node, name, undefined);
+        return;
+      case "__macro":
         this.define(items[1], "macro", node, name, undefined);
         return;
-      case "define-operation":
+      case "__operation":
         this.define(items[1], "function", node, name, undefined);
         return;
-      case "define-type":
+      case "__sum-type":
         this.define(
           items[1]?._tag === "List" ? items[1].items[0] : items[1],
           "type",
@@ -436,7 +440,7 @@ class SymbolWalker {
           );
         }
         return;
-      case "define-typeclass":
+      case "__typeclass":
         this.define(
           items[1]?._tag === "List" ? items[1].items[0] : items[1],
           "type",
@@ -448,11 +452,11 @@ class SymbolWalker {
           if (method._tag === "List") this.define(method.items[0], "method", node, name, undefined);
         }
         return;
-      case "define-error":
-      case "define-schema":
+      case "__error":
+      case "__schema":
         this.define(items[1], "type", node, name, undefined);
         return;
-      case "define-service": {
+      case "__service": {
         const service = symName(items[1]);
         this.define(items[1], "type", node, name, undefined);
         for (const slot of items.slice(2)) {
@@ -476,7 +480,7 @@ class SymbolWalker {
       }
       return;
     }
-    if (FALLBACK_DEFINING_HEADS.has(head) || head.startsWith("define-")) {
+    if (FALLBACK_DEFINING_HEADS.has(head)) {
       defineHead(items[1], "declaration");
       return;
     }
@@ -486,7 +490,7 @@ class SymbolWalker {
   collectNestedGlobals(expr: SExpr, document: IndexedDocument): void {
     if (expr._tag !== "List") return;
     const head = headName(expr);
-    if (head === "quote" || head === "quasiquote" || head === "define-macro") return;
+    if (head === "quote" || head === "quasiquote" || head === "__macro") return;
     if (head === "define") {
       this.collectGlobals(expr, document);
       return;
@@ -635,7 +639,7 @@ class SymbolWalker {
         this.walkAll(items.slice(2), scope, document, form);
         return;
       }
-      case "define-macro": {
+      case "__macro": {
         const outer = this.#inMacroDefinition;
         this.#inMacroDefinition = true;
         try {
@@ -645,7 +649,7 @@ class SymbolWalker {
         }
         return;
       }
-      case "define-operation":
+      case "__operation":
       case "fn": {
         this.walkFunction(items, head === "fn", scope, document, form, local);
         return;
@@ -688,19 +692,19 @@ class SymbolWalker {
         if (items[1]) this.reference(items[1], scope);
         this.walkType(items.slice(2), scope);
         return;
-      case "define-type":
+      case "__sum-type":
         for (const constructor of items.slice(2)) {
           if (constructor._tag === "List") this.walkType(constructor.items.slice(1), scope);
         }
         return;
-      case "define-typeclass":
+      case "__typeclass":
         for (const method of items.slice(2)) {
           if (method._tag === "List") this.walkType(method.items.slice(1), scope);
         }
         return;
-      case "define-error":
-      case "define-schema":
-      case "define-service":
+      case "__error":
+      case "__schema":
+      case "__service":
         this.walkType(items.slice(2), scope);
         return;
       case "instance":
@@ -733,7 +737,7 @@ class SymbolWalker {
       }
       return;
     }
-    if (head && (FALLBACK_DEFINING_HEADS.has(head) || head.startsWith("define-"))) {
+    if (head && (FALLBACK_DEFINING_HEADS.has(head))) {
       this.walkAll(items.slice(2), scope, document, form);
       return;
     }

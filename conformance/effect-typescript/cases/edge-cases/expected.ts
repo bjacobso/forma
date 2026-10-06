@@ -10,8 +10,8 @@ export const Member = Schema.Struct({
 export type Member = typeof Member.Type;
 
 export const Shape = Schema.Union([
-  Schema.Struct({ kind: Schema.Literal("circle"), radius: Schema.Number }),
-  Schema.Struct({ kind: Schema.Literal("square"), side: Schema.Number }),
+  Schema.Struct({ kind: Schema.Literal("Circle"), radius: Schema.Number }),
+  Schema.Struct({ kind: Schema.Literal("Square"), side: Schema.Number }),
 ]);
 export type Shape = typeof Shape.Type;
 
@@ -26,22 +26,22 @@ export class Forbidden extends Schema.TaggedError<Forbidden>()("Forbidden", {
 export class Store extends Context.Service<
   Store,
   {
-    readonly read: (key: string) => Effect.Effect<string, NotFound | Forbidden>;
-    readonly save: (member: Member) => Effect.Effect<void>;
+    readonly read: (arg0: string) => Effect.Effect<string, NotFound | Forbidden>;
+    readonly save: (arg0: Member) => Effect.Effect<void>;
   }
 >()("Store") {}
 
 export class Clock extends Context.Service<
   Clock,
   {
-    readonly now: () => Effect.Effect<number>;
+    readonly now: Effect.Effect<number>;
   }
 >()("Clock") {}
 
 export class Greeter extends Context.Service<
   Greeter,
   {
-    readonly greet: (name: string) => Effect.Effect<string>;
+    readonly greet: (arg0: string) => Effect.Effect<string>;
   }
 >()("Greeter") {}
 
@@ -122,11 +122,11 @@ export const exclaim = (key: string): Effect.Effect<string, NotFound | Forbidden
 export const stamp = (name: string): Effect.Effect<string, never, Clock> =>
   Effect.gen(function* () {
     const clock = yield* Clock;
-    const time = yield* clock.now();
+    const time = yield* clock.now;
     return `${name}@${time}`;
   });
 
-export const defaultRole = (): Effect.Effect<Role> =>
+export const defaultRole: Effect.Effect<Role> =
   Effect.gen(function* () {
     return "admin" as const;
   });
@@ -135,17 +135,17 @@ export const circles = (radii: ReadonlyArray<number>): Effect.Effect<ReadonlyArr
   Effect.gen(function* () {
     return yield* Effect.forEach(radii, (r) => Effect.gen(function* () {
       if (r > 1) {
-        return { kind: "circle", radius: r } satisfies Shape;
+        return { kind: "Circle", radius: r } satisfies Shape;
       } else {
-        return { kind: "square", side: r } satisfies Shape;
+        return { kind: "Square", side: r } satisfies Shape;
       }
     }));
   });
 
-export const pair = (): Effect.Effect<readonly [Shape, Role]> =>
+export const pair: Effect.Effect<readonly [Shape, Role]> =
   Effect.gen(function* () {
     return yield* Effect.all([
-      Effect.succeed({ kind: "circle", radius: 1 } satisfies Shape),
+      Effect.succeed({ kind: "Circle", radius: 1 } satisfies Shape),
       Effect.succeed("member" as const),
     ]);
   });
@@ -154,8 +154,8 @@ export const largest = (sizes: ReadonlyArray<number>): Effect.Effect<Shape> =>
   Effect.gen(function* () {
     return yield* Stream.runFold(
       Stream.fromIterable(sizes),
-      (): Shape => ({ kind: "square", side: 0 }),
-      (_acc, size) => ({ kind: "circle", radius: size } satisfies Shape),
+      (): Shape => ({ kind: "Square", side: 0 }),
+      (_acc, size) => ({ kind: "Circle", radius: size } satisfies Shape),
     );
   });
 
@@ -170,7 +170,7 @@ export const scaled: number = scale(3);
 export const ClockFixed: Layer.Layer<Clock> = Layer.succeed(
   Clock,
   Clock.of({
-    now: () => Effect.succeed(7),
+    now: Effect.succeed(7),
   }),
 );
 

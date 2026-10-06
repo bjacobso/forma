@@ -1,8 +1,11 @@
+import { typeDefinition } from "../surface/type-alias.js";
+import { metadataDescriptor } from "../surface/metadata.js";
+import { protocolModuleDescriptor } from "../surface/protocol-module.js";
 /**
- * MetaFnDecl — parse (meta-fn ...) declarations from prelude sources.
+ * MetaFnDecl — parse (__form-hook ...) declarations from prelude sources.
  *
  * Meta-fn declarations define compile-time hooks as Lisp expressions:
- *   (meta-fn name
+ *   (__form-hook name
  *     (:kind bindings)
  *     (:input FormMetaInput)
  *     (:output BindingMap)
@@ -17,6 +20,9 @@ import { headSym, tail, trySym } from "../reader/types.js";
 import { parse, toSExprMany } from "../reader/index.js";
 import type { HookKind } from "./ElaborationHook.js";
 import type { FormDescriptor } from "./FormDescriptor.js";
+import { typeDescriptor } from "../surface/contract.js";
+import { parseUnifiedForm } from "../surface/form.js";
+import { head, name } from "../surface/effect.js";
 import { parseFormDescriptorForms } from "./parse-descriptor.js";
 import { parseElaborationDescriptor, type ElaborationDescriptor } from "./ElaborationDescriptor.js";
 
@@ -34,6 +40,7 @@ export interface MetaFnDecl {
   readonly capabilities: readonly string[];
   readonly doc?: string;
   readonly body: SExpr;
+  readonly helpers?: readonly SExpr[];
 }
 
 export class MetaFnSyntaxError extends Error {
@@ -61,21 +68,21 @@ const HOOK_KIND_MAP: Record<string, MetaFnKind> = {
 };
 
 /**
- * Parse a single (meta-fn ...) S-expression into a MetaFnDecl.
- * Returns undefined if the expression is not a meta-fn declaration.
+ * Parse a single (__form-hook ...) S-expression into a MetaFnDecl.
+ * Returns undefined if the expression is not a __form-hook declaration.
  */
 export function parseMetaFnDecl(expr: SExpr): MetaFnDecl | undefined {
-  if (headSym(expr) !== "meta-fn") return undefined;
+  if (headSym(expr) !== "__form-hook") return undefined;
 
   const args = tail(expr);
   if (args.length < 1) {
-    throw new MetaFnSyntaxError("<anonymous>", ":name", "meta-fn is missing its name");
+    throw new MetaFnSyntaxError("<anonymous>", ":name", "__form-hook is missing its name");
   }
 
   const nameExpr = args[0]!;
   const name = trySym(nameExpr);
   if (!name) {
-    throw new MetaFnSyntaxError("<anonymous>", ":name", "meta-fn name must be a symbol identifier");
+    throw new MetaFnSyntaxError("<anonymous>", ":name", "__form-hook name must be a symbol identifier");
   }
 
   let kind: MetaFnKind | undefined;
@@ -101,7 +108,7 @@ export function parseMetaFnDecl(expr: SExpr): MetaFnDecl | undefined {
           throw new MetaFnSyntaxError(
             name,
             ":kind",
-            `meta-fn '${name}' has invalid hook kind '${String(val ?? "")}'`,
+            `__form-hook '${name}' has invalid hook kind '${String(val ?? "")}'`,
           );
         }
         break;
@@ -138,7 +145,7 @@ export function parseMetaFnDecl(expr: SExpr): MetaFnDecl | undefined {
         throw new MetaFnSyntaxError(
           name,
           kw,
-          `Unknown meta-fn section '${kw}' in meta-fn '${name}'`,
+          `Unknown __form-hook section '${kw}' in __form-hook '${name}'`,
         );
     }
   }
@@ -147,28 +154,28 @@ export function parseMetaFnDecl(expr: SExpr): MetaFnDecl | undefined {
     throw new MetaFnSyntaxError(
       name,
       ":kind",
-      `meta-fn '${name}' is missing required section ':kind'`,
+      `__form-hook '${name}' is missing required section ':kind'`,
     );
   }
   if (!inputType) {
     throw new MetaFnSyntaxError(
       name,
       ":input",
-      `meta-fn '${name}' is missing required section ':input'`,
+      `__form-hook '${name}' is missing required section ':input'`,
     );
   }
   if (!outputType) {
     throw new MetaFnSyntaxError(
       name,
       ":output",
-      `meta-fn '${name}' is missing required section ':output'`,
+      `__form-hook '${name}' is missing required section ':output'`,
     );
   }
   if (!body) {
     throw new MetaFnSyntaxError(
       name,
       ":body",
-      `meta-fn '${name}' is missing required section ':body'`,
+      `__form-hook '${name}' is missing required section ':body'`,
     );
   }
 
@@ -190,12 +197,13 @@ export function parseMetaFnDecl(expr: SExpr): MetaFnDecl | undefined {
 /**
  * Parse a prelude source string, returning both form descriptors and meta-fns.
  * Uses error-tolerant parsing since preludes may contain comments/syntax issues.
- * For duplicate meta-fn names, keeps the LAST occurrence (which has the full body).
+ * For duplicate __form-hook names, keeps the LAST occurrence (which has the full body).
  */
-export function parsePrelude(source: string): {
+export function parsePrelude(source: string, sharedTypes?: ReadonlyMap<string,SExpr>, sharedHelpers: readonly SExpr[] = []): {
   forms: FormDescriptor[];
   metaFns: MetaFnDecl[];
   elaborations: ElaborationDescriptor[];
+  helpers: readonly SExpr[];
 } {
   const { redTree } = parse(source);
   const exprs = toSExprMany(redTree);
@@ -204,7 +212,20 @@ export function parsePrelude(source: string): {
   const metaFnMap = new Map<string, MetaFnDecl>();
   const elaborationMap = new Map<string, ElaborationDescriptor>();
 
+  const types = new Map(exprs.flatMap(e => {const definition=typeDefinition(e);return definition ? [definition] : [];}));
+  if (sharedTypes) for (const [n,t] of sharedTypes) if (!types.has(n)) types.set(n,t);
+  const helpers = [...sharedHelpers,...exprs.filter(e => head(e) === "define" || head(e) === "macro")];
   for (const expr of exprs) {
+    if (head(expr) === "type" && expr._tag === "List" && name(expr.items[1]) && expr.items[2]) {
+      forms.push(typeDescriptor(name(expr.items[1])!,expr.items[2]!, types)); continue;
+    }
+    if (head(expr) === "form") {
+      const form = parseUnifiedForm(expr, types, helpers);
+      if (form) forms.push(form);
+      continue;
+    }
+    const metadata = metadataDescriptor(expr);
+    if (metadata) { forms.push(metadata); continue; }
     const formDesc = parseFormDescriptorForms(expr);
     if (formDesc.length > 0) {
       forms.push(...formDesc);
@@ -224,8 +245,18 @@ export function parsePrelude(source: string): {
     }
   }
 
+  const merged = new Map<string, FormDescriptor>();
+  for (const descriptor of forms) {
+    const previous = merged.get(descriptor.name);
+    const primary = descriptor.surface ? descriptor : previous?.surface ? previous : descriptor;
+    merged.set(descriptor.name, {...primary, extensions: {...previous?.extensions, ...descriptor.extensions}});
+  }
+  forms.splice(0, forms.length, ...merged.values());
+  const module = protocolModuleDescriptor(exprs, forms);
+  if (module) forms.push(module);
   return {
     forms,
+    helpers,
     metaFns: [...metaFnMap.values()],
     elaborations: [...elaborationMap.values()],
   };

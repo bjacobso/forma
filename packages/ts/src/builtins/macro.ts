@@ -21,14 +21,15 @@ export const sexprListQ: BuiltinFn = (args) => {
   if (args.length !== 1)
     return Effect.fail(new ArityError({ name: "sexpr-list?", expected: 1, got: args.length }));
   const v = args[0]!;
-  return Effect.succeed(isKSExpr(v) && v.expr._tag === "List");
+  return Effect.succeed(Array.isArray(v) || isKSExpr(v) && ["List","Vector"].includes(v.expr._tag));
 };
 
 export const sexprItems: BuiltinFn = (args) => {
   if (args.length !== 1)
     return Effect.fail(new ArityError({ name: "sexpr-items", expected: 1, got: args.length }));
   const v = args[0]!;
-  if (!isKSExpr(v) || v.expr._tag !== "List") {
+  if (Array.isArray(v)) return Effect.succeed(v);
+  if (!isKSExpr(v) || (v.expr._tag !== "List" && v.expr._tag !== "Vector")) {
     return Effect.succeed([] as readonly KValue[]);
   }
   const items: KValue[] = v.expr.items.map((item) => ({

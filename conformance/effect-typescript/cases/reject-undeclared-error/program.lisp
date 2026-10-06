@@ -1,8 +1,8 @@
 ;; The body can fail with UserNotFound, but the signature promises no errors.
-(define-error UserNotFound (:fields (field id String)))
+(error UserNotFound {:id String})
 
 (: lookup (-> String (Effect String [] [])))
-(define-operation lookup [id]
+(define lookup [id]
   (if (= id "root")
     (succeed "root")
     (fail (UserNotFound {:id id}))))

@@ -13,14 +13,14 @@ export class SensorOffline extends Schema.TaggedError<SensorOffline>()("SensorOf
 export class Sensors extends Context.Service<
   Sensors,
   {
-    readonly read: (sensor: string) => Effect.Effect<Reading, SensorOffline>;
+    readonly read: (arg0: string) => Effect.Effect<Reading, SensorOffline>;
   }
 >()("Sensors") {}
 
 export class Sink extends Context.Service<
   Sink,
   {
-    readonly write: (line: string) => Effect.Effect<void>;
+    readonly write: (arg0: string) => Effect.Effect<void>;
   }
 >()("Sink") {}
 

@@ -1,2 +1,2 @@
-(define-type (Color) (Red) (Blue))
+(type (Color) (Tagged Red Blue))
 (Red)

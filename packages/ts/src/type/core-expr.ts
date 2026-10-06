@@ -8,6 +8,7 @@
  * SExpr → CoreExpr before inference runs.
  */
 
+import type { SExpr } from "../reader/types.js";
 import type { Type } from "./types.js";
 import type { MacroOrigin } from "../evaluator/source-trace.js";
 
@@ -44,12 +45,15 @@ export type Lit =
   | { readonly _tag: "LString"; readonly value: string }
   | { readonly _tag: "LBool"; readonly value: boolean }
   | { readonly _tag: "LKeyword"; readonly value: string }
+  | { readonly _tag: "LSymbol"; readonly value: string }
+  | { readonly _tag: "LQuoted"; readonly value: SExpr }
   | { readonly _tag: "LNil" };
 
 export const LInt = (value: number): Lit => ({ _tag: "LInt", value });
 export const LString = (value: string): Lit => ({ _tag: "LString", value });
 export const LBool = (value: boolean): Lit => ({ _tag: "LBool", value });
 export const LKeyword = (value: string): Lit => ({ _tag: "LKeyword", value });
+export const LSymbol = (value: string): Lit => ({ _tag: "LSymbol", value });
 export const LNil: Lit = { _tag: "LNil" };
 
 // ---------------------------------------------------------------------------
@@ -248,6 +252,7 @@ export interface CGet {
   readonly span: Span;
   readonly record: CoreExpr;
   readonly label: string;
+  readonly key?: CoreExpr;
 }
 
 export interface CDef {
@@ -286,7 +291,7 @@ export interface CDSLForm {
 }
 
 /**
- * Type alias definition: (define-type Name TypeExpr)
+ * Type alias definition: (__sum-type Name TypeExpr)
  *
  * Registers a named alias that can be used in type annotations.
  * The alias is expanded during type expression resolution.
@@ -297,7 +302,7 @@ export interface CTypeDef {
   readonly span: Span;
   readonly name: string;
   readonly typeExpr?: TypeExpr | undefined;
-  readonly source?: "type" | "schema" | "error" | undefined;
+  readonly source?: "type" | "schema" | "error" | "class" | "form" | undefined;
   /** Type parameters for ADTs (e.g., ["a"] for Option) */
   readonly typeParams?: readonly string[] | undefined;
   /** Constructor definitions for ADTs */
@@ -327,13 +332,14 @@ export interface MatchArm {
 
 export type Pattern =
   | { readonly _tag: "PCon"; readonly name: string; readonly vars: readonly string[] }
-  | { readonly _tag: "PWild" };
+  | { readonly _tag: "PWild" }
+  | { readonly _tag: "PData"; readonly syntax: import("../reader/types.js").SExpr };
 
 // ---------------------------------------------------------------------------
 // Type Classes
 // ---------------------------------------------------------------------------
 
-/** Type class definition: (define-typeclass (ClassName params...) (method-name type) ...) */
+/** Type class definition: (__typeclass (ClassName params...) (method-name type) ...) */
 export interface CDefClass {
   readonly _tag: "DefClass";
   readonly id: string;
@@ -384,7 +390,7 @@ export interface InstanceMethod {
 // Services
 // ---------------------------------------------------------------------------
 
-/** Service interface definition: (define-service Name (:methods ...)) */
+/** Service interface definition: (__service Name (:methods ...)) */
 export interface CDefService {
   readonly _tag: "DefService";
   readonly id: string;
@@ -555,7 +561,7 @@ export const CTypeDef = (
   typeExpr?: TypeExpr,
   typeParams?: readonly string[],
   constructors?: readonly ADTConstructor[],
-  source?: "type" | "schema" | "error",
+  source?: "type" | "schema" | "error" | "class" | "form",
 ): CTypeDef => ({
   _tag: "TypeDef",
   id: freshNodeId(),
@@ -667,7 +673,7 @@ export const exprChildren = (expr: CoreExpr): readonly CoreExpr[] => {
     case "Record":
       return expr.fields.map((f) => f.value);
     case "Get":
-      return [expr.record];
+      return [expr.record,...(expr.key ? [expr.key] : [])];
     case "Def":
       return [expr.expr];
     case "Ascribe":

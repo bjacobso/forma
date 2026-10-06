@@ -17,9 +17,9 @@
       "code": "mechanics/unreachable-pattern",
       "message": "This _ is unreachable: every case is already matched.",
       "line": 10,
-      "column": 63,
+      "column": 60,
       "endLine": 10,
-      "endColumn": 64
+      "endColumn": 61
     }
   ]
 }

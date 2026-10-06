@@ -22,18 +22,18 @@ Status key:
 
 | Effect construct | Forma surface | Status | Case |
 | --- | --- | --- | --- |
-| `Schema.Struct` + `typeof X.Type` | `(define-schema N (Struct (field f T) ...))` | supported | crud-users |
-| Optional fields (`Schema.optionalKey`) | `(Optional T)` in a field; `get` returns `(Option T)` | supported | crud-users |
-| `Schema.Array`, `Schema.Record` | `(Array T)`, `(Map T)`; `get`/`assoc`/`dissoc`/`keys`/`vals` on maps | supported | crud-users, pure-domain-logic |
-| `Schema.Literal(s)` | `(Enum a b)`, `(Literal ...)` | supported | crud-users |
+| `Schema.Struct` + `typeof X.Type` | `(type N {:f T ...})` | supported | crud-users |
+| Optional fields (`Schema.optionalKey`) | `(Option T)` in a field; `get` returns `(Option T)` | supported | crud-users |
+| `Schema.Array`, `Schema.Record` | `(List T)`, `(Map String T)`; `get`/`assoc`/`dissoc`/`keys`/`vals` on maps | supported | crud-users, pure-domain-logic |
+| `Schema.Literal(s)` | `(Union "a" "b")`, literal types | supported | crud-users |
 | `Schema.Union`, `Schema.Tuple` | `(Union A B)`, `(Tuple A B)` | supported | schemas-and-decoding |
-| Tagged unions | `(TaggedUnion tag [t (Struct ...)] ...)`, matched by tag | supported | schemas-and-decoding, pure-domain-logic |
-| Brands (`Schema.brand`, `.make`) | `(Brand Name T)`, `(Name value)` | supported | crud-users, schemas-and-decoding |
+| Tagged unions | `(Tagged :tag tag (Ctor {...}) ...)`, matched by tag | supported | schemas-and-decoding, pure-domain-logic |
+| Brands (`Schema.brand`, `.make`) | `(type Name (Brand T))`, `(Name value)` | supported | crud-users, schemas-and-decoding |
 | Annotations | `(T :doc "...")`, `:identifier`, `:title`, `:pattern` | supported | schemas-and-decoding |
-| `Schema.Class` | `(define-class N (:fields ...))`, `(N {...})` | supported | pure-domain-logic |
+| `Schema.Class` | `(class N {...})`, `(N {...})` | supported | pure-domain-logic |
 | `Schema.decodeUnknownEffect` | `(decode Schema value)`, fails with `SchemaError` | supported | schemas-and-decoding |
-| `Option` | `(Option T)`, `some`, `none`, `match`, `get-or-else`, `is-some` | supported | crud-users, pure-domain-logic |
-| `Result` | `(Result A E)`, `(result eff)`, `match` on `success`/`failure` | supported | typed-errors, pure-domain-logic |
+| `Option` | `(Option T)`, `Some`, `None`, `match`, `get-or-else`, `is-some` | supported | crud-users, pure-domain-logic |
+| `Result` | `(Result A E)`, `(result eff)`, `match` on `Ok`/`Err` | supported | typed-errors, pure-domain-logic |
 | Recursive schemas (`Schema.suspend`) | none | missing | rejected with a diagnostic (reject-recursive-schema) |
 | `Schema.TaggedClass`, transformations, filters beyond `:pattern` | none | missing | |
 
@@ -41,7 +41,7 @@ Status key:
 
 | Effect construct | Forma surface | Status | Case |
 | --- | --- | --- | --- |
-| `Schema.TaggedError` classes | `(define-error E (:fields ...))` | supported | all |
+| `Schema.TaggedError` classes | `(error E {...})` | supported | all |
 | `Effect.fail` | `(fail (E {...}))`, `(fail e)` | supported | crud-users |
 | `Effect.catchTag` / `catchTags` | `(catch eff (E e) handler ...)` | supported | typed-errors |
 | `Effect.catch` | `(catch eff (_ e) handler)` | supported | typed-errors |
@@ -53,9 +53,9 @@ Status key:
 
 | Effect construct | Forma surface | Status | Case |
 | --- | --- | --- | --- |
-| `Context.Service` classes | `define-service` | supported | all |
+| `Context.Service` classes | `service` | supported | all |
 | Requirements | `[Service.method]` capabilities or `[Service]`, plus `Scope` | supported | all |
-| `Layer.succeed` / `Layer.effect` | `(define-layer L (:provides S) (:setup [...]) (:methods ...))` | supported | crud-users, multi-service-checkout |
+| `Layer.succeed` / `Layer.effect` | `(layer L :provides S :setup [...] (define ...))` | supported | crud-users, multi-service-checkout |
 | Layer dependencies | services used by methods are captured; operations get `Effect.provideContext` | supported | multi-service-checkout |
 | `Layer.mergeAll`, `Layer.provide`, `Layer.provideMerge` | `layer-merge`, `layer-provide`, `layer-provide-merge` | supported | multi-service-checkout |
 | Layer types | `(: L (Layer [Provides] [Errors] [Requirements]))` | supported | multi-service-checkout |
@@ -129,14 +129,14 @@ output with the TypeScript compiler API.
 
 | Effect construct | Forma surface | Status | Notes |
 | --- | --- | --- | --- |
-| `Schema.Struct` | `(define-schema N (Struct [f T] ...))` | partial | The Effect TS module emits a plain `interface` and no runtime schema. The separate Schema module emits `Schema.Struct`. The two modules are not linked. |
-| Optional fields | `(Optional T)` in a field | partial | The interface uses `readonly f?: T`. The Schema module uses `Schema.optional`, which is `T \| undefined` and does not match the interface under `exactOptionalPropertyTypes`. |
-| `Schema.Array`, `Schema.Record` | `(Array T)`, `(Map T)` | supported | |
+| `Schema.Struct` | `(type N {:f T ...})` | partial | The Effect TS module emits a plain `interface` and no runtime schema. The separate Schema module emits `Schema.Struct`. The two modules are not linked. |
+| Optional fields | `(Option T)` in a field | partial | The interface uses `readonly f?: T`. The Schema module uses `Schema.optional`, which is `T \| undefined` and does not match the interface under `exactOptionalPropertyTypes`. |
+| `Schema.Array`, `Schema.Record` | `(List T)`, `(Map String T)` | supported | |
 | Literal unions | `(Enum a b)`, `(Literal ...)` | partial | Types are correct. The Schema module emits Effect 3 `Schema.Literal("a", "b")`, which does not typecheck in Effect 4 (`Schema.Literals([...])`). |
 | `Schema.Union` | `(Union A B)` | partial | Types are correct. The Schema module emits `Schema.Union(a, b)`, which does not typecheck in Effect 4 (`Schema.Union([a, b])`). |
 | `Schema.Tuple` | `(Tuple A B)` | partial | Same Effect 3 call shape as `Union`. |
 | Tagged unions | `(TaggedUnion tag [t S] ...)` | partial | The Effect TS module types it as `unknown`. The Schema module does not typecheck. |
-| Brands | `(Brand Name T)` | partial | The TS module uses a hand-rolled `Brand` type that is incompatible with `Schema.brand`. There is no way to construct a branded value in a body. |
+| Brands | `(type Name (Brand T))` | partial | The TS module uses a hand-rolled `Brand` type that is incompatible with `Schema.brand`. There is no way to construct a branded value in a body. |
 | Annotations | `(T :doc "...")` | partial | Annotated schemas are typed as `unknown` in the TS module. |
 | `Schema.Class` / `Schema.TaggedClass` | none | missing | |
 | Recursive schemas (`Schema.suspend`) | none | missing | |
@@ -148,7 +148,7 @@ output with the TypeScript compiler API.
 
 | Effect construct | Forma surface | Status | Notes |
 | --- | --- | --- | --- |
-| Tagged errors | `(define-error E (:fields ...))` | partial | Emitted as a structural `interface` with `_tag`, not a yieldable `Schema.TaggedError` class. Errors carry no stack and no schema. |
+| Tagged errors | `(error E {...})` | partial | Emitted as a structural `interface` with `_tag`, not a yieldable `Schema.TaggedError` class. Errors carry no stack and no schema. |
 | `Effect.fail` | `(fail (E {...}))` | supported | Emits an object spread with `_tag`. |
 | `Effect.catchTag` | `(catch body (E e) handler)` | supported | One tag per `catch`. A missing pattern silently becomes `"UnknownError"`. |
 | `Effect.catchTags`, `Effect.catch`, `mapError`, `orElseSucceed`, `orDie` | none | missing | |
@@ -159,7 +159,7 @@ output with the TypeScript compiler API.
 
 | Effect construct | Forma surface | Status | Notes |
 | --- | --- | --- | --- |
-| `Context.Service` class | `(define-service S (:methods ...))` | supported | |
+| `Context.Service` class | `(service S (: m Type) ...)` | supported | |
 | Service method calls | `(S.method args)` | supported | |
 | Zero-argument methods | `(m [] (Effect ...))` | supported | |
 | Requirements in signatures | `[S.method ...]` | supported | Capability-granular. They collapse to service tags in TypeScript. |

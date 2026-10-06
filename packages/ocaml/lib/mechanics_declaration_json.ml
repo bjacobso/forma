@@ -47,7 +47,7 @@ let function_payload ~source_id expr name signature value_expr =
             if is_effect_type returns then
               failed expr "artifact/function"
                 (name
-               ^ " returns an Effect; write it with define-operation so its body is an effect \
+               ^ " returns an Effect; write it with __operation so its body is an effect \
                   program.")
             else (
               match body with

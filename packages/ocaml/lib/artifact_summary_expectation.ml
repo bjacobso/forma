@@ -24,7 +24,7 @@ let of_descriptor env form declaration =
           Eval_slot.declaration_name declaration
         else None);
      result_type =
-       Option.bind (Descriptor.result_type env form) Descriptor.value_text;
+       (if Env.lookup ("__form/" ^ form) env <> None && Descriptor.result_type_hook env form <> None then None else Option.bind (Descriptor.result_type env form) Descriptor.value_text);
    }
     : t)
 

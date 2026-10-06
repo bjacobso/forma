@@ -267,7 +267,7 @@ class Generator {
     const lines = [`export class ${className} extends Context.Service<`, `  ${className},`, "  {"];
     for (const method of methods?.values() ?? []) {
       const params = method.params.map((param) => `${camelIdentifier(param.name)}: ${this.typeTs(param.type)}`).join(", ");
-      lines.push(`    readonly ${propertyName(camelIdentifier(method.name))}: (${params}) => ${this.effectTypeTs(method.effect)};`);
+      lines.push(`    readonly ${propertyName(camelIdentifier(method.name))}: ${method.value ? "" : `(${params}) => `}${this.effectTypeTs(method.effect)};`);
     }
     lines.push("  }", `>()(${JSON.stringify(name)}) {}`);
     return lines;
@@ -347,7 +347,7 @@ class Generator {
     this.serviceVars = new Map();
     for (const service of services) this.serviceVars.set(service, bindService(names, service));
     const returns = signature ? this.effectTypeTs(signature.result) : "Effect.Effect<unknown>";
-    const lines = [signatureHead(camelIdentifier(name), params, returns), "  Effect.gen(function* () {"];
+    const lines = [operation["value"] === true ? `export const ${camelIdentifier(name)}: ${returns} =` : signatureHead(camelIdentifier(name), params, returns), "  Effect.gen(function* () {"];
     for (const service of services) lines.push(`    const ${this.serviceVars.get(service)!} = yield* ${typeName(service)};`);
     lines.push(...this.statements(body, names, "    ", "return"));
     lines.push("  });");
@@ -427,7 +427,8 @@ class Generator {
       const scope = names.child();
       const params = stringItems(method["params"]).map((param) => scope.bind(param, unusedPrefix(param, method["body"])));
       const key = propertyName(camelIdentifier(String(method["name"])));
-      const prefix = `${entryIndent}${key}: (${params.join(", ")}) =>`;
+      const isValue = this.info.services.get(service)?.get(String(method["name"]))?.value;
+      const prefix = `${entryIndent}${key}:${isValue ? "" : ` (${params.join(", ")}) =>`}`;
       const inline = this.effectExpression(method["body"], scope.child(), entryIndent);
       if (!inline.includes("\n") && `${prefix} ${inline},`.length <= maxWidth) {
         entries.push(`${prefix} ${inline},`);
@@ -576,7 +577,7 @@ class Generator {
     switch (node["kind"]) {
       case "ServiceCall": {
         const callee = `${this.serviceVar(String(node["service"]))}.${camelIdentifier(String(node["method"]))}`;
-        return layout(callee, this.argRenders(node["args"], names), indent);
+        return node["value"] === true ? callee : layout(callee, this.argRenders(node["args"], names), indent);
       }
       case "OperationCall": {
         const call = layout(camelIdentifier(String(node["operation"])), this.argRenders(node["args"], names), indent);
@@ -607,6 +608,23 @@ class Generator {
       case "CatchTags": {
         this.use("Effect");
         const handlers = arrayItems(node["handlers"]).filter(isRecord);
+        if (handlers.at(-1)?.["errorType"] === "_") {
+          const callback=names.child();
+          const error=callback.bind("catch$error","error");
+          return layout("Effect.catch",[
+            inner=>this.effectExpression(node["body"],names,inner),
+            inner=> {
+              const branches=handlers.map(handler=> {
+                const scope=callback.child();
+                const binding=String(handler["binding"]);
+                const bound=binding!=="_" && freeIn(handler["handler"],binding) ? scope.bind(binding) : undefined;
+                const label=handler["errorType"]==="_" ? "default" : `case ${JSON.stringify(handler["errorType"])}`;
+                return `${inner}    ${label}: {\n${bound ? `${inner}      const ${bound} = ${error};\n` : ""}${inner}      return ${this.effectExpression(handler["handler"],scope,`${inner}      `)};\n${inner}    }`;
+              });
+              return `(${error}) => {\n${inner}  switch (${error}._tag) {\n${branches.join("\n")}\n${inner}  }\n${inner}}`;
+            },
+          ],indent);
+        }
         return layout(
           "Effect.catchTags",
           [
@@ -857,13 +875,14 @@ class Generator {
       lines.push(`${indent}const ${temp} = ${subject};`);
       subject = temp;
     }
-    const arms = arrayItems(node["arms"]).filter(isRecord).map((arm) => ({ pattern: parsePattern(arm["pattern"]), body: arm["body"] }));
+    const arms = arrayItems(node["arms"]).filter(isRecord).map((arm) => ({ pattern: parsePattern(arm["pattern"],shape.kind), body: arm["body"] }));
     const armFor = (tag: string) => arms.find((arm) => arm.pattern?.tag === tag) ?? arms.find((arm) => arm.pattern?.tag === "_");
     const armLines = (arm: (typeof arms)[number] | undefined, payload: string | undefined, inner: string): string[] => {
       if (!arm) return mode === "return" ? [`${inner}return;`] : [];
       const scope = names.child();
       const out: string[] = [];
       const binding = arm.pattern?.binding;
+      if (arm.pattern?.tag === "_") payload = subject;
       if (binding && binding !== "_" && payload !== undefined && freeIn(arm.body, binding)) {
         out.push(`${inner}const ${scope.bind(binding)} = ${payload};`);
       }
@@ -1306,7 +1325,7 @@ class Generator {
     if (!shape) throw new Error("Effect TypeScript: match was not checked");
     const arms: { readonly pattern: ReturnType<typeof parsePattern>; readonly body: JsonValue | undefined }[] = [];
     for (let index = 1; index + 1 < args.length; index += 2) {
-      arms.push({ pattern: parsePattern(args[index]), body: args[index + 1] });
+      arms.push({ pattern: parsePattern(args[index],shape.kind), body: args[index + 1] });
     }
     const subject = this.value(args[0], names, indent);
     const armFor = (tag: string) => arms.find((arm) => arm.pattern?.tag === tag) ?? arms.find((arm) => arm.pattern?.tag === "_");
@@ -1445,7 +1464,9 @@ class Generator {
       case "array":
         return `ReadonlyArray<${this.typeTs(type.item)}>`;
       case "map":
-        return `{ readonly [key: string]: ${this.typeTs(type.value)} }`;
+        return type.key && !(type.key.kind === "prim" && type.key.name === "String")
+          ? `{ readonly [key in ${this.typeTs(type.key)}]?: ${this.typeTs(type.value)} }`
+          : `{ readonly [key: string]: ${this.typeTs(type.value)} }`;
       case "tuple":
         return `readonly [${type.items.map((item) => this.typeTs(item)).join(", ")}]`;
       case "union":

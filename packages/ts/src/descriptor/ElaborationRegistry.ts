@@ -20,6 +20,12 @@ import type { Type } from "../type/types.js";
 export class ElaborationRegistry {
   private readonly hooks = new Map<string, ElaborationHook>();
 
+  fork(): ElaborationRegistry {
+    const child = new ElaborationRegistry();
+    for (const [name, hook] of this.hooks) child.hooks.set(name,hook);
+    return child;
+  }
+
   registerHook(hook: ElaborationHook): void {
     this.hooks.set(hook.name, hook);
   }

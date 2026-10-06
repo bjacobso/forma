@@ -1,7 +1,7 @@
 /**
  * MetaFnExecutor — converts MetaFnDecl into executable ElaborationHooks.
  *
- * Each meta-fn body is a Lisp expression evaluated at compile time using the
+ * Each __form-hook body is a Lisp expression evaluated at compile time using the
  * kernel evaluator with a constrained set of helper builtins.
  *
  * @module meta-fn-executor
@@ -27,7 +27,7 @@ import {
 } from "./meta-builtins.js";
 import { defaultBuiltins } from "../builtins/index.js";
 import { Env } from "../Env.js";
-import { evaluateCompileTimeExprs } from "../evaluator/eval.js";
+import { evaluateExprs } from "../evaluator/eval.js";
 import { SimpleNormalizedSlots, type SlotValue } from "./NormalizedSlots.js";
 
 // =============================================================================
@@ -35,7 +35,7 @@ import { SimpleNormalizedSlots, type SlotValue } from "./NormalizedSlots.js";
 // =============================================================================
 
 /**
- * Convert a HookInput into a KMap that meta-fn bodies can access
+ * Convert a HookInput into a KMap that __form-hook bodies can access
  * via meta/* builtins.
  */
 export function hookInputToKValue(input: HookInput): KValue {
@@ -223,7 +223,7 @@ export function kValueToHookOutput(kind: HookKind, value: KValue): HookOutput {
 
 /**
  * Create an ElaborationHook from a MetaFnDecl.
- * The hook evaluates the meta-fn's body expression at compile time.
+ * The hook evaluates the __form-hook's body expression at compile time.
  */
 export function createMetaFnHook(
   decl: MetaFnDecl,
@@ -269,7 +269,7 @@ export function createMetaFnHook(
         const env = Env.empty().bind("input", hookInputToKValue(input));
 
         // Evaluate the body using the kernel evaluator
-        const result = yield* evaluateCompileTimeExprs([decl.body], {
+        const result = yield* evaluateExprs([...(decl.helpers ?? []),decl.body], {
           builtins,
           stepLimit: 10000,
           env,

@@ -1,3 +1,4 @@
+import type { UnifiedForm } from "../surface/form.js";
 /**
  * FormDescriptor — the declarative description of a language construct.
  *
@@ -19,6 +20,7 @@
 // =============================================================================
 
 export interface FormDescriptor {
+  readonly surface?: UnifiedForm;
   // --- Identity ---
   readonly name: string;
   readonly phase: "meta" | "domain";

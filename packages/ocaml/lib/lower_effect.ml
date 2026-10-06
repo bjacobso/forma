@@ -71,12 +71,22 @@ let rec lower_body lower_expr span = function
                   Core_ast.Let (Core_ast.node span, [ binding expr name value ], body))
                 (lower_body lower_expr span rest)))
 
-let lower_sequence lower_expr expr args =
+let rec lower_sequence lower_expr expr args =
   match args with
   | Ast.Vector (_, bindings) :: body when body <> [] -> (
-      match (lower_bindings lower_expr [] bindings, lower_body lower_expr (Ast.expr_span expr) body) with
+      let rec split prefix = function
+        | Ast.Keyword (span,":let") :: Ast.Vector (bs,pure) :: rest ->
+            if List.length pure mod 2<>0 then Error [diagnostic ~span "lower/do-effect" ":let requires binding/value pairs."] else
+            let remaining=Ast.List (span,Ast.Symbol (span,"do!") :: Ast.Vector (bs,rest) :: body) in
+            let scoped=Ast.List (span,[Ast.Symbol (span,"let");Ast.Vector (bs,pure);remaining]) in
+            lower_sequence lower_expr expr [Ast.Vector (bs,List.rev prefix);scoped]
+        | key :: value :: rest -> split (value :: key :: prefix) rest
+        | [] ->
+      (match (lower_bindings lower_expr [] bindings, lower_body lower_expr (Ast.expr_span expr) body) with
       | Error diagnostics, _ | _, Error diagnostics -> Error diagnostics
-      | Ok bindings, Ok body -> Ok (Core_ast.EffectDo (Core_ast.node (Ast.expr_span expr), bindings, body))
+      | Ok bindings, Ok body -> Ok (Core_ast.EffectDo (Core_ast.node (Ast.expr_span expr), bindings, body)))
+        | _ -> Error [diagnostic "lower/do-effect" "do! requires binding/value pairs."] in
+      split [] bindings
       )
   | _ ->
       Error

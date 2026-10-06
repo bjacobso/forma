@@ -5,14 +5,13 @@
 (: unsafe Int)
 (define unsafe 9007199254740993)
 
-(: weights (Map Int))
-(define weights {"__proto__" 1 "a" 2 "a" 3})
+(: weights (Map String Int))
+(define weights {"__proto__" 1 "a" 2 "b" 3})
 
-(: seen (Map Unit))
+(: seen (Map String Unit))
 (define seen {"a" nil})
 
-(define-error Broken (:fields (field _tag String)))
+(error Broken {:_tag String})
 
-(define-schema Shape
-  (TaggedUnion kind
-    [circle (Struct (field kind String) (field radius Number))]))
+(type Shape (Tagged :tag kind (Circle {:kind String
+ :radius Number})))

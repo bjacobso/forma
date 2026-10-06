@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 import type { BuiltinFn, KValue } from "../evaluator/types.js";
-import { asList, isKMap, isKList } from "../evaluator/types.js";
+import { KDictionary, isKDictionary, asList, isKMap, isKList, mapKey, mapKeyValue, kEquals } from "../evaluator/types.js";
 import { ArityError, KernelTypeError } from "../diagnostic/errors.js";
 
 export const get: BuiltinFn = (args) => {
@@ -11,7 +11,7 @@ export const get: BuiltinFn = (args) => {
   const defaultVal = args.length === 3 ? args[2]! : null;
 
   if (isKMap(coll)) {
-    if (typeof key !== "string")
+    if (mapKey(key) === undefined)
       return Effect.fail(
         new KernelTypeError({
           message: "get: map key must be a string",
@@ -19,8 +19,8 @@ export const get: BuiltinFn = (args) => {
           got: typeof key,
         }),
       );
-    const v = coll.get(key);
-    return Effect.succeed(v !== undefined ? v : defaultVal);
+    const v = coll.get(mapKey(key)!);
+    return Effect.succeed(isKDictionary(coll) ? v === undefined ? new Map([[":_tag", "None"]]) : new Map<string, KValue>([[":_tag", "Some"], [":value", v]]) : v !== undefined ? v : defaultVal);
   }
   if (isKList(coll)) {
     if (typeof key !== "number")
@@ -47,8 +47,8 @@ export const getIn: BuiltinFn = (args) => {
   for (const key of path) {
     if (current === null) return Effect.succeed(defaultVal);
     if (isKMap(current)) {
-      if (typeof key !== "string") return Effect.succeed(defaultVal);
-      const mapVal = current.get(key);
+      if (mapKey(key) === undefined) return Effect.succeed(defaultVal);
+      const mapVal = current.get(mapKey(key)!);
       current = mapVal !== undefined ? mapVal : null;
     } else if (isKList(current)) {
       if (typeof key !== "number") return Effect.succeed(defaultVal);
@@ -62,6 +62,8 @@ export const getIn: BuiltinFn = (args) => {
 };
 
 const keyCandidates = (key: KValue): readonly string[] | null => {
+  key = mapKeyValue(mapKey(key) ?? "");
+  if (typeof key === "object" && key !== null && "name" in key) key = key.name;
   if (typeof key === "string") {
     return key.startsWith(":") ? [key, key.slice(1)] : [key, `:${key}`];
   }
@@ -131,10 +133,10 @@ export const assoc: BuiltinFn = (args) => {
         got: typeof coll,
       }),
     );
-  const result = new Map(coll);
+  const result = isKDictionary(coll) ? new KDictionary(coll) : new Map(coll);
   for (let i = 1; i < args.length; i += 2) {
     const k = args[i]!;
-    if (typeof k !== "string")
+    if (mapKey(k) === undefined)
       return Effect.fail(
         new KernelTypeError({
           message: "assoc: key must be a string",
@@ -142,7 +144,7 @@ export const assoc: BuiltinFn = (args) => {
           got: typeof k,
         }),
       );
-    result.set(k, args[i + 1]!);
+    result.set(mapKey(k)!, args[i + 1]!);
   }
   return Effect.succeed(result as ReadonlyMap<string, KValue>);
 };
@@ -159,10 +161,10 @@ export const dissoc: BuiltinFn = (args) => {
         got: typeof coll,
       }),
     );
-  const result = new Map(coll);
+  const result = isKDictionary(coll) ? new KDictionary(coll) : new Map(coll);
   for (let i = 1; i < args.length; i++) {
     const k = args[i]!;
-    if (typeof k === "string") result.delete(k);
+    if (mapKey(k) !== undefined) result.delete(mapKey(k)!);
   }
   return Effect.succeed(result as ReadonlyMap<string, KValue>);
 };
@@ -179,7 +181,7 @@ export const keys: BuiltinFn = (args) => {
         got: typeof coll,
       }),
     );
-  return Effect.succeed([...coll.keys()] as readonly KValue[]);
+  return Effect.succeed([...coll.keys()].map(mapKeyValue));
 };
 
 export const vals: BuiltinFn = (args) => {
@@ -198,7 +200,7 @@ export const vals: BuiltinFn = (args) => {
 };
 
 export const merge: BuiltinFn = (args) => {
-  const result = new Map<string, KValue>();
+  const result = args.some(isKDictionary) ? new KDictionary() : new Map<string, KValue>();
   for (const a of args) {
     if (!isKMap(a))
       return Effect.fail(
@@ -228,10 +230,10 @@ export const selectKeys: BuiltinFn = (args) => {
       }),
     );
   const keyList = asList(args[1]!, "select-keys");
-  const result = new Map<string, KValue>();
+  const result = isKDictionary(coll) ? new KDictionary() : new Map<string, KValue>();
   for (const k of keyList) {
-    if (typeof k === "string" && coll.has(k)) {
-      result.set(k, coll.get(k)!);
+    if (mapKey(k) !== undefined && coll.has(mapKey(k)!)) {
+      result.set(mapKey(k)!, coll.get(mapKey(k)!)!);
     }
   }
   return Effect.succeed(result as ReadonlyMap<string, KValue>);
@@ -245,7 +247,29 @@ export const id: BuiltinFn = (args) => {
   return Effect.succeed(null);
 };
 
+export const contains: BuiltinFn = args => {
+  if (args.length !== 2) return Effect.fail(new ArityError({name: "contains?", expected: 2, got: args.length}));
+  const collection = args[0]!, key = args[1]!;
+  if (isKMap(collection)) return Effect.succeed(mapKey(key) !== undefined && collection.has(mapKey(key)!));
+  if (Array.isArray(collection)) return Effect.succeed(collection.some(value => kEquals(value, key)));
+  if (typeof collection === "string" && typeof key === "string") return Effect.succeed(collection.includes(key));
+  return Effect.fail(new KernelTypeError({message: "contains? requires a collection", expected: "collection", got: typeof collection}));
+};
+
+const dictionary: BuiltinFn = args => {
+  if (args.length !== 1) return Effect.fail(new ArityError({name:"__dictionary",expected:1,got:args.length}));
+  if (!isKMap(args[0]!)) return Effect.fail(new KernelTypeError({message:"Map construction requires a record or map",expected:"Map",got:typeof args[0]}));
+  return Effect.succeed(new KDictionary(args[0]));
+};
+/** A computed key selects the dictionary view, including missing values. */
+const computedGet: BuiltinFn = (args, apply) => isKMap(args[0]!)
+  ? get([new KDictionary(args[0]), ...args.slice(1)], apply)
+  : get(args, apply);
 export const dataBuiltins: Record<string, BuiltinFn> = {
+  __dictionary: dictionary,
+  "__map-get": computedGet,
+  "meta/get": get,
+  "contains?": contains,
   get,
   "get-in": getIn,
   path,

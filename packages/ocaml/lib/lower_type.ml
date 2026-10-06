@@ -7,12 +7,18 @@ type diagnostic = Lower_common.diagnostic = {
 let diagnostic = Lower_common.diagnostic
 
 let label_name = function
-  | Ast.Symbol (_, name) | Ast.Keyword (_, name) | Ast.String (_, name) ->
-      Some name
+  | Ast.Symbol (_, name) | Ast.Keyword (_, name) -> Some name
+  | Ast.String (_,name) -> Some (if String.starts_with ~prefix:":" name || String.starts_with ~prefix:"\000" name then "\000str:" ^ name else name)
   | _ -> None
 
 let rec parse_type_expr expr =
   match expr with
+  | Ast.List (s, [Ast.Symbol (h,"Effect"); success]) -> parse_type_expr (Ast.List (s,[Ast.Symbol (h,"Effect");success;Ast.Vector (s,[]);Ast.Vector (s,[])]))
+  | Ast.List (s, [Ast.Symbol (h,"Effect"); success; errors]) -> parse_type_expr (Ast.List (s,[Ast.Symbol (h,"Effect");success;errors;Ast.Vector (s,[])]))
+  | Ast.String (span,v) -> Ok (Core_ast.TESym (span,Value.string_json v))
+  | Ast.Int (span,v) -> Ok (Core_ast.TESym (span,string_of_int v))
+  | Ast.Float (span,v) -> Ok (Core_ast.TESym (span,string_of_float v))
+  | Ast.Bool (span,v) -> Ok (Core_ast.TESym (span,string_of_bool v))
   | Ast.Symbol (span, name) -> Ok (Core_ast.TESym (span, name))
   | Ast.Keyword (span, name) -> Ok (Core_ast.TESym (span, name))
   | Ast.List
@@ -125,6 +131,9 @@ and parse_type_exprs exprs =
 and parse_row_type span entries =
   let rec loop acc = function
     | [] -> Ok (Core_ast.TERow (span, List.rev acc, None))
+    | ((Ast.Symbol (_,"&") | Ast.Keyword (_,":*")),Ast.Symbol (_,tail)) :: rest ->
+        if rest <> [] then Error [diagnostic ~span "lower/type-expression" "Row tail must be final."]
+        else Ok (Core_ast.TERow (span,List.rev acc,Some tail))
     | (key, value) :: rest -> (
         match label_name key with
         | None ->
@@ -174,7 +183,7 @@ let type_signature = function
 let definition_name = function
   | Ast.List
       ( _,
-        Ast.Symbol (_, ("define" | "define-operation")) :: Ast.Symbol (_, name)
+        Ast.Symbol (_, ("define" | "__operation")) :: Ast.Symbol (_, name)
         :: _ ) ->
       Some name
   | Ast.List

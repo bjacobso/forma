@@ -31,12 +31,13 @@ let rec constructor_type env result_ty type_params = function
   | Ast.List (_, Ast.Symbol (_, _name) :: fields) -> (
       match field_types env type_params fields with
       | Error _ as error -> error
+      | Ok [] -> Ok result_ty
       | Ok field_tys -> Ok (Type_expr.TFn (field_tys, result_ty)))
   | bad ->
       Error
         [
           diagnostic ~span:(Ast.expr_span bad) "typecheck/define-type"
-            "define-type constructor must be a list headed by a symbol.";
+            "Tagged constructor must be a list headed by a symbol.";
         ]
 
 and field_types env type_params fields =
@@ -50,6 +51,7 @@ and field_types env type_params fields =
   loop [] fields
 
 let bindings name type_param_names constructors env =
+  let constructors = List.filter (fun e -> Surface.head e <> Some ":tag") constructors in
   let type_params =
     List.map (fun name -> (name, Type_expr.fresh_tyvar ())) type_param_names
   in
@@ -58,9 +60,10 @@ let bindings name type_param_names constructors env =
       (function _, Type_expr.TVar id -> Some id | _ -> None)
       type_params
   in
+  let env = List.fold_left (fun env (n,t) -> Type_env.bind n (Type_env.Forall ([],t,[],Type_env.Plain)) env) env type_params in
   let result_ty = result_type name type_params in
   let rec loop env = function
-    | [] -> Ok env
+    | [] -> Ok (List.filter (fun (n,_) -> not (List.mem_assoc n type_params)) env)
     | (Ast.List (_, Ast.Symbol (_, constructor_name) :: _) as constructor)
       :: rest -> (
         match constructor_type env result_ty type_params constructor with
@@ -70,17 +73,17 @@ let bindings name type_param_names constructors env =
               (Type_env.bind constructor_name
                  (Type_env.Forall
                     (type_param_ids, constructor_ty, [], Type_env.Plain))
-                 env)
+                 (Type_env.bind (name ^ "." ^ constructor_name) (Type_env.Forall (type_param_ids,constructor_ty,[],Type_env.Plain)) env))
               rest)
     | bad :: _ ->
         Error
           [
             diagnostic ~span:(Ast.expr_span bad) "typecheck/define-type"
-              "define-type constructor must be a list headed by a symbol.";
+              "Tagged constructor must be a list headed by a symbol.";
           ]
   in
   loop
     (Type_env.bind name
        (Type_env.Forall (type_param_ids, result_ty, [], Type_env.Plain))
-       env)
+       (Type_env.bind ("__type/" ^ name) (Type_env.Forall ([],Type_expr.TNamed name,[],Type_env.Plain)) env))
     constructors

@@ -16,6 +16,7 @@ let package ?(modules = []) ~engine_name ~engine_version ~session_id ~sources
             (Manifest.build_package ~engine_name ~engine_version ~session_id
                ~sources ~preludes ~source_ids ~declarations:package_declarations
                ~modules
+               ~diagnostics:(List.concat_map Packageable_declaration.diagnostics declarations)
                ~type_summary:
                  (Artifact_summary.package_type_summary package_declarations)))
 

@@ -1,124 +1,308 @@
 {
   "normalized": {
+    "backend": "canonical-ir",
     "artifacts": [
       {
+        "name": "ir.json",
+        "mediaType": "application/vnd.forma.ir+json",
         "content": {
+          "irVersion": "1",
+          "kind": "CanonicalIr",
+          "engine": {
+            "name": "forma-ocaml",
+            "version": "0.1.0"
+          },
+          "sessionId": "session:1",
+          "hashAlgorithm": "md5",
+          "sourceIds": [
+            "emit/canonical-schema",
+            "emit/canonical-data"
+          ],
+          "sourceHashes": {
+            "emit/canonical-schema": "3cd7f07f7c47c1d5f9f9da1e1026617f",
+            "emit/canonical-data": "3602def48f820855edbd114d8673d203"
+          },
+          "preludeIds": [
+            "preludes/compiler.lisp",
+            "preludes/kernel.lisp",
+            "preludes/ontology.lisp"
+          ],
+          "preludeHashes": {
+            "preludes/compiler.lisp": "aa886e59b648cc8be331edf6aca1f71b",
+            "preludes/kernel.lisp": "1125e905b12d8cb02955fc5b27132f73",
+            "preludes/ontology.lisp": "b98580fd22731b94b09dd8c032aa5cbd"
+          },
+          "modules": [
+            {
+              "moduleId": "emit/canonical-schema",
+              "sourcePath": "emit/canonical-schema",
+              "sourceHash": "3cd7f07f7c47c1d5f9f9da1e1026617f",
+              "usedPreludes": [],
+              "imports": [],
+              "exports": [],
+              "reExports": [],
+              "declarations": [
+                {
+                  "localName": "Department",
+                  "kind": "Entity",
+                  "canonicalName": "emit/canonical-schema/Department"
+                },
+                {
+                  "localName": "Employee",
+                  "kind": "Entity",
+                  "canonicalName": "emit/canonical-schema/Employee"
+                },
+                {
+                  "localName": "employee-directory",
+                  "kind": "Query",
+                  "canonicalName": "emit/canonical-schema/employee-directory"
+                }
+              ],
+              "diagnostics": [],
+              "publicExportHash": "d7b5cbd0e6567799a0e1a5ee942109f1c809f04ef0e2737234a2c107f0cefa91"
+            },
+            {
+              "moduleId": "emit/canonical-data",
+              "sourcePath": "emit/canonical-data",
+              "sourceHash": "3602def48f820855edbd114d8673d203",
+              "usedPreludes": [],
+              "imports": [],
+              "exports": [],
+              "reExports": [],
+              "declarations": [
+                {
+                  "localName": "department:platform",
+                  "kind": "Record",
+                  "canonicalName": "emit/canonical-data/department:platform"
+                },
+                {
+                  "localName": "employee:ada",
+                  "kind": "Record",
+                  "canonicalName": "emit/canonical-data/employee:ada"
+                }
+              ],
+              "diagnostics": [],
+              "publicExportHash": "d7b5cbd0e6567799a0e1a5ee942109f1c809f04ef0e2737234a2c107f0cefa91"
+            }
+          ],
           "declarationCount": 5,
+          "declarationsHash": "7faf545eec33aefca79e2bd18172ba0d",
+          "declarationProvenance": [
+            {
+              "declarationIndex": 0,
+              "sourceId": "emit/canonical-schema",
+              "formIndex": 0,
+              "span": {
+                "startOffset": 0,
+                "endOffset": 34,
+                "startLine": 1,
+                "startColumn": 1,
+                "endLine": 1,
+                "endColumn": 35
+              }
+            },
+            {
+              "declarationIndex": 1,
+              "sourceId": "emit/canonical-schema",
+              "formIndex": 1,
+              "span": {
+                "startOffset": 36,
+                "endOffset": 126,
+                "startLine": 3,
+                "startColumn": 1,
+                "endLine": 5,
+                "endColumn": 19
+              }
+            },
+            {
+              "declarationIndex": 2,
+              "sourceId": "emit/canonical-schema",
+              "formIndex": 2,
+              "span": {
+                "startOffset": 128,
+                "endOffset": 215,
+                "startLine": 7,
+                "startColumn": 1,
+                "endLine": 10,
+                "endColumn": 29
+              }
+            },
+            {
+              "declarationIndex": 3,
+              "sourceId": "emit/canonical-data",
+              "formIndex": 0,
+              "span": {
+                "startOffset": 0,
+                "endOffset": 58,
+                "startLine": 1,
+                "startColumn": 1,
+                "endLine": 1,
+                "endColumn": 59
+              }
+            },
+            {
+              "declarationIndex": 4,
+              "sourceId": "emit/canonical-data",
+              "formIndex": 1,
+              "span": {
+                "startOffset": 60,
+                "endOffset": 162,
+                "startLine": 3,
+                "startColumn": 1,
+                "endLine": 4,
+                "endColumn": 51
+              }
+            }
+          ],
+          "declarationTypeSummaries": [
+            {
+              "kind": "Entity",
+              "name": "Department",
+              "resultType": "SchemaDecl"
+            },
+            {
+              "kind": "Entity",
+              "name": "Employee",
+              "resultType": "SchemaDecl"
+            },
+            {
+              "kind": "Query",
+              "name": "employee-directory",
+              "resultType": "List<{:department Option<Id<Department>> :name String}>"
+            },
+            {
+              "kind": "Record",
+              "name": "department:platform",
+              "resultType": "RecordDef"
+            },
+            {
+              "kind": "Record",
+              "name": "employee:ada",
+              "resultType": "RecordDef"
+            }
+          ],
           "declarations": [
             {
+              "kind": "Entity",
+              "name": "Department",
               "fields": [
                 {
                   "name": "department/name",
-                  "required": "true",
-                  "type": "String"
+                  "type": "String",
+                  "required": true,
+                  "indexed": false
                 }
-              ],
-              "kind": "Entity",
-              "name": "Department"
+              ]
             },
             {
+              "kind": "Entity",
+              "name": "Employee",
               "fields": [
                 {
                   "name": "employee/name",
-                  "required": "true",
-                  "type": "String"
+                  "type": "String",
+                  "required": true,
+                  "indexed": false
                 },
                 {
                   "name": "employee/department",
-                  "required": null,
-                  "type": ["Ref", "Department"]
+                  "type": [
+                    "Id",
+                    "Department"
+                  ],
+                  "required": false,
+                  "indexed": false
                 },
                 {
                   "name": "employee/active",
-                  "required": null,
-                  "type": "Bool"
+                  "type": "Bool",
+                  "required": true,
+                  "indexed": false
                 }
-              ],
-              "kind": "Entity",
-              "name": "Employee"
+              ]
             },
             {
-              "from": "Employee",
               "kind": "Query",
               "name": "employee-directory",
-              "select": ["employee/name", "employee/department"],
-              "where": "employee/active"
+              "from": "Employee",
+              "where": {
+                "kind": "raw-expr",
+                "expr": "active"
+              },
+              "select": [
+                "employee/name",
+                "employee/department"
+              ]
             },
             {
+              "kind": "Record",
+              "name": "department:platform",
+              "id": "department:platform",
               "entity": "Department",
               "fields": {
                 "department/name": "Platform"
-              },
-              "id": "department:platform",
-              "kind": "Record"
+              }
             },
             {
+              "kind": "Record",
+              "name": "employee:ada",
+              "id": "employee:ada",
               "entity": "Employee",
               "fields": {
+                "employee/name": "Ada Lovelace",
                 "employee/department": "department:platform",
-                "employee/name": "Ada Lovelace"
-              },
-              "id": "employee:ada",
-              "kind": "Record"
+                "employee/active": true
+              }
             }
           ],
-          "modules": [
+          "derivedArtifacts": [
             {
+              "kind": "DerivedManifest",
+              "target": "manifest",
+              "sourceKind": "CanonicalIr",
+              "sourceIrVersion": "1",
+              "declarationCount": 5,
               "declarations": [
                 {
-                  "canonicalName": "emit/canonical-schema/Department",
                   "kind": "Entity",
-                  "localName": "Department"
+                  "name": "Department",
+                  "resultType": "SchemaDecl"
                 },
                 {
-                  "canonicalName": "emit/canonical-schema/Employee",
                   "kind": "Entity",
-                  "localName": "Employee"
+                  "name": "Employee",
+                  "resultType": "SchemaDecl"
                 },
                 {
-                  "canonicalName": "emit/canonical-schema/employee-directory",
                   "kind": "Query",
-                  "localName": "employee-directory"
-                }
-              ],
-              "diagnostics": [],
-              "exports": [],
-              "imports": [],
-              "moduleId": "emit/canonical-schema",
-              "publicExportHash": "d7b5cbd0e6567799a0e1a5ee942109f1c809f04ef0e2737234a2c107f0cefa91",
-              "reExports": [],
-              "sourcePath": "emit/canonical-schema",
-              "usedPreludes": []
-            },
-            {
-              "declarations": [
-                {
-                  "canonicalName": "emit/canonical-data/department:platform",
-                  "kind": "Record",
-                  "localName": "department:platform"
+                  "name": "employee-directory",
+                  "resultType": "List<{:department Option<Id<Department>> :name String}>"
                 },
                 {
-                  "canonicalName": "emit/canonical-data/employee:ada",
                   "kind": "Record",
-                  "localName": "employee:ada"
+                  "name": "department:platform",
+                  "resultType": "RecordDef"
+                },
+                {
+                  "kind": "Record",
+                  "name": "employee:ada",
+                  "resultType": "RecordDef"
                 }
-              ],
-              "diagnostics": [],
-              "exports": [],
-              "imports": [],
-              "moduleId": "emit/canonical-data",
-              "publicExportHash": "d7b5cbd0e6567799a0e1a5ee942109f1c809f04ef0e2737234a2c107f0cefa91",
-              "reExports": [],
-              "sourcePath": "emit/canonical-data",
-              "usedPreludes": []
+              ]
             }
-          ]
-        },
-        "mediaType": "application/vnd.forma.ir+json",
-        "name": "ir.json"
+          ],
+          "typeSummary": {
+            "declarationCount": 5,
+            "resultTypes": {
+              "List<{:department Option<Id<Department>> :name String}>": 1,
+              "RecordDef": 2,
+              "SchemaDecl": 2
+            }
+          },
+          "diagnostics": []
+        }
       }
-    ],
-    "backend": "canonical-ir"
+    ]
   },
   "success": true
 }

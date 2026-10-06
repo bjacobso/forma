@@ -32,7 +32,7 @@ type flow = {
 type work_input = {
   name : string;
   type_ : Ir_json.t option;
-  required : string option;
+  required : bool option;
 }
 
 type work_item = {
@@ -332,9 +332,11 @@ let work_input_of_json index = function
         | Some value -> Ok (Some value)
       in
       let required =
-        optional_entry_string
-          (Printf.sprintf "$.inputs[%d].required" index)
-          "Workflow work input" "required" entries
+        (match List.assoc_opt "required" entries with
+        | None | Some Ir_json.Null -> Ok None
+        | Some (Ir_json.Bool value) -> Ok (Some value)
+        | Some value -> Error [diagnostic (Printf.sprintf "$.inputs[%d].required" index)
+            ("Workflow work input required must be a boolean, got " ^ json_kind value ^ ".")])
       in
       match (name, type_, required) with
       | Ok name, Ok type_, Ok required -> Ok { name; type_; required }

@@ -10,6 +10,5 @@ roots.
   (:version "0.1.0")
   (:preludes core))
 
-(define-entity LegacyThing
-  (:field [legacy-thing/name String {:required true}]))
+(entity LegacyThing {:name String})
 ```

@@ -18,23 +18,23 @@ export class QueryFailed extends Schema.TaggedError<QueryFailed>()("QueryFailed"
 export class Pool extends Context.Service<
   Pool,
   {
-    readonly open: (name: string) => Effect.Effect<Connection>;
-    readonly close: (connection: Connection) => Effect.Effect<void>;
-    readonly query: (connection: Connection, sql: string) => Effect.Effect<ReadonlyArray<Row>, QueryFailed>;
+    readonly open: (arg0: string) => Effect.Effect<Connection>;
+    readonly close: (arg0: Connection) => Effect.Effect<void>;
+    readonly query: (arg0: Connection, arg1: string) => Effect.Effect<ReadonlyArray<Row>, QueryFailed>;
   }
 >()("Pool") {}
 
 export class Audit extends Context.Service<
   Audit,
   {
-    readonly record: (event: string) => Effect.Effect<void>;
+    readonly record: (arg0: string) => Effect.Effect<void>;
   }
 >()("Audit") {}
 
 export class ReportStore extends Context.Service<
   ReportStore,
   {
-    readonly save: (name: string, total: number) => Effect.Effect<void, QueryFailed>;
+    readonly save: (arg0: string, arg1: number) => Effect.Effect<void, QueryFailed>;
   }
 >()("ReportStore") {}
 

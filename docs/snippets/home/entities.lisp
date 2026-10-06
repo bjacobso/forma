@@ -1,12 +1,10 @@
-(define-entity Department
-  (:field [department/name String {:required true}]))
+(entity Department {:name String})
 
-(define-entity Employee
-  (:field [employee/name String {:required true}])
-  (:field [employee/department (Ref Department)])
-  (:field [employee/active Bool]))
+(entity Employee {:name String
+    :department (Option (Id Department))
+    :active Bool})
 
-(define-query employee-directory
-  (:from Employee)
-  (:where employee/active)
-  (:select [employee/name employee/department]))
+(query employee-directory
+  :from Employee
+  :where active
+  :select [name department])

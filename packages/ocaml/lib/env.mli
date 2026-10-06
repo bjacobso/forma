@@ -8,3 +8,5 @@ val bindings : t -> (string * Value.t) list
 val of_bindings : (string * Value.t) list -> t
 val length : t -> int
 val remove_names : string list -> t -> t
+
+val visible_bindings : t -> (string * Value.t) list

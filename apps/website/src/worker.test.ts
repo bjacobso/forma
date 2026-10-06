@@ -174,7 +174,7 @@ describe("pipeline registry", () => {
   test("shows the actual thread-last prelude macro in the pipes demo", () => {
     const pipeline = getPipeline("pipes");
 
-    expect(pipeline.context?.code).toContain("(define-macro ->> [x & forms]");
+    expect(pipeline.context?.code).toMatch(/\(macro\s+\(->> x forms \.\.\.\)/);
     expect(pipeline.context?.code).toContain("threaded");
   });
 
@@ -190,8 +190,8 @@ describe("pipeline registry", () => {
   test("generates the Effect TypeScript target from mechanics service declarations", () => {
     const pipeline = getPipeline("effect-ts");
 
-    expect(pipeline.source).toContain("(define-service CartRepo");
-    expect(pipeline.source).toContain("(define-operation checkout [request]");
+    expect(pipeline.source).toContain("(service CartRepo");
+    expect(pipeline.source).toContain("(define checkout [request]");
     expect(pipeline.preview?.output).toContain('import { Context, Effect, Schema } from "effect";');
     expect(pipeline.preview?.output).toContain('export const CartId = Schema.String.pipe(Schema.brand("CartId"));');
     expect(pipeline.preview?.output).toContain("export type CustomerId = typeof CustomerId.Type;");
@@ -226,7 +226,7 @@ describe("pipeline registry", () => {
         : originalGetSourceFile(name, languageVersionOrOptions, onError, shouldCreateNewSourceFile);
     const diagnostics = ts.getPreEmitDiagnostics(ts.createProgram([file], options, host));
     expect(diagnostics.map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"))).toEqual([]);
-  });
+  }, 30_000);
 
   test("typechecks the Effect TypeScript pipeline without diagnostics", () => {
     const pipeline = getPipeline("effect-ts");

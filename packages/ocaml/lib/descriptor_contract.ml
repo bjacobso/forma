@@ -303,12 +303,72 @@ let descriptor_infer_type env application =
 
 let descriptor_check_type env application = run_check_hook env application
 
-let descriptor_hooks env =
-  Descriptor_protocol.
-    {
-      bindings = bindings env;
-      typed_slots = check_typed_slots env;
-      result_type = result_type env;
-      infer = descriptor_infer_type env;
-      check = descriptor_check_type env;
-    }
+let load_unified_context env syntax =
+  (* Function helpers are closures: loading them does not run their bodies.
+     Source-local form hooks can therefore call the same helpers as loaded forms. *)
+  let metadata=List.filter (function
+    | Ast.List (_,Ast.Symbol (_,"define") :: Ast.Symbol _ :: Ast.List (_,Ast.Symbol (_,"fn") :: _) :: []) -> true
+    | Ast.List (_,Ast.Symbol (_, ("__sum-type" | "__record-type" | "__type-alias" | "__form-descriptor" | "__form-hook")) :: _) -> true
+    | Ast.List (_,Ast.Symbol (_,"define") :: Ast.Symbol (_,n) :: _) ->
+        List.exists (fun prefix -> String.starts_with ~prefix n) ["__type/";"__type-kind/";"__form/";"__form.ir/";"__form.types/";"__form.options/"]
+    | _ -> false) syntax in
+  match Eval.evaluate_program_with_env env metadata with
+  | Error _ as error -> error
+  | Ok (_,env) ->
+      let invalid_ir=List.find_map (function
+        | Ast.List (span,Ast.Symbol (_,"define") :: Ast.Symbol (_,n) :: _) when String.starts_with ~prefix:"__form.ir/" n ->
+            (match Env.lookup n env with Some (Value.VSymbol ir) when Env.lookup ("__type/" ^ ir) env=None -> Some (Eval_common.diagnostic ~span "surface/invalid-form" ("Unknown IR type " ^ ir)) | _ -> None)
+        | _ -> None) metadata in
+      match invalid_ir with Some diagnostic -> Error [diagnostic] | None ->
+      let declarations=List.filter (fun expr -> match Surface.head expr with Some form -> Env.lookup ("__form/" ^ form) env<>None | None -> false) syntax in
+      Eval.evaluate_program_with_env env declarations |> Result.map snd
+
+let unified_context env syntax =
+  match load_unified_context env syntax with Ok env -> env | Error _ -> env
+
+let unified_declaration env syntax (application : Descriptor_protocol.descriptor_application) =
+  if Env.lookup ("__form/" ^ application.form_name) env=None then None else
+  Option.map (fun expr -> expr,Eval.evaluate_program_with_env env [expr])
+    (List.find_opt (fun expr -> Ast.expr_span expr=application.span) syntax)
+
+let validate_unified_forms env syntax =
+  match load_unified_context env syntax with
+  | Error ds -> Error (List.map eval_diagnostic_to_type ds)
+  | Ok env ->
+  let rec loop = function
+    | [] -> Ok ()
+    | (Ast.List (_,Ast.Symbol (_,form) :: _) as expr) :: rest when Env.lookup ("__form/" ^ form) env<>None ->
+        (match Eval.evaluate_program_with_env env [expr] with
+         | Error ds -> Error (List.map eval_diagnostic_to_type ds)
+         | Ok (declaration,_) ->
+             (match Eval_meta.with_lookup_declaration (fun n->Env.lookup n env) (fun () -> Form_semantics.validate ~syntax:expr ~span:(Ast.expr_span expr) env declaration) with
+              | Error ds -> Error (List.map eval_diagnostic_to_type ds)
+              | Ok _ ->
+                  match Descriptor.construct_hook env form with
+                  | None -> loop rest
+                  | Some hook ->
+                      match Eval_meta.with_lookup_declaration (fun n->Env.lookup n env) (fun () -> Eval.apply_named env hook declaration) with
+                      | Ok _ -> loop rest
+                      | Error ds -> Error (List.map (fun (d:Eval_common.diagnostic) -> eval_diagnostic_to_type {d with span=Some (Ast.expr_span expr)}) ds)))
+    | _ :: rest -> loop rest in
+  loop syntax
+
+let descriptor_hooks ?(syntax=[]) env =
+  let env=unified_context env syntax in
+  let typed_slots application = match unified_declaration env syntax application with
+    | None -> check_typed_slots env application
+    | Some (_,Error ds) -> Error (List.map eval_diagnostic_to_type ds)
+    | Some (expr,Ok (declaration,_)) ->
+        Eval_meta.with_lookup_declaration (fun n->Env.lookup n env) (fun () ->
+          Form_semantics.validate ~syntax:expr ~span:application.span env declaration)
+        |> Result.map (fun _ -> ()) |> Result.map_error (List.map eval_diagnostic_to_type) in
+  let result_type application = match unified_declaration env syntax application with
+    | Some (_,Ok (declaration,_)) ->
+        (match Descriptor.result_type_hook env application.form_name with
+         | None -> result_type env application
+         | Some hook ->
+             (match Eval_meta.with_lookup_declaration (fun n->Env.lookup n env) (fun () -> Eval.apply_named env hook declaration) with
+              | Error ds -> Error (List.map eval_diagnostic_to_type ds)
+              | Ok value -> Form_semantics.resolve_type value |> Result.map Option.some |> Result.map_error (List.map eval_diagnostic_to_type)))
+    | _ -> result_type env application in
+  Descriptor_protocol.{ bindings=bindings env;typed_slots;result_type;infer=descriptor_infer_type env;check=descriptor_check_type env }

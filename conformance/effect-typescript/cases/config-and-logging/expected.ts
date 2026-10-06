@@ -12,7 +12,7 @@ export class Misconfigured extends Schema.TaggedError<Misconfigured>()("Misconfi
   reason: Schema.String,
 }) {}
 
-export const settings = (): Effect.Effect<ServerSettings, Config.ConfigError> =>
+export const settings: Effect.Effect<ServerSettings, Config.ConfigError> =
   Effect.gen(function* () {
     const host = yield* Config.string("HOST");
     const port = yield* Config.withDefault(Config.int("PORT"), 8080);
@@ -22,10 +22,10 @@ export const settings = (): Effect.Effect<ServerSettings, Config.ConfigError> =>
     return { host, port, debug, ratio };
   });
 
-export const validatedSettings = (): Effect.Effect<ServerSettings, Misconfigured> =>
+export const validatedSettings: Effect.Effect<ServerSettings, Misconfigured> =
   Effect.gen(function* () {
     const loaded = yield* Effect.catchTag(
-      settings(),
+      settings,
       "ConfigError",
       () => Effect.fail(new Misconfigured({ reason: "HOST is required" })),
     );
@@ -36,8 +36,8 @@ export const validatedSettings = (): Effect.Effect<ServerSettings, Misconfigured
     }
   });
 
-export const baseUrl = (): Effect.Effect<string, Misconfigured> =>
+export const baseUrl: Effect.Effect<string, Misconfigured> =
   Effect.gen(function* () {
-    const current = yield* validatedSettings();
+    const current = yield* validatedSettings;
     return `${current.debug ? "http" : "https"}://${current.host}:${current.port}`;
   });
