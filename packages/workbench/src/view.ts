@@ -1,4 +1,5 @@
 import type { Html } from "foldkit/html";
+import { CodeEditor } from "@foldworks/code-editor";
 import { ValueTree } from "@foldworks/ui";
 import { preview } from "./values.js";
 import { defineView } from "foldkit/submodel";
@@ -49,7 +50,7 @@ const stats = (model: Model): string => {
 
 export const view = defineView<Model, Message>((model, h): Html => {
   return h.div(
-    [h.Class("wb"), h.DataAttribute("workbench", model.id)],
+    [h.Class("wb"), h.DataAttribute("workbench", model.id), h.DataAttribute("source-dirty", String(model.sourceDirty))],
     [
       h.section(
         [h.Class("wb__window"), h.AriaLabel("Program")],
@@ -62,6 +63,7 @@ export const view = defineView<Model, Message>((model, h): Html => {
             ],
           ),
           h.nav([h.Class("wb__toolbar"), h.AriaLabel("Notation")], [
+            h.button([h.Type("button"), h.OnClick(Message.SetPane({ pane: model.pane === "outline" ? "source" : "outline" }))], [model.pane === "outline" ? "Source" : "Back to outline"]),
             ...(["Outline", "Brackets"] as const).map((notation) => h.button([h.Type("button"), h.AriaPressed(String(model.notation === notation)), h.OnClick(Message.SetNotation({ notation }))], [notation])),
           ]),
           ...(model.failure === null
@@ -70,7 +72,16 @@ export const view = defineView<Model, Message>((model, h): Html => {
           h.div(
             [h.Class("wb__page")],
             [
-              h.submodel({
+              ...(model.pane === "source" ? [CodeEditor.view({
+                model: model.source, label: "Forma source", showToolbar: false, showInspector: false,
+                toParentMessage: (message) => Message.GotSourceMessage({ message }),
+                hover: ({ offset, document }) => {
+                  if (model.analysis === null || document.text !== model.analysis.document.source) return null;
+                  const fact = hoverFact(model.analysis, offset);
+                  return fact === null ? null : { from: fact.from, to: fact.to, content: hoverContent(fact, h) };
+                },
+              }, h), ...(model.sourceError === null ? [] : [h.p([h.Role("alert"), h.Class("wb-error")], [model.sourceError])])]
+              : [h.submodel({
                 slotId: `${model.id}-outline`,
                 model: model.outline,
                 view: Outliner.view,
@@ -101,7 +112,7 @@ export const view = defineView<Model, Message>((model, h): Html => {
                   },
                 },
                 toParentMessage: outlineMessage,
-              }),
+              })]),
             ],
           ),
           ...(model.inspector === null ? [] : [h.aside([h.Class("wb__inspector"), h.AriaLabel("Inspector")], [

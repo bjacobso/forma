@@ -157,3 +157,5 @@
 .wb__toolbar button { border: 1px solid var(--border); border-radius: 5px; background: var(--background); color: var(--foreground); padding: 4px 9px; font: inherit; font-size: 12px; cursor: pointer; }
 .wb__toolbar button[aria-pressed="true"] { background: var(--accent); font-weight: 600; }
 .wb__hover p { margin: 6px 0; }
+
+.wb .native-editor { min-height: 600px; }

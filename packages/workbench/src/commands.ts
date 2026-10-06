@@ -4,6 +4,8 @@
 import { Duration, Effect, Schema as S } from "effect";
 import { Command } from "foldkit";
 
+import { CodeEditor } from "@foldworks/code-editor";
+import { readSource } from "./source.js";
 import { valueChildren } from "./values.js";
 import { analyzeProgram } from "./analysis.js";
 import { Document, OutlineRow } from "./document.js";
@@ -68,4 +70,14 @@ export const LoadValue = Command.define("LoadFormaValue", {
     if (result.diagnostics.length > 0) return Message.FailedProgram({ reason: result.diagnostics.map((d) => d.message).join("; ") });
     return Message.LoadedValue({ sessionId, id, nodes: valueChildren(result.value, id) });
   }).pipe(Effect.catch((reason) => Effect.succeed(Message.FailedProgram({ reason })))),
+});
+
+export const ParseSource = Command.define("ReadEditedFormaSource", {
+  args: { expected: CodeEditor.DocumentVersion, source: S.String, base: Document },
+  messages: [Message.ReadSource, Message.FailedProgram],
+  execute: ({ expected, source, base }) => Effect.sleep(ANALYSIS_DELAY).pipe(
+    Effect.andThen(readSource(source, base)),
+    Effect.map((result) => Message.ReadSource({ expected, ...result })),
+    Effect.catch((reason) => Effect.succeed(Message.FailedProgram({ reason }))),
+  ),
 });

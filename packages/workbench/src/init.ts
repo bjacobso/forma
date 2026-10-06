@@ -1,4 +1,5 @@
 import type { Update } from "foldkit";
+import { CodeEditor } from "@foldworks/code-editor";
 import { ValueTree } from "@foldworks/ui";
 import { Outliner } from "@foldworks/outliner";
 
@@ -23,6 +24,11 @@ export const init = (config: InitConfig): Update.Return<Model, Message, FormaHos
     outline: Outliner.init({ id: domIds(config.id).outline }),
     document: null,
     analysis: null,
+    pane: "outline",
+    source: CodeEditor.init({ id: `${config.id}-source`, uri: config.title, languageId: "lisp", text: config.source, suggestions: "host" }),
+    sourceDirty: false,
+    sourceError: null,
+    documents: [],
     notation: "Outline",
     inspector: null,
     valueTree: ValueTree.init({ id: `${config.id}-value` }),

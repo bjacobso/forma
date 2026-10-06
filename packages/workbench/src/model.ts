@@ -1,10 +1,11 @@
 import { Schema as S } from "effect";
+import { CodeEditor } from "@foldworks/code-editor";
 import { ValueTree } from "@foldworks/ui";
 import { ValueNodeSchema } from "./values.js";
 import { Outliner } from "@foldworks/outliner";
 
 import { Analysis } from "./analysis.js";
-import { Document } from "./document.js";
+import { Document, OutlineRow } from "./document.js";
 
 export const Model = S.Struct({
   /** Prefixes element ids and the ids of rows the outliner creates. Unique on the page. */
@@ -16,6 +17,11 @@ export const Model = S.Struct({
   document: S.NullOr(Document),
   /** The latest analysis. Rows show its facts while their text is the text it analyzed. */
   analysis: S.NullOr(Analysis),
+  pane: S.Literals(["outline", "source"]),
+  source: CodeEditor.Model,
+  sourceDirty: S.Boolean,
+  sourceError: S.NullOr(S.String),
+  documents: S.Array(S.Struct({ rows: S.Array(OutlineRow), document: Document })),
   notation: S.Literals(["Outline", "Brackets"]),
   inspector: S.NullOr(S.String),
   valueTree: ValueTree.Model,
