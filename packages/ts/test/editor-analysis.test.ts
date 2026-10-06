@@ -19,7 +19,7 @@ describe("editor analysis around type errors", () => {
     const source = [
       "(define rate 0.08)",
       '(define a (+ 1 "x"))',
-      "(define (total n) (* n (+ 1 rate)))",
+      "(define total [n] (* n (+ 1 rate)))",
       '(define b (+ 2 "y"))',
       "(total 100)",
     ].join("\n");
@@ -39,7 +39,7 @@ describe("editor analysis around type errors", () => {
   });
 
   it("resolves types recorded before inference learned them", () => {
-    const { result, typeOf } = analyze("(define (twice f x) (f (f x)))\n(twice (fn [n] (* n 2)) 4)");
+    const { result, typeOf } = analyze("(define twice [f x] (f (f x)))\n(twice (fn [n] (* n 2)) 4)");
     expect(result.success).toBe(true);
     expect(typeOf("(fn [n] (* n 2))")).toBe("Number -> Number");
     expect(typeOf("n")).toBe("Number");

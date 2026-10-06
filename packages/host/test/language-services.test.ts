@@ -33,7 +33,7 @@ describe("structural editor services on the TypeScript host", () => {
       },
       handler: { kind: "host-effect" as const, effect: "Directory.lookup" },
     };
-    const source = '(define (badge who) (Directory.lookup who))\n(define broken (+ 1 "x"))\n(badge "ada")';
+    const source = '(define badge [who] (Directory.lookup who))\n(define broken (+ 1 "x"))\n(badge "ada")';
     const typeOf = (result: { readonly typedSpans: readonly { readonly span: { readonly startOffset: number; readonly endOffset: number }; readonly display: string }[] }, text: string) =>
       result.typedSpans.find(
         (span) => source.slice(span.span.startOffset, span.span.endOffset) === text,
@@ -206,7 +206,7 @@ describe("structural editor services on the TypeScript host", () => {
     await host.loadSource({
       sessionId,
       sourceId: "lib.lisp",
-      source: "(define (greet name) name)",
+      source: "(define greet [name] name)",
       kind: "prelude",
     });
     const source = "(greet 1)\n(greet 2)";
