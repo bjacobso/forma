@@ -736,7 +736,10 @@ export function moduleCheckOptions(request: TypecheckRequest): import("../module
     ...(request.session ? {coreExpressions:request.session.coreExpressions()} : {})};
 }
 
-function typeInferOptions(request: TypecheckRequest): Type.InferOptions {
+/** How the type checker sees host builtins and names a type policy covers. */
+export function typeInferOptions(
+  request: Pick<TypecheckRequest, "hostBuiltins" | "typePolicy">,
+): Type.InferOptions {
   const builtinScheme = builtinSchemeFromRequest(request);
   const unboundSymbolType = unboundSymbolTypeFromPolicy(request.typePolicy);
   return {
@@ -746,7 +749,7 @@ function typeInferOptions(request: TypecheckRequest): Type.InferOptions {
 }
 
 function builtinSchemeFromRequest(
-  request: TypecheckRequest,
+  request: Pick<TypecheckRequest, "hostBuiltins" | "typePolicy">,
 ): Type.BuiltinSchemeProvider | undefined {
   if (!request.hostBuiltins && request.typePolicy?.defaultBuiltinScheme !== "none") {
     return undefined;

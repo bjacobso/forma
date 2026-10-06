@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   push:
     branches: [main]
   workflow_dispatch:
@@ -70,12 +71,15 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/install
       - run: pnpm check
       - run: pnpm --filter @formalang/website exec playwright install --with-deps chromium
       - run: pnpm test:visual
+      - run: pnpm --filter @formalang/workbench-app exec playwright install --with-deps chromium
+      - run: pnpm test:e2e:workbench
       - run: pnpm website:build
       - run: pnpm website:dry-run
+      - run: pnpm test:site
 
   ocaml:
     name: OCaml engine and parity suites
@@ -94,7 +98,7 @@ jobs:
       - uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: "5.2"
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/install
       - name: Cache OCaml dependencies
         uses: actions/cache@v4
         with:

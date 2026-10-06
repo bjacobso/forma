@@ -1,0 +1,55 @@
+name: Install Forma dependencies
+description: Validate the registry lockfile and link pinned, unpublished Foldworks primitives for workbench PRs.
+
+runs:
+  using: composite
+  steps:
+    - id: mode
+      name: Select dependency source
+      shell: bash
+      env:
+        PULL_REQUEST: ${{ github.event_name == 'pull_request' }}
+      run: |
+        node --input-type=module <<'NODE'
+        import { appendFileSync, existsSync, readFileSync } from 'node:fs';
+        const manifest = 'packages/workbench/package.json';
+        const unpublished = existsSync(manifest) && JSON.parse(readFileSync(manifest, 'utf8')).private === true;
+        const linked = process.env.PULL_REQUEST === 'true' && unpublished;
+        appendFileSync(process.env.GITHUB_OUTPUT, `linked=${linked}\n`);
+        NODE
+
+    - name: Install published dependencies
+      if: steps.mode.outputs.linked != 'true'
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Validate and install locked registry dependencies
+      if: steps.mode.outputs.linked == 'true'
+      shell: bash
+      run: node scripts/ci-install-registry.mjs
+
+    - name: Check out pinned Foldworks primitives
+      if: steps.mode.outputs.linked == 'true'
+      uses: actions/checkout@v4
+      with:
+        repository: bjacobso/foldworks
+        ref: 695695e48f39df3df4a588c319269eedafb3886b
+        path: .context/foldworks-ci
+        persist-credentials: false
+
+    - name: Build Foldworks primitives
+      if: steps.mode.outputs.linked == 'true'
+      shell: bash
+      working-directory: .context/foldworks-ci
+      run: |
+        pnpm install --frozen-lockfile
+        pnpm build:packages
+
+    - name: Link Foldworks primitives for this job
+      if: steps.mode.outputs.linked == 'true'
+      shell: bash
+      env:
+        FOLDWORKS_DIR: .context/foldworks-ci
+      run: |
+        node scripts/foldworks-link.mjs
+        pnpm install --no-frozen-lockfile

@@ -1,3 +1,4 @@
+import { copySourceTrace } from "../evaluator/source-trace.js";
 import type { SExpr } from "../reader/types.js";
 import { head, name, list, sym } from "./effect.js";
 
@@ -10,6 +11,10 @@ export function patternBindings(e: SExpr | undefined): readonly string[] {
 }
 /** Only lexical values use record access. Nominal members stay qualified symbols. */
 export function lowerMembers(e: SExpr, bound: ReadonlySet<string>): SExpr {
+  return copySourceTrace(e, lowerMembersInner(e, bound));
+}
+
+function lowerMembersInner(e: SExpr, bound: ReadonlySet<string>): SExpr {
   if (e._tag === "Sym") {
     const [root,...fields] = e.name.split(".");
     return fields.length && bound.has(root!) ? fields.reduce((r,f)=>list(e,[sym(e,"get"),r,sym(e,`:${f}`)]),sym(e,root!)) : e;
@@ -35,10 +40,10 @@ export function lowerMembers(e: SExpr, bound: ReadonlySet<string>): SExpr {
       if (name(p)===":let" && value._tag === "Vector") {
         const pure: SExpr[]=[];
         for (let j=0;j<value.items.length;j+=2) {const binder=value.items[j]!,rhs=value.items[j+1]; if (!rhs) {pure.push(binder);break;} pure.push(binder,lowerMembers(rhs,scope)); patternBindings(binder).forEach(n=>scope.add(n));}
-        bindings.push(p,{...value,items:pure});
+        bindings.push(p,copySourceTrace(value,{...value,items:pure}));
       } else {bindings.push(p,lowerMembers(value,scope)); patternBindings(p).forEach(n=>scope.add(n));}
     }
-    items = [e.items[0]!,{...e.items[1],items:bindings},...e.items.slice(2).map(v=>lowerMembers(v,scope))];
+    items = [e.items[0]!,copySourceTrace(e.items[1],{...e.items[1],items:bindings}),...e.items.slice(2).map(v=>lowerMembers(v,scope))];
   } else if (head(e)==="match" || head(e)==="catch") {
     items=e.items.map((v,i)=>i<2 ? lowerMembers(v,bound) : i%2===0 ? v : lowerMembers(v,new Set([...bound,...patternBindings(e.items[i-1])])));
   } else if (head(e)==="define" && e.items[2]?._tag==="Vector" && e.items.length>3) {

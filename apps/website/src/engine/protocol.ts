@@ -36,6 +36,7 @@ export interface RunResult {
 export type WorkerRequest = RunRequest;
 
 export type WorkerResponse =
+  | { readonly kind: "ready" }
   | { readonly kind: "result"; readonly result: RunResult }
   | {
       readonly kind: "fatal";

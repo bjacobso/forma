@@ -18,6 +18,27 @@ The documentation site can be started locally with `pnpm docs:dev`. Use
 samples in `docs/snippets/home/` are generated from real engine output; run
 `pnpm --filter @formalang/website snippets:home` after changing them.
 
+## Structural workbench
+
+The outline is the program: each row is a Forma form, with its observed value,
+inferred type, and diagnostics beside it. Inspect a collection, fill a descriptor
+slot, or switch to source while keeping the same document and node identities.
+
+![Forma workbench showing editable outline rows, live values and types, descriptor slot placeholders, and a collection inspector](docs/images/workbench/outline.png)
+
+The assistant proposes structural edits. Review the tree diff and its analyzed
+consequences before accepting one undoable change. Running a host capability
+pauses for approval before its implementation executes.
+
+![Assistant proposal showing a new do wrapper, the moved form, analyzed consequences, and Accept and Discard controls](docs/images/workbench/proposal.png)
+
+See the [screenshot tour](packages/workbench/README.md#screenshots),
+[workbench vision](docs/workbench-vision.md), and
+[local setup](packages/workbench/README.md#foldworks). The standalone app runs
+with `pnpm workbench` after linking the unpublished Foldworks primitives.
+The website also includes it at `/workbench/demo/`, linked from the homepage
+and playground examples, when built with `pnpm website:build`.
+
 ## Forma at a glance
 
 Functions, collections, and control flow use compact Lisp syntax:
@@ -301,6 +322,9 @@ pnpm dev
 ```
 
 The website and live compiler demos run at the Vite URL printed by `pnpm dev`.
+The separate structural IDE runs with `pnpm workbench`, after the local
+[Foldworks setup](packages/workbench/README.md#foldworks); its unpublished
+primitives currently require that development link.
 There is currently no published `forma` CLI. Pre-1.0 packages such as
 `@formalang/ts` are published to npm under the `@formalang` scope; otherwise
 work from this repository or build the OCaml engine locally.
@@ -324,6 +348,9 @@ mise run forma:ocaml:test
   the current architecture.
 - [Language services](docs/language-services.md) describes node identity,
   observation, edit scripts, and the outline codec for structural editors.
+- [The outline is the program](docs/workbench-vision.md) describes a
+  structural Forma IDE, and [Workbench](docs/workbench.md) designs it on those
+  services and Foldworks.
 - [Roadmap](docs/roadmap.md) tracks the path from the research implementation
   toward a stable language platform.
 - [Examples](examples/README.md) contains reviewable domain programs embedded
@@ -340,6 +367,8 @@ mise run forma:ocaml:test
 | `@formalang/editor` | CodeMirror and React editing components |
 | `@formalang/language-server` | Language Server Protocol implementation |
 | `@formalang/website` | Browser-based compiler explorer and project site |
+| `@formalang/workbench` | Foldkit structural IDE over the real Forma services |
+| `@formalang/workbench-app` | Separate Vite demo of the structural workbench |
 | `conformance/` | Cross-engine semantic and effect fixtures |
 
 ## Runtime configuration
@@ -362,10 +391,11 @@ and npm trusted-publisher setup are described in [Publishing](docs/publishing.md
 
 ## Website deployment
 
-The docs homepage and compiler explorer at `/playground` deploy to https://forma-lang.com with Alchemy
+The docs homepage, compiler explorer at `/playground`, and structural workbench
+at `/workbench/demo/` deploy to https://forma-lang.com with Alchemy
 and Cloudflare Workers. After CI succeeds for a push to `main`, the Deploy
 workflow builds and deploys that validated revision, then checks the home,
-about, and demo pages. Pull requests do not deploy.
+about, and demo pages, including the workbench. Pull requests do not deploy.
 
 Configure `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in the repository's
 GitHub `production` environment. The token needs Workers Scripts Edit, Account

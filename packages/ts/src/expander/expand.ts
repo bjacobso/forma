@@ -7,7 +7,12 @@ import { ArityError } from "../diagnostic/errors.js";
 import { evaluateCompileTimeExprs } from "../evaluator/eval.js";
 import { PRELUDE_SOURCE } from "./prelude.js";
 import { kValueToSExpr } from "../evaluator/quasiquote.js";
-import { copySourceTrace, markExpansion, tagExpandedExpr } from "../evaluator/source-trace.js";
+import {
+  copySourceTrace,
+  markExpansion,
+  sourceLocOf,
+  tagExpandedExpr,
+} from "../evaluator/source-trace.js";
 import type { BuiltinFn, KMacro, KValue } from "../evaluator/types.js";
 import { isKMacro, isKSExpr } from "../evaluator/types.js";
 
@@ -164,8 +169,9 @@ function expandExpr(
     if (head._tag === "Sym") {
       const binding = macroEnv.lookup(head.name);
       if (binding !== undefined && isKMacro(binding)) {
-        const result = evaluateMacro(binding, expr.items.slice(1), builtins, macroStepLimit);
-        tagExpandedExpr(result, { macroName: binding.name, loc: expr.loc });
+        const args = expr.items.slice(1);
+        const result = evaluateMacro(binding, args, builtins, macroStepLimit);
+        tagExpandedExpr(result, { macroName: binding.name, loc: sourceLocOf(expr) }, args);
         const expanded = markExpansion(expr, result);
         return expandExpr(
           normalizeCoreProgram([expanded])[0]!,

@@ -236,7 +236,10 @@ describe("inference annotations", () => {
     expect(before.typedSpans.filter(s => s.exprTag === "App").map(s => s.typeString)).toEqual(["Int"]);
     const failed = Effect.runSync(analyzeLsp('(+ 1 "bad")'));
     expect(failed.success).toBe(false);
-    expect(failed.typedSpans).toEqual([]);
+    expect(failed.errors).toHaveLength(1);
+    expect(failed.typedSpans.map(s => [s.code, s.typeString])).toEqual([
+      ["1", "Int"], ['"bad"', "String"],
+    ]);
     const after = Effect.runSync(analyzeLsp('"ok"'));
     expect(after.typedSpans.map(s => s.typeString)).toEqual(["String"]);
     expect(before.typedSpans).toHaveLength(6);
