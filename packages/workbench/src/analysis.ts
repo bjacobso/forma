@@ -441,6 +441,7 @@ export const analyzeProgram = (input: AnalyzeInput): Effect.Effect<Analysis, str
           const insertion = slot.insertion;
           const listed = insertion.text.startsWith("(") && insertion.text.endsWith(")");
           return { key: slot.name, label: slot.name, text: listed ? insertion.text.slice(1, -1) : insertion.text,
+            inline: !listed && insertion.text.trimStart().startsWith(":"),
             caret: Math.max(0, insertion.cursor - (listed ? 1 : 0)), doc: slot.doc };
         });
       }
