@@ -79,11 +79,19 @@ export const view = defineView<Model, Message>((model, h): Html => {
             h.button([h.Type("button"), h.OnClick(Message.GotOutlinerMessage({ message: Outliner.Message.ClickedUndo() }))], ["Undo"]),
             h.button([h.Type("button"), h.OnClick(Message.GotOutlinerMessage({ message: Outliner.Message.ClickedRedo() }))], ["Redo"]),
           ]),
+          h.section([h.Class("wb__assistant"), h.AriaLabel("Assistant")], [
+            h.div([h.Class("wb__assistant-heading")], [h.strong([], ["Assistant"]), h.span([], [model.assistantName])]),
+            h.div([h.Class("wb__toolbar")], [
+              h.input([h.Type("text"), h.AriaLabel("Assistant request"), h.Value(model.prompt), h.OnInput((value) => Message.SetPrompt({ value }))]),
+              h.button([h.Type("button"), h.Disabled(model.editBusy || model.sourceDirty || model.analysis?.revision !== model.outline.revision), h.OnClick(Message.AskAssistant())], [model.editBusy ? "Analyzing proposal…" : "Propose"]),
+            ]),
+            ...(model.assistantReply === null ? [] : [h.p([h.Role("status")], [model.assistantReply])]),
+          ]),
           ...(model.proposal === null ? [] : [h.div([h.Class("wb__review")], [ChangeSetPreview.view({
             label: model.proposal.title, basis: `${model.proposal.proposer} · revision ${model.proposal.basis}`,
             content: [TreeDiff.view({ label: "Structural diff", before: diffNodes(model.outline.items), after: diffNodes(model.proposal.rows) }, h)],
             consequences: model.proposal.consequences,
-            notices: ["Capabilities are not performed during preview."],
+            notices: ["Capabilities are not performed during preview.", ...(model.proposal.consequences.length === 0 ? ["No diagnostic, observed value, or capability changes."] : [])],
             actions: [h.button([h.Type("button"), h.OnClick(Message.AcceptProposal())], ["Accept"]), h.button([h.Type("button"), h.OnClick(Message.DiscardProposal())], ["Discard"])],
           }, h)])]),
           ...(model.run?.call == null ? [] : [h.div([h.Class("wb__review")], [Agent.PermissionRequest.view({

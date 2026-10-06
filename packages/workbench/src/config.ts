@@ -2,6 +2,7 @@
 // forms a program may use, the capabilities it may call, and the checks over
 // its declarations all come from here.
 
+import type { Proposer } from "./proposer.js";
 import type { Effect } from "effect";
 import type {
   Diagnostic,
@@ -42,6 +43,8 @@ export type DeclarationCheck = (
 ) => ReadonlyArray<Diagnostic>;
 
 export interface WorkbenchConfig {
+  /** Defaults to the deterministic local proposer. Models must be explicitly supplied. */
+  readonly proposer?: Proposer;
   /** Names the program, in diagnostics and the title bar. */
   readonly sourceId: string;
   /**

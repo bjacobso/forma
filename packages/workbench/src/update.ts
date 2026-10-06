@@ -1,4 +1,5 @@
 import { Option } from "effect";
+import { AskProposer } from "./propose-command.js";
 import { BeginRun, ResumeRun, AbortRun } from "./run-commands.js";
 import { selectedRoots } from "@foldworks/outliner";
 import { refactoring, type Proposal } from "./edits.js";
@@ -88,6 +89,15 @@ const applyProposal = (model: Model, proposal: Proposal): UpdateReturn => {
 
 const updateModel = (model: Model, message: Message): UpdateReturn =>
   Message.match<UpdateReturn>(message, {
+    SetPrompt: ({ value }) => ({ model: { ...model, prompt: value } }),
+    AskAssistant: () => {
+      if (model.analysis === null || model.analysis.revision !== model.outline.revision || model.editBusy || model.sourceDirty || model.prompt.trim().length === 0) return { model };
+      const token = model.editToken + 1;
+      return { model: { ...model, editToken: token, editBusy: true, assistantReply: null, failure: null, proposal: null },
+        commands: [...(model.proposal?.analysis.valueSession == null ? [] : [ReleaseAnalysis({ sessionId: model.proposal.analysis.valueSession })]), AskProposer({ basis: model.analysis, token, prompt: model.prompt, selectedIds: selectedRoots(model.outline), focusId: model.outline.focus?.id ?? null })],
+      };
+    },
+    AssistantReply: ({ token, proposer, text }) => ({ model: token !== model.editToken ? model : { ...model, editBusy: false, assistantName: proposer, assistantReply: text } }),
     Run: () => {
       if (model.analysis === null || model.analysis.revision !== model.outline.revision || model.runBusy || model.run?.status === "pending" || model.sourceDirty || model.analysis.diagnostics.some((diagnostic) => diagnostic.severity === "error") || model.analysis.brokenRows.length > 0) return { model };
       const token = model.runToken + 1;
@@ -120,13 +130,13 @@ const updateModel = (model: Model, message: Message): UpdateReturn =>
       try {
         const script = refactoring(action, targets, model.editArgument);
         const token = model.editToken + 1;
-        return { model: { ...model, editToken: token, editBusy: true, failure: null }, commands: [PrepareEdit({ basis: model.analysis, script, title: `${action[0]!.toUpperCase()}${action.slice(1)}`, proposer: "Refactoring", token, direct: true })] };
+        return { model: { ...model, editToken: token, editBusy: true, failure: null, proposal: null }, commands: [...(model.proposal?.analysis.valueSession == null ? [] : [ReleaseAnalysis({ sessionId: model.proposal.analysis.valueSession })]), PrepareEdit({ basis: model.analysis, script, title: `${action[0]!.toUpperCase()}${action.slice(1)}`, proposer: "Refactoring", token, direct: true })] };
       } catch (error) { return { model: { ...model, failure: String(error) } }; }
     },
     PreparedEdit: ({ proposal, direct }) => {
       if (proposal.token !== model.editToken || proposal.basis !== model.outline.revision || model.sourceDirty) return { model,
         commands: proposal.analysis.valueSession === null ? [] : [ReleaseAnalysis({ sessionId: proposal.analysis.valueSession })] };
-      return direct ? applyProposal(model, proposal) : { model: { ...model, proposal, editBusy: false } };
+      return direct ? applyProposal(model, proposal) : { model: { ...model, proposal, assistantName: proposal.proposer, editBusy: false } };
     },
     FailedEdit: ({ token, reason }) => ({ model: token !== model.editToken ? model : { ...model, failure: reason, editBusy: false } }),
     AcceptProposal: () => model.proposal === null || model.proposal.basis !== model.outline.revision || model.sourceDirty ? { model } : applyProposal(model, model.proposal),

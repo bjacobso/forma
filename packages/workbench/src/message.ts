@@ -11,6 +11,9 @@ import { Analysis } from "./analysis.js";
 import { Document, OutlineRow } from "./document.js";
 
 export const Message = defineMessageUnion({
+  SetPrompt: { value: S.String },
+  AskAssistant: {},
+  AssistantReply: { token: S.Number, proposer: S.String, text: S.String },
   Run: {},
   DecideCapability: { allow: S.Boolean },
   Ran: { outcome: RunOutcome },

@@ -1,5 +1,6 @@
 import { Effect, Schema as S } from "effect";
 import type { EditOp, EditScript } from "@formalang/host/types";
+import { preserveEditRows } from "./edit-rows.js";
 import { Analysis, analyzeProgram, type Analysis as AnalysisValue } from "./analysis.js";
 import { OutlineRow } from "./document.js";
 import { FormaHost, call, required } from "./host.js";
@@ -63,10 +64,11 @@ export const previewEdit = (basis: AnalysisValue, script: EditScript, title: str
   }));
   if (!result.ok) return yield* Effect.fail(result.errors.map((error) => error.message).join("; "));
   const rows = yield* call(() => read({ sourceId: config.sourceId, source: result.source, identity: result.identity }));
-  const analyzed = yield* analyzeProgram({ revision: basis.revision, rows: rows.items,
+  const projected = yield* preserveEditRows(result.source, result.identity, rows.items, new Set(basis.rows.map((row) => row.id)));
+  const analyzed = yield* analyzeProgram({ revision: basis.revision, rows: projected,
     base: { revision: basis.revision, source: result.source, identity: result.identity as AnalysisValue["document"]["identity"] },
   });
-  return { token, basis: basis.revision, title, proposer, script, rows: rows.items,
+  return { token, basis: basis.revision, title, proposer, script, rows: projected,
     analysis: analyzed, consequences: consequences(basis, analyzed) } satisfies Proposal;
 });
 

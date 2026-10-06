@@ -167,3 +167,10 @@
 
 .wb__requirements { color: var(--wb-warning); }
 .wb__run-result { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--border); margin: 0; color: var(--wb-success); }
+
+.wb__assistant { border-bottom: 1px solid var(--border); font-size: 13px; }
+.wb__assistant-heading { display: flex; justify-content: space-between; padding: 10px 14px 0; }
+.wb__assistant-heading span { color: var(--muted-foreground); font-size: 12px; }
+.wb__assistant .wb__toolbar { border: 0; }
+.wb__assistant input { width: min(500px, 75%); }
+.wb__assistant p { margin: 0; padding: 0 14px 10px; }
