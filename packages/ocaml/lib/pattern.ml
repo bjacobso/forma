@@ -15,10 +15,15 @@ let rec match_value ?(constructor_spec=(fun _ -> None)) pattern value =
       (match Value.lookup_map entries (Value.VKeyword (tag name)) with
        | _ when matches_constructor name entries ->
          let record = match constructor_spec name with Some (Value.VMap spec) -> Value.lookup_map spec (Value.VKeyword ":record") = Some (Value.VBool true) | _ -> false in
-         let payload = if record then [value] else match patterns with [] -> [] | [_] -> [Option.value ~default:Value.VNil (Value.lookup_map entries (Value.VKeyword ":value"))] | _ -> (match Value.lookup_map entries (Value.VKeyword ":values") with Some (Value.VVector values) -> values | _ -> []) in
+         let payload = if record then [value] else match patterns with [] -> [] | [_] -> [Option.value ~default:Value.VNil (Value.lookup_map entries (Value.VKeyword ":value"))] | _ -> (match Value.lookup_map entries (Value.VKeyword ":values") with Some (Value.VList values | Value.VVector values) -> values | _ -> []) in
          match_list ~constructor_spec patterns payload
        | _ -> None)
-  | Reader.Map (_, patterns), Value.VMap entries ->
+  | Reader.Map (_, patterns), ((Value.VMap entries | Value.VDictionary entries) as map) ->
+      (* Records accept keyword, string or symbol spellings of a field; a
+         dictionary key matches only an equal key. *)
+      let lookup key = match map with
+        | Value.VDictionary _ -> List.find_map (fun (k,v) -> if Value.equal k key then Some v else None) entries
+        | _ -> Value.lookup_map entries key in
       let as_pattern = List.find_map (function Reader.Keyword (_,":as"),p -> Some p | _ -> None) patterns in
       let patterns = List.filter (function Reader.Keyword (_,":as"),_ -> false | _ -> true) patterns in
       let patterns = List.concat_map (function
@@ -29,7 +34,7 @@ let rec match_value ?(constructor_spec=(fun _ -> None)) pattern value =
         | (key, pattern) :: rest ->
             (match Quote.quote [key] with
              | Error _ -> None
-             | Ok key -> (match Value.lookup_map entries key with
+             | Ok key -> (match lookup key with
                | None -> None
                | Some value -> match match_value ~constructor_spec pattern value with
                  | None -> None | Some next -> (match merge bindings next with Some bindings -> loop bindings rest | None -> None)))
@@ -47,15 +52,21 @@ let rec match_value ?(constructor_spec=(fun _ -> None)) pattern value =
       match_list ~constructor_spec patterns values
   | _ -> None
 
+(* A repeated binder must bind equal values (runtime equality, not
+   polymorphic comparison: closures can be cyclic). *)
 and merge left right =
-  if List.exists (fun (n,v) -> match List.assoc_opt n left with Some other -> other <> v | None -> false) right then None
+  if List.exists (fun (n,v) -> match List.assoc_opt n left with Some other -> not (Value.equal other v) | None -> false) right then None
   else Some (right @ left)
 
 and match_list ~constructor_spec patterns values =
     let rec loop bindings patterns values =
       match (patterns, values) with
       | [], [] -> Some bindings
-      | [Reader.Symbol (_, "&"); Reader.Symbol (_, name)], values -> merge bindings [name, Value.VVector values]
+      | [Reader.Symbol (_, "&"); rest], values -> (
+          (* Sequence values are lists; the rest is one too. *)
+          match match_value ~constructor_spec rest (Value.VList values) with
+          | Some next -> merge bindings next
+          | None -> None)
       | pattern :: rest_patterns, value :: rest_values -> (
           match match_value ~constructor_spec pattern value with
           | Some next_bindings ->

@@ -199,6 +199,7 @@ let load_runtime_input ~kind (session : Session.t) source_id source =
   match parsed with
   | Error diagnostics -> Error (List.map Reader.diagnostic_to_json diagnostics)
   | Ok exprs -> (
+      try
       Surface.validate_program exprs;
       let known_source_ids =
         if kind = "prelude" then []
@@ -291,7 +292,14 @@ let load_runtime_input ~kind (session : Session.t) source_id source =
                 | Ok () ->
                     stores_source ~env ~type_env
                       ~binding_names:(source_binding_names env exprs)
-                      ~timings ())))
+                      ~timings ()))
+      with exn -> (
+        (* Authoring errors found while lowering are located diagnostics;
+           the session is unchanged because nothing has been stored. *)
+        match Surface.diagnostic_of_exn exn with
+        | Some (span, code, message) ->
+            Error [ Eval.diagnostic_to_json { Eval.span = Some span; code; message } ]
+        | None -> raise exn))
 
 let store_runtime_input ~kind (session : Session.t) source_id source =
   match source with

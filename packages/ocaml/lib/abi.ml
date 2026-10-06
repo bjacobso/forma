@@ -170,19 +170,28 @@ let dispatch_request request =
             ~message:(Printf.sprintf "Unsupported operation %S." op);
         ]
 
+(* No exception escapes a request. Authoring errors raised while lowering
+   surface syntax are located diagnostics; anything else is an engine fault,
+   reported as such rather than as a user error. *)
+let internal_error_json op exn =
+  Response.eval_diagnostics_json
+    [ Eval.{ span = None; code = "internal/error";
+             message = Printf.sprintf "Internal error while handling %s: %s" op (Printexc.to_string exn) } ]
+
 let handle_request request =
   try
     (match request.source with
      | Some source when List.mem request.op ["evaluate";"eval";"expand";"typecheck";"typecheckCore";"typecheckCoreTyped";"emit";"elaborate"] ->
          (match Reader.parse_ast ~source_id:(Option.value ~default:"request" request.source_id) source with Ok exprs -> Surface.validate_program exprs | Error _ -> ())
      | _ -> ());
-    dispatch_request request with
-  | Surface.Invalid_form (span,message) -> Response.eval_diagnostics_json [Eval.{span=Some span;code="surface/invalid-form";message}]
-  | Invalid_argument message ->
-      let span=Option.map (fun source -> {Ast.source_id=Option.value ~default:"request" request.source_id;start_offset=0;end_offset=String.length source}) request.source in
-      Response.eval_diagnostics_json [Eval.{span;code="surface/invalid-form";message}]
+    dispatch_request request
+  with exn -> (
+    match Surface.diagnostic_of_exn exn with
+    | Some (span, code, message) -> Response.eval_diagnostics_json [Eval.{span=Some span;code;message}]
+    | None -> internal_error_json request.op exn)
 
 let handle_json json =
   match decode_request json with
   | Ok request -> handle_request request
   | Error diagnostics -> Response.error_json diagnostics
+  | exception exn -> internal_error_json "request" exn

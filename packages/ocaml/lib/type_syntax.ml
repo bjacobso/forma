@@ -49,6 +49,7 @@ let rec errors ?(metadata_keys=[":indexed";":doc";":default"]) expr =
           (match args with first :: sets -> (if h="Layer" then [] else errors ~metadata_keys first) @ List.concat_map (function Ast.Vector (_,items) when List.for_all (function Ast.Symbol _ -> true | _ -> false) items -> [] | _ -> ["Effect sets require vectors of type symbols"]) (if h="Layer" then args else sets) | [] -> [])
        else if h="Tagged" then
           let arms=match args with Ast.Keyword (_,":tag") :: _ :: arms -> arms | _ -> args in
+          (if arms=[] then ["Tagged requires at least one constructor"] else []) @
           List.concat_map (function Ast.Symbol (_,n) when String.length n > 0 && n.[0] >= 'A' && n.[0] <= 'Z' -> [] | Ast.List (_,[Ast.Symbol (_,n);payload]) when String.length n > 0 && n.[0] >= 'A' && n.[0] <= 'Z' -> errors ~metadata_keys payload | _ -> ["Tagged constructors require capitalized names and at most one payload type"]) arms
        else List.concat_map (errors ~metadata_keys) args)
   | _ -> ["Expected type syntax"])

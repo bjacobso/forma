@@ -1,4 +1,12 @@
-exception Invalid_form of Ast.span * string
+exception Invalid_form = Surface_error.Invalid_form
+let invalid = Surface_error.invalid
+
+(* Authoring errors raised by surface lowering, as located diagnostics. *)
+let diagnostic_of_exn = function
+  | Invalid_form (span, message) -> Some (span, "surface/invalid-form", message)
+  | Constructor_scope.Ambiguous (span, message) ->
+      Some (span, "surface/ambiguous-constructor", message)
+  | _ -> None
 
 let namespace_of n =
   let b = Buffer.create (String.length n) in
@@ -31,7 +39,7 @@ let rec type_expr ?(schema=false) ?brand e =
       let tag, arms = match arms with (Ast.Keyword (_, ":tag") | Ast.Symbol (_, ":tag")) :: tag :: rest -> (tag,rest) | _ -> (sym s "_tag",arms) in
       let arm e = let a = Ast.expr_span e in
         let ctor, payload = match e with Ast.List (_, c :: p :: _) -> (c,Some p) | _ -> (e,None) in
-        let payload = match payload with None -> call a "Struct" [] | Some (Ast.Map _ as p) -> type_expr ~schema:true p | Some p -> call a "Struct" [call a "field" [sym a "value"; type_expr ~schema:true p]] in
+        let payload = match payload with None -> call a "Struct" [] | Some (Ast.Map _ as p) -> type_expr ~schema:true p | Some p -> let ps = Ast.expr_span p in call ps "Struct" [call ps "field" [sym ps "value"; type_expr ~schema:true p]] in
         Ast.Vector (a,[ctor;payload]) in
       call s "TaggedUnion" (tag :: List.map arm arms)
   | Ast.List (_, Ast.Symbol (_, ("Effect" | "Stream" | "Fiber" | "Layer" as h)) :: args) ->
@@ -64,6 +72,15 @@ let module_names exprs = List.fold_left (fun acc -> function Ast.List (_,Ast.Sym
 let check_type ?(brand=false) t =
   let t = match t with Ast.List (_,Ast.Symbol (_,"Brand") :: [base]) when brand -> base | t -> t in
   match Type_syntax.errors ~metadata_keys:[":doc";":pattern";":title";":identifier"] t with [] -> () | errors -> raise (Invalid_form (Ast.expr_span t,String.concat "; " errors))
+(* A parametric header is (Name a b ...): a capitalised name and distinct
+   lowercase type parameters. *)
+let check_type_header = function
+  | Ast.List (_,Ast.Symbol (_,n) :: params) when is_upper n ->
+      ignore (List.fold_left (fun seen p -> match p with
+        | Ast.Symbol (_,v) when is_lower v && v <> "_" && not (List.mem v seen) -> v :: seen
+        | p -> invalid (Ast.expr_span p) "Type parameters must be distinct lowercase symbols.") [] params)
+  | Ast.List (_,h :: _) -> invalid (Ast.expr_span h) "A type name must be a capitalised symbol."
+  | h -> invalid (Ast.expr_span h) "A type name must be a capitalised symbol."
 let obsolete = ["def","define";"defn","define";"defmacro","macro";"lambda","fn";"let*","let"]
 let rec body ?(bound=Names.empty) e =
   let s = Ast.expr_span e in
@@ -102,15 +119,15 @@ let core e =
   | Ast.List (_,[(Ast.Symbol (_,":") | Ast.Keyword (_,":"));_;t]) -> check_type t; body e
   | Ast.List (_, Ast.Symbol (_,("class" | "error" as kind)) :: (Ast.Symbol _ as n) :: fields) ->
       let fields,options = match fields with (Ast.Map _ as fields) :: options -> fields,options | options -> Ast.Map (s,[]),options in
-      (match options with [] -> () | [Ast.Keyword (_,":status"); Ast.Int (_,status)] when kind="error" && status>=400 && status<=599 -> () | _ -> invalid_arg "error supports :status with an HTTP error status (400–599)");
+      (match options with [] -> () | [Ast.Keyword (_,":status"); Ast.Int (_,status)] when kind="error" && status>=400 && status<=599 -> () | _ -> invalid s "error supports :status with an HTTP error status (400–599)");
       check_type fields;
       call s "__record-type" [n;fields;sym s kind]
-  | Ast.List (_, [Ast.Symbol (_,"type"); n; Ast.List (_, Ast.Symbol (_,"Tagged") :: arms)]) ->
-      check_type (Ast.List (s,Ast.Symbol (s,"Tagged") :: arms));
-      let n = match n with Ast.Symbol _ -> Ast.List (Ast.expr_span n,[n]) | _ -> n in
+  | Ast.List (_, [Ast.Symbol (_,"type"); n; (Ast.List (_, Ast.Symbol (_,"Tagged") :: arms) as tagged)]) ->
+      check_type tagged;
+      let n = match n with Ast.Symbol _ -> Ast.List (Ast.expr_span n,[n]) | _ -> check_type_header n; n in
       let tag,arms = match arms with Ast.Keyword (_,":tag") :: t :: rest -> t,rest | _ -> sym s "_tag",arms in
       call s "__sum-type" (n :: List.map (function Ast.Symbol _ as a -> Ast.List (Ast.expr_span a,[a]) | a -> a) arms @ [Ast.List (s,[kw s ":tag";tag])])
-  | Ast.List (_, [Ast.Symbol (_,"type"); (Ast.List _ as n); t]) -> check_type t; call s "__type-alias" [n;t]
+  | Ast.List (_, [Ast.Symbol (_,"type"); (Ast.List _ as n); t]) -> check_type_header n; check_type t; call s "__type-alias" [n;t]
   | Ast.List (_, [Ast.Symbol (_,"type"); n; t]) -> check_type ~brand:true t; call s "__sum-type" [n;t]
   | Ast.List (_, Ast.Symbol (_,"define") :: n :: (Ast.Vector _ as p) :: bodies) when bodies <> [] -> call s "define" [n;call s "fn" (p :: List.map body bodies)]
   | Ast.List (_, Ast.Symbol (_,"macro") :: Ast.List (p,h :: args) :: bodies) ->
@@ -157,7 +174,7 @@ let rec binding_patterns e =
       let rec wrap = function
         | p :: value :: rest -> let rest = wrap rest in if plain p then call (Ast.expr_span p) "let" [Ast.Vector (s,[p;lower value]);rest] else call (Ast.expr_span p) "match" [lower value;p;rest]
         | [] -> (match bodies with [value] -> lower value | _ -> call s "do" (List.map lower bodies))
-        | _ -> invalid_arg "let expects pattern/value pairs" in wrap bindings
+        | _ -> invalid s "let expects pattern/value pairs" in wrap bindings
   | Ast.List (s,items) -> Ast.List (s,List.map lower items)
   | Ast.Vector (s,items) -> Ast.Vector (s,List.map lower items)
   | Ast.Map (s,pairs) -> Ast.Map (s,List.map (fun (k,v)->k,lower v) pairs)
@@ -231,12 +248,14 @@ let effect_result = function
   | Ast.List (_,Ast.Symbol (_,"->") :: args) -> (match List.rev args with result :: _ -> head result = Some "Effect" | [] -> false)
   | _ -> false
 
-let rec effect_body constructors e =
+(* Inside an ascription (: value T) constructors stay constructor calls, as
+   in the TypeScript engine: only the Option/Result aliases are renamed. *)
+let rec effect_body ?(ascribed=false) constructors e =
   let s = Ast.expr_span e in
-  let lower = effect_body constructors in
+  let lower = effect_body ~ascribed constructors in
   let alias = function "Some" | "Option.Some" -> "some" | "None" | "Option.None" -> "none" | "Ok" | "Result.Ok" -> "success" | "Err" | "Result.Err" -> "failure" | n -> n in
   match e with
-  | Ast.List (_,[(Ast.Symbol (_,":") | Ast.Keyword (_,":"));value;t]) -> call s ":" [lower value;type_expr t]
+  | Ast.List (_,[(Ast.Symbol (_,":") | Ast.Keyword (_,":"));value;t]) -> call s ":" [effect_body ~ascribed:true [] value;type_expr t]
   | Ast.List (_,Ast.Symbol (_,("quote" | "quasiquote" | ":")) :: _) -> e
   | Ast.Symbol (_,n) when List.mem_assoc n constructors && snd (List.assoc n constructors) = None -> let tag,_ = List.assoc n constructors in Ast.Map (s,[kw s (":" ^ tag),Ast.String (s,n)])
   | Ast.List (_,Ast.Symbol (_,n) :: args) when List.mem_assoc n constructors ->
@@ -251,7 +270,7 @@ let rec effect_body constructors e =
                   let temp = sym ps ("__pattern_" ^ string_of_int ps.Ast.start_offset) in
                   let bindings = List.concat_map (fun (k,v)->[v;call (Ast.expr_span v) "get" [temp;k]]) pairs in
                   Ast.List (ps,[ctor;temp]),call (Ast.expr_span rhs) "let" [Ast.Vector (ps,bindings);lower rhs]
-              | Ast.Symbol (ps,n) when is_lower n && n <> "_" && not (List.mem n ["some";"none";"success";"failure"]) -> call ps "_" [p],lower rhs
+              | Ast.Symbol (ps,n) when is_lower n && n <> "_" && not (List.mem n ["some";"none";"success";"failure"]) && not (ascribed && name h = Some "match") -> call ps "_" [p],lower rhs
               | _ -> p,lower rhs in
             p :: rhs :: arms_ rest
         | rest -> rest in
@@ -295,15 +314,40 @@ let effect_program exprs =
         call s "define" [n;call s "fn" (params :: List.map (fun e -> effect_body constructors (body ~bound:(Names.union bound (pattern_names params)) e)) bodies)]
     | Ast.List (_,Ast.Symbol (_,"layer") :: n :: args) ->
         (match args with [value] -> call s "__layer" [n;lower_body value] | _ ->
+          (* Only the defines the provided service declares are methods; the
+             other defines are private helpers bound around every method. *)
+          let definition_name = function Ast.List (_,Ast.Symbol (_,"define") :: id :: _) -> name id | _ -> None in
+          let definitions = List.filter (fun a -> definition_name a <> None) args in
+          let rec provided = function (Ast.Keyword (_,":provides") | Ast.Symbol (_,":provides")) :: service :: _ -> name service | _ :: rest -> provided rest | [] -> None in
+          let exported = Option.bind (provided args) (fun service -> List.find_map (function
+            | Ast.List (_,Ast.Symbol (_,"service") :: Ast.Symbol (_,m) :: members) when m = service ->
+                Some (List.filter_map (function Ast.List (_,_ :: member :: _) -> name member | _ -> None) members)
+            | _ -> None) exprs) in
+          let helpers = match exported with
+            | None -> []
+            | Some exported -> List.filter (fun d -> match definition_name d with Some n -> not (List.mem n exported) | None -> false) definitions in
+          let split_definition d = match d with
+            | Ast.List (_,_ :: id :: (Ast.Vector _ as params) :: bodies) when bodies <> [] -> id,Some params,bodies
+            | Ast.List (_,_ :: id :: bodies) -> id,None,bodies
+            | _ -> d,None,[] in
+          let helper_bindings = List.concat_map (fun d -> match split_definition d with
+            | id,Some params,bodies -> [id;Ast.List (Ast.expr_span d,sym (Ast.expr_span d) "fn" :: params :: bodies)]
+            | id,None,value :: _ -> [id;value]
+            | id,None,[] -> [id;Ast.Nil (Ast.expr_span d)]) helpers in
+          let helper_names = List.fold_left (fun acc d -> match definition_name d with Some n -> Names.add n acc | None -> acc) Names.empty helpers in
+          let methods = List.filter_map (fun d ->
+            if List.memq d helpers then None else
+            let ms = Ast.expr_span d in
+            let id,params,bodies = split_definition d in
+            let params = Option.value ~default:(Ast.Vector (ms,[])) params in
+            let bodies = if helper_bindings = [] then bodies else [call ms "let" [Ast.Vector (ms,helper_bindings);call ms "do" bodies]] in
+            let scope = Names.union bound (Names.union helper_names (pattern_names params)) in
+            Some (Ast.List (ms,id :: params :: List.map (fun e -> effect_body constructors (body ~bound:scope e)) bodies))) definitions in
           let rec sections = function
             | (Ast.Keyword _ as key) :: value :: rest -> call (Ast.expr_span key) (Option.get (name key)) [lower_body value] :: sections rest
-            | Ast.List (ms,Ast.Symbol (_,"define") :: id :: Ast.Vector (ps,params) :: bodies) :: rest ->
-                call ms ":methods" [Ast.List (ms,id :: Ast.Vector (ps,params) :: List.map (fun e -> effect_body constructors (body ~bound:(Names.union bound (pattern_names (Ast.Vector (ps,params)))) e)) bodies)] :: sections rest
-            | Ast.List (ms,[Ast.Symbol (_,"define");id;value]) :: rest -> call ms ":methods" [Ast.List (ms,[id;Ast.Vector (ms,[]);lower_body value])] :: sections rest
+            | d :: rest when definition_name d <> None -> sections rest
             | e :: rest -> lower_body e :: sections rest | [] -> [] in
-          let sections = sections args in
-          let methods,others = List.fold_left (fun (methods,others) -> function Ast.List (_,(Ast.Keyword (_,":methods") | Ast.Symbol (_,":methods")) :: ms) -> methods @ ms,others | section -> methods,others @ [section]) ([],[]) sections in
-          call s "__layer" (n :: others @ [call s ":methods" methods]))
+          call s "__layer" (n :: sections args @ [call s ":methods" methods]))
     | _ -> lower_body e in
   List.map convert exprs
 

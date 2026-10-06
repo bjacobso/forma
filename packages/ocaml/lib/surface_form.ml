@@ -1,5 +1,9 @@
 (* Typed form declarations derive the descriptor and executable projection together. *)
 open Surface
+(* Form grammar errors are reported at the authored form; stdlib exceptions
+   are not authoring errors and are never converted here. *)
+exception Form_error of string
+let invalid_arg message = raise (Form_error message)
 let text s value = Ast.String (s,value)
 let clause s n args = Ast.List (s,kw s (":" ^ n) :: args)
 let optional t = head t = Some "Option"
@@ -72,7 +76,7 @@ let parse expr = match expr with
   | Ast.List (_,Ast.Symbol (_,"form") :: _) -> invalid_arg "form requires (head pattern ...)"
   | _ -> None
 
-let program exprs = List.concat_map (fun expr -> try match parse expr with Some definitions -> definitions | None -> [expr] with Invalid_argument message -> raise (Surface.Invalid_form (Ast.expr_span expr,message))) exprs
+let program exprs = List.concat_map (fun expr -> try match parse expr with Some definitions -> definitions | None -> [expr] with Form_error message -> raise (Surface.Invalid_form (Ast.expr_span expr,message))) exprs
 
 let normalize_application_unchecked env form_name args =
   match Env.lookup ("__form/" ^ form_name) env with
@@ -94,9 +98,9 @@ let normalize_application_unchecked env form_name args =
       | _ -> invalid_arg "Form arguments do not match their pattern" in
     match_ [] pattern args
 
-let normalize_application env form_name args =
-  try normalize_application_unchecked env form_name args with Invalid_argument message ->
-    let span=match args with first :: _ -> Ast.expr_span first | [] -> {Ast.source_id="generated";start_offset=0;end_offset=0} in
+let normalize_application ?span env form_name args =
+  try normalize_application_unchecked env form_name args with Form_error message ->
+    let span=match span,args with Some span,_ -> span | None,first :: _ -> Ast.expr_span first | None,[] -> {Ast.source_id="generated";start_offset=0;end_offset=0} in
     raise (Surface.Invalid_form (span,message))
 
 (* Expected child IR determines the local namespace for an overloaded child head. *)

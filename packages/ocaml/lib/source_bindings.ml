@@ -35,7 +35,7 @@ let binding_name (env : Eval.env) = function
         Ast.Symbol (_, "define") :: Ast.List (_, Ast.Symbol (_, name) :: _) :: _
       ) ->
       Some name
-  | Ast.List (_, Ast.Symbol (_, op) :: args)
+  | Ast.List (application_span, Ast.Symbol (_, op) :: args)
     when Descriptor.is_form_descriptor env op ->
       if Env.lookup ("__form/" ^ op) env <> None then
         Option.bind (Descriptor.form env op) (fun form ->
@@ -45,7 +45,7 @@ let binding_name (env : Eval.env) = function
                 | Some (Value.VList (Value.VSymbol "Declares" :: _)) -> true | _ -> false)
             | _ -> false) form.identifiers)
             (fun id ->
-              let declaration=Descriptor.application_value op (Surface_form.normalize_application env op args) in
+              let declaration=Descriptor.application_value op (Surface_form.normalize_application ~span:application_span env op args) in
               match Eval_slot.identifier_value_with_lookup ~lookup:(fun n->Env.lookup n env) declaration (Value.VString id.name) with
               | Value.VSymbol n -> Some n | _ -> None))
       else Descriptor.declaration_binding_name args

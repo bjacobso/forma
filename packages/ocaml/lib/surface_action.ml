@@ -3,23 +3,26 @@ let name = function Ast.Symbol (_,n) | Ast.Keyword (_,n) -> Some n | _ -> None
 let head = function Ast.List (_,h :: _) -> name h | _ -> None
 let sym s n = Ast.Symbol (s,n)
 let call s n args = Ast.List (s,sym s n :: args)
+let invalid = Surface_error.invalid
 let program ?(known_actions=[]) exprs =
   let entity_fields = List.filter_map (function Ast.List (_,Ast.Symbol (_,"entity") :: Ast.Symbol (_,n) :: Ast.Map (_,fields) :: _) -> Some (n,fields) | _ -> None) exprs in
-  let signatures=List.filter_map (function
-    | Ast.List (_,[(Ast.Symbol (_,":") | Ast.Keyword (_,":"));Ast.Symbol (_,n);signature]) ->
+  let located=List.filter_map (function
+    | Ast.List (s,[(Ast.Symbol (_,":") | Ast.Keyword (_,":"));Ast.Symbol (_,n);signature]) ->
         let parts=match signature with Ast.List (_,Ast.Symbol (_,"->") :: parts) -> parts | t -> [t] in
-        (match List.rev parts with Ast.List (_, [Ast.Symbol (_,"Action");result]) :: inputs -> Some (n,(List.rev inputs,result)) | _ -> None)
+        (match List.rev parts with Ast.List (_, [Ast.Symbol (_,"Action");result]) :: inputs -> Some (s,(n,(List.rev inputs,result))) | _ -> None)
     | _ -> None) exprs in
-  List.iter (fun (n,_) ->
-    if List.length (List.filter (fun (id,_)->id=n) signatures)<>1 then invalid_arg ("Duplicate Action signature " ^ n);
-    if List.length (List.filter (function Ast.List (_,Ast.Symbol (_,"define") :: Ast.Symbol (_,id) :: _) -> id=n | _ -> false) exprs)<>1 then invalid_arg ("Action " ^ n ^ " requires exactly one definition")) signatures;
+  let signatures=List.map snd located in
+  List.iter (fun (s,(n,_)) ->
+    if List.length (List.filter (fun (id,_)->id=n) signatures)<>1 then invalid s ("Duplicate Action signature " ^ n);
+    let definitions=List.filter (function Ast.List (_,Ast.Symbol (_,"define") :: Ast.Symbol (_,id) :: _) -> id=n | _ -> false) exprs in
+    match definitions with [_] -> () | _ :: second :: _ -> invalid (Ast.expr_span second) ("Action " ^ n ^ " requires exactly one definition") | [] -> invalid s ("Action " ^ n ^ " requires exactly one definition")) located;
   List.map (function
     | Ast.List (s,[(Ast.Symbol (_,":") | Ast.Keyword (_,":"));Ast.Symbol (_,n);_]) when List.mem_assoc n signatures -> call s "do" []
     | Ast.List (s,Ast.Symbol (_,"define") :: (Ast.Symbol (_,n) as id) :: tail) as expr when List.mem_assoc n signatures ->
         let inputs,result=List.assoc n signatures in
         let params,bodies=match tail with Ast.Vector (_,params) :: bodies -> params,bodies | [Ast.List (_,Ast.Symbol (_,"fn") :: Ast.Vector (_,params) :: bodies)] -> params,bodies | bodies -> [],bodies in
-        if List.length params <> List.length inputs || List.length (List.sort_uniq String.compare (List.filter_map name params))<>List.length params || List.exists (function Ast.Symbol (_,n) when String.length n>0 && n.[0]>='a' && n.[0]<='z' -> false | _ -> true) params then invalid_arg ("Action " ^ n ^ " parameters must match its signature");
-        let body=match bodies with [] -> invalid_arg ("Action " ^ n ^ " requires a body") | [body] -> body | bodies -> call s "do" bodies in
+        if List.length params <> List.length inputs || List.length (List.sort_uniq String.compare (List.filter_map name params))<>List.length params || List.exists (function Ast.Symbol (_,n) when String.length n>0 && n.[0]>='a' && n.[0]<='z' -> false | _ -> true) params then invalid s ("Action " ^ n ^ " parameters must match its signature");
+        let body=match bodies with [] -> invalid s ("Action " ^ n ^ " requires a body") | [body] -> body | bodies -> call s "do" bodies in
         let rec value_type locals = function
           | Ast.Symbol (s,n) -> (match List.assoc_opt n locals with Some t -> Some t | None ->
               (match String.rindex_opt n '.' with None -> None | Some dot ->
@@ -47,7 +50,7 @@ let program ?(known_actions=[]) exprs =
           | Ast.List (s,Ast.Symbol (_,(("update!" | "retract!") as op)) :: id :: args) when List.length args=(if op="update!" then 1 else 0) ->
               (match value_type locals id with
                | Some (Ast.List (_,[Ast.Symbol (_,"Id");(Ast.Symbol _ as entity)])) -> call s op (entity :: List.map (normalize locals) (id :: args))
-               | _ -> invalid_arg (op ^ " requires an Id with a known entity type"))
+               | _ -> invalid (Ast.expr_span id) (op ^ " requires an Id with a known entity type"))
           | Ast.List (s,Ast.Symbol (_,(("do!" | "let") as op)) :: Ast.Vector (bs,bindings) :: bodies) ->
               let rec sequence locals = function
                 | [] -> [],locals
@@ -58,7 +61,7 @@ let program ?(known_actions=[]) exprs =
                     let locals=List.filter (fun (n,_)->not (List.mem n (pattern_names binding))) locals in
                     let locals=match binding,t with Ast.Symbol (_,n),Some t -> (n,t)::locals | _ -> locals in
                     let rest,locals=sequence locals rest in binding :: value :: rest,locals
-                | _ -> invalid_arg (op ^ " requires binding/value pairs") in
+                | _ -> invalid bs (op ^ " requires binding/value pairs") in
               let bindings,locals=sequence locals bindings in call s op (Ast.Vector (bs,bindings) :: List.map (normalize locals) bodies)
           | Ast.List (s,Ast.Symbol (_,"fn") :: (Ast.Vector (_,params) as p) :: bodies) ->
               let names=List.concat_map pattern_names params in
@@ -67,7 +70,7 @@ let program ?(known_actions=[]) exprs =
               let rec cases = function
                 | [] -> []
                 | pattern :: body :: rest -> let names=pattern_names pattern in pattern :: normalize (List.filter (fun (n,_)->not (List.mem n names)) locals) body :: cases rest
-                | _ -> invalid_arg "match requires pattern/body pairs" in
+                | _ -> invalid s "match requires pattern/body pairs" in
               call s "match" (normalize locals value :: cases arms)
           | Ast.List (s,items) -> Ast.List (s,List.map (normalize locals) items)
           | e -> e in
@@ -87,9 +90,9 @@ let program ?(known_actions=[]) exprs =
           | Ast.List (s,[Ast.Symbol (_,"task!");(Ast.Symbol (_,entity) as owner);fields]) ->
               remember entities entity owner; call s ("__action.task/" ^ entity) [check fields]
           | Ast.List (s,Ast.Symbol (_,(("create!" | "update!" | "retract!") as op)) :: entity :: args) ->
-              let owner=match entity with Ast.Symbol (_,n) -> n | _ -> invalid_arg (op ^ " requires an entity symbol") in
+              let owner=match entity with Ast.Symbol (_,n) -> n | _ -> invalid (Ast.expr_span entity) (op ^ " requires an entity symbol") in
               let arity=if op="update!" then 2 else 1 in
-              if List.length args<>arity then invalid_arg (op ^ " has " ^ string_of_int (arity+1) ^ " arguments");
+              if List.length args<>arity then invalid s (op ^ " has " ^ string_of_int (arity+1) ^ " arguments");
               if not (List.mem_assoc owner !entities) then entities := !entities @ [owner,entity];
               call s ("__action." ^ String.sub op 0 (String.length op-1) ^ "/" ^ owner) (List.map check args)
           | Ast.List (s,Ast.Symbol (_,"do!") :: Ast.Vector (bs,bindings) :: bodies) ->

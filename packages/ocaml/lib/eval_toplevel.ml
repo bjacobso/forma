@@ -266,9 +266,9 @@ let eval ctx env = function
       match ctx.eval_expr env value_expr with
       | Error _ as error -> error
       | Ok value -> Ok (value, env))
-  | Reader.List (_, Reader.Symbol (_, op) :: args)
+  | Reader.List (application_span, Reader.Symbol (_, op) :: args)
     when Descriptor.is_form_descriptor env op ->
-      let args = Surface_form.normalize_application env op args in
+      let args = Surface_form.normalize_application ~span:application_span env op args in
       let descriptor_form = Descriptor.form env op in
       let slot_validation =
         match descriptor_form with

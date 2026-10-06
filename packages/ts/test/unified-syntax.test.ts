@@ -120,8 +120,7 @@ describe("typed forms and domain surface", () => {
   });
 });
 
-import { migrateSource } from '../src/surface/migrate.js';
-describe('canonical semantics and structural migration', () => {
+describe('canonical semantics', () => {
   test('keywords, strings and quoted symbols remain distinct', async () => {
     expect(await evaluate('[ (= :x ":x") (= :x :x) (= (quote x) "x") (get {:x 1 ":x" 2} :x) (get {:x 1 ":x" 2} ":x")]')).toEqual([false,true,false,1,2]);
     expect(await Effect.runPromise(Type.inferSourceStr(':x'))).toBe(':x');
@@ -134,16 +133,7 @@ describe('canonical semantics and structural migration', () => {
   test('field access follows lexical scope', async () => {
     expect(await evaluate('(define record {:count 7}) (let [other record] other.count)')).toBe(7);
   });
-  test('migration is idempotent and preserves comments', () => {
-    const source='; module\n(define-schema User (Struct\n  ; name\n  (field name String)\n  (field nickname (Optional String))))\n; function\n(define greet (fn [user] ; body\n (get user :name)))\n';
-    const migrated=migrateSource(source);
-    expect(migrated.source).toContain('(type User');
-    expect(migrated.source).toContain(':nickname (Option String)');
-    for (const comment of ['; module','; name','; function','; body']) expect(migrated.source).toContain(comment);
-    expect(migrateSource(migrated.source).changed).toBe(false);
-    expect(migrated.script.ops.every(op=>op.op==='replace' && op.target.length>0)).toBe(true);
-  });
-  test('migration preserves complete reader macro bodies', () => {
+  test('reader spans cover complete reader macro bodies', () => {
     const source = '(define-macro not [x] `(if ~x false true))';
     const expression = Effect.runSync(Reader.parseToSExpr(source));
     expect(expression._tag).toBe('List');
@@ -151,9 +141,6 @@ describe('canonical semantics and structural migration', () => {
       const body = expression.items[3]!;
       expect(source.slice(body.loc.start, body.loc.end)).toBe('`(if ~x false true)');
     }
-    const migrated = migrateSource(source);
-    expect(migrated.source).toBe('(macro (not x) `(if ~x false true))');
-    expect(migrateSource(migrated.source).changed).toBe(false);
   });
   test('Effect tagged constructors support record patterns', () => {
     const code=generate('(type Discount (Tagged :tag kind (Percent {:rate Int}) NoDiscount)) (: apply (-> Discount Int)) (define apply [discount] (match discount (Percent {:rate r}) r NoDiscount 0)) (: discount Discount) (define discount (Percent {:rate 10}))');
@@ -686,17 +673,12 @@ describe("canonical boundary diagnostics", () => {
   test.each(["(def value 1)","(defn value [x] x)","(lambda [x] x)","(let* [x 1] x)","(: value Num) (define value 1)","(type Values (Array String))","(type Old [(name String)])"])("rejects obsolete grammar: %s", async source => {
     await expect(evaluate(source)).rejects.toThrow();
   });
-  test("HTTP migration preserves types, error status, methods and parameters", () => {
-    const source = `(define-schema Response (:kind struct) (:fields (field name String)) (:identifier "Response"))
-(define-error Missing (:fields (field id String)) (:status 404))
-(define-api-group users (:path-params (param id String))
-  (endpoint read (:method GET) (:path "/users/{id}") (:success Response) (:errors Missing)) )`;
-    const result = migrateSource(source);
-    expect(result.source).toContain('(type Response {:name String})');
-    expect(result.source).toContain('(error Missing {:id String} :status 404)');
-    expect(result.source).toContain(':method :get');
-    expect(migrateSource(result.source).changed).toBe(false);
-    expect(elaborateProgram(result.source,{prelude:bootstrapOntologyPreludes()}).diagnostics).toEqual([]);
+  test("canonical HTTP declarations elaborate with types, error status, methods and parameters", () => {
+    const source = `(type Response {:name String})
+(error Missing {:id String} :status 404)
+(api users :path-params {:id String}
+  (endpoint read :method :get :path "/users/{id}" :success Response :errors [Missing]))`;
+    expect(elaborateProgram(source,{prelude:bootstrapOntologyPreludes()}).diagnostics).toEqual([]);
   });
   test("check diagnostics preserve their codes and reject non-records", () => {
     const form = `(type CheckedIR {:kind "Checked"})
@@ -727,12 +709,8 @@ test("formatting retains comments beside nested values and quoted data", async (
 });
 
 
-test("migration extracts nested brands into canonical named declarations", () => {
-  const migrated=migrateSource('(define-schema Request (Struct (field id (Brand RequestId String))))');
-  expect(migrated.source).toContain('(type RequestId (Brand String))');
-  expect(migrated.source).toContain('(type Request {:id RequestId})');
-  expect(migrateSource(migrated.source).changed).toBe(false);
-  expect(generateEffectProgram(migrated.source).diagnostics).toEqual([]);
+test("named brands generate as Effect schemas", () => {
+  expect(generateEffectProgram('(type RequestId (Brand String)) (type Request {:id RequestId})').diagnostics).toEqual([]);
 });
 
 

@@ -200,11 +200,7 @@ Inside a query, fields from the `:from` entity enter the predicate scope. Predic
 must have type `Bool`. Seed and link records check their field names, values, and
 required fields against the referenced entity or relation.
 
-## Migration and structural tools
-
-`forma migrate <paths...>` rewrites previous authoring syntax to the unified
-surface. The rewrite preserves comments and uses syntax identities for edits.
-Running migration again leaves a migrated source unchanged.
+## Structural tools
 
 Forma's formatter and editor share the reader's lossless syntax tree. Diagnostics
 refer to author spans, including expressions produced through macros.

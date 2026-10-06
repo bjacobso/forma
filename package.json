@@ -32,8 +32,7 @@
     "website:build": "pnpm docs:build && turbo run build --filter=@formalang/website && node scripts/assemble-website.mjs",
     "website:plan": "alchemy plan --stage prod",
     "website:deploy": "alchemy deploy --stage prod",
-    "website:dry-run": "pnpm --filter @formalang/website exec wrangler deploy --dry-run",
-    "forma": "node packages/ts/bin/forma.mjs"
+    "website:dry-run": "pnpm --filter @formalang/website exec wrangler deploy --dry-run"
   },
   "devDependencies": {
     "@changesets/cli": "3.0.2",

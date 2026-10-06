@@ -248,7 +248,7 @@ let eval ctx env op args =
         | Ok (VDictionary entries), Ok key ->
             let found=List.find_opt (fun (k,_) -> Value.equal k key) entries in
             Ok (match found with None -> VMap [VKeyword ":_tag",VString "None"] | Some (_,v) -> VMap [VKeyword ":_tag",VString "Some";VKeyword ":value",v])
-        | Ok (VMap entries), Ok key when op="__map-get" || (op="get" && (match key with _ -> match List.nth_opt args 1 with Some (Ast.Keyword _ | Ast.String _ | Ast.Int _) | Some (Ast.List (_, [Ast.Symbol (_,"quote");(Ast.Keyword _ | Ast.String _ | Ast.Int _)])) -> false | _ -> true)) ->
+        | Ok (VMap entries), Ok key when op="__map-get" || (op="get" && List.length args=2 && (match key with _ -> match List.nth_opt args 1 with Some (Ast.Keyword _ | Ast.String _ | Ast.Int _) | Some (Ast.List (_, [Ast.Symbol (_,"quote");(Ast.Keyword _ | Ast.String _ | Ast.Int _)])) -> false | _ -> true)) ->
             Ok (match Value.lookup_map entries key with None -> VMap [VKeyword ":_tag",VString "None"] | Some value -> VMap [VKeyword ":_tag",VString "Some";VKeyword ":value",value])
         | Ok (VMap entries), Ok key -> (
             match

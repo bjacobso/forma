@@ -283,7 +283,7 @@ let eval ctx env op args =
           | _ -> false))
   | "map?" ->
       some
-        (eval_predicate env "map?" args (function VMap _ -> true | _ -> false))
+        (eval_predicate env "map?" args (function VMap _ | VDictionary _ -> true | _ -> false))
   | "fn?" ->
       some
         (eval_predicate env "fn?" args (function

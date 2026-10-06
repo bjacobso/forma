@@ -69,16 +69,22 @@ let rec to_json = function
 
 let truthy = function VNil | VBool false -> false | _ -> true
 
+(* Runtime equality, shared with the TypeScript engine: numbers compare by
+   value (1 equals 1.0), lists and vectors are one sequence representation,
+   and a function equals only itself. Never use polymorphic equality on
+   values: closures may hold cyclic environments. *)
 let rec equal left right =
   match (left, right) with
   | VNil, VNil -> true
   | VBool left, VBool right -> left = right
   | VInt left, VInt right -> left = right
   | VFloat left, VFloat right -> left = right
+  | VInt left, VFloat right | VFloat right, VInt left -> Float.of_int left = right
+  | (VClosure _ | VMacro _), (VClosure _ | VMacro _) -> left == right
   | VString left, VString right -> left = right
   | VSymbol left, VSymbol right -> left = right
   | VKeyword left, VKeyword right -> left = right
-  | VList left, VList right | VVector left, VVector right ->
+  | (VList left | VVector left), (VList right | VVector right) ->
       List.length left = List.length right && List.for_all2 equal left right
   | (VMap left | VDictionary left), (VMap right | VDictionary right) ->
       List.length left = List.length right

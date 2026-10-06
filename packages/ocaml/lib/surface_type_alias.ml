@@ -13,13 +13,17 @@ let rec resolve ?(seen=[]) lookup t =
   | None -> t
   | Some definition ->
       let owner=Option.get owner in
-      if List.mem owner seen then invalid_arg ("Cyclic type alias " ^ owner);
+      let span=Ast.expr_span t in
+      if List.mem owner seen then Surface_error.invalid span ("Cyclic type alias " ^ owner);
       let seen=owner :: seen in
       (match definition with
        | Ast.List (_, [Ast.Symbol (_,"__type-function");Ast.Vector (_,params);body]) ->
            let args=match t with Ast.List (_, _ :: args) -> args | _ -> [] in
-           if List.length args<>List.length params then invalid_arg ("Wrong number of type arguments for " ^ owner);
-           let bindings=List.map2 (fun param arg -> Option.get (name param),arg) params args in
+           if List.length args<>List.length params then
+             Surface_error.invalid span (Printf.sprintf "Type %s expects %d type argument%s, found %d" owner (List.length params) (if List.length params=1 then "" else "s") (List.length args));
+           let bindings=List.map2 (fun param arg -> match name param with
+             | Some n -> n,arg
+             | None -> Surface_error.invalid (Ast.expr_span param) "Type parameters must be distinct lowercase symbols.") params args in
            resolve ~seen lookup (substitute bindings body)
        | _ when Option.is_some (name t) -> resolve ~seen lookup definition
        | _ -> t)

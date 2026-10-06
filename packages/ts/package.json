@@ -123,15 +123,10 @@
     "./ontology": {
       "types": "./dist/Ontology.d.mts",
       "import": "./dist/Ontology.mjs"
-    },
-    "./migrate": {
-      "types": "./dist/Migrate.d.mts",
-      "import": "./dist/Migrate.mjs"
     }
   },
   "files": [
-    "dist",
-    "bin"
+    "dist"
   ],
   "scripts": {
     "build": "tsdown --config ../../tsdown.config.ts",
@@ -149,8 +144,5 @@
     "fast-check": "^4.9.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.8"
-  },
-  "bin": {
-    "forma": "./bin/forma.mjs"
   }
 }

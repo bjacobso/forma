@@ -216,5 +216,7 @@ let expand_program ~eval_body env exprs =
   let known_actions=Env.visible_bindings env |> List.filter_map (fun (n,value) ->
     if Descriptor.declaration_form value=Some "__action" then Some n else None) in
   try loop env [] (Surface.core_program (Surface_protocol.program (Surface_form.program (Surface_action.program ~known_actions exprs)))) with
-  | Constructor_scope.Ambiguous (span,message) -> Error [diagnostic ~span "surface/ambiguous-constructor" message]
-  | Invalid_argument message -> Error [diagnostic "surface/invalid-form" message]
+  | exn -> (
+      match Surface.diagnostic_of_exn exn with
+      | Some (span, code, message) -> Error [diagnostic ~span code message]
+      | None -> raise exn)
