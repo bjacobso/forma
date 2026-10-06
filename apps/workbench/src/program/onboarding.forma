@@ -3,14 +3,14 @@
 ; Pricing
 (define tax-rate 0.0825)
 
-(define (with-tax amount)
+(define with-tax [amount]
   ; The amount plus sales tax, rounded to cents.
   (let [tax (* amount tax-rate)]
     (/ (round (* 100 (+ amount tax))) 100)))
 
 (map with-tax [40 250 1200])
 
-(define (badge years)
+(define badge [years]
   (cond
     (>= years 5) "gold"
     (>= years 2) "silver"
@@ -19,39 +19,26 @@
 (map badge [1 3 7])
 
 ; Steps name the system they call and the data they read and write.
-(define-step verify-identity
-  (:system "Persona")
-  (:writes [:identity]))
+(step verify-identity :system "Persona" :writes [:identity])
 
-(define-step background-check
-  (:system "Checkr")
-  (:reads [:identity])
-  (:writes [:check]))
+(step background-check :system "Checkr" :reads [:identity] :writes [:check])
 
-(define-step collect-i9
-  (:system "Docs")
-  (:reads [:identity])
-  (:writes [:i9]))
+(step collect-i9 :system "Docs" :reads [:identity] :writes [:i9])
 
-(define-step create-payroll-record
-  (:system "Gusto")
-  (:writes [:payroll]))
+(step create-payroll-record :system "Gusto" :writes [:payroll])
 
-(define-step activate
-  (:system "Okta")
-  (:reads [:check :i9 :payroll]))
+(step activate :system "Okta" :reads [:check :i9 :payroll])
 
-(define-workflow onboarding
-  (:steps
-    background-check
-    collect-i9
-    create-payroll-record
-    activate))
+(workflow onboarding
+  (use background-check)
+  (use collect-i9)
+  (use create-payroll-record)
+  (use activate))
 
 ; Capabilities run only after you allow them.
 (define hire (Directory.lookup "ada"))
 
-(define (welcome person)
+(define welcome [person]
   (Chat.post "#people" (str "Welcome, " (get person :name) "!")))
 
 (welcome hire)

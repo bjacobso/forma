@@ -45,7 +45,7 @@ export interface WorkbenchConfig {
   /** Names the program, in diagnostics and the title bar. */
   readonly sourceId: string;
   /**
-   * Domain preludes: `define-form` descriptors and their meta hooks. They
+   * Domain preludes: `form` descriptors and their meta hooks. They
    * are bootstrapped on Forma's compiler prelude for elaboration and loaded
    * into the session for slots and the symbol index.
    */

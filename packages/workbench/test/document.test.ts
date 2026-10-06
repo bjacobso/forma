@@ -5,7 +5,7 @@ import { identifySyntax, outlineToSource, sourceToOutline } from "@formalang/ts/
 import { fromRows, sameRows, toRows } from "../src/document.js";
 import { lexicalTokens } from "../src/decorations.js";
 
-const source = "(define (total x)\n  ; doubles\n  (* x 2))\n(total 21)\n";
+const source = "(define total [x]\n  ; doubles\n  (* x 2))\n(total 21)\n";
 
 describe("outline rows", () => {
   it("round-trips through the outliner with the codec's ids", () => {
