@@ -1,6 +1,7 @@
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
+import { indexSymbols } from "../src/Editor.js";
 import { analyzeLsp } from "../src/LSP.js";
 
 const analyze = (source: string) => {
@@ -39,9 +40,27 @@ describe("editor analysis around type errors", () => {
   });
 
   it("resolves types recorded before inference learned them", () => {
-    const { result, typeOf } = analyze("(define twice [f x] (f (f x)))\n(twice (fn [n] (* n 2)) 4)");
+    const { result, typeOf } = analyze(
+      "(define twice [f x] (f (f x)))\n(twice (fn [n] (* n 2)) 4)",
+    );
     expect(result.success).toBe(true);
     expect(typeOf("(fn [n] (* n 2))")).toBe("Number -> Number");
     expect(typeOf("n")).toBe("Number");
   });
+});
+
+it("keeps defining forms and parameter scopes through function and member lowering", () => {
+  const source = "(define total [order] (let [rate 0.08] (* order.amount rate)))";
+  const index = indexSymbols([{ sourceId: "source", source }]);
+  const identity = index.identities["source"]!;
+  const root = identity.nodes.find((node) => node.parent === null)!;
+  const total = index.definitions.find((definition) => definition.name === "total")!;
+  const order = index.definitions.find((definition) => definition.name === "order")!;
+  const rate = index.definitions.find((definition) => definition.name === "rate")!;
+  expect(total.formNodeId).toBe(root.id);
+  expect(order.scopeNodeId).toBe(root.id);
+  const scope = identity.nodes.find((node) => node.id === rate.scopeNodeId)!;
+  expect(source.slice(scope.span.start, scope.span.end)).toBe(
+    "(let [rate 0.08] (* order.amount rate))",
+  );
 });
