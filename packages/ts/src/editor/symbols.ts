@@ -431,14 +431,21 @@ class SymbolWalker {
           undefined,
         );
         for (const constructor of items.slice(2)) {
-          this.define(
+          if (isKeywordHeaded(constructor)) continue;
+          const definition = this.define(
             constructor._tag === "List" ? constructor.items[0] : constructor,
             "constructor",
             node,
             name,
             undefined,
           );
+          const typeName = symName(items[1]?._tag === "List" ? items[1].items[0] : items[1]);
+          if (definition && typeName) this.#globals.set(`${typeName}.${definition.name}`, [definition]);
         }
+        return;
+      case "__record-type":
+      case "__type-alias":
+        this.define(items[1]?._tag === "List" ? items[1].items[0] : items[1], "type", node, name, undefined);
         return;
       case "__typeclass":
         this.define(
@@ -692,11 +699,25 @@ class SymbolWalker {
         if (items[1]) this.reference(items[1], scope);
         this.walkType(items.slice(2), scope);
         return;
-      case "__sum-type":
+      case "__sum-type": {
+        const types = new Scope(scope);
+        if (items[1]?._tag === "List") for (const param of items[1].items.slice(1)) {
+          if (param._tag === "Sym") types.bind(param.name, null);
+        }
         for (const constructor of items.slice(2)) {
-          if (constructor._tag === "List") this.walkType(constructor.items.slice(1), scope);
+          if (constructor._tag === "List" && !isKeywordHeaded(constructor)) this.walkType(constructor.items.slice(1), types);
         }
         return;
+      }
+      case "__record-type":
+      case "__type-alias": {
+        const types = new Scope(scope);
+        if (items[1]?._tag === "List") for (const param of items[1].items.slice(1)) {
+          if (param._tag === "Sym") types.bind(param.name, null);
+        }
+        this.walkType(items.slice(2), types);
+        return;
+      }
       case "__typeclass":
         for (const method of items.slice(2)) {
           if (method._tag === "List") this.walkType(method.items.slice(1), scope);
@@ -767,24 +788,33 @@ class SymbolWalker {
     scope: Scope,
     document: IndexedDocument,
     form: AuthorNode | null,
+    depth = 1,
   ): void {
     if (!expr) return;
     const head = headName(expr);
     if ((head === "unquote" || head === "unquote-splicing") && expr._tag === "List") {
-      if (expr.items[1]) this.walk(expr.items[1], scope, document, form);
+      if (depth === 1) {
+        if (expr.items[1]) this.walk(expr.items[1], scope, document, form);
+      } else this.walkTemplate(expr.items[1], scope, document, form, depth - 1);
+      return;
+    }
+    if (head === "quasiquote" && expr._tag === "List") {
+      this.walkTemplate(expr.items[1], scope, document, form, depth + 1);
       return;
     }
     if (expr._tag === "Sym") {
-      this.reference(expr, scope, true);
+      if (this.#inMacroDefinition) this.reference(expr, scope, true);
       return;
     }
-    for (const child of children(expr)) this.walkTemplate(child, scope, document, form);
+    for (const child of children(expr)) this.walkTemplate(child, scope, document, form, depth);
   }
 
   /** Type expressions refer only to global names; everything else in them is structure. */
   walkType(items: readonly SExpr[], scope: Scope): void {
     for (const item of items) {
-      if (item._tag === "Sym") this.reference(item, scope, true);
+      if (item._tag === "Sym") {
+        if (scope.lookup(item.name) !== null) this.reference(item, scope, true);
+      }
       else for (const child of children(item)) this.walkType([child], scope);
     }
   }

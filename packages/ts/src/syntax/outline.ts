@@ -248,6 +248,13 @@ interface BaseLayout {
   readonly columns: ReadonlyMap<string, number>;
 }
 
+function sameItems(left: readonly OutlineItem[], right: readonly OutlineItem[]): boolean {
+  return left.length === right.length && left.every((item, position) => {
+    const other = right[position]!;
+    return item.id === other.id && item.text === other.text && sameItems(item.children, other.children);
+  });
+}
+
 /** Print an outline as source, one row per line unless a base layout says otherwise. */
 export function outlineToSource(
   items: readonly OutlineItem[],
@@ -255,6 +262,16 @@ export function outlineToSource(
 ): OutlineToSourceResult {
   const base = options.base ? baseLayout(options.base.source, options.base.identity) : undefined;
   const commentBroken = options.brokenRows === "comment";
+  // An unchanged outline is a lossless view, including incomplete input and
+  // whitespace inside comments or unterminated strings.
+  if (base && !commentBroken && sameItems(items, base.reading.items)) {
+    return {
+      source: base.source,
+      identity: options.base!.identity,
+      rows: [...base.reading.rows.keys()].map((id) => ({ id, span: base.index.node(id)!.span })),
+      errors: sourceToOutline(base.source, { identity: options.base!.identity }).errors,
+    };
+  }
   let out = "";
   const spans: OutlineRowSpan[] = [];
   const errors: OutlineRowError[] = [];
@@ -293,7 +310,7 @@ export function outlineToSource(
     const own = column();
     const start = out.length;
     out += indentContinuation(commented, own);
-    spans.push({ id: item.id, span: { start, end: start + firstLine(commented).trimEnd().length } });
+    spans.push({ id: item.id, span: { start, end: start + firstLine(commented).length } });
     last = { kind: "row", id: item.id };
     trailingComment = true;
     for (const child of item.children) {
@@ -302,7 +319,9 @@ export function outlineToSource(
   };
 
   const printRow = (item: OutlineItem, parent: string | null, childColumn: number, parentColumn: number): void => {
-    const text = item.text.trim();
+    const unpadded = item.text.trimStart();
+    const end = identifySyntax(unpadded).nodes.filter((node) => node.parent === null).at(-1)?.span.end ?? 0;
+    const text = unpadded.slice(0, end);
     if (text.startsWith(";")) {
       printComment(item, parent, childColumn, parentColumn, false);
       return;
@@ -338,7 +357,11 @@ export function outlineToSource(
       trailingComment = elements.at(-1)?.kind === "Comment" && code < 2;
       return;
     }
-    out += `${marker ? marker[1] : ""}(${layoutText(item.id, text, header, rowColumn)}`;
+    const originalHeader = original?.header[0] && base!.index.node(original.header[0]);
+    const opening = original?.container && original.item.text === text && base!.columns.get(item.id) === rowColumn
+      ? base!.source.slice(base!.index.node(item.id)!.span.start, originalHeader ? originalHeader.span.start : original.container.span.start + 1)
+      : `${marker ? marker[1] : ""}(`;
+    out += `${opening}${layoutText(item.id, text, header, rowColumn)}`;
     last = header === "" ? { kind: "open", row: item.id } : { kind: "header", row: item.id };
     trailingComment = elements.at(-1)?.kind === "Comment";
     const ownColumn = rowColumn;

@@ -171,8 +171,8 @@ function expandExpr(
       if (binding !== undefined && isKMacro(binding)) {
         const args = expr.items.slice(1);
         const result = evaluateMacro(binding, args, builtins, macroStepLimit);
-        tagExpandedExpr(result, { macroName: binding.name, loc: sourceLocOf(expr) }, args);
-        const expanded = markExpansion(expr, result);
+        const expanded = markExpansion(expr, result, args);
+        tagExpandedExpr(expanded, { macroName: binding.name, loc: sourceLocOf(expr) }, args);
         return expandExpr(
           normalizeCoreProgram([expanded])[0]!,
           macroEnv,
