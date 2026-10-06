@@ -16,6 +16,7 @@ export {
   parse,
   parseSource,
   typecheck,
+  typeInferOptions,
   typeProjection,
   type AstNode,
   type Diagnostic,

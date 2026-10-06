@@ -21,3 +21,7 @@ PLAN
 PLAN.md
 TODO
 TODO.md
+
+# Local Foldworks link (scripts/foldworks-link.mjs)
+.foldworks/
+.pnpmfile.cjs

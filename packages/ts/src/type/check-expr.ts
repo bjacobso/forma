@@ -37,6 +37,7 @@ export const checkExpr = (env: TypeEnv, expr: CoreExpr, expected: Type): Effect.
   if (expr._tag === "Lam") {
     const actual=yield* inferLam(env,expr,target);
     yield* assignType(actual,target,originOf(expr,"function-check"));
+    yield* ctx.recordType(expr.id,actual);
     return target;
   }
   if (expr._tag === "If" && target._tag !== "TVar") {

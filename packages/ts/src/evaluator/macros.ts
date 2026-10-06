@@ -146,7 +146,7 @@ export function applyMacro(
     const result = yield* evalExpr(macro.body, macroEnv, runtime);
 
     if (isKSExpr(result)) {
-      tagExpandedExpr(result.expr, { macroName: macro.name, loc: callLoc });
+      tagExpandedExpr(result.expr, { macroName: macro.name, loc: callLoc }, argExprs);
       return yield* evalExpr(result.expr, callerEnv, runtime);
     }
 

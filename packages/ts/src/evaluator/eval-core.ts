@@ -74,7 +74,7 @@ function evalUnobserved(
         case "Map":
           return yield* evalMap(expr.pairs, env, runtime);
         case "List":
-          return yield* evalList(expr.items, expr.loc, env, runtime);
+          return yield* evalList(expr.items, trace.loc, env, runtime);
         case "Set":
           return yield* new KernelTypeError({
             message: "Set literals are not supported as runtime values",

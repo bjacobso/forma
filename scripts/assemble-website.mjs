@@ -7,3 +7,6 @@ await cp(new URL("../dist-docs/", import.meta.url), output, { recursive: true })
 await cp(new URL("../apps/website/dist/", import.meta.url), new URL("playground/", output), {
   recursive: true,
 });
+await cp(new URL("../apps/workbench/dist/", import.meta.url), new URL("workbench/demo/", output), {
+  recursive: true,
+});

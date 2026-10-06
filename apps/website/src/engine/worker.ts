@@ -78,3 +78,6 @@ async function runPass(pass: PassName, request: RunRequest) {
 function post(message: WorkerResponse): void {
   ctx.postMessage(message);
 }
+
+// Imports and handler installation have finished; execution timing can now begin.
+post({ kind: "ready" });

@@ -22,6 +22,45 @@ describe("structural editor services on the TypeScript host", () => {
       ]));
   });
 
+  it("types host builtins in editor analysis and keeps types around an error", async () => {
+    const lookup = {
+      name: "Directory.lookup",
+      arity: 1,
+      typeScheme: {
+        kind: "function" as const,
+        params: [{ kind: "type" as const, name: "String" }],
+        result: { kind: "type" as const, name: "Number" },
+      },
+      handler: { kind: "host-effect" as const, effect: "Directory.lookup" },
+    };
+    const source = '(define badge [who] (Directory.lookup who))\n(define broken (+ 1 "x"))\n(badge "ada")';
+    const typeOf = (result: { readonly typedSpans: readonly { readonly span: { readonly startOffset: number; readonly endOffset: number }; readonly display: string }[] }, text: string) =>
+      result.typedSpans.find(
+        (span) => source.slice(span.span.startOffset, span.span.endOffset) === text,
+      )?.display;
+
+    const untyped = await host.analyzeEditor({ source });
+    expect(untyped.errors.map((error) => error.message)).toEqual(
+      expect.arrayContaining([expect.stringContaining("Directory.lookup")]),
+    );
+
+    const typed = await host.analyzeEditor({ sourceId: "doc", source, hostBuiltins: [lookup] });
+    expect(typed.success).toBe(false);
+    // Only the broken definition fails; the forms around it are typed.
+    expect(typed.errors).toHaveLength(1);
+    expect(source.slice(typed.errors[0]!.span!.startOffset, typed.errors[0]!.span!.endOffset)).toBe(
+      '(+ 1 "x")',
+    );
+    expect(typeOf(typed, "(Directory.lookup who)")).toBe("Number");
+    expect(typeOf(typed, '(badge "ada")')).toBe("Number");
+
+    const { sessionId } = await host.openSession();
+    await host.configureSession({ sessionId, hostBuiltins: [lookup] });
+    const inSession = await host.analyzeEditor({ source, sessionId });
+    expect(typeOf(inSession, '(badge "ada")')).toBe("Number");
+    await host.closeSession({ sessionId });
+  });
+
   it("identifies syntax and carries ids across an edit", async () => {
     const source = "(define total 1)\n(+ total 2)";
     const first = await host.identifySyntax({ sourceId: "doc", source });
@@ -167,7 +206,7 @@ describe("structural editor services on the TypeScript host", () => {
     await host.loadSource({
       sessionId,
       sourceId: "lib.lisp",
-      source: "(define (greet name) name)",
+      source: "(define greet [name] name)",
       kind: "prelude",
     });
     const source = "(greet 1)\n(greet 2)";

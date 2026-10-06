@@ -742,7 +742,12 @@ export class TsLanguageHost implements LanguageHost {
   async analyzeEditor(request: EditorAnalysisRequest): Promise<EditorAnalysisResult> {
     const sourceId = request.sourceId ?? "source";
     const parse = editorParseProjection(sourceId, request.source);
-    const lspResult = await Effect.runPromise(Lsp.analyzeLsp(request.source, {}));
+    const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
+    const inferOptions = Engine.typeInferOptions({
+      hostBuiltins: request.hostBuiltins ?? session?.hostBuiltins,
+      typePolicy: request.typePolicy ?? session?.typePolicy,
+    });
+    const lspResult = await Effect.runPromise(Lsp.analyzeLsp(request.source, { inferOptions }));
     return {
       sourceId,
       success: lspResult.success,

@@ -1,0 +1,56 @@
+{
+  "name": "@formalang/workbench",
+  "version": "0.0.0",
+  "description": "A structural Forma IDE in which the outline is the program, built with Foldkit and Foldworks.",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "publishConfig": { "access": "public" },
+  "repository": { "type": "git", "url": "git+https://github.com/bjacobso/forma.git", "directory": "packages/workbench" },
+  "homepage": "https://forma-lang.com",
+  "sideEffects": ["**/*.css"],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown --config ../../tsdown.config.ts && node scripts/copy-styles.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@formalang/host": "workspace:*",
+    "@formalang/ts": "workspace:*",
+    "@foldworks/agent": "^0.2.0",
+    "@foldworks/code-editor": "^0.2.0",
+    "@foldworks/history": "^0.1.1",
+    "@foldworks/outliner": "^0.1.0",
+    "@foldworks/text-intelligence": "^0.1.0",
+    "@foldworks/ui": "^0.3.0",
+    "@lucide/icons": "1.40.0"
+  },
+  "peerDependencies": {
+    "@foldkit/ui": "^0.156.0",
+    "@stylexjs/stylex": "^0.19.0",
+    "effect": "^4.0.0-rc.112",
+    "foldkit": "^0.156.0"
+  },
+  "devDependencies": {
+    "@foldkit/ui": "0.156.0",
+    "@stylexjs/stylex": "0.19.0",
+    "@types/node": "^24.10.1",
+    "effect": "4.0.0-rc.112",
+    "foldkit": "0.156.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  }
+}
