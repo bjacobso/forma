@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import * as Engine from "../src/Engine.js";
 import { analyzeLsp } from "../src/LSP.js";
 
-const unless = "(define-macro my-unless [test & body]\n  `(if ~test nil (do ~@body)))\n";
+const unless = "(macro (my-unless test & body)\n  `(if ~test nil (do ~@body)))\n";
 
 const text = (source: string, span: { readonly start: number; readonly end: number } | undefined) =>
   span === undefined ? undefined : source.slice(span.start, span.end);
@@ -41,7 +41,7 @@ describe("macro arguments keep their source locations", () => {
   });
 
   it("keeps a macro template's own errors on the call", () => {
-    const source = '(define-macro bad [x] `(+ ~x "s"))\n(bad 1)';
+    const source = '(macro (bad x) `(+ ~x "s"))\n(bad 1)';
     expect(typeError(source)).toBe("(bad 1)");
   });
 
