@@ -15,6 +15,7 @@ import type { FormDescriptor } from "../descriptor/FormDescriptor.js";
 import type { Diagnostic, Span } from "../diagnostic/diagnostic.js";
 import { formSlots } from "../editor/slots.js";
 import {
+  createSymbolIndexCache,
   findReferences,
   indexSymbols,
   kernelNames,
@@ -105,6 +106,7 @@ export class AnalysisWorkspace {
   readonly #preludes = new Map<string, Input>();
   readonly #documents = new Map<string, Input>();
   readonly #memo = new Map<string, { readonly key: string; readonly value: unknown }>();
+  readonly #symbolCache = createSymbolIndexCache();
   #nextRevision = 1;
 
   constructor(options: WorkspaceOptions = {}) {
@@ -194,7 +196,7 @@ export class AnalysisWorkspace {
           sourceId,
           source: input.text,
         })),
-        { descriptors: this.#descriptors() },
+        { descriptors: this.#descriptors(), cache: this.#symbolCache },
       ),
     );
   }

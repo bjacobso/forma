@@ -3,7 +3,7 @@ import { parseUnifiedForm } from "../surface/form.js";
 import type { FormDescriptor } from "../descriptor/FormDescriptor.js";
 import { FormDescriptorRegistry } from "../descriptor/FormDescriptorRegistry.js";
 import { parseFormDescriptorForms } from "../descriptor/parse-descriptor.js";
-import { parse, toSExprMany } from "../reader/index.js";
+import { parse, toSExprMany, type SExpr } from "../reader/index.js";
 
 /** Descriptors to use for editor services, from a registry or a list. */
 export type DescriptorSource = FormDescriptorRegistry | readonly FormDescriptor[];
@@ -23,8 +23,18 @@ export function editorDescriptors(
   sources: readonly string[],
   descriptors: DescriptorSource = [],
 ): DescriptorLookup {
+  return descriptorsFromExpressions(
+    sources.flatMap((source) => toSExprMany(parse(source).redTree)),
+    descriptors,
+  );
+}
+
+/** `editorDescriptors` over sources that are already read. */
+export function descriptorsFromExpressions(
+  expressions: readonly SExpr[],
+  descriptors: DescriptorSource = [],
+): DescriptorLookup {
   const found = new FormDescriptorRegistry();
-  const expressions = sources.flatMap(source => toSExprMany(parse(source).redTree));
   const types = new Map(expressions.flatMap(expr => { const definition = typeDefinition(expr); return definition ? [definition] : []; }));
   for (const expr of expressions) {
       try {
