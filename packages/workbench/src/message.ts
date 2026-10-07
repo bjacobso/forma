@@ -37,6 +37,8 @@ export const Message = defineMessageUnion({
   Inspect: { id: S.String },
   GotValueMessage: { message: ValueTree.Message },
   RevealNode: { id: S.String },
+  GoToDefinition: { key: S.String },
+  DefinitionAtCaret: {},
   FailedValue: { sessionId: S.String, reason: S.String },
   LoadedValue: { sessionId: S.String, id: S.String, nodes: S.Array(ValueNodeSchema) },
   ReleasedAnalysis: {},

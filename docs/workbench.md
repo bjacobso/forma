@@ -1,8 +1,9 @@
 # The Forma workbench
 
-<a href="/workbench/demo/" target="_self">Open the live demo</a> to edit an
-onboarding program as an outline, inspect live values and types, review
-assistant proposals, and approve simulated capabilities.
+<a href="/workbench/demo/" target="_self">Open the live demo</a> to edit
+example projects as outlines or source, evaluate expressions in a REPL, jump
+between module definitions, review assistant proposals, and approve simulated
+capabilities.
 
 This note decides how `@formalang/workbench` is built: a structural Forma IDE
 in which the outline is the program. Every outline row is one Forma form and
@@ -46,8 +47,8 @@ toy piece has a real counterpart:
   runs the StyleX compiler. Its own styles are plain CSS on the Foldworks
   tokens, like the outliner's.
 - **`apps/workbench`** is a small Vite application with the Foldkit plugin and
-  StyleX. It mounts the workbench and supplies the sample program, a workflow
-  prelude, and the capabilities the sample uses. The React website does not
+  StyleX. It mounts the project workspace and supplies three examples, a workflow
+  prelude, and the capabilities the onboarding example uses. The React website does not
   include Foldkit. The website build serves this app's separate bundle at
   `/workbench/demo/`, linked from the docs and playground.
 - **Host first.** Everything that can go through `LanguageHost` does, so a
@@ -63,6 +64,34 @@ toy piece has a real counterpart:
   workbench needs.
 
 ## Where state lives
+
+**Projects wrap documents.** `Workspace` adds an example picker, a file list,
+file creation, navigation history, and a REPL around `Workbench`. Each file
+keeps its editor model, including both undo histories and malformed source.
+Projects keep separate drafts and REPL histories. Reset restores the bundled
+project; reload discards all in-memory edits.
+
+Every host command receives an immutable snapshot of the project's current
+files; static analysis uses an isolated session. Files load as source modules,
+while domain preludes stay shared core configuration. Explicit imports and
+exports govern visibility. File changes invalidate older analyses and pending
+runs; reset also rejects replies from the previous project generation. Resource
+disposal closes retained value sessions.
+
+F12, Definition ↗, and the inspector's Uses links resolve the original author
+location, open the owning file, and select the declaration in Source. Namespace
+imports and re-exports preserve definition identity. Back restores the caller's
+location. The TypeScript host's editor analysis now checks the module graph and
+retains typed spans; its symbol index keeps module globals lexical.
+
+**A REPL beside authoring.** Ctrl/⌘+Enter evaluates multiline input against the
+active file's pure declarations and current module drafts. Successful scratch
+definitions persist and can be redefined; failed entries do not modify that
+environment. Each entry replays declarations in a fresh session, so deleted or
+edited definitions never leave hidden stale bindings. Top-level application
+expressions and known capability-dependent definitions are excluded from the
+file context. The REPL performs no host capabilities; authoring's Run retains
+the explicit approval flow. Clear removes scratch declarations and history.
 
 - **The outline is the program being edited.** `Outliner.Model` owns the rows,
   the caret, the selection, and undo history. Every change the workbench makes
@@ -309,7 +338,7 @@ Not in the first release:
   would be a new language service.
 - **Independent top-level forms.** Evaluation stops at the first failure, as
   Language services records; later rows show no values until it is fixed.
-- A worker-backed host, the OCaml host, persistence, multiple files, and the
+- A worker-backed host, the OCaml host, persistence, and the
   outliner's virtualization.
 
 ## Implementation

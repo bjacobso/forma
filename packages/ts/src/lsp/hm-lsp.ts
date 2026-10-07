@@ -67,7 +67,7 @@ function extractCode(source: string, span: Span): string {
 /**
  * Recursively collect all CoreExpr nodes in tree order.
  */
-function collectNodes(expr: CoreExpr): CoreExpr[] {
+export function collectNodes(expr: CoreExpr): CoreExpr[] {
   const nodes: CoreExpr[] = [expr];
 
   switch (expr._tag) {

@@ -48,6 +48,7 @@ const outcome = (state: EvaluationState, sessionId: string, basis: Analysis, tok
             (item) => item.name === pending.name && item.name === pending.effect,
           );
     const diagnostics = evaluationDiagnostics(state).map((diagnostic) => ({
+      sourceId: diagnostic.span?.sourceId,
       start: diagnostic.span?.startOffset ?? 0,
       end: diagnostic.span?.endOffset ?? basis.document.source.length,
       severity:

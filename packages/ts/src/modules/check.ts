@@ -9,7 +9,8 @@ import { lowerProgram } from "../type/lower.js";
 import { resetNodeIds } from "../type/core-expr.js";
 import { unifiedFormProvider } from "../type/unified-form-provider.js";
 import { printSExpr } from "../evaluator/kvalue-to-source.js";
-import type { TypeEnv } from "../type/substitution.js";
+import { applyType, type TypeEnv } from "../type/substitution.js";
+import { collectNodes, type TypedSpan } from "../lsp/hm-lsp.js";
 import { showType, type Scheme, type Type } from "../type/types.js";
 import type { Diagnostic } from "../engine/operations.js";
 import { diagnosticFromUnknown } from "../engine/operations.js";
@@ -21,6 +22,8 @@ import { ModuleError } from "./graph.js";
 export type CheckedModuleInterface = ModuleInterface;
 export interface ModuleCheckOptions extends MakeInferContextOptions {
   readonly coreExpressions?: readonly SExpr[];
+  /** Editor analysis retains types and continues after a failing top-level form. */
+  readonly editor?: boolean;
 }
 export interface ModuleCheckResult {
   readonly ok: boolean;
@@ -28,6 +31,7 @@ export interface ModuleCheckResult {
   readonly diagnostics: readonly Diagnostic[];
   readonly environments: ReadonlyMap<string, ReadonlyMap<string, Scheme>>;
   readonly results: ReadonlyMap<string, Type>;
+  readonly typedSpans: ReadonlyMap<string, readonly TypedSpan[]>;
 }
 /** Check each lexical module separately, sharing only resolved dependency types. */
 export function checkModuleGraph(
@@ -36,6 +40,7 @@ export function checkModuleGraph(
 ): ModuleCheckResult {
   const environments = new Map<string, TypeEnv>(),
     results = new Map<string, Type>(),
+    typedSpans = new Map<string, readonly TypedSpan[]>(),
     diagnostics: Diagnostic[] = [];
   let current: ResolvedModule | undefined;
   try {
@@ -102,10 +107,24 @@ export function checkModuleGraph(
           const result = yield* Effect.provide(
             inferProgram(core, initial, provider, module.expressions, (env) =>
               environments.set(module.id, env),
+              options.editor ? { onFormError: (error) => Effect.sync(() => {
+                diagnostics.push(diagnosticFromUnknown(error, "typecheck", module.id));
+              }) } : {},
             ),
             Layer.succeed(InferContext, ctx),
           );
           results.set(module.id, result);
+          if (options.editor) {
+            const substitution = yield* Ref.get(ctx.subst);
+            const recorded = yield* Ref.get(ctx.nodeTypes);
+            typedSpans.set(module.id, core.flatMap(collectNodes).flatMap((node) => {
+              const inferred = recorded.get(node.id);
+              if (!inferred) return [];
+              const type = applyType(substitution, inferred);
+              return [{ id: node.id, span: node.span, type, typeString: showType(type),
+                code: module.source.slice(node.span.start, node.span.end), exprTag: node._tag }];
+            }));
+          }
           for (const d of yield* Ref.get(ctx.diagnostics))
             diagnostics.push({
               code: "typecheck/diagnostic",
@@ -291,6 +310,7 @@ export function checkModuleGraph(
     diagnostics,
     environments,
     results,
+    typedSpans,
   };
 }
 export function moduleResultDisplay(

@@ -4,7 +4,7 @@
 // the model. The layer opens the workbench's session and loads its preludes.
 
 import { Context, Effect, Layer } from "effect";
-import type { LanguageHost } from "@formalang/host/types";
+import type { Diagnostic, LanguageHost } from "@formalang/host/types";
 import { bootstrapFromSources, type BootstrappedPrelude } from "@formalang/ts/descriptor";
 import { preludeSource } from "@formalang/ts/preludes";
 
@@ -19,6 +19,7 @@ export interface FormaHostService {
   readonly config: WorkbenchConfig;
   /** Descriptors and elaboration hooks, when the configuration has preludes. */
   readonly prelude: BootstrappedPrelude | undefined;
+  readonly sourceDiagnostics?: readonly Diagnostic[];
 }
 
 export class FormaHost extends Context.Service<FormaHost, FormaHostService>()(
@@ -39,13 +40,13 @@ export class FormaHost extends Context.Service<FormaHost, FormaHostService>()(
           host.openSession({ defaultStepLimit: config.stepLimit ?? 200_000 }),
         );
         sessions.add(sessionId);
-        yield* Effect.promise(() => configureSession(host, sessionId, config));
+        const sourceDiagnostics = yield* Effect.promise(() => configureSession(host, sessionId, config));
         const [domain, ...additional] = (config.preludes ?? []).map((document) => document.source);
         const prelude =
           domain === undefined
             ? undefined
             : bootstrapFromSources(preludeSource("compiler.lisp"), domain, ...additional);
-        return FormaHost.of({ host, sessionId, config, prelude, sessions });
+        return FormaHost.of({ host, sessionId, config, prelude, sessions, sourceDiagnostics });
       }),
     );
   }
@@ -56,18 +57,25 @@ export const configureSession = async (
   host: LanguageHost,
   sessionId: string,
   config: WorkbenchConfig,
-): Promise<void> => {
+): Promise<readonly Diagnostic[]> => {
+  const diagnostics: Diagnostic[] = [];
   const preludes = config.preludes ?? [];
   if (preludes.length > 0) {
-    await host.loadSourceBundle({
+    const loaded = await host.loadSourceBundle({
       sessionId,
       sources: preludes.map((document) => ({ ...document, kind: "prelude" as const })),
     });
+    diagnostics.push(...loaded.diagnostics);
   }
   await host.configureSession({
     sessionId,
     hostBuiltins: (config.capabilities ?? []).map(hostBuiltinOf),
   });
+  if ((config.sources?.length ?? 0) > 0) {
+    const loaded = await host.loadSourceBundle({ sessionId, sources: config.sources!.map((source) => ({ ...source, kind: "source" as const })) });
+    diagnostics.push(...loaded.diagnostics);
+  }
+  return diagnostics;
 };
 
 /** A host service the workbench needs, or a failure naming the missing capability. */

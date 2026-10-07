@@ -57,6 +57,10 @@ export const viewOf = (analysis: Analysis): AnalysisView => {
   const diagnostics = new Map<string, Diagnostic[]>();
   const unplaced: SourceDiagnostic[] = [];
   for (const diagnostic of analysis.diagnostics) {
+    if (diagnostic.sourceId !== undefined && analysis.sourceId !== undefined && diagnostic.sourceId !== analysis.sourceId) {
+      unplaced.push({ ...diagnostic, message: `${diagnostic.sourceId}: ${diagnostic.message}` });
+      continue;
+    }
     const row = rowContaining(layouts, diagnostic.start, diagnostic.end);
     if (row === undefined) {
       unplaced.push(diagnostic);
@@ -112,7 +116,7 @@ export const sourceTokens = (analysis: Analysis): ReadonlyArray<SemanticToken> =
  */
 export const sourceDiagnostics = (analysis: Analysis): ReadonlyArray<Diagnostic> =>
   analysis.analyzed === null
-    ? analysis.diagnostics.map((diagnostic) =>
+    ? analysis.diagnostics.filter((diagnostic) => diagnostic.sourceId === undefined || analysis.sourceId === undefined || diagnostic.sourceId === analysis.sourceId).map((diagnostic) =>
         toDiagnostic(diagnostic, { from: diagnostic.start, to: diagnostic.end }),
       )
     : analysis.document.identity.errors.map((error) => ({
@@ -179,6 +183,7 @@ export const completeAt = (
   const prefix = text.slice(from, offset);
   const identity = analyzedText(analysis).identity;
   const visible = analysis.definitions.filter((definition) => {
+    if (definition.visible === false) return false;
     if (definition.scope === "global") return true;
     const scope = identity.nodes.find((node) => node.id === definition.scopeNodeId);
     return scope !== undefined && scope.span.start <= sourceOffset && sourceOffset < scope.span.end;

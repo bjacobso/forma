@@ -37,6 +37,8 @@ import { Op } from "./opcodes.js";
 export interface VMClosureData {
   readonly chunk: Chunk;
   readonly upvalues: UpvalueCell[];
+  /** Bytecode indices refer to the tables of the compilation that created this closure. */
+  readonly scope?: Pick<VMRuntime, "globals" | "globalNames" | "strictGlobals" | "builtins" | "builtinLookup">;
 }
 
 export interface UpvalueCell {
@@ -228,8 +230,12 @@ function makeDispatchWrapper(
  * value stack and stored in globals. Builtins see it as a normal KFn
  * (passes isKFn check), and the VM recognizes it via getVMClosure().
  */
-function makeVMKFn(chunk: Chunk, upvalues: UpvalueCell[]): KFn {
-  const vmData: VMClosureData = { chunk, upvalues };
+function makeVMKFn(chunk: Chunk, upvalues: UpvalueCell[], runtime: VMRuntime): KFn {
+  const vmData: VMClosureData = { chunk, upvalues, scope: {
+    globals: runtime.globals, builtins: runtime.builtins, builtinLookup: runtime.builtinLookup,
+    ...(runtime.globalNames ? { globalNames: runtime.globalNames } : {}),
+    ...(runtime.strictGlobals !== undefined ? { strictGlobals: runtime.strictGlobals } : {}),
+  } };
   const kfn: VMKFn = {
     _tag: "KFn",
     params: Array.from({ length: chunk.arity }, (_, i) => `__arg_${i}`),
@@ -607,7 +613,7 @@ function executeVM(
               upvalues.push(frame.upvalues[index]!);
             }
           }
-          stack.push(makeVMKFn(funcChunk, upvalues));
+          stack.push(makeVMKFn(funcChunk, upvalues, runtime));
           break;
         }
 
@@ -618,7 +624,7 @@ function executeVM(
           const callee = stack[calleePos]!;
           const vmData = getVMClosure(callee);
 
-          if (vmData) {
+          if (vmData && (!vmData.scope || vmData.scope.globals === runtime.globals)) {
             if (!hasValidArity(vmData.chunk, argc)) {
               return yield* withStackTrace(
                 new ArityError({
@@ -672,7 +678,7 @@ function executeVM(
           const callee = stack[calleePos]!;
           const vmData = getVMClosure(callee);
 
-          if (vmData) {
+          if (vmData && (!vmData.scope || vmData.scope.globals === runtime.globals)) {
             if (!hasValidArity(vmData.chunk, argc)) {
               return yield* withStackTrace(
                 new ArityError({
@@ -1074,10 +1080,23 @@ function runClosure(
     stack.push(null);
   }
 
+  const scope = vmData.scope;
+  const builtinNames = scope && scope.globals !== runtime.globals
+    ? new Map([...scope.builtinLookup].map(([name, builtin]) => [builtin, name])) : undefined;
+  const execution = scope && builtinNames ? {
+    ...runtime, ...scope,
+    // Tables keep their defining indices, while host handlers belong to the current call.
+    builtins: scope.builtins.map((builtin) => {
+      const name = builtinNames.get(builtin);
+      return name ? runtime.builtinLookup.get(name) ?? builtin : builtin;
+    }),
+    builtinLookup: new Map([...scope.builtinLookup, ...runtime.builtinLookup]),
+  } : runtime;
+
   return executeVM(
     chunk,
     vmData.upvalues,
-    runtime,
+    execution,
     stack,
     1, // stackBase: after the callee placeholder
   ).pipe(Effect.map((result) => result.value));

@@ -38,6 +38,7 @@ export const Severity = S.Literals(["error", "warning", "info"]);
 
 /** A problem at a span of the document. */
 export const SourceDiagnostic = S.Struct({
+  sourceId: S.optional(S.String),
   start: S.Number,
   end: S.Number,
   severity: Severity,
@@ -67,6 +68,9 @@ export const Definition = S.Struct({
   form: S.String,
   formNodeId: S.NullOr(S.String),
   sourceId: S.String,
+  visible: S.optional(S.Boolean),
+  start: S.optional(S.Number),
+  end: S.optional(S.Number),
   scopeNodeId: S.NullOr(S.String),
 });
 export type Definition = typeof Definition.Type;
@@ -104,6 +108,7 @@ export const RowLayoutSchema = S.Struct({
 const Analyzed = S.Struct({ source: S.String, identity: SyntaxIdentitySchema });
 
 export const Analysis = S.Struct({
+  sourceId: S.optional(S.String),
   /** The outline revision the analysis describes. */
   revision: S.Number,
   /** The outline printed as written. */
@@ -252,6 +257,7 @@ const fromHost = (diagnostic: HostDiagnostic): SourceDiagnostic | undefined =>
   diagnostic.span === undefined
     ? undefined
     : {
+        sourceId: diagnostic.span.sourceId,
         start: diagnostic.span.startOffset,
         end: diagnostic.span.endOffset,
         severity: severityOf(diagnostic.severity),
@@ -280,6 +286,8 @@ const symbolFacts = (
     form: definition.form,
     formNodeId: definition.span.sourceId === sourceId ? (definition.formNodeId ?? null) : null,
     sourceId: definition.span.sourceId,
+    start: definition.span.startOffset,
+    end: definition.span.endOffset,
     scopeNodeId: definition.scopeNodeId ?? null,
   }));
   const byKey = new Map(definitions.map((definition) => [definition.key, definition]));
@@ -423,6 +431,9 @@ export const analyzeProgram = (input: AnalyzeInput): Effect.Effect<Analysis, str
       symbolIndex({ sourceId, source: text.source, identity: text.identity, sessionId }),
     );
     const facts = symbolFacts(index, sourceId, text.source, syntax, capabilities, isDescriptor);
+    const projectFiles = new Set((config.sources ?? []).map((source) => source.sourceId));
+    facts.definitions = facts.definitions.map((definition) => ({ ...definition,
+      visible: definition.sourceId === sourceId || !projectFiles.has(definition.sourceId) }));
 
     const parseErrors: SourceDiagnostic[] = text.identity.errors.map((error) => ({
       start: error.span.start,
@@ -446,6 +457,8 @@ export const analyzeProgram = (input: AnalyzeInput): Effect.Effect<Analysis, str
           ],
     );
     const diagnostics = [
+      ...(service.sourceDiagnostics ?? []).filter((diagnostic) => diagnostic.span?.sourceId !== sourceId)
+        .flatMap((diagnostic) => fromHost(diagnostic) ?? []),
       ...parseErrors,
       // A program that does not parse has no type errors worth showing.
       ...(parseErrors.length > 0 ? [] : typeErrors),
@@ -455,6 +468,11 @@ export const analyzeProgram = (input: AnalyzeInput): Effect.Effect<Analysis, str
 
     const types = typesByNode(typed.typedSpans, syntax);
     const suggestions = [
+      ...index.references.filter((reference) => reference.span.sourceId === sourceId && reference.definition !== undefined)
+        .flatMap((reference) => {
+          const definition = facts.definitions.find((definition) => definition.key === reference.definition);
+          return definition?.visible === false ? [{ name: reference.name, kind: definition.kind }] : [];
+        }),
       ...Object.keys(defaultBuiltins).map((name) => ({ name, kind: "builtin" })),
       ...[...SPECIAL_FORMS].map((name) => ({ name, kind: "special" })),
       ...[...KERNEL_MACROS].map((name) => ({ name, kind: "macro" })),
@@ -504,7 +522,7 @@ export const analyzeProgram = (input: AnalyzeInput): Effect.Effect<Analysis, str
             code,
           );
     const runtimeErrors =
-      observed === undefined || typed.errors.length > 0
+      observed === undefined || typed.errors.length > 0 || typed.diagnostics.some((diagnostic) => diagnostic.severity === "error")
         ? []
         : evaluationDiagnostics(observed.state).flatMap((diagnostic) => fromHost(diagnostic) ?? []);
 
@@ -522,6 +540,7 @@ export const analyzeProgram = (input: AnalyzeInput): Effect.Effect<Analysis, str
     }
 
     return {
+      sourceId,
       revision: input.revision,
       document,
       analyzed:

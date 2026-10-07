@@ -4,6 +4,43 @@
 @import "@foldworks/text-intelligence/styles.css";
 @import "@foldworks/code-editor/styles.css";
 
+.workspace { height: 100%; display: flex; flex-direction: column; font-size: 13px; }
+.workspace__bar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+.workspace__bar p { flex: 1; margin: 0; color: var(--muted-foreground); }
+.workspace :is(button, select, input, textarea) { font: inherit; }
+.workspace__bar :is(button, select), .workspace__files :is(button, input), .workspace__repl button {
+  padding: 6px 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--background); color: var(--foreground);
+}
+.workspace__body { display: grid; grid-template-columns: 190px minmax(0, 1fr) 310px; flex: 1; min-height: 0; }
+.workspace__files { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 16px 12px; border-right: 1px solid var(--border); overflow: auto; }
+.workspace__files button { text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+.workspace__files button[aria-pressed="true"] { background: var(--muted); font-weight: 600; }
+.workspace__files p { color: var(--muted-foreground); line-height: 1.5; }
+.workspace__files input { min-width: 0; width: 100%; }
+.workspace__files .workspace__diagnostic { color: var(--foldworks-ui-danger, #dc2626); font-size: 12px; line-height: 1.5; }
+.workspace__authoring { min-width: 0; min-height: 0; }
+.workspace__authoring .wb { padding: 16px 16px 64px; }
+.workspace__repl { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-left: 1px solid var(--border); overflow: auto; }
+.workspace__repl header { display: flex; align-items: center; justify-content: space-between; }
+.workspace__repl p, .workspace__repl small { margin: 0; color: var(--muted-foreground); line-height: 1.5; }
+.workspace__transcript { flex: 1; overflow: auto; min-height: 100px; }
+.workspace__repl pre, .workspace__repl textarea { font-family: var(--font-mono, ui-monospace, monospace); font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.workspace__repl textarea { width: 100%; min-height: 100px; resize: vertical; padding: 10px; background: var(--background); color: var(--foreground); border: 1px solid var(--border); border-radius: 5px; }
+.repl-entry { border-bottom: 1px solid var(--border); padding: 12px 0; }
+.repl-entry--error pre:last-child { color: var(--foldworks-ui-danger, #dc2626); }
+@media (max-width: 1000px) {
+  .workspace__body { grid-template-columns: 150px minmax(0, 1fr); overflow: auto; }
+  .workspace__authoring .wb { height: auto; }
+  .workspace__repl { grid-column: 2; border-top: 1px solid var(--border); min-height: 350px; }
+  .workspace__files { grid-row: span 2; }
+}
+@media (max-width: 600px) {
+  .workspace__body { display: flex; flex-direction: column; }
+  .workspace__files { flex: none; flex-direction: row; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+  .workspace__files p { width: 100%; }
+  .workspace__repl { flex: none; }
+}
+
 .wb {
   --wb-mono: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   --wb-code-special: var(--foldworks-ui-code-keyword, #8741a0);

@@ -63,6 +63,57 @@ Import `@foldworks/ui/base.css`, a Foldworks theme, and
 
 ## Using the workbench
 
+The demo mounts `Workspace`, a project wrapper around the single-document
+`Workbench`. Choose Onboarding workflow, Functions & collections, or Pricing
+modules. File drafts, outline/source undo histories, and REPL history stay in
+memory when switching files or projects. Add file creates a module; Reset
+example restores the bundled files. Reloading the page discards drafts.
+
+Modules use explicit `(export name)`, `(import "./file.forma" [name])`,
+`(import "./file.forma" :as alias)`, and `(export-from "./file.forma" [name])`.
+Files load without running their application expressions. F12 or Definition ↗
+at a symbol opens its original declaration, including through namespaces and
+re-exports; the inspector's Uses links do the same. Back returns to the caller.
+
+The REPL evaluates expressions using the active file's pure definitions and
+the current project drafts. Ctrl/⌘+Enter submits multiline input. Successful
+scratch definitions remain available to later entries and can be redefined.
+Each entry replays those definitions in a fresh session, so changes to files
+take effect on the next submission. Application expressions and definitions
+known to require capabilities are omitted from the file context. The REPL
+performs no capabilities; use Run in authoring for the approval flow. Clear
+discards the transcript and scratch definitions.
+
+Applications can mount the same project experience:
+
+```ts
+import { Workspace } from "@formalang/workbench";
+
+const projects: readonly Workspace.Project[] = [{
+  id: "pricing",
+  title: "Pricing",
+  description: "A small module project",
+  entry: "main.forma",
+  files: [
+    { sourceId: "main.forma", source: '(import "./math.forma" [double]) (double 21)' },
+    { sourceId: "math.forma", source: '(export double) (define double [x] (+ x x))' },
+  ],
+  repl: "(double 10)",
+}];
+
+Runtime.run(Runtime.makeElement({
+  Model: Workspace.Model,
+  init: () => Workspace.init({ id: "workbench", projects }),
+  update: Workspace.update,
+  view: Workspace.view,
+  container: document.getElementById("root"),
+  resources: Workspace.layer(new TsLanguageHost(), projects),
+}));
+```
+
+Each project can supply `config` with its own preludes, checks, proposer, and
+capabilities. No file's definitions become implicit globals in another file.
+
 Edit a row's text, and use Return, Tab, and Shift+Tab to change the outline.
 Fold and hoist with the outliner's controls. Outline and Brackets are two
 notations for the same tree. Source opens the Foldworks code editor over the
