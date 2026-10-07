@@ -15,9 +15,14 @@ import type { CoreExpr, Span } from "../type/core-expr.js";
 import { resetNodeIds } from "../type/core-expr.js";
 import { lowerProgram } from "../type/lower.js";
 import { inferProgram } from "../type/infer.js";
+import type { TypeEnv } from "../type/substitution.js";
+import { unifiedFormProvider } from "../type/unified-form-provider.js";
+import type { SExpr } from "../reader/types.js";
+import type { Env } from "../Env.js";
+import { expandKernelExprsSync } from "../evaluator/frontend.js";
 import {
   InferContext,
-  makeInferContext,
+  makeOwnedInferContext,
   type MakeInferContextOptions,
 } from "../type/context.js";
 import { applyType } from "../type/substitution.js";
@@ -143,6 +148,12 @@ export interface AnalyzeLspOptions {
    * and `typePolicy`.
    */
   readonly inferOptions?: MakeInferContextOptions;
+  /** Types of names defined before this source, such as by its preludes. */
+  readonly initialEnv?: TypeEnv | undefined;
+  /** Macros defined before this source, such as by its preludes. */
+  readonly macroEnv?: Env | undefined;
+  /** Receives the type environment after the last form. */
+  readonly captureEnv?: ((env: TypeEnv) => void) | undefined;
 }
 
 /**
@@ -156,8 +167,6 @@ export function analyzeLsp(
   options?: AnalyzeLspOptions,
 ): Effect.Effect<LspResult, never> {
   return Effect.gen(function* () {
-    const dslProvider = options?.dslProvider;
-
     // Parse
     const parseResult = yield* Effect.result(parseManyToSExpr(source));
     if (parseResult._tag === "Failure") {
@@ -187,36 +196,33 @@ export function analyzeLsp(
       };
     }
 
-    // Lower (passing DSL provider so DSL forms become CDSLForm nodes)
+    // Lower (passing DSL provider so DSL forms become CDSLForm nodes). A
+    // top-level form that does not lower is reported, and the others are
+    // still lowered and typed.
     resetNodeIds();
-    let coreExprs: CoreExpr[];
+    // An invalid local `form` declaration is reported; the program is still
+    // typed with the forms its preludes describe.
+    const formErrors: InferenceError[] = [];
+    let dslProvider = options?.dslProvider;
     try {
-      coreExprs = lowerProgram(sexprs, dslProvider);
+      dslProvider = unifiedFormProvider(source, sexprs, options?.dslProvider);
     } catch (e) {
-      const err = e instanceof InferenceError ? e : new InferenceError({ message: String(e) });
-      return {
-        success: false,
-        typedSpans: [],
-        errors: [
-          {
-            message: err.message,
-            span: err.origin?.span,
-          },
-        ],
-        diagnostics: [],
-      };
+      formErrors.push(asInferenceError(e));
     }
-
+    const lowered = lowerRecovering(sexprs, dslProvider, options?.macroEnv);
+    const coreExprs = lowered.core;
     // Infer (passing DSL provider for result types and type bindings). A
     // top-level form that does not type is reported, and the forms around it
     // are still typed.
-    const ctxService = yield* makeInferContext(options?.inferOptions);
+    // The builder stays private; only projected typed spans escape this call.
+    const ctxService = yield* makeOwnedInferContext(options?.inferOptions);
     const layer = Layer.succeed(InferContext, ctxService);
-    const formErrors: InferenceError[] = [];
+
+    formErrors.push(...lowered.errors);
 
     const inferResult = yield* Effect.result(
       Effect.provide(
-        inferProgram(coreExprs, undefined, dslProvider, sexprs, undefined, {
+        inferProgram(coreExprs, options?.initialEnv, dslProvider, sexprs, options?.captureEnv, {
           onFormError: (error) => Effect.sync(() => void formErrors.push(error)),
         }),
         layer,
@@ -272,6 +278,73 @@ export function analyzeLsp(
       diagnostics: collectedDiagnostics,
     };
   });
+}
+
+function asInferenceError(error: unknown): InferenceError {
+  if (error instanceof InferenceError) return error;
+  return new InferenceError({ message: error instanceof Error ? error.message : String(error) });
+}
+
+/**
+ * Lower a program, or, when one of its forms does not lower, each form on
+ * its own with the signatures that describe it.
+ */
+function lowerRecovering(
+  sexprs: readonly SExpr[],
+  dslProvider: DSLTypeProvider | undefined,
+  macroEnv: Env | undefined,
+): { readonly core: CoreExpr[]; readonly errors: readonly InferenceError[] } {
+  const lowerOptions = macroEnv ? { macroEnv } : {};
+  try {
+    return { core: lowerProgram(sexprs, dslProvider, lowerOptions), errors: [] };
+  } catch {
+    // Fall through to per-form lowering.
+  }
+  const signatureOf = (expr: SExpr): string | undefined =>
+    expr._tag === "List" &&
+    expr.items.length === 3 &&
+    expr.items[0]?._tag === "Sym" &&
+    expr.items[0].name === ":" &&
+    expr.items[1]?._tag === "Sym"
+      ? expr.items[1].name
+      : undefined;
+  const definedName = (expr: SExpr): string | undefined =>
+    expr._tag === "List" && expr.items[1]?._tag === "Sym" ? expr.items[1].name : undefined;
+  // Each form is lowered on its own, so the document's macros are defined first.
+  const macros = sexprs.filter((expr) => {
+    const head = expr._tag === "List" && expr.items[0]?._tag === "Sym" ? expr.items[0].name : undefined;
+    return head === "macro" || head === "__macro";
+  });
+  let formOptions = lowerOptions;
+  if (macros.length > 0) {
+    try {
+      const env = expandKernelExprsSync(macros, macroEnv ? { env: macroEnv } : {}).macroEnv;
+      formOptions = { macroEnv: env.flatten() };
+    } catch {
+      // Calls to a macro that does not define are reported where they are lowered.
+    }
+  }
+  const core: CoreExpr[] = [];
+  const errors: InferenceError[] = [];
+  for (const expr of sexprs) {
+    if (signatureOf(expr) !== undefined) continue;
+    const name = definedName(expr);
+    const signatures = sexprs.filter((candidate) => name !== undefined && signatureOf(candidate) === name);
+    try {
+      core.push(...lowerProgram([...signatures, expr], dslProvider, formOptions));
+    } catch (e) {
+      const error = asInferenceError(e);
+      errors.push(
+        error.origin?.span
+          ? error
+          : new InferenceError({
+              message: error.message,
+              origin: { span: { start: expr.loc.start, end: expr.loc.end }, kind: "form", nodeId: "form" },
+            }),
+      );
+    }
+  }
+  return { core, errors };
 }
 
 // ---------------------------------------------------------------------------

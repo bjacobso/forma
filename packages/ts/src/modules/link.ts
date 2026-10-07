@@ -2,7 +2,7 @@ import { expandKernelExprsSync } from "../evaluator/frontend.js";
 import type { PackageableDeclaration } from "../artifact/artifact.js";
 import { checkModuleGraph } from "./check.js";
 import { inferredModuleSignatures } from "./signatures.js";
-import type { Diagnostic } from "../engine/operations.js";
+import type { Diagnostic } from "../diagnostic/diagnostic.js";
 import { mechanicsPackageableDeclarations } from "../mechanics/artifact.js";
 import { normalizeEffectProgram } from "../surface/effect.js";
 import { checkMechanicsDeclarations } from "../mechanics/check.js";

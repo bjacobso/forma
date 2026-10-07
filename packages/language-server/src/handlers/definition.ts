@@ -1,42 +1,24 @@
-import { type Definition, type DefinitionParams, type Location } from "vscode-languageserver";
+import type { DefinitionParams, Location } from "vscode-languageserver";
 import type { TextDocument } from "vscode-languageserver-textdocument";
 
-import { positionToOffset, spanToRange } from "../document.js";
-import { isRecord, type CstSpan } from "../protocol.js";
-import type { OcamlWorkspaceSession } from "../session.js";
-import { editorValue, sourceIdForUri } from "../session.js";
-import { findIndexedDefinition } from "./references.js";
+import { positionToOffset, spanToLocation } from "../document.js";
+import type { FormaWorkspace } from "../workspace.js";
 
-export async function getDefinition(
-  session: OcamlWorkspaceSession,
+export function getDefinition(
+  workspace: FormaWorkspace,
   document: TextDocument,
   params: DefinitionParams,
-): Promise<Definition | null> {
-  const offset = positionToOffset(document, params.position);
-  const response = await session.editorDefinition(document, offset);
-  const definition = editorValue(response)["definition"];
-  if (!isRecord(definition) || !isSpan(definition["span"])) {
-    // Names introduced by macros and descriptor forms are found by the symbol index.
-    return await findIndexedDefinition(session, document, offset);
-  }
-
-  const location: Location = {
-    uri:
-      definition["uri"] === sourceIdForUri(document.uri) || definition["uri"] === "request"
-        ? document.uri
-        : typeof definition["uri"] === "string"
-          ? definition["uri"]
-          : document.uri,
-    range: spanToRange(document, definition["span"]),
-  };
-  return location;
-}
-
-function isSpan(value: unknown): value is CstSpan {
+): Location | null {
+  const definition = workspace.analysis.definition(
+    document.uri,
+    positionToOffset(document, params.position),
+  );
+  if (!definition) return null;
   return (
-    isRecord(value) &&
-    typeof value["sourceId"] === "string" &&
-    typeof value["startOffset"] === "number" &&
-    typeof value["endOffset"] === "number"
+    spanToLocation(workspace, {
+      sourceId: definition.sourceId,
+      startOffset: definition.span.start,
+      endOffset: definition.span.end,
+    }) ?? null
   );
 }

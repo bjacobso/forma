@@ -1,13 +1,10 @@
-export { OcamlAbiClient } from "./abi.js";
-export {
-  createOcamlEditorAnalysisHost,
-  editorAnalysisResultFromOcamlResponse,
-} from "./editor-host.js";
-export type { OcamlEditorAnalysisHost, OcamlEditorAnalysisHostOptions } from "./editor-host.js";
-export { OcamlWorkspaceSession } from "./session.js";
-export { formatDocument } from "./handlers/formatting.js";
+export { FormaWorkspace, type FormaWorkspaceOptions } from "./workspace.js";
 export { getCompletions } from "./handlers/completion.js";
 export { getDefinition } from "./handlers/definition.js";
-export { getDiagnostics } from "./handlers/diagnostics.js";
+export { getDiagnostics, toLspDiagnostic } from "./handlers/diagnostics.js";
+export { formatDocument } from "./handlers/formatting.js";
 export { getHover } from "./handlers/hover.js";
 export { getReferences } from "./handlers/references.js";
+export { prepareRename, rename } from "./handlers/rename.js";
+export { getSemanticTokens, semanticTokensLegend } from "./handlers/semantic-tokens.js";
+export { getDocumentSymbols } from "./handlers/symbols.js";

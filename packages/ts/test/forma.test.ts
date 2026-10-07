@@ -3,7 +3,7 @@ import { Effect, Result } from "effect";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Builtins, Elaboration, Evaluator, Formatter, Reader, Type } from "../src/index.js";
+import { Builtins, Evaluator, Formatter, Reader, Type } from "../src/index.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = resolve(__dirname, "fixtures/language-features");
@@ -62,16 +62,6 @@ describe("@formalang/ts evaluator fixtures", () => {
 
   test("cond branching fixture", async () => {
     expect(await runFixture("cond-grades.lisp")).toEqual(["A", "B", "C", "D", "F"]);
-  });
-});
-
-describe("@formalang/ts elaboration", () => {
-  test("compiles through an Effect 4 prelude service", async () => {
-    const result = await Effect.runPromise(
-      Effect.provide(Elaboration.compile("42", { builtins: Builtins.defaultBuiltins }), PreludeLive),
-    );
-    expect(result.errors).toEqual([]);
-    expect(result.results).toEqual([{ kind: "value", value: 42 }]);
   });
 });
 

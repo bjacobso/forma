@@ -1,7 +1,7 @@
 import { Effect, Layer, Ref } from "effect";
 import { inferProgram } from "../type/infer-program.js";
 import {
-  makeInferContext,
+  makeOwnedInferContext,
   InferContext,
   type MakeInferContextOptions,
 } from "../type/context.js";
@@ -12,8 +12,8 @@ import { printSExpr } from "../evaluator/kvalue-to-source.js";
 import { applyType, type TypeEnv } from "../type/substitution.js";
 import { collectNodes, type TypedSpan } from "../lsp/hm-lsp.js";
 import { showType, type Scheme, type Type } from "../type/types.js";
-import type { Diagnostic } from "../engine/operations.js";
-import { diagnosticFromUnknown } from "../engine/operations.js";
+import type { Diagnostic } from "../diagnostic/diagnostic.js";
+import { diagnosticFromUnknown } from "../diagnostic/diagnostic.js";
 import type { ModuleGraph, ModuleInterface, ResolvedModule } from "./graph.js";
 import { schemeSyntax } from "./signatures.js";
 import type { SExpr } from "../reader/types.js";
@@ -46,7 +46,8 @@ export function checkModuleGraph(
   try {
     Effect.runSync(
       Effect.gen(function* () {
-        const ctx = yield* makeInferContext(options);
+        // Annotations stay private across the modules checked in this operation.
+        const ctx = yield* makeOwnedInferContext(options);
         let coreEnvironment: TypeEnv = new Map();
         if (options.coreExpressions?.length) {
           const expressions = options.coreExpressions;

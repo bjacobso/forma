@@ -231,3 +231,57 @@ describe("indexSymbols", () => {
     ]);
   });
 });
+
+describe("indexSymbols with a cache", () => {
+  test("refreshes module definition targets while reusing unchanged imports", () => {
+    const cache = Editor.createSymbolIndexCache();
+    const main = {
+      sourceId: "main.forma",
+      source: '(import "./barrel.forma" [double]) (double 21) secret',
+    };
+    const barrel = {
+      sourceId: "barrel.forma",
+      source: '(export-from "./math.forma" [double])',
+    };
+    const moduleSourceIds = ["math.forma", barrel.sourceId, main.sourceId];
+    for (const source of [
+      '(export double) (define secret 1) (define double [x] (+ x x))',
+      '(export double) (define secret 99) (define double [x] (* x 2))',
+    ]) {
+      const documents = [{ sourceId: "math.forma", source }, barrel, main];
+      const cached = Editor.indexSymbols(documents, { cache, moduleSourceIds });
+      const fresh = Editor.indexSymbols(documents, { moduleSourceIds });
+      expect(cached).toEqual(fresh);
+      const found = Editor.findReferences(cached, {
+        sourceId: main.sourceId,
+        offset: main.source.indexOf("double 21") + 1,
+      });
+      expect(found.definition?.sourceId).toBe("math.forma");
+      expect(found.definition && textOf(source, found.definition)).toBe("double");
+      expect(cached.references.find((reference) => reference.name === "secret")?.resolution)
+        .toBe("unresolved");
+    }
+  });
+
+  test("gives the same index as a fresh call after documents change", () => {
+    const prelude = { sourceId: "prelude", source: "(macro (defstep name) `(define ~name 1))\n(define base 2)" };
+    const versions = [
+      "(defstep verify)\n(+ verify base)",
+      "(defstep verify)\n(defstep check)\n(+ check verify base)",
+      "(define verify 3)\n(+ verify base)",
+    ];
+    const cache = Editor.createSymbolIndexCache();
+    for (const source of versions) {
+      const documents = [prelude, { sourceId: "doc", source }];
+      const cached = Editor.indexSymbols(documents, { cache });
+      const fresh = Editor.indexSymbols(documents);
+      const strip = (index: Editor.SymbolIndex) => ({
+        definitions: index.definitions,
+        references: index.references,
+      });
+      expect(strip(cached)).toEqual(strip(fresh));
+    }
+    // The prelude's reading and expansion were reused across the edits.
+    expect(cache.prepared.get("prelude")?.source).toBe(prelude.source);
+  });
+});

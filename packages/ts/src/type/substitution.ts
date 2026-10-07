@@ -92,15 +92,21 @@ export function applyRow(s: Subst, r: Row): Row {
   }
 }
 
+function restrict<K, V>(map: ReadonlyMap<K, V>, bound: readonly K[]): ReadonlyMap<K, V> {
+  // Most schemes bind fresh variables absent from the current substitution.
+  // Applying a substitution only reads these maps, so sharing is safe.
+  if (!bound.some(key => map.has(key))) return map;
+  const result = new Map(map);
+  for (const key of bound) result.delete(key);
+  return result;
+}
+
 export function applyScheme(s: Subst, scheme: Scheme): Scheme {
-  // Remove bound variables from substitution
-  const tRestricted = new Map(s.tvars);
-  for (const v of scheme.tvars) tRestricted.delete(v);
-  const rRestricted = new Map(s.rvars);
-  for (const v of scheme.rvars) rRestricted.delete(v);
-  const eRestricted = new Map(s.evars);
-  for (const v of scheme.evars) eRestricted.delete(v);
-  const restricted: Subst = { tvars: tRestricted, rvars: rRestricted, evars: eRestricted };
+  const restricted: Subst = {
+    tvars: restrict(s.tvars, scheme.tvars),
+    rvars: restrict(s.rvars, scheme.rvars),
+    evars: restrict(s.evars, scheme.evars),
+  };
   return {
     tvars: scheme.tvars,
     rvars: scheme.rvars,
