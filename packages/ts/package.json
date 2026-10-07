@@ -20,6 +20,10 @@
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs"
     },
+    "./analysis": {
+      "types": "./dist/Analysis.d.mts",
+      "import": "./dist/Analysis.mjs"
+    },
     "./reader": {
       "types": "./dist/Reader.d.mts",
       "import": "./dist/Reader.mjs"

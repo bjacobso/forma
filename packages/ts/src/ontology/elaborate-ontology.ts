@@ -18,7 +18,7 @@ import {
   type ElaboratedDeclaration,
   type ProgramSource,
 } from "../descriptor/elaborate.js";
-import type { Diagnostic, Span } from "../engine/operations.js";
+import type { Diagnostic, Span } from "../diagnostic/diagnostic.js";
 import { bootstrapOntologyPreludes } from "../Preludes.js";
 
 /** A field or input type written in ontology source. */

@@ -1,4 +1,4 @@
-import type { Diagnostic, Span } from "../engine/operations.js";
+import type { Diagnostic, Span } from "../diagnostic/diagnostic.js";
 import type { LanguageSession, SessionSourceSummary } from "../session/session.js";
 import type { SourceOrigin } from "../source/source.js";
 

@@ -72,6 +72,15 @@ export class Env {
     return new Env(new Map(Object.entries(bindings)), this);
   }
 
+  /** One frame holding every binding visible here, innermost first. */
+  flatten(): Env {
+    const bindings = new Map<string, KValue>();
+    for (let env: Env | null = this; env; env = env.parent) {
+      for (const [name, value] of env.bindings) if (!bindings.has(name)) bindings.set(name, value);
+    }
+    return new Env(bindings, null);
+  }
+
   /**
    * Return a copy of this env with a new parent. Used to chain prelude
    * macros beneath a user-provided environment.

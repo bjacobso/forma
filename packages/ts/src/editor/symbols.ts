@@ -215,6 +215,8 @@ export function indexSymbols(
   const walker = new SymbolWalker(authors, macroNodes, descriptors, builtinNames, orders);
   for (const { document, expr } of expanded.forms) walker.collectGlobals(expr, document);
   for (const { document, expr } of expanded.forms) walker.walk(expr, walker.root, document, null);
+  // Expansion replaces a macro call, so its head is found in the author's code.
+  for (const document of indexed) for (const expr of document.exprs) walker.referenceMacroCalls(expr);
 
   const sorted = <T extends { sourceId: string; span: SyntaxSpan }>(items: Iterable<T>) =>
     [...items].sort(
@@ -261,6 +263,32 @@ export function findReferences(index: SymbolIndex, target: SymbolTarget): Symbol
 }
 
 let kernelNameSet: ReadonlySet<string> | undefined;
+
+/** Heads the surface syntax rewrites before expansion. */
+const SURFACE_FORMS = new Set([
+  "macro",
+  "form",
+  "type",
+  "typeclass",
+  "instance",
+  "class",
+  "error",
+  "service",
+  "layer",
+  "import",
+  "export",
+  "export-from",
+]);
+
+/** What a kernel name is: a special form, a builtin function, or a prelude macro. */
+export type KernelNameKind = "special-form" | "builtin" | "macro";
+
+/** The kind of a name the kernel provides, or `undefined` for other names. */
+export function kernelNameKind(name: string): KernelNameKind | undefined {
+  if (SPECIAL_FORMS.has(name) || SURFACE_FORMS.has(name)) return "special-form";
+  if (Object.hasOwn(defaultBuiltins, name)) return "builtin";
+  return kernelNames().has(name) ? "macro" : undefined;
+}
 
 /** Names the kernel provides: builtins, special forms, and prelude macros. */
 export function kernelNames(): ReadonlySet<string> {
@@ -562,6 +590,32 @@ class SymbolWalker {
       resolution,
       ...(definition ? { definition: definition.key } : {}),
     });
+  }
+
+  /** References the global macro named by the head of each macro call in author-written code. */
+  referenceMacroCalls(expr: SExpr): void {
+    if (expr._tag !== "List" && expr._tag !== "Vector" && expr._tag !== "Map") return;
+    if (expr._tag === "List") {
+      const head = headName(expr);
+      if (head === "quote" || head === "quasiquote" || head === "macro" || head === "__macro") return;
+      const first = expr.items[0];
+      const author = first ? this.authors.get(first) : undefined;
+      if (first?._tag === "Sym" && author && !this.macroNodes.has(first)) {
+        const key = `${author.document.sourceId}#${author.node.id}`;
+        const definition = this.global(first.name, author);
+        if (definition?.kind === "macro" && !this.definitions.has(key) && !this.references.has(key)) {
+          this.references.set(key, {
+            name: first.name,
+            sourceId: author.document.sourceId,
+            nodeId: author.node.id,
+            span: author.node.span,
+            resolution: "definition",
+            definition: definition.key,
+          });
+        }
+      }
+    }
+    children(expr).forEach((child) => this.referenceMacroCalls(child));
   }
 
   /** The latest global definition before the reference, else the first after it. */
