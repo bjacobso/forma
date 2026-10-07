@@ -1,0 +1,113 @@
+{
+  "timestamp": "2026-10-06T22:25:50.205Z",
+  "revision": "bdc817dd9450430ead8f02445a8545bcdc5df2de",
+  "dirty": true,
+  "node": "v24.14.1",
+  "effect": "4.0.0-rc.112",
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.90GHz",
+  "logicalCpus": 8,
+  "platform": "linux x64",
+  "command": [
+    "node",
+    "/home/vercel-sandbox/forma/scripts/benchmark-typecheck.mjs",
+    "--engine",
+    ".context/typecheck-baseline/dist/Engine.mjs",
+    "--label",
+    "baseline",
+    "--output",
+    "scripts/benchmarks/typecheck-baseline.json"
+  ],
+  "samples": 9,
+  "warmup": 3,
+  "startup": [
+    {
+      "label": "baseline",
+      "path": ".context/typecheck-baseline/dist/Engine.mjs",
+      "importMs": 324.959012,
+      "firstCheckMs": 19.84572700000001
+    }
+  ],
+  "consumed": 183,
+  "results": [
+    {
+      "workload": "definitions-10",
+      "label": "baseline",
+      "medianMs": 3.7919109999999705,
+      "samplesMs": [
+        3.897109999999998,
+        3.994516000000033,
+        3.7963009999999713,
+        3.7919109999999705,
+        6.185926999999992,
+        2.41240700000003,
+        2.3420149999999467,
+        1.8772959999999443,
+        3.0372750000000224
+      ]
+    },
+    {
+      "workload": "definitions-100",
+      "label": "baseline",
+      "medianMs": 95.06242599999996,
+      "samplesMs": [
+        95.54100699999992,
+        92.951101,
+        92.96106999999995,
+        107.08241899999985,
+        146.7727359999999,
+        95.06242599999996,
+        91.88954899999999,
+        90.22865999999999,
+        96.51789400000007
+      ]
+    },
+    {
+      "workload": "definitions-250",
+      "label": "baseline",
+      "medianMs": 1022.5399510000007,
+      "samplesMs": [
+        984.680805,
+        995.6348120000002,
+        1037.5393640000002,
+        1056.046886,
+        1022.3417279999994,
+        1048.2065559999992,
+        1022.4806689999987,
+        1028.3577000000005,
+        1022.5399510000007
+      ]
+    },
+    {
+      "workload": "definitions-500",
+      "label": "baseline",
+      "medianMs": 7893.367126999998,
+      "samplesMs": [
+        7705.759893999995,
+        8083.285791000002,
+        7893.367126999998,
+        7913.596289000008,
+        7557.888479999994,
+        7780.001562000005,
+        8131.417778000003,
+        7893.648432999995,
+        7870.252028000003
+      ]
+    },
+    {
+      "workload": "polymorphic-100",
+      "label": "baseline",
+      "medianMs": 142.89328399999067,
+      "samplesMs": [
+        143.4971380000061,
+        142.89328399999067,
+        143.7332929999975,
+        146.50471600001038,
+        139.00448499999766,
+        151.01334799999313,
+        140.56633699999657,
+        138.2817420000065,
+        136.30401400000846
+      ]
+    }
+  ]
+}
