@@ -1,5 +1,6 @@
 import { evaluate, expand, parse, typecheck } from "@formalang/ts/engine";
 import type { PassName } from "@formalang/ts/engine";
+import { compileEffectDemo } from "./effectCompiler";
 import {
   hasErrors,
   serializablePassResult,
@@ -16,6 +17,10 @@ ctx.onmessage = (event: MessageEvent<RunRequest>) => {
 
 async function run(request: RunRequest): Promise<void> {
   try {
+    if (request.dialect === "effect") {
+      post({ kind: "result", result: compileEffectDemo(request) });
+      return;
+    }
     const passResults: TimedPassResult[] = [];
     let stoppedAt: PassName | undefined;
 

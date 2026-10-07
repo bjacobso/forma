@@ -715,3 +715,10 @@ body {
   overflow-wrap: anywhere;
   width: auto;
 }
+
+.fh-hero--live { grid-template-columns: 1fr; gap: 28px; }
+.fh-hero--live .fh-hero__copy { max-width: 880px; }
+.fh-hero--live .fh-hero__demo { width: 100%; }
+.fh-live-embed { width: 100%; min-width: 0; }
+.fh-live-embed iframe { display: block; width: 100%; border: 1px solid var(--vp-c-divider); border-radius: 10px; background: var(--vp-c-bg-elv); }
+.fh-live-embed__fallback { display: inline-block; margin-top: 10px; font-size: 12px; color: var(--vp-c-text-2) !important; }

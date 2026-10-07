@@ -32,6 +32,10 @@ toy piece has a real counterpart:
 | hand-written placeholder slots          | slot affordances from form descriptors                                  |
 | the `defstep` and `workflow` sample     | a prelude that registers workflow forms through elaboration             |
 
+The homepage and Effect page use a [live source embed](./workbench-embeds.md)
+with real diagnostics, body inference, compiler output, and typing replays. That
+note describes the embed contract, themes, and the next language-service work.
+
 ## Package boundary
 
 - **`@formalang/workbench`** (`packages/workbench`) is a Foldkit submodel:

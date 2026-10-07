@@ -9,7 +9,7 @@ pageClass: forma-index forma-effect
 
 <div class="forma-home">
 
-<header class="fh-hero">
+<header class="fh-hero fh-hero--live">
 <div class="fh-hero__copy">
 <p class="fh-eyebrow"><span class="fh-dot"></span>Effect 4 · Pre-alpha · MIT licensed</p>
 <h1>A language for writing Effect, not a library inside one.</h1>
@@ -22,15 +22,9 @@ pageClass: forma-index forma-effect
 </div>
 <div class="fh-hero__demo">
 
-::: code-group
+<WorkbenchEmbed example="orders" title="Live Effect workbench: order payments" />
 
-<<< @/snippets/effect/orders.lisp [orders.lisp]
-
-<<< @/snippets/effect/orders.ts [orders.ts · generated]
-
-:::
-
-<p class="fh-caption">Both tabs are real. <strong>orders.ts</strong> is the compiler's output for <strong>orders.lisp</strong>, regenerated and typechecked under the repository's strictest <code>tsconfig</code> by a test that keeps this page in sync.</p>
+<p class="fh-caption">These panes run the real Effect compiler in your browser. Edit the operation, inspect the body's inferred failures and requirements, and open <strong>Effect TypeScript</strong> to see fresh generated code. <strong>Watch typing</strong> introduces an undeclared failure and repairs it.</p>
 </div>
 </header>
 
@@ -71,26 +65,10 @@ pageClass: forma-index forma-effect
 <div class="fh-section__head">
 <p class="fh-label">02 · Diagnostics</p>
 <h2 id="errors-heading">Errors at the line you wrote, in the words you used.</h2>
-<p>Drop <code>PaymentDeclined</code> from the signature. Forma reports the mistake at the call that can raise it. TypeScript would also reject the generated code, but it reports the mismatch on the generated function, as an assignability chain. Both outputs below are produced by the same test.</p>
+<p>Drop <code>PaymentDeclined</code> from the signature. Forma reports the mistake at the call that can raise it. TypeScript would also reject the generated code, but it reports the mismatch on the generated function, as an assignability chain. The live editor below uses that same compiler and updates as you type.</p>
 </div>
-<div class="fh-pair">
-<div>
-<p class="fh-file">orders.lisp · signature without PaymentDeclined</p>
-
-<<< @/snippets/effect/orders-undeclared.lisp{23,29}
-
-</div>
-<div>
-<p class="fh-file">Forma</p>
-
-<<< @/snippets/effect/orders-undeclared.forma.txt
-
-<p class="fh-file">tsc on the same code, with Forma's checker bypassed</p>
-
-<<< @/snippets/effect/orders-undeclared.tsc.txt
-
-</div>
-</div>
+<WorkbenchEmbed example="orders" broken title="Live undeclared PaymentDeclined diagnostic" />
+<p class="fh-note">The signature omits <code>PaymentDeclined</code>. Click the problem to reveal the call that introduces it. Add the error to the signature, or press Reset, and generated TypeScript becomes available again.</p>
 </section>
 
 <section class="fh-section" aria-labelledby="strict-heading">
@@ -206,7 +184,7 @@ pageClass: forma-index forma-effect
 <article><h3>The Effect version</h3><p>The target is exactly <code>effect@4.0.0-rc.112</code>, a release candidate. Following Effect's releases means re-validating the generator, and supporting two Effect versions at once has not been considered.</p></article>
 <article><h3>The platform layer</h3><p>HTTP APIs, SQL, RPC, workers, and observability are where most Effect applications spend their code. None of <code>@effect/platform</code> is modelled; it would sit behind hand-written service layers.</p></article>
 <article><h3>Testing in Forma</h3><p>Tests are TypeScript harnesses written against the generated module. Forma has no way to write tests, test layers, or property checks in Forma itself.</p></article>
-<article><h3>Two checkers</h3><p>The general HM checker and the Effect checker disagree on these programs. Whether they converge, and which one the language server should run, is open.</p></article>
+<article><h3>Two checkers</h3><p>The general HM checker and the Effect checker disagree on these programs. The live embeds on this page use the Effect checker for diagnostics, body types, and generation. Convergence and language-server routing are still open.</p></article>
 </div>
 </section>
 

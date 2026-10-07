@@ -49,3 +49,6 @@ export {
   type MechanicsServiceImplementation,
   type MechanicsServiceMethod,
 } from "./mechanics/runtime.js";
+
+/** Display a mechanics checker type in Forma notation. */
+export { showType as showMechanicsType, type MType as MechanicsType } from "./mechanics/types.js";

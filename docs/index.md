@@ -10,7 +10,7 @@ pageClass: forma-index
 
 <div class="forma-home">
 
-<header class="fh-hero">
+<header class="fh-hero fh-hero--live">
 <div class="fh-hero__copy">
 <p class="fh-eyebrow"><span class="fh-dot"></span>Pre-alpha research · MIT licensed</p>
 <h1>Build your own typed domain language.</h1>
@@ -23,15 +23,9 @@ pageClass: forma-index
 </div>
 <div class="fh-hero__demo">
 
-::: code-group
+<WorkbenchEmbed example="contracts" title="Live contract workbench: edit, infer, and generate Effect TypeScript" />
 
-<<< @/snippets/home/entities.lisp [schema.lisp]
-
-<<< @/snippets/home/entities.ir.json [ir.json]
-
-:::
-
-<p class="fh-caption">The <strong>ir.json</strong> tab is real compiler output: the declarations the OCaml engine emits for this source, pinned by a <a href="https://github.com/bjacobso/forma-lang/tree/main/conformance/fixtures/canonical-ir">conformance fixture</a> that CI checks.</p>
+<p class="fh-caption">Edit real source. <strong>Watch typing</strong> removes a requirement, pauses on the compiler's red underline, and types the repair. Inferred contracts, diagnostics, typed IR, and Effect TypeScript all come from the source in this editor. Switch examples to explore inference and macro expansion.</p>
 </div>
 </header>
 
@@ -110,22 +104,23 @@ pageClass: forma-index
 <div class="fh-section__head">
 <p class="fh-label">03 · Diagnostics</p>
 <h2 id="errors-heading">Forget a capability, and it won't compile.</h2>
-<p>Here the body calls <code>Console.print</code>, but the signature declares no requirements. The typechecker rejects the operation and the diagnostic's span points at the author's <code>define</code> form, not at generated code. Macro expansion keeps the same provenance.</p>
+<p>Here the body calls <code>Console.print</code>, but the signature declares no requirements. The Effect checker rejects the operation and points at the call you wrote. Fix the contract and watch generation resume.</p>
 </div>
-<div class="fh-pair">
-<div>
-<p class="fh-file">log.lisp · signature missing <code>Console.print</code></p>
+<WorkbenchEmbed example="contracts" broken title="A live missing-capability error" />
+<p class="fh-note">This example starts with an undeclared capability. Click the diagnostic to jump to its source, then add <code>Console.print</code> to the signature or press Reset. The Effect checker points at the call that introduces the requirement.</p>
+</section>
 
-<<< @/snippets/home/log-undeclared.lisp{8-9} [log.lisp]
-
+<section class="fh-section" aria-labelledby="ambition-heading">
+<div class="fh-section__head">
+<p class="fh-label">The ambition</p>
+<h2 id="ambition-heading">A language should bring its tools with it.</h2>
+<p>The same program can be source, an outline, or a domain view. A form's descriptor can teach the editor its slots, the compiler its checks, and a reviewer its meaning. The ambition is to make new domain languages feel as well supported as built-in ones.</p>
 </div>
-<div>
-<p class="fh-file">typecheck diagnostic · verbatim engine output</p>
-
-<<< @/snippets/home/log-undeclared.diagnostic.json
-
-<p class="fh-note">The wording is still pre-alpha. The check and the span are real, and they run in your browser in the <a href="/playground/demo/contracts" target="_self">contracts demo</a>.</p>
-</div>
+<div class="fh-facts">
+<article><h3>See what an edit means</h3><p>Types, requirements, and values beside the form you are editing. The live workbench above demonstrates the compiler feedback loop.</p></article>
+<article><h3>Edit the structure</h3><p>The structural workbench shares one document between source and outline views, with live values, types, and descriptor placeholders.</p><a class="fh-link" href="/workbench/demo/" target="_self">Try the outline →</a></article>
+<article><h3>Review a proposal</h3><p>Assistant edits become a tree diff with analyzed consequences. Accepting a proposal applies one undoable edit.</p><a class="fh-link" href="/workbench-vision">Read the workbench vision →</a></article>
+<article><h3>Inspect what can run</h3><p>Capabilities stay visible in contracts. The structural demo pauses for approval before simulated directory and chat capabilities run.</p><a class="fh-link" href="/workbench">See today's capabilities and limits →</a></article>
 </div>
 </section>
 

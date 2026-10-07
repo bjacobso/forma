@@ -23,6 +23,7 @@ export interface RunRequest {
   readonly sourceId: string;
   readonly source: string;
   readonly passes: readonly EnginePassName[];
+  readonly dialect?: "effect";
 }
 
 export interface RunResult {
@@ -31,6 +32,9 @@ export interface RunResult {
   readonly passResults: readonly TimedPassResult[];
   readonly diagnostics: readonly Diagnostic[];
   readonly stoppedAt?: EnginePassName | undefined;
+  readonly generatedCode?: string;
+  readonly declarations?: unknown;
+  readonly contracts?: readonly { readonly name: string; readonly declared: string; readonly inferred: string }[];
 }
 
 export type WorkerRequest = RunRequest;

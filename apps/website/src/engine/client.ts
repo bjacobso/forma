@@ -23,10 +23,10 @@ export class EngineClient {
     }
   >();
 
-  run(source: string, passes: readonly EnginePassName[], sourceId = "demo"): Promise<RunResult> {
+  run(source: string, passes: readonly EnginePassName[], sourceId = "demo", dialect?: "effect"): Promise<RunResult> {
     const id = this.nextId++;
     const worker = this.ensureWorker();
-    const request: WorkerRequest = { id, sourceId, source, passes };
+    const request: WorkerRequest = { id, sourceId, source, passes, ...(dialect ? { dialect } : {}) };
 
     return new Promise((resolve, reject) => {
       const timeout = this.watchdog(id, !this.ready);

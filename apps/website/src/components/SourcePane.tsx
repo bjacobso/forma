@@ -61,7 +61,6 @@ export function SourcePane({
       <LispEditor
         ariaLabel="Forma source"
         className="embedded-editor"
-        key={theme}
         lineNumbers
         maxHeight={620}
         minHeight={360}

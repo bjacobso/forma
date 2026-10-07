@@ -17,18 +17,13 @@
 
 import { useState, useEffect, useRef, useImperativeHandle, forwardRef, useCallback } from "react";
 import { EditorView, placeholder as cmPlaceholder, lineNumbers } from "@codemirror/view";
-import { EditorState } from "@codemirror/state";
+import { Compartment, EditorState } from "@codemirror/state";
 import { bracketMatching } from "@codemirror/language";
 import { closeBrackets } from "@codemirror/autocomplete";
 import { history, defaultKeymap, historyKeymap } from "@codemirror/commands";
 import { keymap } from "@codemirror/view";
 import { lispSupport } from "../codemirror/syntax.js";
-import {
-  appDarkTheme,
-  appDarkSyntaxHighlighting,
-  appLightTheme,
-  appLightSyntaxHighlighting,
-} from "../codemirror/theme.js";
+import { editorAppearance, type SyntaxPalette } from "../codemirror/appearance.js";
 import { structuralKeymap } from "../codemirror/structural.js";
 import { createCompletionExtension } from "../codemirror/completion.js";
 import { createHoverExtension } from "../codemirror/hover.js";
@@ -61,6 +56,8 @@ export interface LispEditorProps {
   lineNumbers?: boolean;
   /** Theme (default: "app-dark") */
   theme?: "app-dark" | "vs-dark" | "light";
+  /** Syntax colors, independent of light/dark appearance. */
+  syntaxPalette?: SyntaxPalette;
   /** Additional className for outer container */
   className?: string;
   /** Placeholder text when editor is empty */
@@ -101,6 +98,7 @@ export const LispEditor = forwardRef<LispEditorRef, LispEditorProps>(function Li
     maxHeight = Infinity,
     lineNumbers: showLineNumbers = false,
     theme = "app-dark",
+    syntaxPalette = "forma",
     className,
     placeholder,
     showStatusBar = true,
@@ -115,6 +113,7 @@ export const LispEditor = forwardRef<LispEditorRef, LispEditorProps>(function Li
 ) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
+  const appearance = useRef(new Compartment());
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const [height, setHeight] = useState(minHeight);
@@ -181,9 +180,7 @@ export const LispEditor = forwardRef<LispEditorRef, LispEditorProps>(function Li
       // Language support (grammar + folding + indentation)
       lispSupport(),
       // Theme
-      ...(theme === "app-dark" || theme === "vs-dark"
-        ? [appDarkTheme, appDarkSyntaxHighlighting]
-        : [appLightTheme, appLightSyntaxHighlighting]),
+      appearance.current.of(editorAppearance(theme === "light" ? "light" : "dark", syntaxPalette)),
       // Core editing
       history(),
       bracketMatching(),
@@ -278,6 +275,12 @@ export const LispEditor = forwardRef<LispEditorRef, LispEditorProps>(function Li
       viewRef.current = null;
     };
   }, [createEditor]);
+
+  useEffect(() => {
+    viewRef.current?.dispatch({
+      effects: appearance.current.reconfigure(editorAppearance(theme === "light" ? "light" : "dark", syntaxPalette)),
+    });
+  }, [theme, syntaxPalette]);
 
   // Sync external value changes
   useEffect(() => {
