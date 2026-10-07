@@ -71,6 +71,9 @@ function metaForPath(pathname: string): RouteMeta | null {
     };
   }
 
+  const liveExample = pathname.match(/^\/(?:embed|live)\/([^/]+)$/)?.[1];
+  if (liveExample) return { title: "Live Forma workbench", description: playgroundDescription, path: pathname };
+
   const pipelineId = pathname.match(/^\/demo\/([^/]+)$/)?.[1];
   if (pipelineId) {
     const pipeline = getPipeline(pipelineId);

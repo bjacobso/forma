@@ -1,9 +1,8 @@
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
-import { homeSnippetDir, homeSnippets, spanLines, typecheckDiagnostic } from "./docsSnippets";
+import { homeSnippetDir, homeSnippets } from "./docsSnippets";
 import { effectPageSnippets, effectSnippetDir, typecheck } from "./effectPageSnippets";
-import { undeclaredCapabilitySource } from "./pipelines/sources";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const snippetDir = resolve(repoRoot, homeSnippetDir);
@@ -30,13 +29,7 @@ describe("docs homepage snippets", () => {
     ).toBe(snippets[name]);
   });
 
-  test("the homepage highlights the lines the diagnostic points at", () => {
-    const diagnostic = typecheckDiagnostic(undeclaredCapabilitySource, "log.lisp");
-    const [start, end] = spanLines(`${undeclaredCapabilitySource}\n`, diagnostic);
-    const homepage = readFileSync(resolve(repoRoot, "docs/index.md"), "utf8");
 
-    expect(homepage).toContain(`<<< @/snippets/home/log-undeclared.lisp{${start}-${end}}`);
-  });
 });
 
 describe("docs /effect page snippets", () => {
@@ -73,8 +66,11 @@ describe("docs /effect page snippets", () => {
     expect(page).toContain(`about ${ratio} times as many lines`);
   });
 
-  test("the page includes every snippet", () => {
+  test("the remaining static examples use the generated snippets", () => {
     const page = readFileSync(resolve(repoRoot, "docs/effect.md"), "utf8");
-    for (const name of Object.keys(snippets)) expect(page).toContain(`snippets/effect/${name}`);
+    for (const name of ["orders.lisp", "strict.lisp", "strict.forma.txt", "strict.tsc.txt", "sizes.md"]) {
+      expect(snippets[name]).toBeDefined();
+      expect(page).toContain(`snippets/effect/${name}`);
+    }
   });
 });

@@ -36,3 +36,4 @@ export {
   type SemanticRange,
   type LispEditorIntelligence,
 } from "./types.js";
+export { editorAppearance, type SyntaxPalette } from "./appearance.js";

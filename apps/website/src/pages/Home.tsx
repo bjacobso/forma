@@ -1,11 +1,9 @@
 import { Link } from "react-router-dom";
 import { Dfn } from "../components/Dfn";
+import { LiveWorkbench } from "../components/LiveWorkbench";
 import { PipelineGrid } from "../components/PipelineGrid";
 import { useDocumentMeta } from "../lib/documentMeta";
 import { playgroundDescription } from "../lib/siteCopy";
-import { contractSource, contractType } from "../pipelines/sources";
-
-const contractExcerpt = contractSource.slice(contractSource.indexOf("(: log"));
 
 export function Home() {
   useDocumentMeta({
@@ -32,13 +30,10 @@ export function Home() {
             </Link>
           </div>
         </div>
-        <div className="hero-specimen">
-          <span>log.lisp</span>
-          <pre>{contractExcerpt}</pre>
-          <div>Source → Read → Expand → Typecheck</div>
-          <strong>{contractType}</strong>
-        </div>
+
       </section>
+
+      <LiveWorkbench />
 
       <section className="claim-row">
         <Link to="/demo/entities">Keywords are library code</Link>
