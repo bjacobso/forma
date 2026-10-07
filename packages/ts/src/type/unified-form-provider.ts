@@ -1,5 +1,5 @@
 import type { SExpr } from "../reader/types.js";
-import { bootstrapFromSources } from "../descriptor/bootstrap.js";
+import { bootstrapFromSources, type BootstrappedPrelude } from "../descriptor/bootstrap.js";
 import { elaborateProgram } from "../descriptor/elaborate.js";
 import { head } from "../surface/effect.js";
 import { matchFormSyntax } from "../surface/form.js";
@@ -105,6 +105,17 @@ export function unifiedFormProvider(
           }
         : {}),
     });
+  return descriptorFormProvider(prelude, parent);
+}
+
+/**
+ * Types the forms a bootstrapped prelude describes: an application is a
+ * `Declaration`, and so is every name its declaration identifiers bind.
+ */
+export function descriptorFormProvider(
+  prelude: BootstrappedPrelude,
+  parent?: DSLTypeProvider,
+): DSLTypeProvider {
   return {
     isKnownForm: (name) =>
       prelude.descriptions.has(name) || !!parent?.isKnownForm(name),

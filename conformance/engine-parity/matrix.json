@@ -80,6 +80,13 @@
       "reason": "formSlots is implemented by the TypeScript host only; it reads descriptors with the TypeScript descriptor parser."
     },
     {
+      "id": "editor-services",
+      "status": "intentional-difference",
+      "typescript": "analysis-workspace",
+      "ocaml": "editor-abi",
+      "reason": "The language server and editors run the TypeScript analysis workspace (docs/rfcs/0004-one-analysis-architecture.md). The OCaml editorAnalyze, editorHover, editorCompletion, editorDefinition, and editorFormat ops have no JavaScript consumer and are not compared."
+    },
+    {
       "id": "parse-nil",
       "status": "gap",
       "fixture": "cases.json (operational-effects, effect-typescript/operational-effects, multi-service-checkout, resource-scope)",

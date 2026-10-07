@@ -23,7 +23,7 @@ import {
   type SyntaxNode,
   type SyntaxSpan,
 } from "../syntax/identity.js";
-import { editorDescriptors, type DescriptorLookup, type DescriptorSource } from "./descriptors.js";
+import { descriptorsFromExpressions, type DescriptorLookup, type DescriptorSource } from "./descriptors.js";
 
 export interface SymbolDocument {
   readonly sourceId: string;
@@ -35,6 +35,40 @@ export interface SymbolDocument {
 export interface SymbolIndexOptions {
   /** Descriptors in addition to the `__form-descriptor`s found in the documents. */
   readonly descriptors?: DescriptorSource | undefined;
+  /**
+   * Work to reuse from earlier calls. Documents whose text is unchanged are
+   * not read again, and the expansion of an unchanged leading run of
+   * documents (such as preludes) is reused.
+   */
+  readonly cache?: SymbolIndexCache | undefined;
+}
+
+/** Reusable work between `indexSymbols` calls. Create one per workspace. */
+export interface SymbolIndexCache {
+  readonly prepared: Map<string, PreparedDocument>;
+  expansions: readonly ExpandedDocument[];
+  descriptors?: { readonly key: readonly unknown[]; readonly lookup: DescriptorLookup } | undefined;
+}
+
+export function createSymbolIndexCache(): SymbolIndexCache {
+  return { prepared: new Map(), expansions: [] };
+}
+
+/** A document read for indexing, independent of the other documents. */
+interface PreparedDocument {
+  readonly source: string;
+  readonly identity: SyntaxIdentity;
+  readonly index: SyntaxIndex;
+  readonly exprs: readonly SExpr[];
+  /** Author-written nodes, and whether each is inside a macro definition's template. */
+  readonly authors: readonly (readonly [SExpr, SyntaxNode, boolean])[];
+}
+
+/** One document's expanded forms, and the macro environment after them. */
+interface ExpandedDocument {
+  readonly prepared: PreparedDocument;
+  readonly forms: readonly SExpr[];
+  readonly env: Env;
 }
 
 export type DefinitionKind =
@@ -173,48 +207,48 @@ export function indexSymbols(
   documents: readonly SymbolDocument[],
   options: SymbolIndexOptions = {},
 ): SymbolIndex {
-  const descriptors = editorDescriptors(
-    [...new Map(documents.map((document) => [document.sourceId, document.source])).values()],
-    options.descriptors,
-  );
+  const cache = options.cache ?? createSymbolIndexCache();
+  // A later document with the same source id replaces an earlier one.
+  const unique = [...new Map(documents.map((document) => [document.sourceId, document])).values()];
+  const prepared = unique.map((document) => prepareDocument(cache, document));
+  const descriptorKey = [options.descriptors, ...prepared];
+  if (
+    !cache.descriptors ||
+    cache.descriptors.key.length !== descriptorKey.length ||
+    cache.descriptors.key.some((item, position) => item !== descriptorKey[position])
+  ) {
+    cache.descriptors = {
+      key: descriptorKey,
+      lookup: descriptorsFromExpressions(
+        prepared.flatMap((document) => document.exprs),
+        options.descriptors,
+      ),
+    };
+  }
+  const descriptors = cache.descriptors.lookup;
   const authors = new Map<SExpr, AuthorNode>();
   // Nodes inside macro definitions. Their templates are copied into every
   // expansion, so they count only while the definition itself is walked.
   const macroNodes = new Set<SExpr>();
-  // A later document with the same source id replaces an earlier one.
-  const unique = [...new Map(documents.map((document) => [document.sourceId, document])).values()];
   const indexed: IndexedDocument[] = unique.map((document, order) => {
-    const identity = document.identity ?? identifySyntax(document.source);
-    const index = indexSyntax(identity);
-    const exprs = toSExprMany(parse(document.source).redTree);
-    const result: IndexedDocument = {
-      sourceId: document.sourceId,
-      order,
-      identity,
-      index,
-      exprs,
-    };
-    const visit = (expr: SExpr, inMacro: boolean): void => {
-      const node = index.withSpan(expr.loc.start, expr.loc.end);
-      if (node && matchesSyntaxKind(expr, node.kind) && !authors.has(expr)) {
-        authors.set(expr, { document: result, node, expr });
-        if (inMacro) macroNodes.add(expr);
-      }
-      // A macro's name and parameters are ordinary; its body is template.
-      const macroHead = headName(expr);
-      const definesMacro = macroHead === "__macro" || macroHead === "macro";
-      children(expr).forEach((child, position) => visit(child, inMacro || (definesMacro && position >= (macroHead === "macro" ? 2 : 3))));
-    };
-    exprs.forEach((expr) => visit(expr, false));
+    const { identity, index, exprs } = prepared[order]!;
+    const result: IndexedDocument = { sourceId: document.sourceId, order, identity, index, exprs };
+    for (const [expr, node, inMacro] of prepared[order]!.authors) {
+      if (authors.has(expr)) continue;
+      authors.set(expr, { document: result, node, expr });
+      if (inMacro) macroNodes.add(expr);
+    }
     return result;
   });
 
-  const expanded = expandDocuments(indexed);
+  const expanded = expandDocuments(cache, indexed, prepared);
   const builtinNames = kernelNames();
   const orders = new Map(indexed.map((document) => [document.sourceId, document.order]));
   const walker = new SymbolWalker(authors, macroNodes, descriptors, builtinNames, orders);
   for (const { document, expr } of expanded.forms) walker.collectGlobals(expr, document);
   for (const { document, expr } of expanded.forms) walker.walk(expr, walker.root, document, null);
+  // Expansion replaces a macro call, so its head is found in the author's code.
+  for (const document of indexed) for (const expr of document.exprs) walker.referenceMacroCalls(expr);
 
   const sorted = <T extends { sourceId: string; span: SyntaxSpan }>(items: Iterable<T>) =>
     [...items].sort(
@@ -262,6 +296,32 @@ export function findReferences(index: SymbolIndex, target: SymbolTarget): Symbol
 
 let kernelNameSet: ReadonlySet<string> | undefined;
 
+/** Heads the surface syntax rewrites before expansion. */
+const SURFACE_FORMS = new Set([
+  "macro",
+  "form",
+  "type",
+  "typeclass",
+  "instance",
+  "class",
+  "error",
+  "service",
+  "layer",
+  "import",
+  "export",
+  "export-from",
+]);
+
+/** What a kernel name is: a special form, a builtin function, or a prelude macro. */
+export type KernelNameKind = "special-form" | "builtin" | "macro";
+
+/** The kind of a name the kernel provides, or `undefined` for other names. */
+export function kernelNameKind(name: string): KernelNameKind | undefined {
+  if (SPECIAL_FORMS.has(name) || SURFACE_FORMS.has(name)) return "special-form";
+  if (Object.hasOwn(defaultBuiltins, name)) return "builtin";
+  return kernelNames().has(name) ? "macro" : undefined;
+}
+
 /** Names the kernel provides: builtins, special forms, and prelude macros. */
 export function kernelNames(): ReadonlySet<string> {
   kernelNameSet ??= new Set([
@@ -281,14 +341,63 @@ interface ExpandedForm {
   readonly expr: SExpr;
 }
 
-function expandDocuments(documents: readonly IndexedDocument[]): {
-  readonly forms: readonly ExpandedForm[];
-} {
+/** Read a document, or reuse its reading while its text and identity are unchanged. */
+function prepareDocument(cache: SymbolIndexCache, document: SymbolDocument): PreparedDocument {
+  const cached = cache.prepared.get(document.sourceId);
+  if (
+    cached &&
+    cached.source === document.source &&
+    (document.identity === undefined || document.identity === cached.identity)
+  ) {
+    return cached;
+  }
+  const identity = document.identity ?? identifySyntax(document.source);
+  const index = indexSyntax(identity);
+  const exprs = toSExprMany(parse(document.source).redTree);
+  const authors: (readonly [SExpr, SyntaxNode, boolean])[] = [];
+  const seen = new Set<SExpr>();
+  const visit = (expr: SExpr, inMacro: boolean): void => {
+    const node = index.withSpan(expr.loc.start, expr.loc.end);
+    if (node && matchesSyntaxKind(expr, node.kind) && !seen.has(expr)) {
+      seen.add(expr);
+      authors.push([expr, node, inMacro]);
+    }
+    // A macro's name and parameters are ordinary; its body is template.
+    const macroHead = headName(expr);
+    const definesMacro = macroHead === "__macro" || macroHead === "macro";
+    children(expr).forEach((child, position) =>
+      visit(child, inMacro || (definesMacro && position >= (macroHead === "macro" ? 2 : 3))),
+    );
+  };
+  exprs.forEach((expr) => visit(expr, false));
+  const result: PreparedDocument = { source: document.source, identity, index, exprs, authors };
+  cache.prepared.set(document.sourceId, result);
+  return result;
+}
+
+/**
+ * Expand every document in order, each in the macro environment the ones
+ * before it produce. The expansions of a leading run of unchanged documents
+ * are reused.
+ */
+function expandDocuments(
+  cache: SymbolIndexCache,
+  documents: readonly IndexedDocument[],
+  prepared: readonly PreparedDocument[],
+): { readonly forms: readonly ExpandedForm[] } {
   const builtins = defaultBuiltins;
-  const prelude = getPreludeEnvSync(builtins);
-  let env: Env = prelude;
-  const forms: ExpandedForm[] = [];
-  for (const document of documents) {
+  let env: Env = getPreludeEnvSync(builtins);
+  const expansions: ExpandedDocument[] = [];
+  let reusing = true;
+  for (const [position, document] of documents.entries()) {
+    const reused = reusing ? cache.expansions[position] : undefined;
+    if (reused && reused.prepared === prepared[position]) {
+      expansions.push(reused);
+      env = reused.env;
+      continue;
+    }
+    reusing = false;
+    const forms: SExpr[] = [];
     for (const expr of document.exprs) {
       try {
         const result = expandProgramSync([expr], {
@@ -298,14 +407,20 @@ function expandDocuments(documents: readonly IndexedDocument[]): {
           keepMacroDefs: true,
         });
         env = result.env;
-        for (const expanded of result.exprs) forms.push({ document, expr: expanded });
+        forms.push(...result.exprs);
       } catch {
         // A form whose expansion fails is indexed as written.
-        forms.push({ document, expr });
+        forms.push(expr);
       }
     }
+    expansions.push({ prepared: prepared[position]!, forms, env });
   }
-  return { forms };
+  cache.expansions = expansions;
+  return {
+    forms: expansions.flatMap((expansion, position) =>
+      expansion.forms.map((expr) => ({ document: documents[position]!, expr })),
+    ),
+  };
 }
 
 // =============================================================================
@@ -562,6 +677,32 @@ class SymbolWalker {
       resolution,
       ...(definition ? { definition: definition.key } : {}),
     });
+  }
+
+  /** References the global macro named by the head of each macro call in author-written code. */
+  referenceMacroCalls(expr: SExpr): void {
+    if (expr._tag !== "List" && expr._tag !== "Vector" && expr._tag !== "Map") return;
+    if (expr._tag === "List") {
+      const head = headName(expr);
+      if (head === "quote" || head === "quasiquote" || head === "macro" || head === "__macro") return;
+      const first = expr.items[0];
+      const author = first ? this.authors.get(first) : undefined;
+      if (first?._tag === "Sym" && author && !this.macroNodes.has(first)) {
+        const key = `${author.document.sourceId}#${author.node.id}`;
+        const definition = this.global(first.name, author);
+        if (definition?.kind === "macro" && !this.definitions.has(key) && !this.references.has(key)) {
+          this.references.set(key, {
+            name: first.name,
+            sourceId: author.document.sourceId,
+            nodeId: author.node.id,
+            span: author.node.span,
+            resolution: "definition",
+            definition: definition.key,
+          });
+        }
+      }
+    }
+    children(expr).forEach((child) => this.referenceMacroCalls(child));
   }
 
   /** The latest global definition before the reference, else the first after it. */

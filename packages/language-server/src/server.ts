@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import {
   createConnection,
-  DidChangeConfigurationNotification,
   ProposedFeatures,
   TextDocuments,
   TextDocumentSyncKind,
@@ -9,6 +8,7 @@ import {
   type InitializeResult,
 } from "vscode-languageserver/node.js";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { fileURLToPath } from "node:url";
 
 import { getCompletions } from "./handlers/completion.js";
 import { getDefinition } from "./handlers/definition.js";
@@ -16,26 +16,26 @@ import { getDiagnostics } from "./handlers/diagnostics.js";
 import { formatDocument } from "./handlers/formatting.js";
 import { getHover } from "./handlers/hover.js";
 import { getReferences } from "./handlers/references.js";
-import { OcamlWorkspaceSession } from "./session.js";
+import { prepareRename, rename } from "./handlers/rename.js";
+import { getSemanticTokens, semanticTokensLegend } from "./handlers/semantic-tokens.js";
+import { getDocumentSymbols } from "./handlers/symbols.js";
+import { FormaWorkspace } from "./workspace.js";
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
 
-let workspaceSession: OcamlWorkspaceSession | undefined;
-let hasConfigurationCapability = false;
+let workspace: FormaWorkspace | undefined;
 const formattingEnabled = ["1", "true"].includes(
   process.env["FORMA_LANGUAGE_SERVER_ENABLE_FORMATTING"] ?? "",
 );
 
 connection.onInitialize((params: InitializeParams): InitializeResult => {
-  hasConfigurationCapability = Boolean(params.capabilities.workspace?.configuration);
-  const workspaceRoot =
+  const root =
     params.workspaceFolders?.[0]?.uri ??
     params.rootUri ??
     (params.rootPath ? `file://${params.rootPath}` : undefined);
-
-  workspaceSession = new OcamlWorkspaceSession({
-    workspaceRoot: workspaceRoot ? workspaceRoot.replace(/^file:\/\//, "") : process.cwd(),
+  workspace = new FormaWorkspace({
+    workspaceRoot: root?.startsWith("file:") ? fileURLToPath(root) : process.cwd(),
   });
 
   return {
@@ -44,109 +44,84 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
       hoverProvider: true,
       completionProvider: {
         resolveProvider: false,
-        triggerCharacters: ["(", ":", "/", "-"],
-        completionItem: {
-          labelDetailsSupport: true,
-        },
+        triggerCharacters: ["(", ":"],
       },
       definitionProvider: true,
       referencesProvider: true,
+      renameProvider: { prepareProvider: true },
+      documentSymbolProvider: true,
+      semanticTokensProvider: { legend: semanticTokensLegend, full: true },
       documentFormattingProvider: formattingEnabled,
     },
   };
 });
 
 connection.onInitialized(() => {
-  if (hasConfigurationCapability) {
-    connection.client.register(DidChangeConfigurationNotification.type, undefined).catch(() => {
-      // Configuration is optional. The server still runs with env/default settings.
-    });
-  }
-});
-
-documents.onDidOpen(async (event) => {
-  await publishDiagnostics(event.document);
+  workspace?.ready().catch((error: unknown) => connection.console.error(message(error)));
 });
 
 documents.onDidChangeContent(async (event) => {
-  await publishDiagnostics(event.document);
+  if (!workspace) return;
+  publish(await workspace.update(event.document));
 });
 
-documents.onDidClose((event) => {
-  workspaceSession?.forgetDocument(event.document.uri);
+documents.onDidClose(async (event) => {
   connection.sendDiagnostics({ uri: event.document.uri, diagnostics: [] });
+  if (workspace) publish(await workspace.close(event.document.uri));
 });
 
-connection.onHover(async (params) => {
-  const session = workspaceSession;
-  const document = documents.get(params.textDocument.uri);
-  if (!session || !document) return null;
-  return await getHover(session, document, params);
-});
+/** Run a request against the current text of its document. */
+function handle<P extends { textDocument: { uri: string } }, R>(
+  fallback: R,
+  run: (workspace: FormaWorkspace, document: TextDocument, params: P) => R,
+): (params: P) => Promise<R> {
+  return async (params) => {
+    const document = documents.get(params.textDocument.uri);
+    if (!workspace || !document) return fallback;
+    await workspace.update(document);
+    return run(workspace, document, params);
+  };
+}
 
-connection.onCompletion(async (params) => {
-  const session = workspaceSession;
-  const document = documents.get(params.textDocument.uri);
-  if (!session || !document) {
-    return { isIncomplete: false, items: [] };
-  }
-  return await getCompletions(session, document, params);
-});
+connection.onHover(handle(null, getHover));
+connection.onCompletion(handle({ isIncomplete: false, items: [] }, getCompletions));
+connection.onDefinition(handle(null, getDefinition));
+connection.onReferences(handle([], getReferences));
+connection.onPrepareRename(handle(null, prepareRename));
+connection.onRenameRequest(handle(null, rename));
+connection.onDocumentSymbol(handle([], getDocumentSymbols));
+connection.languages.semanticTokens.on(
+  handle({ data: [] }, (workspace, document) => getSemanticTokens(workspace, document)),
+);
+connection.onDocumentFormatting(
+  handle([], (workspace, document) => (formattingEnabled ? formatDocument(workspace, document) : [])),
+);
 
-connection.onDefinition(async (params) => {
-  const session = workspaceSession;
-  const document = documents.get(params.textDocument.uri);
-  if (!session || !document) return null;
-  return await getDefinition(session, document, params);
-});
-
-connection.onReferences(async (params) => {
-  const session = workspaceSession;
-  const document = documents.get(params.textDocument.uri);
-  if (!session || !document) return [];
-  return await getReferences(session, document, params);
-});
-
-connection.onDocumentFormatting(async (params) => {
-  if (!formattingEnabled) return [];
-  const session = workspaceSession;
-  const document = documents.get(params.textDocument.uri);
-  if (!session || !document) return [];
-  return await formatDocument(session, document, params.options);
-});
-
-connection.onShutdown(async () => {
-  await workspaceSession?.close();
-});
-
-connection.onExit(() => {
-  process.exit(0);
-});
-
-async function publishDiagnostics(document: TextDocument): Promise<void> {
-  const session = workspaceSession;
-  if (!session) return;
-
-  try {
-    connection.sendDiagnostics(await getDiagnostics(session, document));
-  } catch (error) {
-    connection.console.error(error instanceof Error ? error.message : String(error));
-    connection.sendDiagnostics({
-      uri: document.uri,
-      diagnostics: [
-        {
-          range: {
-            start: { line: 0, character: 0 },
-            end: { line: 0, character: 1 },
+function publish(changed: readonly TextDocument[]): void {
+  for (const document of changed) {
+    if (!workspace || !documents.get(document.uri)) continue;
+    try {
+      connection.sendDiagnostics(getDiagnostics(workspace, document));
+    } catch (error) {
+      connection.console.error(message(error));
+      connection.sendDiagnostics({
+        uri: document.uri,
+        diagnostics: [
+          {
+            range: { start: { line: 0, character: 0 }, end: { line: 0, character: 1 } },
+            message: message(error),
+            source: "forma",
+            severity: 1,
+            code: "forma/internal",
           },
-          message: error instanceof Error ? error.message : String(error),
-          source: "forma",
-          severity: 1,
-          code: "forma/internal",
-        },
-      ],
-    });
+        ],
+      });
+    }
   }
+}
+
+function message(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 documents.listen(connection);

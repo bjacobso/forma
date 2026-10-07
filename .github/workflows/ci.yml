@@ -108,5 +108,4 @@ jobs:
         run: xargs opam install -y < .github/ocaml-packages.txt
       - run: opam exec -- pnpm test:ocaml
       - run: pnpm build:js
-      - run: pnpm --filter @formalang/language-server build:release
       - run: pnpm pack:check

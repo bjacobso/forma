@@ -2,7 +2,7 @@ import { parse } from "../reader/parser.js";
 import { toSExprMany } from "../reader/to-sexpr.js";
 import { headSym as head, type SExpr } from "../reader/types.js";
 const headSym = (e?: SExpr): string | undefined => (e ? head(e) : undefined);
-import type { Diagnostic } from "../engine/operations.js";
+import type { Diagnostic } from "../diagnostic/diagnostic.js";
 import { defaultBuiltins } from "../Builtins.js";
 
 /** A resolver is supplied by the host. IDs identify file instances, not contents. */

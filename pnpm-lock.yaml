@@ -200,9 +200,9 @@ importers:
 
   packages/language-server:
     dependencies:
-      '@formalang/host':
+      '@formalang/ts':
         specifier: workspace:*
-        version: link:../host
+        version: link:../ts
       vscode-languageserver:
         specifier: ^9.0.1
         version: 9.0.1

@@ -231,3 +231,27 @@ describe("indexSymbols", () => {
     ]);
   });
 });
+
+describe("indexSymbols with a cache", () => {
+  test("gives the same index as a fresh call after documents change", () => {
+    const prelude = { sourceId: "prelude", source: "(macro (defstep name) `(define ~name 1))\n(define base 2)" };
+    const versions = [
+      "(defstep verify)\n(+ verify base)",
+      "(defstep verify)\n(defstep check)\n(+ check verify base)",
+      "(define verify 3)\n(+ verify base)",
+    ];
+    const cache = Editor.createSymbolIndexCache();
+    for (const source of versions) {
+      const documents = [prelude, { sourceId: "doc", source }];
+      const cached = Editor.indexSymbols(documents, { cache });
+      const fresh = Editor.indexSymbols(documents);
+      const strip = (index: Editor.SymbolIndex) => ({
+        definitions: index.definitions,
+        references: index.references,
+      });
+      expect(strip(cached)).toEqual(strip(fresh));
+    }
+    // The prelude's reading and expansion were reused across the edits.
+    expect(cache.prepared.get("prelude")?.source).toBe(prelude.source);
+  });
+});

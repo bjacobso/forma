@@ -12,32 +12,10 @@ import * as Type from "../Type.js";
 import { resolveModuleGraph, sourceModuleResolver, normalizeModuleId, type ModuleGraph } from "../modules/graph.js";
 import { checkModuleGraph, moduleResultDisplay } from "../modules/check.js";
 import { ModuleRuntime } from "../modules/runtime.js";
+import { diagnosticFromUnknown, type Diagnostic, type DiagnosticPhase, type Span } from "../diagnostic/diagnostic.js";
 
-export interface Span {
-  readonly sourceId: string;
-  readonly startOffset: number;
-  readonly endOffset: number;
-  readonly startLine?: number | undefined;
-  readonly startColumn?: number | undefined;
-  readonly endLine?: number | undefined;
-  readonly endColumn?: number | undefined;
-}
-
-export interface Diagnostic {
-  readonly code: string;
-  readonly severity: "error" | "warning" | "info";
-  readonly message: string;
-  readonly phase?:
-    | "parse"
-    | "expand"
-    | "typecheck"
-    | "evaluate"
-    | "elaborate"
-    | "host-effect"
-    | "emit";
-  readonly span?: Span | undefined;
-  readonly details?: Record<string, unknown> | undefined;
-}
+export type { Diagnostic, DiagnosticPhase, Span } from "../diagnostic/diagnostic.js";
+export { diagnosticFromUnknown } from "../diagnostic/diagnostic.js";
 
 export type PassName = "parse" | "expand" | "typecheck" | "evaluate";
 
@@ -193,8 +171,6 @@ export interface EvaluateInSessionRequest {
   readonly stepLimit?: number | undefined;
   readonly observe?: Evaluator.ObservationOptions | undefined;
 }
-
-type DiagnosticPhase = NonNullable<Diagnostic["phase"]>;
 
 export function parse(request: ParseRequest): ParseResult {
   const { exprs: _exprs, ...result } = parseSource(request);
@@ -573,58 +549,6 @@ export function typeProjection(display: string): TypeProjection {
   return { kind: "display", display };
 }
 
-export function diagnosticFromUnknown(
-  error: unknown,
-  phase: DiagnosticPhase,
-  sourceId: string,
-): Diagnostic {
-  const cause = effectCauseFromUnknown(error);
-  if (cause?._tag === "Fail") {
-    return diagnosticFromUnknown(cause.error, phase, sourceId);
-  }
-  if (cause?._tag === "Die") {
-    return diagnosticFromUnknown(cause.defect, phase, sourceId);
-  }
-  if (error && typeof error === "object") {
-    const candidate = error as {
-      _tag?: string;
-      message?: string;
-      origin?: { span?: { start?: number; end?: number } };
-      loc?: { sourceId?: string; start?: number; end?: number; line?: number; col?: number };
-      details?: Record<string, unknown>;
-    };
-    const span: Span | undefined = candidate.origin?.span
-      ? {
-          sourceId,
-          startOffset: candidate.origin.span.start ?? 0,
-          endOffset: candidate.origin.span.end ?? candidate.origin.span.start ?? 0,
-        }
-      : candidate.loc
-        ? {
-            sourceId:candidate.loc.sourceId ?? sourceId,
-            startOffset: candidate.loc.start ?? 0,
-            endOffset: candidate.loc.end ?? candidate.loc.start ?? 0,
-            ...(candidate.loc.line !== undefined ? { startLine: candidate.loc.line } : {}),
-            ...(candidate.loc.col !== undefined ? { startColumn: candidate.loc.col } : {}),
-          }
-        : undefined;
-    return {
-      code: typeof candidate.details?.["code"] === "string" ? candidate.details["code"] : candidate._tag ?? `${phase}/error`,
-      severity: "error",
-      message: candidate.message ?? String(error),
-      phase,
-      ...(span ? { span } : {}),
-      ...(candidate.details ? { details: candidate.details } : {}),
-    };
-  }
-  return {
-    code: `${phase}/error`,
-    severity: "error",
-    message: String(error),
-    phase,
-  };
-}
-
 function spanFromLoc(sourceId: string, loc: Reader.Loc): Span {
   return {
     sourceId:loc.sourceId ?? sourceId,
@@ -834,23 +758,4 @@ function primitiveType(name: string): Type.Type {
     default:
       return Type.TCon(name);
   }
-}
-
-function effectCauseFromUnknown(error: unknown):
-  | {
-      readonly _tag: string;
-      readonly error?: unknown;
-      readonly defect?: unknown;
-    }
-  | undefined {
-  if (!error || typeof error !== "object") return undefined;
-  for (const symbol of Object.getOwnPropertySymbols(error)) {
-    if (symbol.description === "effect/Runtime/FiberFailure/Cause") {
-      const cause = (error as Record<symbol, unknown>)[symbol];
-      return cause && typeof cause === "object"
-        ? (cause as { readonly _tag: string; readonly error?: unknown; readonly defect?: unknown })
-        : undefined;
-    }
-  }
-  return undefined;
 }

@@ -155,14 +155,7 @@ export {
   type TypedSpan,
   type LspError,
 } from "../lsp/hm-lsp.js";
-export type { DSLTypeProvider, DSLSlotInfo } from "./dsl-provider.js";
-export {
-  createDSLTypeProviderFromRegistry,
-  type CreateDSLTypeProviderOptions,
-  type TypedSlotExtractor,
-  type TypeBindingsExtractor,
-  type ResultTypeForExprExtractor,
-} from "./dsl-provider-from-registry.js";
+export type { DSLTypeProvider, DSLSlotInfo, SlotMode } from "./dsl-provider.js";
 
 // ---------------------------------------------------------------------------
 // Convenience: infer from source string

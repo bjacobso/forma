@@ -29,7 +29,7 @@ import type {
   SourceMapEntry,
 } from "../artifact/artifact.js";
 import { defaultBuiltins } from "../builtins/index.js";
-import type { Diagnostic, Span } from "../engine/operations.js";
+import type { Diagnostic, Span } from "../diagnostic/diagnostic.js";
 import { sourceTraceOf } from "../evaluator/source-trace.js";
 import { expandProgramSync } from "../expander/expand.js";
 import { parse } from "../reader/parser.js";

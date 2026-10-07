@@ -35,9 +35,6 @@ try {
     for (const entry of entries) {
       assert(!/^package\/(src|test|node_modules)\//.test(entry), `${manifest.name}: unexpected ${entry}`);
     }
-    if (directory === "language-server") {
-      assert(entries.has("package/dist/runtime/jsoo_entry.cjs"), "Language server is missing its portable engine");
-    }
     packages.push({ directory, manifest, archive });
     console.log(`Packed ${manifest.name}: exports and dependencies verified`);
   }
@@ -52,15 +49,11 @@ try {
     for (const name of ${JSON.stringify(packages.flatMap(p => Object.keys(p.manifest.exports).filter(e => e !== './server').map(e => p.manifest.name + (e === '.' ? '' : e.slice(1)))) )}) await import(name);
     const { createDefaultLanguageHost } = await import(${JSON.stringify(byDirectory.host)});
     assert.equal(typeof createDefaultLanguageHost().parseSync, 'function');
-    const { OcamlAbiClient } = await import(${JSON.stringify(byDirectory['language-server'])});
-    assert.equal((await OcamlAbiClient.inspectArtifact()).status, 'ready');
-    const client = await OcamlAbiClient.create();
-    try {
-      const parsed = await client.request({ op: 'parse', sourceId: 'package-smoke', source: '(+ 1 2)' });
-      assert.equal(parsed.ok, true);
-    }
-    finally { await client.close(); }
-    console.log('Installed tarballs: all library exports and bundled OCaml engine work');
+    const { FormaWorkspace } = await import(${JSON.stringify(byDirectory['language-server'])});
+    const workspace = new FormaWorkspace({ preludePaths: [] });
+    workspace.analysis.setDocument('package-smoke', '(define (double n) (* n 2))\\n(double 4)');
+    assert.equal(workspace.analysis.analysis('package-smoke').resultType, 'Number');
+    console.log('Installed tarballs: all library exports and the language server workspace work');
   `;
   await writeFile(join(consumer, "smoke.mjs"), smoke);
   console.log(run(process.execPath, ["smoke.mjs"], consumer).trim());

@@ -20,6 +20,7 @@ export {
   type StructuralEditResult,
 } from "./editor/structural-editing.js";
 export {
+  createSymbolIndexCache,
   findReferences,
   indexSymbols,
   type DefinitionKind,
@@ -27,6 +28,7 @@ export {
   type SymbolDefinition,
   type SymbolDocument,
   type SymbolIndex,
+  type SymbolIndexCache,
   type SymbolIndexOptions,
   type SymbolOccurrences,
   type SymbolReference,

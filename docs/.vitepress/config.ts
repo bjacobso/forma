@@ -63,6 +63,7 @@ export default defineConfig({
           { text: "0001: One language, one syntax", link: "/rfcs/0001-unified-syntax" },
           { text: "0002: Modules and packages", link: "/rfcs/0002-modules-and-packages" },
           { text: "0003: Direct-style effects", link: "/rfcs/0003-direct-style-effects" },
+          { text: "0004: One analysis architecture", link: "/rfcs/0004-one-analysis-architecture" },
         ],
       },
       {

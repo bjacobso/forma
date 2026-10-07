@@ -27,6 +27,7 @@ import { InferenceError } from "./errors.js";
 import type { DSLTypeProvider } from "./dsl-provider.js";
 import { defaultBuiltins } from "../builtins/index.js";
 import { expandKernelExprsSync } from "../evaluator/frontend.js";
+import type { Env } from "../Env.js";
 import {
   lower,
   setDslProvider,
@@ -69,6 +70,11 @@ function isDef(expr: SExpr): expr is SExpr & { _tag: "List" } {
   );
 }
 
+export interface LowerProgramOptions {
+  /** Macros visible to the program, such as those its preludes define. Kernel macros are always visible. */
+  readonly macroEnv?: Env | undefined;
+}
+
 /**
  * Lower a sequence of top-level SExprs into CoreExprs.
  *
@@ -79,7 +85,11 @@ function isDef(expr: SExpr): expr is SExpr & { _tag: "List" } {
  *   When provided, forms like (entity ...) are lowered to CDSLForm nodes
  *   instead of CApp nodes (which would fail with "Unbound variable").
  */
-export function lowerProgram(exprs: readonly SExpr[], dslProvider?: DSLTypeProvider): CoreExpr[] {
+export function lowerProgram(
+  exprs: readonly SExpr[],
+  dslProvider?: DSLTypeProvider,
+  options: LowerProgramOptions = {},
+): CoreExpr[] {
   const formTypes = new Map(exprs.flatMap(expr => {const entry=typeDefinition(expr);return entry ? [entry] : [];}));
   // Set the module-level provider for use by lower/lowerList/lowerDSLForm
   const prevProvider = getDslProvider();
@@ -93,7 +103,10 @@ export function lowerProgram(exprs: readonly SExpr[], dslProvider?: DSLTypeProvi
     if (head(e)==="__operation" && e._tag === "List" && e.items[2]?._tag === "Vector" && !e.items[2].items.length && head(signatures.get(name(e.items[1])!))==="Effect") return list(e,[sym(e,"define"),e.items[1]!,e.items.length === 4 ? e.items[3]! : list(e,[sym(e,"do"),...e.items.slice(3)])]);
     return e;
   }) : exprs;
-  const expanded = expandKernelExprsSync(normalized, { builtins: defaultBuiltins }).expanded;
+  const expanded = expandKernelExprsSync(normalized, {
+    builtins: defaultBuiltins,
+    ...(options.macroEnv ? { env: options.macroEnv } : {}),
+  }).expanded;
 
   try {
     const signatures = new Map<string, ReturnType<typeof parseTypeExpr>>();

@@ -1,6 +1,6 @@
 import { lowerOntologyOperations } from "../surface/ontology-effect.js";
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
-import type { Span } from "../engine/operations.js";
+import type { Span } from "../diagnostic/diagnostic.js";
 import { normalizeEffectProgram, serviceValues } from "../surface/effect.js";
 import type { SExpr } from "../reader/types.js";
 
