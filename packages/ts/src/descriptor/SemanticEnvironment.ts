@@ -9,7 +9,7 @@
 import { lowerMembers } from "../surface/members.js";
 import { Effect, Layer } from "effect";
 import type { SExpr } from "../reader/types.js";
-import { InferContext, makeInferContext } from "../type/context.js";
+import { InferContext, makeOwnedInferContext } from "../type/context.js";
 import { resetNodeIds } from "../type/core-expr.js";
 import { inferProgram } from "../type/infer.js";
 import { lowerProgram } from "../type/lower.js";
@@ -191,7 +191,7 @@ export class SimpleSemanticEnvironment implements SemanticEnvironment {
       const initialEnv = new Map(
         [...this.getVisibleBindings()].map(([name, type]) => [name, mono(type)] as const),
       );
-      const ctxService = Effect.runSync(makeInferContext());
+      const ctxService = Effect.runSync(makeOwnedInferContext());
       const layer = Layer.succeed(InferContext, ctxService);
       const type = Effect.runSync(
         Effect.provide(inferProgram(coreExprs, initialEnv, undefined, [expr]), layer),

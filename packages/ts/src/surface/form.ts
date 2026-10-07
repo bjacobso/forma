@@ -17,7 +17,7 @@ import { defaultBuiltins } from "../builtins/index.js";
 import { evaluateExprs } from "../evaluator/eval.js";
 import type { KValue, BuiltinFn } from "../evaluator/types.js";
 import { showType, type Type } from "../type/types.js";
-import { InferContext, makeInferContext } from "../type/context.js";
+import { InferContext, makeOwnedInferContext } from "../type/context.js";
 import { typeExprToType } from "../type/infer-core.js";
 import { parseTypeExpr } from "../type/type-parser.js";
 import { kValueToSExpr } from "../evaluator/quasiquote.js";
@@ -47,7 +47,7 @@ const typeSyntax = (value: KValue, template: SExpr): SExpr => {
 const resolveType = (value: KValue, template: SExpr): Effect.Effect<Type, Error> => {
   const syntax=typeSyntax(value,template);
   return Effect.gen(function* () {
-    const context = yield* makeInferContext();
+    const context = yield* makeOwnedInferContext();
     return yield* typeExprToType(parseTypeExpr(syntax), new Map(), new Map()).pipe(Effect.provide(Layer.succeed(InferContext, context)));
   });
 };
@@ -412,7 +412,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
           else {
             const expectedSyntax = arg(u)!;
             const expected = yield* resolveType(converted.get(`:${name(expectedSyntax)}`) ?? datum(expectedSyntax), e);
-            const context = yield* makeInferContext();
+            const context = yield* makeOwnedInferContext();
             const checked = yield* assignType(inferred.type,expected,{kind:"expression",nodeId:"form-hole",span:{start:e.loc.start,end:e.loc.end}}).pipe(Effect.provide(Layer.succeed(InferContext,context)),Effect.result);
             if (checked._tag === "Failure") diagnostics.push({severity:"error",message:`${n} expects ${showType(expected)}, found ${showType(inferred.type)}`,loc:e.loc});
           }

@@ -154,6 +154,24 @@ export interface MakeInferContextOptions {
 export function makeInferContext(
   options: MakeInferContextOptions = {},
 ): Effect.Effect<InferContextService> {
+  return makeContext(options, false);
+}
+
+/**
+ * @internal An annotation builder owned by one inference operation. Reads of
+ * nodeTypes are live: callers must copy the map before publishing a snapshot.
+ * Keep makeInferContext's copy-on-write behavior for public context consumers.
+ */
+export function makeOwnedInferContext(
+  options: MakeInferContextOptions = {},
+): Effect.Effect<InferContextService> {
+  return makeContext(options, true);
+}
+
+function makeContext(
+  options: MakeInferContextOptions,
+  ownedNodeTypes: boolean,
+): Effect.Effect<InferContextService> {
   let tvarCounter = 0;
   let rvarCounter = 0;
   let evarCounter = 0;
@@ -208,7 +226,9 @@ export function makeInferContext(
           const s = yield* Ref.get(subst);
           const resolved = applyType(s, type);
           yield* Ref.update(nodeTypes, (m) => {
-            const next = new Map(m);
+            // Only the operation-owned annotation builder can be mutated.
+            // Substitution and registry refs retain their snapshot semantics.
+            const next = ownedNodeTypes ? m : new Map(m);
             next.set(nodeId, resolved);
             return next;
           });

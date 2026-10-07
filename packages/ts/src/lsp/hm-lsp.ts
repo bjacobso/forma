@@ -22,7 +22,7 @@ import type { Env } from "../Env.js";
 import { expandKernelExprsSync } from "../evaluator/frontend.js";
 import {
   InferContext,
-  makeInferContext,
+  makeOwnedInferContext,
   type MakeInferContextOptions,
 } from "../type/context.js";
 import { applyType } from "../type/substitution.js";
@@ -214,7 +214,8 @@ export function analyzeLsp(
     // Infer (passing DSL provider for result types and type bindings). A
     // top-level form that does not type is reported, and the forms around it
     // are still typed.
-    const ctxService = yield* makeInferContext(options?.inferOptions);
+    // The builder stays private; only projected typed spans escape this call.
+    const ctxService = yield* makeOwnedInferContext(options?.inferOptions);
     const layer = Layer.succeed(InferContext, ctxService);
 
     formErrors.push(...lowered.errors);

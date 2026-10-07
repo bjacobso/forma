@@ -1,7 +1,7 @@
 import { Effect, Layer, Ref } from "effect";
 import { inferProgram } from "../type/infer-program.js";
 import {
-  makeInferContext,
+  makeOwnedInferContext,
   InferContext,
   type MakeInferContextOptions,
 } from "../type/context.js";
@@ -41,7 +41,8 @@ export function checkModuleGraph(
   try {
     Effect.runSync(
       Effect.gen(function* () {
-        const ctx = yield* makeInferContext(options);
+        // Annotations stay private across the modules checked in this operation.
+        const ctx = yield* makeOwnedInferContext(options);
         let coreEnvironment: TypeEnv = new Map();
         if (options.coreExpressions?.length) {
           const expressions = options.coreExpressions;

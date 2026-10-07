@@ -18,7 +18,7 @@ import { parseManyToSExpr, type ParseError } from "../reader/index.js";
 import type { Type } from "./types.js";
 import { showType, tNil } from "./types.js";
 import { inferProgram, inferProgramAll } from "./infer.js";
-import { InferContext, makeInferContext, type NodeTypeMap } from "./context.js";
+import { InferContext, makeOwnedInferContext, type NodeTypeMap } from "./context.js";
 import type { BuiltinSchemeProvider } from "./builtin-schemes.js";
 import { InferenceError } from "./errors.js";
 import { unifiedFormProvider } from "./unified-form-provider.js";
@@ -203,7 +203,7 @@ export function inferSource(
       catch: (e) => (e instanceof InferenceError ? e : new InferenceError({ message: String(e) })),
     });
 
-    const ctxService = yield* makeInferContext({
+    const ctxService = yield* makeOwnedInferContext({
       ...(options?.builtinScheme ? { builtinScheme: options.builtinScheme } : {}),
       ...(options?.unboundSymbolType ? { unboundSymbolType: options.unboundSymbolType } : {}),
     });
@@ -216,7 +216,8 @@ export function inferSource(
     const nodeTypes = yield* Ref.get(ctxService.nodeTypes);
     const diagnostics = yield* Ref.get(ctxService.diagnostics);
 
-    return { type: result, nodeTypes, diagnostics };
+    // Publish a stable snapshot rather than the operation's mutable builder.
+    return { type: result, nodeTypes: new Map(nodeTypes), diagnostics };
   });
 }
 
@@ -263,7 +264,7 @@ export function inferSourceAll(
       catch: (e) => (e instanceof InferenceError ? e : new InferenceError({ message: String(e) })),
     });
 
-    const ctxService = yield* makeInferContext({
+    const ctxService = yield* makeOwnedInferContext({
       ...(options?.builtinScheme ? { builtinScheme: options.builtinScheme } : {}),
       ...(options?.unboundSymbolType ? { unboundSymbolType: options.unboundSymbolType } : {}),
     });
@@ -276,6 +277,6 @@ export function inferSourceAll(
     const nodeTypes = yield* Ref.get(ctxService.nodeTypes);
     const diagnostics = yield* Ref.get(ctxService.diagnostics);
 
-    return { types, nodeTypes, diagnostics };
+    return { types, nodeTypes: new Map(nodeTypes), diagnostics };
   });
 }
