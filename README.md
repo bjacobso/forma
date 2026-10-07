@@ -375,7 +375,6 @@ mise run forma:ocaml:test
 
 - `FORMA_OCAML_CLI` overrides the native `forma_cli` artifact.
 - `FORMA_OCAML_JS` overrides the JavaScript OCaml artifact.
-- `FORMA_LANGUAGE_SERVER_ARTIFACT` overrides the language-server engine artifact.
 - `FORMA_LANGUAGE_SERVER_PRELUDES` supplies comma-separated, consumer-owned prelude paths.
 - `FORMA_LANGUAGE_SERVER_ENABLE_FORMATTING` enables language-server formatting.
 - `FORMA_DISABLE_NATIVE_ELABORATION` selects the portable elaboration path.

@@ -313,13 +313,40 @@ template text such as `(:trigger )`. An editor can then render placeholders
 such as `+ trigger` and fill one with an `insert` edit. Descriptors come
 from the same sources as the symbol index.
 
+## 7. Analysis workspace
+
+`AnalysisWorkspace` in `@formalang/ts/analysis` holds ordered preludes and
+open documents and answers every service above, plus hover, completion,
+rename, document symbols, semantic tokens, and formatting, as memoized
+queries. It is the language server's whole implementation.
+
+- **Inputs and revisions.** Setting a source's text bumps its revision only
+  when the text changes. Each query result is keyed by the revisions it read,
+  so repeated requests between edits are lookups.
+- **Prelude scope.** Preludes are analyzed in load order, each in the scope
+  of the ones before it. A document sees their macros, the inferred types of
+  their definitions, and the forms their descriptors describe. An open
+  prelude is analyzed in exactly the scope it contributes to later sources.
+- **Recovery.** Top-level forms that do not parse are blanked (keeping every
+  offset) so the rest of the document is still typed. A form that does not
+  lower is reported and the others are lowered on their own, with the
+  document's macros.
+- **Reuse.** Symbol indexing keeps each unchanged document's reading and the
+  expansion of the unchanged documents before the first changed one, so an
+  edit re-expands only the edited document and what follows it.
+
+[RFC 0004](./rfcs/0004-one-analysis-architecture.md) describes where this is
+going: per-form memoization, spans on nodes, a schema-defined IR, and a typed
+core tree.
+
 ## Deferred
 
 - OCaml implementations of these host methods (tracked in the parity
   matrix).
 - Evaluating top-level forms independently after a failure.
 - Incremental reparsing with green-node reuse.
-- Cross-file references in the language server beyond open documents.
+- Cross-file references in the language server beyond open documents and
+  configured preludes.
 
 ## Focused follow-up fixes
 
