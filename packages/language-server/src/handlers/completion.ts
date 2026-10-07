@@ -1,53 +1,64 @@
 import {
   CompletionItemKind,
   InsertTextFormat,
+  MarkupKind,
   type CompletionItem,
   type CompletionList,
   type CompletionParams,
 } from "vscode-languageserver";
 import type { TextDocument } from "vscode-languageserver-textdocument";
+import type { CompletionKind } from "@formalang/ts/analysis";
 
-import { positionToOffset } from "../document.js";
-import { isRecord } from "../protocol.js";
-import type { OcamlWorkspaceSession } from "../session.js";
-import { editorValue } from "../session.js";
+import { positionToOffset, spanToRange } from "../document.js";
+import type { FormaWorkspace } from "../workspace.js";
 
-export async function getCompletions(
-  session: OcamlWorkspaceSession,
+export function getCompletions(
+  workspace: FormaWorkspace,
   document: TextDocument,
   params: CompletionParams,
-): Promise<CompletionList> {
-  const offset = positionToOffset(document, params.position);
-  const response = await session.editorCompletion(document, offset);
-  const rawItems = editorValue(response)["items"];
-  const items = Array.isArray(rawItems) ? rawItems : [];
-
+): CompletionList {
+  const items = workspace.analysis.completions(
+    document.uri,
+    positionToOffset(document, params.position),
+  );
   return {
     isIncomplete: false,
-    items: items.filter(isRecord).map(toCompletionItem),
+    items: items.map(
+      (item): CompletionItem => ({
+        label: item.label,
+        kind: completionKind(item.kind),
+        sortText: item.sortText,
+        insertTextFormat: InsertTextFormat.PlainText,
+        textEdit: {
+          range: spanToRange(document, { startOffset: item.replace.start, endOffset: item.replace.end }),
+          newText: item.label,
+        },
+        ...(item.detail ? { detail: item.detail } : {}),
+        ...(item.documentation
+          ? { documentation: { kind: MarkupKind.Markdown, value: item.documentation } }
+          : {}),
+      }),
+    ),
   };
 }
 
-function toCompletionItem(item: Record<string, unknown>): CompletionItem {
-  const label = typeof item["label"] === "string" ? item["label"] : String(item["label"]);
-  return {
-    label,
-    kind: completionKind(item["kind"]),
-    insertTextFormat: InsertTextFormat.PlainText,
-    ...(typeof item["detail"] === "string" ? { detail: item["detail"] } : {}),
-  };
-}
-
-function completionKind(kind: unknown): CompletionItemKind {
+function completionKind(kind: CompletionKind): CompletionItemKind {
   switch (kind) {
     case "form":
+    case "keyword":
+      return CompletionItemKind.Keyword;
     case "function":
       return CompletionItemKind.Function;
-    case "keyword":
-      return CompletionItemKind.EnumMember;
+    case "macro":
+      return CompletionItemKind.Snippet;
     case "type":
-      return CompletionItemKind.TypeParameter;
-    default:
+      return CompletionItemKind.Class;
+    case "constructor":
+      return CompletionItemKind.EnumMember;
+    case "slot":
+      return CompletionItemKind.Property;
+    case "parameter":
+    case "variable":
       return CompletionItemKind.Variable;
   }
 }

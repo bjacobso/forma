@@ -9,7 +9,7 @@
   "scripts": {
     "changeset": "changeset",
     "release:version": "changeset version && node scripts/ci-install-registry.mjs --lockfile-only",
-    "release:check": "pnpm check && pnpm build:ocaml && pnpm parity:engines && pnpm --filter @formalang/language-server build:release && pnpm pack:check",
+    "release:check": "pnpm check && pnpm build:ocaml && pnpm parity:engines && pnpm pack:check",
     "release:publish": "changeset publish",
     "pack:check": "node scripts/check-packages.mjs",
     "foldworks:link": "node scripts/foldworks-link.mjs",
@@ -24,7 +24,7 @@
     "docs:preview": "vitepress preview docs",
     "test": "pnpm test:js",
     "test:js": "turbo run test --filter=@formalang/ts --filter=@formalang/host --filter=@formalang/editor --filter=@formalang/language-server --filter=@formalang/workbench --filter=@formalang/workbench-app --filter=@formalang/website && pnpm parity:engines:test",
-    "test:ocaml": "pnpm build:ocaml && turbo run build --filter=@formalang/language-server && pnpm --filter @formalang/ocaml test:ocaml && pnpm --filter @formalang/language-server test:parity && FORMA_REQUIRE_NATIVE_MODULES=1 pnpm --filter @formalang/host exec vitest run test/modules.test.ts",
+    "test:ocaml": "pnpm build:ocaml && pnpm --filter @formalang/ocaml test:ocaml && FORMA_REQUIRE_NATIVE_MODULES=1 pnpm --filter @formalang/host exec vitest run test/modules.test.ts",
     "test:all": "pnpm test:js && pnpm test:ocaml && pnpm parity:engines",
     "parity:engines": "pnpm --filter @formalang/ts build && pnpm --filter @formalang/host build && node scripts/parity-engines.mjs",
     "parity:engines:test": "node --test scripts/parity/*.test.mjs",

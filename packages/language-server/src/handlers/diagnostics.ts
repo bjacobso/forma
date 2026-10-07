@@ -4,59 +4,35 @@ import {
   type PublishDiagnosticsParams,
 } from "vscode-languageserver";
 import type { TextDocument } from "vscode-languageserver-textdocument";
+import type { Diagnostic as FormaDiagnostic } from "@formalang/ts/analysis";
 
 import { spanToRange } from "../document.js";
-import type { AbiDiagnostic } from "../protocol.js";
-import { isRecord } from "../protocol.js";
-import type { OcamlWorkspaceSession } from "../session.js";
+import type { FormaWorkspace } from "../workspace.js";
 
-export async function getDiagnostics(
-  session: OcamlWorkspaceSession,
+export function getDiagnostics(
+  workspace: FormaWorkspace,
   document: TextDocument,
-): Promise<PublishDiagnosticsParams> {
-  const result = await session.updateDocument(document);
+): PublishDiagnosticsParams {
   return {
     uri: document.uri,
-    diagnostics: result.diagnostics.map((diagnostic) => toLspDiagnostic(document, diagnostic)),
+    version: document.version,
+    diagnostics: workspace.analysis
+      .diagnostics(document.uri)
+      .map((diagnostic) => toLspDiagnostic(document, diagnostic)),
   };
 }
 
-export function toLspDiagnostic(document: TextDocument, diagnostic: AbiDiagnostic): Diagnostic {
-  const span = diagnostic.span;
-  const range =
-    span &&
-    isRecord(span) &&
-    typeof span["startOffset"] === "number" &&
-    typeof span["endOffset"] === "number"
-      ? spanToRange(document, {
-          sourceId: typeof span["sourceId"] === "string" ? span["sourceId"] : document.uri,
-          startOffset: span["startOffset"],
-          endOffset: span["endOffset"],
-        })
-      : {
-          start: { line: 0, character: 0 },
-          end: { line: 0, character: Math.max(1, document.getText().split("\n")[0]?.length ?? 1) },
-        };
-
+export function toLspDiagnostic(document: TextDocument, diagnostic: FormaDiagnostic): Diagnostic {
   return {
-    range,
-    message: diagnostic.message ?? "OCaml language diagnostic",
-    severity: severityToLsp(diagnostic.severity),
-    source: "ocaml",
-    ...(diagnostic.code ? { code: diagnostic.code } : {}),
+    range: spanToRange(document, diagnostic.span ?? { startOffset: 0, endOffset: 0 }),
+    message: diagnostic.message,
+    severity:
+      diagnostic.severity === "warning"
+        ? DiagnosticSeverity.Warning
+        : diagnostic.severity === "info"
+          ? DiagnosticSeverity.Information
+          : DiagnosticSeverity.Error,
+    source: "forma",
+    code: diagnostic.code,
   };
-}
-
-function severityToLsp(severity: string | undefined): DiagnosticSeverity {
-  switch (severity) {
-    case "warning":
-      return DiagnosticSeverity.Warning;
-    case "information":
-      return DiagnosticSeverity.Information;
-    case "hint":
-      return DiagnosticSeverity.Hint;
-    case "error":
-    default:
-      return DiagnosticSeverity.Error;
-  }
 }
