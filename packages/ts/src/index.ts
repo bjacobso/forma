@@ -17,8 +17,6 @@
  * - `@formalang/ts/builtins`     — Primitive operations
  * - `@formalang/ts/type`         — Hindley-Milner type system
  * - `@formalang/ts/core-expr`    — Typed core expression AST
- * - `@formalang/ts/elaboration`  — DSL handler framework
- * - `@formalang/ts/form`         — Form/pattern/compiler framework
  * - `@formalang/ts/env`          — Value environment
  * - `@formalang/ts/diagnostic`   — Errors and diagnostics
  * - `@formalang/ts/formatter`    — Code formatter
@@ -48,8 +46,6 @@ export * as VM from "./VM.js";
 export * as Builtins from "./Builtins.js";
 export * as Type from "./Type.js";
 export * as CoreExpr from "./CoreExpr.js";
-export * as Elaboration from "./Elaboration.js";
-export * as Form from "./Form.js";
 export * as Env from "./Env.js";
 export * as Diagnostic from "./Diagnostic.js";
 export * as Formatter from "./Formatter.js";

@@ -123,11 +123,7 @@ export {
   // DSL type provider
   type DSLTypeProvider,
   type DSLSlotInfo,
-  createDSLTypeProviderFromRegistry,
-  type CreateDSLTypeProviderOptions,
-  type TypedSlotExtractor,
-  type TypeBindingsExtractor,
-  type ResultTypeForExprExtractor,
+  type SlotMode,
 
   // Convenience inference functions
   inferSource,

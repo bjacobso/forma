@@ -12,12 +12,14 @@
 
 import type { SExpr } from "../reader/index.js";
 import type { Type, Scheme } from "./types.js";
-import type { SlotMode } from "../elaboration/types.js";
 import type { InferDiagnostic } from "./context.js";
 
 // ---------------------------------------------------------------------------
 // Slot info (subset of SlotDefinition relevant to type inference)
 // ---------------------------------------------------------------------------
+
+/** How a DSL form slot's value is processed. */
+export type SlotMode = "immediate" | "deferred" | "quoted" | "pattern";
 
 /**
  * Type-relevant information about a DSL form slot.

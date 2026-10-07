@@ -72,14 +72,6 @@
       "types": "./dist/Type.d.mts",
       "import": "./dist/Type.mjs"
     },
-    "./elaboration": {
-      "types": "./dist/Elaboration.d.mts",
-      "import": "./dist/Elaboration.mjs"
-    },
-    "./form": {
-      "types": "./dist/Form.d.mts",
-      "import": "./dist/Form.mjs"
-    },
     "./core-expr": {
       "types": "./dist/CoreExpr.d.mts",
       "import": "./dist/CoreExpr.mjs"

@@ -1,19 +1,10 @@
 /**
- * Language server protocol support: semantic tokens, hover, completions, analysis.
+ * Type analysis for editors: typed spans and type errors for one source.
+ * Workspace-wide language services live in `@formalang/ts/analysis`.
  *
  * @module LSP
  */
 
-// Semantic tokens (from framework LSP)
-export {
-  generateSemanticTokens,
-  TOKEN_TYPES,
-  TOKEN_MODIFIERS,
-  type SemanticToken,
-  type SemanticTokensResult,
-} from "./lsp/index.js";
-
-// HM-based LSP analysis
 export {
   analyzeLsp,
   findTypeAtOffset,
@@ -23,9 +14,4 @@ export {
   type LspError,
 } from "./lsp/hm-lsp.js";
 
-// DSL type provider (for LSP integration)
-export type { DSLTypeProvider, DSLSlotInfo } from "./type/dsl-provider.js";
-export {
-  createDSLTypeProviderFromRegistry,
-  type CreateDSLTypeProviderOptions,
-} from "./type/dsl-provider-from-registry.js";
+export type { DSLTypeProvider, DSLSlotInfo, SlotMode } from "./type/dsl-provider.js";
