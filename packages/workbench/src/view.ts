@@ -13,6 +13,7 @@ import { lexicalTokens, spansOf } from "./decorations.js";
 import { Message } from "./message.js";
 import type { Model } from "./model.js";
 import { policy } from "./update.js";
+import { Option } from "effect";
 
 const diffNodes = (
   rows: ReadonlyArray<import("@formalang/host/types").OutlineItem>,
@@ -75,7 +76,7 @@ const symbolDetails = (model: Model, h: HtmlBuilder<Message>): ReadonlyArray<Htm
     (row?.nodes ?? []).flatMap((node) => analysis.symbols[node.nodeId]?.definition ?? []),
   );
   const targets = analysis.definitions.filter(
-    (definition) => uses.has(definition.key) && definition.nodeId !== null,
+    (definition) => uses.has(definition.key),
   );
   return [
     ...(targets.length === 0
@@ -86,8 +87,8 @@ const symbolDetails = (model: Model, h: HtmlBuilder<Message>): ReadonlyArray<Htm
             [h.Class("wb__links")],
             targets.map((definition) =>
               h.button(
-                [h.Type("button"), h.OnClick(Message.RevealNode({ id: definition.nodeId! }))],
-                [definition.name],
+                [h.Type("button"), h.OnClick(Message.GoToDefinition({ key: definition.key }))],
+                [definition.nodeId === null ? `${definition.name} · ${definition.sourceId}` : definition.name],
               ),
             ),
           ),
@@ -110,6 +111,8 @@ export const view = defineView<Model, Message>((model, h): Html => {
   return h.div(
     [
       h.Class("wb"),
+      h.Key(model.id),
+      h.OnKeyDownPreventDefault((key) => key === "F12" ? Option.some(Message.DefinitionAtCaret()) : Option.none()),
       h.DataAttribute("workbench", model.id),
       h.DataAttribute("source-dirty", String(model.sourceDirty)),
     ],
@@ -167,6 +170,7 @@ export const view = defineView<Model, Message>((model, h): Html => {
                   [notation],
                 ),
               ),
+              h.button([h.Type("button"), h.OnClick(Message.DefinitionAtCaret()), h.Title("Go to definition (F12)")], ["Definition ↗"]),
             ],
           ),
           h.nav(

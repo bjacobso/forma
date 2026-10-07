@@ -1,29 +1,24 @@
 import { Runtime } from "foldkit";
 import { TsLanguageHost } from "@formalang/host/ts-host";
-import { FormaHost, Workbench, type WorkbenchConfig } from "@formalang/workbench";
-
-import { capabilities } from "./program/capabilities";
-import { dataflow } from "./program/checks";
-import source from "./program/onboarding.forma?raw";
-import workflow from "./program/workflow.lisp?raw";
-
-const config: WorkbenchConfig = {
-  sourceId: "onboarding.forma",
-  preludes: [{ sourceId: "workflow.lisp", source: workflow }],
-  capabilities,
-  checks: [dataflow],
-};
+import { Workspace } from "@formalang/workbench";
+import { projects } from "./projects";
 
 const application = Runtime.makeElement({
-  Model: Workbench.Model,
-  init: () => Workbench.init({ id: "workbench", title: config.sourceId, source }),
-  update: Workbench.update,
-  view: Workbench.view,
+  Model: Workspace.Model,
+  init: () =>
+    Workspace.init({
+      id: "workbench",
+      projects,
+      project: new URLSearchParams(window.location.search).get("project") ?? projects[0]!.id,
+    }),
+  update: Workspace.update,
+  view: Workspace.view,
   container: document.getElementById("root"),
-  resources: FormaHost.layer(new TsLanguageHost(), config),
+  resources: Workspace.layer(new TsLanguageHost(), projects),
   // Report slow phases without sending the whole program model through Vite's console bridge.
   slow: {
-    onSlow: ({ _tag, durationMs }) => console.warn(`[foldkit] Slow ${_tag}: ${durationMs.toFixed(1)}ms`),
+    onSlow: ({ _tag, durationMs }) =>
+      console.warn(`[foldkit] Slow ${_tag}: ${durationMs.toFixed(1)}ms`),
   },
 });
 

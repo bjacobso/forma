@@ -24,8 +24,8 @@ export interface Capability {
   /** How the type checker sees calls to it. */
   readonly typeScheme?: HostBuiltinDescriptor["typeScheme"];
   /**
-   * `read` capabilities can be allowed for the session and then run during
-   * live analysis. `write` capabilities are asked for on every call.
+   * Both reads and writes require approval on every explicit run. Live
+   * analysis and REPL replay do not perform capabilities.
    */
   readonly purity: "read" | "write";
   /** One sentence shown at the permission checkpoint. */
@@ -53,6 +53,8 @@ export interface WorkbenchConfig {
    * into the session for slots and the symbol index.
    */
   readonly preludes?: ReadonlyArray<SourceDocument>;
+  /** Project file snapshot. Files are modules, loaded without executing their expressions. */
+  readonly sources?: ReadonlyArray<SourceDocument>;
   readonly capabilities?: ReadonlyArray<Capability>;
   readonly checks?: ReadonlyArray<DeclarationCheck>;
   /** Evaluation step limit. Defaults to 200,000. */

@@ -24,6 +24,8 @@ import {
   type SyntaxSpan,
 } from "../syntax/identity.js";
 import { descriptorsFromExpressions, type DescriptorLookup, type DescriptorSource } from "./descriptors.js";
+import { resolveModuleGraph, sourceModuleResolver, normalizeModuleId, relativeModuleId,
+  type BindingIdentity } from "../modules/graph.js";
 
 export interface SymbolDocument {
   readonly sourceId: string;
@@ -35,6 +37,8 @@ export interface SymbolDocument {
 export interface SymbolIndexOptions {
   /** Descriptors in addition to the `__form-descriptor`s found in the documents. */
   readonly descriptors?: DescriptorSource | undefined;
+  /** File modules are lexical; documents outside this set are shared preludes. */
+  readonly moduleSourceIds?: readonly string[] | undefined;
   /**
    * Work to reuse from earlier calls. Documents whose text is unchanged are
    * not read again, and the expansion of an unchanged leading run of
@@ -244,8 +248,46 @@ export function indexSymbols(
   const expanded = expandDocuments(cache, indexed, prepared);
   const builtinNames = kernelNames();
   const orders = new Map(indexed.map((document) => [document.sourceId, document.order]));
-  const walker = new SymbolWalker(authors, macroNodes, descriptors, builtinNames, orders);
+  const moduleIds = new Set((options.moduleSourceIds ?? unique.filter((document) =>
+    /\((?:import|export|export-from)\s/.test(document.source)).map((document) => document.sourceId))
+    .map(normalizeModuleId));
+  const bindings = new Map<string, ReadonlyMap<string, BindingIdentity>>();
+  const walker = new SymbolWalker(authors, macroNodes, descriptors, builtinNames, orders, moduleIds, bindings);
   for (const { document, expr } of expanded.forms) walker.collectGlobals(expr, document);
+  const sources = unique.map((document) => ({ id: document.sourceId, source: document.source }));
+  const coreNames = [...builtinNames, ...walker.definitions.values()].flatMap((value) =>
+    typeof value === "string" ? [value] : moduleIds.has(normalizeModuleId(value.sourceId)) ? [] : [value.name]);
+  for (const source of sources.filter((source) => moduleIds.has(normalizeModuleId(source.id)))) {
+    try {
+      const graph = resolveModuleGraph(source, sourceModuleResolver(sources), {
+        // Import identities remain useful while expressions have unresolved names.
+        // The type checker owns validation; lexical lookup below still enforces visibility.
+        bindings: new Set(coreNames), isCoreBinding: () => true,
+      });
+      for (const module of graph.modules) {
+        const visible = new Map<string, BindingIdentity>();
+        const add = (name: string, binding: typeof module.interface.exports[number]) => {
+          visible.set(name, binding.identity);
+          for (const constructor of binding.constructors) visible.set(`${name}.${constructor}`, {
+            ...binding.identity, declaration: `${binding.identity.declaration}.${constructor}`,
+          });
+        };
+        for (const [name, binding] of [...module.bindings, ...module.imports]) add(name, binding);
+        const authored = indexed.find((document) => normalizeModuleId(document.sourceId) === module.id)?.exprs ?? [];
+        for (const expression of authored) {
+          if (expression._tag !== "List" || headName(expression) !== "import" ||
+              expression.items[1]?._tag !== "Str" || symName(expression.items[2]) !== ":as") continue;
+          const alias = symName(expression.items[3]);
+          const specifier = expression.items[1].value;
+          const target = graph.modules.find((dependency) => dependency.id === relativeModuleId(specifier, module.id));
+          if (alias && target) for (const binding of target.interface.exports) add(`${alias}/${binding.name}`, binding);
+        }
+        bindings.set(module.id, visible);
+      }
+    } catch {
+      // Broken imports still keep locals navigable, without leaking private sibling names.
+    }
+  }
   for (const { document, expr } of expanded.forms) walker.walk(expr, walker.root, document, null);
   // Expansion replaces a macro call, so its head is found in the author's code.
   for (const document of indexed) for (const expr of document.exprs) walker.referenceMacroCalls(expr);
@@ -439,6 +481,8 @@ class SymbolWalker {
     private readonly descriptors: DescriptorLookup,
     private readonly builtins: ReadonlySet<string>,
     private readonly orders: ReadonlyMap<string, number>,
+    private readonly moduleIds: ReadonlySet<string>,
+    private readonly moduleBindings: ReadonlyMap<string, ReadonlyMap<string, BindingIdentity>>,
   ) {}
 
   /** True while a `__macro` form itself is walked. */
@@ -707,7 +751,13 @@ class SymbolWalker {
 
   /** The latest global definition before the reference, else the first after it. */
   global(name: string, at: AuthorNode): SymbolDefinition | undefined {
-    const candidates = this.#globals.get(name);
+    const id = normalizeModuleId(at.document.sourceId);
+    const binding = this.moduleBindings.get(id)?.get(name);
+    if (binding) return (this.#globals.get(binding.declaration) ?? []).find((definition) =>
+      normalizeModuleId(definition.sourceId) === binding.moduleId);
+    const candidates = (this.#globals.get(name) ?? []).filter((definition) =>
+      !this.moduleIds.has(id) || normalizeModuleId(definition.sourceId) === id ||
+      !this.moduleIds.has(normalizeModuleId(definition.sourceId)));
     if (!candidates || candidates.length === 0) return undefined;
     const before = (definition: SymbolDefinition) => {
       const order = this.orderOf(definition.sourceId);
@@ -771,6 +821,15 @@ class SymbolWalker {
       };
     };
     switch (head) {
+      case "import":
+        // Imported names are references to their original definitions; aliases are syntax.
+        if (items[2]?._tag === "Vector") this.walkAll(items[2].items, scope, document, form);
+        return;
+      case "export":
+        this.walkAll(items.slice(1), scope, document, form);
+        return;
+      case "export-from":
+        return;
       case "quote":
         return;
       case "quasiquote":

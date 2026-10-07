@@ -1,9 +1,18 @@
 # Forma workbench app
 
 A small Vite application that mounts [`@formalang/workbench`](../../packages/workbench)
-on an onboarding program: pricing functions, workflow steps registered by a
-prelude through elaboration, and capabilities that run only after you allow
-them. See the [design note](../../docs/workbench.md).
+as a project workspace for authoring and a REPL. The example picker opens an
+onboarding workflow, functions and collections, or a four-file pricing project.
+The onboarding example includes workflow forms registered by a prelude and
+capabilities that run only after you allow them. See the [design note](../../docs/workbench.md).
+
+Choose a file in the sidebar, edit its outline or source, and evaluate expressions
+in the REPL with Ctrl/⌘+Enter. The REPL replays pure definitions against current
+file drafts; scratch definitions persist until Clear. F12 or Definition ↗ opens
+the resolved declaration across imports and re-exports. Back returns to its use.
+Add file creates a module, and Reset example restores the selected project.
+Drafts and history survive project switches in memory and are discarded on reload.
+`?project=functions` and `?project=modules` open those examples directly.
 
 The [screenshot tour](../../packages/workbench/README.md#screenshots) shows the
 outline and inspector, source pane, proposal review, and capability approval flow.
@@ -24,7 +33,10 @@ pnpm --filter @formalang/workbench-app test:e2e
 
 | File | Purpose |
 | --- | --- |
+| `src/projects.ts` | Bundled project catalog and per-project configuration |
 | `src/program/onboarding.forma` | The program the workbench opens |
+| `src/program/functions.forma` | Pure functions and collections for the REPL |
+| `src/program/modules/` | Named imports, namespace imports, and a re-export |
 | `src/program/workflow.lisp` | The prelude that registers `step` and `workflow` |
 | `src/program/capabilities.ts` | The simulated capabilities the program may call |
 

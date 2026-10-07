@@ -743,6 +743,30 @@ export class TsLanguageHost implements LanguageHost {
     const sourceId = request.sourceId ?? "source";
     const parse = editorParseProjection(sourceId, request.source);
     const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
+    if (session && /\((?:import|export|export-from)\s/.test(request.source)) {
+      try {
+        const graph = this.#moduleGraph({ sessionId: request.sessionId!, sourceId, source: request.source });
+        const checked = Modules.checkModuleGraph(graph, {
+          ...Engine.moduleCheckOptions({ session: session.language, source: request.source,
+            hostBuiltins: request.hostBuiltins ?? session.hostBuiltins,
+            typePolicy: request.typePolicy ?? session.typePolicy }),
+          editor: true,
+        });
+        const display = Modules.moduleResultDisplay(checked, graph.entry);
+        return { sourceId, success: checked.ok, parse,
+          ...(checked.ok ? { resultTypeDisplay: display, resultType: typeProjection(display) } : {}),
+          typedSpans: (checked.typedSpans.get(graph.entry) ?? []).map((typed) => ({
+            id: typed.id, span: { sourceId, startOffset: typed.span.start, endOffset: typed.span.end },
+            display: typed.typeString, type: typeProjection(typed.typeString), code: typed.code, exprTag: typed.exprTag,
+          })),
+          errors: [], diagnostics: checked.diagnostics,
+        };
+      } catch (error) {
+        const diagnostic = error instanceof Modules.ModuleError ? error.diagnostic
+          : Engine.diagnosticFromUnknown(error, "typecheck", sourceId);
+        return { sourceId, success: false, parse, typedSpans: [], errors: [], diagnostics: [diagnostic] };
+      }
+    }
     const inferOptions = Engine.typeInferOptions({
       hostBuiltins: request.hostBuiltins ?? session?.hostBuiltins,
       typePolicy: request.typePolicy ?? session?.typePolicy,
@@ -951,7 +975,12 @@ export class TsLanguageHost implements LanguageHost {
         ...(request.identity ? { identity: request.identity } : {}),
       },
     ];
-    return Editor.indexSymbols(documents);
+    return Editor.indexSymbols(documents, {
+      moduleSourceIds: session ? [
+        ...session.language.orderedSources("source").map((source) => source.id),
+        ...(session.language.orderedSources("source").length > 0 || /\((?:import|export|export-from)\s/.test(request.source) ? [sourceId] : []),
+      ] : undefined,
+    });
   }
 
   #requireSession(sessionId: string): TsSession {

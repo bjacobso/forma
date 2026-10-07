@@ -24,6 +24,23 @@ import type { Model } from "./model.js";
 
 export type UpdateReturn = Update.Return<Model, Message, FormaHost>;
 
+/** The resolved symbol under the caret, shared by the button and F12. */
+export const definitionAtCaret = (model: Model): string | undefined => {
+  const analysis = model.analysis;
+  if (!analysis || model.sourceDirty || analysis.revision !== model.outline.revision) return undefined;
+  if (model.pane === "source") {
+    const offset = model.source.selection.head;
+    const node = analysis.document.identity.nodes.find((node) => node.kind === "Symbol" &&
+      node.span.start <= offset && offset <= node.span.end);
+    return node ? analysis.symbols[node.id]?.definition : undefined;
+  }
+  const focus = model.outline.focus;
+  const row = analysis.rows.find((row) => row.id === focus?.id);
+  const node = row?.nodes.find((node) => node.kind === "Symbol" &&
+    node.from <= (focus?.start ?? 0) && (focus?.start ?? 0) <= node.to);
+  return node ? analysis.symbols[node.nodeId]?.definition : undefined;
+};
+
 /** The outline's rules. */
 export const policy: Policy = {};
 
@@ -403,6 +420,15 @@ const updateModel = (model: Model, message: Message): UpdateReturn =>
     FailedValue: ({ sessionId, reason }) => ({
       model: sessionId !== model.analysis?.valueSession ? model : { ...model, failure: reason },
     }),
+    DefinitionAtCaret: () => {
+      const key = definitionAtCaret(model);
+      return key === undefined ? { model } : updateModel(model, Message.GoToDefinition({ key }));
+    },
+    GoToDefinition: ({ key }) => {
+      const definition = model.analysis?.definitions.find((definition) => definition.key === key);
+      return definition?.nodeId == null ? { model }
+        : updateModel(model, Message.RevealNode({ id: definition.nodeId }));
+    },
     RevealNode: ({ id }) => {
       const node = model.analysis?.document.identity.nodes.find((node) => node.id === id);
       if (node === undefined || model.analysis === null) return { model };
