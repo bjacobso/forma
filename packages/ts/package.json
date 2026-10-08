@@ -108,6 +108,10 @@
       "types": "./dist/DescriptorCodegen.d.mts",
       "import": "./dist/DescriptorCodegen.mjs"
     },
+    "./http-api": {
+      "types": "./dist/HttpApi.d.mts",
+      "import": "./dist/HttpApi.mjs"
+    },
     "./descriptor": {
       "types": "./dist/Descriptor.d.mts",
       "import": "./dist/Descriptor.mjs"

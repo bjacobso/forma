@@ -67,7 +67,7 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
   while (i < e.items.length - 1) {
     const key = name(e.items[i]);
     if (!key?.startsWith(":")) throw new Error(`form ${formName}: expected a :key value option`);
-    if (![":types", ":ir", ":type", ":scope", ":check", ":examples"].includes(key)) throw new Error(`form ${formName}: unknown option ${key}`);
+    if (![":types", ":ir", ":type", ":scope", ":check", ":examples", ":emit"].includes(key)) throw new Error(`form ${formName}: unknown option ${key}`);
     if (options.has(key)) throw new Error(`form ${formName}: duplicate option ${key}`);
     const value = e.items[++i];
     if (!value) throw new Error(`form ${formName}: ${key} needs a value`);
@@ -376,7 +376,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
             for (const problem of checked.diagnostics) diagnostics.push({severity:problem.severity,message:problem.message,loc:layout.loc});
           }
         }
-        const typeHoles = name(u) === "Type" ? [e] : head(u) === "Record" && name(arg(u)) === "Type" && e._tag === "Map" ? e.pairs.map(([,v]) => v) : [];
+        const typeHoles = name(u) === "Type" ? [e] : head(u) === "Record" && name(arg(u)) === "Type" && e._tag === "Map" ? e.pairs.map(([,v]) => v) : head(u) === "List" && name(arg(u)) === "Type" && e._tag === "Vector" ? e.items : [];
         for (const syntax of typeHoles) for (const message of [...typeSyntaxErrors(syntax), ...unknownTypeReferences(syntax, n => spec.types.has(n) || input.semanticEnv.getDeclaredNames().has(n) || input.semanticEnv.getFact("type-kind", n) !== undefined)]) diagnostics.push({severity: "error", message, loc: syntax.loc});
         const checkReferences = (value: SExpr, type: SExpr): void => {
           type = unwrapOption(type);

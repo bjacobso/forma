@@ -44,6 +44,7 @@ export default defineConfig({
           { text: "Writing a form", link: "/writing-a-form" },
           { text: "Forma for Effect", link: "/effect" },
           { text: "Effect reference", link: "/effect/reference" },
+          { text: "Prelude HTTP API spike", link: "/effect/http-api" },
         ],
       },
       {

@@ -78,6 +78,12 @@ availability, declaration bindings, and form layout derive from the form
 pattern and hole types. Add another form by writing another definition;
 registration tables and separate payload contracts are unnecessary.
 
+Forms can also define `:emit (fn [ir] ...)`, returning a quasiquoted target
+TypeScript expression over projected IR. `emitFormTypeScript` evaluates these
+hooks, and `generateFormBuilders` derives builders for a restricted set of
+typed holes and record projections. See [Prelude-defined HTTP APIs](./effect/http-api.md)
+for the shared emitter and builder example and its current limits.
+
 Actions use the same type syntax: `(: hire (-> Candidate (Action (Id Employee))))`.
 Their effect bodies use `do!`, `create!`, `update!`, and the other ontology
 operations. Generated Effect TypeScript exposes these operations through the
