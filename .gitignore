@@ -1,4 +1,5 @@
 node_modules/
+.context/
 _opam/
 dist/
 dist-docs/

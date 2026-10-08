@@ -68,7 +68,10 @@ export default defineConfig({
       },
       {
         text: "Project",
-        items: [{ text: "Roadmap", link: "/roadmap" }],
+        items: [
+          { text: "For agents", link: "/agents" },
+          { text: "Roadmap", link: "/roadmap" },
+        ],
       },
     ],
     search: {
