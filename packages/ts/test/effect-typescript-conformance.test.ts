@@ -17,6 +17,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import ts from "typescript";
 import { Mechanics } from "../src/index.js";
+import { generateHttpApiProgram, generateHttpApiBuilders } from "../src/HttpApi.js";
 import { parse } from "../src/reader/parser.js";
 import { toSExprMany } from "../src/reader/to-sexpr.js";
 import { packageArtifact } from "../src/Artifact.js";
@@ -57,6 +58,11 @@ function normalize(code: string): string {
 function sourceId(item: ConformanceCase): string {
   return `cases/${item.name}/program.lisp`;
 }
+
+const isHttpApiCase = (item: ConformanceCase): boolean => existsSync(resolve(item.dir, "http-api.json"));
+const generate = (item: ConformanceCase) => isHttpApiCase(item)
+  ? generateHttpApiProgram(item.source, {sourceId:sourceId(item)})
+  : Mechanics.generateEffectProgram(item.source, {sourceId:sourceId(item)});
 
 interface DiagnosticRecord {
   readonly phase: string;
@@ -195,8 +201,9 @@ describe("Effect TypeScript conformance", () => {
   beforeAll(() => {
     if (!update) return;
     for (const item of positive) {
-      const result = Mechanics.generateEffectProgram(item.source, { sourceId: sourceId(item) });
+      const result = generate(item);
       if (result.code) writeFileSync(resolve(item.dir, "expected.ts"), normalize(result.code));
+      if (isHttpApiCase(item)) writeFileSync(resolve(item.dir, "builders.ts"), generateHttpApiBuilders().code);
     }
   });
 
@@ -212,15 +219,16 @@ describe("Effect TypeScript conformance", () => {
     const goldenPath = resolve(item.dir, "expected.ts");
 
     test("elaborates with no diagnostics and matches expected.ts", () => {
-      const result = Mechanics.generateEffectProgram(item.source, { sourceId: sourceId(item) });
-      expect(diagnosticRecords(item.source, item)).toEqual([]);
+      const result = generate(item);
+      expect(result.diagnostics).toEqual([]);
       expect(result.code).toBeDefined();
       expect(normalize(result.code ?? "")).toBe(normalize(readFileSync(goldenPath, "utf8")));
+      if (isHttpApiCase(item)) expect(generateHttpApiBuilders().code).toBe(readFileSync(resolve(item.dir,"builders.ts"),"utf8"));
     });
 
     test("typechecks under the strict tsconfig without any escapes", () => {
       const tsProgram = typescriptProgram();
-      const files = [goldenPath, resolve(item.dir, "harness.ts")];
+      const files = [goldenPath, resolve(item.dir, "harness.ts"), ...(isHttpApiCase(item)?[resolve(item.dir,"builders.ts")]:[])];
       const diagnostics = files.flatMap((file) => {
         const sourceFile = tsProgram.getSourceFile(file);
         if (!sourceFile) return [`${file} is not part of the suite tsconfig`];
@@ -237,10 +245,11 @@ describe("Effect TypeScript conformance", () => {
       expect(diagnostics).toEqual([]);
       const golden = tsProgram.getSourceFile(goldenPath)!;
       expect(anyEscapes(golden, tsProgram.getTypeChecker())).toEqual([]);
+      if (isHttpApiCase(item)) expect(anyEscapes(tsProgram.getSourceFile(resolve(item.dir,"builders.ts"))!,tsProgram.getTypeChecker())).toEqual([]);
     }, 60_000);
 
     test("packages as a validated artifact", () => {
-      const result = Mechanics.elaborateEffectProgram(item.source, { sourceId: sourceId(item) });
+      const result = generate(item);
       const session = openSession({ id: `conformance-${item.name}` });
       session.rememberSource({ id: sourceId(item), text: item.source });
       const artifact = packageArtifact({ engineName: "conformance", engineVersion: "0", session, declarations: result.declarations });

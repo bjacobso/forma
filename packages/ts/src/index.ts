@@ -55,4 +55,5 @@ export * as Syntax from "./Syntax.js";
 export * as LSP from "./LSP.js";
 export * as CodeGen from "./CodeGen.js";
 export * as DescriptorCodegen from "./DescriptorCodegen.js";
+export * as HttpApi from "./HttpApi.js";
 export * as Descriptor from "./Descriptor.js";

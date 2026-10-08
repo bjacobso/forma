@@ -104,6 +104,13 @@ Status key:
 
 ### Checking
 
+The independent `generateHttpApiProgram` / `generateHttpApiBuilders` spike
+adds `HttpApi`, `HttpApiGroup`, `HttpApiEndpoint`, and `HttpApiBuilder.group`
+through `http-api.lisp`, with handler contract checks and a strict `http-api`
+conformance case. This declaration vocabulary uses shared Lisp emit hooks;
+the operational combinators above still use the mechanics compiler. See
+[HTTP API limits](../../docs/effect/http-api.md).
+
 | Property | Status | Notes |
 | --- | --- | --- |
 | Located diagnostics | supported | Read, projection, and check diagnostics all carry a line and column span (`elaborateEffectProgram`). |

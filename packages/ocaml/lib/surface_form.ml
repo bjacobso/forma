@@ -16,7 +16,7 @@ let parse expr = match expr with
       let doc,options = match options with Ast.String (_,doc) :: rest -> Some doc,rest | _ -> None,options in
       let rec pairs acc = function
         | [body] -> List.rev acc,body
-        | Ast.Keyword (_,key) :: value :: rest when List.mem key [":types";":ir";":type";":scope";":check";":examples"] ->
+        | Ast.Keyword (_,key) :: value :: rest when List.mem key [":types";":ir";":type";":scope";":check";":examples";":emit"] ->
             if List.mem_assoc key acc then invalid_arg ("Duplicate form option " ^ key);
             pairs ((key,value) :: acc) rest
         | _ -> invalid_arg "form expects :types, :ir, optional hooks and one projection body" in

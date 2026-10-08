@@ -15,3 +15,8 @@ paths, and the language server loads none by default.
 
 All executable examples keep the `.lisp` extension. Protocol preludes are also
 inputs to generation and snapshot tests.
+
+`http-api.lisp` is an independent Effect 4 declaration prelude. Its forms
+also carry TypeScript emit hooks and derive a typed builder DSL. Bootstrap
+it with `compiler.lisp`, separately from the ontology's older `api` form.
+See [the HTTP API spike](../docs/effect/http-api.md).
