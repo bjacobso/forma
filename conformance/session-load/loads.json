@@ -1,0 +1,65 @@
+{
+  "cases": [
+    {
+      "id": "surface-error",
+      "load": {
+        "sourceId": "bad.forma",
+        "source": "(def x 1)"
+      },
+      "expected": {
+        "ok": false,
+        "located": true
+      }
+    },
+    {
+      "id": "forward-reference",
+      "load": {
+        "sourceId": "forward.forma",
+        "source": "(+ future 1)"
+      },
+      "expected": {
+        "ok": true,
+        "located": true
+      }
+    },
+    {
+      "id": "checked-prelude",
+      "load": {
+        "sourceId": "core.forma",
+        "kind": "prelude",
+        "source": "(define answer 42)"
+      },
+      "expected": {
+        "ok": true,
+        "located": true
+      },
+      "evaluate": "answer",
+      "expectedValue": {
+        "kind": "int",
+        "value": 42
+      }
+    },
+    {
+      "id": "atomic-prelude-type-error",
+      "initial": {
+        "sourceId": "core.forma",
+        "kind": "prelude",
+        "source": "(define answer 42)"
+      },
+      "load": {
+        "sourceId": "core.forma",
+        "kind": "prelude",
+        "source": "(define leaked 3) (define answer (if true 1 \"bad\"))"
+      },
+      "expected": {
+        "ok": false,
+        "located": true
+      },
+      "evaluate": "answer",
+      "expectedValue": {
+        "kind": "int",
+        "value": 42
+      }
+    }
+  ]
+}

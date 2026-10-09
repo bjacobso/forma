@@ -25,6 +25,7 @@ export interface SourceText {
 
 /** The names, macros, and forms visible to a source. */
 export interface Scope {
+  readonly inferenceState?: import("../type/inference-snapshot.js").InferenceSnapshot | undefined;
   /** Types of the names earlier preludes define. */
   readonly typeEnv: TypeEnv;
   /** Macros earlier preludes define; `undefined` when there are none. */
@@ -68,16 +69,18 @@ export function buildPreludeScopes(
   for (const source of preludes) {
     const before = scope;
     let typeEnv = before.typeEnv;
+    let inferenceState = before.inferenceState;
     const analysis = Effect.runSync(
       analyzeLsp(source.text, {
         ...analyzeOptions(before, inferOptions),
+        captureState: state => { inferenceState = state; },
         captureEnv: (env) => {
           typeEnv = env;
         },
       }),
     );
     layers.push({ sourceId: source.sourceId, before, analysis });
-    scope = { ...before, typeEnv, macroEnv: extendMacros(before.macroEnv, source.text) };
+    scope = { ...before, typeEnv, inferenceState, macroEnv: extendMacros(before.macroEnv, source.text) };
   }
   return { layers, scope };
 }
@@ -91,7 +94,7 @@ export function analyzeOptions(
     initialEnv: scope.typeEnv,
     ...(scope.macroEnv ? { macroEnv: scope.macroEnv } : {}),
     ...(scope.formProvider ? { dslProvider: scope.formProvider } : {}),
-    ...(inferOptions ? { inferOptions } : {}),
+    inferOptions: { ...inferOptions, ...(scope.inferenceState ? { initialState: scope.inferenceState } : {}) },
   };
 }
 

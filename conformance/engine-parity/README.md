@@ -7,6 +7,10 @@ evaluation cases retain their existing goldens in `../forma-zero/expected.json`.
 These expectations preserve the current pre-alpha behavior, including diagnostic
 codes and author offsets; they do not imply parity for untested features.
 
+Six session load and retained-value comparisons use the reviewed expectations
+in `../session-load/loads.json`. They run in TypeScript-only mode and against
+both OCaml targets in live mode.
+
 `pnpm parity:engines --typescript-only` compares TypeScript with these references
 without loading or requiring any OCaml artifact. `pnpm parity:engines:test` runs
 both the runner's unit tests and this stored-output check, and is included in
@@ -44,12 +48,13 @@ TypeScript value, OCaml value). The run fails on new, changed, or resolved
 differences, and on duplicate or stale entries. Review the report and edit this
 file deliberately before recapturing a changed reference.
 
-The current allowlist is empty: the live run agrees on all 208 outputs.
+The current allowlist is empty: TypeScript matches the references for all 214
+selected outputs.
 The historical `parse-nil` gap is resolved for the selected fixtures, and the two
 selected operational-effects typecheck cases agree. Other Effect programs are
 checked by the mechanics checker; HM typecheck parity for those programs is not
 claimed. Remaining matrix rows describe capability and ABI differences outside
-the captured surfaces, including `loadSource` semantics, artifact envelopes, and
+the captured surfaces, including artifact envelopes and
 editor APIs; they are not blanket exceptions for case output differences.
 
 An entry may include `expected`, keyed by pass, to pin a normalized golden

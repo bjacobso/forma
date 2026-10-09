@@ -1,3 +1,4 @@
+import { checkSessionTypes } from "./session-validation.js";
 import { bootstrapFromSources, type BootstrappedPrelude } from "../descriptor/bootstrap.js";
 import { elaborateSources } from "../descriptor/elaborate.js";
 import { head } from "../surface/effect.js";
@@ -304,6 +305,10 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
   try {
     const formErrors = formDiagnostics(request, sourceId, source);
     if (formErrors.some(d=>d.severity === "error")) return {sourceId, pass:"typecheck", diagnostics:formErrors};
+    if (request.session) {
+      const checked = checkSessionTypes({ ...mergedRequest, session: request.session, source: mergedSource }, sourceId);
+      return { ...checked, diagnostics: [...formErrors, ...checked.diagnostics] };
+    }
     const inferOptions = typeInferOptions(mergedRequest);
     const result =
       mergedRequest.result === "per-expression"

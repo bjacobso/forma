@@ -41,3 +41,5 @@ export {
   type TypeProjection,
   type TypeSchemeExpr,
 } from "./engine/operations.js";
+
+export { validateSurface, validateSourceLoad, validatePreludeTypes, validatePreludeMetacheck, checkReplSubmission } from "./engine/session-validation.js";
