@@ -42,3 +42,7 @@ require a separately built artifact: set `FORMA_OCAML_CLI` for the native CLI,
 or `FORMA_OCAML_JS` for the portable JavaScript engine.
 
 Forma is pre-alpha. See https://forma-lang.com for documentation and demos.
+
+The repository's [inline code-mode experiment](examples/inline-code-mode/README.md)
+uses this ABI for executable chat fences, checked mock bindings and continuation
+transcripts. It is a development example, not an exported package API.

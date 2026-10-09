@@ -1,0 +1,63 @@
+{
+  "effectEvidence": {
+    "type": "(Effect (Array {:account String :open Int}) [Unavailable] [Issues.list-open Accounts.list-active])",
+    "errors": [
+      "Unavailable"
+    ],
+    "requirements": [
+      "Issues.list-open",
+      "Accounts.list-active"
+    ]
+  },
+  "transcript": [
+    {
+      "kind": "prose",
+      "responseId": "reply-1",
+      "text": "I'll count open issues for each active account.\n\n```forma\n(Issues.close \"ada/I-1\") ; illustrative only\n```\n\n"
+    },
+    {
+      "kind": "code",
+      "responseId": "reply-1",
+      "segmentId": "counts",
+      "invocationId": "reply-1/counts",
+      "source": "(let [issues (Issues.list-open)\n      accounts (Accounts.list-active)]\n  (map (fn [account]\n         {:account account\n          :open (count (filter (fn [issue]\n                                 (starts-with? issue (str account \"/\")))\n                               issues))})\n       accounts))\n"
+    },
+    {
+      "kind": "result",
+      "responseId": "reply-1",
+      "result": {
+        "invocationId": "reply-1/counts",
+        "ok": true,
+        "type": "List<{:account Unknown :open Int}>",
+        "value": [
+          {
+            ":account": "ada",
+            ":open": 2
+          },
+          {
+            ":account": "lin",
+            ":open": 1
+          }
+        ],
+        "diagnostics": [],
+        "calls": [
+          {
+            "invocationId": "reply-1/counts/call-1",
+            "operation": "Issues.list-open",
+            "decision": "allowed"
+          },
+          {
+            "invocationId": "reply-1/counts/call-2",
+            "operation": "Accounts.list-active",
+            "decision": "allowed"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "continuation",
+      "responseId": "reply-2",
+      "text": "The checked host result is [{\":account\":\"ada\",\":open\":2},{\":account\":\"lin\",\":open\":1}].\n"
+    }
+  ]
+}
