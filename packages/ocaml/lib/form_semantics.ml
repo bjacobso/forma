@@ -47,16 +47,23 @@ let rec validate ?syntax ?(scope=[]) ~span env declaration =
       let options=fields env "__form.options/" form in
       let hole_values=Value.VMap (holes env declaration form) in
       let scopes=match List.assoc_opt (Value.VKeyword ":scope") options with Some (Value.VMap scopes) -> scopes | _ -> [] in
+      let reference_span value =
+        let rec find = function
+          | Ast.Symbol (s,n) when n=name value -> Some s
+          | Ast.List (_,xs) | Ast.Vector (_,xs) -> List.find_map find xs
+          | Ast.Map (_,pairs) -> List.find_map (fun (k,v)->match find k with Some _ as span->span | None->find v) pairs
+          | _ -> None in
+        Option.value ~default:span (Option.bind syntax find) in
       let check_reference expected value =
         match Env.lookup (name value) env with
-        | None -> Error [diagnostic "elaborate/unknown-reference" ("Unknown reference " ^ name value)]
+        | None -> Error [diagnostic ~span:(reference_span value) "elaborate/unknown-reference" ("Unknown reference " ^ name value)]
         | Some referred ->
-            let classification = Option.bind (Descriptor.declaration_form referred) (fun declared_form ->
+            let classification = match (match referred with Value.VMap fields->Value.lookup_map fields (Value.VKeyword ":classification") | _->None) with Some _ as t -> t | None -> Option.bind (Descriptor.declaration_form referred) (fun declared_form ->
               match fields env "__form.types/" declared_form |> List.find_map (function _,Value.VList [Value.VSymbol "Declares";t] -> Some t | _ -> None) with
               | Some t -> Some t
               | None -> Option.bind (Descriptor.form env declared_form) (fun descriptor -> descriptor.result_type)) in
             if classification = Some expected then Ok ()
-            else Error [diagnostic "elaborate/reference-type" (name value ^ " does not declare " ^ name expected)] in
+            else Error [diagnostic ~span:(reference_span value) "elaborate/reference-type" (name value ^ " does not declare " ^ name expected)] in
       let rec check = function
         | [] ->
           let result_type = match List.assoc_opt (Value.VKeyword ":type") options with

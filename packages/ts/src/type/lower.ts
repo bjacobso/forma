@@ -73,6 +73,7 @@ function isDef(expr: SExpr): expr is SExpr & { _tag: "List" } {
 export interface LowerProgramOptions {
   /** Macros visible to the program, such as those its preludes define. Kernel macros are always visible. */
   readonly macroEnv?: Env | undefined;
+  readonly includePrelude?: boolean | undefined;
 }
 
 /**
@@ -105,6 +106,7 @@ export function lowerProgram(
   }) : exprs;
   const expanded = expandKernelExprsSync(normalized, {
     builtins: defaultBuiltins,
+    ...(options.includePrelude === false ? {includePrelude:false} : {}),
     ...(options.macroEnv ? { env: options.macroEnv } : {}),
   }).expanded;
 

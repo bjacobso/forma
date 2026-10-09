@@ -111,6 +111,10 @@ export interface NodeOcamlLanguageHostOptions {
 }
 
 export class NodeOcamlLanguageHost implements LanguageHost {
+  readonly #moduleProjects = new Map<
+    string,
+    NonNullable<ModuleGraphRequest["projects"]>
+  >();
   readonly #moduleSources=new Map<string,Map<string,Modules.ModuleSource>>();
   readonly name = "ocaml-native";
   readonly #cliPath: string;
@@ -184,6 +188,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
       throw new Error("OCaml openSession response did not include sessionId");
     }
     this.#openSessions += 1;
+    this.#moduleProjects.delete(sessionId);
     this.#sessionConfigs.set(sessionId, {
       hostBuiltins: [],
       variables: [],
@@ -194,6 +199,15 @@ export class NodeOcamlLanguageHost implements LanguageHost {
 
   async configureSession(request: ConfigureSessionRequest): Promise<ConfigureSessionResult> {
     const current = this.#requireSessionConfig(request.sessionId);
+    if (request.projects) {
+      const response = await this.sessionRequest({
+        op: "configureSession",
+        sessionId: request.sessionId,
+        projects: request.projects,
+      });
+      throwIfAbiFailed(response, "OCaml project configuration failed");
+      this.#moduleProjects.set(request.sessionId, request.projects);
+    }
     const variables = request.variables ?? current.variables;
     const hostBuiltins = request.hostBuiltins ?? current.hostBuiltins;
     const typePolicy = request.typePolicy ?? current.typePolicy;
@@ -694,6 +708,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
   }
 
   async resetSession(request: ResetSessionRequest): Promise<ResetSessionResult> {
+    this.#moduleProjects.delete(request.sessionId);
     this.#moduleSources.delete(request.sessionId);
     this.#requireSessionConfig(request.sessionId);
     const response = await this.sessionRequest({
@@ -720,6 +735,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
     await this.sessionRequest({ op: "closeSession", sessionId: request.sessionId });
     this.#moduleSources.delete(request.sessionId);
     this.#sessionConfigs.delete(request.sessionId);
+    this.#moduleProjects.delete(request.sessionId);
     this.#sessionValueRefs.delete(request.sessionId);
     this.#openSessions = Math.max(0, this.#openSessions - 1);
     if (this.#openSessions === 0) {
@@ -891,7 +907,16 @@ export class NodeOcamlLanguageHost implements LanguageHost {
   }
 
   private async sessionRequest(payload: Record<string, unknown>): Promise<AbiResponse> {
-    return JSON.parse(await this.daemonRequest(JSON.stringify(payload))) as AbiResponse;
+    const projects =
+      typeof payload["sessionId"] === "string"
+        ? this.#moduleProjects.get(payload["sessionId"])
+        : undefined;
+    return JSON.parse(await this.daemonRequest(JSON.stringify({
+          ...payload,
+          ...(payload["projects"] === undefined && projects
+            ? { projects }
+            : {}),
+        }))) as AbiResponse;
   }
 
   #requireSessionConfig(sessionId: string): OcamlSessionConfig {

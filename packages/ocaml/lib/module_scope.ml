@@ -2,13 +2,13 @@ open Module_contract
 
 (** Resolve lexical references and binders after the host graph has resolved
     imports. *)
-let expressions ~bindings ~constructors ~imports ~namespaces ~core_bindings
+let expressions ?(allow_resolved = false) ~bindings ~constructors ~imports ~namespaces ~core_bindings
     ~core_type_names ~data_forms ~is_core_binding ~local_core_names authored =
   let resolve_name locals type_context = function
     | Ast.Symbol (span, n) as e -> (
         let root = List.hd (String.split_on_char '.' n) in
         if
-          List.mem n locals || List.mem root locals
+          (allow_resolved && contains n "__forma_") || List.mem n locals || List.mem root locals
           || String.starts_with ~prefix:":" n
           || (not (List.mem_assoc root (bindings @ imports)))
              && (not
@@ -96,6 +96,7 @@ let expressions ~bindings ~constructors ~imports ~namespaces ~core_bindings
                   fail e "surface/ambiguous-constructor"
                     ("Ambiguous constructor " ^ n ^ "; use Type." ^ n ^ ".")
               | _ ->
+                  if not type_context && List.mem n ["when";"unless";"cond";"and";"or";"->";"->>"] then fail e "module/unimported-sugar" ("Import "^n^" from a library or select a project prelude.");
                   if contains n "__forma_" then
                     fail e "module/private-name"
                       ("Resolved declaration identities cannot be written in \
@@ -169,7 +170,7 @@ let expressions ~bindings ~constructors ~imports ~namespaces ~core_bindings
           (Ast.Symbol (_, "define") as h)
           :: n
           :: (Ast.Vector (_, _) as params)
-          :: body ) ->
+          :: body ) when body <> [] ->
         Ast.List
           ( s,
             h

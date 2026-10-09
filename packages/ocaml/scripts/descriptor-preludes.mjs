@@ -76,7 +76,8 @@ const examples = [
   "examples/compiler-debug/schema.md",
   "examples/compiler-debug/query-basic.md",
   "examples/compiler-debug/query-filtered.md",
-  "examples/compiler-debug/action-basic.md",
+  // Executable actions are covered by operational-effects.mjs; this suite
+  // checks legacy descriptor values.
 ].map((sourceId) => ({
   sourceId,
   source: readMarkdownLispSource(resolve(repoRoot, sourceId)),
@@ -235,6 +236,9 @@ try {
       op: "evaluate",
       sessionId,
       sourceId: example.sourceId,
+      // This suite exercises legacy descriptor evaluation. Module imports use
+      // ordinary form libraries in the shared compile-time module fixtures.
+      source: example.source.replace(/^\((?:import|export|export-from)\b[^\n]*\)\s*$/gm, ""),
     });
 
     if (evaluated?.ok !== true || evaluated.value?.kind !== "map") {

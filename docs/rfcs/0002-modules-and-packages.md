@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Stage 1 implemented; later stages proposed |
+| Status | Stage 1 implemented; stage 2 file-based slice implemented; later stages proposed |
 | Created | 2026-10-06 |
 | Scope | Module isolation, imports and exports, compile-time dependencies, package resolution, compilation, and tooling |
 | Compatibility | Greenfield design; correctness and a consistent module model take precedence over preserving source-loading behavior |
@@ -19,8 +19,9 @@ consistent language. This proposal gives those programs a project model: reusabl
 libraries, independently checked modules, packages, and application entry points.
 Relative file imports, explicit exports, re-exports, isolated scopes, and linked
 Effect TypeScript are implemented in stage 1; see [working file modules](../modules.md).
-Package paths, compile-time library imports, and project commands on this page
-remain proposed.
+Relative compile-time library imports and host-selected project preludes are
+implemented in the TypeScript and Native OCaml engines. Package paths and project
+commands remain proposed.
 
 The examples use the current Effect-value authoring surface.
 [RFC 0003](./0003-direct-style-effects.md) proposes direct-style calls, inferred
@@ -97,7 +98,6 @@ Named imports introduce only the requested exports:
 ```lisp
 ;; src/checkout.forma
 (import "./orders.forma" [OrderId Order])
-(import "@forma/effect" [Effect service do!])
 
 (export Payments pay)
 
@@ -152,10 +152,10 @@ errors rather than declarations that silently replace one another.
 ## Binding and type semantics
 
 Each module has its own lexical scope. Its visible bindings are the small core
-language, explicit imports, and its local definitions. Loading a source into a
-host session never makes its declarations implicitly visible to other modules.
-The exact boundary between core bindings and standard-library imports must be
-specified consistently for both engines.
+language, explicit imports, project prelude exports in stage 2, and its local
+definitions. Loading a source into a host session never makes its declarations
+implicitly visible to other modules. The stage 1 and stage 2 core
+boundaries below apply consistently to both engines.
 
 A resolved binding carries an identity derived from the resolved package
 instance, module path, and declaration. It is not identified solely by its printed
@@ -189,7 +189,7 @@ paths; identity consists of the file-instance ID and declaration name, independe
 of contents, offsets, session IDs, or graph traversal order. Hosts resolving different
 package instances must supply different IDs in a later package implementation.
 
-The initial implicit core is the existing kernel builtins and bundled kernel prelude,
+Stage 1’s initial implicit core was the kernel builtins and bundled kernel prelude,
 primitive/container type constructors, and the current `type`, `class`, `error`,
 `service`, `layer`, and Effect-value authoring forms (including `do!`). Host-loaded
 preludes are compiler configuration, applied consistently to each isolated file;
@@ -231,8 +231,217 @@ declaration data, type metadata, and global seed IDs. Their symbolic references
 are data references, not executable imports. This index never publishes source
 functions or bindings into module scopes; its cache tracks data dependencies
 separately. Form-library imports and linking those projections belong to stage 2.
-Imported macros, forms, and typeclasses/instances require stage 2 and are rejected
-with a stage-specific diagnostic; their environments are never implicitly shared.
+Stage 1 rejected imported macros and forms. Stage 2 links them through their
+defining module; typeclass instance imports and coherence remain deferred.
+
+## Stage 2 decisions
+
+These decisions define the agreed stage 2 direction. The file-based slice now
+implements imported forms and macros, project preludes, declaration descriptors,
+pure collections, public schemas, and portable data facets in both the TypeScript
+and Native OCaml engines. The shared Stripe → Salesforce fixtures pin this slice.
+Data-member provenance currently conservatively retains every contributing input
+declaration through arbitrary pure helpers; it does not identify the minimal
+input set or a distinct authored span for each computed field. Module interfaces
+are rebuilt on demand, so helper and input changes refresh derived data without
+a persistent compile-time cache. Migrating the legacy artifact emit pipelines
+and bundled domain stacks, richer schema field spans, complete macro hygiene
+for every binding construct, related-location diagnostics, and a persistent
+compile-time cache remain follow-up work. The remaining requirements below
+describe the target design, not additional shipped guarantees.
+
+Stage 2 makes preludes ordinary dependency modules and extends interfaces with
+compile-time definitions, declarations, schemas, and pure data. It retains the
+current Effect-value surface. Package resolution, manifests, lockfiles,
+`interface`/`implements`, rename tracking, registry publishing, and RFC 0003
+direct-style effects remain outside this stage. Typeclass instance imports and
+coherence still require a separate decision.
+
+The implicit core is the kernel's intrinsic syntax and evaluation primitives,
+primitive/container and Effect type constructors, and the intrinsic declaration
+forms `type`, `class`, `error`, `service`, `layer`, and `do!`. It includes `define`,
+signatures, lexical binding and control primitives, `macro`, `form`, and the
+`Declares` and `Refers` contract machinery needed to author libraries. This is a
+fixed language boundary shared by both engines; it contains no bundled source
+prelude, domain forms, descriptor stack, or host-loaded bindings. Kernel sugar
+such as `when`, `cond`, and threading macros moves into ordinary exported
+libraries. The six stage-1 declaration and Effect forms stay intrinsic in this
+stage; library imports do not activate or replace their semantics. An eventual
+`@forma/effect` library exports helpers around this core rather than supplying
+`service`, `layer`, or `do!` bindings. This boundary retains the built-in forms agreed for this stage.
+
+A project-level `"prelude"` setting selects one module specifier. The host passes
+that setting, the project's canonical resolution base, and source ownership to
+the compiler; stage 2 does not introduce a manifest format. An omitted setting
+means no automatic library imports. The selected module's public exports are
+imported into each source module owned by that project, as if named imports had
+listed those exports. A prelude replaces only the project's automatic library
+imports, never the intrinsic core. A project can compose a prelude with ordinary
+`export-from` declarations. There is no `:all` source syntax and no ambient stack
+of loaded preludes.
+
+The prelude resolves through the same host resolver and has the same identities,
+visibility, collisions, and cycle rules as an explicit dependency. Relative
+prelude specifiers resolve from the project's supplied base, not separately from
+each source file. Missing modules and conflicts report the setting's source span
+when supplied, or a project configuration diagnostic. Automatic imports collide
+with local definitions and explicit imports just as named imports do, even when
+they name the same identity. Prelude modules and their dependency closure must
+bootstrap through intrinsic syntax and explicit imports; they do not receive
+their own project's automatic prelude. Dependency libraries use their owning
+project's configuration, never the importing project's selection. Salesforce
+and Stripe libraries can therefore coexist in one graph without sharing scopes.
+Hosts must assign each module one owning project; changing a project's prelude
+does not reinterpret another project's modules.
+
+An imported form carries its pattern, hole types, `:check`s, `:scope`, projection,
+result and IR contracts, emit hooks, documentation, examples, and editor metadata.
+Its interface identifies the defining module and the resolved dependencies needed
+by these operations. Private helpers and private contract/schema support remain
+in that module's compile-time environment. Their retention does not export their
+names. Public runtime signatures still obey stage 1's private nominal type rule.
+The consumer supplies the authored holes and a semantic view of its own visible
+declarations; it does not supply the lexical environment for library helpers.
+
+Compilation links an immutable compile-time environment per defining module,
+containing intrinsic primitives, that module's explicit imports, and its private
+definitions. Form operations and macro expansion retain a reference to that
+environment by module and binding identity. Dependencies of helpers are linked
+transitively through their own interfaces. No concatenated helper source, copied
+caller bindings, or session-wide environment substitutes for these links. Library
+identifiers in macro expansions resolve at the definition; caller syntax retains
+caller bindings; introduced identifiers are fresh. Re-exporting a form or macro
+retains its original environment and identity. Expansion records both definition
+and invocation spans.
+
+Export discovery follows resolved form contracts. At module top level, each
+symbol-valued `(Declares T)` hole introduces a declaration in the invoking
+module, not the form library. The interface identity remains
+`{moduleId, declaration}`; `declaration` is the introduced name, independent of
+form name, payload kind strings, source offsets, and expansion order. The compiler
+must not maintain a list of domain heads such as `price` or `profile` to discover
+these exports. Multiple declaring holes introduce separate identities; forms
+without declaring holes introduce none. Scoped child declarations do not become
+module exports. `(Declares T String)` introduces a data identity, not a lexical
+symbol; its data can be exposed through an explicitly exported collection.
+Existing duplicate-name, private-name, and undefined-export rules apply, and an
+`export` may precede the declaring form invocation.
+
+The graph first resolves dependency forms and expands macros, then discovers
+local declarations and prepares their identities before checks and projections.
+Declaring names must be obtainable from authored or expanded syntax and the form
+pattern, without evaluating a projection. Expansion cannot add computed imports
+or otherwise change the static dependency graph. Pure data dependencies within a
+module are evaluated in dependency order; forward declaration references are
+allowed, but cyclic demands for data are diagnosed with their reference chain.
+Module cycles remain rejected. Macro-introduced private names remain hygienic;
+public declarations require a stable name supplied by the caller.
+
+Interfaces extend the existing binding entry with phase availability and optional
+compile-time facets. Both engines expose the same portable information:
+
+| Facet | Contents |
+| --- | --- |
+| Binding | Public name, owning identity, resolved symbol, kind, constructors, and runtime `scheme` when applicable |
+| Declaration | Kind `declaration`, classification from the resolved `T` in `(Declares T)`, declaring form identity, and authored declaration span |
+| Schema | Resolved structural/type metadata, field metadata and spans, and the identities of referenced types or declarations |
+| Data | Immutable pure value, compile-time `scheme`, payload contract when applicable, and provenance for its members |
+| Form or macro | Definition metadata, contracts, linked environment reference, and definition/expansion provenance |
+
+Classification, payload type, and runtime type are separate. A `price` form may
+declare `PriceDecl` while projecting a record checked against `PriceIR`; neither
+automatically creates a runtime constructor or value. The declaration's data
+facet contains the checked projection and its contract. A runtime `scheme` is
+attached only if the form also introduces a checked runtime binding; no runtime
+scheme is invented from the classification or payload kind. The data facet's
+compile-time `scheme` describes the descriptor, including its classification and
+payload type, or the inferred type of an ordinary pure value. Imported schemes
+are instantiated at each use in their applicable phase. Exported types carry
+schema metadata alongside their existing schemes and constructors, so importing
+`Account` is sufficient to inspect its public schema during field checks and
+mappings. Private schema support carried by a contract is inspectable only through
+that contract, not as additional named declarations.
+
+An imported declaration resolves to its original identity in declaration holes
+and to an immutable declaration descriptor during pure elaboration. Library
+operations can inspect its classification, schema, and checked data. A pure
+`define` can build an exported value such as `prices` from these descriptors and
+ordinary literals. Its data facet is available to consumers in addition to its
+inferred scheme. The portable representation preserves symbols, keywords, type
+references, and declaration references explicitly; printed names or lossy JSON
+strings must not replace identities. Functions can be linked for pure elaboration
+but are not serialized as data. Effects, host handles, mutable state, and closures
+are not inspectable data payloads. A consumer demanding a value that cannot be
+prepared purely receives a diagnostic at that demand.
+
+For a typed data hole, a form may accept an expression such as `billing/prices`;
+it checks that expression in the caller's scope and evaluates it purely before
+projection. `Declares` and `Refers` holes retain declaration/reference syntax and
+resolve identities; `Syntax` holes retain syntax, and executable expression holes
+retain code for their declared phase. The projection's linked lexical environment
+receives the resulting hole values without inheriting the caller's bindings.
+
+Thus `sales/SalesUser` identifies an exported profile declaration,
+`billing/prices` exposes an inspectable collection to `picklist-of`, and
+`sales/Account` exposes only its public schema. Named imports, namespace imports,
+and re-exports carry these facets under the existing visibility rules. Private
+declarations do not become independently discoverable merely because their data
+appears inside an exported value. An exported value may intentionally include
+checked data and opaque references to them; this grants no private name lookup.
+Compile-time access creates no runtime import when the binding has no runtime
+role.
+
+The artifact declaration-data index is a projection of these resolved identities
+and facets, not a second module namespace. Module elaboration can query local
+declarations and imported public facets, plus private support accessible within
+the defining library's environment. It cannot scan sibling files, all loaded
+sources, or global seed IDs to bypass an import. Standalone artifact consumers may
+retain their explicit data-index API, but it never publishes bindings into module
+scopes. Reference checks compare identity and classification rather than matching
+printed names or looking up the producer's form in the caller's registry.
+
+Pure elaboration may construct syntax or IR describing future platform behavior,
+including `(update! ...)` inside a deferred action body. It must not execute that
+operation. The same operation in an invoked executable action remains an Effect
+and runs only through an explicit runner with its host capabilities. Phase
+availability and the hole's contract distinguish inspectable data or syntax from
+executable code; neither imports nor pure projection helpers turn an Effect into
+compile-time data. Constructing an Effect value does not run it and does not make
+its result available during elaboration. Stage 2 introduces no direct-style effect
+inference or implicit execution.
+
+Provenance accompanies data independently of its payload. Each exported
+declaration and payload member retains its defining module, identity, and authored
+span. Selection and reordering preserve member origins; a derived value records
+the transformation's authored span and its input origins, even when a computation
+combines several inputs. Collection elements and record fields must retain this
+information so a derived picklist entry can be traced to its Stripe price.
+Diagnostics for a broken authored reference point to that reference's exact span;
+diagnostics for derived data use the consumer's transformation or use span and
+include the defining data spans as related locations. Generated or library spans
+must not replace available authored spans. Re-exports preserve provenance.
+
+Cache dependencies distinguish runtime implementation, public type/interface,
+and compile-time behavior/data. A compile-time fingerprint includes form or macro
+definitions, contracts, reachable private helpers and their transitive imports,
+exported schema metadata, and evaluated data actually consumed during elaboration.
+Each compile-time read records its owning identity and facet; implementations may
+invalidate at whole-module granularity initially but must include all these
+dependencies. Changing a price amount, an `Account` field, or a private projection
+helper invalidates affected elaborations even when exported names and schemes
+stay unchanged. Prelude selection and resolved automatic imports are also cache
+inputs. Provenance is refreshed when source spans move, independently of nominal
+identity and semantic data equality. Cached data must never lose its origins.
+
+Acceptance starts with a TypeScript vertical slice using relative modules: import
+a Stripe form library with a private helper, export two price declarations and a
+pure `prices` collection, then derive a Salesforce picklist from that collection.
+A broken imported reference must report its authored span. Conformance fixtures
+also cover classification mismatches, schema inspection, private helper isolation,
+re-export identity, macro hygiene, distinct project preludes, data/helper cache
+invalidation, derived provenance, and deferred `update!` without execution. The
+OCaml implementation follows with the same normalized interfaces, data, and
+diagnostic expectations; parity is established by running those fixtures.
 
 ## Compile-time modules
 
@@ -364,7 +573,7 @@ other loaded files implicitly.
 
 ## Decisions still required
 
-- The exact implicit core and the public standard-library module layout.
+- The public standard-library module layout beyond the file-based kernel library.
 - Opaque type exports, constructor visibility, and deriving codecs for opaque types.
 - Import renaming and any later support for recursive modules.
 - Typeclass instance export and coherence rules across modules.

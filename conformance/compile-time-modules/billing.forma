@@ -1,0 +1,6 @@
+(import "./stripe.forma" [price])
+(export Monthly Annual prices)
+
+(price Monthly "Monthly" 1200)
+(price Annual "Annual" 12000)
+(define prices [Monthly Annual])

@@ -265,3 +265,66 @@ test("target name normalization preserves distinct declaration identities", () =
   for (const name of names)
     expect(linked.modules[0]!.code).toContain(`export const ${name}`);
 });
+
+test("an imported macro links its private runtime helper in generated modules", () => {
+  const library = {
+    id: "macros.forma",
+    source:
+      "(export increment) (define helper [x] (+ x 1)) (macro (increment x) `(helper ~x))",
+  };
+  const entry = {
+    id: "main.forma",
+    source:
+      '(import "./macros.forma" [increment]) (export answer) (define answer (increment 41))',
+  };
+  const graph = resolveModuleGraph(entry, sourceModuleResolver([library]));
+  const linked = linkEffectModules(graph);
+  expect(linked.diagnostics).toEqual([]);
+  expect(graph.modules[0]!.interface.exports.map((b) => b.name)).toEqual([
+    "increment",
+  ]);
+  const root = resolve(import.meta.dirname, "../../..");
+  const dir = mkdtempSync(resolve(root, ".context/macro-link-test-"));
+  try {
+    writeFileSync(resolve(dir, "package.json"), '{"type":"module"}');
+    for (const module of linked.modules)
+      writeFileSync(resolve(dir, module.fileName), module.code);
+    const answer = generatedBindingName(
+      graph.modules.at(-1)!.interface.exports[0]!,
+    );
+    writeFileSync(
+      resolve(dir, "run.ts"),
+      `import { ${answer} as answer } from "./${linked.entry.replace(/\.ts$/, ".js")}";\nconsole.log(answer);\n`,
+    );
+    writeFileSync(
+      resolve(dir, "tsconfig.json"),
+      JSON.stringify({
+        compilerOptions: {
+          target: "ES2022",
+          module: "NodeNext",
+          moduleResolution: "NodeNext",
+          strict: true,
+          skipLibCheck: true,
+          outDir: "out",
+        },
+        include: ["*.ts"],
+      }),
+    );
+    execFileSync(
+      process.execPath,
+      [
+        resolve(root, "node_modules/typescript/bin/tsc"),
+        "-p",
+        resolve(dir, "tsconfig.json"),
+      ],
+      { encoding: "utf8" },
+    );
+    expect(
+      execFileSync(process.execPath, [resolve(dir, "out/run.js")], {
+        encoding: "utf8",
+      }).trim(),
+    ).toBe("42");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}, 20000);

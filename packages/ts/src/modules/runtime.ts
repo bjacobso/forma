@@ -11,6 +11,7 @@ import { headSym, type SExpr } from "../reader/types.js";
 import { ModuleError, type ModuleGraph } from "./graph.js";
 
 export interface ModuleInstance {
+  readonly moduleId: string;
   readonly source: string;
   readonly dependencies: readonly ModuleInstance[];
   readonly result: KernelResult;
@@ -27,13 +28,21 @@ const definition = (e: SExpr): boolean =>
     "form",
     "typeclass",
     "instance",
-    "entity",
-    "query",
-    "command",
-    "view",
-    "rule",
-    "protocol",
   ].includes(headSym(e) ?? "");
+const referencedSymbols = (expressions: readonly SExpr[]): Set<string> => {
+  const symbols = new Set<string>();
+  const visit = (e: SExpr): void => {
+    if (e._tag === "Sym" && e.name.includes("__forma_")) symbols.add(e.name);
+    else if (e._tag === "Map")
+      e.pairs.forEach(([k, v]) => {
+        visit(k);
+        visit(v);
+      });
+    else if (e._tag === "List" || e._tag === "Vector") e.items.forEach(visit);
+  };
+  expressions.forEach(visit);
+  return symbols;
+};
 /** Runtime-local definition cache. Entry expressions run only on explicit evaluation. */
 export class ModuleRuntime {
   readonly instances = new Map<string, ModuleInstance>();
@@ -87,8 +96,8 @@ export class ModuleRuntime {
         });
     }
     for (const module of graph.modules) {
-      const dependencies = module.dependencies.map((id) =>
-        this.instances.get(id)!,
+      const dependencies = module.dependencies.map(
+        (id) => this.instances.get(id)!,
       );
       const previous = this.instances.get(module.id);
       if (
@@ -109,11 +118,13 @@ export class ModuleRuntime {
         evaluateExprs(module.expressions.filter(definition), {
           env,
           builtins: defaultBuiltins,
+          includePrelude: false,
           stepLimit,
           ...(collector ? { observer: collector } : {}),
         }),
       );
       this.instances.set(module.id, {
+        moduleId: module.id,
         source: module.source,
         dependencies,
         result,
@@ -147,10 +158,19 @@ export class ModuleRuntime {
       ]),
     );
     const values: Record<string, KValue> = {};
-    for (const dependency of dependencies) {
+    const referenced = referencedSymbols(module.expressions);
+    for (const dependency of new Set([
+      ...dependencies,
+      ...this.instances.values(),
+    ])) {
       const env = dependency.result.env;
+      const ownerMarker = `__forma_${[...new TextEncoder().encode(dependency.moduleId)].map((b) => b.toString(16).padStart(2, "0")).join("")}_d`;
       for (const name of env.bindingNames())
-        if (allowed.has(name)) values[name] = env.lookup(name)!;
+        if (
+          name.includes(ownerMarker) &&
+          (allowed.has(name) || referenced.has(name))
+        )
+          values[name] = env.lookup(name)!;
     }
     return this.core.extend(values);
   }
@@ -181,6 +201,7 @@ export class ModuleRuntime {
           evaluateExprs(expressions, {
             env: instance.result.env,
             builtins: defaultBuiltins,
+            includePrelude: false,
             stepLimit,
             ...(collector ? { observer: collector } : {}),
           }),

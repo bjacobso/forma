@@ -1,7 +1,7 @@
 # File modules
 
-RFC 0002 stage 1 implements isolated file modules in the TypeScript and Native
-OCaml engines. A file's definitions are private. Source loading registers files;
+RFC 0002 implements isolated file modules and a stage 2 compile-time library
+slice in the TypeScript and Native OCaml engines. A file's definitions are private. Source loading registers files;
 it does not publish their bindings into a host session.
 
 ```lisp
@@ -52,11 +52,83 @@ stage-1 type exports are transparent. Public signatures must export the owning
 nominal types and services they mention. Constructor-only and opaque exports
 are not implemented.
 
-The implicit core consists of the existing kernel builtins and bundled kernel
-prelude, primitive/container types, and the current Effect-value authoring forms.
-Configured host variables and preludes are explicit additions to this core.
-Ordinary source files never extend it. Exported macros, forms, and typeclasses require stage 2 and receive a located diagnostic.
-Local macros can still expand references to helpers in their own module.
+The implicit module core consists of intrinsic syntax, evaluation primitives,
+primitive/container types, and the current Effect-value authoring forms. `type`,
+`class`, `error`, `service`, `layer`, and `do!` remain built in. Kernel sugar can be
+imported from `preludes/kernel.forma`; it is not automatically loaded into file
+modules. Explicitly configured host variables remain available. Source-loading
+and legacy descriptor-prelude APIs do not add library bindings to module scopes.
+Typeclass instance imports and coherence remain deferred.
+
+## Compile-time libraries
+
+Forms and macros use the same imports and visibility rules as values and types.
+A form retains its defining module's private projection helpers, patterns, hole
+types, checks, contracts, and editor metadata. Macro helper references retain
+definition-site identity; caller syntax retains caller bindings. The implemented
+hygiene covers generated `fn` and `let` binders; other binding constructs still
+need further work.
+
+```lisp
+;; stripe.forma
+(export price)
+(type PriceDecl Symbol)
+(type PriceIR {:name Symbol :label String :amount Int})
+(define display-label [label] (str "Stripe: " label))
+(form (price name label amount)
+  :types {:name (Declares PriceDecl) :label String :amount Int}
+  :ir PriceIR
+  {:name name :label (display-label label) :amount amount})
+
+;; billing.forma
+(import "./stripe.forma" [price])
+(export Monthly Annual prices)
+(price Monthly "Monthly" 1200)
+(price Annual "Annual" 12000)
+(define prices [Monthly Annual])
+```
+
+`Declares` contracts introduce declaration exports. Each declaration has its
+invoking module's identity and a classification, declaring-form identity, and
+source span. During pure elaboration it is a descriptor with `:identity`,
+`:classification`, and `:data`. Private helpers retain the form library's scope.
+The `prices` export is inspectable pure data for another form's typed data hole.
+Exported types carry public schema syntax. Declaration and data interfaces carry
+compile-time schemes separately from runtime schemes; classification does not
+manufacture a runtime constructor.
+
+The complete [Stripe → Salesforce fixture](https://github.com/bjacobso/forma/tree/main/conformance/compile-time-modules)
+uses `billing/prices` to derive picklist entries and checks imported references
+at their authored spans. Data provenance contains paths into the elaborated
+value and source declaration identities and spans. It conservatively includes
+all contributing input declarations on every derived member. Selection and
+transformation do not yet track minimal per-member input sets.
+
+A host selects each project's automatic imports through `configureSession`:
+
+```typescript
+await host.configureSession({
+  sessionId,
+  projects: [{
+    id: "billing",
+    base: "billing/project",
+    prelude: "./prelude.forma",
+    modules: ["billing/main.forma", "billing/prelude.forma"],
+  }],
+});
+```
+
+`base` is the resolver's importing-file base: the example resolves the setting to
+`billing/prelude.forma`. A project's source modules receive the selected module's
+exports under ordinary named-import collision rules. The prelude and its explicit
+dependency closure bootstrap without that project's automatic imports. Each
+module uses its owning project's selection, so two projects can use distinct
+form libraries in the same graph. No setting means no automatic library imports.
+
+Pure projections can retain `RuntimeExpr` syntax describing a future `update!`;
+they do not invoke it. Executable Effects still require the existing explicit
+runner. Graph requests rebuild compile-time interfaces from current sources,
+including private helper dependencies.
 
 ## Host and browser use
 
@@ -135,7 +207,7 @@ open-row signatures, and variadic functions require further target work and repo
 diagnostics. The existing domain artifact APIs still resolve symbolic declaration
 data and global seed IDs in their artifact reference index. That index supplies
 artifact hooks with data; it never supplies functions or lexical bindings to a
-file module. Importing form definitions and linking domain projection libraries
-remain stage 2 work. Manifests,
-registries, lockfiles, package imports, compile-time libraries, project commands,
+file module. File module interfaces now expose compile-time libraries and checked declaration
+data. Migrating these legacy artifact emit pipelines to those interfaces remains
+follow-up work. Manifests, registries, lockfiles, package imports, project commands,
 and RFC 0003 direct-style effects remain proposals.

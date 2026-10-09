@@ -60,6 +60,7 @@ type request = Abi_request.t = {
   failure_message : string option;
   type_policy : type_policy option;
   host_builtins : host_builtin_descriptor list;
+  projects : Module_contract.project list option;
 }
 
 let engine_name = "forma-ocaml"
@@ -129,6 +130,9 @@ let dispatch_request request =
   match request.op with
   | "version" -> version_json ()
   | "openSession" -> open_session ()
+  | "configureSession" -> with_session request.session_id (fun session ->
+      Option.iter (fun projects->session.Session.projects<-projects) request.projects;
+      "{\"ok\":true,\"value\":null}")
   | "closeSession" -> close_session request.session_id
   | "resetSession" -> reset_session request.session_id
   | "loadPrelude" -> load_prelude request

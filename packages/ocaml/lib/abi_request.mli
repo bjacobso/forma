@@ -52,6 +52,7 @@ type t = {
   failure_message : string option;
   type_policy : type_policy option;
   host_builtins : host_builtin_descriptor list;
+  projects : Module_contract.project list option;
 }
 
 val find_string_field : string -> string -> string option
