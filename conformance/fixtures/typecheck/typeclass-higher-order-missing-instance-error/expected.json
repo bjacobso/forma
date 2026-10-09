@@ -7,5 +7,15 @@
       }
     ]
   },
-  "success": false
+  "success": false,
+  "expectation": {
+    "kind": "error",
+    "diagnostic": {
+      "code": "typecheck/missing-instance",
+      "span": {
+        "start": 130,
+        "end": 132
+      }
+    }
+  }
 }

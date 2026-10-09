@@ -11,5 +11,15 @@
       }
     ]
   },
-  "success": false
+  "success": false,
+  "expectation": {
+    "kind": "error",
+    "diagnostic": {
+      "code": "reader/invalid-number",
+      "span": {
+        "start": 0,
+        "end": 2
+      }
+    }
+  }
 }

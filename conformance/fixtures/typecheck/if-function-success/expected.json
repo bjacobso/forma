@@ -3,5 +3,9 @@
     "diagnostics": [],
     "type": "Number -> Number"
   },
-  "success": true
+  "success": true,
+  "expectation": {
+    "kind": "success",
+    "allowDiagnostics": true
+  }
 }

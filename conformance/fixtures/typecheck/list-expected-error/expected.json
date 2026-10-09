@@ -13,5 +13,29 @@
       }
     ]
   },
-  "success": false
+  "success": false,
+  "expectation": {
+    "kind": "error",
+    "diagnostic": {
+      "code": "typecheck/type-mismatch",
+      "span": {
+        "start": 0,
+        "end": 9
+      }
+    }
+  },
+  "typescript": {
+    "reason": "TypeScript checks the argument at its own span; OCaml locates the entire builtin call.",
+    "expectation": {
+      "kind": "error",
+      "diagnostic": {
+        "code": "typecheck/type-mismatch",
+        "severity": "error",
+        "span": {
+          "start": 7,
+          "end": 8
+        }
+      }
+    }
+  }
 }

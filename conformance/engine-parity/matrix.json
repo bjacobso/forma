@@ -97,6 +97,28 @@
       "status": "gap",
       "fixture": "cases.json (effect-typescript/*)",
       "reason": "Neither HM typechecker accepts the Effect program forms (define-layer, define-class, combinators, typed defines); both reject them with different diagnostics. Effect programs are checked by the mechanics checker, so only effect-typescript/operational-effects compares typecheck."
+    },
+    {
+      "id": "reader-diagnostic-corpus",
+      "status": "compared",
+      "fixture": "../fixtures/reader/*-error/expected.json",
+      "reason": "Both engines check the 12 stored reader error codes and spans; TypeScript runs them in its package tests."
+    },
+    {
+      "id": "typecheck-diagnostic-corpus",
+      "status": "intentional-difference",
+      "fixture": "../fixtures/typecheck/*/expected.json",
+      "reason": "TypeScript runs all 84 fixtures. Five stored overrides preserve narrower argument spans and qualified constructor warning names."
+    },
+    {
+      "id": "incremental-summary",
+      "status": "intentional-difference",
+      "reason": "Both report per-form shape digests and author spans. TypeScript hashes UTF-8 AST JSON with FNV-1a 64-bit; OCaml uses MD5 and its own numeric AST serialization."
+    },
+    {
+      "id": "core-debug",
+      "status": "intentional-difference",
+      "reason": "Both expose lowerCore, typecheckCore, and typecheckCoreTyped. Dumps use their engine-specific core representations; TypeScript annotates expression nodes with inferredType."
     }
   ]
 }

@@ -39,7 +39,7 @@ export const inferTypeDef = (
     if (expr.typeExpr) {
       if (expr.source === "error" || expr.source === "class") {
         const fields = yield* typeExprToType(expr.typeExpr, new Map(), new Map());
-        if (fields._tag !== "TRow") return yield* ctx.fail(originOf(expr, "named-record"), {message: "Named record types require record fields"});
+        if (fields._tag !== "TRow") return yield* ctx.fail(originOf(expr, "named-record"), {code: "typecheck/named-record", message: "Named record types require record fields"});
         const nominal = TCon(expr.name);
         const shape = expr.source === "error" ? TRow(RExtend(":_tag", TCon(JSON.stringify(expr.name)), fields.row)) : fields;
         yield* Ref.update(ctx.nominalRecords, records => new Map(records).set(expr.name, shape));
@@ -194,7 +194,7 @@ const validateMechanicsTypeRefs = (
             if (uppercaseInitial(name)) {
               return yield* ctx.fail(
                 { nodeId: `mechanics-schema-ref:${name}`, span: expr.span, kind: "__schema" },
-                { message: `Unknown schema reference: ${name}` },
+                { code: "typecheck/unknown-type", message: `Unknown schema reference: ${name}` },
               );
             }
             return;
@@ -338,7 +338,7 @@ export const inferInstance = (
     const classInfo = classReg.get(expr.className);
     if (!classInfo) {
       return yield* ctx.fail(originOf(expr, "instance"), {
-        message: `Unknown type class: ${expr.className}`,
+        code: "typecheck/unknown-typeclass", message: `Unknown type class: ${expr.className}`,
       });
     }
 

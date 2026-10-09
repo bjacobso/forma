@@ -149,7 +149,7 @@ export const inferEffectFail = (
     const errorTypes = yield* Ref.get(ctx.errorTypes);
     if (!errorTypes.has(expr.errorName)) {
       return yield* ctx.fail(originOf(expr, "effect-fail"), {
-        message: `Unknown error type ${expr.errorName}. Define it with error before using fail.`,
+        code: "typecheck/unknown-type", message: `Unknown error type ${expr.errorName}. Define it with error before using fail.`,
       });
     }
     const payloadType = yield* inferExpr(env, expr.payload);
@@ -176,14 +176,14 @@ export const inferEffectCatch = (
     const errorTypes = yield* Ref.get(ctx.errorTypes);
     if (!errorTypes.has(expr.errorName)) {
       return yield* ctx.fail(originOf(expr, "effect-catch"), {
-        message: `Unknown error type ${expr.errorName}. Define it with error before using catch.`,
+        code: "typecheck/unknown-type", message: `Unknown error type ${expr.errorName}. Define it with error before using catch.`,
       });
     }
     const bodyType = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.body));
     const bodyEffect = operationalEffectParts(bodyType);
     if (!bodyEffect) {
       return yield* ctx.fail(originOf(expr, "effect-catch"), {
-        message: `catch expects Effect, received ${showType(bodyType)}.`,
+        code: "typecheck/type-mismatch", message: `catch expects Effect, received ${showType(bodyType)}.`,
       });
     }
 
@@ -192,7 +192,7 @@ export const inferEffectCatch = (
     );
     if (!handled) {
       return yield* ctx.fail(originOf(expr, "effect-catch"), {
-        message: `Impossible catch: ${expr.errorName} is not in ${showType(bodyType)}.`,
+        code: "typecheck/effect-set", message: `Impossible catch: ${expr.errorName} is not in ${showType(bodyType)}.`,
       });
     }
 
@@ -278,7 +278,7 @@ function inferDataPattern(env: TypeEnv, syntax: import("../reader/types.js").SEx
         for (let i=0;i<p.items.length;i++) {
           const item = p.items[i]!;
           if (item._tag === "Sym" && item.name === "&") {
-            if (i !== p.items.length - 2) return yield* ctx.fail(origin, {message: "Vector rest pattern requires one final binder"});
+            if (i !== p.items.length - 2) return yield* ctx.fail(origin, {code: "typecheck/pattern-rest", message: "Vector rest pattern requires one final binder"});
             yield* visit(p.items[++i]!, list);
           } else yield* visit(item,element);
         } return;
@@ -290,14 +290,14 @@ function inferDataPattern(env: TypeEnv, syntax: import("../reader/types.js").SEx
         let ct = yield* instantiate(scheme);
         const args = p._tag === "List" ? p.items.slice(1) : [];
         for (const a of args) {
-          if (ct._tag !== "TFun") return yield* ctx.fail(origin,{message: `Too many pattern arguments for ${ctor}`});
+          if (ct._tag !== "TFun") return yield* ctx.fail(origin,{code: "typecheck/pattern-arity", message: `Too many pattern arguments for ${ctor}`});
           yield* visit(a,ct.arg); ct = ct.res;
         }
-        if (ct._tag === "TFun") return yield* ctx.fail(origin,{message: `Missing pattern arguments for ${ctor}`});
+        if (ct._tag === "TFun") return yield* ctx.fail(origin,{code: "typecheck/pattern-arity", message: `Missing pattern arguments for ${ctor}`});
         yield* unify(t,ct,origin); return;
       }
       const literal = p._tag === "Num" || p._tag === "Str" || p._tag === "Bool" ? TCon(JSON.stringify(p.value)) : p._tag === "Sym" && p.name.startsWith(":") ? TCon(p.name) : p._tag === "Sym" && p.name === "nil" ? tNil : undefined;
-      if (!literal) return yield* ctx.fail(origin,{message: "Invalid match pattern"});
+      if (!literal) return yield* ctx.fail(origin,{code: "typecheck/pattern", message: "Invalid match pattern"});
       const target = applyType(yield* Ref.get(ctx.subst), t);
       const widened = p._tag === "Num" ? TCon(Number.isInteger(p.value) ? "Int" : "Number")
         : p._tag === "Str" ? TCon("String") : p._tag === "Bool" ? TCon("Bool")
@@ -386,7 +386,7 @@ export const inferMatch = (
           for (let i = 0; i < arm.pattern.vars.length; i++) {
             if (cur._tag !== "TFun") {
               return yield* ctx.fail(originOf(expr, "match"), {
-                message: `Constructor ${conName} expects ${i} field(s) but pattern has ${arm.pattern.vars.length}`,
+                code: "typecheck/pattern-arity", message: `Constructor ${conName} expects ${i} field(s) but pattern has ${arm.pattern.vars.length}`,
               });
             }
             fieldTypes.push(cur.arg);

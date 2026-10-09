@@ -3,8 +3,10 @@
 > Forma is a pre-alpha typed, homoiconic Lisp for building domain-specific languages and portable artifacts. Install the TypeScript engine with `pnpm add @formalang/ts`, or try the browser playground at https://forma-lang.com/playground.
 
 APIs, package boundaries, syntax, and artifact formats are still evolving.
-There is no published `forma` CLI. The TypeScript engine powers the browser
-tools; the OCaml engine builds to native code, JavaScript, and WebAssembly.
+The TypeScript host includes a source-built `forma` JSON CLI and daemon, with
+filesystem module commands described in [File modules](https://forma-lang.com/modules).
+The TypeScript engine also powers the browser tools; the OCaml engine builds
+to native code, JavaScript, and WebAssembly.
 Shared conformance fixtures define their portable semantic intersection.
 The structural workbench currently depends on unpublished Foldworks packages.
 

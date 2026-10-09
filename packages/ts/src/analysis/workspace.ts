@@ -446,7 +446,7 @@ function analyzeDocument(
   );
   for (const error of result.errors) {
     diagnostics.push({
-      code: "typecheck/error",
+      code: error.diagnosticCode ?? "typecheck/type-mismatch",
       severity: "error",
       message: withoutOffset(error.message),
       phase: "typecheck",

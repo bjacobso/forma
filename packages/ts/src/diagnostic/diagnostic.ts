@@ -70,7 +70,15 @@ export function diagnosticFromUnknown(
           }
         : undefined;
     return {
-      code: typeof candidate.details?.["code"] === "string" ? candidate.details["code"] : candidate._tag ?? `${phase}/error`,
+      code: typeof candidate.details?.["code"] === "string"
+        ? candidate.details["code"]
+        : candidate._tag === "InferenceError"
+          ? "typecheck/type-mismatch"
+          : candidate._tag === "ParseError"
+            ? readerCode(candidate.message ?? "")
+            : candidate.loc && !candidate._tag
+              ? "surface/invalid-form"
+              : candidate._tag ?? "internal/error",
       severity: "error",
       message: candidate.message ?? String(error),
       phase,
@@ -79,7 +87,7 @@ export function diagnosticFromUnknown(
     };
   }
   return {
-    code: `${phase}/error`,
+    code: "internal/error",
     severity: "error",
     message: String(error),
     phase,
@@ -103,4 +111,18 @@ function effectCauseFromUnknown(error: unknown):
     }
   }
   return undefined;
+}
+
+/** Reader errors have one tag; the parser retains the precise failure message. */
+function readerCode(message: string): string {
+  if (message.startsWith("Unterminated string escape")) return "reader/unterminated-string-escape";
+  if (message.startsWith("Unterminated")) return "reader/unterminated-string";
+  if (message.startsWith("Invalid number")) return "reader/invalid-number";
+  if (message.startsWith("Unexpected character")) return "reader/unexpected-character";
+  if (message.startsWith("Map requires")) return "reader/map-entry-missing-value";
+  if (message.startsWith("Unclosed map")) return "reader/unclosed-map";
+  if (message.startsWith("Unclosed")) return "reader/unclosed-sequence";
+  if (message.startsWith("Expected form") || message.includes("EOF")) return "reader/unexpected-eof";
+  if (message.startsWith("Unexpected")) return "reader/unexpected-close";
+  return "reader/error";
 }

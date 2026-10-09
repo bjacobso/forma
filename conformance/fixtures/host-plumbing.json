@@ -1,0 +1,26 @@
+{
+  "reference": "packages/ocaml/scripts/smoke.mjs and packages/ocaml/scripts/incremental.mjs",
+  "cases": [
+    {
+      "id": "prefix-policy",
+      "request": {"op":"typecheck","sourceId":"type-policy-prefix","source":"?entity","typePolicy":{"unboundSymbols":[{"match":{"kind":"prefix","value":"?"},"type":{"kind":"type","name":"String"}}]}},
+      "expected": {"ok":true,"type":"String","diagnostics":[]}
+    },
+    {
+      "id": "exact-policy",
+      "request": {"op":"typecheck","sourceId":"type-policy-exact","source":"runtime-flag","result":"per-expression","typePolicy":{"unboundSymbols":[{"match":{"kind":"exact","value":"runtime-flag"},"type":{"kind":"type","name":"Bool"}}]}},
+      "expected": {"ok":true,"type":"Bool","diagnostics":[]}
+    },
+    {
+      "id": "host-builtin",
+      "request": {"op":"typecheck","sourceId":"host-builtin","source":"(runtime-add 1 2)","typePolicy":{"defaultBuiltinScheme":"none"},"hostBuiltins":[{"name":"runtime-add","arity":2,"typeScheme":{"kind":"function","params":[{"kind":"type","name":"Int"},{"kind":"type","name":"Int"}],"result":{"kind":"type","name":"Int"}},"handler":{"kind":"host-effect","effect":"runtime/add"}}]},
+      "expected": {"ok":true,"type":"Int","diagnostics":[]},
+      "typescript": {"reason":"Numeric host scheme aliases remain Number in TypeScript, including Int and Float.","expected":{"ok":true,"type":"Number","diagnostics":[]}}
+    }
+  ],
+  "incremental": {
+    "before":"(define a 1)\n(define b 2)\n(define c 3)\n",
+    "after":"(define a 1)\n(define b 20)\n(define c 3)\n",
+    "changedForms":[1]
+  }
+}

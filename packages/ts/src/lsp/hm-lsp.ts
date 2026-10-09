@@ -43,6 +43,7 @@ export interface TypedSpan {
 }
 
 export interface LspError {
+  readonly diagnosticCode?: string | undefined;
   readonly message: string;
   readonly span?: Span | undefined;
   readonly code?: string | undefined;
@@ -235,6 +236,7 @@ export function analyzeLsp(
     const errors = failures.map((err) => ({
       message: err.message,
       span: err.origin?.span,
+      diagnosticCode: typeof err.details.code === "string" ? err.details.code : "typecheck/type-mismatch",
       code: err.origin?.span ? extractCode(source, err.origin.span) : undefined,
     }));
 

@@ -33,6 +33,7 @@ export type {
   HostCall,
   HostCallResumeResult,
   LanguageHost,
+  LoadPhaseTimings,
   ModuleGraphRequest,
   ModuleGraphResult,
   ModuleLinkResult,

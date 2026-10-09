@@ -31,7 +31,7 @@ sessions, editor analysis, retained values, and host calls. Implementations
 adapt the TypeScript engine, the native OCaml daemon, or the JavaScript OCaml
 artifact to that contract.
 
-The native daemon uses newline-delimited JSON. Long-lived sessions retain
+The TypeScript `forma` CLI and native OCaml daemon use newline-delimited JSON. Long-lived sessions retain
 loaded sources, generalized definitions, artifact caches, and suspended host
 calls. One-shot requests remain available for simple compiler invocations.
 

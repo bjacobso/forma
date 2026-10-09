@@ -36,7 +36,7 @@ const bindTVar = (id: string, t: Type, origin: Origin) =>
 
     if (occursInType(id, tApplied)) {
       return yield* ctx.fail(origin, {
-        message: `Infinite type: ${id} occurs in ${showType(tApplied)}`,
+        code: "typecheck/occurs-check", message: `Infinite type: ${id} occurs in ${showType(tApplied)}`,
         tvar: id,
         in: showType(tApplied),
       });
@@ -59,7 +59,7 @@ const bindRVar = (id: string, r: Row, origin: Origin) =>
 
     if (occursInRow(id, rApplied)) {
       return yield* ctx.fail(origin, {
-        message: "Row occurs check failed",
+        code: "typecheck/occurs-check", message: "Row occurs check failed",
         rvar: id,
       });
     }
@@ -81,7 +81,7 @@ const bindEVar = (id: string, e: ERow, origin: Origin) =>
 
     if (occursInERow(id, eApplied)) {
       return yield* ctx.fail(origin, {
-        message: "Effect row occurs check failed",
+        code: "typecheck/occurs-check", message: "Effect row occurs check failed",
         evar: id,
       });
     }
@@ -121,7 +121,7 @@ export const unify = (
     if (a._tag === "TCon" && b._tag === "TCon") {
       if (a.name === b.name) return;
       return yield* ctx.fail(origin, {
-        message: `Type mismatch: ${showType(a)} vs ${showType(b)}`,
+        code: "typecheck/type-mismatch", message: `Type mismatch: ${showType(a)} vs ${showType(b)}`,
         expected: showType(a),
         got: showType(b),
       });
@@ -168,7 +168,7 @@ export const unify = (
     }
 
     return yield* ctx.fail(origin, {
-      message: `Cannot unify ${showType(a)} with ${showType(b)}`,
+      code: "typecheck/type-mismatch", message: `Cannot unify ${showType(a)} with ${showType(b)}`,
       expected: showType(a),
       got: showType(b),
     });
@@ -196,7 +196,7 @@ const unifyFiniteTypeSetArgs = (
     }
     if (sortedLeft.length !== sortedRight.length) {
       return yield* ctx.fail(origin, {
-        message: "Type application arity mismatch",
+        code: "typecheck/arity", message: "Type application arity mismatch",
         left: showType(TApp(TCon("Set"), left)),
         right: showType(TApp(TCon("Set"), right)),
       });
@@ -212,7 +212,7 @@ const unifyTypeAppArgs = (
     const ctx = yield* InferContext;
     if (left.args.length !== right.args.length) {
       return yield* ctx.fail(origin, {
-        message: "Type application arity mismatch",
+        code: "typecheck/arity", message: "Type application arity mismatch",
         left: showType(left),
         right: showType(right),
       });
@@ -271,20 +271,20 @@ export const unifyRows = (
 
     if (aTail._tag === "RVar" && bTail._tag === "RVar" && aTail.id === bTail.id
       && (onlyA.size > 0 || onlyB.size > 0)) {
-      return yield* ctx.fail(origin, { message: "Incompatible fields on records sharing the same row tail" });
+      return yield* ctx.fail(origin, { code: "typecheck/row-merge", message: "Incompatible fields on records sharing the same row tail" });
     }
 
     // Closed record missing fields => error
     if (onlyB.size > 0 && aTail._tag === "REmpty") {
       return yield* ctx.fail(origin, {
-        message: "Missing field(s) in record",
+        code: "typecheck/missing-field", message: "Missing field(s) in record",
         missingIn: "left",
         fields: Array.from(onlyB.keys()).sort(),
       });
     }
     if (onlyA.size > 0 && bTail._tag === "REmpty") {
       return yield* ctx.fail(origin, {
-        message: "Missing field(s) in record",
+        code: "typecheck/missing-field", message: "Missing field(s) in record",
         missingIn: "right",
         fields: Array.from(onlyA.keys()).sort(),
       });
@@ -351,12 +351,12 @@ export const unifyERows = (
     // Closed effect row missing labels => error
     if (onlyB.size > 0 && aTail._tag === "EEmpty") {
       return yield* ctx.fail(origin, {
-        message: `Missing effect(s): ${Array.from(onlyB).sort().join(", ")}`,
+        code: "typecheck/effect-set", message: `Missing effect(s): ${Array.from(onlyB).sort().join(", ")}`,
       });
     }
     if (onlyA.size > 0 && bTail._tag === "EEmpty") {
       return yield* ctx.fail(origin, {
-        message: `Missing effect(s): ${Array.from(onlyA).sort().join(", ")}`,
+        code: "typecheck/effect-set", message: `Missing effect(s): ${Array.from(onlyA).sort().join(", ")}`,
       });
     }
 

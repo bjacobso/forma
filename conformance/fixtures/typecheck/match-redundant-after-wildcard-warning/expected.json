@@ -12,5 +12,16 @@
     ],
     "type": "Number"
   },
-  "success": true
+  "success": true,
+  "expectation": {
+    "kind": "warning",
+    "diagnostic": {
+      "severity": "warning",
+      "message": "Unreachable match arm(s) after wildcard pattern",
+      "span": {
+        "start": 41,
+        "end": 88
+      }
+    }
+  }
 }

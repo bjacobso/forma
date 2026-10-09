@@ -3,5 +3,9 @@
     "diagnostics": [],
     "type": "List<Number>"
   },
-  "success": true
+  "success": true,
+  "expectation": {
+    "kind": "success",
+    "allowDiagnostics": true
+  }
 }

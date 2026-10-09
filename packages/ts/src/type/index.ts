@@ -200,7 +200,14 @@ export function inferSource(
     resetNodeIds();
     const coreExprs = yield* Effect.try({
       try: () => lowerProgram(exprs, dslProvider),
-      catch: (e) => (e instanceof InferenceError ? e : new InferenceError({ message: String(e) })),
+      catch: (e) => {
+        if (e instanceof InferenceError) return e;
+        if (e instanceof Error && "loc" in e) {
+          const loc = e.loc as {start:number; end:number};
+          return new InferenceError({message:e.message, origin:{nodeId:`surface:${loc.start}`, kind:"surface", span:loc}, details:{code:"surface/invalid-form"}});
+        }
+        throw e;
+      },
     });
 
     const ctxService = yield* makeOwnedInferContext({
@@ -261,7 +268,14 @@ export function inferSourceAll(
     resetNodeIds();
     const coreExprs = yield* Effect.try({
       try: () => lowerProgram(exprs, dslProvider),
-      catch: (e) => (e instanceof InferenceError ? e : new InferenceError({ message: String(e) })),
+      catch: (e) => {
+        if (e instanceof InferenceError) return e;
+        if (e instanceof Error && "loc" in e) {
+          const loc = e.loc as {start:number; end:number};
+          return new InferenceError({message:e.message, origin:{nodeId:`surface:${loc.start}`, kind:"surface", span:loc}, details:{code:"surface/invalid-form"}});
+        }
+        throw e;
+      },
     });
 
     const ctxService = yield* makeOwnedInferContext({

@@ -159,7 +159,7 @@ await host.closeSession({ sessionId });
 Loading order does not affect resolution. The host supplies a synchronous resolver
 `(specifier, importerId) => { id, source } | undefined`. In-memory bundles resolve
 normalized relative paths. The Node adapter in `@formalang/ts/node` and the Native
-CLI use canonical filesystem paths. Cycles report the complete import chain;
+CLI adapters use canonical filesystem paths. Cycles report the complete import chain;
 missing files, private exports, collisions, and namespace mistakes report the
 importing author's span.
 
@@ -179,19 +179,60 @@ polymorphic function, branded IDs, a class, tagged constructors, and an Effect
 service. Its `main` export is an Effect value. Importing the generated files
 prepares that value; application code supplies the service and runs the Effect.
 
-After building the engines:
+After building the TypeScript packages:
 
 ```sh
 pnpm --filter @formalang/ts build
 pnpm --filter @formalang/host build
-pnpm build:ocaml
-node scripts/link-forma-modules.mjs conformance/modules/main.forma .context/linked native
-# The same linker accepts independently checked TS declarations:
-node scripts/link-forma-modules.mjs conformance/modules/main.forma .context/linked-ts ts
-# The Native CLI can inspect or check files directly:
-packages/ocaml/dist/native/forma_cli.exe file interface conformance/modules/main.forma
-packages/ocaml/dist/native/forma_cli.exe file typecheck conformance/modules/main.forma
+# TypeScript is the default engine:
+node scripts/link-forma-modules.mjs conformance/modules/main.forma .context/linked
+# The host package installs the forma executable; from a checkout:
+node packages/host/dist/cli.mjs file interface conformance/modules/main.forma
+node packages/host/dist/cli.mjs file typecheck conformance/modules/main.forma
+# Native remains an explicit option after pnpm build:ocaml:
+node scripts/link-forma-modules.mjs conformance/modules/main.forma .context/linked-native native
 ```
+
+The TypeScript `forma` executable also accepts a JSON request argument or stdin:
+
+```sh
+forma request '{"op":"typecheck","sourceId":"example.forma","source":"(+ 1 2)"}'
+printf '%s\n' '{"op":"parseSummary","source":"1 2"}' '{"op":"version"}' | forma daemon
+forma file evaluate path/to/main.forma
+forma file declarations path/to/main.forma
+```
+
+`daemon` reads one JSON object per line and writes one response per line. Sessions
+persist across requests, which run in input order. Every response has `ok` and
+`diagnostics`, and successful operations expose their host projection in `value`.
+Typecheck also exposes its display string in `type`. Malformed requests use
+`abi/*` diagnostics, author errors keep their compiler codes and source spans,
+and unexpected engine failures use `internal/error`. Request failures do not
+terminate the daemon. Filesystem failures use `io/error`.
+
+The exported `@formalang/host/json-abi` entry provides `JsonRequest`, `JsonResponse`,
+`TypeScheme`, and `JsonValueProjection` Effect schemas and a `JsonAbi` dispatcher.
+Its operations cover parsing, expansion, typechecking, evaluation, modules,
+session configuration, loading, retained values, and suspended host calls.
+Descriptor artifact operations and REPL submission are separate interfaces.
+Host schemes reject unknown names and malformed structure, including nested
+schemes; numeric host aliases `Int`, `Float`, `Number`, and `Num` still mean
+`Number`. Invalid configuration names its JSON path and locates the affected
+symbol, or uses a zero-width source span when no symbol occurs.
+
+The debug operations `lowerCore`, `typecheckCore`, and `typecheckCoreTyped` return
+TypeScript core trees and inferred display types; typed trees add `inferredType`
+to expression nodes. Their tree representation differs from OCaml's.
+`parseSummary` reports the top-level form count. `incrementalSummary` reports
+per-form spans and a stable FNV-1a 64-bit digest of UTF-8 AST shape JSON, ignoring
+spans, comments, and whitespace. OCaml uses MD5, so digest strings differ across
+engines. These are structural change hints, not persistent artifact identities.
+
+`loadSource` and `loadSourceBundle` accept `timings: true`. Load results include
+millisecond durations for the phases executed (`parseMs`, `storeMs`, and
+`evalMs` for preludes). The timing contract also reserves `typecheckMs`,
+`metacheckMs`, and `elaborateMs`; absent phases were not run. TypeScript's load
+semantics remain parse and store, so timings do not imply load-validation parity.
 
 `linkEffectModules` returns one `.ts` file per module, the generated entry filename,
 portable interfaces, declarations, and diagnostics. Files contain real relative

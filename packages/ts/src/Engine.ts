@@ -41,3 +41,8 @@ export {
   type TypeProjection,
   type TypeSchemeExpr,
 } from "./engine/operations.js";
+
+export { debugCore, type CoreDebugResult } from "./engine/debug.js";
+export { lowerCore, typecheckCore, typecheckCoreTyped } from "./engine/debug.js";
+export { incrementalSummary, parseSummary, type IncrementalSummary } from "./engine/incremental.js";
+export { validateHostTypes } from "./engine/type-policy.js";

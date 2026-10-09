@@ -314,15 +314,22 @@ export class TsLanguageHost implements LanguageHost {
     const kind = request.kind === "prelude" ? "prelude" : "source";
     const sourceId =
       kind === "source" ? Modules.normalizeModuleId(request.sourceId) : request.sourceId;
+    const timings: import("./types.js").LoadPhaseTimings & { parseMs?: number; evalMs?: number; storeMs?: number } = {};
+    const parseStart = performance.now();
     const parsed = Engine.parseSource({ sourceId, source: request.source });
+    timings.parseMs = performance.now() - parseStart;
+    const timingResult = () => request.timings ? { timings: { ...timings } } : {};
     if (parsed.diagnostics.some((d) => d.severity === "error"))
-      return { sourceId, formCount: parsed.ast.length, diagnostics: parsed.diagnostics };
+      return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics: parsed.diagnostics };
     const previousPrelude = session.language.preludes.get(request.sourceId);
     const previousParsed = session.language.parsedPreludes.get(request.sourceId);
+    const storeStart = performance.now();
     session.language.rememberSource({ id: sourceId, text: request.source, kind });
     if (parsed.diagnostics.length === 0) {
       session.language.rememberParsedSource(kind, sourceId, parsed.exprs);
+      timings.storeMs = performance.now() - storeStart;
       if (kind === "prelude") {
+        const evalStart = performance.now();
         try {
           session.language.env = (
             await Effect.runPromise(
@@ -333,12 +340,15 @@ export class TsLanguageHost implements LanguageHost {
               }),
             )
           ).env;
+          timings.evalMs = performance.now() - evalStart;
         } catch (error) {
+          timings.evalMs = performance.now() - evalStart;
           if (previousPrelude) session.language.preludes.set(request.sourceId, previousPrelude);
           else session.language.preludes.delete(request.sourceId);
           if (previousParsed) session.language.parsedPreludes.set(request.sourceId, previousParsed);
           else session.language.parsedPreludes.delete(request.sourceId);
           return {
+            ...timingResult(),
             sourceId: request.sourceId,
             formCount: parsed.ast.length,
             diagnostics: [Engine.diagnosticFromUnknown(error, "evaluate", request.sourceId)],
@@ -347,6 +357,7 @@ export class TsLanguageHost implements LanguageHost {
       }
     }
     return {
+      ...timingResult(),
       sourceId,
       formCount: parsed.ast.length,
       diagnostics: parsed.diagnostics,
@@ -356,7 +367,7 @@ export class TsLanguageHost implements LanguageHost {
   async loadSourceBundle(request: LoadSourceBundleRequest): Promise<LoadSourceBundleResult> {
     const sources: LoadSourceResult[] = [];
     for (const source of request.sources) {
-      sources.push(await this.loadSource({ ...source, sessionId: request.sessionId }));
+      sources.push(await this.loadSource({ ...source, sessionId: request.sessionId, timings: request.timings }));
     }
     return {
       sources,
@@ -451,6 +462,14 @@ export class TsLanguageHost implements LanguageHost {
       hostBuiltins: request.hostBuiltins ?? session?.hostBuiltins,
       typePolicy: request.typePolicy ?? session?.typePolicy,
     });
+  }
+
+  /** Debug operations share the session's host type configuration. */
+  async debugCore(request: TypecheckRequest, mode: "lowerCore" | "typecheckCore" | "typecheckCoreTyped"): Promise<Engine.CoreDebugResult> {
+    const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
+    const source = request.source ?? (request.sourceId ? session?.language.sourceText(request.sourceId) : undefined);
+    if (source === undefined) return {sourceId:request.sourceId ?? "source", diagnostics:[{code:"abi/missing-source", severity:"error", message:"Debug operations require a source or a loaded session source."}]};
+    return Engine.debugCore({...request, source, session:session?.language, hostBuiltins:request.hostBuiltins ?? session?.hostBuiltins, typePolicy:request.typePolicy ?? session?.typePolicy}, mode);
   }
 
   async evaluate(request: EvaluateRequest): Promise<EvaluationResult> {
@@ -744,6 +763,11 @@ export class TsLanguageHost implements LanguageHost {
     const sourceId = request.sourceId ?? "source";
     const parse = editorParseProjection(sourceId, request.source);
     const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
+    try {
+      Engine.validateHostTypes({hostBuiltins:request.hostBuiltins ?? session?.hostBuiltins, typePolicy:request.typePolicy ?? session?.typePolicy}, request.source);
+    } catch (error) {
+      return {sourceId, success:false, parse, typedSpans:[], errors:[], diagnostics:[Engine.diagnosticFromUnknown(error,"typecheck",sourceId)]};
+    }
     if (session && (session.language.projects.length || /\((?:import|export|export-from)\s/.test(request.source))) {
       try {
         const graph = this.#moduleGraph({ sessionId: request.sessionId!, sourceId, source: request.source });

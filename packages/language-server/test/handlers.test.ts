@@ -57,7 +57,7 @@ describe("Forma language server handlers", () => {
     expect(diagnostics.map((diagnostic) => [diagnostic.code, diagnostic.range.start.line])).toEqual(
       expect.arrayContaining([
         ["parse/syntax", 2],
-        ["typecheck/error", 1],
+        ["typecheck/type-mismatch", 1],
       ]),
     );
     expect(diagnostics.every((diagnostic) => diagnostic.source === "forma")).toBe(true);
@@ -178,7 +178,7 @@ describe("Forma language server handlers", () => {
     const changed = await workspace.update(prelude);
     expect(changed.map((item) => item.uri)).toContain(uri);
     expect(getDiagnostics(workspace, document).diagnostics.map((d) => d.code)).toContain(
-      "typecheck/error",
+      "typecheck/type-mismatch",
     );
     await workspace.close(preludeUri);
     expect(getDiagnostics(workspace, document).diagnostics).toEqual([]);

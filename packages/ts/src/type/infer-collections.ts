@@ -29,7 +29,7 @@ const rowType = (fields: ReadonlyMap<string, Type>, tail: Row): Type => {
 export const inferCollectionOperation = (env: TypeEnv, expr: CoreExpr & { _tag: "App" }, op: string, infer: InferFn) => Effect.gen(function* () {
   const ctx = yield* InferContext;
   const origin = originOf(expr, op);
-  const fail = (message: string) => ctx.fail(origin, { message, ...(message.includes("closed record") ? {code:"typecheck/open-record"} : {}) });
+  const fail = (message: string, code = "typecheck/type-mismatch") => ctx.fail(origin, { message, code, ...(message.includes("closed record") ? {code:"typecheck/open-record"} : {}) });
   const inferred: Type[] = [];
   for (const [index,arg] of expr.args.entries()) {
     const keys = op === "select-keys" && index === 1 && arg._tag === "App" && arg.fn._tag === "Var" && arg.fn.name === "__vector";
@@ -72,36 +72,36 @@ export const inferCollectionOperation = (env: TypeEnv, expr: CoreExpr & { _tag: 
   }
   if (!first) return yield* fail(`${op} requires a collection`);
   if (["count", "empty?"].includes(op)) {
-    if (types.length !== 1) return yield* fail(`${op} expects one argument`);
+    if (types.length !== 1) return yield* fail(`${op} expects one argument`, "typecheck/arity");
     if (first._tag !== "TRow" && !dictionary(first) && !(first._tag === "TApp" && first.con._tag === "TCon" && first.con.name === "List") && !(first._tag === "TCon" && first.name === "String")) return yield* fail(`${op} requires a collection`);
     return TCon(op === "count" ? "Int" : "Bool");
   }
   if (op === "contains?" && first._tag === "TCon" && first.name === "String") {
-    if (types.length !== 2) return yield* fail("contains? expects two arguments");
+    if (types.length !== 2) return yield* fail("contains? expects two arguments", "typecheck/arity");
     yield* assignType(types[1]!, TCon("String"), origin);
     return TCon("Bool");
   }
   if (op === "contains?" && first._tag === "TApp" && first.con._tag === "TCon" && first.con.name === "List") {
-    if (types.length !== 2) return yield* fail("contains? expects two arguments");
+    if (types.length !== 2) return yield* fail("contains? expects two arguments", "typecheck/arity");
     yield* assignType(types[1]!, first.args[0]!, origin);
     return TCon("Bool");
   }
   if (first._tag !== "TRow" && !dictionary(first)) return yield* fail(`${op} requires a record or dictionary`);
   if (["keys", "values", "vals"].includes(op)) {
-    if (types.length !== 1) return yield* fail(`${op} expects one argument`);
+    if (types.length !== 1) return yield* fail(`${op} expects one argument`, "typecheck/arity");
     if (dictionary(first)) return TApp(TCon("List"), [first.args[op === "keys" ? 0 : 1]!]);
     const {fields,tail} = flattenRow(first.row);
     if (tail._tag !== "REmpty") return yield* fail(`${op} requires a closed record or a typed Map`);
     return TApp(TCon("List"), [op === "keys" ? union([...fields.keys()].map(keyType)) : union([...fields.values()])]);
   }
   if (op === "contains?") {
-    if (types.length !== 2) return yield* fail("contains? expects two arguments");
+    if (types.length !== 2) return yield* fail("contains? expects two arguments", "typecheck/arity");
     if (dictionary(first)) yield* assignType(actualKey(1), first.args[0]!, origin);
     else yield* assignType(actualKey(1), union([...flattenRow(first.row).fields.keys()].map(keyType)), origin);
     return TCon("Bool");
   }
   if (op === "assoc") {
-    if (types.length < 3 || types.length % 2 !== 1) return yield* fail("assoc expects a collection and key/value pairs");
+    if (types.length < 3 || types.length % 2 !== 1) return yield* fail("assoc expects a collection and key/value pairs", "typecheck/arity");
     if (dictionary(first)) {
       for (let i = 1; i < types.length; i += 2) {
         yield* assignType(actualKey(i), first.args[0]!, origin);
@@ -119,7 +119,7 @@ export const inferCollectionOperation = (env: TypeEnv, expr: CoreExpr & { _tag: 
     }
     return rowType(result, tail);
   }
-  if (op === "select-keys" && types.length !== 2) return yield* fail("select-keys expects a collection and keys");
+  if (op === "select-keys" && types.length !== 2) return yield* fail("select-keys expects a collection and keys", "typecheck/arity");
   const keys = op === "select-keys" && expr.args[1]?._tag === "App" && expr.args[1].fn._tag === "Var" && expr.args[1].fn.name === "__vector" ? expr.args[1].args : op === "dissoc" ? expr.args.slice(1) : undefined;
   if (dictionary(first)) {
     if (op === "select-keys") {
