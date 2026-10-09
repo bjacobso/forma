@@ -1,3 +1,4 @@
+import * as Artifact from "@formalang/ts/artifact";
 import * as Modules from "@formalang/ts/modules";
 import { Effect, Ref } from "effect";
 import * as Builtins from "@formalang/ts/builtins";
@@ -262,6 +263,10 @@ export class TsLanguageHost implements LanguageHost {
         "sourceToOutline",
         "outlineToSource",
         "formSlots",
+        "emit",
+        "emitMany",
+        "emitBackends",
+        "artifactSummary",
       ],
     };
   }
@@ -424,6 +429,17 @@ export class TsLanguageHost implements LanguageHost {
         ],
       };
     }
+  }
+
+  async emit(request: import("./types.js").EmitRequest): Promise<Artifact.EmitResult> {
+    return Artifact.emit({ ...request, session: this.#requireSession(request.sessionId).language });
+  }
+  async emitMany(request: import("./types.js").EmitRequest): Promise<ReturnType<typeof Artifact.emitMany>> {
+    return Artifact.emitMany({ ...request, session: this.#requireSession(request.sessionId).language });
+  }
+  async emitBackends(): Promise<ReturnType<typeof Artifact.emitBackends>> { return Artifact.emitBackends(); }
+  async artifactSummary(request: import("./types.js").EmitRequest): Promise<ReturnType<typeof Artifact.artifactSummary>> {
+    return Artifact.artifactSummary({ ...request, session: this.#requireSession(request.sessionId).language });
   }
 
   async parse(request: ParseRequest): Promise<ParseResult> {

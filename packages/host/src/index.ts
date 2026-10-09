@@ -17,6 +17,7 @@ export type {
   EditorAnalysisResult,
   EditorParseProjection,
   EditorTypedSpan,
+  EmitRequest,
   ExpandRequest,
   FindReferencesRequest,
   FormSlotAffordance,

@@ -1,0 +1,10 @@
+{
+  "reference": "packages/ocaml/scripts/emit-golden.mjs",
+  "backend": "canonical-ir",
+  "artifactName": "ir.json",
+  "mediaType": "application/vnd.forma.ir+json",
+  "kind": "CanonicalIr",
+  "requiredCollections": ["declarations", "declarationProvenance", "declarationTypeSummaries", "modules", "derivedArtifacts"],
+  "provenanceFields": ["sourceId", "formIndex", "span"],
+  "spanFields": ["startOffset", "endOffset", "startLine", "startColumn", "endLine", "endColumn"]
+}

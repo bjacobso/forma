@@ -1,3 +1,5 @@
+import { descriptorPayloadContract, descriptorValidatorNames, checkArtifactDescriptor, checkArtifactPayloadContracts, payloadContractsFromSources } from "../artifact/descriptor-contracts.js";
+import { makeArtifactValidatorRegistry } from "../artifact/validator-catalog.js";
 import { typeDefinition } from "../surface/type-alias.js";
 import { projectContractValue } from "../surface/contract.js";
 import { isKKeyword, isKSymbol, mapKeyValue, type KValue } from "../evaluator/types.js";
@@ -19,7 +21,7 @@ import { parsePrelude } from "./meta-fn-decl.js";
 import { lowerActionProgram } from "../surface/action.js";
 import { matchFormSyntax, unifiedFormHooks } from "../surface/form.js";
 import { head, name as surfaceName } from "../surface/effect.js";
-import { TCon } from "../type/types.js";
+import { showType, TCon } from "../type/types.js";
 import { Effect, Exit } from "effect";
 import type {
   DeclarationOrigin,
@@ -51,6 +53,8 @@ export interface ElaborateProgramOptions {
   readonly forms?: Iterable<string>;
   /** Share declarations across programs. A fresh environment is used by default. */
   readonly semanticEnv?: SimpleSemanticEnvironment;
+  readonly payloadContracts?: import("../artifact/descriptor-contracts.js").PayloadContracts;
+  readonly validatorRegistry?: import("../artifact/validator-registry.js").ArtifactValidatorRegistry;
 }
 
 /** One top-level form elaborated to a JSON payload. */
@@ -123,6 +127,28 @@ export function elaborateSources(
         descriptions.register(descriptor);
       }
     } catch (error) { report(sourceLocator(source,sourceId),"elaborate/form-definition",errorMessage(error),undefined); }
+  }
+  const contracts = new Map([...options.prelude.payloadContracts ?? [], ...options.payloadContracts ?? [], ...payloadContractsFromSources(sources.map(s => s.source))]);
+  const artifactRegistry = options.validatorRegistry ?? makeArtifactValidatorRegistry();
+  const invalidArtifacts = new Set<string>();
+  const descriptorSpans = new Map<string, Span>();
+  const contractSpans = new Map<string, Span>();
+  for (const { source, sourceId } of sources) for (const e of toSExprMany(parse(source).redTree)) {
+    if (head(e) === "__payload-contract" && e._tag === "List") {
+      const n = surfaceName(e.items[1]);
+      if (n) contractSpans.set(n, sourceLocator(source, sourceId)(e.loc));
+    }
+    if (head(e) === "__form-descriptor" && e._tag === "List") {
+      const n = surfaceName(e.items[1]);
+      if (n) descriptorSpans.set(n, sourceLocator(source, sourceId)(e.loc));
+    }
+  }
+  diagnostics.push(...checkArtifactPayloadContracts(contracts, name => contractSpans.get(name)));
+  for (const descriptor of descriptions.list()) {
+    const span = descriptorSpans.get(descriptor.name);
+    const checked = checkArtifactDescriptor(descriptor, { registry: artifactRegistry, contracts, ...(span ? { span } : {}) });
+    diagnostics.push(...checked);
+    if (checked.some(d => d.severity === "error")) invalidArtifacts.add(descriptor.name);
   }
   for (const descriptor of descriptions.list()) for (const hook of unifiedFormHooks(descriptor,descriptions,options.prelude.formBuiltins,options.prelude.hostedDsls)) elaboration.registerHook(hook);
   const accepted = options.forms ? new Set(options.forms) : undefined;
@@ -237,9 +263,11 @@ export function elaborateSources(
       for (const problem of checked.value) diagnostics.push({code:problem.code ?? "elaborate/hole-type",severity:problem.severity,message:problem.message,phase:"elaborate",span:locate(problem.loc ?? loc),details});
       if (checked.value.some(p => p.severity === "error")) continue;
     }
+    let computedResultType: string | undefined;
     if (form.descriptor.resultType.kind === "hook") {
       const computed = Effect.runSyncExit(elaboration.computeResultType(form.descriptor.resultType.fn,input));
       if (Exit.isFailure(computed)) { at("elaborate/result-type-failed",failureMessage(computed),loc,details); continue; }
+      computedResultType = showType(computed.value);
       if (name) semanticEnv.declareGlobal(name,form.formName,computed.value);
     }
     const strategy = form.descriptor.elaboration;
@@ -253,13 +281,20 @@ export function elaborateSources(
       continue;
     }
 
+    if (invalidArtifacts.has(form.formName)) continue;
+    if (containsExecutableValue(exit.value)) { at("artifact/untyped-runtime-declaration", "Declaration payload cannot include executable runtime values.", loc, details); continue; }
     const surface = form.descriptor.surface;
     const payload = toJsonValue(surface?.ir ? projectContractValue(exit.value as import("../evaluator/types.js").KValue,surface.ir,surface.types) : exit.value);
     const span = locate(loc);
     const contract = payloadContract(form);
     declarations.push({
       formName: form.formName,
-      summary: summaryOf(payload, form, name),
+      summary: summaryOf(payload, form, name, computedResultType),
+      summaryRequired: !surface,
+      summaryExpectation: {
+        ...(form.descriptor.resultType.kind === "constant" ? { resultType: form.descriptor.resultType.type } : {}),
+        ...descriptorConstructExpectation(form, name),
+      },
       payload,
       sourceId,
       formIndex,
@@ -267,6 +302,8 @@ export function elaborateSources(
       origin,
       sourceMap: sourceMapOf(form, payload, span, locate),
       ...(contract ? { payloadContract: contract } : {}),
+      payloadConstraints: descriptorPayloadContract(form.descriptor, contracts),
+      validators: descriptorValidatorNames(form.descriptor),
     });
   }
 
@@ -586,13 +623,13 @@ const staticProblems = (form: NormalizedForm): readonly { code: string; message:
   return problems;
 };
 
-const summaryOf = (payload: JsonValue, form: NormalizedForm, name: string | undefined): DeclarationSummary => {
+const summaryOf = (payload: JsonValue, form: NormalizedForm, name: string | undefined, computedResultType?: string): DeclarationSummary => {
   const record = jsonObject(payload);
   const summary = jsonObject(record?.["$summary"]);
   const kind = stringField(summary, "kind") ?? stringField(record, "kind") ?? form.formName;
   const declared = stringField(summary, "name") ?? stringField(record, "name") ?? name;
   const resultType =
-    stringField(summary, "resultType") ??
+    stringField(summary, "resultType") ?? computedResultType ??
     (form.descriptor.resultType.kind === "constant" ? form.descriptor.resultType.type : kind);
   return { kind, resultType, ...(declared !== undefined ? { name: declared } : {}) };
 };
@@ -616,3 +653,19 @@ const failureMessage = (exit: Exit.Exit<unknown, unknown>): string => {
   )[0];
   return errorMessage(error);
 };
+
+
+function containsExecutableValue(value: unknown): boolean {
+  if (!value || typeof value !== "object") return typeof value === "function";
+  if ("_tag" in value && ["KFn", "KBuiltin", "KMacro"].includes(String(value._tag))) return true;
+  if (value instanceof Map) return [...value.values()].some(containsExecutableValue);
+  return Object.values(value).some(containsExecutableValue);
+}
+function descriptorConstructExpectation(form: NormalizedForm, declaredName: string | undefined): Partial<DeclarationSummary> {
+  const result: { kind?: string; name?: string } = {};
+  for (const field of form.descriptor.construct?.fields ?? []) {
+    if (field.name === "kind" && field.expr.startsWith('"')) { try { result.kind = JSON.parse(field.expr); } catch { /* An expression is not a literal expectation. */ } }
+    if (field.name === "name" && field.expr.includes("declaration-name") && declaredName !== undefined) result.name = declaredName;
+  }
+  return result;
+}
