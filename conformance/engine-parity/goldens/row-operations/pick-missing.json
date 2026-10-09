@@ -1,0 +1,122 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/pick-missing",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/pick-missing",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 9,
+                "sourceId": "engine-parity/row-operations/pick-missing",
+                "startOffset": 6
+              },
+              "value": "Bad"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 15,
+                    "sourceId": "engine-parity/row-operations/pick-missing",
+                    "startOffset": 11
+                  },
+                  "value": "Pick"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 19,
+                          "sourceId": "engine-parity/row-operations/pick-missing",
+                          "startOffset": 17
+                        },
+                        "value": ":a"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 23,
+                          "sourceId": "engine-parity/row-operations/pick-missing",
+                          "startOffset": 20
+                        },
+                        "value": "Int"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 24,
+                    "sourceId": "engine-parity/row-operations/pick-missing",
+                    "startOffset": 16
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 34,
+                        "sourceId": "engine-parity/row-operations/pick-missing",
+                        "startOffset": 26
+                      },
+                      "value": ":missing"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 35,
+                    "sourceId": "engine-parity/row-operations/pick-missing",
+                    "startOffset": 25
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 36,
+                "sourceId": "engine-parity/row-operations/pick-missing",
+                "startOffset": 10
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 37,
+            "sourceId": "engine-parity/row-operations/pick-missing",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/row-operation",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 34,
+            "sourceId": "engine-parity/row-operations/pick-missing",
+            "startOffset": 26
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

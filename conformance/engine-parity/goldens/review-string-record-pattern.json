@@ -1,0 +1,18 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "review-string-record-pattern",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "string",
+        "value": "text"
+      }
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "String"
+    }
+  },
+  "version": 1
+}

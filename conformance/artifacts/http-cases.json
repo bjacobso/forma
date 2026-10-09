@@ -1,0 +1,194 @@
+{
+  "reference": "packages/ocaml/lib/http_ir_validation.ml",
+  "cases": [
+    {
+      "name": "valid schema reference",
+      "declarations": [
+        {
+          "kind": "Schema",
+          "name": "User",
+          "schema": {
+            "kind": "Primitive",
+            "prim": "String"
+          }
+        },
+        {
+          "kind": "Schema",
+          "name": "Users",
+          "schema": {
+            "kind": "Array",
+            "item": {
+              "kind": "Ref",
+              "target": "User"
+            }
+          }
+        }
+      ],
+      "expectedCodes": []
+    },
+    {
+      "name": "unknown nested schema reference",
+      "declarations": [
+        {
+          "kind": "Schema",
+          "name": "Users",
+          "schema": {
+            "kind": "Array",
+            "item": {
+              "kind": "Ref",
+              "target": "Missing"
+            }
+          }
+        }
+      ],
+      "expectedCodes": [
+        "http/unknown-schema-ref"
+      ]
+    },
+    {
+      "name": "schema without an error declaration",
+      "declarations": [
+        {
+          "kind": "Schema",
+          "name": "Failure",
+          "schema": {
+            "kind": "Primitive",
+            "prim": "String"
+          }
+        },
+        {
+          "kind": "HttpApi",
+          "name": "App",
+          "groups": [
+            {
+              "name": "users",
+              "pathParams": [],
+              "handlers": [],
+              "endpoints": [
+                {
+                  "name": "get",
+                  "method": "GET",
+                  "path": "/users",
+                  "success": {
+                    "kind": "Primitive",
+                    "prim": "String"
+                  },
+                  "errors": [
+                    {
+                      "kind": "Ref",
+                      "target": "Failure"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expectedCodes": [
+        "http/undeclared-error",
+        "http-api/error-schema"
+      ]
+    },
+    {
+      "name": "builtin internal error",
+      "declarations": [
+        {
+          "kind": "HttpApi",
+          "name": "App",
+          "groups": [
+            {
+              "name": "users",
+              "pathParams": [],
+              "handlers": [],
+              "endpoints": [
+                {
+                  "name": "get",
+                  "method": "GET",
+                  "path": "/users",
+                  "success": {
+                    "kind": "Primitive",
+                    "prim": "String"
+                  },
+                  "errors": [
+                    {
+                      "kind": "Ref",
+                      "target": "InternalError"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expectedCodes": []
+    },
+    {
+      "name": "invalid HTTP declaration",
+      "declarations": [
+        {
+          "kind": "Other",
+          "name": "invalid"
+        }
+      ],
+      "expectedCodes": [
+        "http/invalid-declaration"
+      ]
+    },
+    {
+      "name": "invalid HTTP group",
+      "declarations": [
+        {
+          "kind": "HttpApi",
+          "name": "invalid",
+          "groups": [
+            42
+          ]
+        }
+      ],
+      "expectedCodes": [
+        "http/invalid-declaration"
+      ]
+    },
+    {
+      "name": "unknown annotated schema reference",
+      "declarations": [
+        {
+          "kind": "Schema",
+          "name": "Annotated",
+          "schema": {
+            "kind": "Annotated",
+            "schema": {
+              "kind": "Ref",
+              "target": "Missing"
+            },
+            "annotations": {}
+          }
+        }
+      ],
+      "expectedCodes": [
+        "http/unknown-schema-ref"
+      ]
+    },
+    {
+      "name": "unknown TypeScript map value schema reference",
+      "declarations": [
+        {
+          "kind": "Schema",
+          "name": "Lookup",
+          "schema": {
+            "kind": "Map",
+            "value": {
+              "kind": "Ref",
+              "name": "Missing"
+            }
+          }
+        }
+      ],
+      "expectedCodes": [
+        "http/unknown-schema-ref"
+      ]
+    }
+  ]
+}

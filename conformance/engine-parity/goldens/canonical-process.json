@@ -1,0 +1,62 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-process",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 0,
+        "payload": {
+          "fields": [
+            {
+              "indexed": false,
+              "name": "employee/name",
+              "required": true,
+              "type": "String"
+            }
+          ],
+          "kind": "Entity",
+          "name": "Employee"
+        },
+        "sourceId": "engine-parity/canonical-process",
+        "span": {
+          "endOffset": 32,
+          "sourceId": "engine-parity/canonical-process",
+          "startOffset": 0
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "edges": [
+            {
+              "from": "start",
+              "kind": "Edge",
+              "to": "welcome"
+            }
+          ],
+          "kind": "Process",
+          "name": "onboarding",
+          "nodes": [
+            {
+              "id": "welcome",
+              "inputs": [],
+              "kind": "Node"
+            }
+          ],
+          "trigger": {
+            "entity": "Employee",
+            "kind": "Trigger",
+            "triggerKind": "on-create"
+          }
+        },
+        "sourceId": "engine-parity/canonical-process",
+        "span": {
+          "endOffset": 119,
+          "sourceId": "engine-parity/canonical-process",
+          "startOffset": 33
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,278 @@
+{
+  "interfaces": [
+    {
+      "exports": [
+        {
+          "constructors": [
+            "Ready",
+            "Empty"
+          ],
+          "identity": {
+            "declaration": "Status",
+            "moduleId": "state.forma"
+          },
+          "kind": "type",
+          "name": "Status",
+          "schema": [
+            "Tagged",
+            [
+              "Ready",
+              {
+                "fields": [
+                  [
+                    ":message",
+                    "String"
+                  ]
+                ]
+              }
+            ],
+            "Empty"
+          ],
+          "scheme": {
+            "parameters": [],
+            "type": [
+              "Tagged",
+              [
+                "Ready",
+                {
+                  "fields": [
+                    [
+                      ":message",
+                      "String"
+                    ]
+                  ]
+                }
+              ],
+              "Empty"
+            ]
+          },
+          "symbol": "Status__forma_73746174652e666f726d61_d537461747573"
+        },
+        {
+          "constructors": [],
+          "identity": {
+            "declaration": "label",
+            "moduleId": "state.forma"
+          },
+          "kind": "value",
+          "name": "label",
+          "scheme": {
+            "parameters": [],
+            "type": [
+              "->",
+              "Status__forma_73746174652e666f726d61_d537461747573",
+              "String"
+            ]
+          },
+          "symbol": "label__forma_73746174652e666f726d61_d6c6162656c"
+        }
+      ],
+      "moduleId": "state.forma"
+    },
+    {
+      "exports": [
+        {
+          "constructors": [],
+          "identity": {
+            "declaration": "identity",
+            "moduleId": "identity.forma"
+          },
+          "kind": "value",
+          "name": "identity",
+          "scheme": {
+            "parameters": [
+              "a0"
+            ],
+            "type": [
+              "->",
+              "a0",
+              "a0"
+            ]
+          },
+          "symbol": "identity__forma_6964656e746974792e666f726d61_d6964656e74697479"
+        }
+      ],
+      "moduleId": "identity.forma"
+    },
+    {
+      "exports": [
+        {
+          "constructors": [],
+          "identity": {
+            "declaration": "Customer",
+            "moduleId": "ids.forma"
+          },
+          "kind": "class",
+          "name": "Customer",
+          "scheme": {
+            "parameters": [],
+            "type": {
+              "fields": [
+                [
+                  ":id",
+                  "CustomerId__forma_6964732e666f726d61_d437573746f6d65724964"
+                ],
+                [
+                  ":name",
+                  "String"
+                ]
+              ]
+            }
+          },
+          "symbol": "Customer__forma_6964732e666f726d61_d437573746f6d6572"
+        },
+        {
+          "constructors": [],
+          "identity": {
+            "declaration": "CustomerId",
+            "moduleId": "ids.forma"
+          },
+          "kind": "type",
+          "name": "CustomerId",
+          "schema": [
+            "Brand",
+            "String"
+          ],
+          "scheme": {
+            "parameters": [],
+            "type": [
+              "Brand",
+              "String"
+            ]
+          },
+          "symbol": "CustomerId__forma_6964732e666f726d61_d437573746f6d65724964"
+        },
+        {
+          "constructors": [],
+          "identity": {
+            "declaration": "make-customer",
+            "moduleId": "ids.forma"
+          },
+          "kind": "value",
+          "name": "make-customer",
+          "scheme": {
+            "parameters": [],
+            "type": [
+              "->",
+              "CustomerId__forma_6964732e666f726d61_d437573746f6d65724964",
+              "String",
+              "Customer__forma_6964732e666f726d61_d437573746f6d6572"
+            ]
+          },
+          "symbol": "make-customer__forma_6964732e666f726d61_d6d616b652d637573746f6d6572"
+        }
+      ],
+      "moduleId": "ids.forma"
+    },
+    {
+      "exports": [
+        {
+          "constructors": [],
+          "identity": {
+            "declaration": "Console",
+            "moduleId": "log.forma"
+          },
+          "kind": "service",
+          "name": "Console",
+          "scheme": {
+            "parameters": [],
+            "type": [
+              [
+                ":",
+                "print",
+                [
+                  "->",
+                  "String",
+                  [
+                    "Effect",
+                    "Unit"
+                  ]
+                ]
+              ]
+            ]
+          },
+          "symbol": "Console__forma_6c6f672e666f726d61_d436f6e736f6c65"
+        },
+        {
+          "constructors": [],
+          "identity": {
+            "declaration": "log",
+            "moduleId": "log.forma"
+          },
+          "kind": "value",
+          "name": "log",
+          "scheme": {
+            "parameters": [],
+            "type": [
+              "->",
+              "Customer__forma_6964732e666f726d61_d437573746f6d6572",
+              [
+                "Effect",
+                "String",
+                [],
+                [
+                  "Console__forma_6c6f672e666f726d61_d436f6e736f6c65.print"
+                ]
+              ]
+            ]
+          },
+          "symbol": "log__forma_6c6f672e666f726d61_d6c6f67"
+        }
+      ],
+      "moduleId": "log.forma"
+    },
+    {
+      "exports": [
+        {
+          "constructors": [],
+          "identity": {
+            "declaration": "main",
+            "moduleId": "main.forma"
+          },
+          "kind": "value",
+          "name": "main",
+          "scheme": {
+            "parameters": [],
+            "type": [
+              "Effect",
+              "String",
+              [],
+              [
+                "Console__forma_6c6f672e666f726d61_d436f6e736f6c65.print"
+              ]
+            ]
+          },
+          "symbol": "main__forma_6d61696e2e666f726d61_d6d61696e"
+        }
+      ],
+      "moduleId": "main.forma"
+    }
+  ],
+  "modules": [
+    {
+      "code": "import { Schema } from \"effect\";\n\nexport const StatusForma73746174652e666f726d61D537461747573 = Schema.Union([\n  Schema.Struct({ _tag: Schema.Literal(\"Ready\"), message: Schema.String }),\n  Schema.Struct({ _tag: Schema.Literal(\"Empty\") }),\n]).pipe(Schema.brand(\"Status__forma_73746174652e666f726d61_d537461747573\"));\nexport type StatusForma73746174652e666f726d61D537461747573 = typeof StatusForma73746174652e666f726d61D537461747573.Type;\nexport const StatusForma73746174652e666f726d61D537461747573Constructors = {\n  Ready: (value: { readonly message: string }): StatusForma73746174652e666f726d61D537461747573 => StatusForma73746174652e666f726d61D537461747573.make({ ...value, _tag: \"Ready\" }),\n  Empty: (): StatusForma73746174652e666f726d61D537461747573 => StatusForma73746174652e666f726d61D537461747573.make({ _tag: \"Empty\" }),\n};\n\nexport const label__forma_73746174652e666f726d61_d6c6162656c = (\n  status: StatusForma73746174652e666f726d61D537461747573,\n): string =>\n  status._tag === \"Ready\" ? (() => { const message = status.message; return message; })() : \"\";\n",
+      "fileName": "module_73746174652e666f726d61.ts",
+      "moduleId": "state.forma"
+    },
+    {
+      "code": "export const identity__forma_6964656e746974792e666f726d61_d6964656e74697479 = <A0>(value: A0): A0 =>\n  value;\n",
+      "fileName": "module_6964656e746974792e666f726d61.ts",
+      "moduleId": "identity.forma"
+    },
+    {
+      "code": "import { Schema } from \"effect\";\n\nexport const CustomerIdForma6964732e666f726d61D437573746f6d65724964 = Schema.String.pipe(Schema.brand(\"CustomerId__forma_6964732e666f726d61_d437573746f6d65724964\"));\nexport type CustomerIdForma6964732e666f726d61D437573746f6d65724964 = typeof CustomerIdForma6964732e666f726d61D437573746f6d65724964.Type;\n\nexport class CustomerForma6964732e666f726d61D437573746f6d6572 extends Schema.Class<CustomerForma6964732e666f726d61D437573746f6d6572>(\"Customer__forma_6964732e666f726d61_d437573746f6d6572\")({\n  id: CustomerIdForma6964732e666f726d61D437573746f6d65724964,\n  name: Schema.String,\n}) { declare private readonly __formaNominal: void; }\n\nexport const makeCustomer__forma_6964732e666f726d61_d6d616b652d637573746f6d6572 = (\n  id: CustomerIdForma6964732e666f726d61D437573746f6d65724964,\n  name: string,\n): CustomerForma6964732e666f726d61D437573746f6d6572 =>\n  new CustomerForma6964732e666f726d61D437573746f6d6572({ id, name });\n",
+      "fileName": "module_6964732e666f726d61.ts",
+      "moduleId": "ids.forma"
+    },
+    {
+      "code": "import { CustomerForma6964732e666f726d61D437573746f6d6572 } from \"./module_6964732e666f726d61.js\";\nimport { Context, Effect } from \"effect\";\n\nexport class ConsoleForma6c6f672e666f726d61D436f6e736f6c65 extends Context.Service<\n  ConsoleForma6c6f672e666f726d61D436f6e736f6c65,\n  {\n    readonly print: (arg0: string) => Effect.Effect<void>;\n  }\n>()(\"Console__forma_6c6f672e666f726d61_d436f6e736f6c65\") {}\n\nexport const log__forma_6c6f672e666f726d61_d6c6f67 = (\n  customer: CustomerForma6964732e666f726d61D437573746f6d6572,\n): Effect.Effect<string, never, ConsoleForma6c6f672e666f726d61D436f6e736f6c65> =>\n  Effect.gen(function* () {\n    const consoleForma6c6f672e666f726d61D436f6e736f6c65 = yield* ConsoleForma6c6f672e666f726d61D436f6e736f6c65;\n    yield* consoleForma6c6f672e666f726d61D436f6e736f6c65.print(customer.name);\n    return customer.name;\n  });\n",
+      "fileName": "module_6c6f672e666f726d61.ts",
+      "moduleId": "log.forma"
+    },
+    {
+      "code": "import { StatusForma73746174652e666f726d61D537461747573, StatusForma73746174652e666f726d61D537461747573Constructors, label__forma_73746174652e666f726d61_d6c6162656c } from \"./module_73746174652e666f726d61.js\";\nimport { identity__forma_6964656e746974792e666f726d61_d6964656e74697479 } from \"./module_6964656e746974792e666f726d61.js\";\nimport { CustomerIdForma6964732e666f726d61D437573746f6d65724964, makeCustomer__forma_6964732e666f726d61_d6d616b652d637573746f6d6572 } from \"./module_6964732e666f726d61.js\";\nimport { ConsoleForma6c6f672e666f726d61D436f6e736f6c65, log__forma_6c6f672e666f726d61_d6c6f67 } from \"./module_6c6f672e666f726d61.js\";\nimport { Effect } from \"effect\";\n\nexport const main__forma_6d61696e2e666f726d61_d6d61696e: Effect.Effect<string, never, ConsoleForma6c6f672e666f726d61D436f6e736f6c65> =\n  Effect.gen(function* () {\n    return yield* log__forma_6c6f672e666f726d61_d6c6f67(\n      makeCustomer__forma_6964732e666f726d61_d6d616b652d637573746f6d6572(\n        CustomerIdForma6964732e666f726d61D437573746f6d65724964.make(identity__forma_6964656e746974792e666f726d61_d6964656e74697479(\"1\")),\n        label__forma_73746174652e666f726d61_d6c6162656c(\n          StatusForma73746174652e666f726d61D537461747573Constructors.Ready({\n            message: identity__forma_6964656e746974792e666f726d61_d6964656e74697479(\"Ada\"),\n          }),\n        ),\n      ),\n    );\n  });\n\nconst inferredInt__forma_6d61696e2e666f726d61_d696e6665727265642d696e74: number = identity__forma_6964656e746974792e666f726d61_d6964656e74697479(42);\n",
+      "fileName": "module_6d61696e2e666f726d61.ts",
+      "moduleId": "main.forma"
+    }
+  ]
+}

@@ -64,10 +64,22 @@ nodes instead of producing placeholder code. The generated program is compiled
 and executed against the shared operational-effects fixture in the TypeScript
 suite. OCaml currently emits canonical IR; it does not emit Effect TypeScript.
 
-The engines still package declarations in different artifact envelopes. The
-TypeScript package uses `language-ts-artifact/v0`, while the OCaml canonical
-package uses IR version `1`. Consumers should compare the normalized
-declarations and diagnostics, not assume the envelopes are interchangeable.
+The engines package declarations in different artifact envelopes. The
+TypeScript package uses `language-ts-artifact/v1` and SHA-256 over canonical
+payload JSON with sorted object keys; OCaml uses IR version `1` and MD5 over
+serialized payloads. Both include module identities, provenance and type
+summaries. Shared artifact fixtures check the canonical IR golden and the
+58-source, 548-declaration corpus counts.
+
+The TypeScript host exposes `emit`, `emitMany`, `emitBackends` and
+`artifactSummary`. Registered validators check canonical domain payloads,
+descriptor payload contracts and HTTP declarations before packaging immutable
+validated declarations. `artifactSummary` returns validation failures or kind
+counts and manifest metadata. OCaml also reports artifact cache telemetry and
+can aggregate counts across failing sources. Module entries project authored
+imports and exports; resolution and typechecking belong to the module stage.
+
+Consumers can compare the normalized declarations and diagnostics.
 The [engine parity runner](https://github.com/bjacobso/forma/blob/main/conformance/engine-parity/README.md) performs
 that comparison and reports differences by JSON path. Its matrix records
 intentional differences and missing surfaces.

@@ -20,7 +20,7 @@ import { Mechanics } from "../src/index.js";
 import { generateHttpApiProgram, generateHttpApiBuilders } from "../src/HttpApi.js";
 import { parse } from "../src/reader/parser.js";
 import { toSExprMany } from "../src/reader/to-sexpr.js";
-import { packageArtifact } from "../src/Artifact.js";
+import { packageArtifact, validateDeclarations } from "../src/Artifact.js";
 import { openSession } from "../src/Session.js";
 
 const packageDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -252,7 +252,10 @@ describe("Effect TypeScript conformance", () => {
       const result = generate(item);
       const session = openSession({ id: `conformance-${item.name}` });
       session.rememberSource({ id: sourceId(item), text: item.source });
-      const artifact = packageArtifact({ engineName: "conformance", engineVersion: "0", session, declarations: result.declarations });
+      const validated = validateDeclarations(session, result.declarations);
+      expect(validated.ok, JSON.stringify(validated)).toBe(true);
+      if (!validated.ok) return;
+      const artifact = packageArtifact({ engineName: "conformance", engineVersion: "0", session, declarations: validated.declarations });
       expect(artifact.ok ? [] : artifact.diagnostics).toEqual([]);
     });
 

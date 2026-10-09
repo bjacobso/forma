@@ -1,0 +1,60 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-nominal-records",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "entries": [
+          {
+            "key": {
+              "kind": "keyword",
+              "value": ":error"
+            },
+            "value": {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "value": ":_tag"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "value": "Missing"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "value": ":id"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "value": "42"
+                  }
+                }
+              ],
+              "kind": "map"
+            }
+          },
+          {
+            "key": {
+              "kind": "keyword",
+              "value": ":name"
+            },
+            "value": {
+              "kind": "string",
+              "value": "Ada"
+            }
+          }
+        ],
+        "kind": "map"
+      }
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "{:error Missing :name String}"
+    }
+  },
+  "version": 1
+}

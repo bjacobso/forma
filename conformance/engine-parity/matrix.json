@@ -4,32 +4,38 @@
     {
       "id": "parse",
       "status": "compared",
-      "fixture": "cases.json"
+      "fixture": "cases.json",
+      "goldens": "goldens/<case-id>.json"
     },
     {
       "id": "expand",
       "status": "compared",
-      "fixture": "cases.json"
+      "fixture": "cases.json",
+      "goldens": "goldens/<case-id>.json"
     },
     {
       "id": "typecheck",
       "status": "compared",
-      "fixture": "cases.json"
+      "fixture": "cases.json",
+      "goldens": "goldens/<case-id>.json"
     },
     {
       "id": "evaluate",
       "status": "compared",
-      "fixture": "cases.json and ../forma-zero"
+      "fixture": "cases.json and ../forma-zero",
+      "goldens": "goldens/<case-id>.json and ../forma-zero/expected.json"
     },
     {
       "id": "effect-ir",
       "status": "compared",
-      "fixture": "../operational-effects and ../effect-typescript/cases (positive cases)"
+      "fixture": "../operational-effects and ../effect-typescript/cases (positive cases)",
+      "goldens": "goldens/<case-id>.json"
     },
     {
       "id": "canonical-ir",
       "status": "compared",
-      "fixture": "cases.json (canonical typed domain forms)"
+      "fixture": "cases.json (canonical typed domain forms)",
+      "goldens": "goldens/<case-id>.json"
     },
     {
       "id": "loadSource",
@@ -48,7 +54,10 @@
     {
       "id": "artifact-envelope",
       "status": "intentional-difference",
-      "reason": "The packages have different envelope versions; the runner compares declaration payloads and provenance."
+      "reason": "TypeScript preserves its declaration wrappers and session/source summaries in a versioned v1 envelope. Declaration hashes use SHA-256 over sorted-key canonical JSON; OCaml uses MD5 and serialization order. Shared fixtures compare payloads, provenance, module identities and type summaries, plus 58-source/548-declaration corpus kind/module counts. TypeScript omits OCaml artifact-cache telemetry and returns validation failures from artifactSummary rather than aggregating failing sources.",
+      "typescript": "language-ts-artifact/v1; sha256 over canonical JSON with sorted object keys",
+      "ocaml": "CanonicalIr v1; md5 over serialized declaration payloads",
+      "fixture": "../artifacts and ../fixtures/canonical-ir/expected.json"
     },
     {
       "id": "syntax-identity",
@@ -89,15 +98,27 @@
     },
     {
       "id": "parse-nil",
-      "status": "gap",
+      "status": "compared",
       "fixture": "cases.json (operational-effects, effect-typescript/operational-effects, multi-service-checkout, resource-scope)",
-      "reason": "The TypeScript reader reads nil as a symbol named nil; the OCaml reader produces a distinct nil node. The effect-ir projections agree (both emit Var nil)."
+      "reason": "The current TypeScript and OCaml host ASTs agree on nil for every selected parse fixture. The historical reader gap no longer produces a normalized divergence."
     },
     {
       "id": "effect-typescript-typecheck",
       "status": "gap",
       "fixture": "cases.json (effect-typescript/*)",
-      "reason": "Neither HM typechecker accepts the Effect program forms (define-layer, define-class, combinators, typed defines); both reject them with different diagnostics. Effect programs are checked by the mechanics checker, so only effect-typescript/operational-effects compares typecheck."
+      "reason": "The selected operational-effects and effect-typescript/operational-effects HM typecheck outputs agree. Other Effect programs are checked by the mechanics checker; their HM typecheck outputs are not selected here, so broader HM parity is not claimed."
+    },
+    {
+      "id": "artifact-validation",
+      "status": "compared",
+      "fixture": "../artifacts/payload-cases.json and descriptor-cases.json",
+      "reason": "TypeScript runs registered canonical payload schemas for every ontology kind, named validators, descriptor contracts and HTTP checks; Effect Schema diagnostic wording and nested span precision differ from OCaml."
     }
-  ]
+  ],
+  "comparisonModel": {
+    "reference": "native OCaml normalized goldens/<case-id>.json",
+    "typescript": "stored goldens with exact per-case exceptions in divergences.json",
+    "live": "native OCaml versus goldens; JavaScript OCaml versus native; TypeScript versus goldens and divergences",
+    "formaZero": "../forma-zero/expected.json"
+  }
 }

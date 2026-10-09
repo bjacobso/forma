@@ -1,0 +1,85 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-map-operations",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "entries": [
+          {
+            "key": {
+              "kind": "keyword",
+              "value": ":count"
+            },
+            "value": {
+              "kind": "int",
+              "value": 1
+            }
+          },
+          {
+            "key": {
+              "kind": "keyword",
+              "value": ":keys"
+            },
+            "value": {
+              "items": [
+                {
+                  "kind": "string",
+                  "value": "Grace"
+                }
+              ],
+              "kind": "list"
+            }
+          },
+          {
+            "key": {
+              "kind": "keyword",
+              "value": ":present"
+            },
+            "value": {
+              "kind": "bool",
+              "value": true
+            }
+          },
+          {
+            "key": {
+              "kind": "keyword",
+              "value": ":value"
+            },
+            "value": {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "value": ":_tag"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "value": "Some"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "value": ":value"
+                  },
+                  "value": {
+                    "kind": "int",
+                    "value": 9
+                  }
+                }
+              ],
+              "kind": "map"
+            }
+          }
+        ],
+        "kind": "map"
+      }
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "{:count Int :keys List<String> :present Bool :value Option<Int>}"
+    }
+  },
+  "version": 1
+}

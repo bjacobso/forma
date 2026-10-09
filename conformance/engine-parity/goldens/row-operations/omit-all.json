@@ -1,0 +1,158 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/omit-all",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/row-operations/omit-all",
+                "startOffset": 1
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 8,
+                "sourceId": "engine-parity/row-operations/omit-all",
+                "startOffset": 3
+              },
+              "value": "empty"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 14,
+                    "sourceId": "engine-parity/row-operations/omit-all",
+                    "startOffset": 10
+                  },
+                  "value": "Omit"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 18,
+                          "sourceId": "engine-parity/row-operations/omit-all",
+                          "startOffset": 16
+                        },
+                        "value": ":a"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 22,
+                          "sourceId": "engine-parity/row-operations/omit-all",
+                          "startOffset": 19
+                        },
+                        "value": "Int"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 23,
+                    "sourceId": "engine-parity/row-operations/omit-all",
+                    "startOffset": 15
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 27,
+                        "sourceId": "engine-parity/row-operations/omit-all",
+                        "startOffset": 25
+                      },
+                      "value": ":a"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 28,
+                    "sourceId": "engine-parity/row-operations/omit-all",
+                    "startOffset": 24
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 29,
+                "sourceId": "engine-parity/row-operations/omit-all",
+                "startOffset": 9
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 30,
+            "sourceId": "engine-parity/row-operations/omit-all",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 38,
+                "sourceId": "engine-parity/row-operations/omit-all",
+                "startOffset": 32
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 44,
+                "sourceId": "engine-parity/row-operations/omit-all",
+                "startOffset": 39
+              },
+              "value": "empty"
+            },
+            {
+              "entries": [],
+              "kind": "map",
+              "span": {
+                "endOffset": 47,
+                "sourceId": "engine-parity/row-operations/omit-all",
+                "startOffset": 45
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 48,
+            "sourceId": "engine-parity/row-operations/omit-all",
+            "startOffset": 31
+          }
+        },
+        {
+          "kind": "symbol",
+          "span": {
+            "endOffset": 54,
+            "sourceId": "engine-parity/row-operations/omit-all",
+            "startOffset": 49
+          },
+          "value": "empty"
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "{}"
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,169 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/empty-omit",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/row-operations/empty-omit",
+                "startOffset": 1
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 7,
+                "sourceId": "engine-parity/row-operations/empty-omit",
+                "startOffset": 3
+              },
+              "value": "kept"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 13,
+                    "sourceId": "engine-parity/row-operations/empty-omit",
+                    "startOffset": 9
+                  },
+                  "value": "Omit"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 17,
+                          "sourceId": "engine-parity/row-operations/empty-omit",
+                          "startOffset": 15
+                        },
+                        "value": ":a"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 21,
+                          "sourceId": "engine-parity/row-operations/empty-omit",
+                          "startOffset": 18
+                        },
+                        "value": "Int"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 22,
+                    "sourceId": "engine-parity/row-operations/empty-omit",
+                    "startOffset": 14
+                  }
+                },
+                {
+                  "items": [],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 25,
+                    "sourceId": "engine-parity/row-operations/empty-omit",
+                    "startOffset": 23
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 26,
+                "sourceId": "engine-parity/row-operations/empty-omit",
+                "startOffset": 8
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 27,
+            "sourceId": "engine-parity/row-operations/empty-omit",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 35,
+                "sourceId": "engine-parity/row-operations/empty-omit",
+                "startOffset": 29
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 40,
+                "sourceId": "engine-parity/row-operations/empty-omit",
+                "startOffset": 36
+              },
+              "value": "kept"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 44,
+                      "sourceId": "engine-parity/row-operations/empty-omit",
+                      "startOffset": 42
+                    },
+                    "value": ":a"
+                  },
+                  "value": {
+                    "kind": "int",
+                    "span": {
+                      "endOffset": 46,
+                      "sourceId": "engine-parity/row-operations/empty-omit",
+                      "startOffset": 45
+                    },
+                    "value": 1
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 47,
+                "sourceId": "engine-parity/row-operations/empty-omit",
+                "startOffset": 41
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 48,
+            "sourceId": "engine-parity/row-operations/empty-omit",
+            "startOffset": 28
+          }
+        },
+        {
+          "kind": "symbol",
+          "span": {
+            "endOffset": 53,
+            "sourceId": "engine-parity/row-operations/empty-omit",
+            "startOffset": 49
+          },
+          "value": "kept"
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "{:a Int}"
+    }
+  },
+  "version": 1
+}

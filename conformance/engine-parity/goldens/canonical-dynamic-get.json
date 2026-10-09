@@ -1,0 +1,187 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-dynamic-get",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "entries": [
+          {
+            "key": {
+              "kind": "keyword",
+              "value": ":_tag"
+            },
+            "value": {
+              "kind": "string",
+              "value": "Some"
+            }
+          },
+          {
+            "key": {
+              "kind": "keyword",
+              "value": ":value"
+            },
+            "value": {
+              "kind": "int",
+              "value": 1
+            }
+          }
+        ],
+        "kind": "map"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 4,
+                "sourceId": "engine-parity/canonical-dynamic-get",
+                "startOffset": 1
+              },
+              "value": "let"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 9,
+                    "sourceId": "engine-parity/canonical-dynamic-get",
+                    "startOffset": 6
+                  },
+                  "value": "key"
+                },
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 12,
+                    "sourceId": "engine-parity/canonical-dynamic-get",
+                    "startOffset": 10
+                  },
+                  "value": ":x"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 19,
+                    "sourceId": "engine-parity/canonical-dynamic-get",
+                    "startOffset": 13
+                  },
+                  "value": "record"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 23,
+                          "sourceId": "engine-parity/canonical-dynamic-get",
+                          "startOffset": 21
+                        },
+                        "value": ":x"
+                      },
+                      "value": {
+                        "kind": "int",
+                        "span": {
+                          "endOffset": 25,
+                          "sourceId": "engine-parity/canonical-dynamic-get",
+                          "startOffset": 24
+                        },
+                        "value": 1
+                      }
+                    },
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 28,
+                          "sourceId": "engine-parity/canonical-dynamic-get",
+                          "startOffset": 26
+                        },
+                        "value": ":y"
+                      },
+                      "value": {
+                        "kind": "int",
+                        "span": {
+                          "endOffset": 30,
+                          "sourceId": "engine-parity/canonical-dynamic-get",
+                          "startOffset": 29
+                        },
+                        "value": 2
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 31,
+                    "sourceId": "engine-parity/canonical-dynamic-get",
+                    "startOffset": 20
+                  }
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 32,
+                "sourceId": "engine-parity/canonical-dynamic-get",
+                "startOffset": 5
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 37,
+                    "sourceId": "engine-parity/canonical-dynamic-get",
+                    "startOffset": 34
+                  },
+                  "value": "get"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 44,
+                    "sourceId": "engine-parity/canonical-dynamic-get",
+                    "startOffset": 38
+                  },
+                  "value": "record"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 48,
+                    "sourceId": "engine-parity/canonical-dynamic-get",
+                    "startOffset": 45
+                  },
+                  "value": "key"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 49,
+                "sourceId": "engine-parity/canonical-dynamic-get",
+                "startOffset": 33
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 50,
+            "sourceId": "engine-parity/canonical-dynamic-get",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Option<Int>"
+    }
+  },
+  "version": 1
+}

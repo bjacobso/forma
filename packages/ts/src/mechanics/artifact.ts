@@ -27,9 +27,11 @@ export function mechanicsPackageableDeclarations(
   sourceId: string,
   normalized = false,
   context?: readonly SExpr[],
+  options: { readonly lowerOntology?: boolean } = {},
 ): MechanicsArtifactResult {
   try {
-    exprs = normalizeEffectProgram(lowerOntologyOperations(exprs), !normalized);
+    exprs = normalizeEffectProgram(options.lowerOntology === false ? exprs : lowerOntologyOperations(exprs), !normalized);
+    if (context) context = normalizeEffectProgram(options.lowerOntology === false ? context : lowerOntologyOperations(context), !normalized);
   } catch (error) {
     const diagnostic = diagnosticFromUnknown(error, "elaborate", sourceId);
     return { ok: false, diagnostics: [{

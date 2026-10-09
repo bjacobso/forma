@@ -845,6 +845,10 @@ export type ModuleLinkResult = LinkedEffectProgram;
 
 export interface LanguageHost {
   readonly name: string;
+  emit?(request: EmitRequest): Promise<import("@formalang/ts/artifact").EmitResult>;
+  emitMany?(request: EmitRequest): Promise<ReturnType<typeof import("@formalang/ts/artifact").emitMany>>;
+  emitBackends?(): Promise<ReturnType<typeof import("@formalang/ts/artifact").emitBackends>>;
+  artifactSummary?(request: EmitRequest): Promise<ReturnType<typeof import("@formalang/ts/artifact").artifactSummary>>;
   version(): Promise<VersionResult>;
   openSession(request?: OpenSessionRequest): Promise<OpenSessionResult>;
   configureSession(request: ConfigureSessionRequest): Promise<ConfigureSessionResult>;
@@ -878,4 +882,13 @@ export interface LanguageHost {
   sourceToOutline?(request: SourceToOutlineRequest): Promise<SourceToOutlineResult>;
   outlineToSource?(request: OutlineToSourceRequest): Promise<OutlineToSourceResult>;
   formSlots?(request: FormSlotsRequest): Promise<FormSlotsResult>;
+}
+
+
+/** Session artifact operations; canonical IR is the only implemented backend. */
+export interface EmitRequest {
+  readonly sessionId: string;
+  readonly sourceId?: string;
+  readonly sourceIds?: readonly string[];
+  readonly backend?: string;
 }

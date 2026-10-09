@@ -1,0 +1,112 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/invalid-key-vector",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/invalid-key-vector",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 9,
+                "sourceId": "engine-parity/row-operations/invalid-key-vector",
+                "startOffset": 6
+              },
+              "value": "Bad"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 15,
+                    "sourceId": "engine-parity/row-operations/invalid-key-vector",
+                    "startOffset": 11
+                  },
+                  "value": "Pick"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 19,
+                          "sourceId": "engine-parity/row-operations/invalid-key-vector",
+                          "startOffset": 17
+                        },
+                        "value": ":a"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 23,
+                          "sourceId": "engine-parity/row-operations/invalid-key-vector",
+                          "startOffset": 20
+                        },
+                        "value": "Int"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 24,
+                    "sourceId": "engine-parity/row-operations/invalid-key-vector",
+                    "startOffset": 16
+                  }
+                },
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 27,
+                    "sourceId": "engine-parity/row-operations/invalid-key-vector",
+                    "startOffset": 25
+                  },
+                  "value": ":a"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 28,
+                "sourceId": "engine-parity/row-operations/invalid-key-vector",
+                "startOffset": 10
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 29,
+            "sourceId": "engine-parity/row-operations/invalid-key-vector",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/row-operation",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 27,
+            "sourceId": "engine-parity/row-operations/invalid-key-vector",
+            "startOffset": 25
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

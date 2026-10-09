@@ -1,0 +1,92 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-signed-action",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 3,
+        "payload": {
+          "do": {
+            "expr": [
+              "create!",
+              "Employee",
+              {
+                "active": true,
+                "name": "candidate.name"
+              }
+            ],
+            "kind": "raw-expr"
+          },
+          "inputs": [
+            {
+              "name": "candidate",
+              "required": true,
+              "type": "Candidate"
+            }
+          ],
+          "kind": "Action",
+          "name": "hire",
+          "returns": [
+            "Id",
+            "Employee"
+          ]
+        },
+        "sourceId": "engine-parity/canonical-signed-action",
+        "span": {
+          "endOffset": 207,
+          "sourceId": "engine-parity/canonical-signed-action",
+          "startOffset": 127
+        }
+      },
+      {
+        "formIndex": 0,
+        "payload": {
+          "fields": [
+            {
+              "indexed": false,
+              "name": "candidate/name",
+              "required": true,
+              "type": "String"
+            }
+          ],
+          "kind": "Entity",
+          "name": "Candidate"
+        },
+        "sourceId": "engine-parity/canonical-signed-action",
+        "span": {
+          "endOffset": 33,
+          "sourceId": "engine-parity/canonical-signed-action",
+          "startOffset": 0
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "fields": [
+            {
+              "indexed": false,
+              "name": "employee/name",
+              "required": true,
+              "type": "String"
+            },
+            {
+              "indexed": false,
+              "name": "employee/active",
+              "required": true,
+              "type": "Bool"
+            }
+          ],
+          "kind": "Entity",
+          "name": "Employee"
+        },
+        "sourceId": "engine-parity/canonical-signed-action",
+        "span": {
+          "endOffset": 79,
+          "sourceId": "engine-parity/canonical-signed-action",
+          "startOffset": 34
+        }
+      }
+    ]
+  },
+  "version": 1
+}

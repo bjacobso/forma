@@ -1,0 +1,271 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-dictionary-lookup",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "items": [
+          {
+            "entries": [
+              {
+                "key": {
+                  "kind": "keyword",
+                  "value": ":_tag"
+                },
+                "value": {
+                  "kind": "string",
+                  "value": "Some"
+                }
+              },
+              {
+                "key": {
+                  "kind": "keyword",
+                  "value": ":value"
+                },
+                "value": {
+                  "kind": "int",
+                  "value": 1
+                }
+              }
+            ],
+            "kind": "map"
+          },
+          {
+            "entries": [
+              {
+                "key": {
+                  "kind": "keyword",
+                  "value": ":_tag"
+                },
+                "value": {
+                  "kind": "string",
+                  "value": "None"
+                }
+              }
+            ],
+            "kind": "map"
+          }
+        ],
+        "kind": "list"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/canonical-dictionary-lookup",
+                "startOffset": 1
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 8,
+                "sourceId": "engine-parity/canonical-dictionary-lookup",
+                "startOffset": 3
+              },
+              "value": "names"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 13,
+                    "sourceId": "engine-parity/canonical-dictionary-lookup",
+                    "startOffset": 10
+                  },
+                  "value": "Map"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 20,
+                    "sourceId": "engine-parity/canonical-dictionary-lookup",
+                    "startOffset": 14
+                  },
+                  "value": "String"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 24,
+                    "sourceId": "engine-parity/canonical-dictionary-lookup",
+                    "startOffset": 21
+                  },
+                  "value": "Int"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 25,
+                "sourceId": "engine-parity/canonical-dictionary-lookup",
+                "startOffset": 9
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 26,
+            "sourceId": "engine-parity/canonical-dictionary-lookup",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 34,
+                "sourceId": "engine-parity/canonical-dictionary-lookup",
+                "startOffset": 28
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 40,
+                "sourceId": "engine-parity/canonical-dictionary-lookup",
+                "startOffset": 35
+              },
+              "value": "names"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "string",
+                    "span": {
+                      "endOffset": 47,
+                      "sourceId": "engine-parity/canonical-dictionary-lookup",
+                      "startOffset": 42
+                    },
+                    "value": "Ada"
+                  },
+                  "value": {
+                    "kind": "int",
+                    "span": {
+                      "endOffset": 49,
+                      "sourceId": "engine-parity/canonical-dictionary-lookup",
+                      "startOffset": 48
+                    },
+                    "value": 1
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 50,
+                "sourceId": "engine-parity/canonical-dictionary-lookup",
+                "startOffset": 41
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 51,
+            "sourceId": "engine-parity/canonical-dictionary-lookup",
+            "startOffset": 27
+          }
+        },
+        {
+          "items": [
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 57,
+                    "sourceId": "engine-parity/canonical-dictionary-lookup",
+                    "startOffset": 54
+                  },
+                  "value": "get"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 63,
+                    "sourceId": "engine-parity/canonical-dictionary-lookup",
+                    "startOffset": 58
+                  },
+                  "value": "names"
+                },
+                {
+                  "kind": "string",
+                  "span": {
+                    "endOffset": 69,
+                    "sourceId": "engine-parity/canonical-dictionary-lookup",
+                    "startOffset": 64
+                  },
+                  "value": "Ada"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 70,
+                "sourceId": "engine-parity/canonical-dictionary-lookup",
+                "startOffset": 53
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 75,
+                    "sourceId": "engine-parity/canonical-dictionary-lookup",
+                    "startOffset": 72
+                  },
+                  "value": "get"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 81,
+                    "sourceId": "engine-parity/canonical-dictionary-lookup",
+                    "startOffset": 76
+                  },
+                  "value": "names"
+                },
+                {
+                  "kind": "string",
+                  "span": {
+                    "endOffset": 91,
+                    "sourceId": "engine-parity/canonical-dictionary-lookup",
+                    "startOffset": 82
+                  },
+                  "value": "missing"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 92,
+                "sourceId": "engine-parity/canonical-dictionary-lookup",
+                "startOffset": 71
+              }
+            }
+          ],
+          "kind": "vector",
+          "span": {
+            "endOffset": 93,
+            "sourceId": "engine-parity/canonical-dictionary-lookup",
+            "startOffset": 52
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "List<Option<Int>>"
+    }
+  },
+  "version": 1
+}

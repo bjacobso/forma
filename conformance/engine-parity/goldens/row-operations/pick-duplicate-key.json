@@ -1,0 +1,131 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/pick-duplicate-key",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/pick-duplicate-key",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 9,
+                "sourceId": "engine-parity/row-operations/pick-duplicate-key",
+                "startOffset": 6
+              },
+              "value": "Bad"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 15,
+                    "sourceId": "engine-parity/row-operations/pick-duplicate-key",
+                    "startOffset": 11
+                  },
+                  "value": "Pick"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 19,
+                          "sourceId": "engine-parity/row-operations/pick-duplicate-key",
+                          "startOffset": 17
+                        },
+                        "value": ":a"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 23,
+                          "sourceId": "engine-parity/row-operations/pick-duplicate-key",
+                          "startOffset": 20
+                        },
+                        "value": "Int"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 24,
+                    "sourceId": "engine-parity/row-operations/pick-duplicate-key",
+                    "startOffset": 16
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 28,
+                        "sourceId": "engine-parity/row-operations/pick-duplicate-key",
+                        "startOffset": 26
+                      },
+                      "value": ":a"
+                    },
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 31,
+                        "sourceId": "engine-parity/row-operations/pick-duplicate-key",
+                        "startOffset": 29
+                      },
+                      "value": ":a"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 32,
+                    "sourceId": "engine-parity/row-operations/pick-duplicate-key",
+                    "startOffset": 25
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 33,
+                "sourceId": "engine-parity/row-operations/pick-duplicate-key",
+                "startOffset": 10
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 34,
+            "sourceId": "engine-parity/row-operations/pick-duplicate-key",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/row-operation",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 31,
+            "sourceId": "engine-parity/row-operations/pick-duplicate-key",
+            "startOffset": 29
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

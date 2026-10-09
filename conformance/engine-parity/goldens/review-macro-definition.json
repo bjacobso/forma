@@ -1,0 +1,14 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "review-macro-definition",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "int",
+        "value": 7
+      }
+    }
+  },
+  "version": 1
+}

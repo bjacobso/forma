@@ -11,7 +11,8 @@ of OCaml's artifact declaration cache or per-form inference cache yet.
 The scenarios cover private and public edits, removal of exports and schemas,
 replacement and deletion of declarations, and restoration after invalid edits.
 
-`loads.json` is compared by `pnpm parity:engines`: successful structural loads,
+`loads.json` is compared by `pnpm parity:engines` (including TypeScript-only
+mode): successful structural loads,
 located surface errors, checked preludes, and unchanged values after a failed
 prelude replacement. Diagnostic codes for HM errors remain engine-specific.
 The direct TypeScript elaborator reports missing schema references with

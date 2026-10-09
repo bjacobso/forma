@@ -1,0 +1,276 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/optional-field",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "entries": [
+          {
+            "key": {
+              "kind": "keyword",
+              "value": ":nickname"
+            },
+            "value": {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "value": ":_tag"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "value": "Some"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "value": ":value"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "value": "Ada"
+                  }
+                }
+              ],
+              "kind": "map"
+            }
+          }
+        ],
+        "kind": "map"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/row-operations/optional-field",
+                "startOffset": 1
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 9,
+                "sourceId": "engine-parity/row-operations/optional-field",
+                "startOffset": 3
+              },
+              "value": "person"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 15,
+                    "sourceId": "engine-parity/row-operations/optional-field",
+                    "startOffset": 11
+                  },
+                  "value": "Pick"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 22,
+                          "sourceId": "engine-parity/row-operations/optional-field",
+                          "startOffset": 17
+                        },
+                        "value": ":name"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 29,
+                          "sourceId": "engine-parity/row-operations/optional-field",
+                          "startOffset": 23
+                        },
+                        "value": "String"
+                      }
+                    },
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 39,
+                          "sourceId": "engine-parity/row-operations/optional-field",
+                          "startOffset": 30
+                        },
+                        "value": ":nickname"
+                      },
+                      "value": {
+                        "items": [
+                          {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 47,
+                              "sourceId": "engine-parity/row-operations/optional-field",
+                              "startOffset": 41
+                            },
+                            "value": "Option"
+                          },
+                          {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 54,
+                              "sourceId": "engine-parity/row-operations/optional-field",
+                              "startOffset": 48
+                            },
+                            "value": "String"
+                          }
+                        ],
+                        "kind": "list",
+                        "span": {
+                          "endOffset": 55,
+                          "sourceId": "engine-parity/row-operations/optional-field",
+                          "startOffset": 40
+                        }
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 56,
+                    "sourceId": "engine-parity/row-operations/optional-field",
+                    "startOffset": 16
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 67,
+                        "sourceId": "engine-parity/row-operations/optional-field",
+                        "startOffset": 58
+                      },
+                      "value": ":nickname"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 68,
+                    "sourceId": "engine-parity/row-operations/optional-field",
+                    "startOffset": 57
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 69,
+                "sourceId": "engine-parity/row-operations/optional-field",
+                "startOffset": 10
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 70,
+            "sourceId": "engine-parity/row-operations/optional-field",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 78,
+                "sourceId": "engine-parity/row-operations/optional-field",
+                "startOffset": 72
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 85,
+                "sourceId": "engine-parity/row-operations/optional-field",
+                "startOffset": 79
+              },
+              "value": "person"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 96,
+                      "sourceId": "engine-parity/row-operations/optional-field",
+                      "startOffset": 87
+                    },
+                    "value": ":nickname"
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 102,
+                          "sourceId": "engine-parity/row-operations/optional-field",
+                          "startOffset": 98
+                        },
+                        "value": "Some"
+                      },
+                      {
+                        "kind": "string",
+                        "span": {
+                          "endOffset": 108,
+                          "sourceId": "engine-parity/row-operations/optional-field",
+                          "startOffset": 103
+                        },
+                        "value": "Ada"
+                      }
+                    ],
+                    "kind": "list",
+                    "span": {
+                      "endOffset": 109,
+                      "sourceId": "engine-parity/row-operations/optional-field",
+                      "startOffset": 97
+                    }
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 110,
+                "sourceId": "engine-parity/row-operations/optional-field",
+                "startOffset": 86
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 111,
+            "sourceId": "engine-parity/row-operations/optional-field",
+            "startOffset": 71
+          }
+        },
+        {
+          "kind": "symbol",
+          "span": {
+            "endOffset": 118,
+            "sourceId": "engine-parity/row-operations/optional-field",
+            "startOffset": 112
+          },
+          "value": "person"
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "{:nickname Option<String>}"
+    }
+  },
+  "version": 1
+}
