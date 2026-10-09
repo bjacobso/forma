@@ -14,6 +14,14 @@
       "dependsOn": ["^build", "build"],
       "outputs": []
     },
+    "@formalang/host#test": {
+      "dependsOn": ["^build", "build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/conformance/modules/**",
+        "$TURBO_ROOT$/conformance/compile-time-modules/**"
+      ]
+    },
     "pack:check": {
       "dependsOn": ["build"],
       "outputs": []

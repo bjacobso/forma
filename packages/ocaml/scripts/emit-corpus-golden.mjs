@@ -1,6 +1,7 @@
 import { emitExampleModules } from "./corpus-emission.mjs";
 import { createHash } from "node:crypto";
-import { corpusGolden } from "./gates.mjs";
+import { readFileSync, writeFileSync } from "node:fs";
+import { corpusGoldenPath } from "./gates.mjs";
 
 const printActual = process.argv.includes("--print");
 
@@ -113,11 +114,15 @@ const sources=results.map(result=>({sourceId:result.sourceId}));
     manifestHash: sha256(stableJson(perSource)),
   };
 
+  if (process.env.FORMA_UPDATE_GOLDEN === "1") {
+    writeFileSync(corpusGoldenPath, `${JSON.stringify(actual, null, 2)}\n`);
+  }
+  const expected = JSON.parse(readFileSync(corpusGoldenPath, "utf8"));
   if (printActual) {
     console.log(JSON.stringify(actual, null, 2));
-  } else if (stableJson(actual) !== stableJson(corpusGolden)) {
+  } else if (stableJson(actual) !== stableJson(expected)) {
     throw new Error(
-      `Corpus golden mismatch.\nExpected:\n${JSON.stringify(corpusGolden, null, 2)}\nActual:\n${JSON.stringify(actual, null, 2)}`,
+      `Corpus golden mismatch.\nExpected:\n${JSON.stringify(expected, null, 2)}\nActual:\n${JSON.stringify(actual, null, 2)}`,
     );
   } else {
     console.log(

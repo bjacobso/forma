@@ -1,0 +1,14 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "review-computed-get-default",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "int",
+        "value": 0
+      }
+    }
+  },
+  "version": 1
+}

@@ -25,6 +25,13 @@ corpora used by the native implementation. The Markdown programs in
 `../examples` and the language definitions in `../preludes` complete the
 cross-target corpus.
 
+Stored native references live in [`engine-parity/`](engine-parity/README.md),
+[`modules/`](modules/README.md), [`compile-time-modules/`](compile-time-modules/README.md),
+[`fixtures/canonical-ir/`](fixtures/canonical-ir/README.md), and
+[`corpus-emission/`](corpus-emission/README.md). Their READMEs document capture
+commands and which checks run without OCaml. Capture preserves current behavior;
+it does not extend the language or establish parity outside selected fixtures.
+
 ## The shared dialect (discovered, not designed)
 
 The TS engine is dynamic; the OCaml engine runs HM typechecking on every

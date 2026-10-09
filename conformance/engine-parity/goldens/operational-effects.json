@@ -1,0 +1,1503 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "operational-effects",
+  "outputs": {
+    "effect-ir": [
+      {
+        "formIndex": 3,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "effect": {
+              "errors": [
+                "ConsoleUnavailable"
+              ],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 190,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 153
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "Unit",
+                "span": {
+                  "endOffset": 165,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 161
+                }
+              }
+            },
+            "error": {
+              "errorType": "ConsoleUnavailable",
+              "kind": "Error",
+              "payload": {
+                "entries": [
+                  {
+                    "key": {
+                      "kind": "Expr",
+                      "source": {
+                        "kind": "Symbol",
+                        "name": ":message"
+                      },
+                      "span": {
+                        "endOffset": 260,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 252
+                      }
+                    },
+                    "value": {
+                      "kind": "Var",
+                      "name": "message",
+                      "span": {
+                        "endOffset": 268,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 261
+                      }
+                    }
+                  }
+                ],
+                "kind": "Record",
+                "span": {
+                  "endOffset": 269,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 251
+                }
+              },
+              "span": {
+                "endOffset": 270,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 231
+              }
+            },
+            "kind": "Fail",
+            "span": {
+              "endOffset": 271,
+              "sourceId": "engine-parity/operational-effects",
+              "startOffset": 225
+            }
+          },
+          "effect": {
+            "errors": [
+              "ConsoleUnavailable"
+            ],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 190,
+              "sourceId": "engine-parity/operational-effects",
+              "startOffset": 153
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "Unit",
+              "span": {
+                "endOffset": 165,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 161
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "always-fail",
+          "params": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 152,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 146
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "engine-parity/operational-effects",
+        "span": {
+          "endOffset": 272,
+          "sourceId": "engine-parity/operational-effects",
+          "startOffset": 193
+        }
+      },
+      {
+        "formIndex": 7,
+        "payload": {
+          "authority": {
+            "capabilities": [
+              "Console.print"
+            ]
+          },
+          "body": {
+            "bindings": [
+              {
+                "name": "_",
+                "span": {
+                  "endOffset": 557,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 534
+                },
+                "value": {
+                  "args": [
+                    {
+                      "kind": "Var",
+                      "name": "message",
+                      "span": {
+                        "endOffset": 556,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 549
+                      }
+                    }
+                  ],
+                  "effect": {
+                    "errors": [
+                      "ConsoleUnavailable"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [
+                      "Console.print"
+                    ],
+                    "span": {
+                      "endOffset": 122,
+                      "sourceId": "engine-parity/operational-effects",
+                      "startOffset": 85
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "Unit",
+                      "span": {
+                        "endOffset": 97,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 93
+                      }
+                    }
+                  },
+                  "kind": "ServiceCall",
+                  "method": "print",
+                  "service": "Console",
+                  "span": {
+                    "endOffset": 557,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 534
+                  }
+                }
+              }
+            ],
+            "body": {
+              "effect": {
+                "errors": [
+                  "ConsoleUnavailable"
+                ],
+                "kind": "Effect",
+                "requirements": [
+                  "Console.print"
+                ],
+                "span": {
+                  "endOffset": 499,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 449
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "Unit",
+                  "span": {
+                    "endOffset": 461,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 457
+                  }
+                }
+              },
+              "kind": "Succeed",
+              "span": {
+                "endOffset": 576,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 563
+              },
+              "value": {
+                "kind": "Var",
+                "name": "nil",
+                "span": {
+                  "endOffset": 575,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 572
+                }
+              }
+            },
+            "effect": {
+              "errors": [
+                "ConsoleUnavailable"
+              ],
+              "kind": "Effect",
+              "requirements": [
+                "Console.print"
+              ],
+              "span": {
+                "endOffset": 499,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 449
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "Unit",
+                "span": {
+                  "endOffset": 461,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 457
+                }
+              }
+            },
+            "kind": "Do",
+            "span": {
+              "endOffset": 577,
+              "sourceId": "engine-parity/operational-effects",
+              "startOffset": 526
+            }
+          },
+          "effect": {
+            "errors": [
+              "ConsoleUnavailable"
+            ],
+            "kind": "Effect",
+            "requirements": [
+              "Console.print"
+            ],
+            "span": {
+              "endOffset": 499,
+              "sourceId": "engine-parity/operational-effects",
+              "startOffset": 449
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "Unit",
+              "span": {
+                "endOffset": 461,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 457
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "log",
+          "params": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 448,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 442
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "engine-parity/operational-effects",
+        "span": {
+          "endOffset": 578,
+          "sourceId": "engine-parity/operational-effects",
+          "startOffset": 502
+        }
+      },
+      {
+        "formIndex": 5,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "binding": "error",
+            "body": {
+              "args": [
+                {
+                  "kind": "Var",
+                  "name": "message",
+                  "span": {
+                    "endOffset": 377,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 370
+                  }
+                }
+              ],
+              "effect": {
+                "errors": [
+                  "ConsoleUnavailable"
+                ],
+                "kind": "Effect",
+                "requirements": [],
+                "span": {
+                  "endOffset": 190,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 153
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "Unit",
+                  "span": {
+                    "endOffset": 165,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 161
+                  }
+                }
+              },
+              "kind": "OperationCall",
+              "operation": "always-fail",
+              "span": {
+                "endOffset": 378,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 357
+              }
+            },
+            "effect": {
+              "errors": [],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 315,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 296
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "Unit",
+                "span": {
+                  "endOffset": 308,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 304
+                }
+              }
+            },
+            "errorType": "ConsoleUnavailable",
+            "handler": {
+              "effect": {
+                "errors": [],
+                "kind": "Effect",
+                "requirements": [],
+                "span": {
+                  "endOffset": 315,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 296
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "Unit",
+                  "span": {
+                    "endOffset": 308,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 304
+                  }
+                }
+              },
+              "kind": "Succeed",
+              "span": {
+                "endOffset": 427,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 414
+              },
+              "value": {
+                "kind": "Var",
+                "name": "nil",
+                "span": {
+                  "endOffset": 426,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 423
+                }
+              }
+            },
+            "kind": "Catch",
+            "span": {
+              "endOffset": 428,
+              "sourceId": "engine-parity/operational-effects",
+              "startOffset": 346
+            }
+          },
+          "effect": {
+            "errors": [],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 315,
+              "sourceId": "engine-parity/operational-effects",
+              "startOffset": 296
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "Unit",
+              "span": {
+                "endOffset": 308,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 304
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "recover",
+          "params": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 295,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 289
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "engine-parity/operational-effects",
+        "span": {
+          "endOffset": 429,
+          "sourceId": "engine-parity/operational-effects",
+          "startOffset": 318
+        }
+      },
+      {
+        "formIndex": 0,
+        "payload": {
+          "kind": "ErrorDef",
+          "name": "ConsoleUnavailable",
+          "schema": {
+            "fields": [
+              {
+                "name": "message",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 42,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 36
+                  }
+                },
+                "span": {
+                  "endOffset": 42,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 36
+                }
+              }
+            ],
+            "kind": "Struct"
+          }
+        },
+        "sourceId": "engine-parity/operational-effects",
+        "span": {
+          "endOffset": 44,
+          "sourceId": "engine-parity/operational-effects",
+          "startOffset": 0
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "kind": "ServiceDef",
+          "methods": [
+            {
+              "effect": {
+                "errors": [
+                  "ConsoleUnavailable"
+                ],
+                "kind": "Effect",
+                "requirements": [
+                  "Console.print"
+                ],
+                "span": {
+                  "endOffset": 122,
+                  "sourceId": "engine-parity/operational-effects",
+                  "startOffset": 85
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "Unit",
+                  "span": {
+                    "endOffset": 97,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 93
+                  }
+                }
+              },
+              "name": "print",
+              "params": [
+                {
+                  "name": "arg0",
+                  "type": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 84,
+                      "sourceId": "engine-parity/operational-effects",
+                      "startOffset": 78
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "name": "Console"
+        },
+        "sourceId": "engine-parity/operational-effects",
+        "span": {
+          "endOffset": 125,
+          "sourceId": "engine-parity/operational-effects",
+          "startOffset": 46
+        }
+      }
+    ],
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 6,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 1
+              },
+              "value": "error"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 25,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 7
+              },
+              "value": "ConsoleUnavailable"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 35,
+                      "sourceId": "engine-parity/operational-effects",
+                      "startOffset": 27
+                    },
+                    "value": ":message"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 42,
+                      "sourceId": "engine-parity/operational-effects",
+                      "startOffset": 36
+                    },
+                    "value": "String"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 43,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 26
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 44,
+            "sourceId": "engine-parity/operational-effects",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 54,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 47
+              },
+              "value": "service"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 62,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 55
+              },
+              "value": "Console"
+            },
+            {
+              "items": [
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 67,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 66
+                  },
+                  "value": ":"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 73,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 68
+                  },
+                  "value": "print"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 77,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 75
+                      },
+                      "value": "->"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 84,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 78
+                      },
+                      "value": "String"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 92,
+                            "sourceId": "engine-parity/operational-effects",
+                            "startOffset": 86
+                          },
+                          "value": "Effect"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 97,
+                            "sourceId": "engine-parity/operational-effects",
+                            "startOffset": 93
+                          },
+                          "value": "Unit"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 117,
+                                "sourceId": "engine-parity/operational-effects",
+                                "startOffset": 99
+                              },
+                              "value": "ConsoleUnavailable"
+                            }
+                          ],
+                          "kind": "vector",
+                          "span": {
+                            "endOffset": 118,
+                            "sourceId": "engine-parity/operational-effects",
+                            "startOffset": 98
+                          }
+                        },
+                        {
+                          "items": [],
+                          "kind": "vector",
+                          "span": {
+                            "endOffset": 121,
+                            "sourceId": "engine-parity/operational-effects",
+                            "startOffset": 119
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 122,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 85
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 123,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 74
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 124,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 65
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 125,
+            "sourceId": "engine-parity/operational-effects",
+            "startOffset": 46
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 129,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 128
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 141,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 130
+              },
+              "value": "always-fail"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 145,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 143
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 152,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 146
+                  },
+                  "value": "String"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 160,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 154
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 165,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 161
+                      },
+                      "value": "Unit"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 185,
+                            "sourceId": "engine-parity/operational-effects",
+                            "startOffset": 167
+                          },
+                          "value": "ConsoleUnavailable"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 186,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 166
+                      }
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 189,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 187
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 190,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 153
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 191,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 142
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 192,
+            "sourceId": "engine-parity/operational-effects",
+            "startOffset": 127
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 200,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 194
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 212,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 201
+              },
+              "value": "always-fail"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 221,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 214
+                  },
+                  "value": "message"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 222,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 213
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 230,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 226
+                  },
+                  "value": "fail"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 250,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 232
+                      },
+                      "value": "ConsoleUnavailable"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 260,
+                              "sourceId": "engine-parity/operational-effects",
+                              "startOffset": 252
+                            },
+                            "value": ":message"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 268,
+                              "sourceId": "engine-parity/operational-effects",
+                              "startOffset": 261
+                            },
+                            "value": "message"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 269,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 251
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 270,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 231
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 271,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 225
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 272,
+            "sourceId": "engine-parity/operational-effects",
+            "startOffset": 193
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 276,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 275
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 284,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 277
+              },
+              "value": "recover"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 288,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 286
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 295,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 289
+                  },
+                  "value": "String"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 303,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 297
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 308,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 304
+                      },
+                      "value": "Unit"
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 311,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 309
+                      }
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 314,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 312
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 315,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 296
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 316,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 285
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 317,
+            "sourceId": "engine-parity/operational-effects",
+            "startOffset": 274
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 325,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 319
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 333,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 326
+              },
+              "value": "recover"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 342,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 335
+                  },
+                  "value": "message"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 343,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 334
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 352,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 347
+                  },
+                  "value": "catch"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 369,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 358
+                      },
+                      "value": "always-fail"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 377,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 370
+                      },
+                      "value": "message"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 378,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 357
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 402,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 384
+                      },
+                      "value": "ConsoleUnavailable"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 408,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 403
+                      },
+                      "value": "error"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 409,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 383
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 422,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 415
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "kind": "nil",
+                      "span": {
+                        "endOffset": 426,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 423
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 427,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 414
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 428,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 346
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 429,
+            "sourceId": "engine-parity/operational-effects",
+            "startOffset": 318
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 433,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 432
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 437,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 434
+              },
+              "value": "log"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 441,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 439
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 448,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 442
+                  },
+                  "value": "String"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 456,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 450
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 461,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 457
+                      },
+                      "value": "Unit"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 481,
+                            "sourceId": "engine-parity/operational-effects",
+                            "startOffset": 463
+                          },
+                          "value": "ConsoleUnavailable"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 482,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 462
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 497,
+                            "sourceId": "engine-parity/operational-effects",
+                            "startOffset": 484
+                          },
+                          "value": "Console.print"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 498,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 483
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 499,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 449
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 500,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 438
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 501,
+            "sourceId": "engine-parity/operational-effects",
+            "startOffset": 431
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 509,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 503
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 513,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 510
+              },
+              "value": "log"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 522,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 515
+                  },
+                  "value": "message"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 523,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 514
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 530,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 527
+                  },
+                  "value": "do!"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 533,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 532
+                      },
+                      "value": "_"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 548,
+                            "sourceId": "engine-parity/operational-effects",
+                            "startOffset": 535
+                          },
+                          "value": "Console.print"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 556,
+                            "sourceId": "engine-parity/operational-effects",
+                            "startOffset": 549
+                          },
+                          "value": "message"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 557,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 534
+                      }
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 558,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 531
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 571,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 564
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "kind": "nil",
+                      "span": {
+                        "endOffset": 575,
+                        "sourceId": "engine-parity/operational-effects",
+                        "startOffset": 572
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 576,
+                    "sourceId": "engine-parity/operational-effects",
+                    "startOffset": 563
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 577,
+                "sourceId": "engine-parity/operational-effects",
+                "startOffset": 526
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 578,
+            "sourceId": "engine-parity/operational-effects",
+            "startOffset": 502
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>"
+    }
+  },
+  "version": 1
+}

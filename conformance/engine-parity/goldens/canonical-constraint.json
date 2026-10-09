@@ -1,0 +1,72 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-constraint",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 1,
+        "payload": {
+          "entity": "Employee",
+          "entityRef": {
+            "kind": "Entity",
+            "name": "Employee"
+          },
+          "kind": "Constraint",
+          "message": {
+            "expr": [
+              "str",
+              {
+                "$forma.runtimeExpr": "string-literal",
+                "value": "Inactive "
+              },
+              "name"
+            ],
+            "kind": "raw-expr"
+          },
+          "name": "active-employee",
+          "resolutions": [],
+          "severity": "warning",
+          "taskAssignments": [],
+          "when": {
+            "expr": "active",
+            "kind": "raw-expr"
+          }
+        },
+        "sourceId": "engine-parity/canonical-constraint",
+        "span": {
+          "endOffset": 155,
+          "sourceId": "engine-parity/canonical-constraint",
+          "startOffset": 46
+        }
+      },
+      {
+        "formIndex": 0,
+        "payload": {
+          "fields": [
+            {
+              "indexed": false,
+              "name": "employee/name",
+              "required": true,
+              "type": "String"
+            },
+            {
+              "indexed": false,
+              "name": "employee/active",
+              "required": true,
+              "type": "Bool"
+            }
+          ],
+          "kind": "Entity",
+          "name": "Employee"
+        },
+        "sourceId": "engine-parity/canonical-constraint",
+        "span": {
+          "endOffset": 45,
+          "sourceId": "engine-parity/canonical-constraint",
+          "startOffset": 0
+        }
+      }
+    ]
+  },
+  "version": 1
+}

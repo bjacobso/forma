@@ -1,0 +1,298 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-option-record",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "string",
+        "value": "Ada"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 12,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 6
+              },
+              "value": "Person"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 19,
+                      "sourceId": "engine-parity/canonical-option-record",
+                      "startOffset": 14
+                    },
+                    "value": ":name"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 26,
+                      "sourceId": "engine-parity/canonical-option-record",
+                      "startOffset": 20
+                    },
+                    "value": "String"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 36,
+                      "sourceId": "engine-parity/canonical-option-record",
+                      "startOffset": 27
+                    },
+                    "value": ":nickname"
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 44,
+                          "sourceId": "engine-parity/canonical-option-record",
+                          "startOffset": 38
+                        },
+                        "value": "Option"
+                      },
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 51,
+                          "sourceId": "engine-parity/canonical-option-record",
+                          "startOffset": 45
+                        },
+                        "value": "String"
+                      }
+                    ],
+                    "kind": "list",
+                    "span": {
+                      "endOffset": 52,
+                      "sourceId": "engine-parity/canonical-option-record",
+                      "startOffset": 37
+                    }
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 53,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 13
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 54,
+            "sourceId": "engine-parity/canonical-option-record",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 57,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 56
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 64,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 58
+              },
+              "value": "person"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 71,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 65
+              },
+              "value": "Person"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 72,
+            "sourceId": "engine-parity/canonical-option-record",
+            "startOffset": 55
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 80,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 74
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 87,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 81
+              },
+              "value": "person"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 94,
+                      "sourceId": "engine-parity/canonical-option-record",
+                      "startOffset": 89
+                    },
+                    "value": ":name"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "span": {
+                      "endOffset": 100,
+                      "sourceId": "engine-parity/canonical-option-record",
+                      "startOffset": 95
+                    },
+                    "value": "Ada"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 101,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 88
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 102,
+            "sourceId": "engine-parity/canonical-option-record",
+            "startOffset": 73
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 109,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 104
+              },
+              "value": "match"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 125,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 110
+              },
+              "value": "person.nickname"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 131,
+                    "sourceId": "engine-parity/canonical-option-record",
+                    "startOffset": 127
+                  },
+                  "value": "Some"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 136,
+                    "sourceId": "engine-parity/canonical-option-record",
+                    "startOffset": 132
+                  },
+                  "value": "nick"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 137,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 126
+              }
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 142,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 138
+              },
+              "value": "nick"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 147,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 143
+              },
+              "value": "None"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "engine-parity/canonical-option-record",
+                "startOffset": 148
+              },
+              "value": "person.name"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 160,
+            "sourceId": "engine-parity/canonical-option-record",
+            "startOffset": 103
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "String"
+    }
+  },
+  "version": 1
+}

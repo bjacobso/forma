@@ -1,0 +1,4496 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "effect-typescript/stream-pipeline",
+  "outputs": {
+    "effect-ir": [
+      {
+        "formIndex": 13,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "bindings": [
+              {
+                "name": "total",
+                "span": {
+                  "endOffset": 1805,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 1694
+                },
+                "value": {
+                  "effect": {
+                    "errors": [],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 1629,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 1614
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "Number",
+                      "span": {
+                        "endOffset": 1628,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1622
+                      }
+                    }
+                  },
+                  "kind": "Pure",
+                  "span": {
+                    "endOffset": 1805,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1694
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "stream-run-fold",
+                        "span": {
+                          "endOffset": 1710,
+                          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                          "startOffset": 1695
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "celsius-values",
+                            "span": {
+                              "endOffset": 1734,
+                              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                              "startOffset": 1720
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "readings",
+                            "span": {
+                              "endOffset": 1743,
+                              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                              "startOffset": 1735
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1744,
+                          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                          "startOffset": 1719
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":"
+                            },
+                            "span": {
+                              "endOffset": 1765,
+                              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                              "startOffset": 1753
+                            }
+                          },
+                          {
+                            "kind": "Literal",
+                            "span": {
+                              "endOffset": 1757,
+                              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                              "startOffset": 1756
+                            },
+                            "value": 0
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "Number",
+                            "span": {
+                              "endOffset": 1764,
+                              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                              "startOffset": 1758
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1765,
+                          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                          "startOffset": 1753
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "fn",
+                            "span": {
+                              "endOffset": 1777,
+                              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                              "startOffset": 1775
+                            }
+                          },
+                          {
+                            "items": [
+                              {
+                                "kind": "Var",
+                                "name": "sum",
+                                "span": {
+                                  "endOffset": 1782,
+                                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                  "startOffset": 1779
+                                }
+                              },
+                              {
+                                "kind": "Var",
+                                "name": "value",
+                                "span": {
+                                  "endOffset": 1788,
+                                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                  "startOffset": 1783
+                                }
+                              }
+                            ],
+                            "kind": "Vector",
+                            "span": {
+                              "endOffset": 1789,
+                              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                              "startOffset": 1778
+                            }
+                          },
+                          {
+                            "items": [
+                              {
+                                "kind": "Var",
+                                "name": "+",
+                                "span": {
+                                  "endOffset": 1792,
+                                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                  "startOffset": 1791
+                                }
+                              },
+                              {
+                                "kind": "Var",
+                                "name": "sum",
+                                "span": {
+                                  "endOffset": 1796,
+                                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                  "startOffset": 1793
+                                }
+                              },
+                              {
+                                "kind": "Var",
+                                "name": "value",
+                                "span": {
+                                  "endOffset": 1802,
+                                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                  "startOffset": 1797
+                                }
+                              }
+                            ],
+                            "kind": "List",
+                            "span": {
+                              "endOffset": 1803,
+                              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                              "startOffset": 1790
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1804,
+                          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                          "startOffset": 1774
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1805,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 1694
+                    }
+                  }
+                }
+              }
+            ],
+            "body": {
+              "effect": {
+                "errors": [],
+                "kind": "Effect",
+                "requirements": [],
+                "span": {
+                  "endOffset": 1629,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 1614
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "Number",
+                  "span": {
+                    "endOffset": 1628,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1622
+                  }
+                }
+              },
+              "kind": "Succeed",
+              "span": {
+                "endOffset": 1872,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1811
+              },
+              "value": {
+                "items": [
+                  {
+                    "kind": "Var",
+                    "name": "if",
+                    "span": {
+                      "endOffset": 1823,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 1821
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "empty?",
+                        "span": {
+                          "endOffset": 1831,
+                          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                          "startOffset": 1825
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "readings",
+                        "span": {
+                          "endOffset": 1840,
+                          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                          "startOffset": 1832
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1841,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 1824
+                    }
+                  },
+                  {
+                    "kind": "Literal",
+                    "span": {
+                      "endOffset": 1843,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 1842
+                    },
+                    "value": 0
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "/",
+                        "span": {
+                          "endOffset": 1846,
+                          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                          "startOffset": 1845
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "total",
+                        "span": {
+                          "endOffset": 1852,
+                          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                          "startOffset": 1847
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "count",
+                            "span": {
+                              "endOffset": 1859,
+                              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                              "startOffset": 1854
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "readings",
+                            "span": {
+                              "endOffset": 1868,
+                              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                              "startOffset": 1860
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1869,
+                          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                          "startOffset": 1853
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1870,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 1844
+                    }
+                  }
+                ],
+                "kind": "List",
+                "span": {
+                  "endOffset": 1871,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 1820
+                }
+              }
+            },
+            "effect": {
+              "errors": [],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 1629,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1614
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "Number",
+                "span": {
+                  "endOffset": 1628,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 1622
+                }
+              }
+            },
+            "kind": "Do",
+            "span": {
+              "endOffset": 1873,
+              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+              "startOffset": 1665
+            }
+          },
+          "effect": {
+            "errors": [],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 1629,
+              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+              "startOffset": 1614
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "Number",
+              "span": {
+                "endOffset": 1628,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1622
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "average",
+          "params": [
+            {
+              "name": "readings",
+              "type": {
+                "item": {
+                  "kind": "Ref",
+                  "name": "Reading",
+                  "span": {
+                    "endOffset": 1612,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1605
+                  }
+                },
+                "kind": "Array"
+              }
+            }
+          ]
+        },
+        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 1874,
+          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+          "startOffset": 1632
+        }
+      },
+      {
+        "formIndex": 11,
+        "payload": {
+          "authority": {
+            "capabilities": [
+              "Sensors",
+              "Sink"
+            ]
+          },
+          "body": {
+            "effect": {
+              "errors": [
+                "SensorOffline"
+              ],
+              "kind": "Effect",
+              "requirements": [
+                "Sensors",
+                "Sink"
+              ],
+              "span": {
+                "endOffset": 1288,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1244
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "Unit",
+                "span": {
+                  "endOffset": 1256,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 1252
+                }
+              }
+            },
+            "kind": "Pure",
+            "span": {
+              "endOffset": 1582,
+              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+              "startOffset": 1334
+            },
+            "value": {
+              "items": [
+                {
+                  "kind": "Var",
+                  "name": "stream-run-for-each",
+                  "span": {
+                    "endOffset": 1354,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1335
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "stream-take",
+                      "span": {
+                        "endOffset": 1371,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1360
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "stream-map-effect",
+                          "span": {
+                            "endOffset": 1396,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1379
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "stream-of",
+                              "span": {
+                                "endOffset": 1415,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1406
+                              }
+                            },
+                            {
+                              "kind": "Var",
+                              "name": "sensors",
+                              "span": {
+                                "endOffset": 1423,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1416
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 1424,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1405
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "fn",
+                              "span": {
+                                "endOffset": 1436,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1434
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "sensor",
+                                  "span": {
+                                    "endOffset": 1444,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1438
+                                  }
+                                }
+                              ],
+                              "kind": "Vector",
+                              "span": {
+                                "endOffset": 1445,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1437
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "Sensors.read",
+                                  "span": {
+                                    "endOffset": 1459,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1447
+                                  }
+                                },
+                                {
+                                  "kind": "Var",
+                                  "name": "sensor",
+                                  "span": {
+                                    "endOffset": 1466,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1460
+                                  }
+                                }
+                              ],
+                              "kind": "List",
+                              "span": {
+                                "endOffset": 1467,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1446
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 1468,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1433
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1469,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1378
+                      }
+                    },
+                    {
+                      "kind": "Var",
+                      "name": "limit",
+                      "span": {
+                        "endOffset": 1481,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1476
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 1482,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1359
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "fn",
+                      "span": {
+                        "endOffset": 1490,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1488
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "reading",
+                          "span": {
+                            "endOffset": 1505,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1498
+                          }
+                        }
+                      ],
+                      "kind": "Vector",
+                      "span": {
+                        "endOffset": 1506,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1497
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "Sink.write",
+                          "span": {
+                            "endOffset": 1524,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1514
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "str",
+                              "span": {
+                                "endOffset": 1529,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1526
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "get",
+                                  "span": {
+                                    "endOffset": 1534,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1531
+                                  }
+                                },
+                                {
+                                  "kind": "Var",
+                                  "name": "reading",
+                                  "span": {
+                                    "endOffset": 1542,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1535
+                                  }
+                                },
+                                {
+                                  "kind": "Expr",
+                                  "source": {
+                                    "kind": "Symbol",
+                                    "name": ":sensor"
+                                  },
+                                  "span": {
+                                    "endOffset": 1550,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1543
+                                  }
+                                }
+                              ],
+                              "kind": "List",
+                              "span": {
+                                "endOffset": 1551,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1530
+                              }
+                            },
+                            {
+                              "kind": "Literal",
+                              "span": {
+                                "endOffset": 1555,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1552
+                              },
+                              "value": "="
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "get",
+                                  "span": {
+                                    "endOffset": 1560,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1557
+                                  }
+                                },
+                                {
+                                  "kind": "Var",
+                                  "name": "reading",
+                                  "span": {
+                                    "endOffset": 1568,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1561
+                                  }
+                                },
+                                {
+                                  "kind": "Expr",
+                                  "source": {
+                                    "kind": "Symbol",
+                                    "name": ":celsius"
+                                  },
+                                  "span": {
+                                    "endOffset": 1577,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1569
+                                  }
+                                }
+                              ],
+                              "kind": "List",
+                              "span": {
+                                "endOffset": 1578,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1556
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 1579,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1525
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1580,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1513
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 1581,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1487
+                  }
+                }
+              ],
+              "kind": "List",
+              "span": {
+                "endOffset": 1582,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1334
+              }
+            }
+          },
+          "effect": {
+            "errors": [
+              "SensorOffline"
+            ],
+            "kind": "Effect",
+            "requirements": [
+              "Sensors",
+              "Sink"
+            ],
+            "span": {
+              "endOffset": 1288,
+              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+              "startOffset": 1244
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "Unit",
+              "span": {
+                "endOffset": 1256,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1252
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "export-first",
+          "params": [
+            {
+              "name": "sensors",
+              "type": {
+                "item": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 1238,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1232
+                  }
+                },
+                "kind": "Array"
+              }
+            },
+            {
+              "name": "limit",
+              "type": {
+                "kind": "Primitive",
+                "name": "Int",
+                "span": {
+                  "endOffset": 1243,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 1240
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 1583,
+          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+          "startOffset": 1291
+        }
+      },
+      {
+        "formIndex": 7,
+        "payload": {
+          "authority": {
+            "capabilities": [
+              "Sensors.read"
+            ]
+          },
+          "body": {
+            "effect": {
+              "errors": [
+                "SensorOffline"
+              ],
+              "kind": "Effect",
+              "requirements": [
+                "Sensors.read"
+              ],
+              "span": {
+                "endOffset": 751,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 697
+              },
+              "success": {
+                "item": {
+                  "kind": "Ref",
+                  "name": "Reading",
+                  "span": {
+                    "endOffset": 718,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 711
+                  }
+                },
+                "kind": "Array"
+              }
+            },
+            "kind": "Pure",
+            "span": {
+              "endOffset": 1007,
+              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+              "startOffset": 801
+            },
+            "value": {
+              "items": [
+                {
+                  "kind": "Var",
+                  "name": "stream-run-collect",
+                  "span": {
+                    "endOffset": 820,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 802
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "stream-filter",
+                      "span": {
+                        "endOffset": 839,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 826
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "stream-map-effect",
+                          "span": {
+                            "endOffset": 864,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 847
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "stream-of",
+                              "span": {
+                                "endOffset": 883,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 874
+                              }
+                            },
+                            {
+                              "kind": "Var",
+                              "name": "sensors",
+                              "span": {
+                                "endOffset": 891,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 884
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 892,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 873
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "fn",
+                              "span": {
+                                "endOffset": 904,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 902
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "sensor",
+                                  "span": {
+                                    "endOffset": 912,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 906
+                                  }
+                                }
+                              ],
+                              "kind": "Vector",
+                              "span": {
+                                "endOffset": 913,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 905
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "Sensors.read",
+                                  "span": {
+                                    "endOffset": 927,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 915
+                                  }
+                                },
+                                {
+                                  "kind": "Var",
+                                  "name": "sensor",
+                                  "span": {
+                                    "endOffset": 934,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 928
+                                  }
+                                }
+                              ],
+                              "kind": "List",
+                              "span": {
+                                "endOffset": 935,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 914
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 936,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 901
+                          }
+                        },
+                        {
+                          "kind": "Literal",
+                          "span": {
+                            "endOffset": 946,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 945
+                          },
+                          "value": 2
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 947,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 846
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "fn",
+                          "span": {
+                            "endOffset": 957,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 955
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "reading",
+                              "span": {
+                                "endOffset": 966,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 959
+                              }
+                            }
+                          ],
+                          "kind": "Vector",
+                          "span": {
+                            "endOffset": 967,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 958
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": ">",
+                              "span": {
+                                "endOffset": 970,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 969
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "get",
+                                  "span": {
+                                    "endOffset": 975,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 972
+                                  }
+                                },
+                                {
+                                  "kind": "Var",
+                                  "name": "reading",
+                                  "span": {
+                                    "endOffset": 983,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 976
+                                  }
+                                },
+                                {
+                                  "kind": "Expr",
+                                  "source": {
+                                    "kind": "Symbol",
+                                    "name": ":celsius"
+                                  },
+                                  "span": {
+                                    "endOffset": 992,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 984
+                                  }
+                                }
+                              ],
+                              "kind": "List",
+                              "span": {
+                                "endOffset": 993,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 971
+                              }
+                            },
+                            {
+                              "kind": "Var",
+                              "name": "threshold",
+                              "span": {
+                                "endOffset": 1003,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 994
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 1004,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 968
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1005,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 954
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 1006,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 825
+                  }
+                }
+              ],
+              "kind": "List",
+              "span": {
+                "endOffset": 1007,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 801
+              }
+            }
+          },
+          "effect": {
+            "errors": [
+              "SensorOffline"
+            ],
+            "kind": "Effect",
+            "requirements": [
+              "Sensors.read"
+            ],
+            "span": {
+              "endOffset": 751,
+              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+              "startOffset": 697
+            },
+            "success": {
+              "item": {
+                "kind": "Ref",
+                "name": "Reading",
+                "span": {
+                  "endOffset": 718,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 711
+                }
+              },
+              "kind": "Array"
+            }
+          },
+          "kind": "EffectDef",
+          "name": "hot-readings",
+          "params": [
+            {
+              "name": "sensors",
+              "type": {
+                "item": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 680,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 674
+                  }
+                },
+                "kind": "Array"
+              }
+            },
+            {
+              "name": "threshold",
+              "type": {
+                "kind": "Primitive",
+                "name": "Number",
+                "span": {
+                  "endOffset": 692,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 686
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 1008,
+          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+          "startOffset": 754
+        }
+      },
+      {
+        "formIndex": 9,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "effect": {
+              "errors": [],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 1047,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1035
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "Int",
+                "span": {
+                  "endOffset": 1046,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 1043
+                }
+              }
+            },
+            "kind": "Pure",
+            "span": {
+              "endOffset": 1200,
+              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+              "startOffset": 1083
+            },
+            "value": {
+              "items": [
+                {
+                  "kind": "Var",
+                  "name": "stream-run-fold",
+                  "span": {
+                    "endOffset": 1099,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1084
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "stream-map",
+                      "span": {
+                        "endOffset": 1115,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1105
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "stream-range",
+                          "span": {
+                            "endOffset": 1129,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1117
+                          }
+                        },
+                        {
+                          "kind": "Literal",
+                          "span": {
+                            "endOffset": 1131,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1130
+                          },
+                          "value": 1
+                        },
+                        {
+                          "kind": "Var",
+                          "name": "n",
+                          "span": {
+                            "endOffset": 1133,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1132
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1134,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1116
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "fn",
+                          "span": {
+                            "endOffset": 1138,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1136
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "i",
+                              "span": {
+                                "endOffset": 1141,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1140
+                              }
+                            }
+                          ],
+                          "kind": "Vector",
+                          "span": {
+                            "endOffset": 1142,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1139
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "*",
+                              "span": {
+                                "endOffset": 1145,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1144
+                              }
+                            },
+                            {
+                              "kind": "Var",
+                              "name": "i",
+                              "span": {
+                                "endOffset": 1147,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1146
+                              }
+                            },
+                            {
+                              "kind": "Var",
+                              "name": "i",
+                              "span": {
+                                "endOffset": 1149,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1148
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 1150,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1143
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1151,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1135
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 1152,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1104
+                  }
+                },
+                {
+                  "kind": "Literal",
+                  "span": {
+                    "endOffset": 1158,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1157
+                  },
+                  "value": 0
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "fn",
+                      "span": {
+                        "endOffset": 1166,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1164
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "total",
+                          "span": {
+                            "endOffset": 1173,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1168
+                          }
+                        },
+                        {
+                          "kind": "Var",
+                          "name": "square",
+                          "span": {
+                            "endOffset": 1180,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1174
+                          }
+                        }
+                      ],
+                      "kind": "Vector",
+                      "span": {
+                        "endOffset": 1181,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1167
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "+",
+                          "span": {
+                            "endOffset": 1184,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1183
+                          }
+                        },
+                        {
+                          "kind": "Var",
+                          "name": "total",
+                          "span": {
+                            "endOffset": 1190,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1185
+                          }
+                        },
+                        {
+                          "kind": "Var",
+                          "name": "square",
+                          "span": {
+                            "endOffset": 1197,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1191
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1198,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1182
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 1199,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1163
+                  }
+                }
+              ],
+              "kind": "List",
+              "span": {
+                "endOffset": 1200,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1083
+              }
+            }
+          },
+          "effect": {
+            "errors": [],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 1047,
+              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+              "startOffset": 1035
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "Int",
+              "span": {
+                "endOffset": 1046,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1043
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "sum-of-squares",
+          "params": [
+            {
+              "name": "n",
+              "type": {
+                "kind": "Primitive",
+                "name": "Int",
+                "span": {
+                  "endOffset": 1034,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 1031
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 1201,
+          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+          "startOffset": 1050
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "kind": "ErrorDef",
+          "name": "SensorOffline",
+          "schema": {
+            "fields": [
+              {
+                "name": "sensor",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 337,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 331
+                  }
+                },
+                "span": {
+                  "endOffset": 337,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 331
+                }
+              }
+            ],
+            "kind": "Struct"
+          }
+        },
+        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 339,
+          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+          "startOffset": 301
+        }
+      },
+      {
+        "formIndex": 5,
+        "payload": {
+          "body": {
+            "items": [
+              {
+                "kind": "Var",
+                "name": "stream-map",
+                "span": {
+                  "endOffset": 578,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 568
+                }
+              },
+              {
+                "items": [
+                  {
+                    "kind": "Var",
+                    "name": "stream-of",
+                    "span": {
+                      "endOffset": 589,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 580
+                    }
+                  },
+                  {
+                    "kind": "Var",
+                    "name": "readings",
+                    "span": {
+                      "endOffset": 598,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 590
+                    }
+                  }
+                ],
+                "kind": "List",
+                "span": {
+                  "endOffset": 599,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 579
+                }
+              },
+              {
+                "items": [
+                  {
+                    "kind": "Var",
+                    "name": "fn",
+                    "span": {
+                      "endOffset": 603,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 601
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "reading",
+                        "span": {
+                          "endOffset": 612,
+                          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                          "startOffset": 605
+                        }
+                      }
+                    ],
+                    "kind": "Vector",
+                    "span": {
+                      "endOffset": 613,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 604
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "get",
+                        "span": {
+                          "endOffset": 618,
+                          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                          "startOffset": 615
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "reading",
+                        "span": {
+                          "endOffset": 626,
+                          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                          "startOffset": 619
+                        }
+                      },
+                      {
+                        "kind": "Expr",
+                        "source": {
+                          "kind": "Symbol",
+                          "name": ":celsius"
+                        },
+                        "span": {
+                          "endOffset": 635,
+                          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                          "startOffset": 627
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 636,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 614
+                    }
+                  }
+                ],
+                "kind": "List",
+                "span": {
+                  "endOffset": 637,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 600
+                }
+              }
+            ],
+            "kind": "List",
+            "span": {
+              "endOffset": 638,
+              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+              "startOffset": 567
+            }
+          },
+          "kind": "FunctionDef",
+          "name": "celsius-values",
+          "params": [
+            {
+              "name": "readings",
+              "type": {
+                "item": {
+                  "kind": "Ref",
+                  "name": "Reading",
+                  "span": {
+                    "endOffset": 501,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 494
+                  }
+                },
+                "kind": "Array"
+              }
+            }
+          ],
+          "returns": {
+            "errors": [],
+            "item": {
+              "kind": "Primitive",
+              "name": "Number",
+              "span": {
+                "endOffset": 517,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 511
+              }
+            },
+            "kind": "Stream",
+            "requirements": [],
+            "span": {
+              "endOffset": 524,
+              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+              "startOffset": 503
+            }
+          }
+        },
+        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 639,
+          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+          "startOffset": 527
+        }
+      },
+      {
+        "formIndex": 0,
+        "payload": {
+          "kind": "SchemaDef",
+          "name": "Reading",
+          "schema": {
+            "fields": [
+              {
+                "name": "sensor",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 282,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 276
+                  }
+                },
+                "span": {
+                  "endOffset": 282,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 276
+                }
+              },
+              {
+                "name": "celsius",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "Number",
+                  "span": {
+                    "endOffset": 298,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 292
+                  }
+                },
+                "span": {
+                  "endOffset": 298,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 292
+                }
+              }
+            ],
+            "kind": "Struct",
+            "span": {
+              "endOffset": 299,
+              "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+              "startOffset": 267
+            }
+          }
+        },
+        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 300,
+          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+          "startOffset": 253
+        }
+      },
+      {
+        "formIndex": 2,
+        "payload": {
+          "kind": "ServiceDef",
+          "methods": [
+            {
+              "effect": {
+                "errors": [
+                  "SensorOffline"
+                ],
+                "kind": "Effect",
+                "requirements": [
+                  "Sensors.read"
+                ],
+                "span": {
+                  "endOffset": 411,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 376
+                },
+                "success": {
+                  "kind": "Ref",
+                  "name": "Reading",
+                  "span": {
+                    "endOffset": 391,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 384
+                  }
+                }
+              },
+              "name": "read",
+              "params": [
+                {
+                  "name": "arg0",
+                  "type": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 375,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 369
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "name": "Sensors"
+        },
+        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 414,
+          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+          "startOffset": 340
+        }
+      },
+      {
+        "formIndex": 3,
+        "payload": {
+          "kind": "ServiceDef",
+          "methods": [
+            {
+              "effect": {
+                "errors": [],
+                "kind": "Effect",
+                "requirements": [
+                  "Sink.write"
+                ],
+                "span": {
+                  "endOffset": 462,
+                  "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                  "startOffset": 449
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "Unit",
+                  "span": {
+                    "endOffset": 461,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 457
+                  }
+                }
+              },
+              "name": "write",
+              "params": [
+                {
+                  "name": "arg0",
+                  "type": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 448,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 442
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "name": "Sink"
+        },
+        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 465,
+          "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+          "startOffset": 415
+        }
+      }
+    ],
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 258,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 254
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 266,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 259
+              },
+              "value": "Reading"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 275,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 268
+                    },
+                    "value": ":sensor"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 282,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 276
+                    },
+                    "value": "String"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 291,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 283
+                    },
+                    "value": ":celsius"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 298,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 292
+                    },
+                    "value": "Number"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 299,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 267
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 300,
+            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+            "startOffset": 253
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 307,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 302
+              },
+              "value": "error"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 321,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 308
+              },
+              "value": "SensorOffline"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 330,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 323
+                    },
+                    "value": ":sensor"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 337,
+                      "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                      "startOffset": 331
+                    },
+                    "value": "String"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 338,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 322
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 339,
+            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+            "startOffset": 301
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 348,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 341
+              },
+              "value": "service"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 356,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 349
+              },
+              "value": "Sensors"
+            },
+            {
+              "items": [
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 359,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 358
+                  },
+                  "value": ":"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 364,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 360
+                  },
+                  "value": "read"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 368,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 366
+                      },
+                      "value": "->"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 375,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 369
+                      },
+                      "value": "String"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 383,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 377
+                          },
+                          "value": "Effect"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 391,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 384
+                          },
+                          "value": "Reading"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 406,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 393
+                              },
+                              "value": "SensorOffline"
+                            }
+                          ],
+                          "kind": "vector",
+                          "span": {
+                            "endOffset": 407,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 392
+                          }
+                        },
+                        {
+                          "items": [],
+                          "kind": "vector",
+                          "span": {
+                            "endOffset": 410,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 408
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 411,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 376
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 412,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 365
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 413,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 357
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 414,
+            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+            "startOffset": 340
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 423,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 416
+              },
+              "value": "service"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 428,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 424
+              },
+              "value": "Sink"
+            },
+            {
+              "items": [
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 431,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 430
+                  },
+                  "value": ":"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 437,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 432
+                  },
+                  "value": "write"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 441,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 439
+                      },
+                      "value": "->"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 448,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 442
+                      },
+                      "value": "String"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 456,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 450
+                          },
+                          "value": "Effect"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 461,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 457
+                          },
+                          "value": "Unit"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 462,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 449
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 463,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 438
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 464,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 429
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 465,
+            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+            "startOffset": 415
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 468,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 467
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 483,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 469
+              },
+              "value": "celsius-values"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 487,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 485
+                  },
+                  "value": "->"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 493,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 489
+                      },
+                      "value": "List"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 501,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 494
+                      },
+                      "value": "Reading"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 502,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 488
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 510,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 504
+                      },
+                      "value": "Stream"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 517,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 511
+                      },
+                      "value": "Number"
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 520,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 518
+                      }
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 523,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 521
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 524,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 503
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 525,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 484
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 526,
+            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+            "startOffset": 466
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 534,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 528
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 551,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 537
+              },
+              "value": "celsius-values"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 563,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 555
+                  },
+                  "value": "readings"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 564,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 554
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 578,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 568
+                  },
+                  "value": "stream-map"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 589,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 580
+                      },
+                      "value": "stream-of"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 598,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 590
+                      },
+                      "value": "readings"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 599,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 579
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 603,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 601
+                      },
+                      "value": "fn"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 612,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 605
+                          },
+                          "value": "reading"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 613,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 604
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 618,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 615
+                          },
+                          "value": "get"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 626,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 619
+                          },
+                          "value": "reading"
+                        },
+                        {
+                          "kind": "keyword",
+                          "span": {
+                            "endOffset": 635,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 627
+                          },
+                          "value": ":celsius"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 636,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 614
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 637,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 600
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 638,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 567
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 639,
+            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+            "startOffset": 527
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 642,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 641
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 657,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 645
+              },
+              "value": "hot-readings"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 663,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 661
+                  },
+                  "value": "->"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 673,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 669
+                      },
+                      "value": "List"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 680,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 674
+                      },
+                      "value": "String"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 681,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 668
+                  }
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 692,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 686
+                  },
+                  "value": "Number"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 704,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 698
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 710,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 706
+                          },
+                          "value": "List"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 718,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 711
+                          },
+                          "value": "Reading"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 719,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 705
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 734,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 721
+                          },
+                          "value": "SensorOffline"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 735,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 720
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 749,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 737
+                          },
+                          "value": "Sensors.read"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 750,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 736
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 751,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 697
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 752,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 660
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 753,
+            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+            "startOffset": 640
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 761,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 755
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 776,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 764
+              },
+              "value": "hot-readings"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 787,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 780
+                  },
+                  "value": "sensors"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 797,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 788
+                  },
+                  "value": "threshold"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 798,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 779
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 820,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 802
+                  },
+                  "value": "stream-run-collect"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 839,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 826
+                      },
+                      "value": "stream-filter"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 864,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 847
+                          },
+                          "value": "stream-map-effect"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 883,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 874
+                              },
+                              "value": "stream-of"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 891,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 884
+                              },
+                              "value": "sensors"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 892,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 873
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 904,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 902
+                              },
+                              "value": "fn"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 912,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 906
+                                  },
+                                  "value": "sensor"
+                                }
+                              ],
+                              "kind": "vector",
+                              "span": {
+                                "endOffset": 913,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 905
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 927,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 915
+                                  },
+                                  "value": "Sensors.read"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 934,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 928
+                                  },
+                                  "value": "sensor"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 935,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 914
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 936,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 901
+                          }
+                        },
+                        {
+                          "kind": "int",
+                          "span": {
+                            "endOffset": 946,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 945
+                          },
+                          "value": 2
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 947,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 846
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 957,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 955
+                          },
+                          "value": "fn"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 966,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 959
+                              },
+                              "value": "reading"
+                            }
+                          ],
+                          "kind": "vector",
+                          "span": {
+                            "endOffset": 967,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 958
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 970,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 969
+                              },
+                              "value": ">"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 975,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 972
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 983,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 976
+                                  },
+                                  "value": "reading"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "span": {
+                                    "endOffset": 992,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 984
+                                  },
+                                  "value": ":celsius"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 993,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 971
+                              }
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1003,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 994
+                              },
+                              "value": "threshold"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1004,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 968
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1005,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 954
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1006,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 825
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1007,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 801
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1008,
+            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+            "startOffset": 754
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1011,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1010
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1026,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1012
+              },
+              "value": "sum-of-squares"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1030,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1028
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1034,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1031
+                  },
+                  "value": "Int"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1042,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1036
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1046,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1043
+                      },
+                      "value": "Int"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1047,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1035
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1048,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1027
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1049,
+            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+            "startOffset": 1009
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1057,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1051
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1074,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1060
+              },
+              "value": "sum-of-squares"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1079,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1078
+                  },
+                  "value": "n"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1080,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1077
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1099,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1084
+                  },
+                  "value": "stream-run-fold"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1115,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1105
+                      },
+                      "value": "stream-map"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1129,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1117
+                          },
+                          "value": "stream-range"
+                        },
+                        {
+                          "kind": "int",
+                          "span": {
+                            "endOffset": 1131,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1130
+                          },
+                          "value": 1
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1133,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1132
+                          },
+                          "value": "n"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1134,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1116
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1138,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1136
+                          },
+                          "value": "fn"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1141,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1140
+                              },
+                              "value": "i"
+                            }
+                          ],
+                          "kind": "vector",
+                          "span": {
+                            "endOffset": 1142,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1139
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1145,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1144
+                              },
+                              "value": "*"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1147,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1146
+                              },
+                              "value": "i"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1149,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1148
+                              },
+                              "value": "i"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1150,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1143
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1151,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1135
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1152,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1104
+                  }
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 1158,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1157
+                  },
+                  "value": 0
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1166,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1164
+                      },
+                      "value": "fn"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1173,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1168
+                          },
+                          "value": "total"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1180,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1174
+                          },
+                          "value": "square"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1181,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1167
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1184,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1183
+                          },
+                          "value": "+"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1190,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1185
+                          },
+                          "value": "total"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1197,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1191
+                          },
+                          "value": "square"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1198,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1182
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1199,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1163
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1200,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1083
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1201,
+            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+            "startOffset": 1050
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1204,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1203
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1219,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1207
+              },
+              "value": "export-first"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1225,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1223
+                  },
+                  "value": "->"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1231,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1227
+                      },
+                      "value": "List"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1238,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1232
+                      },
+                      "value": "String"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1239,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1226
+                  }
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1243,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1240
+                  },
+                  "value": "Int"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1251,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1245
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1256,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1252
+                      },
+                      "value": "Unit"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1271,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1258
+                          },
+                          "value": "SensorOffline"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1272,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1257
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1281,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1274
+                          },
+                          "value": "Sensors"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1286,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1282
+                          },
+                          "value": "Sink"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1287,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1273
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1288,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1244
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1289,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1222
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1290,
+            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+            "startOffset": 1202
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1298,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1292
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1313,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1301
+              },
+              "value": "export-first"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1324,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1317
+                  },
+                  "value": "sensors"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1330,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1325
+                  },
+                  "value": "limit"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1331,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1316
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1354,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1335
+                  },
+                  "value": "stream-run-for-each"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1371,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1360
+                      },
+                      "value": "stream-take"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1396,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1379
+                          },
+                          "value": "stream-map-effect"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1415,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1406
+                              },
+                              "value": "stream-of"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1423,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1416
+                              },
+                              "value": "sensors"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1424,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1405
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1436,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1434
+                              },
+                              "value": "fn"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1444,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1438
+                                  },
+                                  "value": "sensor"
+                                }
+                              ],
+                              "kind": "vector",
+                              "span": {
+                                "endOffset": 1445,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1437
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1459,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1447
+                                  },
+                                  "value": "Sensors.read"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1466,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1460
+                                  },
+                                  "value": "sensor"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 1467,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1446
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1468,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1433
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1469,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1378
+                      }
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1481,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1476
+                      },
+                      "value": "limit"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1482,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1359
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1490,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1488
+                      },
+                      "value": "fn"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1505,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1498
+                          },
+                          "value": "reading"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1506,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1497
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1524,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1514
+                          },
+                          "value": "Sink.write"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1529,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1526
+                              },
+                              "value": "str"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1534,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1531
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1542,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1535
+                                  },
+                                  "value": "reading"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "span": {
+                                    "endOffset": 1550,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1543
+                                  },
+                                  "value": ":sensor"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 1551,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1530
+                              }
+                            },
+                            {
+                              "kind": "string",
+                              "span": {
+                                "endOffset": 1555,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1552
+                              },
+                              "value": "="
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1560,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1557
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1568,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1561
+                                  },
+                                  "value": "reading"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "span": {
+                                    "endOffset": 1577,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1569
+                                  },
+                                  "value": ":celsius"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 1578,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1556
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1579,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1525
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1580,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1513
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1581,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1487
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1582,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1334
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1583,
+            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+            "startOffset": 1291
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1586,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1585
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1594,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1587
+              },
+              "value": "average"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1598,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1596
+                  },
+                  "value": "->"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1604,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1600
+                      },
+                      "value": "List"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1612,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1605
+                      },
+                      "value": "Reading"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1613,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1599
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1621,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1615
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1628,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1622
+                      },
+                      "value": "Number"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1629,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1614
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1630,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1595
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1631,
+            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+            "startOffset": 1584
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1639,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1633
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1649,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1642
+              },
+              "value": "average"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1661,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1653
+                  },
+                  "value": "readings"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1662,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1652
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1669,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1666
+                  },
+                  "value": "do!"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1687,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1682
+                      },
+                      "value": "total"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1710,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1695
+                          },
+                          "value": "stream-run-fold"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1734,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1720
+                              },
+                              "value": "celsius-values"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1743,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1735
+                              },
+                              "value": "readings"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1744,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1719
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1755,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1754
+                              },
+                              "value": ":"
+                            },
+                            {
+                              "kind": "int",
+                              "span": {
+                                "endOffset": 1757,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1756
+                              },
+                              "value": 0
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1764,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1758
+                              },
+                              "value": "Number"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1765,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1753
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1777,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1775
+                              },
+                              "value": "fn"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1782,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1779
+                                  },
+                                  "value": "sum"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1788,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1783
+                                  },
+                                  "value": "value"
+                                }
+                              ],
+                              "kind": "vector",
+                              "span": {
+                                "endOffset": 1789,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1778
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1792,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1791
+                                  },
+                                  "value": "+"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1796,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1793
+                                  },
+                                  "value": "sum"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1802,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1797
+                                  },
+                                  "value": "value"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 1803,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1790
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1804,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1774
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1805,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1694
+                      }
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 1806,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1674
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1819,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1812
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1823,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1821
+                          },
+                          "value": "if"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1831,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1825
+                              },
+                              "value": "empty?"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1840,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1832
+                              },
+                              "value": "readings"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1841,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1824
+                          }
+                        },
+                        {
+                          "kind": "int",
+                          "span": {
+                            "endOffset": 1843,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1842
+                          },
+                          "value": 0
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1846,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1845
+                              },
+                              "value": "/"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1852,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1847
+                              },
+                              "value": "total"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1859,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1854
+                                  },
+                                  "value": "count"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1868,
+                                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                    "startOffset": 1860
+                                  },
+                                  "value": "readings"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 1869,
+                                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                                "startOffset": 1853
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1870,
+                            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                            "startOffset": 1844
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1871,
+                        "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                        "startOffset": 1820
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1872,
+                    "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                    "startOffset": 1811
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1873,
+                "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+                "startOffset": 1665
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1874,
+            "sourceId": "engine-parity/effect-typescript/stream-pipeline",
+            "startOffset": 1632
+          }
+        }
+      ],
+      "diagnostics": []
+    }
+  },
+  "version": 1
+}

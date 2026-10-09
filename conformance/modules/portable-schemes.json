@@ -1,0 +1,85 @@
+[
+  {
+    "exports": [
+      {
+        "constructors": [],
+        "identity": {
+          "declaration": "name",
+          "moduleId": "functions.forma"
+        },
+        "kind": "value",
+        "name": "name",
+        "scheme": {
+          "parameters": [
+            "a0",
+            "a1"
+          ],
+          "type": [
+            "->",
+            {
+              "fields": [
+                [
+                  ":name",
+                  "a0"
+                ],
+                [
+                  "&",
+                  "a1"
+                ]
+              ]
+            },
+            "a0"
+          ]
+        },
+        "symbol": "name__forma_66756e6374696f6e732e666f726d61_d6e616d65"
+      },
+      {
+        "constructors": [],
+        "identity": {
+          "declaration": "rest",
+          "moduleId": "functions.forma"
+        },
+        "kind": "value",
+        "name": "rest",
+        "scheme": {
+          "parameters": [
+            "a0"
+          ],
+          "type": [
+            "->",
+            "&",
+            "a0",
+            [
+              "List",
+              "a0"
+            ]
+          ]
+        },
+        "symbol": "rest__forma_66756e6374696f6e732e666f726d61_d72657374"
+      },
+      {
+        "constructors": [],
+        "identity": {
+          "declaration": "second",
+          "moduleId": "functions.forma"
+        },
+        "kind": "value",
+        "name": "second",
+        "scheme": {
+          "parameters": [
+            "a0",
+            "a1"
+          ],
+          "type": [
+            "->",
+            "a0",
+            "a1",
+            "a1"
+          ]
+        },
+        "symbol": "second__forma_66756e6374696f6e732e666f726d61_d7365636f6e64"
+      }
+    ],
+    "moduleId": "functions.forma"
+  }
+]

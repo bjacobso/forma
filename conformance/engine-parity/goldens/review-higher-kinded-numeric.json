@@ -1,0 +1,11 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "review-higher-kinded-numeric",
+  "outputs": {
+    "typecheck": {
+      "diagnostics": [],
+      "type": "List<Number>"
+    }
+  },
+  "version": 1
+}
