@@ -2,6 +2,7 @@ import { ordersSource, ordersUndeclaredSource, strictSource } from "../effectPag
 import { contractSource, undeclaredCapabilitySource } from "../pipelines/sources";
 import { getPipeline } from "../pipelines";
 import type { EnginePassName } from "../engine/protocol";
+import { marketDeskSource, marketDeskMissingModelSource } from "../pipelines/marketDesk";
 
 export interface WorkbenchExample {
   id: string;
@@ -20,6 +21,9 @@ export const workbenchExamples: readonly WorkbenchExample[] = [
     dialect: "effect", passes: ["parse", "typecheck"] },
   { id: "orders", title: "Order payments", file: "orders.forma", source: ordersSource,
     broken: ordersUndeclaredSource, prompt: "Remove PaymentDeclined from the signature. Watch the compiler find the call that can fail.",
+    dialect: "effect", passes: ["parse", "typecheck"] },
+  { id: "market-desk", title: "Market desk", file: "market-desk.forma", source: marketDeskSource,
+    broken: marketDeskMissingModelSource, prompt: "Remove LanguageModel from ask-market's requirements. The composed layer still needs it.",
     dialect: "effect", passes: ["parse", "typecheck"] },
   { id: "inference", title: "Type inference", file: "price.forma",
     source: '(fn [order]\n  (+ (get order :subtotal) (get order :tax)))',

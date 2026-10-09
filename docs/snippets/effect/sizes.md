@@ -4,6 +4,7 @@
 | `config-and-logging` | 46 | 38 | 0.83× |
 | `crud-users` | 139 | 158 | 1.14× |
 | `edge-cases` | 106 | 148 | 1.40× |
+| `market-desk` | 24 | 81 | 3.38× |
 | `multi-service-checkout` | 125 | 155 | 1.24× |
 | `ontology-actions` | 25 | 52 | 2.08× |
 | `operational-effects` | 11 | 24 | 2.18× |
@@ -13,4 +14,4 @@
 | `stream-pipeline` | 60 | 66 | 1.10× |
 | `surface-review` | 45 | 91 | 2.02× |
 | `typed-errors` | 59 | 76 | 1.29× |
-| **All cases** | **993** | **1172** | **1.18×** |
+| **All cases** | **1017** | **1253** | **1.23×** |

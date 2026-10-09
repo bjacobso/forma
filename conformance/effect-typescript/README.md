@@ -48,6 +48,7 @@ For each positive case the runner checks that:
 | --- | --- |
 | `crud-users` | Brands, enums, optional fields, tagged errors, a repository service with a Forma `Ref`-backed layer, CRUD operations, `match` on `Option`, `catch` |
 | `multi-service-checkout` | Six services, layers that depend on services, operations called from layer methods (captured context), `layer-provide`/`layer-merge`, layer signatures, `provide` |
+| `market-desk` | Market feed and model interfaces, layers hiding internal services, typed adapter failures, and a hand-written HTTP boundary using generated schemas |
 | `resource-scope` | `acquire-release`, `scoped`, `add-finalizer`, `ensuring`, a layer holding a scoped resource; release order on success and failure |
 | `concurrent-workflow` | `all` over records and tuples, bounded `for-each`, `retry`, `race`, `timeout` and `TimeoutError`, `fork`/`join`, `sleep`, `Ref` |
 | `typed-errors` | `catchTags`, catch-all, `map-error`, `or-else-succeed`, `option`, `result` matched as data, `or-die` |

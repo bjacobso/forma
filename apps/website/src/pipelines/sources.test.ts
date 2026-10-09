@@ -4,6 +4,8 @@ import { describe, expect, test } from "vitest";
 import { expand, parse, typecheck } from "@formalang/ts/engine";
 import { getPipeline } from ".";
 import { schemaDeclarations } from "./canonicalIr";
+import { marketDeskSource, marketDeskMissingModelSource } from "./marketDesk";
+import { compileEffectDemo } from "../engine/effectCompiler";
 import {
   contractSource,
   contractType,
@@ -15,6 +17,31 @@ import {
 
 const repoFile = (path: string) =>
   readFileSync(resolve(import.meta.dirname, "../../../..", path), "utf8");
+
+describe("market desk example", () => {
+  const compile = (source: string) => compileEffectDemo({
+    id: 1, sourceId: "market-desk.forma", source, passes: ["parse", "typecheck"], dialect: "effect",
+  });
+
+  test("uses the executable conformance source", () => {
+    expect(marketDeskSource).toBe(repoFile("conformance/effect-typescript/cases/market-desk/program.lisp"));
+    expect(getPipeline("market-desk").source).toBe(marketDeskSource);
+  });
+
+  test("checks layer requirements and regenerates after an edit", () => {
+    const valid = compile(marketDeskSource);
+    expect(valid.diagnostics).toEqual([]);
+    expect(valid.generatedCode).toBe(getPipeline("market-desk").preview?.output);
+    const broken = compile(marketDeskMissingModelSource);
+    expect(broken.generatedCode).toBeUndefined();
+    expect(broken.diagnostics).toContainEqual(expect.objectContaining({
+      code: "mechanics/undeclared-requirement", span: expect.any(Object),
+    }));
+    const edited = compile(marketDeskSource.replace('get payload :question)', 'str "Market: " (get payload :question))'));
+    expect(edited.diagnostics).toEqual([]);
+    expect(edited.generatedCode).not.toBe(valid.generatedCode);
+  });
+});
 
 describe("entities pipeline", () => {
   test("uses the canonical IR conformance fixture source verbatim", () => {

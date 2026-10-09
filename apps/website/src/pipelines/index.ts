@@ -15,6 +15,7 @@ import {
   undeclaredFailureSource,
 } from "./sources";
 import type { PipelineDef } from "./types";
+import { marketDeskSource } from "./marketDesk";
 
 const helloSource = `(let [rate 150
       hours 40
@@ -213,6 +214,26 @@ export const pipelines: readonly PipelineDef[] = [
         stage: "target",
         md: "The target pane lowers service requirements into Effect Context tags and turns `<-` bindings into `yield*` inside `Effect.gen`.",
       },
+    ],
+  },
+  {
+    id: "market-desk",
+    group: "domain",
+    title: "Market Desk: Services and Layers",
+    tagline: "Schemas describe the data, services declare the interfaces, and layers wire a market brief workflow.",
+    badge: "preview",
+    source: marketDeskSource,
+    passes: ["parse"],
+    preview: {
+      targetLabel: "Generated Effect TypeScript",
+      language: "typescript",
+      output: effectTypeScriptTarget(marketDeskSource),
+      notice: "Generated from the original Forma source. Open Market desk in the live workbench to regenerate as you edit. The host supplies HTTP and model adapters; HTTP routing stays in TypeScript.",
+    },
+    narration: [
+      { stage: "source", md: "`type` declares request, snapshot, and response schemas. `error` declares the typed failure. These describe data, independently of the service interfaces." },
+      { stage: "parse", md: "`service` declares an interface. `layer` implements it and captures the services its methods use. `MarketDeskLive` needs `MarketFeed` and `LanguageModel`." },
+      { stage: "target", md: "`AppLive` provides `MarketFeedLive` to `MarketDeskLive`, hiding the feed and exposing the desk. Its remaining requirements are `MarketHttp` and `LanguageModel`, supplied by the host." },
     ],
   },
   {

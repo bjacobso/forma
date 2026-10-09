@@ -32,6 +32,9 @@ The [Effect TypeScript conformance suite](https://github.com/bjacobso/forma/tree
 contains complete programs for each feature. For every one it records the
 exact generated module, typechecks it, and runs it.
 
+For a complete example of schemas, service interfaces, layer wiring, and an HTTP
+host boundary, see [Market desk](/effect/market-desk).
+
 For multiple files, use the isolated [file-module workflow](/modules). It checks
 each file separately and emits real relative imports and explicit exports.
 Package resolution and compile-time library imports remain proposals.

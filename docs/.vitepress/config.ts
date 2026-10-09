@@ -44,6 +44,7 @@ export default defineConfig({
           { text: "Writing a form", link: "/writing-a-form" },
           { text: "Forma for Effect", link: "/effect" },
           { text: "Effect reference", link: "/effect/reference" },
+          { text: "Market desk example", link: "/effect/market-desk" },
         ],
       },
       {

@@ -204,7 +204,7 @@ describe("pipeline registry", () => {
     expect(pipeline.preview?.output).toContain("Effect.gen(function* ()");
   });
 
-  test.each(["effect-schema", "effect-ts"])("emits %s code accepted by Effect 4", (id) => {
+  test.each(["effect-schema", "effect-ts", "market-desk"])("emits %s code accepted by Effect 4", (id) => {
     const code = getPipeline(id).preview?.output;
     expect(code).toBeDefined();
     if (!code) return;
@@ -244,6 +244,7 @@ describe("pipeline registry", () => {
       "domain:entities",
       "domain:contracts",
       "domain:effect-ts",
+      "domain:market-desk",
       "domain:effect-schema",
       "core:full-pipeline",
       "core:types",
