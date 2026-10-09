@@ -1,4 +1,5 @@
 import { bootstrapFromSources, type BootstrappedPrelude } from "../descriptor/bootstrap.js";
+import { descriptorFormProvider } from "../type/unified-form-provider.js";
 import { elaborateSources } from "../descriptor/elaborate.js";
 import { head } from "../surface/effect.js";
 import { parse as parseSurface, toSExprMany } from "../reader/index.js";
@@ -304,7 +305,10 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
   try {
     const formErrors = formDiagnostics(request, sourceId, source);
     if (formErrors.some(d=>d.severity === "error")) return {sourceId, pass:"typecheck", diagnostics:formErrors};
-    const inferOptions = typeInferOptions(mergedRequest);
+    const inferOptions = {
+      ...typeInferOptions(mergedRequest),
+      ...(request.session ? { dslProvider: descriptorFormProvider(typecheckPreludes.get(request.session)!.prelude), macroEnv: request.session.env } : {}),
+    };
     const result =
       mergedRequest.result === "per-expression"
         ? Effect.runSync(Type.inferSourceAll(mergedSource, inferOptions))
@@ -315,7 +319,7 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
         : [Type.showType(result.type)];
     const diagnostics = result.diagnostics.map(
       (diagnostic): Diagnostic => ({
-        code: "typecheck/diagnostic",
+        code: diagnostic.code ?? "typecheck/diagnostic",
         severity: diagnostic.severity,
         message: diagnostic.message,
         phase: "typecheck",

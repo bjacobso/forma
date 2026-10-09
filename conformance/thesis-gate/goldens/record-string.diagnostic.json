@@ -1,0 +1,15 @@
+{
+  "diagnostic": {
+    "span": {
+      "sourceId": "thesis-gate/record-string.lisp",
+      "startOffset": 97,
+      "endOffset": 128
+    },
+    "severity": "error",
+    "code": "elaborate/form-check",
+    "message": "fields.employee/active must be Bool",
+    "notes": [],
+    "fixes": []
+  },
+  "spannedText": "{:active \"yes\"\n  :name \"Alice\"}"
+}

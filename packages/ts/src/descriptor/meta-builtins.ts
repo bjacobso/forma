@@ -1,6 +1,8 @@
+import { parse, toSExprMany } from "../reader/index.js";
+import { metaText } from "./meta-types.js";
 import { syntaxForDatum } from "../surface/datum.js";
 import { kValueToSExpr } from "../evaluator/quasiquote.js";
-import { isKKeyword, isKSymbol } from "../evaluator/types.js";
+import { isKKeyword, isKSymbol, kEquals, mapKey } from "../evaluator/types.js";
 /**
  * Meta-builtins — helper vocabulary available inside __form-hook bodies.
  *
@@ -20,7 +22,7 @@ import type { KValue } from "../evaluator/types.js";
 import type { SemanticEnvironment, NormalizedChildForm } from "./ElaborationHook.js";
 import type { FormDescriptor, IdentifierSpec } from "./FormDescriptor.js";
 import { headSym, tail, type SExpr } from "../reader/types.js";
-import { KernelTypeError } from "../diagnostic/errors.js";
+import { ArityError, KernelTypeError } from "../diagnostic/errors.js";
 import { showType, type Row, type Type, TCon, TApp, TRow, REmpty, RExtend } from "../type/types.js";
 import { SimpleNormalizedSlots, type SlotValue } from "./NormalizedSlots.js";
 import { typeCheckDescriptorTree, validateDescriptorTreeLiteralOptions } from "./descriptor-tree-check.js";
@@ -46,6 +48,9 @@ export interface MetaBuiltinsContext {
 }
 
 export interface MetaBuiltinsOptions {
+  /** Supplied by the active descriptor typing application, never global state. */
+  readonly checkExpression?: BuiltinFn;
+  readonly inferExpression?: BuiltinFn;
   readonly hostedBuiltins?: Record<string, BuiltinFn>;
   readonly hostedDsls?: ReadonlyMap<string, HostedDslMetaContext>;
 }
@@ -61,7 +66,7 @@ export function createMetaBuiltins(
   // Strip leading ":" from keyword slot names (e.g., ":from" → "from")
   function normalizeSlotName(name: KValue | undefined): string {
     if (name === undefined || name === null) return "";
-    const s = String(name);
+    const s = metaText(name) ?? String(name);
     return s.startsWith(":") ? s.slice(1) : s;
   }
 
@@ -365,7 +370,90 @@ export function createMetaBuiltins(
     return expected !== undefined && showType(inferred) === expected;
   }
 
+  function slotValues(input: KValue | undefined, slot: KValue | undefined): KValue[] {
+    if (!(input instanceof Map)) return [];
+    const name = normalizeSlotName(slot);
+    const repeated = input.get("slotValues");
+    if (repeated instanceof Map && Array.isArray(repeated.get(name))) return repeated.get(name) as KValue[];
+    const slots = input.get("slots");
+    if (!(slots instanceof Map) || !slots.has(name)) return [];
+    return [slots.get(name)!];
+  }
+  function getMetaValue(value: KValue | undefined, key: KValue | undefined): KValue | undefined {
+    if (value instanceof Map) {
+      const name = metaText(key);
+      for (const candidate of [key !== undefined ? mapKey(key) : undefined, String(key), name, name ? `:${name}` : undefined]) {
+        if (candidate !== undefined && value.has(candidate)) return value.get(candidate);
+      }
+    }
+    return Array.isArray(value) && typeof key === "number" ? value[key] : undefined;
+  }
+  const memberOf: BuiltinFn = (args) => {
+    if (args.length !== 2 && args.length !== 3) return Effect.fail(new ArityError({name:"diag/member-of",expected:"2 or 3",got:args.length}));
+    const [value, allowed] = args.length === 3 ? args.slice(1) : args;
+    const values = Array.isArray(allowed) ? allowed : allowed == null ? [] : [allowed];
+    const same = (a: KValue | undefined, b: KValue) => a !== undefined && kEquals(a,b);
+    return Effect.succeed(values.some(v => same(value, v)) ? [] : [new Map<string,KValue>([
+      ["severity", "error"], ["value", value ?? null], ["allowed", values],
+      ["message", `${metaText(value) ?? String(value)} is not an allowed value`],
+    ])]);
+  };
   return {
+    // Meta inputs use textual keys; authored keyword maps retain their keys.
+    "get": args => {
+      const value = getMetaValue(args[0],args[1]);
+      return Effect.succeed(value !== undefined ? value : args[2] ?? null);
+    },
+    "get-in": args => {
+      let value = args[0];
+      for (const key of Array.isArray(args[1]) ? args[1] : []) value = getMetaValue(value,key);
+      return Effect.succeed(value !== undefined ? value : args[2] ?? null);
+    },
+    "meta/check-expr": metaOptions.checkExpression ?? (() => Effect.fail(new KernelTypeError({ expected:"descriptor typing context", got:"unavailable", message: "meta/check-expr is only available during descriptor typechecking." }))),
+    "meta/infer-expr-type": metaOptions.inferExpression ?? (() => Effect.fail(new KernelTypeError({ expected:"descriptor typing context", got:"unavailable", message: "meta/infer-expr-type is only available during descriptor typechecking." }))),
+    "meta/slot-values": args => Effect.succeed(slotValues(args[0], args[1])),
+    "meta/declaration-kind": args => {
+      if (args.length !== 1) return Effect.fail(new ArityError({name:"meta/declaration-kind",expected:"1",got:args.length}));
+      const input = args[0];
+      const descriptor = input instanceof Map ? input.get("descriptorRef") as unknown as FormDescriptor | undefined : undefined;
+      const kindSpec = descriptor?.construct?.fields.find(field => field.name.replace(/^:/, "") === "kind");
+      const kindSyntax = kindSpec ? toSExprMany(parse(kindSpec.expr).redTree)[0] : undefined;
+      const kind = kindSyntax?._tag === "Str" ? kindSyntax.value : kindSyntax?._tag === "Sym" ? kindSyntax.name.replace(/^:/, "") : undefined;
+      return Effect.succeed(kind ?? (input instanceof Map ? getMetaValue(input,":kind") ?? getMetaValue(input,":formName") ?? null : null));
+    },
+    "meta/descriptor-extension": args => {
+      const descriptor = args[0] instanceof Map ? args[0].get("descriptorRef") as unknown as FormDescriptor : undefined;
+      const key = metaText(args[1]);
+      const convert = (value: unknown): KValue => value !== null && typeof value === "object" && !Array.isArray(value)
+        ? new Map(Object.entries(value).map(([k,v]) => [k,convert(v)])) : Array.isArray(value) ? value.map(convert) : value as KValue;
+      return Effect.succeed(key && descriptor ? convert(descriptor.extensions?.[key] ?? null) : null);
+    },
+    "bindings/scoped": args => Effect.succeed(new Map(args.flatMap(v => v instanceof Map ? [...v] : []))),
+    "type/ref": args => {
+      if (args.length !== 1) return Effect.fail(new ArityError({name:"type/ref",expected:"1",got:args.length}));
+      const name = metaText(args[0]);
+      return name ? Effect.succeed(new Map<string,KValue>([["kind", "type-ref"], ["name", name]]))
+        : Effect.fail(new KernelTypeError({message:"type/ref expects a symbolic type reference name.",expected:"type name",got:typeof args[0]}));
+    },
+    "type/vector": args => args.length === 1
+      ? Effect.succeed(new Map<string,KValue>([["_type", "vector"], ["kind","type-vector"], ["element", args[0]!], ["item",args[0]!]]))
+      : Effect.fail(new ArityError({name:"type/vector",expected:"1",got:args.length})),
+    "type/record": args => {
+      const fields: KValue[] = [];
+      for (const value of args) {
+        const label = Array.isArray(value) && value.length === 2 ? value[0] : getMetaValue(value,":label");
+        const type = Array.isArray(value) && value.length === 2 ? value[1] : getMetaValue(value,":type");
+        if (!metaText(label) || type === undefined) return Effect.fail(new KernelTypeError({message:"type/record expects labeled type fields.",expected:"[label type] or {:label label :type type}",got:String(value)}));
+        fields.push(new Map<string,KValue>([["label",typeof label === "string" ? label : String(label)],["type",type]]));
+      }
+      return Effect.succeed(new Map<string,KValue>([["_type", "row"], ["kind","type-record"], ["fields",fields]]));
+    },
+    "diag/one-of": memberOf,
+    "diag/member-of": memberOf,
+    "diag/require-slot": args => {
+      const name = normalizeSlotName(args[1]);
+      return Effect.succeed(slotValues(args[0], args[1]).length ? [] : [new Map<string,KValue>([["severity", "error"], ["slot", name], ["message", `Missing required slot :${name}`]])]);
+    },
     // =========================================================================
     // meta/* — input accessors
     // =========================================================================
@@ -620,7 +708,7 @@ export function createMetaBuiltins(
           const diag = new Map<string, KValue>();
           diag.set("severity", "error");
           for (let i = 0; i < args.length; i += 2) {
-            const key = String(args[i]);
+            const key = `:${metaText(args[i]) ?? ""}`;
             const val = args[i + 1] as KValue;
             if (key === ":code") diag.set("code", val);
             if (key === ":message") diag.set("message", val);
@@ -1021,6 +1109,8 @@ export function createMetaBuiltins(
           const index = Number(args[1] ?? -1);
           if (!(form instanceof Map) || !Number.isInteger(index) || index < 0) return null;
 
+          const expressions = form.get("args");
+          if (Array.isArray(expressions)) return expressions[index] ?? null;
           const rawExpr = form.get("rawExpr") as SExpr | undefined;
           if (!rawExpr || rawExpr._tag !== "List") return null;
 
@@ -1253,7 +1343,7 @@ export function createMetaBuiltins(
 function isMetaBuiltinsOptions(
   value: MetaBuiltinsOptions | Record<string, BuiltinFn>,
 ): value is MetaBuiltinsOptions {
-  return "hostedBuiltins" in value || "hostedDsls" in value;
+  return "hostedBuiltins" in value || "hostedDsls" in value || "checkExpression" in value || "inferExpression" in value;
 }
 
 /** Build a construct object from alternating keyword/value arguments. */

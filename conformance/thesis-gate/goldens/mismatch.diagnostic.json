@@ -1,0 +1,15 @@
+{
+  "diagnostic": {
+    "span": {
+      "sourceId": "thesis-gate/mismatch.lisp",
+      "startOffset": 3,
+      "endOffset": 22
+    },
+    "severity": "error",
+    "code": "typecheck/type-mismatch",
+    "message": "Expected String to match Bool.",
+    "notes": [],
+    "fixes": []
+  },
+  "spannedText": "(literal-type true)"
+}

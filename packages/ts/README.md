@@ -215,3 +215,37 @@ Effect TypeScript and Schema modules now target the Effect 4 APIs, including
 Release this change through the repository's normal changeset/version workflow.
 After publication, consumers can replace the Effect 3 based
 `@formalang/ts@0.2.0` with the new version.
+
+## Descriptor typing and definition checks
+
+Descriptor `:infer-fn`, `:check-fn`, `:bindings-fn`, and `:result-type-fn` hooks
+participate in HM inference and checking. Hook expression checks use the active
+lexical environment and substitution. Binding hooks introduce bindings only
+inside their application. Typed slots, including repeated slots and positional
+child slots, produce diagnostics at the authored expression. Prelude and
+source-local hooks are available in the analysis workspace, including hover.
+Ordinary functions referenced as hooks and their reachable helpers are loaded
+in the meta environment. Their bodies are evaluated when the hook runs; they are
+excluded from ordinary program inference like `__form-hook` declarations.
+
+The session loader can call this plain synchronous stage, exported from
+`@formalang/ts/descriptor`:
+
+```typescript
+function checkDescriptors(
+  sources: readonly { sourceId: string; source: string }[],
+  options?: CheckDescriptorsOptions,
+): readonly Diagnostic[];
+```
+
+`options.prelude` supplies previously registered forms and hooks.
+`resolveHook(name)` recognizes additional session/native hooks.
+`checkReferences: false` defers unresolved-hook and constructed-by reference
+checks until dependencies have loaded; clause shape and application slot checks
+still run. Malformed descriptors return located diagnostics.
+
+`checkForm(form, span)` is the extension point for artifact payload contracts,
+validators, and artifact summary requirements. This stage does not load,
+evaluate, or mutate a session. The session-load workspace owns integration into
+host prelude loading. Shared expectations and intentional OCaml differences are
+recorded in `conformance/thesis-gate/` and `conformance/descriptor-metacheck/`.

@@ -19,12 +19,13 @@ import {
 } from "./ElaborationHook.js";
 import type { KValue, BuiltinFn } from "../evaluator/types.js";
 import type { Type } from "../type/types.js";
-import { TApp, TCon, TRow, buildRow, REmpty } from "../type/types.js";
+import { TCon } from "../type/types.js";
 import {
   createMetaBuiltins,
   type HostedMetaBuiltinsFactory,
   type MetaBuiltinsContext,
 } from "./meta-builtins.js";
+import { metaType } from "./meta-types.js";
 import { defaultBuiltins } from "../builtins/index.js";
 import { Env } from "../Env.js";
 import { evaluateExprs } from "../evaluator/eval.js";
@@ -157,6 +158,7 @@ function convertDiag(value: KValue): Diagnostic {
     return {
       severity: (m.get("severity") as Diagnostic["severity"]) ?? "error",
       message: (m.get("message") as string) ?? "Unknown error",
+      ...(typeof m.get("code") === "string" ? {code:m.get("code") as string} : {}),
       ...(m.has("slot") ? { slot: m.get("slot") as string } : {}),
     };
   }
@@ -164,34 +166,7 @@ function convertDiag(value: KValue): Diagnostic {
 }
 
 function convertKValueToType(value: KValue): Type {
-  if (typeof value === "string" && value.length > 0) {
-    return TCon(value);
-  }
-
-  if (value instanceof Map) {
-    const m = value as ReadonlyMap<string, KValue>;
-    const typeTag = m.get("_type") as string | undefined;
-    if (typeTag === "constant") {
-      return TCon((m.get("name") as string) ?? "Unknown");
-    }
-    if (typeTag === "list") {
-      const elem = m.get("element");
-      return TApp(TCon("List"), [convertKValueToType(elem as KValue)]);
-    }
-    if (typeTag === "row") {
-      const rawFields = m.get("fields");
-      if (rawFields instanceof Map) {
-        const fields = new Map<string, Type>();
-        for (const [label, fieldType] of rawFields as ReadonlyMap<string, KValue>) {
-          fields.set(label, convertKValueToType(fieldType));
-        }
-        return TRow(buildRow(fields, REmpty));
-      }
-      return TRow(REmpty);
-    }
-  }
-  // Fallback: unknown type
-  return TCon("Unknown");
+  return metaType(value) ?? TCon("Unknown");
 }
 
 export function kValueToHookOutput(kind: HookKind, value: KValue): HookOutput {

@@ -97,6 +97,14 @@
       "status": "gap",
       "fixture": "cases.json (effect-typescript/*)",
       "reason": "Neither HM typechecker accepts the Effect program forms (define-layer, define-class, combinators, typed defines); both reject them with different diagnostics. Effect programs are checked by the mechanics checker, so only effect-typescript/operational-effects compares typecheck."
+    },
+    {
+      "id": "descriptor-typing",
+      "status": "intentional-difference",
+      "fixture": "../thesis-gate",
+      "typescript": "shared TypeScript expectations; hooks, scoped bindings, typed slots, and authored expression spans",
+      "ocaml": "reference thesis-gate sources and diagnostic goldens",
+      "reason": "The TypeScript gate checks all 22 sources separately from the parity runner. TypeScript locates repeated-slot, macro-argument, and record-field failures at their authored values; OCaml goldens sometimes cover the enclosing slot, macro call, or record. Workspace recovery can retain a result type alongside diagnostics."
     }
   ]
 }

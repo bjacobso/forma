@@ -49,6 +49,12 @@ export interface DSLSlotInfo {
  * The inferrer uses the other methods to type-check and infer types.
  */
 export interface DSLTypeProvider {
+  /** Bidirectional descriptor rule, in the caller's HM context. */
+  typeApplication?(env: import("./substitution.js").TypeEnv, expr: import("./core-expr.js").CDSLForm, expected?: Type): import("effect").Effect.Effect<Type | undefined, import("./errors.js").InferenceError, import("./context.js").InferContext>;
+  /** Helper definitions evaluated in the meta environment, rather than as program values. */
+  isMetaDefinition?(name: string): boolean;
+  readonly descriptorPrelude?: import("../descriptor/bootstrap.js").BootstrappedPrelude;
+
   /**
    * Check if a form name is a known DSL form.
    * Used by the lowerer to decide whether to produce CDSLForm vs CApp.

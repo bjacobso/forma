@@ -43,6 +43,7 @@ export interface TypedSpan {
 }
 
 export interface LspError {
+  readonly diagnosticCode?: string | undefined;
   readonly message: string;
   readonly span?: Span | undefined;
   readonly code?: string | undefined;
@@ -234,6 +235,7 @@ export function analyzeLsp(
     const failures = inferResult._tag === "Failure" ? [...formErrors, inferResult.failure] : formErrors;
     const errors = failures.map((err) => ({
       message: err.message,
+      diagnosticCode: typeof err.details?.["code"] === "string" ? err.details["code"] : "typecheck/type-mismatch",
       span: err.origin?.span,
       code: err.origin?.span ? extractCode(source, err.origin.span) : undefined,
     }));
@@ -245,7 +247,7 @@ export function analyzeLsp(
 
     // Collect all nodes and build typed spans
     const allNodes: CoreExpr[] = [];
-    for (const expr of coreExprs) {
+    for (const expr of [...coreExprs, ...yield* Ref.get(ctxService.hookNodes)]) {
       allNodes.push(...collectNodes(expr));
     }
 

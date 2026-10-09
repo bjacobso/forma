@@ -38,6 +38,7 @@ export type NodeTypeMap = Map<string, Type>;
 // ---------------------------------------------------------------------------
 
 export interface InferDiagnostic {
+  readonly code?: string;
   /** Human-readable error or warning message */
   readonly message: string;
   /** Source span in the Lisp source */
@@ -101,6 +102,8 @@ export interface InferContextService {
   readonly subst: Ref.Ref<Subst>;
   /** Map from node ID to inferred type */
   readonly nodeTypes: Ref.Ref<NodeTypeMap>;
+  /** Core nodes the descriptor hooks choose to type, for editor projection. */
+  readonly hookNodes: Ref.Ref<import("./core-expr.js").CoreExpr[]>;
   /** Non-fatal diagnostics accumulated during type checking */
   readonly diagnostics: Ref.Ref<DiagnosticList>;
   /** Type alias registry: maps alias names to their type expressions */
@@ -179,6 +182,7 @@ function makeContext(
   return Effect.gen(function* () {
     const subst = yield* Ref.make<Subst>(emptySubst);
     const nodeTypes = yield* Ref.make<NodeTypeMap>(new Map());
+    const hookNodes = yield* Ref.make<import("./core-expr.js").CoreExpr[]>([]);
     const diagnostics = yield* Ref.make<DiagnosticList>([]);
     const nominalRecords = yield* Ref.make<Map<string, Type>>(new Map());
     const typeAliases = yield* Ref.make<Map<string, TypeExpr>>(new Map());
@@ -201,6 +205,7 @@ function makeContext(
       unboundSymbolType: options.unboundSymbolType ?? (() => undefined),
       subst,
       nodeTypes,
+      hookNodes,
       diagnostics,
       typeAliases,
       nominalRecords,

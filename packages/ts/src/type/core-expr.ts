@@ -281,6 +281,7 @@ export interface CAscribe {
  * to determine the result type and to type-check sub-expressions (children).
  */
 export interface CDSLForm {
+  readonly rawExpr?: import("../reader/types.js").SExpr;
   readonly _tag: "DSLForm";
   readonly id: string;
   readonly span: Span;
