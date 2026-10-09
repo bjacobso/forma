@@ -1,5 +1,29 @@
 # @formalang/editor
 
+## 0.4.0
+
+### Minor Changes
+
+- 4453f84: Add independent light/dark appearance and Forma, Ocean, and Orchid syntax palettes
+  for CodeMirror and LispEditor. Appearance changes preserve the document and undo
+  history. Export showMechanicsType to render the Effect checker's inferred types
+  in live authoring tools.
+
+### Patch Changes
+
+- Updated dependencies [0b72bb2]
+- Updated dependencies [09642e5]
+- Updated dependencies [bdc817d]
+- Updated dependencies [22c549f]
+- Updated dependencies [30d7db4]
+- Updated dependencies [1e93832]
+- Updated dependencies [bb9ad6a]
+- Updated dependencies [d950a22]
+- Updated dependencies [d47da26]
+- Updated dependencies [4662c76]
+- Updated dependencies [e10e2b5]
+  - @formalang/host@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes
