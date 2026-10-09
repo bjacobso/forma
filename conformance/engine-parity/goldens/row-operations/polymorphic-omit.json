@@ -1,0 +1,427 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/polymorphic-omit",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 11,
+                    "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                    "startOffset": 7
+                  },
+                  "value": "Kept"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 13,
+                    "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                    "startOffset": 12
+                  },
+                  "value": "a"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 14,
+                "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                "startOffset": 6
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 20,
+                    "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                    "startOffset": 16
+                  },
+                  "value": "Omit"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 28,
+                          "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                          "startOffset": 22
+                        },
+                        "value": ":value"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 30,
+                          "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                          "startOffset": 29
+                        },
+                        "value": "a"
+                      }
+                    },
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 38,
+                          "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                          "startOffset": 31
+                        },
+                        "value": ":unused"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 43,
+                          "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                          "startOffset": 39
+                        },
+                        "value": "Bool"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 44,
+                    "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                    "startOffset": 21
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 53,
+                        "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                        "startOffset": 46
+                      },
+                      "value": ":unused"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 54,
+                    "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                    "startOffset": 45
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 55,
+                "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                "startOffset": 15
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 56,
+            "sourceId": "engine-parity/row-operations/polymorphic-omit",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 59,
+                "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                "startOffset": 58
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 64,
+                "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                "startOffset": 60
+              },
+              "value": "read"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 68,
+                    "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                    "startOffset": 66
+                  },
+                  "value": "->"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 74,
+                        "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                        "startOffset": 70
+                      },
+                      "value": "Kept"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 76,
+                        "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                        "startOffset": 75
+                      },
+                      "value": "a"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 77,
+                    "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                    "startOffset": 69
+                  }
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 79,
+                    "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                    "startOffset": 78
+                  },
+                  "value": "a"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 80,
+                "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                "startOffset": 65
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 81,
+            "sourceId": "engine-parity/row-operations/polymorphic-omit",
+            "startOffset": 57
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 89,
+                "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                "startOffset": 83
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 94,
+                "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                "startOffset": 90
+              },
+              "value": "read"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 102,
+                    "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                    "startOffset": 96
+                  },
+                  "value": "record"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 103,
+                "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                "startOffset": 95
+              }
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 116,
+                "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                "startOffset": 104
+              },
+              "value": "record.value"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 117,
+            "sourceId": "engine-parity/row-operations/polymorphic-omit",
+            "startOffset": 82
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 122,
+                "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                "startOffset": 119
+              },
+              "value": "let"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 125,
+                    "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                    "startOffset": 124
+                  },
+                  "value": "_"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 131,
+                        "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                        "startOffset": 127
+                      },
+                      "value": "read"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 139,
+                              "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                              "startOffset": 133
+                            },
+                            "value": ":value"
+                          },
+                          "value": {
+                            "kind": "bool",
+                            "span": {
+                              "endOffset": 144,
+                              "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                              "startOffset": 140
+                            },
+                            "value": true
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 145,
+                        "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                        "startOffset": 132
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 146,
+                    "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                    "startOffset": 126
+                  }
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 147,
+                "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                "startOffset": 123
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 153,
+                    "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                    "startOffset": 149
+                  },
+                  "value": "read"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 161,
+                          "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                          "startOffset": 155
+                        },
+                        "value": ":value"
+                      },
+                      "value": {
+                        "kind": "string",
+                        "span": {
+                          "endOffset": 166,
+                          "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                          "startOffset": 162
+                        },
+                        "value": "ok"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 167,
+                    "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                    "startOffset": 154
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 168,
+                "sourceId": "engine-parity/row-operations/polymorphic-omit",
+                "startOffset": 148
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 169,
+            "sourceId": "engine-parity/row-operations/polymorphic-omit",
+            "startOffset": 118
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "String"
+    }
+  },
+  "version": 1
+}

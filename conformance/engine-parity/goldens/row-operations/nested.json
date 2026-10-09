@@ -1,0 +1,323 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/nested",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/nested",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 11,
+                "sourceId": "engine-parity/row-operations/nested",
+                "startOffset": 6
+              },
+              "value": "Small"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 17,
+                    "sourceId": "engine-parity/row-operations/nested",
+                    "startOffset": 13
+                  },
+                  "value": "Omit"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 24,
+                        "sourceId": "engine-parity/row-operations/nested",
+                        "startOffset": 19
+                      },
+                      "value": "Merge"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 30,
+                            "sourceId": "engine-parity/row-operations/nested",
+                            "startOffset": 26
+                          },
+                          "value": "Pick"
+                        },
+                        {
+                          "entries": [
+                            {
+                              "key": {
+                                "kind": "keyword",
+                                "span": {
+                                  "endOffset": 34,
+                                  "sourceId": "engine-parity/row-operations/nested",
+                                  "startOffset": 32
+                                },
+                                "value": ":a"
+                              },
+                              "value": {
+                                "kind": "symbol",
+                                "span": {
+                                  "endOffset": 38,
+                                  "sourceId": "engine-parity/row-operations/nested",
+                                  "startOffset": 35
+                                },
+                                "value": "Int"
+                              }
+                            },
+                            {
+                              "key": {
+                                "kind": "keyword",
+                                "span": {
+                                  "endOffset": 41,
+                                  "sourceId": "engine-parity/row-operations/nested",
+                                  "startOffset": 39
+                                },
+                                "value": ":b"
+                              },
+                              "value": {
+                                "kind": "symbol",
+                                "span": {
+                                  "endOffset": 48,
+                                  "sourceId": "engine-parity/row-operations/nested",
+                                  "startOffset": 42
+                                },
+                                "value": "String"
+                              }
+                            }
+                          ],
+                          "kind": "map",
+                          "span": {
+                            "endOffset": 49,
+                            "sourceId": "engine-parity/row-operations/nested",
+                            "startOffset": 31
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 53,
+                                "sourceId": "engine-parity/row-operations/nested",
+                                "startOffset": 51
+                              },
+                              "value": ":b"
+                            }
+                          ],
+                          "kind": "vector",
+                          "span": {
+                            "endOffset": 54,
+                            "sourceId": "engine-parity/row-operations/nested",
+                            "startOffset": 50
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 55,
+                        "sourceId": "engine-parity/row-operations/nested",
+                        "startOffset": 25
+                      }
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 59,
+                              "sourceId": "engine-parity/row-operations/nested",
+                              "startOffset": 57
+                            },
+                            "value": ":c"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 64,
+                              "sourceId": "engine-parity/row-operations/nested",
+                              "startOffset": 60
+                            },
+                            "value": "Bool"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 65,
+                        "sourceId": "engine-parity/row-operations/nested",
+                        "startOffset": 56
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 66,
+                    "sourceId": "engine-parity/row-operations/nested",
+                    "startOffset": 18
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 70,
+                        "sourceId": "engine-parity/row-operations/nested",
+                        "startOffset": 68
+                      },
+                      "value": ":c"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 71,
+                    "sourceId": "engine-parity/row-operations/nested",
+                    "startOffset": 67
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 72,
+                "sourceId": "engine-parity/row-operations/nested",
+                "startOffset": 12
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 73,
+            "sourceId": "engine-parity/row-operations/nested",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 76,
+                "sourceId": "engine-parity/row-operations/nested",
+                "startOffset": 75
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 82,
+                "sourceId": "engine-parity/row-operations/nested",
+                "startOffset": 77
+              },
+              "value": "small"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 88,
+                "sourceId": "engine-parity/row-operations/nested",
+                "startOffset": 83
+              },
+              "value": "Small"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 89,
+            "sourceId": "engine-parity/row-operations/nested",
+            "startOffset": 74
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 97,
+                "sourceId": "engine-parity/row-operations/nested",
+                "startOffset": 91
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 103,
+                "sourceId": "engine-parity/row-operations/nested",
+                "startOffset": 98
+              },
+              "value": "small"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 107,
+                      "sourceId": "engine-parity/row-operations/nested",
+                      "startOffset": 105
+                    },
+                    "value": ":b"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "span": {
+                      "endOffset": 112,
+                      "sourceId": "engine-parity/row-operations/nested",
+                      "startOffset": 108
+                    },
+                    "value": "ok"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 113,
+                "sourceId": "engine-parity/row-operations/nested",
+                "startOffset": 104
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 114,
+            "sourceId": "engine-parity/row-operations/nested",
+            "startOffset": 90
+          }
+        },
+        {
+          "kind": "symbol",
+          "span": {
+            "endOffset": 120,
+            "sourceId": "engine-parity/row-operations/nested",
+            "startOffset": 115
+          },
+          "value": "small"
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "{:b String}"
+    }
+  },
+  "version": 1
+}

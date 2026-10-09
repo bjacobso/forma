@@ -1,8 +1,8 @@
 # Engine parity goldens
 
 `goldens/<case-id>.json` stores native OCaml's normalized output for every
-surface in `cases.json`: 66 cases and 123 outputs (28 parse, 1 expand,
-36 typecheck, 31 evaluate, 13 effect IR, 14 canonical IR). The 13 Forma Zero
+surface in `cases.json`: 100 cases and 195 outputs (62 parse, 1 expand,
+70 typecheck, 35 evaluate, 13 effect IR, 14 canonical IR). The 13 Forma Zero
 evaluation cases retain their existing goldens in `../forma-zero/expected.json`.
 These expectations preserve the current pre-alpha behavior, including diagnostic
 codes and author offsets; they do not imply parity for untested features.
@@ -44,13 +44,18 @@ TypeScript value, OCaml value). The run fails on new, changed, or resolved
 differences, and on duplicate or stale entries. Review the report and edit this
 file deliberately before recapturing a changed reference.
 
-The current allowlist is empty: the baseline live run agrees on all 136 outputs.
+The current allowlist is empty: the live run agrees on all 208 outputs.
 The historical `parse-nil` gap is resolved for the selected fixtures, and the two
 selected operational-effects typecheck cases agree. Other Effect programs are
 checked by the mechanics checker; HM typecheck parity for those programs is not
 claimed. Remaining matrix rows describe capability and ABI differences outside
 the captured surfaces, including `loadSource` semantics, artifact envelopes, and
 editor APIs; they are not blanket exceptions for case output differences.
+
+An entry may include `expected`, keyed by pass, to pin a normalized golden
+for each engine independently. The row-operation fixtures use this to pin
+successful types and values, and diagnostic codes and author source offsets;
+agreement between two engines alone does not establish correctness.
 
 The comparison retains AST and diagnostic source offsets and declaration
 provenance. It drops line/column duplicates, generated value references,

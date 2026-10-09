@@ -321,6 +321,16 @@ async function main() {
         if (jsHost) addGoldenCheck(report, fixture.id, pass, "ocaml-js", await capture(async () => project(await jsHost[pass](request))), ocaml);
         addComparison(report, fixture.id, pass, typescript, ocaml,
           fixture.typeAliases ? { normalization: { typeAliases: fixture.typeAliases } } : {});
+        const expected = fixture.expected?.[pass];
+        if (expected !== undefined) {
+          for (const [engine, actual] of [["typescript", typescript], ...(!options.typescriptOnly ? [["ocaml", ocaml]] : [])]) {
+            const differences = diffValues(expected, actual);
+            if (differences.length > 0) {
+              report.goldenFailures.push({ id: fixture.id, pass, engine, differences });
+              report.summary.goldenFailures += differences.length;
+            }
+          }
+        }
       }
     }
     if (options.onlyCase === undefined || options.onlyCase.startsWith("forma-zero/")) {

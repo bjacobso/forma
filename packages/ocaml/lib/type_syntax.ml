@@ -1,8 +1,26 @@
 (* Type syntax is inspected without evaluating author expressions. *)
+let rec tagged_payload_problem expression =
+  let own = match expression with
+    | Ast.List (_,Ast.Symbol (_,"Tagged") :: args) ->
+        let discriminator,arms = match args with
+          | Ast.Keyword (_,":tag") :: (Ast.Symbol (_,n) | Ast.Keyword (_,n)) :: rest ->
+              (if String.starts_with ~prefix:":" n then n else ":" ^ n),rest
+          | _ -> ":_tag",args in
+        List.find_map (function
+          | Ast.List (_,[_;Ast.Map (_,fields)]) -> List.find_map (fun (key,_) -> match key with
+              | Ast.Keyword (s,n) when n=discriminator -> Some (s,"Tagged record payload must be disjoint from discriminator " ^ discriminator)
+              | Ast.Symbol (s,"&") -> Some (s,"Tagged record payload requires a closed record; open-row disjointness is not supported")
+              | _ -> None) fields
+          | _ -> None) arms
+    | _ -> None in
+  match own with Some _ -> own | None ->
+    let children = match expression with Ast.Map (_,fields) -> List.map snd fields | Ast.List (_,items) | Ast.Vector (_,items) -> items | _ -> [] in
+    List.find_map tagged_payload_problem children
+
 let metadata_keys = [":indexed";":doc";":default";":pattern";":min";":max";":min-length";":max-length";":format";":title";":identifier"]
 let split expr = match expr with
   | Ast.List (span,(Ast.Symbol (_,h) as ctor) :: args) ->
-      let minimum = if List.mem h ["Map";"Result"] then 2 else if List.mem h ["List";"Option";"Id";"Brand"] then 1 else 0 in
+      let minimum = if List.mem h ["Map";"Result";"Pick";"Omit";"Merge"] then 2 else if List.mem h ["List";"Option";"Id";"Brand"] then 1 else 0 in
       let rec loop index acc = function
         | (Ast.Keyword (_,n) :: _) as rest when index >= minimum && (not (List.mem h ["Union";"Tagged"]) || List.mem n metadata_keys) ->
             let base=match List.rev acc with [] -> ctor | args -> Ast.List (span,ctor :: args) in base,rest
@@ -47,10 +65,18 @@ let rec errors ?(metadata_keys=[":indexed";":doc";":default"]) expr =
       (if List.mem h ["Effect";"Stream";"Fiber";"Layer"] then
           (if arity<1 || arity>3 then ["Effect expects a success type and optional error and requirement sets"] else []) @
           (match args with first :: sets -> (if h="Layer" then [] else errors ~metadata_keys first) @ List.concat_map (function Ast.Vector (_,items) when List.for_all (function Ast.Symbol _ -> true | _ -> false) items -> [] | _ -> ["Effect sets require vectors of type symbols"]) (if h="Layer" then args else sets) | [] -> [])
+       else if List.mem h ["Pick";"Omit";"Merge"] then
+          List.concat_map (errors ~metadata_keys) (match args with left :: right :: _ when h="Merge" -> [left;right] | left :: _ -> [left] | [] -> [])
        else if h="Tagged" then
           let arms=match args with Ast.Keyword (_,":tag") :: _ :: arms -> arms | _ -> args in
+          let discriminator=match args with Ast.Keyword (_,":tag") :: (Ast.Symbol (_,n) | Ast.Keyword (_,n)) :: _ -> if String.starts_with ~prefix:":" n then n else ":" ^ n | _ -> ":_tag" in
           (if arms=[] then ["Tagged requires at least one constructor"] else []) @
-          List.concat_map (function Ast.Symbol (_,n) when String.length n > 0 && n.[0] >= 'A' && n.[0] <= 'Z' -> [] | Ast.List (_,[Ast.Symbol (_,n);payload]) when String.length n > 0 && n.[0] >= 'A' && n.[0] <= 'Z' -> errors ~metadata_keys payload | _ -> ["Tagged constructors require capitalized names and at most one payload type"]) arms
+          List.concat_map (function Ast.Symbol (_,n) when String.length n > 0 && n.[0] >= 'A' && n.[0] <= 'Z' -> [] | Ast.List (_,[Ast.Symbol (_,n);payload]) when String.length n > 0 && n.[0] >= 'A' && n.[0] <= 'Z' ->
+            errors ~metadata_keys payload @ (match payload with Ast.Map (_,fields) ->
+              (if List.exists (fun (k,_) -> match k with Ast.Keyword (_,n) -> n=discriminator | _ -> false) fields then ["Tagged record payload must be disjoint from discriminator " ^ discriminator] else []) @
+              (if List.exists (fun (k,_) -> match k with Ast.Symbol (_,"&") -> true | _ -> false) fields then ["Tagged record payload requires a closed record; open-row disjointness is not supported"] else [])
+              | _ -> [])
+            | _ -> ["Tagged constructors require capitalized names and at most one payload type"]) arms
        else List.concat_map (errors ~metadata_keys) args)
   | _ -> ["Expected type syntax"])
 
@@ -62,6 +88,8 @@ let unknown_references known expression =
     | Ast.List (_,Ast.Symbol (_,"Tagged") :: arms) ->
         let arms=match arms with Ast.Keyword (_,":tag") :: _ :: rest -> rest | _ -> arms in
         List.concat_map (function Ast.List (_,[_;payload]) -> visit payload | _ -> []) arms
+    | Ast.List (_,Ast.Symbol (_,(("Pick" | "Omit" | "Merge") as op)) :: args) ->
+        List.concat_map visit (match args with left :: right :: _ when op="Merge" -> [left;right] | left :: _ -> [left] | [] -> [])
     | Ast.List (_,items) | Ast.Vector (_,items) -> List.concat_map visit items
     | _ -> [] in visit expression
 

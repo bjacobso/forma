@@ -70,6 +70,7 @@ let rec pattern_names = function
   | _ -> Names.empty
 let module_names exprs = List.fold_left (fun acc -> function Ast.List (_,Ast.Symbol (_,"define") :: Ast.Symbol (_,n) :: _) -> Names.add n acc | _ -> acc) Names.empty exprs
 let check_type ?(brand=false) t =
+  (match Type_syntax.tagged_payload_problem t with Some (span,message) -> invalid span message | None -> ());
   let t = match t with Ast.List (_,Ast.Symbol (_,"Brand") :: [base]) when brand -> base | t -> t in
   match Type_syntax.errors ~metadata_keys:[":doc";":pattern";":title";":identifier"] t with [] -> () | errors -> raise (Invalid_form (Ast.expr_span t,String.concat "; " errors))
 (* A parametric header is (Name a b ...): a capitalised name and distinct

@@ -32,6 +32,12 @@ Stored native references live in [`engine-parity/`](engine-parity/README.md),
 commands and which checks run without OCaml. Capture preserves current behavior;
 it does not extend the language or establish parity outside selected fixtures.
 
+`row-operations/` pins closed-record `Pick`, `Omit`, disjoint `Merge`, and
+tagged payload collisions. Its explicit expectations live in
+`engine-parity/cases.json`, with native snapshots under
+`engine-parity/goldens/row-operations/`. The TypeScript tests and engine parity
+gate check these cases, including author offsets for negative cases.
+
 ## The shared dialect (discovered, not designed)
 
 The TS engine is dynamic; the OCaml engine runs HM typechecking on every

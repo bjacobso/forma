@@ -15,6 +15,7 @@ type type_expr =
   | TEFun of Ast.span * type_expr list * type_expr
   | TEApp of Ast.span * type_expr * type_expr list
   | TERow of Ast.span * (string * type_expr) list * string option
+  | TERowOp of Ast.span * string * type_expr list * (Ast.span * string) list
 
 type param = { node : node; name : string }
 type pattern = PCon of string * string list | PWild | PData of Ast.expr
@@ -96,6 +97,12 @@ let list_json encode values =
   Printf.sprintf "[%s]" (String.concat "," (List.map encode values))
 
 let rec type_expr_to_json = function
+  | TERowOp (span, op, operands, keys) ->
+      let key_json (span, label) = Printf.sprintf "{\"span\":%s,%s}"
+        (span_to_json span) (string_field_json "label" label) in
+      Printf.sprintf "{\"kind\":\"type-row-operation\",\"span\":%s,%s,\"operands\":%s,\"keys\":%s}"
+        (span_to_json span) (string_field_json "op" op)
+        (list_json type_expr_to_json operands) (list_json key_json keys)
   | TESym (span, name) ->
       Printf.sprintf "{\"kind\":\"type-symbol\",\"span\":%s,%s}"
         (span_to_json span)
