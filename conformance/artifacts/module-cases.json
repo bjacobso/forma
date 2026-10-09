@@ -1,0 +1,99 @@
+{
+  "reference": "packages/ocaml/lib/module_decl_artifact.ml; packages/ocaml/scripts/emit.mjs",
+  "sources": [
+    {
+      "sourceId": "people.md",
+      "source": "(export Person)\n(entity Person {:name (Option String)})\n"
+    },
+    {
+      "sourceId": "hiring.md",
+      "source": "(use ontology.alpha)\n(import \"./people.md\" :as people)\n(export Candidate)\n(entity Candidate {:name (Option String)})\n"
+    },
+    {
+      "sourceId": "public.md",
+      "source": "(export-from \"./people.md\" [Person])\n"
+    }
+  ],
+  "modules": [
+    {
+      "moduleId": "people.md",
+      "sourcePath": "people.md",
+      "usedPreludes": [],
+      "imports": [],
+      "exports": [
+        {
+          "localName": "Person",
+          "exportedName": "Person",
+          "canonicalName": "people.md/Person",
+          "kind": "Entity"
+        }
+      ],
+      "reExports": [],
+      "declarations": [
+        {
+          "localName": "Person",
+          "kind": "Entity",
+          "canonicalName": "people.md/Person"
+        }
+      ],
+      "diagnostics": [],
+      "publicExportHash": "dbac4af0d6f7f48d6629d6a3e767b6bd7b88a401ad1ab6e0cb1d6bfaeae6825e"
+    },
+    {
+      "moduleId": "hiring.md",
+      "sourcePath": "hiring.md",
+      "usedPreludes": [
+        {
+          "prelude": "ontology.alpha"
+        }
+      ],
+      "imports": [
+        {
+          "specifier": "./people.md",
+          "mode": "alias",
+          "resolvedPath": "people.md",
+          "moduleId": "people.md",
+          "alias": "people"
+        }
+      ],
+      "exports": [
+        {
+          "localName": "Candidate",
+          "exportedName": "Candidate",
+          "canonicalName": "hiring.md/Candidate",
+          "kind": "Entity"
+        }
+      ],
+      "reExports": [],
+      "declarations": [
+        {
+          "localName": "Candidate",
+          "kind": "Entity",
+          "canonicalName": "hiring.md/Candidate"
+        }
+      ],
+      "diagnostics": [],
+      "publicExportHash": "8dd31968ecf34ffe1a4b43ab7aaad8f38922ec408fcc06c4bf3eff3babbcdf97"
+    },
+    {
+      "moduleId": "public.md",
+      "sourcePath": "public.md",
+      "usedPreludes": [],
+      "imports": [],
+      "exports": [],
+      "reExports": [
+        {
+          "specifier": "./people.md",
+          "names": [
+            "Person"
+          ],
+          "resolvedPath": "people.md",
+          "moduleId": "people.md"
+        }
+      ],
+      "declarations": [],
+      "diagnostics": [],
+      "publicExportHash": "e130c56ec023b120c5eb0cdfa3a7e629729a8aeb3c5361895a1041f5bf62810f"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import { checkHttpApiDeclarations, type HttpDeclaration } from "./artifact/http-validator.js";
 /** Prelude-defined HttpApi declarations and a derived TypeScript builder DSL. */
 import type { JsonValue, PackageableDeclaration } from "./artifact/artifact.js";
 import type { Diagnostic } from "./diagnostic/diagnostic.js";
@@ -5,23 +6,15 @@ import { bootstrapPreludes } from "./Preludes.js";
 import {
   elaborateProgram,
   sourceLocator,
-  type ElaboratedDeclaration,
 } from "./descriptor/elaborate.js";
 import { generateFormBuilders } from "./descriptor/form-builders.js";
 import {
   emitFormTypeScript,
-  emissionDatum,
-  emissionSchema,
 } from "./descriptor/form-emitter.js";
 import { generateEffectProgram } from "./mechanics/elaborate.js";
-import { checkMechanicsDeclarations } from "./mechanics/check.js";
 import {
   arrayItems,
   isRecord,
-  isAssignable,
-  typeFromJson,
-  type MField,
-  type MType,
 } from "./mechanics/types.js";
 import { typeName } from "./mechanics/naming.js";
 import { parse, toSExprMany } from "./reader/index.js";
@@ -81,18 +74,15 @@ export function generateHttpApiProgram(
     })),
   ];
   const declarations = [...mechanics.declarations, ...projected.declarations];
-  const info = checkMechanicsDeclarations(mechanics.declarations).info;
-  const type = (value: JsonValue): MType =>
-    typeFromJson(emissionSchema(emissionDatum(value)), info.env);
   const locate = sourceLocator(source, sourceId);
   const report = (
-    d: ElaboratedDeclaration,
+    d: HttpDeclaration,
     code: string,
     message: string,
     operation?: string,
   ): void => {
     const handle = parsed.find(
-      (e) => head(e) === "handle" && e.loc.start === d.span.startOffset,
+      (e) => head(e) === "handle" && e.loc.start === d.span?.startOffset,
     );
     const child =
       operation && handle?._tag === "List"
@@ -111,168 +101,7 @@ export function generateHttpApiProgram(
       span: child ? locate(child.loc) : d.span,
     });
   };
-  const apis = projected.declarations.filter((d) => d.formName === "api");
-  const groupHandlers = new Set<string>();
-  for (const declaration of projected.declarations) {
-    const payload = declaration.payload;
-    if (!isRecord(payload)) continue;
-    if (declaration.formName === "api") {
-      const groups = new Set<string>();
-      for (const group of arrayItems(payload["groups"]).filter(isRecord)) {
-        const groupName = String(group["name"]);
-        if (groups.has(groupName))
-          report(
-            declaration,
-            "duplicate-group",
-            `Duplicate group ${groupName}.`,
-          );
-        groups.add(groupName);
-        const endpoints = new Set<string>();
-        for (const endpoint of arrayItems(group["endpoints"]).filter(
-          isRecord,
-        )) {
-          const endpointName = String(endpoint["name"]);
-          if (endpoints.has(endpointName))
-            report(
-              declaration,
-              "duplicate-endpoint",
-              `Duplicate endpoint ${groupName}.${endpointName}.`,
-            );
-          endpoints.add(endpointName);
-          for (const error of arrayItems(endpoint["errors"]))
-            if (typeof error !== "string" || !info.env.errors.has(error))
-              report(
-                declaration,
-                "error-schema",
-                `Endpoint ${endpointName} refers to undeclared error ${String(error)}.`,
-              );
-          if (
-            ["get", "delete"].includes(String(endpoint["method"])) &&
-            endpoint["payload"] !== undefined
-          )
-            report(
-              declaration,
-              "payload-method",
-              `Endpoint ${endpointName}: payload schemas require a body method (post, put, or patch).`,
-            );
-          if (
-            typeof endpoint["path"] !== "string" ||
-            !endpoint["path"].startsWith("/")
-          )
-            report(
-              declaration,
-              "path",
-              `Endpoint ${endpointName} needs an absolute HTTP path.`,
-            );
-        }
-      }
-    }
-    if (declaration.formName !== "handle") continue;
-    const key = `${String(payload["api"])}.${String(payload["group"])}`;
-    if (groupHandlers.has(key))
-      report(
-        declaration,
-        "duplicate-handle",
-        `Group ${key} already has a handle declaration.`,
-      );
-    groupHandlers.add(key);
-    const api = apis.find(
-      (d) => isRecord(d.payload) && d.payload["name"] === payload["api"],
-    );
-    const group = isRecord(api?.payload)
-      ? arrayItems(api.payload["groups"])
-          .filter(isRecord)
-          .find((g) => g["name"] === payload["group"])
-      : undefined;
-    if (!group) {
-      report(declaration, "unknown-group", `Unknown HTTP group ${key}.`);
-      continue;
-    }
-    const handled = new Set<string>();
-    for (const handler of arrayItems(payload["handlers"]).filter(isRecord)) {
-      const endpointName = String(handler["endpoint"]),
-        operation = String(handler["operation"]);
-      if (handled.has(endpointName))
-        report(
-          declaration,
-          "duplicate-handler",
-          `Endpoint ${key}.${endpointName} is handled twice.`,
-          operation,
-        );
-      handled.add(endpointName);
-      const endpoint = arrayItems(group["endpoints"])
-        .filter(isRecord)
-        .find((e) => e["name"] === endpointName);
-      const signature = info.operations.get(operation);
-      if (!endpoint) {
-        report(
-          declaration,
-          "unknown-endpoint",
-          `Unknown endpoint ${key}.${endpointName}.`,
-          operation,
-        );
-        continue;
-      }
-      if (!signature) {
-        report(
-          declaration,
-          "unknown-operation",
-          `Unknown Effect operation ${operation}.`,
-          operation,
-        );
-        continue;
-      }
-      const allowed = new Set(arrayItems(endpoint["errors"]).map(String));
-      for (const error of signature.result.errors.keys())
-        if (!allowed.has(error))
-          report(
-            declaration,
-            "undeclared-error",
-            `Handler ${operation} can fail with ${error}, but endpoint ${endpointName} does not declare it.`,
-            operation,
-          );
-      if (
-        endpoint["success"] !== undefined &&
-        !isAssignable(
-          signature.result.success,
-          type(endpoint["success"]),
-          info.env,
-        )
-      )
-        report(
-          declaration,
-          "handler-success",
-          `Handler ${operation} does not return the success type of endpoint ${endpointName}.`,
-          operation,
-        );
-      const fields: MField[] = [];
-      for (const field of ["params", "payload"] as const)
-        if (endpoint[field] !== undefined)
-          fields.push({
-            name: field,
-            type: type(endpoint[field]),
-            optional: false,
-          });
-      const request: MType = { kind: "struct", fields };
-      if (
-        signature.params.length !== 1 ||
-        !isAssignable(request, signature.params[0]!.type, info.env)
-      )
-        report(
-          declaration,
-          "handler-request",
-          `Handler ${operation} must accept one request matching endpoint ${endpointName}.`,
-          operation,
-        );
-    }
-    for (const endpoint of arrayItems(group["endpoints"]).filter(isRecord))
-      if (!handled.has(String(endpoint["name"])))
-        report(
-          declaration,
-          "missing-handler",
-          `Endpoint ${key}.${String(endpoint["name"])} has no handler.`,
-        );
-  }
+  checkHttpApiDeclarations(projected.declarations, mechanics.declarations, report);
   if (diagnostics.some((d) => d.severity === "error"))
     return { ok: false, declarations, diagnostics };
   const descriptors = prelude.descriptions.list();

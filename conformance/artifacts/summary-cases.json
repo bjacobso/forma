@@ -1,0 +1,107 @@
+{
+  "reference": "packages/ocaml/scripts/emit.mjs",
+  "cases": [
+    {
+      "sourceId": "emit/invalid-ir",
+      "source": "\n(__form-descriptor define-invalid-ir\n  (:identifier name)\n  (:construct-fn invalid-ir/construct))\n\n(__form-hook invalid-ir/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output InvalidIr)\n  (:body\n    (construct/object\n      :kind \"Invalid\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"Invalid\"\n        :name (meta/declaration-name input)\n        :resultType \"InvalidIr\")\n      :leak (fn [] 1))))\n\n(define-invalid-ir bad)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/untyped-runtime-declaration"
+      }
+    },
+    {
+      "sourceId": "emit/invalid-summary",
+      "source": "\n(__form-descriptor define-invalid-summary\n  (:identifier name)\n  (:construct-fn invalid-summary/construct)\n  (:result-type (constant List)))\n\n(__form-hook invalid-summary/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output InvalidSummary)\n  (:body\n    (construct/declaration\n      :kind \"InvalidSummary\"\n      :name (meta/declaration-name input)\n      :$summary (construct/object :name (meta/declaration-name input)))))\n\n(define-invalid-summary bad-summary)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/missing-type-summary"
+      }
+    },
+    {
+      "sourceId": "emit/invalid-summary-name",
+      "source": "\n(__form-descriptor define-invalid-summary-name\n  (:identifier name)\n  (:construct-fn invalid-summary-name/construct)\n  (:result-type (constant List)))\n\n(__form-hook invalid-summary-name/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output InvalidSummaryName)\n  (:body\n    (construct/declaration\n      :kind \"InvalidSummaryName\"\n      :name (meta/declaration-name input)\n      :$summary (construct/object :kind \"InvalidSummaryName\" :name 42))))\n\n(define-invalid-summary-name bad-summary-name)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/missing-type-summary"
+      }
+    },
+    {
+      "sourceId": "emit/invalid-summary-result-type",
+      "source": "\n(__form-descriptor define-invalid-summary-result-type\n  (:identifier name)\n  (:construct-fn invalid-summary-result-type/construct)\n  (:result-type (constant List)))\n\n(__form-hook invalid-summary-result-type/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output InvalidSummaryResultType)\n  (:body\n    (construct/declaration\n      :kind \"InvalidSummaryResultType\"\n      :name (meta/declaration-name input)\n      :$summary (construct/object\n        :kind \"InvalidSummaryResultType\"\n        :name (meta/declaration-name input)))))\n\n(define-invalid-summary-result-type bad-summary-result-type)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/missing-type-summary"
+      }
+    },
+    {
+      "sourceId": "emit/invalid-masked-summary",
+      "source": "\n(__form-descriptor define-invalid-masked-summary\n  (:identifier name)\n  (:construct-fn invalid-masked-summary/construct)\n  (:result-type (constant MaskedSummaryDef)))\n\n(__form-hook invalid-masked-summary/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output InvalidMaskedSummary)\n  (:body\n    (construct/declaration\n      :kind \"MaskedSummary\"\n      :name (meta/declaration-name input)\n      :$summary (construct/object :name (meta/declaration-name input)))))\n\n(define-invalid-masked-summary bad-masked-summary)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/missing-type-summary"
+      }
+    },
+    {
+      "sourceId": "emit/implicit-summary",
+      "source": "\n(__form-descriptor define-implicit-summary\n  (:identifier name)\n  (:construct-fn implicit-summary/construct)\n  (:result-type (constant ImplicitSummaryDef)))\n\n(__form-hook implicit-summary/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output ImplicitSummary)\n  (:body\n    (construct/object\n      :kind \"ImplicitSummary\"\n      :name (meta/declaration-name input))))\n\n(define-implicit-summary inferred)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/missing-type-summary"
+      }
+    },
+    {
+      "sourceId": "emit/mismatched-summary",
+      "source": "\n(__form-descriptor define-mismatched-summary\n  (:identifier name)\n  (:construct-fn mismatched-summary/construct)\n  (:result-type (constant MismatchedSummaryDef)))\n\n(__form-hook mismatched-summary/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output MismatchedSummary)\n  (:body\n    (construct/declaration\n      :kind \"ActualSummaryKind\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"WrongSummaryKind\"\n        :name (meta/declaration-name input)\n        :resultType \"MismatchedSummaryDef\"))))\n\n(define-mismatched-summary bad-summary-mismatch)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/summary-mismatch"
+      }
+    },
+    {
+      "sourceId": "emit/mismatched-descriptor-kind",
+      "source": "\n(__form-descriptor define-mismatched-descriptor-kind\n  (:identifier name)\n  (:construct-fn mismatched-descriptor-kind/construct)\n  (:construct [kind \"DescriptorSummaryKind\"])\n  (:result-type (constant DescriptorSummaryDef)))\n\n(__form-hook mismatched-descriptor-kind/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output DescriptorSummaryDef)\n  (:body\n    (construct/declaration\n      :kind \"WrongDescriptorSummaryKind\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"WrongDescriptorSummaryKind\"\n        :name (meta/declaration-name input)\n        :resultType \"DescriptorSummaryDef\"))))\n\n(define-mismatched-descriptor-kind bad-descriptor-kind-mismatch)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/summary-mismatch"
+      }
+    },
+    {
+      "sourceId": "emit/mismatched-descriptor-name",
+      "source": "\n(__form-descriptor define-mismatched-descriptor-name\n  (:identifier name)\n  (:construct-fn mismatched-descriptor-name/construct)\n  (:construct\n    [kind \"DescriptorName\"]\n    [name declaration-name])\n  (:result-type (constant DescriptorNameDef)))\n\n(__form-hook mismatched-descriptor-name/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output DescriptorNameDef)\n  (:body\n    (construct/declaration\n      :kind \"DescriptorName\"\n      :name \"wrong-descriptor-name\"\n      :$summary (construct/summary\n        :kind \"DescriptorName\"\n        :name \"wrong-descriptor-name\"\n        :resultType \"DescriptorNameDef\"))))\n\n(define-mismatched-descriptor-name bad-descriptor-name-mismatch)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/summary-mismatch"
+      }
+    },
+    {
+      "sourceId": "emit/mismatched-summary-result-type",
+      "source": "\n(__form-descriptor define-mismatched-summary-result-type\n  (:identifier name)\n  (:construct-fn mismatched-summary-result-type/construct)\n  (:result-type (constant ActualSummaryResultDef)))\n\n(__form-hook mismatched-summary-result-type/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output ActualSummaryResultDef)\n  (:body\n    (construct/declaration\n      :kind \"ActualSummaryResult\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"ActualSummaryResult\"\n        :name (meta/declaration-name input)\n        :resultType \"WrongSummaryResultDef\"))))\n\n(define-mismatched-summary-result-type bad-summary-result-mismatch)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/summary-mismatch"
+      }
+    },
+    {
+      "sourceId": "emit/payload-result-type",
+      "source": "\n(__form-descriptor define-payload-result-type\n  (:identifier name)\n  (:construct-fn payload-result-type/construct)\n  (:result-type (constant SummaryOnlyDef)))\n\n(__form-hook payload-result-type/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output SummaryOnlyDef)\n  (:body\n    (construct/declaration\n      :kind \"PayloadResultType\"\n      :name (meta/declaration-name input)\n      :resultType \"PayloadShouldNotDriveSummary\"\n      :$summary (construct/summary\n        :kind \"PayloadResultType\"\n        :name (meta/declaration-name input)\n        :resultType \"SummaryOnlyDef\"))))\n\n(define-payload-result-type payload-result-type)\n",
+      "expected": {
+        "ok": true
+      }
+    },
+    {
+      "sourceId": "emit/unvalidated-http-shape",
+      "source": "\n(__form-descriptor define-unvalidated-http-schema\n  (:identifier name)\n  (:construct-fn unvalidated-http-schema/construct)\n  (:result-type (constant SchemaDecl)))\n\n(__form-hook unvalidated-http-schema/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output SchemaDecl)\n  (:body\n    (construct/declaration\n      :kind \"Schema\"\n      :name (meta/declaration-name input)\n      :schema (construct/object\n        :kind \"Ref\"\n        :target \"MissingSchema\")\n      :$summary (construct/summary\n        :kind \"Schema\"\n        :name (meta/declaration-name input)\n        :resultType \"SchemaDecl\"))))\n\n(define-unvalidated-http-schema unvalidated-http-schema)\n",
+      "expected": {
+        "ok": true
+      }
+    },
+    {
+      "sourceId": "emit/descriptor-validated-http-shape",
+      "source": "\n(__form-descriptor define-descriptor-validated-http-schema\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:validators [http])))\n  (:construct-fn descriptor-validated-http-schema/construct)\n  (:result-type (constant SchemaDecl)))\n\n(__form-hook descriptor-validated-http-schema/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output SchemaDecl)\n  (:body\n    (construct/declaration\n      :kind \"Schema\"\n      :name (meta/declaration-name input)\n      :schema (construct/object\n        :kind \"Ref\"\n        :target \"MissingSchema\")\n      :$summary (construct/summary\n        :kind \"Schema\"\n        :name (meta/declaration-name input)\n        :resultType \"SchemaDecl\"))))\n\n(define-descriptor-validated-http-schema descriptor-validated-http-schema)\n",
+      "expected": {
+        "ok": false,
+        "code": "http/unknown-schema-ref"
+      }
+    }
+  ]
+}

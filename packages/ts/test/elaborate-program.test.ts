@@ -11,7 +11,7 @@ import {
   isJsonRuntimeStringLiteral,
   toJsonValue,
 } from "../src/Descriptor.js";
-import { packageArtifact } from "../src/Artifact.js";
+import { packageArtifact, validateDeclarations } from "../src/Artifact.js";
 import { bootstrapOntologyPreludes, preludeSource } from "../src/Preludes.js";
 import { openSession } from "../src/Session.js";
 
@@ -197,7 +197,10 @@ describe("elaborateProgram", () => {
       prelude,
       sourceId: "field-service.lisp",
     });
-    const result = packageArtifact({ engineName: "test", engineVersion: "0", session, declarations });
+    const validated = validateDeclarations(session, declarations);
+    expect(validated.ok).toBe(true);
+    if (!validated.ok) return;
+    const result = packageArtifact({ engineName: "test", engineVersion: "0", session, declarations: validated.declarations });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     const [entity] = result.artifact.declarations;

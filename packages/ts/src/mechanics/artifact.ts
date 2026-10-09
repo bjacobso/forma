@@ -26,8 +26,10 @@ export function mechanicsPackageableDeclarations(
   sourceId: string,
   normalized = false,
   context?: readonly SExpr[],
+  options: { readonly lowerOntology?: boolean } = {},
 ): MechanicsArtifactResult {
-  exprs = normalizeEffectProgram(lowerOntologyOperations(exprs), !normalized);
+  exprs = normalizeEffectProgram(options.lowerOntology === false ? exprs : lowerOntologyOperations(exprs), !normalized);
+  if (context) context = normalizeEffectProgram(options.lowerOntology === false ? context : lowerOntologyOperations(context), !normalized);
   const declarations: PackageableDeclaration[] = [];
   const signatures = operationSignatures(context ?? exprs);
   const serviceMethodEffects = collectServiceMethodEffects(context ?? exprs, sourceId);
