@@ -45,4 +45,6 @@ Forma is pre-alpha. See https://forma-lang.com for documentation and demos.
 
 The repository's [inline code-mode experiment](examples/inline-code-mode/README.md)
 uses this ABI for executable chat fences, checked mock bindings and continuation
-transcripts. It is a development example, not an exported package API.
+transcripts. The experimental `@formalang/host/inline-code-mode` entry shares its
+browser-neutral runtime with a Foldkit demo at `/workbench/demo/?demo=code-mode`.
+Its framing and API may change; the Node CLI remains a development example.

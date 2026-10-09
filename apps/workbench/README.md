@@ -14,6 +14,14 @@ Add file creates a module, and Reset example restores the selected project.
 Drafts and history survive project switches in memory and are discarded on reload.
 `?project=functions` and `?project=modules` open those examples directly.
 
+`?demo=code-mode` opens the interactive Foldkit [inline Forma experiment](../../packages/host/examples/inline-code-mode/README.md).
+Edit a prose/code response, run its explicit `forma-run` segment, switch mock
+runtime bindings, or try a write with access denied or explicitly allowed.
+The transcript records executable source, checked host results and a deterministic
+continuation. It uses the existing TypeScript host boundary through the experimental
+`@formalang/host/inline-code-mode` package entry; the Effect companion is checked
+separately and no live model or credentials are used.
+
 The [screenshot tour](../../packages/workbench/README.md#screenshots) shows the
 outline and inspector, source pane, proposal review, and capability approval flow.
 

@@ -10,6 +10,10 @@
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "exports": {
+    "./inline-code-mode": {
+      "types": "./dist/inline-code-mode.d.mts",
+      "import": "./dist/inline-code-mode.mjs"
+    },
     ".": {
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs"

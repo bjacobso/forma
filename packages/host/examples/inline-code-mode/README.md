@@ -16,6 +16,20 @@ node packages/host/examples/inline-code-mode/cli.ts --alternate
 node packages/host/examples/inline-code-mode/cli.ts --write
 ```
 
+For the interactive Foldkit demo, run `pnpm workbench` and open
+`http://localhost:5173/?demo=code-mode`. You can edit the response, swap mock
+bindings while keeping its Lisp, inspect the transcript and contract, and deny
+or explicitly allow a mock write. Fixture chunks play back before the real host
+evaluation; the playback is not a live model stream. The production app uses
+`/workbench/demo/?demo=code-mode`.
+
+The browser and CLI share the experimental `@formalang/host/inline-code-mode`
+package entry: `compileCatalog(source)` checks a host-owned catalog, and
+`new ExecutionSession(catalog, bindings, grants)` evaluates segments against it.
+The generic core has no filesystem catalog loader. Node-only loading lives in
+the CLI wrapper; Vite supplies the browser's catalog as raw text. A regression
+test keeps the browser catalog and Effect companion identical to the CLI copies.
+
 The first command prepares dependencies as usual; it is unnecessary in an already
 prepared workspace. The CLI also accepts a UTF-8 transcript file as its positional
 argument. It emits JSON containing prose, source, result and continuation records.
@@ -124,8 +138,10 @@ type must not be substituted for that display or claimed as kernel inference.
 `--write` requests `(Issues.close "ada/I-1")`. It returns `capability/denied`
 without calling the binding. Declarations confer no authority. Tests demonstrate
 an explicit host grant with `new Set(["Issues.close"])`. A UI could resolve a
-pending call through the workbench's existing approval flow; there is no new
-permission management system or human-approval UI in this CLI.
+pending call through the workbench's existing approval flow. The Foldkit demo
+lets a person explicitly grant mock writes before a run; it does not implement
+per-call approval or a permission management system. The CLI remains deny-only
+for the write example.
 
 ## Framing, streaming and identity
 
@@ -217,12 +233,18 @@ Validation in this workspace (Node 24.14.1, pnpm 10.20.0):
 ```sh
 pnpm --filter @formalang/host exec vitest run test/inline-code-mode.test.ts
 TURBO_CONCURRENCY=1 pnpm check
+TURBO_CONCURRENCY=1 pnpm website:build
+pnpm --filter @formalang/workbench-app test:e2e
+pnpm test:site
+pnpm pack:check
 ```
 
-Both passed: 26 focused tests; the full check passed branding, TypeScript checks,
-826 package tests, nine parity-runner tests, 208 TypeScript/reference comparisons,
-and the docs/llms build checks. The default CLI output matches `transcript.json`
-exactly; alternate bindings and the denied write were also run. A subsequent host
-typecheck passed after the CLI recording validation and diagnostic-message edits.
-No native-engine or site behavior changed; native OCaml and browser site tests
-were not run. `git diff --check` passed, and the committed lockfile is unchanged.
+All passed: 26 focused host tests; branding and TypeScript checks; 827 package
+tests; nine parity-runner tests; 208 TypeScript/reference comparisons; docs/llms
+checks and website assembly; 16 workbench Chromium tests; six assembled-site
+Chromium tests; and installed-tarball export smoke checks. Browser tests cover
+editing, swapped bindings, denied and allowed writes, inert examples,
+dependent-tail rejection and a mobile viewport. The default CLI output matches
+`transcript.json` exactly; alternate bindings and the denied write were also run.
+`git diff --check` passed, and the committed lockfile is unchanged. Native OCaml
+parity for the chat host was not tested.

@@ -5,6 +5,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig(({ mode }) => ({
   base: mode === "production" ? "/workbench/demo/" : "/",
+  server: { allowedHosts: [".conductor.show"] },
   plugins: [
     stylex.vite({
       dev: mode === "development",
