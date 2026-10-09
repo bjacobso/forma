@@ -1,0 +1,181 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-brand",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "string",
+        "value": "user:1"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/canonical-brand",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 12,
+                "sourceId": "engine-parity/canonical-brand",
+                "startOffset": 6
+              },
+              "value": "UserId"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 19,
+                    "sourceId": "engine-parity/canonical-brand",
+                    "startOffset": 14
+                  },
+                  "value": "Brand"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 26,
+                    "sourceId": "engine-parity/canonical-brand",
+                    "startOffset": 20
+                  },
+                  "value": "String"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 27,
+                "sourceId": "engine-parity/canonical-brand",
+                "startOffset": 13
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 28,
+            "sourceId": "engine-parity/canonical-brand",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 31,
+                "sourceId": "engine-parity/canonical-brand",
+                "startOffset": 30
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 34,
+                "sourceId": "engine-parity/canonical-brand",
+                "startOffset": 32
+              },
+              "value": "id"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 41,
+                "sourceId": "engine-parity/canonical-brand",
+                "startOffset": 35
+              },
+              "value": "UserId"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 42,
+            "sourceId": "engine-parity/canonical-brand",
+            "startOffset": 29
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 50,
+                "sourceId": "engine-parity/canonical-brand",
+                "startOffset": 44
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 53,
+                "sourceId": "engine-parity/canonical-brand",
+                "startOffset": 51
+              },
+              "value": "id"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 61,
+                    "sourceId": "engine-parity/canonical-brand",
+                    "startOffset": 55
+                  },
+                  "value": "UserId"
+                },
+                {
+                  "kind": "string",
+                  "span": {
+                    "endOffset": 70,
+                    "sourceId": "engine-parity/canonical-brand",
+                    "startOffset": 62
+                  },
+                  "value": "user:1"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 71,
+                "sourceId": "engine-parity/canonical-brand",
+                "startOffset": 54
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 72,
+            "sourceId": "engine-parity/canonical-brand",
+            "startOffset": 43
+          }
+        },
+        {
+          "kind": "symbol",
+          "span": {
+            "endOffset": 75,
+            "sourceId": "engine-parity/canonical-brand",
+            "startOffset": 73
+          },
+          "value": "id"
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Brand<UserId, String>"
+    }
+  },
+  "version": 1
+}

@@ -4,32 +4,38 @@
     {
       "id": "parse",
       "status": "compared",
-      "fixture": "cases.json"
+      "fixture": "cases.json",
+      "goldens": "goldens/<case-id>.json"
     },
     {
       "id": "expand",
       "status": "compared",
-      "fixture": "cases.json"
+      "fixture": "cases.json",
+      "goldens": "goldens/<case-id>.json"
     },
     {
       "id": "typecheck",
       "status": "compared",
-      "fixture": "cases.json"
+      "fixture": "cases.json",
+      "goldens": "goldens/<case-id>.json"
     },
     {
       "id": "evaluate",
       "status": "compared",
-      "fixture": "cases.json and ../forma-zero"
+      "fixture": "cases.json and ../forma-zero",
+      "goldens": "goldens/<case-id>.json and ../forma-zero/expected.json"
     },
     {
       "id": "effect-ir",
       "status": "compared",
-      "fixture": "../operational-effects and ../effect-typescript/cases (positive cases)"
+      "fixture": "../operational-effects and ../effect-typescript/cases (positive cases)",
+      "goldens": "goldens/<case-id>.json"
     },
     {
       "id": "canonical-ir",
       "status": "compared",
-      "fixture": "cases.json (canonical typed domain forms)"
+      "fixture": "cases.json (canonical typed domain forms)",
+      "goldens": "goldens/<case-id>.json"
     },
     {
       "id": "loadSource",
@@ -88,15 +94,21 @@
     },
     {
       "id": "parse-nil",
-      "status": "gap",
+      "status": "compared",
       "fixture": "cases.json (operational-effects, effect-typescript/operational-effects, multi-service-checkout, resource-scope)",
-      "reason": "The TypeScript reader reads nil as a symbol named nil; the OCaml reader produces a distinct nil node. The effect-ir projections agree (both emit Var nil)."
+      "reason": "The current TypeScript and OCaml host ASTs agree on nil for every selected parse fixture. The historical reader gap no longer produces a normalized divergence."
     },
     {
       "id": "effect-typescript-typecheck",
       "status": "gap",
       "fixture": "cases.json (effect-typescript/*)",
-      "reason": "Neither HM typechecker accepts the Effect program forms (define-layer, define-class, combinators, typed defines); both reject them with different diagnostics. Effect programs are checked by the mechanics checker, so only effect-typescript/operational-effects compares typecheck."
+      "reason": "The selected operational-effects and effect-typescript/operational-effects HM typecheck outputs agree. Other Effect programs are checked by the mechanics checker; their HM typecheck outputs are not selected here, so broader HM parity is not claimed."
     }
-  ]
+  ],
+  "comparisonModel": {
+    "reference": "native OCaml normalized goldens/<case-id>.json",
+    "typescript": "stored goldens with exact per-case exceptions in divergences.json",
+    "live": "native OCaml versus goldens; JavaScript OCaml versus native; TypeScript versus goldens and divergences",
+    "formaZero": "../forma-zero/expected.json"
+  }
 }

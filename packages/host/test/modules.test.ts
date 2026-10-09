@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { expectModuleGolden, updateModuleGoldens } from "./module-golden.js";
 import { TsLanguageHost, NodeOcamlLanguageHost } from "../src/index.js";
 import type { LanguageHost } from "../src/types.js";
 const cliPath = resolve(
@@ -8,11 +9,12 @@ const cliPath = resolve(
   "../../ocaml/dist/native/forma_cli.exe",
 );
 const nativeAvailable = existsSync(cliPath);
-if (process.env["FORMA_REQUIRE_NATIVE_MODULES"] && !nativeAvailable)
+if ((process.env["FORMA_REQUIRE_NATIVE_MODULES"] || updateModuleGoldens) && !nativeAvailable)
   throw new Error("Native module conformance requires a built CLI.");
 const hosts = [
-  new TsLanguageHost(),
+  ...(updateModuleGoldens ? [] : [new TsLanguageHost()]),
   ...(nativeAvailable ? [new NodeOcamlLanguageHost({ cliPath })] : []),
+  ...(updateModuleGoldens ? [new TsLanguageHost()] : []),
 ];
 const fixture = resolve(import.meta.dirname, "../../../conformance/modules");
 const sources = [
@@ -27,10 +29,9 @@ const sources = [
   source: readFileSync(resolve(fixture, name), "utf8"),
 }));
 describe("module contracts across engines", () => {
-  test.skipIf(!nativeAvailable)(
+  test(
     "interfaces and linked artifacts agree, including reverse source loading",
     async () => {
-      const results = [];
       for (const host of hosts) {
         const { sessionId } = await host.openSession();
         try {
@@ -52,7 +53,7 @@ describe("module contracts across engines", () => {
             sourceId: "main.forma",
           });
           expect(linked.diagnostics).toEqual([]);
-          results.push({
+          expectModuleGolden(host, fixture, "interfaces-and-linked-modules", {
             interfaces: graph.interfaces,
             modules: linked.modules,
           });
@@ -60,7 +61,6 @@ describe("module contracts across engines", () => {
           await host.closeSession({ sessionId });
         }
       }
-      expect(results[1]).toEqual(results[0]);
     },
   );
   for (const host of hosts)
@@ -251,10 +251,9 @@ for (const host of hosts)
     }
   });
 
-test.skipIf(!nativeAvailable)(
+test(
   "portable schemes preserve multiple quantifiers, open rows, and variadic imports",
   async () => {
-    const interfaces = [];
     for (const host of hosts) {
       const { sessionId } = await host.openSession();
       try {
@@ -272,7 +271,7 @@ test.skipIf(!nativeAvailable)(
         expect(
           result.interfaces[0]?.exports.every((b) => b.scheme !== undefined),
         ).toBe(true);
-        interfaces.push(result.interfaces);
+        expectModuleGolden(host, fixture, "portable-schemes", result.interfaces);
         expect(
           (
             await host.typecheck({
@@ -287,7 +286,6 @@ test.skipIf(!nativeAvailable)(
         await host.closeSession({ sessionId });
       }
     }
-    expect(interfaces[1]).toEqual(interfaces[0]);
   },
 );
 

@@ -1,0 +1,237 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-literal-union",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "keyword",
+        "value": ":pro"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/canonical-literal-union",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 10,
+                "sourceId": "engine-parity/canonical-literal-union",
+                "startOffset": 6
+              },
+              "value": "Plan"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 17,
+                    "sourceId": "engine-parity/canonical-literal-union",
+                    "startOffset": 12
+                  },
+                  "value": "Union"
+                },
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 23,
+                    "sourceId": "engine-parity/canonical-literal-union",
+                    "startOffset": 18
+                  },
+                  "value": ":free"
+                },
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 28,
+                    "sourceId": "engine-parity/canonical-literal-union",
+                    "startOffset": 24
+                  },
+                  "value": ":pro"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 29,
+                "sourceId": "engine-parity/canonical-literal-union",
+                "startOffset": 11
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 30,
+            "sourceId": "engine-parity/canonical-literal-union",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 33,
+                "sourceId": "engine-parity/canonical-literal-union",
+                "startOffset": 32
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 40,
+                "sourceId": "engine-parity/canonical-literal-union",
+                "startOffset": 34
+              },
+              "value": "choose"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 44,
+                    "sourceId": "engine-parity/canonical-literal-union",
+                    "startOffset": 42
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 49,
+                    "sourceId": "engine-parity/canonical-literal-union",
+                    "startOffset": 45
+                  },
+                  "value": "Plan"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 54,
+                    "sourceId": "engine-parity/canonical-literal-union",
+                    "startOffset": 50
+                  },
+                  "value": "Plan"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 55,
+                "sourceId": "engine-parity/canonical-literal-union",
+                "startOffset": 41
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 56,
+            "sourceId": "engine-parity/canonical-literal-union",
+            "startOffset": 31
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 64,
+                "sourceId": "engine-parity/canonical-literal-union",
+                "startOffset": 58
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 71,
+                "sourceId": "engine-parity/canonical-literal-union",
+                "startOffset": 65
+              },
+              "value": "choose"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 77,
+                    "sourceId": "engine-parity/canonical-literal-union",
+                    "startOffset": 73
+                  },
+                  "value": "plan"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 78,
+                "sourceId": "engine-parity/canonical-literal-union",
+                "startOffset": 72
+              }
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 83,
+                "sourceId": "engine-parity/canonical-literal-union",
+                "startOffset": 79
+              },
+              "value": "plan"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 84,
+            "sourceId": "engine-parity/canonical-literal-union",
+            "startOffset": 57
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 92,
+                "sourceId": "engine-parity/canonical-literal-union",
+                "startOffset": 86
+              },
+              "value": "choose"
+            },
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 97,
+                "sourceId": "engine-parity/canonical-literal-union",
+                "startOffset": 93
+              },
+              "value": ":pro"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 98,
+            "sourceId": "engine-parity/canonical-literal-union",
+            "startOffset": 85
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Union<:free, :pro>"
+    }
+  },
+  "version": 1
+}

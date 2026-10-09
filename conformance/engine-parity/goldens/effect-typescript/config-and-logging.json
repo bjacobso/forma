@@ -1,0 +1,3299 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "effect-typescript/config-and-logging",
+  "outputs": {
+    "effect-ir": [
+      {
+        "formIndex": 7,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "bindings": [
+              {
+                "name": "current",
+                "span": {
+                  "endOffset": 1211,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 1193
+                },
+                "value": {
+                  "effect": {
+                    "errors": [
+                      "Misconfigured"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 1152,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 1118
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "String",
+                      "span": {
+                        "endOffset": 1132,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 1126
+                      }
+                    }
+                  },
+                  "kind": "Pure",
+                  "span": {
+                    "endOffset": 1211,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 1193
+                  },
+                  "value": {
+                    "kind": "Var",
+                    "name": "validated-settings",
+                    "span": {
+                      "endOffset": 1211,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 1193
+                    }
+                  }
+                }
+              }
+            ],
+            "body": {
+              "effect": {
+                "errors": [
+                  "Misconfigured"
+                ],
+                "kind": "Effect",
+                "requirements": [],
+                "span": {
+                  "endOffset": 1152,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 1118
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 1132,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 1126
+                  }
+                }
+              },
+              "kind": "Succeed",
+              "span": {
+                "endOffset": 1369,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 1217
+              },
+              "value": {
+                "items": [
+                  {
+                    "kind": "Var",
+                    "name": "str",
+                    "span": {
+                      "endOffset": 1236,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 1233
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "if",
+                        "span": {
+                          "endOffset": 1248,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 1246
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "get",
+                            "span": {
+                              "endOffset": 1253,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 1250
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "current",
+                            "span": {
+                              "endOffset": 1261,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 1254
+                            }
+                          },
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":debug"
+                            },
+                            "span": {
+                              "endOffset": 1268,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 1262
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1269,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 1249
+                        }
+                      },
+                      {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 1276,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 1270
+                        },
+                        "value": "http"
+                      },
+                      {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 1284,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 1277
+                        },
+                        "value": "https"
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1285,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 1245
+                    }
+                  },
+                  {
+                    "kind": "Literal",
+                    "span": {
+                      "endOffset": 1299,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 1294
+                    },
+                    "value": "://"
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "get",
+                        "span": {
+                          "endOffset": 1312,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 1309
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "current",
+                        "span": {
+                          "endOffset": 1320,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 1313
+                        }
+                      },
+                      {
+                        "kind": "Expr",
+                        "source": {
+                          "kind": "Symbol",
+                          "name": ":host"
+                        },
+                        "span": {
+                          "endOffset": 1326,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 1321
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1327,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 1308
+                    }
+                  },
+                  {
+                    "kind": "Literal",
+                    "span": {
+                      "endOffset": 1339,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 1336
+                    },
+                    "value": ":"
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "get",
+                        "span": {
+                          "endOffset": 1352,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 1349
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "current",
+                        "span": {
+                          "endOffset": 1360,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 1353
+                        }
+                      },
+                      {
+                        "kind": "Expr",
+                        "source": {
+                          "kind": "Symbol",
+                          "name": ":port"
+                        },
+                        "span": {
+                          "endOffset": 1366,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 1361
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1367,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 1348
+                    }
+                  }
+                ],
+                "kind": "List",
+                "span": {
+                  "endOffset": 1368,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 1232
+                }
+              }
+            },
+            "effect": {
+              "errors": [
+                "Misconfigured"
+              ],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 1152,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 1118
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1132,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 1126
+                }
+              }
+            },
+            "kind": "Do",
+            "span": {
+              "endOffset": 1370,
+              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+              "startOffset": 1175
+            }
+          },
+          "effect": {
+            "errors": [
+              "Misconfigured"
+            ],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 1152,
+              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+              "startOffset": 1118
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "String",
+              "span": {
+                "endOffset": 1132,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 1126
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "base-url",
+          "params": [],
+          "value": true
+        },
+        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+        "span": {
+          "endOffset": 1371,
+          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+          "startOffset": 1154
+        }
+      },
+      {
+        "formIndex": 3,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "bindings": [
+              {
+                "name": "host",
+                "span": {
+                  "endOffset": 377,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 355
+                },
+                "value": {
+                  "args": [
+                    {
+                      "kind": "TypeArg",
+                      "span": {
+                        "endOffset": 369,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 363
+                      },
+                      "type": {
+                        "kind": "Primitive",
+                        "name": "String",
+                        "span": {
+                          "endOffset": 369,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 363
+                        }
+                      }
+                    },
+                    {
+                      "kind": "Literal",
+                      "span": {
+                        "endOffset": 376,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 370
+                      },
+                      "value": "HOST"
+                    }
+                  ],
+                  "effect": {
+                    "errors": [
+                      "ConfigError"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 304,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 264
+                    },
+                    "success": {
+                      "kind": "Ref",
+                      "name": "ServerSettings",
+                      "span": {
+                        "endOffset": 286,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 272
+                      }
+                    }
+                  },
+                  "kind": "Combinator",
+                  "name": "config",
+                  "span": {
+                    "endOffset": 377,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 355
+                  }
+                }
+              },
+              {
+                "name": "port",
+                "span": {
+                  "endOffset": 428,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 395
+                },
+                "value": {
+                  "args": [
+                    {
+                      "kind": "TypeArg",
+                      "span": {
+                        "endOffset": 406,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 403
+                      },
+                      "type": {
+                        "kind": "Primitive",
+                        "name": "Int",
+                        "span": {
+                          "endOffset": 406,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 403
+                        }
+                      }
+                    },
+                    {
+                      "kind": "Literal",
+                      "span": {
+                        "endOffset": 413,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 407
+                      },
+                      "value": "PORT"
+                    }
+                  ],
+                  "effect": {
+                    "errors": [
+                      "ConfigError"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 304,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 264
+                    },
+                    "success": {
+                      "kind": "Ref",
+                      "name": "ServerSettings",
+                      "span": {
+                        "endOffset": 286,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 272
+                      }
+                    }
+                  },
+                  "kind": "Combinator",
+                  "name": "config",
+                  "options": [
+                    {
+                      "key": "default",
+                      "value": {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 427,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 423
+                        },
+                        "value": 8080
+                      }
+                    }
+                  ],
+                  "span": {
+                    "endOffset": 428,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 395
+                  }
+                }
+              },
+              {
+                "name": "debug",
+                "span": {
+                  "endOffset": 483,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 447
+                },
+                "value": {
+                  "args": [
+                    {
+                      "kind": "TypeArg",
+                      "span": {
+                        "endOffset": 459,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 455
+                      },
+                      "type": {
+                        "kind": "Primitive",
+                        "name": "Bool",
+                        "span": {
+                          "endOffset": 459,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 455
+                        }
+                      }
+                    },
+                    {
+                      "kind": "Literal",
+                      "span": {
+                        "endOffset": 467,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 460
+                      },
+                      "value": "DEBUG"
+                    }
+                  ],
+                  "effect": {
+                    "errors": [
+                      "ConfigError"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 304,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 264
+                    },
+                    "success": {
+                      "kind": "Ref",
+                      "name": "ServerSettings",
+                      "span": {
+                        "endOffset": 286,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 272
+                      }
+                    }
+                  },
+                  "kind": "Combinator",
+                  "name": "config",
+                  "options": [
+                    {
+                      "key": "default",
+                      "value": {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 482,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 477
+                        },
+                        "value": false
+                      }
+                    }
+                  ],
+                  "span": {
+                    "endOffset": 483,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 447
+                  }
+                }
+              },
+              {
+                "name": "ratio",
+                "span": {
+                  "endOffset": 545,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 502
+                },
+                "value": {
+                  "args": [
+                    {
+                      "kind": "TypeArg",
+                      "span": {
+                        "endOffset": 516,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 510
+                      },
+                      "type": {
+                        "kind": "Primitive",
+                        "name": "Number",
+                        "span": {
+                          "endOffset": 516,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 510
+                        }
+                      }
+                    },
+                    {
+                      "kind": "Literal",
+                      "span": {
+                        "endOffset": 531,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 517
+                      },
+                      "value": "SAMPLE_RATIO"
+                    }
+                  ],
+                  "effect": {
+                    "errors": [
+                      "ConfigError"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 304,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 264
+                    },
+                    "success": {
+                      "kind": "Ref",
+                      "name": "ServerSettings",
+                      "span": {
+                        "endOffset": 286,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 272
+                      }
+                    }
+                  },
+                  "kind": "Combinator",
+                  "name": "config",
+                  "options": [
+                    {
+                      "key": "default",
+                      "value": {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 544,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 541
+                        },
+                        "value": 0.5
+                      }
+                    }
+                  ],
+                  "span": {
+                    "endOffset": 545,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 502
+                  }
+                }
+              },
+              {
+                "name": "_",
+                "span": {
+                  "endOffset": 592,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 560
+                },
+                "value": {
+                  "args": [
+                    {
+                      "kind": "Literal",
+                      "span": {
+                        "endOffset": 586,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 565
+                      },
+                      "value": "loaded settings for"
+                    },
+                    {
+                      "kind": "Var",
+                      "name": "host",
+                      "span": {
+                        "endOffset": 591,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 587
+                      }
+                    }
+                  ],
+                  "effect": {
+                    "errors": [
+                      "ConfigError"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 304,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 264
+                    },
+                    "success": {
+                      "kind": "Ref",
+                      "name": "ServerSettings",
+                      "span": {
+                        "endOffset": 286,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 272
+                      }
+                    }
+                  },
+                  "kind": "Combinator",
+                  "name": "log",
+                  "span": {
+                    "endOffset": 592,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 560
+                  }
+                }
+              }
+            ],
+            "body": {
+              "effect": {
+                "errors": [
+                  "ConfigError"
+                ],
+                "kind": "Effect",
+                "requirements": [],
+                "span": {
+                  "endOffset": 304,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 264
+                },
+                "success": {
+                  "kind": "Ref",
+                  "name": "ServerSettings",
+                  "span": {
+                    "endOffset": 286,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 272
+                  }
+                }
+              },
+              "kind": "Succeed",
+              "span": {
+                "endOffset": 657,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 598
+              },
+              "value": {
+                "entries": [
+                  {
+                    "key": {
+                      "kind": "Expr",
+                      "source": {
+                        "kind": "Symbol",
+                        "name": ":host"
+                      },
+                      "span": {
+                        "endOffset": 613,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 608
+                      }
+                    },
+                    "value": {
+                      "kind": "Var",
+                      "name": "host",
+                      "span": {
+                        "endOffset": 618,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 614
+                      }
+                    }
+                  },
+                  {
+                    "key": {
+                      "kind": "Expr",
+                      "source": {
+                        "kind": "Symbol",
+                        "name": ":port"
+                      },
+                      "span": {
+                        "endOffset": 624,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 619
+                      }
+                    },
+                    "value": {
+                      "kind": "Var",
+                      "name": "port",
+                      "span": {
+                        "endOffset": 629,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 625
+                      }
+                    }
+                  },
+                  {
+                    "key": {
+                      "kind": "Expr",
+                      "source": {
+                        "kind": "Symbol",
+                        "name": ":debug"
+                      },
+                      "span": {
+                        "endOffset": 636,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 630
+                      }
+                    },
+                    "value": {
+                      "kind": "Var",
+                      "name": "debug",
+                      "span": {
+                        "endOffset": 642,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 637
+                      }
+                    }
+                  },
+                  {
+                    "key": {
+                      "kind": "Expr",
+                      "source": {
+                        "kind": "Symbol",
+                        "name": ":ratio"
+                      },
+                      "span": {
+                        "endOffset": 649,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 643
+                      }
+                    },
+                    "value": {
+                      "kind": "Var",
+                      "name": "ratio",
+                      "span": {
+                        "endOffset": 655,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 650
+                      }
+                    }
+                  }
+                ],
+                "kind": "Record",
+                "span": {
+                  "endOffset": 656,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 607
+                }
+              }
+            },
+            "effect": {
+              "errors": [
+                "ConfigError"
+              ],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 304,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 264
+              },
+              "success": {
+                "kind": "Ref",
+                "name": "ServerSettings",
+                "span": {
+                  "endOffset": 286,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 272
+                }
+              }
+            },
+            "kind": "Do",
+            "span": {
+              "endOffset": 658,
+              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+              "startOffset": 327
+            }
+          },
+          "effect": {
+            "errors": [
+              "ConfigError"
+            ],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 304,
+              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+              "startOffset": 264
+            },
+            "success": {
+              "kind": "Ref",
+              "name": "ServerSettings",
+              "span": {
+                "endOffset": 286,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 272
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "settings",
+          "params": [],
+          "value": true
+        },
+        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+        "span": {
+          "endOffset": 659,
+          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+          "startOffset": 306
+        }
+      },
+      {
+        "formIndex": 5,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "bindings": [
+              {
+                "name": "loaded",
+                "span": {
+                  "endOffset": 895,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 787
+                },
+                "value": {
+                  "binding": "_",
+                  "body": {
+                    "effect": {
+                      "errors": [
+                        "Misconfigured"
+                      ],
+                      "kind": "Effect",
+                      "requirements": [],
+                      "span": {
+                        "endOffset": 724,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 682
+                      },
+                      "success": {
+                        "kind": "Ref",
+                        "name": "ServerSettings",
+                        "span": {
+                          "endOffset": 704,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 690
+                        }
+                      }
+                    },
+                    "kind": "Pure",
+                    "span": {
+                      "endOffset": 810,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 802
+                    },
+                    "value": {
+                      "kind": "Var",
+                      "name": "settings",
+                      "span": {
+                        "endOffset": 810,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 802
+                      }
+                    }
+                  },
+                  "effect": {
+                    "errors": [
+                      "Misconfigured"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 724,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 682
+                    },
+                    "success": {
+                      "kind": "Ref",
+                      "name": "ServerSettings",
+                      "span": {
+                        "endOffset": 704,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 690
+                      }
+                    }
+                  },
+                  "errorType": "ConfigError",
+                  "handler": {
+                    "effect": {
+                      "errors": [
+                        "Misconfigured"
+                      ],
+                      "kind": "Effect",
+                      "requirements": [],
+                      "span": {
+                        "endOffset": 724,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 682
+                      },
+                      "success": {
+                        "kind": "Ref",
+                        "name": "ServerSettings",
+                        "span": {
+                          "endOffset": 704,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 690
+                        }
+                      }
+                    },
+                    "error": {
+                      "errorType": "Misconfigured",
+                      "kind": "Error",
+                      "payload": {
+                        "entries": [
+                          {
+                            "key": {
+                              "kind": "Expr",
+                              "source": {
+                                "kind": "Symbol",
+                                "name": ":reason"
+                              },
+                              "span": {
+                                "endOffset": 872,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 865
+                              }
+                            },
+                            "value": {
+                              "kind": "Literal",
+                              "span": {
+                                "endOffset": 891,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 873
+                              },
+                              "value": "HOST is required"
+                            }
+                          }
+                        ],
+                        "kind": "Record",
+                        "span": {
+                          "endOffset": 892,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 864
+                        }
+                      },
+                      "span": {
+                        "endOffset": 893,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 849
+                      }
+                    },
+                    "kind": "Fail",
+                    "span": {
+                      "endOffset": 894,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 843
+                    }
+                  },
+                  "kind": "Catch",
+                  "span": {
+                    "endOffset": 895,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 787
+                  }
+                }
+              }
+            ],
+            "body": {
+              "condition": {
+                "items": [
+                  {
+                    "kind": "Var",
+                    "name": "and",
+                    "span": {
+                      "endOffset": 915,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 912
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": ">",
+                        "span": {
+                          "endOffset": 918,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 917
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "get",
+                            "span": {
+                              "endOffset": 923,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 920
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "loaded",
+                            "span": {
+                              "endOffset": 930,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 924
+                            }
+                          },
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":port"
+                            },
+                            "span": {
+                              "endOffset": 936,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 931
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 937,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 919
+                        }
+                      },
+                      {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 939,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 938
+                        },
+                        "value": 0
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 940,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 916
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "<",
+                        "span": {
+                          "endOffset": 943,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 942
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "get",
+                            "span": {
+                              "endOffset": 948,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 945
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "loaded",
+                            "span": {
+                              "endOffset": 955,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 949
+                            }
+                          },
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":port"
+                            },
+                            "span": {
+                              "endOffset": 961,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 956
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 962,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 944
+                        }
+                      },
+                      {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 968,
+                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                          "startOffset": 963
+                        },
+                        "value": 65536
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 969,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 941
+                    }
+                  }
+                ],
+                "kind": "List",
+                "span": {
+                  "endOffset": 970,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 911
+                }
+              },
+              "effect": {
+                "errors": [
+                  "Misconfigured"
+                ],
+                "kind": "Effect",
+                "requirements": [],
+                "span": {
+                  "endOffset": 724,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 682
+                },
+                "success": {
+                  "kind": "Ref",
+                  "name": "ServerSettings",
+                  "span": {
+                    "endOffset": 704,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 690
+                  }
+                }
+              },
+              "else": {
+                "effect": {
+                  "errors": [
+                    "Misconfigured"
+                  ],
+                  "kind": "Effect",
+                  "requirements": [],
+                  "span": {
+                    "endOffset": 724,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 682
+                  },
+                  "success": {
+                    "kind": "Ref",
+                    "name": "ServerSettings",
+                    "span": {
+                      "endOffset": 704,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 690
+                    }
+                  }
+                },
+                "error": {
+                  "errorType": "Misconfigured",
+                  "kind": "Error",
+                  "payload": {
+                    "entries": [
+                      {
+                        "key": {
+                          "kind": "Expr",
+                          "source": {
+                            "kind": "Symbol",
+                            "name": ":reason"
+                          },
+                          "span": {
+                            "endOffset": 1047,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 1040
+                          }
+                        },
+                        "value": {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "str",
+                              "span": {
+                                "endOffset": 1052,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1049
+                              }
+                            },
+                            {
+                              "kind": "Literal",
+                              "span": {
+                                "endOffset": 1060,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1053
+                              },
+                              "value": "port "
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "get",
+                                  "span": {
+                                    "endOffset": 1065,
+                                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                    "startOffset": 1062
+                                  }
+                                },
+                                {
+                                  "kind": "Var",
+                                  "name": "loaded",
+                                  "span": {
+                                    "endOffset": 1072,
+                                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                    "startOffset": 1066
+                                  }
+                                },
+                                {
+                                  "kind": "Expr",
+                                  "source": {
+                                    "kind": "Symbol",
+                                    "name": ":port"
+                                  },
+                                  "span": {
+                                    "endOffset": 1078,
+                                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                    "startOffset": 1073
+                                  }
+                                }
+                              ],
+                              "kind": "List",
+                              "span": {
+                                "endOffset": 1079,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1061
+                              }
+                            },
+                            {
+                              "kind": "Literal",
+                              "span": {
+                                "endOffset": 1098,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1080
+                              },
+                              "value": " is out of range"
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 1099,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 1048
+                          }
+                        }
+                      }
+                    ],
+                    "kind": "Record",
+                    "span": {
+                      "endOffset": 1100,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 1039
+                    }
+                  },
+                  "span": {
+                    "endOffset": 1101,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 1014
+                  }
+                },
+                "kind": "Fail",
+                "span": {
+                  "endOffset": 1102,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 1000
+                }
+              },
+              "kind": "If",
+              "span": {
+                "endOffset": 1103,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 901
+              },
+              "then": {
+                "effect": {
+                  "errors": [
+                    "Misconfigured"
+                  ],
+                  "kind": "Effect",
+                  "requirements": [],
+                  "span": {
+                    "endOffset": 724,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 682
+                  },
+                  "success": {
+                    "kind": "Ref",
+                    "name": "ServerSettings",
+                    "span": {
+                      "endOffset": 704,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 690
+                    }
+                  }
+                },
+                "kind": "Succeed",
+                "span": {
+                  "endOffset": 993,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 977
+                },
+                "value": {
+                  "kind": "Var",
+                  "name": "loaded",
+                  "span": {
+                    "endOffset": 992,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 986
+                  }
+                }
+              }
+            },
+            "effect": {
+              "errors": [
+                "Misconfigured"
+              ],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 724,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 682
+              },
+              "success": {
+                "kind": "Ref",
+                "name": "ServerSettings",
+                "span": {
+                  "endOffset": 704,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 690
+                }
+              }
+            },
+            "kind": "Do",
+            "span": {
+              "endOffset": 1104,
+              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+              "startOffset": 757
+            }
+          },
+          "effect": {
+            "errors": [
+              "Misconfigured"
+            ],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 724,
+              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+              "startOffset": 682
+            },
+            "success": {
+              "kind": "Ref",
+              "name": "ServerSettings",
+              "span": {
+                "endOffset": 704,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 690
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "validated-settings",
+          "params": [],
+          "value": true
+        },
+        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+        "span": {
+          "endOffset": 1105,
+          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+          "startOffset": 726
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "kind": "ErrorDef",
+          "name": "Misconfigured",
+          "schema": {
+            "fields": [
+              {
+                "name": "reason",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 249,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 243
+                  }
+                },
+                "span": {
+                  "endOffset": 249,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 243
+                }
+              }
+            ],
+            "kind": "Struct"
+          }
+        },
+        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+        "span": {
+          "endOffset": 251,
+          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+          "startOffset": 213
+        }
+      },
+      {
+        "formIndex": 0,
+        "payload": {
+          "kind": "SchemaDef",
+          "name": "ServerSettings",
+          "schema": {
+            "fields": [
+              {
+                "name": "host",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 174,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 168
+                  }
+                },
+                "span": {
+                  "endOffset": 174,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 168
+                }
+              },
+              {
+                "name": "port",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "Int",
+                  "span": {
+                    "endOffset": 184,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 181
+                  }
+                },
+                "span": {
+                  "endOffset": 184,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 181
+                }
+              },
+              {
+                "name": "debug",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "Bool",
+                  "span": {
+                    "endOffset": 196,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 192
+                  }
+                },
+                "span": {
+                  "endOffset": 196,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 192
+                }
+              },
+              {
+                "name": "ratio",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "Number",
+                  "span": {
+                    "endOffset": 210,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 204
+                  }
+                },
+                "span": {
+                  "endOffset": 210,
+                  "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                  "startOffset": 204
+                }
+              }
+            ],
+            "kind": "Struct",
+            "span": {
+              "endOffset": 211,
+              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+              "startOffset": 161
+            }
+          }
+        },
+        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+        "span": {
+          "endOffset": 212,
+          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+          "startOffset": 140
+        }
+      }
+    ],
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 145,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 141
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 160,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 146
+              },
+              "value": "ServerSettings"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 167,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 162
+                    },
+                    "value": ":host"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 174,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 168
+                    },
+                    "value": "String"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 180,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 175
+                    },
+                    "value": ":port"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 184,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 181
+                    },
+                    "value": "Int"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 191,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 185
+                    },
+                    "value": ":debug"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 196,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 192
+                    },
+                    "value": "Bool"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 203,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 197
+                    },
+                    "value": ":ratio"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 210,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 204
+                    },
+                    "value": "Number"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 211,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 161
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 212,
+            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+            "startOffset": 140
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 219,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 214
+              },
+              "value": "error"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 233,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 220
+              },
+              "value": "Misconfigured"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 242,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 235
+                    },
+                    "value": ":reason"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 249,
+                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                      "startOffset": 243
+                    },
+                    "value": "String"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 250,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 234
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 251,
+            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+            "startOffset": 213
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 254,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 253
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 263,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 255
+              },
+              "value": "settings"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 271,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 265
+                  },
+                  "value": "Effect"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 286,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 272
+                  },
+                  "value": "ServerSettings"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 299,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 288
+                      },
+                      "value": "ConfigError"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 300,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 287
+                  }
+                },
+                {
+                  "items": [],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 303,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 301
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 304,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 264
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 305,
+            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+            "startOffset": 252
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 313,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 307
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 324,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 316
+              },
+              "value": "settings"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 331,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 328
+                  },
+                  "value": "do!"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 348,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 344
+                      },
+                      "value": "host"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 362,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 356
+                          },
+                          "value": "config"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 369,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 363
+                          },
+                          "value": "String"
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 376,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 370
+                          },
+                          "value": "HOST"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 377,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 355
+                      }
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 388,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 384
+                      },
+                      "value": "port"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 402,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 396
+                          },
+                          "value": "config"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 406,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 403
+                          },
+                          "value": "Int"
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 413,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 407
+                          },
+                          "value": "PORT"
+                        },
+                        {
+                          "kind": "keyword",
+                          "span": {
+                            "endOffset": 422,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 414
+                          },
+                          "value": ":default"
+                        },
+                        {
+                          "kind": "int",
+                          "span": {
+                            "endOffset": 427,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 423
+                          },
+                          "value": 8080
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 428,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 395
+                      }
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 440,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 435
+                      },
+                      "value": "debug"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 454,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 448
+                          },
+                          "value": "config"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 459,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 455
+                          },
+                          "value": "Bool"
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 467,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 460
+                          },
+                          "value": "DEBUG"
+                        },
+                        {
+                          "kind": "keyword",
+                          "span": {
+                            "endOffset": 476,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 468
+                          },
+                          "value": ":default"
+                        },
+                        {
+                          "kind": "bool",
+                          "span": {
+                            "endOffset": 482,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 477
+                          },
+                          "value": false
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 483,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 447
+                      }
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 495,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 490
+                      },
+                      "value": "ratio"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 509,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 503
+                          },
+                          "value": "config"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 516,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 510
+                          },
+                          "value": "Number"
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 531,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 517
+                          },
+                          "value": "SAMPLE_RATIO"
+                        },
+                        {
+                          "kind": "keyword",
+                          "span": {
+                            "endOffset": 540,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 532
+                          },
+                          "value": ":default"
+                        },
+                        {
+                          "kind": "float",
+                          "span": {
+                            "endOffset": 544,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 541
+                          },
+                          "value": 0.5
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 545,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 502
+                      }
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 553,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 552
+                      },
+                      "value": "_"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 564,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 561
+                          },
+                          "value": "log"
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 586,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 565
+                          },
+                          "value": "loaded settings for"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 591,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 587
+                          },
+                          "value": "host"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 592,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 560
+                      }
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 593,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 336
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 606,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 599
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 613,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 608
+                            },
+                            "value": ":host"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 618,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 614
+                            },
+                            "value": "host"
+                          }
+                        },
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 624,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 619
+                            },
+                            "value": ":port"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 629,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 625
+                            },
+                            "value": "port"
+                          }
+                        },
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 636,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 630
+                            },
+                            "value": ":debug"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 642,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 637
+                            },
+                            "value": "debug"
+                          }
+                        },
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 649,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 643
+                            },
+                            "value": ":ratio"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 655,
+                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                              "startOffset": 650
+                            },
+                            "value": "ratio"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 656,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 607
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 657,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 598
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 658,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 327
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 659,
+            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+            "startOffset": 306
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 662,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 661
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 681,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 663
+              },
+              "value": "validated-settings"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 689,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 683
+                  },
+                  "value": "Effect"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 704,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 690
+                  },
+                  "value": "ServerSettings"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 719,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 706
+                      },
+                      "value": "Misconfigured"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 720,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 705
+                  }
+                },
+                {
+                  "items": [],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 723,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 721
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 724,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 682
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 725,
+            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+            "startOffset": 660
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 733,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 727
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 754,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 736
+              },
+              "value": "validated-settings"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 761,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 758
+                  },
+                  "value": "do!"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 780,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 774
+                      },
+                      "value": "loaded"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 793,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 788
+                          },
+                          "value": "catch"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 810,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 802
+                          },
+                          "value": "settings"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 831,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 820
+                              },
+                              "value": "ConfigError"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 833,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 832
+                              },
+                              "value": "_"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 834,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 819
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 848,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 844
+                              },
+                              "value": "fail"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 863,
+                                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                    "startOffset": 850
+                                  },
+                                  "value": "Misconfigured"
+                                },
+                                {
+                                  "entries": [
+                                    {
+                                      "key": {
+                                        "kind": "keyword",
+                                        "span": {
+                                          "endOffset": 872,
+                                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                          "startOffset": 865
+                                        },
+                                        "value": ":reason"
+                                      },
+                                      "value": {
+                                        "kind": "string",
+                                        "span": {
+                                          "endOffset": 891,
+                                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                          "startOffset": 873
+                                        },
+                                        "value": "HOST is required"
+                                      }
+                                    }
+                                  ],
+                                  "kind": "map",
+                                  "span": {
+                                    "endOffset": 892,
+                                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                    "startOffset": 864
+                                  }
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 893,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 849
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 894,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 843
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 895,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 787
+                      }
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 896,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 766
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 904,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 902
+                      },
+                      "value": "if"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 915,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 912
+                          },
+                          "value": "and"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 918,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 917
+                              },
+                              "value": ">"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 923,
+                                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                    "startOffset": 920
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 930,
+                                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                    "startOffset": 924
+                                  },
+                                  "value": "loaded"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "span": {
+                                    "endOffset": 936,
+                                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                    "startOffset": 931
+                                  },
+                                  "value": ":port"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 937,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 919
+                              }
+                            },
+                            {
+                              "kind": "int",
+                              "span": {
+                                "endOffset": 939,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 938
+                              },
+                              "value": 0
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 940,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 916
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 943,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 942
+                              },
+                              "value": "<"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 948,
+                                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                    "startOffset": 945
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 955,
+                                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                    "startOffset": 949
+                                  },
+                                  "value": "loaded"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "span": {
+                                    "endOffset": 961,
+                                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                    "startOffset": 956
+                                  },
+                                  "value": ":port"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 962,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 944
+                              }
+                            },
+                            {
+                              "kind": "int",
+                              "span": {
+                                "endOffset": 968,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 963
+                              },
+                              "value": 65536
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 969,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 941
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 970,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 911
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 985,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 978
+                          },
+                          "value": "succeed"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 992,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 986
+                          },
+                          "value": "loaded"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 993,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 977
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1005,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 1001
+                          },
+                          "value": "fail"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1028,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1015
+                              },
+                              "value": "Misconfigured"
+                            },
+                            {
+                              "entries": [
+                                {
+                                  "key": {
+                                    "kind": "keyword",
+                                    "span": {
+                                      "endOffset": 1047,
+                                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                      "startOffset": 1040
+                                    },
+                                    "value": ":reason"
+                                  },
+                                  "value": {
+                                    "items": [
+                                      {
+                                        "kind": "symbol",
+                                        "span": {
+                                          "endOffset": 1052,
+                                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                          "startOffset": 1049
+                                        },
+                                        "value": "str"
+                                      },
+                                      {
+                                        "kind": "string",
+                                        "span": {
+                                          "endOffset": 1060,
+                                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                          "startOffset": 1053
+                                        },
+                                        "value": "port "
+                                      },
+                                      {
+                                        "items": [
+                                          {
+                                            "kind": "symbol",
+                                            "span": {
+                                              "endOffset": 1065,
+                                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                              "startOffset": 1062
+                                            },
+                                            "value": "get"
+                                          },
+                                          {
+                                            "kind": "symbol",
+                                            "span": {
+                                              "endOffset": 1072,
+                                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                              "startOffset": 1066
+                                            },
+                                            "value": "loaded"
+                                          },
+                                          {
+                                            "kind": "keyword",
+                                            "span": {
+                                              "endOffset": 1078,
+                                              "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                              "startOffset": 1073
+                                            },
+                                            "value": ":port"
+                                          }
+                                        ],
+                                        "kind": "list",
+                                        "span": {
+                                          "endOffset": 1079,
+                                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                          "startOffset": 1061
+                                        }
+                                      },
+                                      {
+                                        "kind": "string",
+                                        "span": {
+                                          "endOffset": 1098,
+                                          "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                          "startOffset": 1080
+                                        },
+                                        "value": " is out of range"
+                                      }
+                                    ],
+                                    "kind": "list",
+                                    "span": {
+                                      "endOffset": 1099,
+                                      "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                      "startOffset": 1048
+                                    }
+                                  }
+                                }
+                              ],
+                              "kind": "map",
+                              "span": {
+                                "endOffset": 1100,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1039
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1101,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 1014
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1102,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 1000
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1103,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 901
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1104,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 757
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1105,
+            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+            "startOffset": 726
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1108,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 1107
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1117,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 1109
+              },
+              "value": "base-url"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1125,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 1119
+                  },
+                  "value": "Effect"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1132,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 1126
+                  },
+                  "value": "String"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1147,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 1134
+                      },
+                      "value": "Misconfigured"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 1148,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 1133
+                  }
+                },
+                {
+                  "items": [],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 1151,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 1149
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1152,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 1118
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1153,
+            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+            "startOffset": 1106
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1161,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 1155
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1172,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 1164
+              },
+              "value": "base-url"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1179,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 1176
+                  },
+                  "value": "do!"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1192,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 1185
+                      },
+                      "value": "current"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1211,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 1193
+                      },
+                      "value": "validated-settings"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 1212,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 1184
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1225,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 1218
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1236,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 1233
+                          },
+                          "value": "str"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1248,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1246
+                              },
+                              "value": "if"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1253,
+                                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                    "startOffset": 1250
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1261,
+                                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                    "startOffset": 1254
+                                  },
+                                  "value": "current"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "span": {
+                                    "endOffset": 1268,
+                                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                    "startOffset": 1262
+                                  },
+                                  "value": ":debug"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 1269,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1249
+                              }
+                            },
+                            {
+                              "kind": "string",
+                              "span": {
+                                "endOffset": 1276,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1270
+                              },
+                              "value": "http"
+                            },
+                            {
+                              "kind": "string",
+                              "span": {
+                                "endOffset": 1284,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1277
+                              },
+                              "value": "https"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1285,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 1245
+                          }
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 1299,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 1294
+                          },
+                          "value": "://"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1312,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1309
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1320,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1313
+                              },
+                              "value": "current"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1326,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1321
+                              },
+                              "value": ":host"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1327,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 1308
+                          }
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 1339,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 1336
+                          },
+                          "value": ":"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1352,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1349
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1360,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1353
+                              },
+                              "value": "current"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1366,
+                                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                                "startOffset": 1361
+                              },
+                              "value": ":port"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1367,
+                            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                            "startOffset": 1348
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1368,
+                        "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                        "startOffset": 1232
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1369,
+                    "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                    "startOffset": 1217
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1370,
+                "sourceId": "engine-parity/effect-typescript/config-and-logging",
+                "startOffset": 1175
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1371,
+            "sourceId": "engine-parity/effect-typescript/config-and-logging",
+            "startOffset": 1154
+          }
+        }
+      ],
+      "diagnostics": []
+    }
+  },
+  "version": 1
+}

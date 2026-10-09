@@ -1,0 +1,11 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "review-stateless-form-application",
+  "outputs": {
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Declaration"
+    }
+  },
+  "version": 1
+}

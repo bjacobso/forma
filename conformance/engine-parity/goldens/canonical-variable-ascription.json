@@ -1,0 +1,200 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-variable-ascription",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "int",
+        "value": 42
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/canonical-variable-ascription",
+                "startOffset": 1
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 11,
+                "sourceId": "engine-parity/canonical-variable-ascription",
+                "startOffset": 3
+              },
+              "value": "identity"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 15,
+                    "sourceId": "engine-parity/canonical-variable-ascription",
+                    "startOffset": 13
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 19,
+                    "sourceId": "engine-parity/canonical-variable-ascription",
+                    "startOffset": 16
+                  },
+                  "value": "Int"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 23,
+                    "sourceId": "engine-parity/canonical-variable-ascription",
+                    "startOffset": 20
+                  },
+                  "value": "Int"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 24,
+                "sourceId": "engine-parity/canonical-variable-ascription",
+                "startOffset": 12
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 25,
+            "sourceId": "engine-parity/canonical-variable-ascription",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 33,
+                "sourceId": "engine-parity/canonical-variable-ascription",
+                "startOffset": 27
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 42,
+                "sourceId": "engine-parity/canonical-variable-ascription",
+                "startOffset": 34
+              },
+              "value": "identity"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 45,
+                    "sourceId": "engine-parity/canonical-variable-ascription",
+                    "startOffset": 44
+                  },
+                  "value": "x"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 46,
+                "sourceId": "engine-parity/canonical-variable-ascription",
+                "startOffset": 43
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 49,
+                    "sourceId": "engine-parity/canonical-variable-ascription",
+                    "startOffset": 48
+                  },
+                  "value": ":"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 51,
+                    "sourceId": "engine-parity/canonical-variable-ascription",
+                    "startOffset": 50
+                  },
+                  "value": "x"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 55,
+                    "sourceId": "engine-parity/canonical-variable-ascription",
+                    "startOffset": 52
+                  },
+                  "value": "Int"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 56,
+                "sourceId": "engine-parity/canonical-variable-ascription",
+                "startOffset": 47
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 57,
+            "sourceId": "engine-parity/canonical-variable-ascription",
+            "startOffset": 26
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 67,
+                "sourceId": "engine-parity/canonical-variable-ascription",
+                "startOffset": 59
+              },
+              "value": "identity"
+            },
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 70,
+                "sourceId": "engine-parity/canonical-variable-ascription",
+                "startOffset": 68
+              },
+              "value": 42
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 71,
+            "sourceId": "engine-parity/canonical-variable-ascription",
+            "startOffset": 58
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Int"
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,49 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-meta-entity-default",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 0,
+        "payload": {
+          "fields": [
+            {
+              "default": "entry",
+              "indexed": false,
+              "name": "catalog/label",
+              "required": false,
+              "type": "String"
+            }
+          ],
+          "kind": "MetaEntity",
+          "name": "Catalog"
+        },
+        "sourceId": "engine-parity/canonical-meta-entity-default",
+        "span": {
+          "endOffset": 70,
+          "sourceId": "engine-parity/canonical-meta-entity-default",
+          "startOffset": 0
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "entity": "Catalog",
+          "fields": {
+            "catalog/label": "entry"
+          },
+          "id": "catalog:1",
+          "kind": "Record",
+          "name": "catalog:1"
+        },
+        "sourceId": "engine-parity/canonical-meta-entity-default",
+        "span": {
+          "endOffset": 100,
+          "sourceId": "engine-parity/canonical-meta-entity-default",
+          "startOffset": 71
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,21 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "unbound-symbol",
+  "outputs": {
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/unbound-symbol",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 10,
+            "sourceId": "engine-parity/unbound-symbol",
+            "startOffset": 0
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

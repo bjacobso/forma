@@ -1,0 +1,265 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/tagged-valid",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/tagged-valid",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 11,
+                "sourceId": "engine-parity/row-operations/tagged-valid",
+                "startOffset": 6
+              },
+              "value": "Shape"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 19,
+                    "sourceId": "engine-parity/row-operations/tagged-valid",
+                    "startOffset": 13
+                  },
+                  "value": "Tagged"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 27,
+                        "sourceId": "engine-parity/row-operations/tagged-valid",
+                        "startOffset": 21
+                      },
+                      "value": "Circle"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 36,
+                              "sourceId": "engine-parity/row-operations/tagged-valid",
+                              "startOffset": 29
+                            },
+                            "value": ":radius"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 43,
+                              "sourceId": "engine-parity/row-operations/tagged-valid",
+                              "startOffset": 37
+                            },
+                            "value": "Number"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 44,
+                        "sourceId": "engine-parity/row-operations/tagged-valid",
+                        "startOffset": 28
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 45,
+                    "sourceId": "engine-parity/row-operations/tagged-valid",
+                    "startOffset": 20
+                  }
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 51,
+                    "sourceId": "engine-parity/row-operations/tagged-valid",
+                    "startOffset": 46
+                  },
+                  "value": "Point"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 52,
+                "sourceId": "engine-parity/row-operations/tagged-valid",
+                "startOffset": 12
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 53,
+            "sourceId": "engine-parity/row-operations/tagged-valid",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 60,
+                "sourceId": "engine-parity/row-operations/tagged-valid",
+                "startOffset": 55
+              },
+              "value": "match"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 68,
+                    "sourceId": "engine-parity/row-operations/tagged-valid",
+                    "startOffset": 62
+                  },
+                  "value": "Circle"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 77,
+                          "sourceId": "engine-parity/row-operations/tagged-valid",
+                          "startOffset": 70
+                        },
+                        "value": ":radius"
+                      },
+                      "value": {
+                        "kind": "int",
+                        "span": {
+                          "endOffset": 79,
+                          "sourceId": "engine-parity/row-operations/tagged-valid",
+                          "startOffset": 78
+                        },
+                        "value": 3
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 80,
+                    "sourceId": "engine-parity/row-operations/tagged-valid",
+                    "startOffset": 69
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 81,
+                "sourceId": "engine-parity/row-operations/tagged-valid",
+                "startOffset": 61
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 89,
+                    "sourceId": "engine-parity/row-operations/tagged-valid",
+                    "startOffset": 83
+                  },
+                  "value": "Circle"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 98,
+                          "sourceId": "engine-parity/row-operations/tagged-valid",
+                          "startOffset": 91
+                        },
+                        "value": ":radius"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 105,
+                          "sourceId": "engine-parity/row-operations/tagged-valid",
+                          "startOffset": 99
+                        },
+                        "value": "radius"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 106,
+                    "sourceId": "engine-parity/row-operations/tagged-valid",
+                    "startOffset": 90
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 107,
+                "sourceId": "engine-parity/row-operations/tagged-valid",
+                "startOffset": 82
+              }
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 114,
+                "sourceId": "engine-parity/row-operations/tagged-valid",
+                "startOffset": 108
+              },
+              "value": "radius"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 120,
+                "sourceId": "engine-parity/row-operations/tagged-valid",
+                "startOffset": 115
+              },
+              "value": "Point"
+            },
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 122,
+                "sourceId": "engine-parity/row-operations/tagged-valid",
+                "startOffset": 121
+              },
+              "value": 0
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 123,
+            "sourceId": "engine-parity/row-operations/tagged-valid",
+            "startOffset": 54
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Number"
+    }
+  },
+  "version": 1
+}
