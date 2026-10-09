@@ -65,6 +65,10 @@ export default defineConfig({
           { text: "0002: Modules and packages", link: "/rfcs/0002-modules-and-packages" },
           { text: "0003: Direct-style effects", link: "/rfcs/0003-direct-style-effects" },
           { text: "0004: One analysis architecture", link: "/rfcs/0004-one-analysis-architecture" },
+          { text: "0005: Live sessions", link: "/rfcs/0005-live-sessions" },
+          { text: "0006: Signatures as contracts", link: "/rfcs/0006-signatures-as-contracts" },
+          { text: "0007: Checked evaluation", link: "/rfcs/0007-checked-evaluation" },
+          { text: "0008: A runnable host", link: "/rfcs/0008-runnable-host" },
         ],
       },
       {
