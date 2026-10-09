@@ -20,6 +20,34 @@ let make_type_application callee args =
   | _ -> Ok (TApp (callee, args))
 
 let rec resolve env = function
+  | Core_ast.TERowOp (span, op, operands, keys) ->
+      let error span message = Error [diagnostic ~span "typecheck/row-operation" message] in
+      let operand_span = function
+        | Core_ast.TESym (s,_) | Core_ast.TEFun (s,_,_) | Core_ast.TEApp (s,_,_)
+        | Core_ast.TERow (s,_,_) | Core_ast.TERowOp (s,_,_,_) -> s in
+      let rec records acc = function
+        | [] -> Ok (List.rev acc)
+        | Core_ast.TERow (s,_,Some _) :: _ ->
+            error s (op ^ " requires a closed record; open-row constraints are not supported")
+        | operand :: rest ->
+            (match resolve env operand with
+             | Error _ as e -> e
+             | Ok (TRecord fields) -> records (fields :: acc) rest
+             | Ok (TVar _) -> error (operand_span operand) (op ^ " requires a known closed record shape; unresolved row operations are not supported")
+             | Ok (TOpenRecord _) -> error (operand_span operand) (op ^ " requires a closed record; open-row constraints are not supported")
+             | Ok _ -> error (operand_span operand) (op ^ " expects a record type")) in
+      (match records [] operands with
+       | Error _ as e -> e
+       | Ok [left;right] when op = "Merge" ->
+           (match List.find_opt (fun (label,_) -> List.mem_assoc label left) right with
+            | Some (label,_) -> error span ("Merge requires disjoint records; duplicate field " ^ label)
+            | None -> Ok (TRecord (sort_record_fields (left @ right))))
+       | Ok [fields] ->
+           (match List.find_opt (fun (_,label) -> not (List.mem_assoc label fields)) keys with
+            | Some (key_span,label) -> error key_span (op ^ " field " ^ label ^ " is not present in the record")
+            | None -> let labels = List.map snd keys in
+                Ok (TRecord (List.filter (fun (label,_) -> List.mem label labels = (op = "Pick")) fields)))
+       | _ -> assert false)
   | Core_ast.TESym (_, name) -> (
       match name with
       | "Int" -> Ok TInt

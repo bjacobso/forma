@@ -7,6 +7,7 @@
  * @module
  */
 import type { PackageableDeclaration } from "../artifact/artifact.js";
+import { InferenceError } from "../diagnostic/errors.js";
 import { parse } from "../reader/parser.js";
 import { toSExprMany } from "../reader/to-sexpr.js";
 import { lowerOntologyOperations } from "../surface/ontology-effect.js";
@@ -112,7 +113,8 @@ export function elaborateEffectProgram(
   const authored = toSExprMany(redTree);
   const surfaceDiagnostic = (error: unknown, expression?: SExpr): EffectProgramDiagnostic => {
     const loc = error instanceof Error && "loc" in error ? error.loc as SExpr["loc"] : expression?.loc;
-    return {phase:"project",severity:"error",code:"mechanics/ontology-operation",message:error instanceof Error ? error.message : String(error), ...(loc ? {span:locate(loc.start,loc.end)} : {})};
+    const code = error instanceof InferenceError && typeof error.details["code"] === "string" ? error.details["code"] : "mechanics/ontology-operation";
+    return {phase:"project",severity:"error",code,message:error instanceof Error ? error.message : String(error), ...(loc ? {span:locate(loc.start,loc.end)} : {})};
   };
   const surfaceErrors: EffectProgramDiagnostic[] = [];
   for (const expression of authored) {

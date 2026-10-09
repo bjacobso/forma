@@ -13,6 +13,20 @@ let label_name = function
 
 let rec parse_type_expr expr =
   match expr with
+  | Ast.List (span, Ast.Symbol (_, (("Pick" | "Omit" | "Merge") as op)) :: args) ->
+      (match args with
+       | [left; right] when op = "Merge" ->
+           parse_type_exprs [left;right] |> Result.map (fun operands -> Core_ast.TERowOp (span,op,operands,[]))
+       | [record; Ast.Vector (_,keys)] ->
+           let rec loop seen acc = function
+             | [] -> parse_type_expr record |> Result.map (fun operand -> Core_ast.TERowOp (span,op,[operand],List.rev acc))
+             | Ast.Keyword (key_span,label) :: rest ->
+                 if List.mem label seen then Error [diagnostic ~span:key_span "typecheck/row-operation" ("Duplicate " ^ op ^ " field " ^ label)]
+                 else loop (label :: seen) ((key_span,label) :: acc) rest
+             | key :: _ -> Error [diagnostic ~span:(Ast.expr_span key) "typecheck/row-operation" (op ^ " field names must be keywords")] in
+           loop [] [] keys
+       | [_;keys] -> Error [diagnostic ~span:(Ast.expr_span keys) "typecheck/row-operation" (op ^ " field names must be a vector of keywords")]
+       | _ -> Error [diagnostic ~span "typecheck/row-operation" (op ^ " expects two arguments")])
   | Ast.List (s, [Ast.Symbol (h,"Effect"); success]) -> parse_type_expr (Ast.List (s,[Ast.Symbol (h,"Effect");success;Ast.Vector (s,[]);Ast.Vector (s,[])]))
   | Ast.List (s, [Ast.Symbol (h,"Effect"); success; errors]) -> parse_type_expr (Ast.List (s,[Ast.Symbol (h,"Effect");success;errors;Ast.Vector (s,[])]))
   | Ast.String (span,v) -> Ok (Core_ast.TESym (span,Value.string_json v))

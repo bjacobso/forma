@@ -87,6 +87,28 @@ union of keyword or string literals. Dictionary lookup returns `(Option V)`.
 An open record includes a row variable after `&`, as in `{:name String & row}`.
 Generic aliases name their parameters: `(type (Box a) {:value a})`.
 
+Ordinary type aliases and signatures can compute closed record shapes:
+
+```lisp
+(type Person {:name String :age Int})
+(type Name (Pick Person [:name]))
+(type PublicPerson (Omit Person [:age]))
+(type Identified (Merge {:id String} PublicPerson))
+```
+
+`Pick` keeps the listed fields; `Omit` removes them. Their second argument
+must be a literal vector of distinct keywords, and every listed field must
+exist. Empty vectors are allowed. `Merge` combines records with disjoint
+fields; overlapping names are errors even when their types agree. Aliases
+and nested operations are supported, and retained field types may be
+polymorphic. Both engines require known, closed outer record shapes: operations
+on whole-record variables or open rows report an error. These are type
+operations; they do not project or merge values or generate Effect schemas.
+Open-row disjointness constraints are not implemented.
+For computed record annotations, supply optional fields explicitly as `Some`
+or `None`; implicit wrapping and filling currently require explicit record
+type syntax.
+
 ## Unions and tagged values
 
 `Union` accepts types or literal values and has no discriminator. `Tagged` declares
@@ -107,6 +129,8 @@ Constructors belong to their type: `Shape.Circle` is always explicit. Bare
 constructors resolve from the expected type when needed. The discriminator is
 `:_tag` by default; `(Tagged :tag kind ...)` selects another field. Record payloads
 merge into the tagged record; scalar payloads occupy `:value`.
+Inline record payloads must be closed and must not declare the discriminator
+field. A conflicting field or an open payload tail reports a located error.
 
 `class` and `error` declare named record types with the same field syntax. Errors
 have a discriminator derived from their name and may appear in Effect error sets.
