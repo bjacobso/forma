@@ -25,6 +25,11 @@ corpora used by the native implementation. The Markdown programs in
 `../examples` and the language definitions in `../preludes` complete the
 cross-target corpus.
 
+`row-operations/` pins closed-record `Pick`, `Omit`, disjoint `Merge`, and
+tagged payload collisions. Its goldens live in `engine-parity/cases.json` and
+run in the TypeScript tests and engine parity gate, including author offsets
+for negative cases.
+
 ## The shared dialect (discovered, not designed)
 
 The TS engine is dynamic; the OCaml engine runs HM typechecking on every

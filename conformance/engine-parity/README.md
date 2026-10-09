@@ -17,6 +17,11 @@ comparisons. The runner also executes every `../forma-zero` case and compares
 both engines with each other and the existing shared golden. `matrix.json`
 records intentional differences and missing surfaces.
 
+An entry may include `expected`, keyed by pass, to pin a normalized golden
+for each engine independently. The row-operation fixtures use this to pin
+successful types and values, and diagnostic codes and author source offsets;
+agreement between two engines alone does not establish correctness.
+
 The comparison retains AST and diagnostic source offsets and declaration
 provenance. It drops line/column duplicates, generated value references,
 artifact envelope metadata, and diagnostic prose. Map entries are sorted by

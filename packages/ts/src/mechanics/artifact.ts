@@ -1,6 +1,7 @@
 import { lowerOntologyOperations } from "../surface/ontology-effect.js";
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
 import type { Span } from "../diagnostic/diagnostic.js";
+import { diagnosticFromUnknown } from "../diagnostic/diagnostic.js";
 import { normalizeEffectProgram, serviceValues } from "../surface/effect.js";
 import type { SExpr } from "../reader/types.js";
 
@@ -28,8 +29,16 @@ export function mechanicsPackageableDeclarations(
   context?: readonly SExpr[],
   options: { readonly lowerOntology?: boolean } = {},
 ): MechanicsArtifactResult {
-  exprs = normalizeEffectProgram(options.lowerOntology === false ? exprs : lowerOntologyOperations(exprs), !normalized);
-  if (context) context = normalizeEffectProgram(options.lowerOntology === false ? context : lowerOntologyOperations(context), !normalized);
+  try {
+    exprs = normalizeEffectProgram(options.lowerOntology === false ? exprs : lowerOntologyOperations(exprs), !normalized);
+    if (context) context = normalizeEffectProgram(options.lowerOntology === false ? context : lowerOntologyOperations(context), !normalized);
+  } catch (error) {
+    const diagnostic = diagnosticFromUnknown(error, "elaborate", sourceId);
+    return { ok: false, diagnostics: [{
+      code: diagnostic.code, message: diagnostic.message,
+      ...(diagnostic.span ? { span: diagnostic.span } : {}),
+    }] };
+  }
   const declarations: PackageableDeclaration[] = [];
   const signatures = operationSignatures(context ?? exprs);
   const serviceMethodEffects = collectServiceMethodEffects(context ?? exprs, sourceId);
