@@ -107,9 +107,9 @@ async function capture(fn) {
   }
 }
 
-function addComparison(report, id, pass, typescript, ocaml, extra = {}) {
-  const golden = id.startsWith("forma-zero/") ? zeroExpected[id.slice(11)]
-    : options.updateGoldens ? ocaml : readJson(goldenPath(id)).outputs[pass];
+function addComparison(report, id, pass, typescript, ocaml, extra = {}, reference) {
+  const golden = reference ?? (id.startsWith("forma-zero/") ? zeroExpected[id.slice(11)]
+    : options.updateGoldens ? ocaml : readJson(goldenPath(id)).outputs[pass]);
   const differences = diffValues(typescript, golden, Infinity);
   const divergence = divergences.cases.find(item => item.id === id && item.pass === pass);
   const accepted = checkDivergence(differences, divergence);
@@ -122,11 +122,60 @@ function addComparison(report, id, pass, typescript, ocaml, extra = {}) {
     report.summary.goldenFailures++;
   }
   if (typescript?.runnerError || ocaml?.runnerError) report.summary.runnerFailures++;
-  if (!options.typescriptOnly && !options.updateGoldens) addGoldenCheck(report, id, pass, "ocaml", ocaml, golden);
-  if (options.updateGoldens && !id.startsWith("forma-zero/")) {
+  if (!options.typescriptOnly && (!options.updateGoldens || reference !== undefined)) addGoldenCheck(report, id, pass, "ocaml", ocaml, golden);
+  if (options.updateGoldens && reference === undefined && !id.startsWith("forma-zero/")) {
     const entry = candidateGoldens.get(id) ?? { version: 1, capturedFrom: "ocaml-native", id, outputs: {} };
     entry.outputs[pass] = ocaml;
     candidateGoldens.set(id, entry);
+  }
+}
+
+async function compareSessionLoads(report, tsHost, daemon, jsDaemon) {
+  const fixtures = readJson(resolve(repoRoot, "conformance/session-load/loads.json"));
+  for (const fixture of fixtures.cases) {
+    const id = `session-load/${fixture.id}`;
+    if (!selected(id)) continue;
+    const tsSession = await tsHost.openSession();
+    const sessions = [];
+    try {
+      for (const target of [daemon, jsDaemon].filter(Boolean)) {
+        const { sessionId } = checkOk("openSession", await target.request({ op: "openSession" }));
+        sessions.push({ target, sessionId });
+      }
+      if (fixture.initial) {
+        const initial = await tsHost.loadSource({ ...fixture.initial, sessionId: tsSession.sessionId });
+        if (initial.diagnostics.length) throw new Error(`TS initial load: ${JSON.stringify(initial)}`);
+        for (const { target, sessionId } of sessions) {
+          checkOk("initial load", await target.request({ op: "loadSource", ...fixture.initial, sessionId }));
+        }
+      }
+      const ts = await capture(async () => {
+        const result = await tsHost.loadSource({ ...fixture.load, sessionId: tsSession.sessionId });
+        return { ok: !result.diagnostics.some(d => d.severity === "error"), located: result.diagnostics.every(d => d.span?.sourceId === fixture.load.sourceId) };
+      });
+      const values = await Promise.all(sessions.map(({ target, sessionId }) => capture(async () => {
+        const result = await target.request({ op: "loadSource", ...fixture.load, sessionId });
+        return { ok: result.ok, located: (result.diagnostics ?? []).every(d => d.span?.sourceId === fixture.load.sourceId) };
+      })));
+      if (jsDaemon) addGoldenCheck(report, id, "loadSource", "ocaml-js", values[1], values[0]);
+      addComparison(report, id, "loadSource", ts, values[0], {}, fixture.expected);
+      if (fixture.evaluate) {
+        const tsResult = await tsHost.evaluateInSession({ sessionId: tsSession.sessionId, source: fixture.evaluate });
+        const tsValue = tsResult.status === "completed" ? normalizeValue(tsResult.result.value) : tsResult;
+        const values = await Promise.all(sessions.map(({ target, sessionId }) => capture(async () => {
+          const result = checkOk("retained prelude", await target.request({ op: "replSubmit", sessionId, source: fixture.evaluate }));
+          return normalizeValue(result.value);
+        })));
+        const valueId = `${id}/retained-value`;
+        if (jsDaemon) addGoldenCheck(report, valueId, "evaluate", "ocaml-js", values[1], values[0]);
+        addComparison(report, valueId, "evaluate", tsValue, values[0], {}, normalizeValue(fixture.expectedValue));
+      }
+    } finally {
+      await tsHost.closeSession({ sessionId: tsSession.sessionId });
+      for (const { target, sessionId } of sessions) {
+        checkOk("closeSession", await target.request({ op: "closeSession", sessionId }));
+      }
+    }
   }
 }
 
@@ -276,6 +325,8 @@ async function main() {
         report.summary.goldenFailures += differences.length;
       }
     }
+
+    await compareSessionLoads(report, tsHost, daemon, jsDaemon);
 
     for (const fixture of casesManifest.cases) {
       if (!selected(fixture.id)) continue;

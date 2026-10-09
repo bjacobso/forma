@@ -144,3 +144,5 @@ export {
   type AuthorityInferenceResult,
   type AuthorityCheckResult,
 } from "./type/authority.js";
+
+export type { InferenceSnapshot } from "./type/inference-snapshot.js";

@@ -8,6 +8,7 @@
  *  - Error reporting with Origin
  */
 import { Context, Effect, Ref } from "effect";
+import { captureInferenceSnapshot, type InferenceSnapshot } from "./inference-snapshot.js";
 import type { Type, Row, ERow, Constraint } from "./types.js";
 import { TVar, RVar, EVar } from "./types.js";
 import type { Kind } from "./kind.js";
@@ -93,6 +94,8 @@ export interface AmbientEffectState {
 // ---------------------------------------------------------------------------
 
 export interface InferContextService {
+  /** Freeze the state after an operation; callers commit it only on success. */
+  readonly snapshot: Effect.Effect<InferenceSnapshot>;
   /** Resolve a built-in type scheme for the active inference host. */
   readonly builtinScheme: BuiltinSchemeProvider;
   /** Resolve a host-owned unbound symbol as a literal type, if applicable. */
@@ -143,6 +146,7 @@ export interface InferContextService {
 export class InferContext extends Context.Service<InferContext, InferContextService>()("InferContext") {}
 
 export interface MakeInferContextOptions {
+  readonly initialState?: InferenceSnapshot | undefined;
   readonly builtinScheme?: BuiltinSchemeProvider;
   readonly unboundSymbolType?: (name: string) => Type | undefined;
 }
@@ -172,22 +176,22 @@ function makeContext(
   options: MakeInferContextOptions,
   ownedNodeTypes: boolean,
 ): Effect.Effect<InferContextService> {
-  let tvarCounter = 0;
-  let rvarCounter = 0;
-  let evarCounter = 0;
+  let tvarCounter = options.initialState?.nextTypeVariable ?? 0;
+  let rvarCounter = options.initialState?.nextRowVariable ?? 0;
+  let evarCounter = options.initialState?.nextEffectVariable ?? 0;
 
   return Effect.gen(function* () {
-    const subst = yield* Ref.make<Subst>(emptySubst);
+    const subst = yield* Ref.make<Subst>(options.initialState?.subst ?? emptySubst);
     const nodeTypes = yield* Ref.make<NodeTypeMap>(new Map());
     const diagnostics = yield* Ref.make<DiagnosticList>([]);
-    const nominalRecords = yield* Ref.make<Map<string, Type>>(new Map());
-    const typeAliases = yield* Ref.make<Map<string, TypeExpr>>(new Map());
-    const typeAliasParams = yield* Ref.make<Map<string, readonly string[]>>(new Map());
-    const errorTypes = yield* Ref.make<Set<string>>(new Set());
-    const adtRegistry = yield* Ref.make<Map<string, ADTInfo>>(new Map([["Option",{typeParams:["a"],constructors:new Map([["Some",1],["None",0]])}],["Result",{typeParams:["a","e"],constructors:new Map([["Ok",1],["Err",1]])}]]));
-    const constructorToType = yield* Ref.make<Map<string, string>>(new Map());
-    const classRegistry = yield* Ref.make<Map<string, ClassInfo>>(new Map());
-    const instanceRegistry = yield* Ref.make<Map<string, InstanceInfo[]>>(new Map());
+    const nominalRecords = yield* Ref.make<Map<string, Type>>(new Map(options.initialState?.nominalRecords));
+    const typeAliases = yield* Ref.make<Map<string, TypeExpr>>(new Map(options.initialState?.typeAliases));
+    const typeAliasParams = yield* Ref.make<Map<string, readonly string[]>>(new Map(options.initialState?.typeAliasParams));
+    const errorTypes = yield* Ref.make<Set<string>>(new Set(options.initialState?.errorTypes));
+    const adtRegistry = yield* Ref.make<Map<string, ADTInfo>>(new Map(options.initialState?.adtRegistry ?? [["Option",{typeParams:["a"],constructors:new Map([["Some",1],["None",0]])}],["Result",{typeParams:["a","e"],constructors:new Map([["Ok",1],["Err",1]])}]]));
+    const constructorToType = yield* Ref.make<Map<string, string>>(new Map(options.initialState?.constructorToType));
+    const classRegistry = yield* Ref.make<Map<string, ClassInfo>>(new Map(options.initialState?.classRegistry));
+    const instanceRegistry = yield* Ref.make<Map<string, InstanceInfo[]>>(new Map([...options.initialState?.instanceRegistry ?? []].map(([name, instances]) => [name, [...instances]])));
     const initialAmbient = EVar(`e${evarCounter++}`);
     const ambientEffects = yield* Ref.make<AmbientEffectState>({
       row: initialAmbient,
@@ -196,7 +200,8 @@ function makeContext(
     });
     const pendingConstraints = yield* Ref.make<PendingConstraint[]>([]);
 
-    return InferContext.of({
+    const service: InferContextService = InferContext.of({
+      snapshot: Effect.suspend(() => captureInferenceSnapshot(service, { nextTypeVariable: tvarCounter, nextRowVariable: rvarCounter, nextEffectVariable: evarCounter })),
       builtinScheme: options.builtinScheme ?? builtinScheme,
       unboundSymbolType: options.unboundSymbolType ?? (() => undefined),
       subst,
@@ -245,5 +250,6 @@ function makeContext(
           }),
         ),
     });
+    return service;
   });
 }

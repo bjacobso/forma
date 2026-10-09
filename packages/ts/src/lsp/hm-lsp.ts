@@ -46,6 +46,8 @@ export interface LspError {
   readonly message: string;
   readonly span?: Span | undefined;
   readonly code?: string | undefined;
+  /** Compiler diagnostic identity; `code` above is the author source excerpt. */
+  readonly diagnosticCode?: string | undefined;
 }
 
 export interface LspResult {
@@ -154,6 +156,7 @@ export interface AnalyzeLspOptions {
   readonly macroEnv?: Env | undefined;
   /** Receives the type environment after the last form. */
   readonly captureEnv?: ((env: TypeEnv) => void) | undefined;
+  readonly captureState?: ((state: import("../type/inference-snapshot.js").InferenceSnapshot) => void) | undefined;
 }
 
 /**
@@ -234,6 +237,7 @@ export function analyzeLsp(
     const failures = inferResult._tag === "Failure" ? [...formErrors, inferResult.failure] : formErrors;
     const errors = failures.map((err) => ({
       message: err.message,
+      diagnosticCode: typeof err.details?.["code"] === "string" ? err.details["code"] : err._tag,
       span: err.origin?.span,
       code: err.origin?.span ? extractCode(source, err.origin.span) : undefined,
     }));
@@ -241,6 +245,7 @@ export function analyzeLsp(
     const resultType = inferResult._tag === "Success" ? inferResult.success : undefined;
     // Types recorded early in inference are resolved with everything learned since.
     const finalSubst = yield* Ref.get(ctxService.subst);
+    options?.captureState?.(yield* ctxService.snapshot);
     const nodeTypes = yield* Ref.get(ctxService.nodeTypes);
 
     // Collect all nodes and build typed spans
