@@ -28,3 +28,4 @@ The structural workbench currently depends on unpublished Foldworks packages.
 - [Workbench](https://raw.githubusercontent.com/bjacobso/forma/main/packages/workbench/README.md): Structural editing, reviewable proposals, capability approvals, setup, and first-release limits.
 - [Conformance](https://raw.githubusercontent.com/bjacobso/forma/main/conformance/README.md): Fixtures and checks that pin implemented engine behavior.
 - [Roadmap](https://raw.githubusercontent.com/bjacobso/forma/main/docs/roadmap.md): Current foundation and planned work; planned features are not compatibility promises.
+- [Record row rollout](https://raw.githubusercontent.com/bjacobso/forma/main/docs/rfcs/0005-row-operations.md): Implemented closed-record operations and links to proposed generic constraints, normalization, typed reflection, and bounded row mapping.

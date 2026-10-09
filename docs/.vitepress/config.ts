@@ -66,6 +66,10 @@ export default defineConfig({
           { text: "0003: Direct-style effects", link: "/rfcs/0003-direct-style-effects" },
           { text: "0004: One analysis architecture", link: "/rfcs/0004-one-analysis-architecture" },
           { text: "0005: Record type operations", link: "/rfcs/0005-row-operations" },
+          { text: "0006: Qualified rows", link: "/rfcs/0006-qualified-rows" },
+          { text: "0007: Shared type normalization", link: "/rfcs/0007-type-normalization" },
+          { text: "0008: Typed form results", link: "/rfcs/0008-typed-form-results" },
+          { text: "0009: Field names and row map", link: "/rfcs/0009-field-names-and-row-map" },
         ],
       },
       {

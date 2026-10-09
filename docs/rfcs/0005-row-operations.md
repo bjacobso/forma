@@ -169,6 +169,10 @@ Principal inference for unrestricted row equations is not a goal. Rules for
 ambiguous exported constraints and higher-rank use need a separate design
 and fixtures before enabling this syntax.
 
+[RFC 0006](./0006-qualified-rows.md) develops this proposal into a rank-one
+constraint design, including generic value primitives and portable schemes.
+It remains proposed, not part of the implemented closed-shape operations.
+
 ### Why this slice rejects unknown shapes
 
 Neither engine currently records record-domain lacks constraints in schemes.
@@ -244,6 +248,32 @@ Full `pnpm check`, native tests, and `pnpm parity:engines` are the verification
 gates. Any inability to run them must be reported separately from implemented
 behavior. The changeset covers both engine packages.
 
+## Full rollout proposals
+
+The following RFCs cover the remaining bounded row-language rollout. Their
+acceptance criteria are separate from this RFC's implemented slice; none of
+their new syntax is implemented merely by documenting it here.
+
+| Proposal | Capability | Dependency and completion gate |
+| --- | --- | --- |
+| [0006: Qualified rows](./0006-qualified-rows.md) | Open-row presence, absence, disjointness, symbolic operations, and generic record primitives | After 0005; obligations survive generic body checks and module imports in both engines |
+| [0007: Shared normalization](./0007-type-normalization.md) | Computed record coercion, type values, schemas, and opt-in tagged flattening | Closed consumers can follow 0005 independently; symbolic consumers need 0006; existing artifacts remain unchanged |
+| [0009: Field names and row map](./0009-field-names-and-row-map.md) | Key-set indices for selection, then field-name parameters and bounded unary mapping | After 0006; key indices land before checked form templates; mapping is a later independent stage |
+| [0008: Typed form results](./0008-typed-form-results.md) | Domain-neutral reflection and checked declarative result families | Reflection bridge follows 0007; generic templates need 0006 and 0009's key indices; old/new query types and artifacts agree |
+
+The critical path to the ontology migration is qualified rows plus shared
+normalization, then validated reflection and key-set indices, then checked
+templates. Row mapping is useful library work but is not a prerequisite for
+`query`. A reflection-backed `row-of` alone does not meet the stronger goal of
+checking a generic template once.
+
+Each stage requires independent conformance goldens, author-span diagnostics,
+explicit implementation/parity status, and changesets for package behavior
+changes. A TS-only intermediate stage must be documented as a language difference.
+The rollout does not promise full Ur compatibility: unrestricted type-level
+functions, dependent runtime selection, and arbitrary row-equation inference
+remain outside these proposals.
+
 ## Out of scope and remaining work
 
 - Open-row `Disjoint`/`Where`, symbolic operations, and lacks/presence solving.
@@ -257,5 +287,7 @@ behavior. The changeset covers both engine packages.
   or global changes to the existing open-row unifier.
 - Changing the payload representation of `Tagged` aliases or computed types.
 
-These are deferred language features, not engine parity gaps in the shipped
-closed-shape rules.
+These are deferred from this implementation, not engine parity gaps in the
+closed-shape rules. RFCs 0006–0009 propose bounded follow-ups; their explicit
+exclusions, including general field renaming and type-level lambdas, remain
+outside the rollout.
