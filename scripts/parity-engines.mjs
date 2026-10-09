@@ -90,6 +90,57 @@ function addComparison(report, id, pass, typescript, ocaml, extra = {}) {
   if (typescript?.runnerError || ocaml?.runnerError) report.summary.runnerFailures++;
 }
 
+async function compareSessionLoads(report, tsHost, daemon) {
+  const fixtures = readJson(resolve(repoRoot, "conformance/session-load/loads.json"));
+  for (const fixture of fixtures.cases) {
+    const id = `session-load/${fixture.id}`;
+    if (!selected(id)) continue;
+    const tsSession = await tsHost.openSession();
+    const ocamlSession = checkOk("openSession", await daemon.request({ op: "openSession" }));
+    try {
+      if (fixture.initial) {
+        const initial = await tsHost.loadSource({ ...fixture.initial, sessionId: tsSession.sessionId });
+        if (initial.diagnostics.length) throw new Error(`TS initial load: ${JSON.stringify(initial)}`);
+        checkOk("initial load", await daemon.request({ op: "loadSource", ...fixture.initial, sessionId: ocamlSession.sessionId }));
+      }
+      const ts = await capture(async () => {
+        const result = await tsHost.loadSource({ ...fixture.load, sessionId: tsSession.sessionId });
+        return { ok: !result.diagnostics.some(d => d.severity === "error"), located: result.diagnostics.every(d => d.span?.sourceId === fixture.load.sourceId) };
+      });
+      const ocaml = await capture(async () => {
+        const result = await daemon.request({ op: "loadSource", ...fixture.load, sessionId: ocamlSession.sessionId });
+        return { ok: result.ok, located: (result.diagnostics ?? []).every(d => d.span?.sourceId === fixture.load.sourceId) };
+      });
+      addComparison(report, id, "loadSource", ts, ocaml);
+      for (const [engine, actual] of [["typescript", ts], ["ocaml", ocaml]]) {
+        const differences = diffValues(fixture.expected, actual);
+        if (differences.length) {
+          report.goldenFailures.push({ id, engine, differences });
+          report.summary.goldenFailures += differences.length;
+        }
+      }
+      if (fixture.evaluate) {
+        const tsResult = await tsHost.evaluateInSession({ sessionId: tsSession.sessionId, source: fixture.evaluate });
+        const ocamlResult = checkOk("retained prelude", await daemon.request({ op: "replSubmit", sessionId: ocamlSession.sessionId, source: fixture.evaluate }));
+        const tsValue = tsResult.status === "completed" ? normalizeValue(tsResult.result.value) : tsResult;
+        const ocamlValue = normalizeValue(ocamlResult.value);
+        addComparison(report, `${id}/retained-value`, "evaluate", tsValue, ocamlValue);
+        const expected = normalizeValue(fixture.expectedValue);
+        for (const [engine, actual] of [["typescript", tsValue], ["ocaml", ocamlValue]]) {
+          const differences = diffValues(expected, actual);
+          if (differences.length) {
+            report.goldenFailures.push({ id, engine, differences });
+            report.summary.goldenFailures += differences.length;
+          }
+        }
+      }
+    } finally {
+      await tsHost.closeSession({ sessionId: tsSession.sessionId });
+      checkOk("closeSession", await daemon.request({ op: "closeSession", sessionId: ocamlSession.sessionId }));
+    }
+  }
+}
+
 function projectTsEffectIr(sourceId, source, ts) {
   const forms = Effect.runSync(ts.Reader.parseManyToSExpr(source));
   const projected = ts.Mechanics.mechanicsPackageableDeclarations(forms, sourceId);
@@ -219,6 +270,8 @@ async function main() {
         report.summary.goldenFailures += differences.length;
       }
     }
+
+    await compareSessionLoads(report, tsHost, daemon);
 
     for (const fixture of casesManifest.cases) {
       if (!selected(fixture.id)) continue;

@@ -1,0 +1,83 @@
+{
+  "moduleEdits": {
+    "sources": [
+      {
+        "sourceId": "cache/people.forma",
+        "source": "(export value)\n(define value 1)\n(define private 10)"
+      },
+      {
+        "sourceId": "cache/hiring.forma",
+        "source": "(import \"./people.forma\" [value])\n(+ value 2)"
+      }
+    ],
+    "edits": [
+      {
+        "source": "(export value)\n(define value 1)\n(define private 20)",
+        "expectedValue": 3
+      },
+      {
+        "source": "(export value)\n(define value 20)\n(define private 20)",
+        "expectedValue": 22
+      },
+      {
+        "source": "(export replacement)\n(define replacement 7)",
+        "expectedCode": "module/private-export"
+      },
+      {
+        "source": "",
+        "expectedCode": "module/private-export"
+      },
+      {
+        "source": "(export value)\n(define value 3)",
+        "expectedValue": 5
+      }
+    ]
+  },
+  "incremental": {
+    "before": "(define a 1)\n(define b 2)\n(define c 3)",
+    "edits": [
+      {
+        "source": "(define a 1)\n(define b 20)\n(define c 3)",
+        "expectedBindings": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      {
+        "source": "(define a 1)\n(define c 3)",
+        "expectedBindings": [
+          "a",
+          "c"
+        ]
+      },
+      {
+        "source": "(define a true)\n(define replacement 7)",
+        "expectedBindings": [
+          "a",
+          "replacement"
+        ]
+      },
+      {
+        "source": "",
+        "expectedBindings": []
+      }
+    ]
+  },
+  "schema": {
+    "before": "(entity Department {:name String})\n(entity Employee {:name String :department (Option (Id Department)) :active Bool})\n(query employee-directory :from Employee :where active :select [name department])",
+    "data": "(seed Department \"department:platform\" {:name \"Platform\"})\n(seed Employee \"employee:grace\" {:name \"Grace Hopper\" :department \"department:platform\" :active true})",
+    "privateBefore": "(export Person)\n(entity Person {:name (Option String)})\n(entity InternalNote {:body (Option String)})",
+    "privateAfter": "(export Person)\n(entity Person {:name (Option String)})\n(entity InternalNote {:text (Option String)})",
+    "dependent": "(import \"./people.forma\" :as people)\n(export Candidate)\n(entity Candidate {:person (Option (Id people/Person))})",
+    "removed": "(+ 1 2)",
+    "expectedMissingCode": "elaborate/hole-type",
+    "expectedMissingReference": "Employee",
+    "ocamlMissingCode": "elaborate/unknown-reference",
+    "moduleBefore": "(export Person)\n(type Person {:name (Option String)})\n(type InternalNote {:body (Option String)})",
+    "moduleAfter": "(export Person)\n(type Person {:name (Option String)})\n(type InternalNote {:text (Option String)})",
+    "moduleDependent": "(import \"./people.forma\" :as people)\n(export Candidate)\n(type Candidate {:person (Option (Id people/Person))})",
+    "expectedPrivateFieldBefore": "internal-note/body",
+    "expectedPrivateFieldAfter": "internal-note/text"
+  }
+}

@@ -86,11 +86,18 @@ export const evaluateRepl = (context: string, declarations: string, input: strin
         source,
         (head) => prelude?.descriptions.get(head)?.phase === "domain",
       );
+      const executable = blank(source, forms);
+      const checked = yield* call(() => host.typecheck({ sessionId, sourceId: config.sourceId, source: executable }));
+      if (checked.diagnostics.some(diagnostic => diagnostic.severity === "error")) return {
+        ok: false,
+        output: checked.diagnostics.map(diagnostic => diagnostic.message).join("\n"),
+        declarations: "",
+      };
       let state = yield* call(() =>
         host.evaluateInSession({
           sessionId,
           sourceId: config.sourceId,
-          source: blank(source, forms),
+          source: executable,
         }),
       );
       if (state.status === "host-call") {
@@ -117,6 +124,7 @@ export const evaluateRepl = (context: string, declarations: string, input: strin
       return state.status === "completed"
         ? {
             ok: true,
+            type: checked.display,
             output: state.result.printed ?? preview(state.result.value),
             declarations: mergeReplSource(declarations, replDefinitions(input)),
           }

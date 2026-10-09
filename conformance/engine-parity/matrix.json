@@ -33,10 +33,11 @@
     },
     {
       "id": "loadSource",
-      "status": "intentional-difference",
-      "typescript": "parse-and-store",
+      "status": "compared",
+      "typescript": "validate-and-store",
       "ocaml": "apply-declarations",
-      "reason": "OCaml applies and validates session-updating forms on load; TypeScript stores parsed source."
+      "fixture": "../session-load",
+      "reason": "Both validate sources structurally and apply checked preludes atomically. OCaml retains its legacy capability label; descriptor hook metacheck is pending in TypeScript."
     },
     {
       "id": "typed-authority",

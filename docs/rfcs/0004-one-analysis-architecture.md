@@ -148,9 +148,9 @@ queries   parse(id)            lossless tree and errors; never fails
 
 ## Open questions
 
-- **Typeclasses across preludes.** The prelude scope carries the type and
-  macro environments but not typeclass and instance registries, which live
-  in the inference context.
+- **Inference snapshots.** Prelude and REPL scopes now retain alias, record,
+  ADT, typeclass, and instance registries with their fresh-variable supply.
+  Per-form memoization must include this state among its query inputs.
 - **The mechanics checker.** Effect programs (`define-layer`, combinators,
   streams) are checked by the mechanics checker, not Hindley–Milner, so the
   language server reports false errors on them. Stage 7 should decide whether

@@ -35,12 +35,24 @@ The native daemon uses newline-delimited JSON. Long-lived sessions retain
 loaded sources, generalized definitions, artifact caches, and suspended host
 calls. One-shot requests remain available for simple compiler invocations.
 
-`version().sourceLoadSemantics` makes a current difference explicit: the
-TypeScript host parses and stores a loaded source, while the native OCaml host
-also typechecks/evaluates forms that update the session before storing them.
-The JavaScript OCaml adapter does not support persistent loading.
-Call `typecheck` explicitly when the consumer needs a comparable validation
-result from either engine.
+`version().sourceLoadSemantics` reports `validate-and-store` for the TypeScript
+host: source loads validate surface grammar, descriptor application structure,
+module directives, and duplicate global declaration identities. References and
+expression types are checked during analysis. Prelude loads evaluate and infer
+types before atomically committing their scope; replacing a prelude rebuilds
+that scope so removed bindings do not survive. Descriptor hooks and hosted
+helpers are checked by bootstrap for shape; their type contracts remain a
+metacheck seam pending the descriptor port. Kernel definitions continue through
+HM inference. The native OCaml host retains its legacy
+`apply-declarations` label. The JavaScript OCaml adapter does not support
+persistent loading.
+
+The TypeScript host's optional `replSubmit` operation checks each submission,
+evaluates it, and commits its value environment, inferred schemes and type
+registries, and source only on success. Results include a type projection.
+Ordinary `evaluateInSession`
+continues to evaluate snapshots; the workbench rebuilds its REPL context from
+current declarations so document edits cannot leave stale bindings.
 
 ## Effect projection parity
 
