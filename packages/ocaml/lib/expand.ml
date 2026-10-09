@@ -73,7 +73,7 @@ let apply_macro ~eval_body closure args =
              required (List.length args));
       ]
   else
-    let syntax_args = List.map Quote.value_of_syntax args in
+    Quote.with_syntax_arguments args (fun syntax_args ->
     let rec take n acc values =
       if n = 0 then (List.rev acc, values)
       else
@@ -95,7 +95,34 @@ let apply_macro ~eval_body closure args =
     match eval_body local_env closure.body with
     | Error _ as error -> error
     | Ok value ->
-        Quote.syntax_of_value value |> Result.map_error quote_diagnostics
+        Quote.syntax_of_value value |> Result.map_error quote_diagnostics)
+
+let hygiene_counter = ref 0
+let hygienic_expansion args expression =
+  let spans = List.map Ast.expr_span args in
+  let caller e = let span=Ast.expr_span e in List.exists (fun original->span.Ast.source_id=original.Ast.source_id && span.start_offset>=original.start_offset && span.end_offset<=original.end_offset) spans in
+  let fresh () = let n= !hygiene_counter in incr hygiene_counter; "macro__forma_local_"^string_of_int n in
+  let rec bind local = function
+    | e when caller e -> e,local
+    | Ast.Symbol (s,n) when n<>"&" && n<>"..." -> let fresh=fresh () in Ast.Symbol (s,fresh),(n,fresh)::local
+    | Ast.Vector (s,xs) -> let xs,local=List.fold_left (fun (xs,local) e->let e,local=bind local e in xs@[e],local) ([],local) xs in Ast.Vector (s,xs),local
+    | Ast.Map (s,pairs) -> let pairs,local=List.fold_left (fun (pairs,local) (k,v)->let v,local=bind local v in pairs@[k,v],local) ([],local) pairs in Ast.Map (s,pairs),local
+    | e -> e,local
+  and walk local = function
+    | e when caller e -> e
+    | Ast.Symbol (s,n) as e -> Option.fold ~none:e ~some:(fun n->Ast.Symbol (s,n)) (List.assoc_opt n local)
+    | Ast.List (_,Ast.Symbol (_, ("quote"|"quasiquote"))::_) as e -> e
+    | Ast.List (s,(Ast.Symbol (_,"fn") as h)::(Ast.Vector _ as params)::body) -> let params,local=bind local params in Ast.List (s,h::params::List.map (walk local) body)
+    | Ast.List (s,(Ast.Symbol (_,"let") as h)::Ast.Vector (vs,pairs)::body) ->
+        let rec bindings local = function
+          | pattern::value::rest -> let value=walk local value in let pattern,local=bind local pattern in let rest,local=bindings local rest in pattern::value::rest,local
+          | rest -> rest,local in
+        let pairs,local=bindings local pairs in Ast.List (s,h::Ast.Vector (vs,pairs)::List.map (walk local) body)
+    | Ast.List (s,xs) -> Ast.List (s,List.map (walk local) xs)
+    | Ast.Vector (s,xs) -> Ast.Vector (s,List.map (walk local) xs)
+    | Ast.Map (s,pairs) -> Ast.Map (s,List.map (fun (k,v)->walk local k,walk local v) pairs)
+    | e -> e in
+  walk [] expression
 
 let rec replace_generated_spans span = function
   | Ast.Nil expr_span when expr_span.source_id = "generated" -> Ast.Nil span
@@ -158,7 +185,7 @@ let rec expand_expr ~eval_body env expr =
             | Error _ as error -> error
             | Ok expanded ->
                 expand_expr ~eval_body env
-                  (match Surface.core_program [replace_generated_spans span expanded] with [expanded] -> expanded | _ -> expanded))
+                  (match Surface.core_program [replace_generated_spans span (if Module_contract.contains op "__forma_" then hygienic_expansion args expanded else expanded)] with [expanded] -> expanded | _ -> expanded))
         | _ ->
             map_result (expand_expr ~eval_body env) [] args
             |> Result.map (fun args ->

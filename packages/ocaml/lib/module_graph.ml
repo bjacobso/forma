@@ -1,8 +1,38 @@
 include Module_contract
 
-let resolve ?(core_bindings = []) ?(core_type_names = []) ?(data_forms = [])
-    ?(is_core_binding = fun _ -> false) (entry : source) (resolver : resolver) =
+let resolve ?(projects = []) ?(core_bindings = []) ?(core_type_names = [])
+    ?(data_forms = []) ?(is_core_binding = fun _ -> false) (entry : source)
+    (resolver : resolver) =
   let completed = Hashtbl.create 16 and ordered = ref [] and active = ref [] in
+  let bootstrap =
+    List.map
+      (fun (project : project) ->
+        let seen = ref [] in
+        let rec collect (source : source) =
+          let id = normalize_id source.id in
+          if not (List.mem id !seen) then (
+            seen := id :: !seen;
+            match Reader.parse_ast ~source_id:id source.source with
+            | Error _ -> ()
+            | Ok expressions ->
+                List.iter
+                  (function
+                    | Ast.List
+                        ( _,
+                          Ast.Symbol (_, ("import" | "export-from"))
+                          :: Ast.String (_, specifier)
+                          :: _ ) ->
+                        Option.iter collect (resolver ~specifier ~importer:id)
+                    | _ -> ())
+                  expressions)
+        in
+        Option.iter
+          (fun specifier ->
+            Option.iter collect (resolver ~specifier ~importer:project.base))
+          project.prelude;
+        (project.project_id, !seen))
+      projects
+  in
   let rec visit (input : source) =
     let id = normalize_id input.id in
     match Hashtbl.find_opt completed id with
@@ -77,6 +107,10 @@ let resolve ?(core_bindings = []) ?(core_type_names = []) ?(data_forms = [])
                             kind;
                             constructors = names;
                             scheme = None;
+                            declaration = None;
+                            schema = None;
+                            data = None;
+                            form = None;
                           }
                         in
                         bindings := !bindings @ [ (n, b) ];
@@ -207,6 +241,32 @@ let resolve ?(core_bindings = []) ?(core_type_names = []) ?(data_forms = [])
              ^ " requires RFC 0002 stage 2 (compile-time libraries).");
           exports := !exports @ [ (b.name, b) ]
         in
+        (match
+           List.find_opt (fun (p : project) -> List.mem id p.modules) projects
+         with
+        | Some { project_id; base; prelude = Some specifier; _ }
+          when not (List.mem id (List.assoc project_id bootstrap)) -> (
+            match resolver ~specifier ~importer:base with
+            | None ->
+                raise
+                  (Error
+                     (Type_diagnostic.make "module/not-found"
+                        ("Cannot resolve project prelude " ^ specifier
+                       ^ " from " ^ base ^ ".")))
+            | Some source when not (List.mem (normalize_id source.id) !active)
+              ->
+                let prelude = visit source in
+                dependencies := !dependencies @ [ prelude.id ];
+                List.iter
+                  (fun b ->
+                    if List.mem_assoc b.name !bindings then
+                      fail (List.hd authored) "module/duplicate-import"
+                        ("Prelude import " ^ b.name
+                       ^ " conflicts with a local binding.");
+                    imports := !imports @ [ (b.name, b) ])
+                  prelude.interface.exports
+            | _ -> ())
+        | _ -> ());
         List.iter
           (function
             | Ast.List
@@ -252,6 +312,153 @@ let resolve ?(core_bindings = []) ?(core_type_names = []) ?(data_forms = [])
                       else "."))
             | _ -> ())
           authored;
+        let introduced =
+          Module_compile_time.discover authored !bindings !imports !namespaces
+            (fun identity -> Hashtbl.find_opt completed identity.module_id)
+        in
+        List.iter
+          (fun (n, node, classification, form) ->
+            if
+              List.mem_assoc n (!bindings @ !imports)
+              || List.mem_assoc n !namespaces
+            then
+              fail node "module/duplicate-declaration"
+                ("Duplicate declaration " ^ n ^ " in " ^ id ^ ".");
+            let identity = { module_id = id; declaration = n } in
+            let classification =
+              match List.assoc_opt classification (!bindings @ !imports) with
+              | Some b -> b.symbol
+              | None -> classification
+            in
+            let b =
+              {
+                name = n;
+                identity;
+                symbol = symbol identity;
+                kind = "declaration";
+                constructors = [];
+                scheme = None;
+                declaration =
+                  Some { classification; form; span = Ast.expr_span node };
+                schema = None;
+                data = None;
+                form = None;
+              }
+            in
+            bindings := !bindings @ [ (n, b) ])
+          introduced;
+        let expressions =
+          Module_scope.expressions ~bindings:!bindings
+            ~constructors:!constructors ~imports:!imports
+            ~namespaces:!namespaces ~core_bindings ~core_type_names ~data_forms
+            ~is_core_binding ~local_core_names authored
+        in
+        let expressions =
+          if
+            List.exists (fun (_, b) -> b.kind = "macro") (!bindings @ !imports)
+            || List.exists
+                 (fun (_, m) ->
+                   List.exists (fun b -> b.kind = "macro") m.interface.exports)
+                 !namespaces
+          then (
+            let preliminary =
+              {
+                id;
+                source = input.source;
+                expressions;
+                dependencies = !dependencies;
+                bindings = !bindings;
+                imports = !imports;
+                namespace_imports =
+                  List.concat_map
+                    (fun (_, m) -> m.interface.exports)
+                    !namespaces;
+                interface = { module_id = id; exports = [] };
+                compile_time = None;
+              }
+            in
+            let state =
+              Option.get
+                (Module_compile_time.prepare preliminary (fun identity ->
+                     Hashtbl.find_opt completed identity.module_id))
+                  .compile_time
+            in
+            let expanded = Module_compile_time.expand state expressions in
+            let introduce node kind declaration =
+              match name node with
+              | Some n when not (contains n "__forma_") ->
+                  if List.mem_assoc n (!bindings @ !imports) then
+                    fail node "module/duplicate-declaration"
+                      ("Duplicate declaration " ^ n ^ " in " ^ id ^ ".");
+                  let identity = { module_id = id; declaration = n } in
+                  bindings :=
+                    !bindings
+                    @ [
+                        ( n,
+                          {
+                            name = n;
+                            identity;
+                            symbol = symbol identity;
+                            kind;
+                            constructors = [];
+                            scheme = None;
+                            declaration;
+                            schema = None;
+                            data = None;
+                            form = None;
+                          } );
+                      ]
+              | _ -> ()
+            in
+            List.iter
+              (fun expression ->
+                (match expression with
+                | Ast.List (_, Ast.Symbol (_, h) :: (Ast.Symbol _ as node) :: _)
+                  ->
+                    Option.iter
+                      (fun kind -> introduce node kind None)
+                      (Module_contract.kind h)
+                | _ -> ());
+                match
+                  Option.bind (head expression) (fun h ->
+                      List.assoc_opt h (state.forms ()))
+                with
+                | None -> ()
+                | Some form ->
+                    let _, holes, _, _ =
+                      Module_compile_time.form_parts form.definition
+                    in
+                    let values =
+                      Module_compile_time.match_holes form.definition expression
+                    in
+                    List.iter
+                      (fun (hole, t) ->
+                        match
+                          ( Module_compile_time.unwrap t,
+                            List.assoc_opt hole values )
+                        with
+                        | ( Ast.List
+                              ( _,
+                                Ast.Symbol (_, "Declares")
+                                :: Ast.Symbol (_, classification)
+                                :: _ ),
+                            Some node ) ->
+                            introduce node "declaration"
+                              (Some
+                                 {
+                                   classification;
+                                   form = form.form_identity;
+                                   span = Ast.expr_span node;
+                                 })
+                        | _ -> ())
+                      holes)
+              expanded;
+            Module_scope.expressions ~allow_resolved:true ~bindings:!bindings
+              ~constructors:!constructors ~imports:!imports
+              ~namespaces:!namespaces ~core_bindings ~core_type_names
+              ~data_forms ~is_core_binding ~local_core_names expanded)
+          else expressions
+        in
         List.iter
           (function
             | Ast.List (_, Ast.Symbol (_, "export") :: names) as e ->
@@ -269,12 +476,6 @@ let resolve ?(core_bindings = []) ?(core_type_names = []) ?(data_forms = [])
                   names
             | _ -> ())
           authored;
-        let expressions =
-          Module_scope.expressions ~bindings:!bindings
-            ~constructors:!constructors ~imports:!imports
-            ~namespaces:!namespaces ~core_bindings ~core_type_names ~data_forms
-            ~is_core_binding ~local_core_names authored
-        in
         let interface =
           {
             module_id = id;
@@ -297,7 +498,12 @@ let resolve ?(core_bindings = []) ?(core_type_names = []) ?(data_forms = [])
                   List.filter (fun b -> not (later b)) m.interface.exports)
                 !namespaces;
             interface;
+            compile_time = None;
           }
+        in
+        let m =
+          Module_compile_time.prepare m (fun identity ->
+              Hashtbl.find_opt completed identity.module_id)
         in
         Hashtbl.add completed id m;
         ordered := !ordered @ [ m ];

@@ -24,6 +24,7 @@ type t = {
   mutable next_value_ref_id : int;
   pending_evaluations : (string, pending_evaluation) Hashtbl.t;
   value_refs : (string, Eval.value) Hashtbl.t;
+  mutable projects : Module_contract.project list;
   mutable core_env : Eval.env;
   mutable core_types : Type_env.env;
   mutable env : Eval.env;
@@ -63,6 +64,7 @@ let open_ () =
       next_value_ref_id = 0;
       pending_evaluations = Hashtbl.create 8;
       value_refs = Hashtbl.create 16;
+      projects = [];
       core_env = Env.empty;
       core_types = [];
       env = Env.empty;
@@ -93,6 +95,7 @@ let reset session =
   session.next_evaluation_id <- 0;
   session.next_call_id <- 0;
   session.next_value_ref_id <- 0;
+  session.projects <- [];
   session.core_env <- Env.empty;
   session.core_types <- [];
   session.env <- Env.empty;

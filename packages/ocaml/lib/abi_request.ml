@@ -52,6 +52,7 @@ type t = {
   failure_message : string option;
   type_policy : type_policy option;
   host_builtins : host_builtin_descriptor list;
+  projects : Module_contract.project list option;
 }
 
 let json_escape input =
@@ -465,6 +466,31 @@ let decode json =
           failure_message = find_string_field "failureMessage" json;
           type_policy = find_type_policy_field json;
           host_builtins = find_host_builtins_field json;
+          projects =
+            (match find_array_field "projects" json with
+            | None -> None
+            | Some array ->
+                Some
+                  (split_top_level_objects array
+                  |> List.filter_map (fun item ->
+                         match
+                           ( find_string_field "id" item,
+                             find_string_field "base" item )
+                         with
+                         | Some project_id, Some base ->
+                             Some
+                               Module_contract.
+                                 {
+                                   project_id;
+                                   base;
+                                   prelude =
+                                     find_string_field "prelude" item;
+                                   modules =
+                                     Option.value ~default:[]
+                                       (find_string_array_field "modules"
+                                          item);
+                                 }
+                         | _ -> None)));
         }
   | None ->
       Error

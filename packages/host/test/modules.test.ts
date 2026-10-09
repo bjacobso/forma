@@ -194,9 +194,8 @@ for (const host of hosts)
         sourceId: "app.forma",
         source: "(export m) (macro (m x) x)",
       });
-      expect(compileTime.diagnostics[0]?.code).toBe(
-        "module/compile-time-stage",
-      );
+      expect(compileTime.diagnostics).toEqual([]);
+      expect(compileTime.interfaces.at(-1)?.exports[0]?.kind).toBe("macro");
     } finally {
       await host.closeSession({ sessionId });
     }
@@ -355,7 +354,7 @@ for (const host of hosts)
   });
 
 for (const host of hosts)
-  test(`${host.name}: configured core helpers and variables are shared explicitly`, async () => {
+  test(`${host.name}: project prelude helpers and configured variables are explicit`, async () => {
     const { sessionId } = await host.openSession();
     try {
       await host.configureSession({
@@ -366,12 +365,23 @@ for (const host of hosts)
         (
           await host.loadSource({
             sessionId,
-            kind: "prelude",
+            kind: "source",
             sourceId: "core.forma",
-            source: "(define coreIdentity [x] x)",
+            source: "(export coreIdentity) (define coreIdentity [x] x)",
           })
         ).diagnostics,
       ).toEqual([]);
+      await host.configureSession({
+        sessionId,
+        projects: [
+          {
+            id: "app",
+            base: "project",
+            prelude: "./core.forma",
+            modules: ["main.forma", "core.forma"],
+          },
+        ],
+      });
       const source =
         "(export answer) (define answer (coreIdentity tenant)) answer";
       expect(

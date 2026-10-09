@@ -1,4 +1,3 @@
-import { expandKernelExprsSync } from "../evaluator/frontend.js";
 import type { PackageableDeclaration } from "../artifact/artifact.js";
 import { checkModuleGraph } from "./check.js";
 import { inferredModuleSignatures } from "./signatures.js";
@@ -45,39 +44,7 @@ export function moduleMechanicsDeclarations(graph: ModuleGraph): {
   const check = checkModuleGraph(graph);
   if (!check.ok) return { declarations: [], diagnostics: check.diagnostics };
   const enriched = graph.modules.map((m) => {
-    const hasMacros = m.expressions.some(
-      (e) =>
-        e._tag === "List" &&
-        e.items[0]?._tag === "Sym" &&
-        e.items[0].name === "macro",
-    );
-    const expandedDefinitions = hasMacros
-      ? expandKernelExprsSync(m.expressions, {
-          keepMacroDefs: false,
-        }).expanded.filter(
-          (e) =>
-            e._tag === "List" &&
-            e.items[0]?._tag === "Sym" &&
-            e.items[0].name === "define",
-        )
-      : [];
-    const expanded = hasMacros
-      ? m.expressions.flatMap((e) => {
-          if (e._tag !== "List" || e.items[0]?._tag !== "Sym") return [e];
-          if (e.items[0].name === "macro") return [];
-          if (e.items[0].name !== "define" || e.items[1]?._tag !== "Sym")
-            return [e];
-          const name = e.items[1].name;
-          return [
-            expandedDefinitions.find(
-              (d) =>
-                d._tag === "List" &&
-                d.items[1]?._tag === "Sym" &&
-                d.items[1].name === name,
-            ) ?? e,
-          ];
-        })
-      : m.expressions;
+    const expanded = m.compileTime?.expand(m.expressions) ?? m.expressions;
     return {
       ...m,
       expressions: inferredModuleSignatures(
@@ -264,6 +231,16 @@ export function linkEffectModules(
           .filter((b) => b.identity.moduleId === module.id)
           .map((b) => b.symbol),
       );
+      // Macro expansion can refer to private definition-site helpers by compiler
+      // identity. Export them only in generated code so other generated modules
+      // can link the reference; the language interface remains private.
+      for (const consumer of graph.modules)
+        if (consumer.id !== module.id) {
+          const references = JSON.stringify(consumer.expressions);
+          for (const binding of module.bindings.values())
+            if (references.includes(JSON.stringify(binding.symbol)))
+              exported.add(binding.symbol);
+        }
       const generated = generateMechanicsEffectTypeScriptModule(local, {
         check: checked.info,
         externalNames: new Set(external.keys()),

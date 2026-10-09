@@ -24,5 +24,9 @@ export const renderPreludeSources = () => {
 
 if (process.argv[1] === import.meta.filename) {
   writeFileSync(output, renderPreludeSources());
+  const kernel = readFileSync(resolve(preludesDir, "kernel.lisp"), "utf8");
+  writeFileSync(resolve(preludesDir, "kernel.forma"),
+    "; Generated from kernel.lisp by packages/ts/scripts/generate-preludes.mjs.\n" +
+    "(export not when unless cond and or -> ->>)\n\n" + kernel);
   console.log(`Wrote ${output}`);
 }

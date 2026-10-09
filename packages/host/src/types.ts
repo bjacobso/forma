@@ -319,6 +319,7 @@ export interface OpenSessionResult {
 }
 
 export interface ConfigureSessionRequest {
+  readonly projects?: ModuleGraphRequest["projects"];
   readonly sessionId: string;
   readonly variables?: readonly SessionVariable[] | undefined;
   readonly hostBuiltins?: readonly HostBuiltinDescriptor[] | undefined;
@@ -829,7 +830,14 @@ export interface FormSlotsResult {
   readonly unknownSlots: readonly { readonly name: string; readonly nodeId: string }[];
 }
 
-export interface ModuleGraphRequest { readonly sessionId:string; readonly sourceId:string; readonly source?:string|undefined }
+export interface ModuleGraphRequest { readonly sessionId:string; readonly sourceId:string; readonly source?:string|undefined;
+  readonly projects?: readonly {
+    readonly id: string;
+    readonly base: string;
+    readonly prelude?: string;
+    readonly modules?: readonly string[];
+  }[];
+}
 export interface ModuleGraphResult { readonly entry:string; readonly interfaces:readonly ModuleInterface[]; readonly diagnostics:readonly Diagnostic[] }
 export type ModuleLinkResult = LinkedEffectProgram;
 

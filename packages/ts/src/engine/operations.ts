@@ -225,8 +225,14 @@ export function expand(request: ExpandRequest): ExpandResult {
   }
 
   try {
-    const exprs = request.session || /\((?:import|export|export-from)\s/.test(source) ? graphFromRequest(request,sourceId,source).modules.at(-1)!.expressions : Effect.runSync(Reader.parseManyToSExpr(source));
-    const expanded = Evaluator.expandKernelExprsSync(exprs, {
+    const module =
+      request.session?.projects.length || /\((?:import|export|export-from)\s/.test(source) ? graphFromRequest(request,sourceId,source).modules.at(-1)
+        : undefined;
+    const exprs =
+      module?.expressions ?? Effect.runSync(Reader.parseManyToSExpr(source));
+    const expanded =
+      module?.compileTime?.expand(exprs) ??
+      Evaluator.expandKernelExprsSync(exprs, {
       builtins: Builtins.defaultBuiltins,
       ...(request.session ? { env: request.session.env } : {}),
     }).expanded;
@@ -264,7 +270,7 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
   const sourceId = request.sourceId ?? (!request.source && request.session?.orderedSources("source").length === 1
     ? request.session.orderedSources("source")[0]!.id : "source");
   const source = sourceFromRequest(request);
-  if (source !== undefined && /\((?:import|export|export-from)\s/.test(source)) {
+  if (source !== undefined && (request.session?.projects.length || /\((?:import|export|export-from)\s/.test(source))) {
     try {
       const graph = graphFromRequest(request, sourceId, source);
       const checked = checkModuleGraph(graph,moduleCheckOptions(request));
@@ -384,7 +390,7 @@ export async function evaluate(request: EvaluateRequest): Promise<EvaluateResult
 export async function evaluateInSession(
   request: EvaluateInSessionRequest,
 ): Promise<EvaluateResult> {
-  const sourceId = request.sourceId ?? (request.source ? "session" : request.session.orderedSources("source")[0]?.id ?? "session");
+  const sourceId = request.sourceId ?? (request.source ? "session" : (request.session.orderedSources("source")[0]?.id ?? "session"));
   const source = sourceFromRequest(request);
   if (source === undefined) {
     return {
@@ -402,8 +408,19 @@ export async function evaluateInSession(
     };
   }
 
+  if (
+    !request.session.projects.length &&
+    !/\((?:import|export|export-from)\s/.test(source)
+  ) {
+    return evaluate({
+      ...request,
+      source,
+      sourceId,
+      env: request.env ?? request.session.env,
+    });
+  }
   try {
-    const core = request.env ?? request.session.env;
+    const core = request.env ?? request.session.configurationEnv;
     let cached = moduleRuntimes.get(request.session);
     if (!cached || cached.core !== core) {
       cached = { core, runtime:new ModuleRuntime(core) };
@@ -419,33 +436,23 @@ export async function evaluateInSession(
 
 const moduleRuntimes = new WeakMap<LanguageSession,{core:Env;runtime:ModuleRuntime}>();
 export async function prepareModuleImports(request:EvaluateInSessionRequest,sourceId:string,source:string,core:Env):Promise<{expressions:readonly Reader.SExpr[];env:Env}> {
+  if (!request.session.projects.length && !/\((?:import|export|export-from)\s/.test(source)) {
+    return {expressions:Effect.runSync(Reader.parseManyToSExpr(source)),env:core};
+  }
   let cached=moduleRuntimes.get(request.session);
   if (!cached || cached.core!==core) {cached={core,runtime:new ModuleRuntime(core)};moduleRuntimes.set(request.session,cached);}
   const graph=graphFromRequest(request,sourceId,source);
-  return {expressions:graph.modules.find(m=>m.id===graph.entry)!.expressions,env:await cached.runtime.imports(graph,request.stepLimit)};
+  return {expressions:graph.modules.find((m) =>m.id===graph.entry)!.expressions,env:await cached.runtime.imports(graph,request.stepLimit)};
 }
 function graphFromRequest(request:{readonly session?:LanguageSession|undefined},sourceId:string,source:string):ModuleGraph {
-  return resolveModuleGraph({id:sourceId,source},sourceModuleResolver(request.session?.orderedSources("source").map(s=>({id:s.id,source:s.text})) ?? []),moduleCoreOptions(request.session));
+  return resolveModuleGraph({id:sourceId,source},sourceModuleResolver(request.session?.orderedSources("source").map((s) =>({id:s.id,source:s.text})) ?? []),moduleCoreOptions(request.session));
 }
 /** Only host configuration contributes names to the implicit core. */
 export function moduleCoreOptions(session?:LanguageSession):import("../modules/graph.js").ModuleCoreOptions {
-  const bindings=new Set(session?.env.bindingNames() ?? []),types=new Set<string>();
-  for (const source of session?.orderedSources("prelude") ?? []) {
-    const expressions=Reader.toSExprMany(Reader.parse(source.text).redTree);
-    const typeNames=(e:Reader.SExpr):void=>{
-      if (e._tag === "Sym" && /^[A-Z]/.test(e.name)) types.add(e.name);
-      else if (e._tag === "List" || e._tag === "Vector") e.items.forEach(typeNames);
-      else if (e._tag === "Map") e.pairs.forEach(([,v])=>typeNames(v));
-    };
-    for (const e of expressions) {
-      if (e._tag !== "List") continue;
-      const header=e.items[1],name=header?._tag === "Sym" ? header.name : header?._tag === "List" && header.items[0]?._tag === "Sym" ? header.items[0].name : undefined;
-      if (name && ["define","type","class","error","macro","form",":"].includes(head(e) ?? "")) bindings.add(name);
-      if (name?.startsWith("__type/")) types.add(name.slice(7));
-      if ([":","type","class","error","__sum-type","__type-alias","__record-type"].includes(head(e) ?? "")) e.items.slice(2).forEach(typeNames);
-    }
-  }
-  return {bindings,types};
+  return {
+    bindings: new Set(session?.configurationEnv.bindingNames() ?? []),
+    projects: session?.projects ?? [],
+  };
 }
 function moduleDiagnostic(error:unknown,phase:DiagnosticPhase,sourceId:string):Diagnostic {
   return error instanceof Error && "diagnostic" in error ? (error as {diagnostic:Diagnostic}).diagnostic : diagnosticFromUnknown(error,phase,sourceId);
@@ -656,8 +663,29 @@ function typePolicyWithSessionBindings(
 }
 
 export function moduleCheckOptions(request: TypecheckRequest): import("../modules/check.js").ModuleCheckOptions {
-  return {...typeInferOptions(typecheckRequestWithSession(request)),
-    ...(request.session ? {coreExpressions:request.session.coreExpressions()} : {})};
+  const env = request.session?.configurationEnv;
+  const coreExpressions = env
+    ?.bindingNames()
+    .map((name) => ({
+      _tag: "List" as const,
+      loc: { start: 0, end: 0, line: 1, col: 1 },
+      items: [
+        {
+          _tag: "Sym" as const,
+          name: "define",
+          loc: { start: 0, end: 0, line: 1, col: 1 },
+        },
+        {
+          _tag: "Sym" as const,
+          name,
+          loc: { start: 0, end: 0, line: 1, col: 1 },
+        },
+        Evaluator.kValueToSExpr(env.lookup(name)!),
+      ],
+    }));
+  return {
+    ...typeInferOptions(request),
+    ...(coreExpressions ? { coreExpressions } : {})};
 }
 
 /** How the type checker sees host builtins and names a type policy covers. */

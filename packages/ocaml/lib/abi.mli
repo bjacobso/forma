@@ -21,6 +21,7 @@ type request = {
   failure_message : string option;
   type_policy : type_policy option;
   host_builtins : host_builtin_descriptor list;
+  projects : Module_contract.project list option;
 }
 
 and source_bundle_item = { kind : string; source_id : string; source : string }

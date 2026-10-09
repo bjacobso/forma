@@ -37,12 +37,16 @@ export interface SessionInfo {
 export interface LanguageSessionOptions {
   readonly id: string;
   readonly env?: Env | undefined;
+  readonly projects?: import("../modules/graph.js").ModuleCoreOptions["projects"];
 }
 
 export class LanguageSession {
   readonly id: string;
   env: Env;
   configurationEnv: Env;
+  projects: NonNullable<
+    import("../modules/graph.js").ModuleCoreOptions["projects"]
+  >;
 
   readonly preludes = new Map<string, SessionSourceRecord>();
   readonly sources = new Map<string, SessionSourceRecord>();
@@ -55,6 +59,7 @@ export class LanguageSession {
     this.id = options.id;
     this.env = options.env ?? Env.empty();
     this.configurationEnv = this.env;
+    this.projects = options.projects ?? [];
   }
 
   rememberSource(input: SessionSourceInput): SessionSourceRecord {
@@ -153,6 +158,7 @@ export class LanguageSession {
     this.parsedSources.clear();
     this.env = Env.empty();
     this.configurationEnv = this.env;
+    this.projects = [];
     this.#nextSourceOrder = 0;
   }
 }
