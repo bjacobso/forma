@@ -1,0 +1,378 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/projection-function",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "entries": [
+          {
+            "key": {
+              "kind": "keyword",
+              "value": ":name"
+            },
+            "value": {
+              "kind": "string",
+              "value": "Ada"
+            }
+          }
+        ],
+        "kind": "map"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/projection-function",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 12,
+                "sourceId": "engine-parity/row-operations/projection-function",
+                "startOffset": 6
+              },
+              "value": "Person"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 19,
+                      "sourceId": "engine-parity/row-operations/projection-function",
+                      "startOffset": 14
+                    },
+                    "value": ":name"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 26,
+                      "sourceId": "engine-parity/row-operations/projection-function",
+                      "startOffset": 20
+                    },
+                    "value": "String"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 31,
+                      "sourceId": "engine-parity/row-operations/projection-function",
+                      "startOffset": 27
+                    },
+                    "value": ":age"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 35,
+                      "sourceId": "engine-parity/row-operations/projection-function",
+                      "startOffset": 32
+                    },
+                    "value": "Int"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 36,
+                "sourceId": "engine-parity/row-operations/projection-function",
+                "startOffset": 13
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 37,
+            "sourceId": "engine-parity/row-operations/projection-function",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 40,
+                "sourceId": "engine-parity/row-operations/projection-function",
+                "startOffset": 39
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 52,
+                "sourceId": "engine-parity/row-operations/projection-function",
+                "startOffset": 41
+              },
+              "value": "public-name"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 56,
+                    "sourceId": "engine-parity/row-operations/projection-function",
+                    "startOffset": 54
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 63,
+                    "sourceId": "engine-parity/row-operations/projection-function",
+                    "startOffset": 57
+                  },
+                  "value": "Person"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 69,
+                        "sourceId": "engine-parity/row-operations/projection-function",
+                        "startOffset": 65
+                      },
+                      "value": "Pick"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 76,
+                        "sourceId": "engine-parity/row-operations/projection-function",
+                        "startOffset": 70
+                      },
+                      "value": "Person"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "keyword",
+                          "span": {
+                            "endOffset": 83,
+                            "sourceId": "engine-parity/row-operations/projection-function",
+                            "startOffset": 78
+                          },
+                          "value": ":name"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 84,
+                        "sourceId": "engine-parity/row-operations/projection-function",
+                        "startOffset": 77
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 85,
+                    "sourceId": "engine-parity/row-operations/projection-function",
+                    "startOffset": 64
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 86,
+                "sourceId": "engine-parity/row-operations/projection-function",
+                "startOffset": 53
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 87,
+            "sourceId": "engine-parity/row-operations/projection-function",
+            "startOffset": 38
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 95,
+                "sourceId": "engine-parity/row-operations/projection-function",
+                "startOffset": 89
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 107,
+                "sourceId": "engine-parity/row-operations/projection-function",
+                "startOffset": 96
+              },
+              "value": "public-name"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 115,
+                    "sourceId": "engine-parity/row-operations/projection-function",
+                    "startOffset": 109
+                  },
+                  "value": "person"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 116,
+                "sourceId": "engine-parity/row-operations/projection-function",
+                "startOffset": 108
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 129,
+                    "sourceId": "engine-parity/row-operations/projection-function",
+                    "startOffset": 118
+                  },
+                  "value": "select-keys"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 136,
+                    "sourceId": "engine-parity/row-operations/projection-function",
+                    "startOffset": 130
+                  },
+                  "value": "person"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 143,
+                        "sourceId": "engine-parity/row-operations/projection-function",
+                        "startOffset": 138
+                      },
+                      "value": ":name"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 144,
+                    "sourceId": "engine-parity/row-operations/projection-function",
+                    "startOffset": 137
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 145,
+                "sourceId": "engine-parity/row-operations/projection-function",
+                "startOffset": 117
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 146,
+            "sourceId": "engine-parity/row-operations/projection-function",
+            "startOffset": 88
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "engine-parity/row-operations/projection-function",
+                "startOffset": 148
+              },
+              "value": "public-name"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 166,
+                      "sourceId": "engine-parity/row-operations/projection-function",
+                      "startOffset": 161
+                    },
+                    "value": ":name"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "span": {
+                      "endOffset": 172,
+                      "sourceId": "engine-parity/row-operations/projection-function",
+                      "startOffset": 167
+                    },
+                    "value": "Ada"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 177,
+                      "sourceId": "engine-parity/row-operations/projection-function",
+                      "startOffset": 173
+                    },
+                    "value": ":age"
+                  },
+                  "value": {
+                    "kind": "int",
+                    "span": {
+                      "endOffset": 180,
+                      "sourceId": "engine-parity/row-operations/projection-function",
+                      "startOffset": 178
+                    },
+                    "value": 37
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 181,
+                "sourceId": "engine-parity/row-operations/projection-function",
+                "startOffset": 160
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 182,
+            "sourceId": "engine-parity/row-operations/projection-function",
+            "startOffset": 147
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "{:name String}"
+    }
+  },
+  "version": 1
+}

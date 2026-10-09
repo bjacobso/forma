@@ -25,10 +25,18 @@ corpora used by the native implementation. The Markdown programs in
 `../examples` and the language definitions in `../preludes` complete the
 cross-target corpus.
 
+Stored native references live in [`engine-parity/`](engine-parity/README.md),
+[`modules/`](modules/README.md), [`compile-time-modules/`](compile-time-modules/README.md),
+[`fixtures/canonical-ir/`](fixtures/canonical-ir/README.md), and
+[`corpus-emission/`](corpus-emission/README.md). Their READMEs document capture
+commands and which checks run without OCaml. Capture preserves current behavior;
+it does not extend the language or establish parity outside selected fixtures.
+
 `row-operations/` pins closed-record `Pick`, `Omit`, disjoint `Merge`, and
-tagged payload collisions. Its goldens live in `engine-parity/cases.json` and
-run in the TypeScript tests and engine parity gate, including author offsets
-for negative cases.
+tagged payload collisions. Its explicit expectations live in
+`engine-parity/cases.json`, with native snapshots under
+`engine-parity/goldens/row-operations/`. The TypeScript tests and engine parity
+gate check these cases, including author offsets for negative cases.
 
 ## The shared dialect (discovered, not designed)
 

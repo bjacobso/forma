@@ -1,0 +1,21 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "review-type-error",
+  "outputs": {
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/type-mismatch",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 24,
+            "sourceId": "engine-parity/review-type-error",
+            "startOffset": 20
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

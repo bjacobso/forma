@@ -1,0 +1,236 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/pick-alias",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/pick-alias",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 12,
+                "sourceId": "engine-parity/row-operations/pick-alias",
+                "startOffset": 6
+              },
+              "value": "Person"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 19,
+                      "sourceId": "engine-parity/row-operations/pick-alias",
+                      "startOffset": 14
+                    },
+                    "value": ":name"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 26,
+                      "sourceId": "engine-parity/row-operations/pick-alias",
+                      "startOffset": 20
+                    },
+                    "value": "String"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 31,
+                      "sourceId": "engine-parity/row-operations/pick-alias",
+                      "startOffset": 27
+                    },
+                    "value": ":age"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 35,
+                      "sourceId": "engine-parity/row-operations/pick-alias",
+                      "startOffset": 32
+                    },
+                    "value": "Int"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 36,
+                "sourceId": "engine-parity/row-operations/pick-alias",
+                "startOffset": 13
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 37,
+            "sourceId": "engine-parity/row-operations/pick-alias",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 40,
+                "sourceId": "engine-parity/row-operations/pick-alias",
+                "startOffset": 39
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 47,
+                "sourceId": "engine-parity/row-operations/pick-alias",
+                "startOffset": 41
+              },
+              "value": "person"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 53,
+                    "sourceId": "engine-parity/row-operations/pick-alias",
+                    "startOffset": 49
+                  },
+                  "value": "Pick"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 60,
+                    "sourceId": "engine-parity/row-operations/pick-alias",
+                    "startOffset": 54
+                  },
+                  "value": "Person"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 67,
+                        "sourceId": "engine-parity/row-operations/pick-alias",
+                        "startOffset": 62
+                      },
+                      "value": ":name"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 68,
+                    "sourceId": "engine-parity/row-operations/pick-alias",
+                    "startOffset": 61
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 69,
+                "sourceId": "engine-parity/row-operations/pick-alias",
+                "startOffset": 48
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 70,
+            "sourceId": "engine-parity/row-operations/pick-alias",
+            "startOffset": 38
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 78,
+                "sourceId": "engine-parity/row-operations/pick-alias",
+                "startOffset": 72
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 85,
+                "sourceId": "engine-parity/row-operations/pick-alias",
+                "startOffset": 79
+              },
+              "value": "person"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 92,
+                      "sourceId": "engine-parity/row-operations/pick-alias",
+                      "startOffset": 87
+                    },
+                    "value": ":name"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "span": {
+                      "endOffset": 98,
+                      "sourceId": "engine-parity/row-operations/pick-alias",
+                      "startOffset": 93
+                    },
+                    "value": "Ada"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 99,
+                "sourceId": "engine-parity/row-operations/pick-alias",
+                "startOffset": 86
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 100,
+            "sourceId": "engine-parity/row-operations/pick-alias",
+            "startOffset": 71
+          }
+        },
+        {
+          "kind": "symbol",
+          "span": {
+            "endOffset": 107,
+            "sourceId": "engine-parity/row-operations/pick-alias",
+            "startOffset": 101
+          },
+          "value": "person"
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "{:name String}"
+    }
+  },
+  "version": 1
+}

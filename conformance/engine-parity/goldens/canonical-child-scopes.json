@@ -1,0 +1,31 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-child-scopes",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 4,
+        "payload": {
+          "children": [
+            {
+              "kind": "Leaf",
+              "value": [
+                "+",
+                "local",
+                1
+              ]
+            }
+          ],
+          "kind": "Tree"
+        },
+        "sourceId": "engine-parity/canonical-child-scopes",
+        "span": {
+          "endOffset": 351,
+          "sourceId": "engine-parity/canonical-child-scopes",
+          "startOffset": 326
+        }
+      }
+    ]
+  },
+  "version": 1
+}

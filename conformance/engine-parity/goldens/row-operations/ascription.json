@@ -1,0 +1,171 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/ascription",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "entries": [
+          {
+            "key": {
+              "kind": "keyword",
+              "value": ":name"
+            },
+            "value": {
+              "kind": "string",
+              "value": "Ada"
+            }
+          }
+        ],
+        "kind": "map"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/row-operations/ascription",
+                "startOffset": 1
+              },
+              "value": ":"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 9,
+                      "sourceId": "engine-parity/row-operations/ascription",
+                      "startOffset": 4
+                    },
+                    "value": ":name"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "span": {
+                      "endOffset": 15,
+                      "sourceId": "engine-parity/row-operations/ascription",
+                      "startOffset": 10
+                    },
+                    "value": "Ada"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 16,
+                "sourceId": "engine-parity/row-operations/ascription",
+                "startOffset": 3
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 22,
+                    "sourceId": "engine-parity/row-operations/ascription",
+                    "startOffset": 18
+                  },
+                  "value": "Pick"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 29,
+                          "sourceId": "engine-parity/row-operations/ascription",
+                          "startOffset": 24
+                        },
+                        "value": ":name"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 36,
+                          "sourceId": "engine-parity/row-operations/ascription",
+                          "startOffset": 30
+                        },
+                        "value": "String"
+                      }
+                    },
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 41,
+                          "sourceId": "engine-parity/row-operations/ascription",
+                          "startOffset": 37
+                        },
+                        "value": ":age"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 45,
+                          "sourceId": "engine-parity/row-operations/ascription",
+                          "startOffset": 42
+                        },
+                        "value": "Int"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 46,
+                    "sourceId": "engine-parity/row-operations/ascription",
+                    "startOffset": 23
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 53,
+                        "sourceId": "engine-parity/row-operations/ascription",
+                        "startOffset": 48
+                      },
+                      "value": ":name"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 54,
+                    "sourceId": "engine-parity/row-operations/ascription",
+                    "startOffset": 47
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 55,
+                "sourceId": "engine-parity/row-operations/ascription",
+                "startOffset": 17
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 56,
+            "sourceId": "engine-parity/row-operations/ascription",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "{:name String}"
+    }
+  },
+  "version": 1
+}

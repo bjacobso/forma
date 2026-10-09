@@ -1,0 +1,4877 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "effect-typescript/typed-errors",
+  "outputs": {
+    "effect-ir": [
+      {
+        "formIndex": 16,
+        "payload": {
+          "authority": {
+            "capabilities": [
+              "Storage.read"
+            ]
+          },
+          "body": {
+            "bindings": [
+              {
+                "name": "outcome",
+                "span": {
+                  "endOffset": 1702,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1670
+                },
+                "value": {
+                  "args": [
+                    {
+                      "args": [
+                        {
+                          "kind": "Var",
+                          "name": "user",
+                          "span": {
+                            "endOffset": 1696,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1692
+                          }
+                        },
+                        {
+                          "kind": "Var",
+                          "name": "key",
+                          "span": {
+                            "endOffset": 1700,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1697
+                          }
+                        }
+                      ],
+                      "effect": {
+                        "errors": [
+                          "NotFound",
+                          "Forbidden",
+                          "RateLimited"
+                        ],
+                        "kind": "Effect",
+                        "requirements": [
+                          "Storage.read"
+                        ],
+                        "span": {
+                          "endOffset": 458,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 407
+                        },
+                        "success": {
+                          "kind": "Primitive",
+                          "name": "String",
+                          "span": {
+                            "endOffset": 421,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 415
+                          }
+                        }
+                      },
+                      "kind": "ServiceCall",
+                      "method": "read",
+                      "service": "Storage",
+                      "span": {
+                        "endOffset": 1701,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1678
+                      }
+                    }
+                  ],
+                  "effect": {
+                    "errors": [],
+                    "kind": "Effect",
+                    "requirements": [
+                      "Storage.read"
+                    ],
+                    "span": {
+                      "endOffset": 1610,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1577
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "String",
+                      "span": {
+                        "endOffset": 1591,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1585
+                      }
+                    }
+                  },
+                  "kind": "Combinator",
+                  "name": "result",
+                  "span": {
+                    "endOffset": 1702,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1670
+                  }
+                }
+              }
+            ],
+            "body": {
+              "arms": [
+                {
+                  "body": {
+                    "effect": {
+                      "errors": [],
+                      "kind": "Effect",
+                      "requirements": [
+                        "Storage.read"
+                      ],
+                      "span": {
+                        "endOffset": 1610,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1577
+                      },
+                      "success": {
+                        "kind": "Primitive",
+                        "name": "String",
+                        "span": {
+                          "endOffset": 1591,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 1585
+                        }
+                      }
+                    },
+                    "kind": "Succeed",
+                    "span": {
+                      "endOffset": 1780,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1752
+                    },
+                    "value": {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "str",
+                          "span": {
+                            "endOffset": 1765,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1762
+                          }
+                        },
+                        {
+                          "kind": "Literal",
+                          "span": {
+                            "endOffset": 1772,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1766
+                          },
+                          "value": "ok: "
+                        },
+                        {
+                          "kind": "Var",
+                          "name": "value",
+                          "span": {
+                            "endOffset": 1778,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1773
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1779,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1761
+                      }
+                    }
+                  },
+                  "pattern": {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "Ok",
+                        "span": {
+                          "endOffset": 1738,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 1736
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "value",
+                        "span": {
+                          "endOffset": 1744,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 1739
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1745,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1735
+                    }
+                  },
+                  "span": {
+                    "endOffset": 1745,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1735
+                  }
+                },
+                {
+                  "body": {
+                    "effect": {
+                      "errors": [],
+                      "kind": "Effect",
+                      "requirements": [
+                        "Storage.read"
+                      ],
+                      "span": {
+                        "endOffset": 1610,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1577
+                      },
+                      "success": {
+                        "kind": "Primitive",
+                        "name": "String",
+                        "span": {
+                          "endOffset": 1591,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 1585
+                        }
+                      }
+                    },
+                    "kind": "Succeed",
+                    "span": {
+                      "endOffset": 1848,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1805
+                    },
+                    "value": {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "str",
+                          "span": {
+                            "endOffset": 1818,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1815
+                          }
+                        },
+                        {
+                          "kind": "Literal",
+                          "span": {
+                            "endOffset": 1828,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1819
+                          },
+                          "value": "error: "
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "get",
+                              "span": {
+                                "endOffset": 1833,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 1830
+                              }
+                            },
+                            {
+                              "kind": "Var",
+                              "name": "error",
+                              "span": {
+                                "endOffset": 1839,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 1834
+                              }
+                            },
+                            {
+                              "kind": "Expr",
+                              "source": {
+                                "kind": "Symbol",
+                                "name": ":_tag"
+                              },
+                              "span": {
+                                "endOffset": 1845,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 1840
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 1846,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1829
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1847,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1814
+                      }
+                    }
+                  },
+                  "pattern": {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "Err",
+                        "span": {
+                          "endOffset": 1791,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 1788
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "error",
+                        "span": {
+                          "endOffset": 1797,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 1792
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1798,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1787
+                    }
+                  },
+                  "span": {
+                    "endOffset": 1798,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1787
+                  }
+                }
+              ],
+              "effect": {
+                "errors": [],
+                "kind": "Effect",
+                "requirements": [
+                  "Storage.read"
+                ],
+                "span": {
+                  "endOffset": 1610,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1577
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 1591,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1585
+                  }
+                }
+              },
+              "kind": "Match",
+              "span": {
+                "endOffset": 1849,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1708
+              },
+              "value": {
+                "kind": "Var",
+                "name": "outcome",
+                "span": {
+                  "endOffset": 1728,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1721
+                }
+              }
+            },
+            "effect": {
+              "errors": [],
+              "kind": "Effect",
+              "requirements": [
+                "Storage.read"
+              ],
+              "span": {
+                "endOffset": 1610,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1577
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1591,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1585
+                }
+              }
+            },
+            "kind": "Do",
+            "span": {
+              "endOffset": 1850,
+              "sourceId": "engine-parity/effect-typescript/typed-errors",
+              "startOffset": 1652
+            }
+          },
+          "effect": {
+            "errors": [],
+            "kind": "Effect",
+            "requirements": [
+              "Storage.read"
+            ],
+            "span": {
+              "endOffset": 1610,
+              "sourceId": "engine-parity/effect-typescript/typed-errors",
+              "startOffset": 1577
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "String",
+              "span": {
+                "endOffset": 1591,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1585
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "describe-read",
+          "params": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1569,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1563
+                }
+              }
+            },
+            {
+              "name": "key",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1576,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1570
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "engine-parity/effect-typescript/typed-errors",
+        "span": {
+          "endOffset": 1851,
+          "sourceId": "engine-parity/effect-typescript/typed-errors",
+          "startOffset": 1613
+        }
+      },
+      {
+        "formIndex": 8,
+        "payload": {
+          "authority": {
+            "capabilities": [
+              "Storage.read"
+            ]
+          },
+          "body": {
+            "binding": "error",
+            "body": {
+              "args": [
+                {
+                  "kind": "Var",
+                  "name": "user",
+                  "span": {
+                    "endOffset": 918,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 914
+                  }
+                },
+                {
+                  "kind": "Var",
+                  "name": "key",
+                  "span": {
+                    "endOffset": 922,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 919
+                  }
+                }
+              ],
+              "effect": {
+                "errors": [
+                  "NotFound",
+                  "Forbidden",
+                  "RateLimited"
+                ],
+                "kind": "Effect",
+                "requirements": [
+                  "Storage.read"
+                ],
+                "span": {
+                  "endOffset": 458,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 407
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 421,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 415
+                  }
+                }
+              },
+              "kind": "ServiceCall",
+              "method": "read",
+              "service": "Storage",
+              "span": {
+                "endOffset": 923,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 900
+              }
+            },
+            "effect": {
+              "errors": [],
+              "kind": "Effect",
+              "requirements": [
+                "Storage.read"
+              ],
+              "span": {
+                "endOffset": 847,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 814
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 828,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 822
+                }
+              }
+            },
+            "handler": {
+              "effect": {
+                "errors": [],
+                "kind": "Effect",
+                "requirements": [
+                  "Storage.read"
+                ],
+                "span": {
+                  "endOffset": 847,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 814
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 828,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 822
+                  }
+                }
+              },
+              "kind": "Succeed",
+              "span": {
+                "endOffset": 990,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 942
+              },
+              "value": {
+                "items": [
+                  {
+                    "kind": "Var",
+                    "name": "str",
+                    "span": {
+                      "endOffset": 955,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 952
+                    }
+                  },
+                  {
+                    "kind": "Literal",
+                    "span": {
+                      "endOffset": 970,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 956
+                    },
+                    "value": "failed with "
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "get",
+                        "span": {
+                          "endOffset": 975,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 972
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "error",
+                        "span": {
+                          "endOffset": 981,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 976
+                        }
+                      },
+                      {
+                        "kind": "Expr",
+                        "source": {
+                          "kind": "Symbol",
+                          "name": ":_tag"
+                        },
+                        "span": {
+                          "endOffset": 987,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 982
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 988,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 971
+                    }
+                  }
+                ],
+                "kind": "List",
+                "span": {
+                  "endOffset": 989,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 951
+                }
+              }
+            },
+            "kind": "CatchAll",
+            "span": {
+              "endOffset": 991,
+              "sourceId": "engine-parity/effect-typescript/typed-errors",
+              "startOffset": 889
+            }
+          },
+          "effect": {
+            "errors": [],
+            "kind": "Effect",
+            "requirements": [
+              "Storage.read"
+            ],
+            "span": {
+              "endOffset": 847,
+              "sourceId": "engine-parity/effect-typescript/typed-errors",
+              "startOffset": 814
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "String",
+              "span": {
+                "endOffset": 828,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 822
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "read-anything",
+          "params": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 806,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 800
+                }
+              }
+            },
+            {
+              "name": "key",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 813,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 807
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "engine-parity/effect-typescript/typed-errors",
+        "span": {
+          "endOffset": 992,
+          "sourceId": "engine-parity/effect-typescript/typed-errors",
+          "startOffset": 850
+        }
+      },
+      {
+        "formIndex": 14,
+        "payload": {
+          "authority": {
+            "capabilities": [
+              "Storage.read"
+            ]
+          },
+          "body": {
+            "args": [
+              {
+                "args": [
+                  {
+                    "kind": "Var",
+                    "name": "user",
+                    "span": {
+                      "endOffset": 1534,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1530
+                    }
+                  },
+                  {
+                    "kind": "Var",
+                    "name": "key",
+                    "span": {
+                      "endOffset": 1538,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1535
+                    }
+                  }
+                ],
+                "effect": {
+                  "errors": [
+                    "NotFound",
+                    "Forbidden",
+                    "RateLimited"
+                  ],
+                  "kind": "Effect",
+                  "requirements": [
+                    "Storage.read"
+                  ],
+                  "span": {
+                    "endOffset": 458,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 407
+                  },
+                  "success": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 421,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 415
+                    }
+                  }
+                },
+                "kind": "ServiceCall",
+                "method": "read",
+                "service": "Storage",
+                "span": {
+                  "endOffset": 1539,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1516
+                }
+              }
+            ],
+            "effect": {
+              "errors": [],
+              "kind": "Effect",
+              "requirements": [
+                "Storage.read"
+              ],
+              "span": {
+                "endOffset": 1474,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1432
+              },
+              "success": {
+                "item": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 1454,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1448
+                  }
+                },
+                "kind": "Option"
+              }
+            },
+            "kind": "Combinator",
+            "name": "option",
+            "span": {
+              "endOffset": 1540,
+              "sourceId": "engine-parity/effect-typescript/typed-errors",
+              "startOffset": 1508
+            }
+          },
+          "effect": {
+            "errors": [],
+            "kind": "Effect",
+            "requirements": [
+              "Storage.read"
+            ],
+            "span": {
+              "endOffset": 1474,
+              "sourceId": "engine-parity/effect-typescript/typed-errors",
+              "startOffset": 1432
+            },
+            "success": {
+              "item": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1454,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1448
+                }
+              },
+              "kind": "Option"
+            }
+          },
+          "kind": "EffectDef",
+          "name": "read-option",
+          "params": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1424,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1418
+                }
+              }
+            },
+            {
+              "name": "key",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1431,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1425
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "engine-parity/effect-typescript/typed-errors",
+        "span": {
+          "endOffset": 1541,
+          "sourceId": "engine-parity/effect-typescript/typed-errors",
+          "startOffset": 1477
+        }
+      },
+      {
+        "formIndex": 18,
+        "payload": {
+          "authority": {
+            "capabilities": [
+              "Storage.read"
+            ]
+          },
+          "body": {
+            "args": [
+              {
+                "args": [
+                  {
+                    "kind": "Var",
+                    "name": "user",
+                    "span": {
+                      "endOffset": 1978,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1974
+                    }
+                  },
+                  {
+                    "kind": "Var",
+                    "name": "key",
+                    "span": {
+                      "endOffset": 1982,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1979
+                    }
+                  }
+                ],
+                "effect": {
+                  "errors": [
+                    "NotFound",
+                    "Forbidden",
+                    "RateLimited"
+                  ],
+                  "kind": "Effect",
+                  "requirements": [
+                    "Storage.read"
+                  ],
+                  "span": {
+                    "endOffset": 458,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 407
+                  },
+                  "success": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 421,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 415
+                    }
+                  }
+                },
+                "kind": "ServiceCall",
+                "method": "read",
+                "service": "Storage",
+                "span": {
+                  "endOffset": 1983,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1960
+                }
+              }
+            ],
+            "effect": {
+              "errors": [],
+              "kind": "Effect",
+              "requirements": [
+                "Storage.read"
+              ],
+              "span": {
+                "endOffset": 1918,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1885
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1899,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1893
+                }
+              }
+            },
+            "kind": "Combinator",
+            "name": "or-die",
+            "span": {
+              "endOffset": 1984,
+              "sourceId": "engine-parity/effect-typescript/typed-errors",
+              "startOffset": 1952
+            }
+          },
+          "effect": {
+            "errors": [],
+            "kind": "Effect",
+            "requirements": [
+              "Storage.read"
+            ],
+            "span": {
+              "endOffset": 1918,
+              "sourceId": "engine-parity/effect-typescript/typed-errors",
+              "startOffset": 1885
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "String",
+              "span": {
+                "endOffset": 1899,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1893
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "read-or-die",
+          "params": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1877,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1871
+                }
+              }
+            },
+            {
+              "name": "key",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1884,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1878
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "engine-parity/effect-typescript/typed-errors",
+        "span": {
+          "endOffset": 1985,
+          "sourceId": "engine-parity/effect-typescript/typed-errors",
+          "startOffset": 1921
+        }
+      },
+      {
+        "formIndex": 6,
+        "payload": {
+          "authority": {
+            "capabilities": [
+              "Storage.read"
+            ]
+          },
+          "body": {
+            "body": {
+              "args": [
+                {
+                  "kind": "Var",
+                  "name": "user",
+                  "span": {
+                    "endOffset": 620,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 616
+                  }
+                },
+                {
+                  "kind": "Var",
+                  "name": "key",
+                  "span": {
+                    "endOffset": 624,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 621
+                  }
+                }
+              ],
+              "effect": {
+                "errors": [
+                  "NotFound",
+                  "Forbidden",
+                  "RateLimited"
+                ],
+                "kind": "Effect",
+                "requirements": [
+                  "Storage.read"
+                ],
+                "span": {
+                  "endOffset": 458,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 407
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 421,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 415
+                  }
+                }
+              },
+              "kind": "ServiceCall",
+              "method": "read",
+              "service": "Storage",
+              "span": {
+                "endOffset": 625,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 602
+              }
+            },
+            "effect": {
+              "errors": [
+                "RateLimited"
+              ],
+              "kind": "Effect",
+              "requirements": [
+                "Storage.read"
+              ],
+              "span": {
+                "endOffset": 547,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 503
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 517,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 511
+                }
+              }
+            },
+            "handlers": [
+              {
+                "binding": "missing",
+                "errorType": "NotFound",
+                "handler": {
+                  "effect": {
+                    "errors": [
+                      "RateLimited"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [
+                      "Storage.read"
+                    ],
+                    "span": {
+                      "endOffset": 547,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 503
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "String",
+                      "span": {
+                        "endOffset": 517,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 511
+                      }
+                    }
+                  },
+                  "kind": "Succeed",
+                  "span": {
+                    "endOffset": 693,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 653
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "str",
+                        "span": {
+                          "endOffset": 666,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 663
+                        }
+                      },
+                      {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 672,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 667
+                        },
+                        "value": "no "
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "get",
+                            "span": {
+                              "endOffset": 677,
+                              "sourceId": "engine-parity/effect-typescript/typed-errors",
+                              "startOffset": 674
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "missing",
+                            "span": {
+                              "endOffset": 685,
+                              "sourceId": "engine-parity/effect-typescript/typed-errors",
+                              "startOffset": 678
+                            }
+                          },
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":key"
+                            },
+                            "span": {
+                              "endOffset": 690,
+                              "sourceId": "engine-parity/effect-typescript/typed-errors",
+                              "startOffset": 686
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 691,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 673
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 692,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 662
+                    }
+                  }
+                },
+                "span": {
+                  "endOffset": 648,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 630
+                }
+              },
+              {
+                "binding": "denied",
+                "errorType": "Forbidden",
+                "handler": {
+                  "effect": {
+                    "errors": [
+                      "RateLimited"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [
+                      "Storage.read"
+                    ],
+                    "span": {
+                      "endOffset": 547,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 503
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "String",
+                      "span": {
+                        "endOffset": 517,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 511
+                      }
+                    }
+                  },
+                  "kind": "Succeed",
+                  "span": {
+                    "endOffset": 776,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 721
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "str",
+                        "span": {
+                          "endOffset": 734,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 731
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "get",
+                            "span": {
+                              "endOffset": 739,
+                              "sourceId": "engine-parity/effect-typescript/typed-errors",
+                              "startOffset": 736
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "denied",
+                            "span": {
+                              "endOffset": 746,
+                              "sourceId": "engine-parity/effect-typescript/typed-errors",
+                              "startOffset": 740
+                            }
+                          },
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":user"
+                            },
+                            "span": {
+                              "endOffset": 752,
+                              "sourceId": "engine-parity/effect-typescript/typed-errors",
+                              "startOffset": 747
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 753,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 735
+                        }
+                      },
+                      {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 770,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 754
+                        },
+                        "value": " may not read "
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "key",
+                        "span": {
+                          "endOffset": 774,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 771
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 775,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 730
+                    }
+                  }
+                },
+                "span": {
+                  "endOffset": 716,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 698
+                }
+              }
+            ],
+            "kind": "CatchTags",
+            "span": {
+              "endOffset": 777,
+              "sourceId": "engine-parity/effect-typescript/typed-errors",
+              "startOffset": 591
+            }
+          },
+          "effect": {
+            "errors": [
+              "RateLimited"
+            ],
+            "kind": "Effect",
+            "requirements": [
+              "Storage.read"
+            ],
+            "span": {
+              "endOffset": 547,
+              "sourceId": "engine-parity/effect-typescript/typed-errors",
+              "startOffset": 503
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "String",
+              "span": {
+                "endOffset": 517,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 511
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "read-or-explain",
+          "params": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 495,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 489
+                }
+              }
+            },
+            {
+              "name": "key",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 502,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 496
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "engine-parity/effect-typescript/typed-errors",
+        "span": {
+          "endOffset": 778,
+          "sourceId": "engine-parity/effect-typescript/typed-errors",
+          "startOffset": 550
+        }
+      },
+      {
+        "formIndex": 12,
+        "payload": {
+          "authority": {
+            "capabilities": [
+              "Storage.read"
+            ]
+          },
+          "body": {
+            "args": [
+              {
+                "args": [
+                  {
+                    "kind": "Var",
+                    "name": "user",
+                    "span": {
+                      "endOffset": 1381,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1377
+                    }
+                  },
+                  {
+                    "kind": "Var",
+                    "name": "key",
+                    "span": {
+                      "endOffset": 1385,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1382
+                    }
+                  }
+                ],
+                "effect": {
+                  "errors": [
+                    "NotFound",
+                    "Forbidden",
+                    "RateLimited"
+                  ],
+                  "kind": "Effect",
+                  "requirements": [
+                    "Storage.read"
+                  ],
+                  "span": {
+                    "endOffset": 458,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 407
+                  },
+                  "success": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 421,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 415
+                    }
+                  }
+                },
+                "kind": "ServiceCall",
+                "method": "read",
+                "service": "Storage",
+                "span": {
+                  "endOffset": 1386,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1363
+                }
+              },
+              {
+                "kind": "Literal",
+                "span": {
+                  "endOffset": 1396,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1387
+                },
+                "value": "default"
+              }
+            ],
+            "effect": {
+              "errors": [],
+              "kind": "Effect",
+              "requirements": [
+                "Storage.read"
+              ],
+              "span": {
+                "endOffset": 1300,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1267
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1281,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1275
+                }
+              }
+            },
+            "kind": "Combinator",
+            "name": "or-else-succeed",
+            "span": {
+              "endOffset": 1397,
+              "sourceId": "engine-parity/effect-typescript/typed-errors",
+              "startOffset": 1346
+            }
+          },
+          "effect": {
+            "errors": [],
+            "kind": "Effect",
+            "requirements": [
+              "Storage.read"
+            ],
+            "span": {
+              "endOffset": 1300,
+              "sourceId": "engine-parity/effect-typescript/typed-errors",
+              "startOffset": 1267
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "String",
+              "span": {
+                "endOffset": 1281,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1275
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "read-with-default",
+          "params": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1259,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1253
+                }
+              }
+            },
+            {
+              "name": "key",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1266,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1260
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "engine-parity/effect-typescript/typed-errors",
+        "span": {
+          "endOffset": 1398,
+          "sourceId": "engine-parity/effect-typescript/typed-errors",
+          "startOffset": 1303
+        }
+      },
+      {
+        "formIndex": 10,
+        "payload": {
+          "authority": {
+            "capabilities": [
+              "Storage.read"
+            ]
+          },
+          "body": {
+            "args": [
+              {
+                "args": [
+                  {
+                    "kind": "Var",
+                    "name": "user",
+                    "span": {
+                      "endOffset": 1150,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1146
+                    }
+                  },
+                  {
+                    "kind": "Var",
+                    "name": "key",
+                    "span": {
+                      "endOffset": 1154,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1151
+                    }
+                  }
+                ],
+                "effect": {
+                  "errors": [
+                    "NotFound",
+                    "Forbidden",
+                    "RateLimited"
+                  ],
+                  "kind": "Effect",
+                  "requirements": [
+                    "Storage.read"
+                  ],
+                  "span": {
+                    "endOffset": 458,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 407
+                  },
+                  "success": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 421,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 415
+                    }
+                  }
+                },
+                "kind": "ServiceCall",
+                "method": "read",
+                "service": "Storage",
+                "span": {
+                  "endOffset": 1155,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1132
+                }
+              },
+              {
+                "items": [
+                  {
+                    "kind": "Var",
+                    "name": "fn",
+                    "span": {
+                      "endOffset": 1163,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1161
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "error",
+                        "span": {
+                          "endOffset": 1170,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 1165
+                        }
+                      }
+                    ],
+                    "kind": "Vector",
+                    "span": {
+                      "endOffset": 1171,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1164
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "StorageError",
+                        "span": {
+                          "endOffset": 1185,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 1173
+                        }
+                      },
+                      {
+                        "entries": [
+                          {
+                            "key": {
+                              "kind": "Expr",
+                              "source": {
+                                "kind": "Symbol",
+                                "name": ":detail"
+                              },
+                              "span": {
+                                "endOffset": 1194,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 1187
+                              }
+                            },
+                            "value": {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "str",
+                                  "span": {
+                                    "endOffset": 1199,
+                                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                    "startOffset": 1196
+                                  }
+                                },
+                                {
+                                  "kind": "Literal",
+                                  "span": {
+                                    "endOffset": 1207,
+                                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                    "startOffset": 1200
+                                  },
+                                  "value": "read "
+                                },
+                                {
+                                  "kind": "Var",
+                                  "name": "key",
+                                  "span": {
+                                    "endOffset": 1211,
+                                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                    "startOffset": 1208
+                                  }
+                                },
+                                {
+                                  "kind": "Literal",
+                                  "span": {
+                                    "endOffset": 1221,
+                                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                    "startOffset": 1212
+                                  },
+                                  "value": " failed"
+                                }
+                              ],
+                              "kind": "List",
+                              "span": {
+                                "endOffset": 1222,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 1195
+                              }
+                            }
+                          }
+                        ],
+                        "kind": "Record",
+                        "span": {
+                          "endOffset": 1223,
+                          "sourceId": "engine-parity/effect-typescript/typed-errors",
+                          "startOffset": 1186
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1224,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 1172
+                    }
+                  }
+                ],
+                "kind": "List",
+                "span": {
+                  "endOffset": 1225,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1160
+                }
+              }
+            ],
+            "effect": {
+              "errors": [
+                "StorageError"
+              ],
+              "kind": "Effect",
+              "requirements": [
+                "Storage.read"
+              ],
+              "span": {
+                "endOffset": 1076,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1031
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1045,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1039
+                }
+              }
+            },
+            "kind": "Combinator",
+            "name": "map-error",
+            "span": {
+              "endOffset": 1226,
+              "sourceId": "engine-parity/effect-typescript/typed-errors",
+              "startOffset": 1117
+            }
+          },
+          "effect": {
+            "errors": [
+              "StorageError"
+            ],
+            "kind": "Effect",
+            "requirements": [
+              "Storage.read"
+            ],
+            "span": {
+              "endOffset": 1076,
+              "sourceId": "engine-parity/effect-typescript/typed-errors",
+              "startOffset": 1031
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "String",
+              "span": {
+                "endOffset": 1045,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1039
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "read-wrapped",
+          "params": [
+            {
+              "name": "user",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1023,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1017
+                }
+              }
+            },
+            {
+              "name": "key",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1030,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 1024
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "engine-parity/effect-typescript/typed-errors",
+        "span": {
+          "endOffset": 1227,
+          "sourceId": "engine-parity/effect-typescript/typed-errors",
+          "startOffset": 1079
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "kind": "ErrorDef",
+          "name": "Forbidden",
+          "schema": {
+            "fields": [
+              {
+                "name": "user",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 272,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 266
+                  }
+                },
+                "span": {
+                  "endOffset": 272,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 266
+                }
+              }
+            ],
+            "kind": "Struct"
+          }
+        },
+        "sourceId": "engine-parity/effect-typescript/typed-errors",
+        "span": {
+          "endOffset": 274,
+          "sourceId": "engine-parity/effect-typescript/typed-errors",
+          "startOffset": 242
+        }
+      },
+      {
+        "formIndex": 0,
+        "payload": {
+          "kind": "ErrorDef",
+          "name": "NotFound",
+          "schema": {
+            "fields": [
+              {
+                "name": "key",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 239,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 233
+                  }
+                },
+                "span": {
+                  "endOffset": 239,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 233
+                }
+              }
+            ],
+            "kind": "Struct"
+          }
+        },
+        "sourceId": "engine-parity/effect-typescript/typed-errors",
+        "span": {
+          "endOffset": 241,
+          "sourceId": "engine-parity/effect-typescript/typed-errors",
+          "startOffset": 211
+        }
+      },
+      {
+        "formIndex": 2,
+        "payload": {
+          "kind": "ErrorDef",
+          "name": "RateLimited",
+          "schema": {
+            "fields": [
+              {
+                "name": "retry-after",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "Int",
+                  "span": {
+                    "endOffset": 311,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 308
+                  }
+                },
+                "span": {
+                  "endOffset": 311,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 308
+                }
+              }
+            ],
+            "kind": "Struct"
+          }
+        },
+        "sourceId": "engine-parity/effect-typescript/typed-errors",
+        "span": {
+          "endOffset": 313,
+          "sourceId": "engine-parity/effect-typescript/typed-errors",
+          "startOffset": 275
+        }
+      },
+      {
+        "formIndex": 3,
+        "payload": {
+          "kind": "ErrorDef",
+          "name": "StorageError",
+          "schema": {
+            "fields": [
+              {
+                "name": "detail",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 349,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 343
+                  }
+                },
+                "span": {
+                  "endOffset": 349,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 343
+                }
+              }
+            ],
+            "kind": "Struct"
+          }
+        },
+        "sourceId": "engine-parity/effect-typescript/typed-errors",
+        "span": {
+          "endOffset": 351,
+          "sourceId": "engine-parity/effect-typescript/typed-errors",
+          "startOffset": 314
+        }
+      },
+      {
+        "formIndex": 4,
+        "payload": {
+          "kind": "ServiceDef",
+          "methods": [
+            {
+              "effect": {
+                "errors": [
+                  "NotFound",
+                  "Forbidden",
+                  "RateLimited"
+                ],
+                "kind": "Effect",
+                "requirements": [
+                  "Storage.read"
+                ],
+                "span": {
+                  "endOffset": 458,
+                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                  "startOffset": 407
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 421,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 415
+                  }
+                }
+              },
+              "name": "read",
+              "params": [
+                {
+                  "name": "arg0",
+                  "type": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 399,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 393
+                    }
+                  }
+                },
+                {
+                  "name": "arg1",
+                  "type": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 406,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 400
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "name": "Storage"
+        },
+        "sourceId": "engine-parity/effect-typescript/typed-errors",
+        "span": {
+          "endOffset": 461,
+          "sourceId": "engine-parity/effect-typescript/typed-errors",
+          "startOffset": 352
+        }
+      }
+    ],
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 217,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 212
+              },
+              "value": "error"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 226,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 218
+              },
+              "value": "NotFound"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 232,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 228
+                    },
+                    "value": ":key"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 239,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 233
+                    },
+                    "value": "String"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 240,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 227
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 241,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 211
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 248,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 243
+              },
+              "value": "error"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 258,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 249
+              },
+              "value": "Forbidden"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 265,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 260
+                    },
+                    "value": ":user"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 272,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 266
+                    },
+                    "value": "String"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 273,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 259
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 274,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 242
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 281,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 276
+              },
+              "value": "error"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 293,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 282
+              },
+              "value": "RateLimited"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 307,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 295
+                    },
+                    "value": ":retry-after"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 311,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 308
+                    },
+                    "value": "Int"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 312,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 294
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 313,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 275
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 320,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 315
+              },
+              "value": "error"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 333,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 321
+              },
+              "value": "StorageError"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 342,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 335
+                    },
+                    "value": ":detail"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 349,
+                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                      "startOffset": 343
+                    },
+                    "value": "String"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 350,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 334
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 351,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 314
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 360,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 353
+              },
+              "value": "service"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 370,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 363
+              },
+              "value": "Storage"
+            },
+            {
+              "items": [
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 375,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 374
+                  },
+                  "value": ":"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 384,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 380
+                  },
+                  "value": "read"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 392,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 390
+                      },
+                      "value": "->"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 399,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 393
+                      },
+                      "value": "String"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 406,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 400
+                      },
+                      "value": "String"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 414,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 408
+                          },
+                          "value": "Effect"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 421,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 415
+                          },
+                          "value": "String"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 431,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 423
+                              },
+                              "value": "NotFound"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 441,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 432
+                              },
+                              "value": "Forbidden"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 453,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 442
+                              },
+                              "value": "RateLimited"
+                            }
+                          ],
+                          "kind": "vector",
+                          "span": {
+                            "endOffset": 454,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 422
+                          }
+                        },
+                        {
+                          "items": [],
+                          "kind": "vector",
+                          "span": {
+                            "endOffset": 457,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 455
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 458,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 407
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 459,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 389
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 460,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 373
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 461,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 352
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 464,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 463
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 482,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 467
+              },
+              "value": "read-or-explain"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 488,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 486
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 495,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 489
+                  },
+                  "value": "String"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 502,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 496
+                  },
+                  "value": "String"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 510,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 504
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 517,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 511
+                      },
+                      "value": "String"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 530,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 519
+                          },
+                          "value": "RateLimited"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 531,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 518
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 545,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 533
+                          },
+                          "value": "Storage.read"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 546,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 532
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 547,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 503
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 548,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 485
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 549,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 462
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 557,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 551
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 575,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 560
+              },
+              "value": "read-or-explain"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 583,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 579
+                  },
+                  "value": "user"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 587,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 584
+                  },
+                  "value": "key"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 588,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 578
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 597,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 592
+                  },
+                  "value": "catch"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 615,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 603
+                      },
+                      "value": "Storage.read"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 620,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 616
+                      },
+                      "value": "user"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 624,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 621
+                      },
+                      "value": "key"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 625,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 602
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 639,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 631
+                      },
+                      "value": "NotFound"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 647,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 640
+                      },
+                      "value": "missing"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 648,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 630
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 661,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 654
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 666,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 663
+                          },
+                          "value": "str"
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 672,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 667
+                          },
+                          "value": "no "
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 677,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 674
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 685,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 678
+                              },
+                              "value": "missing"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 690,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 686
+                              },
+                              "value": ":key"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 691,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 673
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 692,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 662
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 693,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 653
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 708,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 699
+                      },
+                      "value": "Forbidden"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 715,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 709
+                      },
+                      "value": "denied"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 716,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 698
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 729,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 722
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 734,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 731
+                          },
+                          "value": "str"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 739,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 736
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 746,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 740
+                              },
+                              "value": "denied"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 752,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 747
+                              },
+                              "value": ":user"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 753,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 735
+                          }
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 770,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 754
+                          },
+                          "value": " may not read "
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 774,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 771
+                          },
+                          "value": "key"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 775,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 730
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 776,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 721
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 777,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 591
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 778,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 550
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 781,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 780
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 795,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 782
+              },
+              "value": "read-anything"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 799,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 797
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 806,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 800
+                  },
+                  "value": "String"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 813,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 807
+                  },
+                  "value": "String"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 821,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 815
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 828,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 822
+                      },
+                      "value": "String"
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 831,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 829
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 845,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 833
+                          },
+                          "value": "Storage.read"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 846,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 832
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 847,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 814
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 848,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 796
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 849,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 779
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 857,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 851
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 873,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 860
+              },
+              "value": "read-anything"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 881,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 877
+                  },
+                  "value": "user"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 885,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 882
+                  },
+                  "value": "key"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 886,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 876
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 895,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 890
+                  },
+                  "value": "catch"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 913,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 901
+                      },
+                      "value": "Storage.read"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 918,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 914
+                      },
+                      "value": "user"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 922,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 919
+                      },
+                      "value": "key"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 923,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 900
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 930,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 929
+                      },
+                      "value": "_"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 936,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 931
+                      },
+                      "value": "error"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 937,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 928
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 950,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 943
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 955,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 952
+                          },
+                          "value": "str"
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 970,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 956
+                          },
+                          "value": "failed with "
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 975,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 972
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 981,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 976
+                              },
+                              "value": "error"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 987,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 982
+                              },
+                              "value": ":_tag"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 988,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 971
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 989,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 951
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 990,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 942
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 991,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 889
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 992,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 850
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 995,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 994
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1010,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 998
+              },
+              "value": "read-wrapped"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1016,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1014
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1023,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1017
+                  },
+                  "value": "String"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1030,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1024
+                  },
+                  "value": "String"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1038,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1032
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1045,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1039
+                      },
+                      "value": "String"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1059,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1047
+                          },
+                          "value": "StorageError"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1060,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1046
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1074,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1062
+                          },
+                          "value": "Storage.read"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1075,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1061
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1076,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1031
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1077,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1013
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1078,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 993
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1086,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1080
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1101,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1089
+              },
+              "value": "read-wrapped"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1109,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1105
+                  },
+                  "value": "user"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1113,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1110
+                  },
+                  "value": "key"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1114,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1104
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1127,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1118
+                  },
+                  "value": "map-error"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1145,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1133
+                      },
+                      "value": "Storage.read"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1150,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1146
+                      },
+                      "value": "user"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1154,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1151
+                      },
+                      "value": "key"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1155,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1132
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1163,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1161
+                      },
+                      "value": "fn"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1170,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1165
+                          },
+                          "value": "error"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1171,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1164
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1185,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1173
+                          },
+                          "value": "StorageError"
+                        },
+                        {
+                          "entries": [
+                            {
+                              "key": {
+                                "kind": "keyword",
+                                "span": {
+                                  "endOffset": 1194,
+                                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                  "startOffset": 1187
+                                },
+                                "value": ":detail"
+                              },
+                              "value": {
+                                "items": [
+                                  {
+                                    "kind": "symbol",
+                                    "span": {
+                                      "endOffset": 1199,
+                                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                      "startOffset": 1196
+                                    },
+                                    "value": "str"
+                                  },
+                                  {
+                                    "kind": "string",
+                                    "span": {
+                                      "endOffset": 1207,
+                                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                      "startOffset": 1200
+                                    },
+                                    "value": "read "
+                                  },
+                                  {
+                                    "kind": "symbol",
+                                    "span": {
+                                      "endOffset": 1211,
+                                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                      "startOffset": 1208
+                                    },
+                                    "value": "key"
+                                  },
+                                  {
+                                    "kind": "string",
+                                    "span": {
+                                      "endOffset": 1221,
+                                      "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                      "startOffset": 1212
+                                    },
+                                    "value": " failed"
+                                  }
+                                ],
+                                "kind": "list",
+                                "span": {
+                                  "endOffset": 1222,
+                                  "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                  "startOffset": 1195
+                                }
+                              }
+                            }
+                          ],
+                          "kind": "map",
+                          "span": {
+                            "endOffset": 1223,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1186
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1224,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1172
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1225,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1160
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1226,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1117
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1227,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 1079
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1230,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1229
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1248,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1231
+              },
+              "value": "read-with-default"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1252,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1250
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1259,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1253
+                  },
+                  "value": "String"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1266,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1260
+                  },
+                  "value": "String"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1274,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1268
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1281,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1275
+                      },
+                      "value": "String"
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1284,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1282
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1298,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1286
+                          },
+                          "value": "Storage.read"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1299,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1285
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1300,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1267
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1301,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1249
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1302,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 1228
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1310,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1304
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1330,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1313
+              },
+              "value": "read-with-default"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1338,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1334
+                  },
+                  "value": "user"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1342,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1339
+                  },
+                  "value": "key"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1343,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1333
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1362,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1347
+                  },
+                  "value": "or-else-succeed"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1376,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1364
+                      },
+                      "value": "Storage.read"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1381,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1377
+                      },
+                      "value": "user"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1385,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1382
+                      },
+                      "value": "key"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1386,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1363
+                  }
+                },
+                {
+                  "kind": "string",
+                  "span": {
+                    "endOffset": 1396,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1387
+                  },
+                  "value": "default"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1397,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1346
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1398,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 1303
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1401,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1400
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1413,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1402
+              },
+              "value": "read-option"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1417,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1415
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1424,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1418
+                  },
+                  "value": "String"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1431,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1425
+                  },
+                  "value": "String"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1439,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1433
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1447,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1441
+                          },
+                          "value": "Option"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1454,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1448
+                          },
+                          "value": "String"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1455,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1440
+                      }
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1458,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1456
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1472,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1460
+                          },
+                          "value": "Storage.read"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1473,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1459
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1474,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1432
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1475,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1414
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1476,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 1399
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1484,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1478
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1496,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1485
+              },
+              "value": "read-option"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1502,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1498
+                  },
+                  "value": "user"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1506,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1503
+                  },
+                  "value": "key"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1507,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1497
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1515,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1509
+                  },
+                  "value": "option"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1529,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1517
+                      },
+                      "value": "Storage.read"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1534,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1530
+                      },
+                      "value": "user"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1538,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1535
+                      },
+                      "value": "key"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1539,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1516
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1540,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1508
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1541,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 1477
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1544,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1543
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1558,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1545
+              },
+              "value": "describe-read"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1562,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1560
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1569,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1563
+                  },
+                  "value": "String"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1576,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1570
+                  },
+                  "value": "String"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1584,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1578
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1591,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1585
+                      },
+                      "value": "String"
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1594,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1592
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1608,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1596
+                          },
+                          "value": "Storage.read"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1609,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1595
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1610,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1577
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1611,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1559
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1612,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 1542
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1620,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1614
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1636,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1623
+              },
+              "value": "describe-read"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1644,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1640
+                  },
+                  "value": "user"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1648,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1645
+                  },
+                  "value": "key"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1649,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1639
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1656,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1653
+                  },
+                  "value": "do!"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1669,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1662
+                      },
+                      "value": "outcome"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1677,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1671
+                          },
+                          "value": "result"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1691,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 1679
+                              },
+                              "value": "Storage.read"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1696,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 1692
+                              },
+                              "value": "user"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1700,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 1697
+                              },
+                              "value": "key"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1701,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1678
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1702,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1670
+                      }
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 1703,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1661
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1714,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1709
+                      },
+                      "value": "match"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1728,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1721
+                      },
+                      "value": "outcome"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1738,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1736
+                          },
+                          "value": "Ok"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1744,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1739
+                          },
+                          "value": "value"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1745,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1735
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1760,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1753
+                          },
+                          "value": "succeed"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1765,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 1762
+                              },
+                              "value": "str"
+                            },
+                            {
+                              "kind": "string",
+                              "span": {
+                                "endOffset": 1772,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 1766
+                              },
+                              "value": "ok: "
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1778,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 1773
+                              },
+                              "value": "value"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1779,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1761
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1780,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1752
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1791,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1788
+                          },
+                          "value": "Err"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1797,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1792
+                          },
+                          "value": "error"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1798,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1787
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1813,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1806
+                          },
+                          "value": "succeed"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1818,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 1815
+                              },
+                              "value": "str"
+                            },
+                            {
+                              "kind": "string",
+                              "span": {
+                                "endOffset": 1828,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 1819
+                              },
+                              "value": "error: "
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1833,
+                                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                    "startOffset": 1830
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1839,
+                                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                    "startOffset": 1834
+                                  },
+                                  "value": "error"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "span": {
+                                    "endOffset": 1845,
+                                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                    "startOffset": 1840
+                                  },
+                                  "value": ":_tag"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 1846,
+                                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                                "startOffset": 1829
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1847,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1814
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1848,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1805
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1849,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1708
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1850,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1652
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1851,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 1613
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1854,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1853
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1866,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1855
+              },
+              "value": "read-or-die"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1870,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1868
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1877,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1871
+                  },
+                  "value": "String"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1884,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1878
+                  },
+                  "value": "String"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1892,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1886
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1899,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1893
+                      },
+                      "value": "String"
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1902,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1900
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1916,
+                            "sourceId": "engine-parity/effect-typescript/typed-errors",
+                            "startOffset": 1904
+                          },
+                          "value": "Storage.read"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1917,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1903
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1918,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1885
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1919,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1867
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1920,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 1852
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1928,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1922
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1940,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1929
+              },
+              "value": "read-or-die"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1946,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1942
+                  },
+                  "value": "user"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1950,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1947
+                  },
+                  "value": "key"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1951,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1941
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1959,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1953
+                  },
+                  "value": "or-die"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1973,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1961
+                      },
+                      "value": "Storage.read"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1978,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1974
+                      },
+                      "value": "user"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1982,
+                        "sourceId": "engine-parity/effect-typescript/typed-errors",
+                        "startOffset": 1979
+                      },
+                      "value": "key"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1983,
+                    "sourceId": "engine-parity/effect-typescript/typed-errors",
+                    "startOffset": 1960
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1984,
+                "sourceId": "engine-parity/effect-typescript/typed-errors",
+                "startOffset": 1952
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1985,
+            "sourceId": "engine-parity/effect-typescript/typed-errors",
+            "startOffset": 1921
+          }
+        }
+      ],
+      "diagnostics": []
+    }
+  },
+  "version": 1
+}

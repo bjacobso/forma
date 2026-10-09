@@ -1,0 +1,290 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-qualified-constructor",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "int",
+        "value": 2
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/canonical-qualified-constructor",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 11,
+                "sourceId": "engine-parity/canonical-qualified-constructor",
+                "startOffset": 6
+              },
+              "value": "Shape"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 19,
+                    "sourceId": "engine-parity/canonical-qualified-constructor",
+                    "startOffset": 13
+                  },
+                  "value": "Tagged"
+                },
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 24,
+                    "sourceId": "engine-parity/canonical-qualified-constructor",
+                    "startOffset": 20
+                  },
+                  "value": ":tag"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 29,
+                    "sourceId": "engine-parity/canonical-qualified-constructor",
+                    "startOffset": 25
+                  },
+                  "value": "kind"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 37,
+                        "sourceId": "engine-parity/canonical-qualified-constructor",
+                        "startOffset": 31
+                      },
+                      "value": "Circle"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 46,
+                              "sourceId": "engine-parity/canonical-qualified-constructor",
+                              "startOffset": 39
+                            },
+                            "value": ":radius"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 53,
+                              "sourceId": "engine-parity/canonical-qualified-constructor",
+                              "startOffset": 47
+                            },
+                            "value": "Number"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 54,
+                        "sourceId": "engine-parity/canonical-qualified-constructor",
+                        "startOffset": 38
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 55,
+                    "sourceId": "engine-parity/canonical-qualified-constructor",
+                    "startOffset": 30
+                  }
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 61,
+                    "sourceId": "engine-parity/canonical-qualified-constructor",
+                    "startOffset": 56
+                  },
+                  "value": "Point"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 62,
+                "sourceId": "engine-parity/canonical-qualified-constructor",
+                "startOffset": 12
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 63,
+            "sourceId": "engine-parity/canonical-qualified-constructor",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 70,
+                "sourceId": "engine-parity/canonical-qualified-constructor",
+                "startOffset": 65
+              },
+              "value": "match"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 84,
+                    "sourceId": "engine-parity/canonical-qualified-constructor",
+                    "startOffset": 72
+                  },
+                  "value": "Shape.Circle"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 93,
+                          "sourceId": "engine-parity/canonical-qualified-constructor",
+                          "startOffset": 86
+                        },
+                        "value": ":radius"
+                      },
+                      "value": {
+                        "kind": "int",
+                        "span": {
+                          "endOffset": 95,
+                          "sourceId": "engine-parity/canonical-qualified-constructor",
+                          "startOffset": 94
+                        },
+                        "value": 2
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 96,
+                    "sourceId": "engine-parity/canonical-qualified-constructor",
+                    "startOffset": 85
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 97,
+                "sourceId": "engine-parity/canonical-qualified-constructor",
+                "startOffset": 71
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 111,
+                    "sourceId": "engine-parity/canonical-qualified-constructor",
+                    "startOffset": 99
+                  },
+                  "value": "Shape.Circle"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 120,
+                          "sourceId": "engine-parity/canonical-qualified-constructor",
+                          "startOffset": 113
+                        },
+                        "value": ":radius"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 127,
+                          "sourceId": "engine-parity/canonical-qualified-constructor",
+                          "startOffset": 121
+                        },
+                        "value": "radius"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 128,
+                    "sourceId": "engine-parity/canonical-qualified-constructor",
+                    "startOffset": 112
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 129,
+                "sourceId": "engine-parity/canonical-qualified-constructor",
+                "startOffset": 98
+              }
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 136,
+                "sourceId": "engine-parity/canonical-qualified-constructor",
+                "startOffset": 130
+              },
+              "value": "radius"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 148,
+                "sourceId": "engine-parity/canonical-qualified-constructor",
+                "startOffset": 137
+              },
+              "value": "Shape.Point"
+            },
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 150,
+                "sourceId": "engine-parity/canonical-qualified-constructor",
+                "startOffset": 149
+              },
+              "value": 0
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 151,
+            "sourceId": "engine-parity/canonical-qualified-constructor",
+            "startOffset": 64
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Number"
+    }
+  },
+  "version": 1
+}

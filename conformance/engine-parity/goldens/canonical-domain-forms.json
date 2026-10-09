@@ -1,0 +1,87 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-domain-forms",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 0,
+        "payload": {
+          "fields": [
+            {
+              "indexed": false,
+              "name": "employee/name",
+              "required": true,
+              "type": "String"
+            },
+            {
+              "indexed": false,
+              "name": "employee/active",
+              "required": true,
+              "type": "Bool"
+            },
+            {
+              "indexed": false,
+              "name": "employee/plan",
+              "required": true,
+              "type": [
+                "Union",
+                ":free",
+                ":pro"
+              ]
+            }
+          ],
+          "kind": "Entity",
+          "name": "Employee"
+        },
+        "sourceId": "engine-parity/canonical-domain-forms",
+        "span": {
+          "endOffset": 70,
+          "sourceId": "engine-parity/canonical-domain-forms",
+          "startOffset": 0
+        }
+      },
+      {
+        "formIndex": 2,
+        "payload": {
+          "from": "Employee",
+          "kind": "Query",
+          "name": "people",
+          "select": [
+            "employee/name"
+          ],
+          "where": {
+            "expr": "active",
+            "kind": "raw-expr"
+          }
+        },
+        "sourceId": "engine-parity/canonical-domain-forms",
+        "span": {
+          "endOffset": 191,
+          "sourceId": "engine-parity/canonical-domain-forms",
+          "startOffset": 133
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "entity": "Employee",
+          "fields": {
+            "employee/active": true,
+            "employee/name": "Ada",
+            "employee/plan": ":pro"
+          },
+          "id": "emp:1",
+          "kind": "Record",
+          "name": "emp:1"
+        },
+        "sourceId": "engine-parity/canonical-domain-forms",
+        "span": {
+          "endOffset": 132,
+          "sourceId": "engine-parity/canonical-domain-forms",
+          "startOffset": 71
+        }
+      }
+    ]
+  },
+  "version": 1
+}

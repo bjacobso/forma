@@ -1,0 +1,64 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-seed-defaults",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 0,
+        "payload": {
+          "fields": [
+            {
+              "default": "Ada",
+              "indexed": false,
+              "name": "employee/name",
+              "required": true,
+              "type": "String"
+            },
+            {
+              "default": false,
+              "indexed": false,
+              "name": "employee/active",
+              "required": true,
+              "type": "Bool"
+            },
+            {
+              "indexed": false,
+              "name": "employee/nickname",
+              "required": false,
+              "type": "String"
+            }
+          ],
+          "kind": "Entity",
+          "name": "Employee"
+        },
+        "sourceId": "engine-parity/canonical-seed-defaults",
+        "span": {
+          "endOffset": 105,
+          "sourceId": "engine-parity/canonical-seed-defaults",
+          "startOffset": 0
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "entity": "Employee",
+          "fields": {
+            "employee/active": false,
+            "employee/name": "Ada",
+            "employee/nickname": "A"
+          },
+          "id": "e:1",
+          "kind": "Record",
+          "name": "e:1"
+        },
+        "sourceId": "engine-parity/canonical-seed-defaults",
+        "span": {
+          "endOffset": 152,
+          "sourceId": "engine-parity/canonical-seed-defaults",
+          "startOffset": 106
+        }
+      }
+    ]
+  },
+  "version": 1
+}

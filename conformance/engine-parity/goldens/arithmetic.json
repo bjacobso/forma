@@ -1,0 +1,102 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "arithmetic",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "int",
+        "value": 3
+      }
+    },
+    "expand": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/arithmetic",
+                "startOffset": 1
+              },
+              "value": "+"
+            },
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 4,
+                "sourceId": "engine-parity/arithmetic",
+                "startOffset": 3
+              },
+              "value": 1
+            },
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 6,
+                "sourceId": "engine-parity/arithmetic",
+                "startOffset": 5
+              },
+              "value": 2
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 7,
+            "sourceId": "engine-parity/arithmetic",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/arithmetic",
+                "startOffset": 1
+              },
+              "value": "+"
+            },
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 4,
+                "sourceId": "engine-parity/arithmetic",
+                "startOffset": 3
+              },
+              "value": 1
+            },
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 6,
+                "sourceId": "engine-parity/arithmetic",
+                "startOffset": 5
+              },
+              "value": 2
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 7,
+            "sourceId": "engine-parity/arithmetic",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Int"
+    }
+  },
+  "version": 1
+}

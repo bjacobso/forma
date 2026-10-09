@@ -1,0 +1,31 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-child-families",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 7,
+        "payload": {
+          "children": [
+            {
+              "content": "hello",
+              "kind": "Text"
+            },
+            {
+              "kind": "Count",
+              "value": 3
+            }
+          ],
+          "kind": "Panel"
+        },
+        "sourceId": "engine-parity/canonical-child-families",
+        "span": {
+          "endOffset": 491,
+          "sourceId": "engine-parity/canonical-child-families",
+          "startOffset": 459
+        }
+      }
+    ]
+  },
+  "version": 1
+}

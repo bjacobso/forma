@@ -1,0 +1,75 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-query-preset",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 0,
+        "payload": {
+          "fields": [
+            {
+              "indexed": false,
+              "name": "employee/name",
+              "required": true,
+              "type": "String"
+            }
+          ],
+          "kind": "Entity",
+          "name": "Employee"
+        },
+        "sourceId": "engine-parity/canonical-query-preset",
+        "span": {
+          "endOffset": 32,
+          "sourceId": "engine-parity/canonical-query-preset",
+          "startOffset": 0
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "from": "Employee",
+          "kind": "Query",
+          "name": "staff",
+          "select": []
+        },
+        "sourceId": "engine-parity/canonical-query-preset",
+        "span": {
+          "endOffset": 61,
+          "sourceId": "engine-parity/canonical-query-preset",
+          "startOffset": 33
+        }
+      },
+      {
+        "formIndex": 2,
+        "payload": {
+          "defaults": [
+            {
+              "name": "search",
+              "value": {
+                "expr": {
+                  "$forma.runtimeExpr": "string-literal",
+                  "value": "Ada"
+                },
+                "kind": "raw-expr"
+              }
+            }
+          ],
+          "kind": "QueryPreset",
+          "mergePolicy": "preset-overrides",
+          "name": "names",
+          "queryRef": {
+            "kind": "Query",
+            "name": "staff"
+          }
+        },
+        "sourceId": "engine-parity/canonical-query-preset",
+        "span": {
+          "endOffset": 136,
+          "sourceId": "engine-parity/canonical-query-preset",
+          "startOffset": 62
+        }
+      }
+    ]
+  },
+  "version": 1
+}
