@@ -18,6 +18,7 @@ import type { ModuleGraph, ModuleInterface, ResolvedModule } from "./graph.js";
 import { schemeSyntax } from "./signatures.js";
 import type { SExpr } from "../reader/types.js";
 import { ModuleError } from "./graph.js";
+import { moduleFormProvider } from "./compile-time.js";
 
 export type CheckedModuleInterface = ModuleInterface;
 export interface ModuleCheckOptions extends MakeInferContextOptions {
@@ -103,14 +104,55 @@ export function checkModuleGraph(
               if (allowed.has(symbol)) initial.set(symbol, scheme);
             }
           const source = module.expressions.map(printSExpr).join("\n");
-          const provider = unifiedFormProvider(source, module.expressions);
-          const core = lowerProgram(module.expressions, provider);
+          const expressions =
+            module.compileTime?.expand(module.expressions) ??
+            module.expressions;
+          const referenced = new Set<string>();
+          const references = (e: SExpr): void => {
+            if (e._tag === "Sym") referenced.add(e.name.split(".")[0]!);
+            else if (e._tag === "Map")
+              e.pairs.forEach(([k, v]) => {
+                references(k);
+                references(v);
+              });
+            else if (e._tag === "List" || e._tag === "Vector")
+              e.items.forEach(references);
+          };
+          expressions.forEach(references);
+          // Only expansion can introduce these compiler-owned identities; authored
+          // private names were rejected during resolution.
+          for (const owner of graph.modules)
+            if (owner.id !== module.id)
+              for (const binding of owner.bindings.values())
+                if (referenced.has(binding.symbol)) {
+                  const scheme = environments
+                    .get(owner.id)
+                    ?.get(binding.symbol);
+                  if (scheme) initial.set(binding.symbol, scheme);
+                }
+          const provider = module.compileTime
+            ? moduleFormProvider(module.compileTime)
+            : unifiedFormProvider(source, expressions);
+          const core = lowerProgram(expressions, provider, {
+            includePrelude: false,
+          });
           const result = yield* Effect.provide(
-            inferProgram(core, initial, provider, module.expressions, (env) =>
-              environments.set(module.id, env),
-              options.editor ? { onFormError: (error) => Effect.sync(() => {
-                diagnostics.push(diagnosticFromUnknown(error, "typecheck", module.id));
-              }) } : {},
+            inferProgram(
+              core,
+              initial,
+              provider,
+              expressions,
+              (env) => environments.set(module.id, env),
+              options.editor
+                ? {
+                    onFormError: (error) =>
+                      Effect.sync(() => {
+                        diagnostics.push(
+                          diagnosticFromUnknown(error, "typecheck", module.id),
+                        );
+                      }),
+                  }
+                : {},
             ),
             Layer.succeed(InferContext, ctx),
           );
@@ -118,13 +160,24 @@ export function checkModuleGraph(
           if (options.editor) {
             const substitution = yield* Ref.get(ctx.subst);
             const recorded = yield* Ref.get(ctx.nodeTypes);
-            typedSpans.set(module.id, core.flatMap(collectNodes).flatMap((node) => {
-              const inferred = recorded.get(node.id);
-              if (!inferred) return [];
-              const type = applyType(substitution, inferred);
-              return [{ id: node.id, span: node.span, type, typeString: showType(type),
-                code: module.source.slice(node.span.start, node.span.end), exprTag: node._tag }];
-            }));
+            typedSpans.set(
+              module.id,
+              core.flatMap(collectNodes).flatMap((node) => {
+                const inferred = recorded.get(node.id);
+                if (!inferred) return [];
+                const type = applyType(substitution, inferred);
+                return [
+                  {
+                    id: node.id,
+                    span: node.span,
+                    type,
+                    typeString: showType(type),
+                    code: module.source.slice(node.span.start, node.span.end),
+                    exprTag: node._tag,
+                  },
+                ];
+              }),
+            );
           }
           for (const d of yield* Ref.get(ctx.diagnostics))
             diagnostics.push({
@@ -292,7 +345,12 @@ export function checkModuleGraph(
             }
           : binding;
       }
-      if (!expression || !scheme) return binding;
+      if (
+        !expression ||
+        !scheme ||
+        ["declaration", "form", "macro"].includes(binding.kind)
+      )
+        return binding;
       // The portable interface syntax names quantified variables by order, not engine IDs.
       const type = syntax(schemeSyntax(scheme, expression, false));
       const parameters = Array.from(
@@ -302,7 +360,14 @@ export function checkModuleGraph(
         },
         (_, i) => `a${i}`,
       );
-      return { ...binding, scheme: { parameters, type } };
+      const compileOnly = JSON.stringify(type).includes('"Declaration"');
+      return {
+        ...binding,
+        ...(!compileOnly ? { scheme: { parameters, type } } : {}),
+        ...(binding.data
+          ? { data: { ...binding.data, scheme: { parameters, type } } }
+          : {}),
+      };
     }),
   }));
   return {

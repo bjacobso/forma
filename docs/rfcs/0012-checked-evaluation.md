@@ -1,4 +1,4 @@
-# RFC 0007: Checked evaluation of untrusted source
+# RFC 0012: Checked evaluation of untrusted source
 
 | | |
 | --- | --- |
@@ -27,7 +27,7 @@ Hosts increasingly run code written by models. One design gives a model a
 single tool that evaluates code in a restricted language with a granted
 vocabulary, instead of many fixed tools. oh-my-lisp plans this as an agent
 whose only tool is `eval` in a SCI sandbox
-([RFC 0005](./0005-live-sessions.md) describes that evaluation). Forma can
+([RFC 0010](./0010-live-sessions.md) describes that evaluation). Forma can
 offer more than a restricted namespace: the code is typechecked before it
 runs, its reachable capabilities are known before it runs, and each
 capability call is a typed pause that the host controls.
@@ -133,7 +133,7 @@ operation runs these steps in order and stops at the first failure:
 
 A rejected run performs no host calls. The session is not changed; to keep
 definitions, a host submits accepted source through
-[RFC 0005](./0005-live-sessions.md).
+[RFC 0010](./0010-live-sessions.md).
 
 ### Static capability requirements
 
@@ -151,7 +151,7 @@ caller can see what the source needed.
 denial resumes with `capability/denied` at that span, as the workbench does
 today. `maxCalls` and `limits.hostCalls` fail the run with `limit/host-calls`
 at the call that exceeded them. Implementations of host builtins still
-validate their arguments; with [RFC 0006](./0006-signatures-as-contracts.md),
+validate their arguments; with [RFC 0011](./0011-signatures-as-contracts.md),
 arguments can be decoded against the builtin's declared type.
 
 ### Limits and cancellation
@@ -198,7 +198,7 @@ It does not provide isolation from hostile code:
   detect manipulation.
 
 Hosts that run hostile code should run the engine in a separate process or
-worker with operating-system limits ([RFC 0008](./0008-runnable-host.md)
+worker with operating-system limits ([RFC 0013](./0013-runnable-host.md)
 proposes a process protocol; the native OCaml daemon already runs as a
 child process, without a sandbox). Host builtin implementations are the trust
 boundary: each one must validate its arguments and enforce its own policy,

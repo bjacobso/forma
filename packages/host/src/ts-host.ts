@@ -281,6 +281,7 @@ export class TsLanguageHost implements LanguageHost {
 
   async configureSession(request: ConfigureSessionRequest): Promise<ConfigureSessionResult> {
     const session = this.#requireSession(request.sessionId);
+    if (request.projects) session.language.projects = request.projects;
     if (request.variables) {
       session.language.configurationEnv = session.language.configurationEnv.extend(
         variablesToBindings(request.variables),
@@ -373,7 +374,7 @@ export class TsLanguageHost implements LanguageHost {
       Modules.sourceModuleResolver(
         session.language.orderedSources("source").map((s) => ({ id: s.id, source: s.text })),
       ),
-      Engine.moduleCoreOptions(session.language),
+      { ...Engine.moduleCoreOptions(session.language), ...(request.projects ? { projects: request.projects } : {}) },
     );
   }
   async moduleGraph(request: ModuleGraphRequest): Promise<ModuleGraphResult> {
@@ -743,7 +744,7 @@ export class TsLanguageHost implements LanguageHost {
     const sourceId = request.sourceId ?? "source";
     const parse = editorParseProjection(sourceId, request.source);
     const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
-    if (session && /\((?:import|export|export-from)\s/.test(request.source)) {
+    if (session && (session.language.projects.length || /\((?:import|export|export-from)\s/.test(request.source))) {
       try {
         const graph = this.#moduleGraph({ sessionId: request.sessionId!, sourceId, source: request.source });
         const checked = Modules.checkModuleGraph(graph, {

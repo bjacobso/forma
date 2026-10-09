@@ -1,4 +1,4 @@
-# RFC 0008: A runnable host
+# RFC 0013: A runnable host
 
 | | |
 | --- | --- |
@@ -26,7 +26,7 @@ TypeScript packages, or by building the OCaml engine. There is no command to
 check or run a file, and no way to connect to a Forma session inside a
 running process.
 
-The agent evaluation described in [RFC 0005](./0005-live-sessions.md) needs
+The agent evaluation described in [RFC 0010](./0010-live-sessions.md) needs
 both. Its host process owns I/O and calls Forma definitions; an author
 inspects and redefines those definitions while it runs, as oh-my-lisp does
 through an nREPL server. A web UI may connect to the same session. None of
@@ -81,9 +81,9 @@ A new package, `@formalang/cli`, depends on `@formalang/host` and
 | Command | Behavior |
 | --- | --- |
 | `forma check <entry>` | Check the module graph with the Node file resolver. Print diagnostics with source excerpts, or JSON with `--json`. Exit 1 on errors. |
-| `forma run <entry> [--main name] [--args json]` | Evaluate the entry, or call an exported binding with JSON arguments decoded by its type ([RFC 0006](./0006-signatures-as-contracts.md)). |
+| `forma run <entry> [--main name] [--args json]` | Evaluate the entry, or call an exported binding with JSON arguments decoded by its type ([RFC 0011](./0011-signatures-as-contracts.md)). |
 | `forma interface <entry>` | Print the module interface; with `--contracts`, binding contracts and JSON Schema. |
-| `forma repl [entry]` | Open a session with the entry's modules loaded. Supports `:type`, `:doc`, `:exports`, and, once [RFC 0005](./0005-live-sessions.md) is implemented, persistent definitions and `:revisions`. |
+| `forma repl [entry]` | Open a session with the entry's modules loaded. Supports `:type`, `:doc`, `:exports`, and, once [RFC 0010](./0010-live-sessions.md) is implemented, persistent definitions and `:revisions`. |
 | `forma daemon` | Serve the host protocol over stdio. |
 | `forma attach <socket>` | Run the REPL against a session served by another process. |
 
@@ -91,7 +91,7 @@ A new package, `@formalang/cli`, depends on `@formalang/host` and
 `--host <module>`, a JavaScript module that exports descriptors and
 implementations. Each host call runs its implementation if granted with
 `--allow <name>`, prompts on a terminal otherwise, and is denied when there is
-no terminal. Grants and limits follow [RFC 0007](./0007-checked-evaluation.md).
+no terminal. Grants and limits follow [RFC 0012](./0012-checked-evaluation.md).
 Effect programs report `module/effect-runtime` until running linked Effect
 output is specified.
 
@@ -112,7 +112,7 @@ Messages are JSON-RPC 2.0 objects, one per line. Method names are
 
 - Request ids allow concurrent requests and out-of-order responses.
 - The server sends notifications for events a client did not request:
-  `session/revision` with a revision record (RFC 0005) and `evaluation/hostCall`
+  `session/revision` with a revision record (RFC 0010) and `evaluation/hostCall`
   when an evaluation started by another client pauses, so that an attached
   REPL and a UI can observe the same session.
 - Errors in Forma programs remain results with diagnostics. JSON-RPC errors
@@ -153,12 +153,12 @@ The pause and resume model stays, because each pause is a permission point.
   argument once per chunk through `callValue`. The TypeScript host must
   support host calls made from such callbacks, matching the OCaml test.
 - **Cancellation.** `abortEvaluation` is checked at every evaluation step
-  (RFC 0007). Aborting fails the pending call with `evaluation/aborted`. When
+  (RFC 0012). Aborting fails the pending call with `evaluation/aborted`. When
   a client implements a host builtin, the server sends
   `evaluation/cancelHostCall` so the client can stop that work, for example
   by closing an HTTP stream.
 - **Timeouts.** Per-request timeouts belong to the client. The server applies
-  the run limits of RFC 0007.
+  the run limits of RFC 0012.
 
 ## Alternatives considered
 
@@ -188,7 +188,7 @@ The pause and resume model stays, because each pause is a permission point.
    requests and receives the second response before the first.
 3. **Attach.** `serveHost`, Unix sockets, and `forma attach`. A test embeds a
    host in a Node process, attaches a client, defines a function under RFC
-   0005, and observes the embedding process's next `callBinding` use it.
+   0010, and observes the embedding process's next `callBinding` use it.
 4. **Host calls.** `--host` modules and grants for `run`, cooperative abort,
    and nested host calls from TypeScript callbacks. A test aborts a pure
    infinite loop; a test mirrors the OCaml nested-callback test.

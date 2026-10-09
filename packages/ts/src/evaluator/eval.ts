@@ -109,6 +109,7 @@ export function evaluateExprs(
       try: () =>
         expandKernelExprsSync(exprs, {
           builtins: options.builtins ?? {},
+          ...(options.includePrelude === false ? {includePrelude:false} : {}),
           ...(options.env ? { env: options.env } : {}),
         }),
       catch: toKernelError,

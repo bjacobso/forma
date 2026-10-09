@@ -24,6 +24,7 @@ type t = {
   mutable next_value_ref_id : int;
   pending_evaluations : (string, pending_evaluation) Hashtbl.t;
   value_refs : (string, Eval.value) Hashtbl.t;
+  mutable projects : Module_contract.project list;
   mutable core_env : Eval.env;
   mutable core_types : Type_env.env;
   mutable env : Eval.env;

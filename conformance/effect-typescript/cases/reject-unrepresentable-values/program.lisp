@@ -12,6 +12,3 @@
 (define seen {"a" nil})
 
 (error Broken {:_tag String})
-
-(type Shape (Tagged :tag kind (Circle {:kind String
- :radius Number})))

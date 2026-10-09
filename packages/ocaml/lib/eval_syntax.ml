@@ -103,7 +103,9 @@ let declaration_fields env owner =
               | _ -> []) fields
           | _ -> [])
       | None -> [])
-  | None -> []
+  | None -> (match lookup ("__type/"^Value.to_str_part owner) with
+      | Some (VMap fields)->List.map (fun (k,t)->let key=Value.to_str_part k in VString (if String.starts_with ~prefix:":" key then String.sub key 1 (String.length key-1) else key),t) fields
+      | _->[])
 
 let eval ctx env op args =
   let some result = Result.map (fun value -> Some value) result in

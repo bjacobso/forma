@@ -4,11 +4,21 @@ import { headSym as head, type SExpr } from "../reader/types.js";
 const headSym = (e?: SExpr): string | undefined => (e ? head(e) : undefined);
 import type { Diagnostic } from "../diagnostic/diagnostic.js";
 import { defaultBuiltins } from "../Builtins.js";
+import {
+  discoverFormDeclarations,
+  prepareCompileTimeModule,
+  type ModuleCompileTime,
+  type ModuleData,
+  type ModuleFormMetadata,
+} from "./compile-time.js";
+import { matchFormSyntax } from "../surface/form.js";
+import type { Span } from "../diagnostic/diagnostic.js";
 
 /** A resolver is supplied by the host. IDs identify file instances, not contents. */
 export interface ModuleSource {
   readonly id: string;
   readonly source: string;
+  readonly projectId?: string;
 }
 export type ModuleResolver = (
   specifier: string,
@@ -28,7 +38,8 @@ export type ModuleDeclarationKind =
   | "macro"
   | "form"
   | "typeclass"
-  | "compile-time";
+  | "compile-time"
+  | "declaration";
 export interface ModuleBinding {
   readonly name: string;
   readonly identity: BindingIdentity;
@@ -36,6 +47,14 @@ export interface ModuleBinding {
   readonly kind: ModuleDeclarationKind;
   readonly constructors: readonly string[];
   readonly scheme?: ModuleTypeScheme;
+  readonly declaration?: {
+    readonly classification: string;
+    readonly form: BindingIdentity;
+    readonly span: Span;
+  };
+  readonly schema?: ModuleTypeSyntax;
+  readonly data?: ModuleData;
+  readonly form?: ModuleFormMetadata;
 }
 export type ModuleTypeSyntax =
   | string
@@ -66,6 +85,7 @@ export interface ResolvedModule {
   readonly imports: ReadonlyMap<string, ModuleBinding>;
   readonly namespaceImports: readonly ModuleBinding[];
   readonly interface: ModuleInterface;
+  readonly compileTime?: ModuleCompileTime;
 }
 export interface ModuleGraph {
   readonly entry: string;
@@ -126,11 +146,8 @@ const declarationKinds = new Map<string, ModuleDeclarationKind>([
   ["macro", "macro"],
   ["form", "form"],
   ["typeclass", "typeclass"],
-  ...["entity", "query", "command", "view", "rule", "protocol"].map(
-    (h) => [h, "value"] as const,
-  ),
 ]);
-const laterKinds = new Set(["macro", "form", "typeclass", "compile-time"]);
+const laterKinds = new Set(["typeclass"]);
 const directives = new Set(["import", "export", "export-from"]);
 export const coreTypeNames = new Set([
   "String",
@@ -170,6 +187,7 @@ export const coreTypeNames = new Set([
   "OntologyRuntime",
   "Action",
   "Declares",
+  "Refers",
   "FormDescriptor",
 ]);
 
@@ -177,6 +195,13 @@ export interface ModuleCoreOptions {
   readonly bindings?: ReadonlySet<string>;
   readonly types?: ReadonlySet<string>;
   readonly isCoreBinding?: (name: string) => boolean;
+  readonly projects?: readonly {
+    readonly id: string;
+    readonly base: string;
+    readonly prelude?: string;
+    readonly modules?: readonly string[];
+  }[];
+  readonly projectForModule?: (moduleId: string) => string | undefined;
 }
 export function resolveModuleGraph(
   entry: ModuleSource,
@@ -200,6 +225,34 @@ export function resolveModuleGraph(
       },
     });
   };
+  // Bootstrap closures are fixed before traversal, including when a helper is
+  // also imported directly before its project's prelude.
+  const bootstrap = new Map<string, Set<string>>();
+  for (const project of core.projects ?? []) {
+    const closure = new Set<string>();
+    const collect = (source: ModuleSource): void => {
+      const id = normalizeModuleId(source.id);
+      if (closure.has(id)) return;
+      closure.add(id);
+      const parsed = parse(source.source);
+      if (parsed.errors.length) return;
+      for (const e of toSExprMany(parsed.redTree)) {
+        if (
+          e._tag === "List" &&
+          ["import", "export-from"].includes(headSym(e) ?? "") &&
+          e.items[1]?._tag === "Str"
+        ) {
+          const target = resolver(e.items[1].value, id);
+          if (target) collect(target);
+        }
+      }
+    };
+    const source = project.prelude
+      ? resolver(project.prelude, project.base)
+      : undefined;
+    if (source) collect(source);
+    bootstrap.set(project.id, closure);
+  }
   const visit = (input: ModuleSource): ResolvedModule => {
     const id = normalizeModuleId(input.id),
       cached = completed.get(id);
@@ -365,6 +418,42 @@ export function resolveModuleGraph(
         );
       exports.set(b.name, b);
     };
+    const project = core.projects?.find(
+      (p) =>
+        p.id ===
+        (input.projectId ??
+          core.projectForModule?.(id) ??
+          core.projects?.find((p) => p.modules?.includes(id))?.id),
+    );
+    if (project?.prelude && !bootstrap.get(project.id)?.has(id)) {
+      const preludeSource = resolver(project.prelude, project.base);
+      if (!preludeSource)
+        fail(
+          id,
+          authored[0] ?? {
+            _tag: "Sym",
+            name: "prelude",
+            loc: { start: 0, end: 0, line: 1, col: 1 },
+          },
+          "module/not-found",
+          `Cannot resolve project prelude ${project.prelude} from ${project.base}.`,
+        );
+      const preludeId = normalizeModuleId(preludeSource!.id);
+      if (preludeId !== id) {
+        const prelude = visit(preludeSource!);
+        dependencies.push(preludeId);
+        for (const binding of prelude.interface.exports) {
+          if (bindings.has(binding.name))
+            fail(
+              id,
+              declarationNodes.get(binding.name)!,
+              "module/duplicate-import",
+              `Prelude import ${binding.name} conflicts with a local binding.`,
+            );
+          imports.set(binding.name, binding);
+        }
+      }
+    }
     // Imports/re-exports are prepared before exports, regardless of directive order.
     for (const e of authored) {
       if (e._tag !== "List") continue;
@@ -419,30 +508,52 @@ export function resolveModuleGraph(
           `Use (${h} "./file.forma" [names])${h === "import" ? ' or (import "./file.forma" :as alias)' : ""}.`,
         );
     }
-    for (const e of authored)
-      if (headSym(e) === "export" && e._tag === "List") {
-        if (e.items.length < 2)
-          fail(id, e, "module/directive", "export requires one or more names.");
-        for (const n of e.items.slice(1)) {
-          const b =
-            bindings.get(scalar(n) ?? "") ?? imports.get(scalar(n) ?? "");
-          if (!b)
-            fail(
-              id,
-              n,
-              "module/missing-export",
-              `Cannot export ${scalar(n) ?? "expression"}: no local declaration or named import.`,
-            );
-          addExport(n, b!);
-        }
-      }
+    for (const introduced of discoverFormDeclarations(
+      authored,
+      bindings,
+      imports,
+      namespaces,
+      (identity) => completed.get(identity.moduleId),
+    )) {
+      const { name, node, classification, form } = introduced;
+      if (bindings.has(name) || imports.has(name) || namespaces.has(name))
+        fail(
+          id,
+          node,
+          "module/duplicate-declaration",
+          `Duplicate declaration ${name} in ${id}.`,
+        );
+      const identity = { moduleId: id, declaration: name };
+      bindings.set(name, {
+        name,
+        identity,
+        symbol: bindingSymbol(identity),
+        kind: "declaration",
+        constructors: [],
+        declaration: {
+          classification:
+            bindings.get(classification)?.symbol ??
+            imports.get(classification)?.symbol ??
+            classification,
+          form,
+          span: {
+            sourceId: id,
+            startOffset: node.loc.start,
+            endOffset: node.loc.end,
+          },
+        },
+      });
+      declarationNodes.set(name, node);
+    }
     const visible = new Map([...bindings, ...imports]);
+    let allowResolved = false;
     const resolve = (
       e: SExpr,
       locals: ReadonlySet<string>,
       type = false,
     ): SExpr => {
       if (e._tag !== "Sym" || e.name.startsWith(":")) return e;
+      if (allowResolved && e.name.includes("__forma_")) return e;
       const n = e.name,
         root = n.split(".")[0]!;
       if (locals.has(n) || locals.has(root)) return e;
@@ -525,6 +636,16 @@ export function resolveModuleGraph(
           "surface/ambiguous-constructor",
           `Ambiguous constructor ${n}; use Type.${n}.`,
         );
+      if (
+        !type &&
+        ["when", "unless", "cond", "and", "or", "->", "->>"].includes(n)
+      )
+        fail(
+          id,
+          e,
+          "module/unimported-sugar",
+          `Import ${n} from a library or select a project prelude.`,
+        );
       if (n.includes("__forma_"))
         fail(
           id,
@@ -548,7 +669,7 @@ export function resolveModuleGraph(
     };
     const boundNames = (e: SExpr): string[] => {
       if (e._tag === "Sym")
-        return /^[a-z_$]/.test(e.name) &&
+        return /^[a-z_$@]/.test(e.name) &&
           !["nil", "true", "false", "&"].includes(e.name)
           ? [e.name]
           : [];
@@ -610,6 +731,7 @@ export function resolveModuleGraph(
         new Set([...locals, ...boundNames(binders)]);
       if (
         (h === "fn" || h === "define") &&
+        (h === "fn" || items.length > 3) &&
         (h === "fn" ? items[1] : items[2])?._tag === "Vector"
       ) {
         const index = h === "fn" ? 1 : 2,
@@ -825,9 +947,125 @@ export function resolveModuleGraph(
         };
       return e;
     };
-    const expressions = authored
+    let expressions = authored
       .filter((e) => !directives.has(headSym(e) ?? ""))
       .map((e) => walk(e));
+    if (
+      [
+        ...imports.values(),
+        ...[...namespaces.values()].flatMap((m) => m.interface.exports),
+        ...bindings.values(),
+      ].some((b) => b.kind === "macro")
+    ) {
+      const preliminary: ResolvedModule = {
+        id,
+        source: input.source,
+        expressions,
+        dependencies,
+        bindings,
+        imports,
+        namespaceImports: [...namespaces.values()].flatMap(
+          (m) => m.interface.exports,
+        ),
+        interface: { moduleId: id, exports: [] },
+      };
+      const state = prepareCompileTimeModule(preliminary, (identity) =>
+        completed.get(identity.moduleId),
+      ).compileTime!;
+      const expanded = state.expand(expressions);
+      const introduce = (
+        node: SExpr,
+        kind: ModuleDeclarationKind,
+        classification?: string,
+        form?: BindingIdentity,
+      ): void => {
+        const name = scalar(node);
+        if (!name || name.includes("__forma_")) return;
+        if (bindings.has(name) || imports.has(name) || namespaces.has(name))
+          fail(
+            id,
+            node,
+            "module/duplicate-declaration",
+            `Duplicate declaration ${name} in ${id}.`,
+          );
+        if (name.includes("/") || name.includes("."))
+          fail(
+            id,
+            node,
+            "module/declaration-name",
+            `Module declaration ${name} must be unqualified.`,
+          );
+        const identity = { moduleId: id, declaration: name };
+        const binding: ModuleBinding = {
+          name,
+          identity,
+          symbol: bindingSymbol(identity),
+          kind,
+          constructors: [],
+          ...(classification && form
+            ? {
+                declaration: {
+                  classification,
+                  form,
+                  span: {
+                    sourceId: id,
+                    startOffset: node.loc.start,
+                    endOffset: node.loc.end,
+                  },
+                },
+              }
+            : {}),
+        };
+        bindings.set(name, binding);
+        visible.set(name, binding);
+        declarationNodes.set(name, node);
+      };
+      for (const expression of expanded) {
+        if (expression._tag !== "List") continue;
+        const kind = declarationKinds.get(headSym(expression) ?? "");
+        if (kind && expression.items[1]?._tag === "Sym")
+          introduce(expression.items[1], kind);
+        const linked = state.forms.get(headSym(expression) ?? "");
+        if (linked?.descriptor.surface) {
+          const holes = matchFormSyntax(linked.descriptor.surface, expression);
+          for (const [hole, type] of linked.descriptor.surface.holes)
+            if (
+              headSym(type) === "Declares" &&
+              type._tag === "List" &&
+              holes.get(hole)
+            )
+              introduce(
+                holes.get(hole)!,
+                "declaration",
+                scalar(type.items[1]),
+                linked.identity,
+              );
+        }
+      }
+      allowResolved = true;
+      expressions = [
+        ...expressions.filter((e) => headSym(e) === "macro"),
+        ...expanded.map((e) => walk(e)),
+      ];
+      allowResolved = false;
+    }
+    for (const e of authored)
+      if (headSym(e) === "export" && e._tag === "List") {
+        if (e.items.length < 2)
+          fail(id, e, "module/directive", "export requires one or more names.");
+        for (const n of e.items.slice(1)) {
+          const b =
+            bindings.get(scalar(n) ?? "") ?? imports.get(scalar(n) ?? "");
+          if (!b)
+            fail(
+              id,
+              n,
+              "module/missing-export",
+              `Cannot export ${scalar(n) ?? "expression"}: no local declaration or named import.`,
+            );
+          addExport(n, b!);
+        }
+      }
     const module: ResolvedModule = {
       id,
       source: input.source,
@@ -845,9 +1083,12 @@ export function resolveModuleGraph(
         ),
       },
     };
-    completed.set(id, module);
+    const prepared = prepareCompileTimeModule(module, (identity) =>
+      completed.get(identity.moduleId),
+    );
+    completed.set(id, prepared);
     active.pop();
-    return module;
+    return prepared;
   };
   const root = visit(entry);
   return { entry: root.id, modules: [...completed.values()] };

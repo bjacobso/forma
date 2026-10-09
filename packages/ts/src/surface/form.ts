@@ -125,7 +125,7 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
   const extensions = typeDescriptor(irName, types.get(irName)!, types).extensions;
   return {
     name: formName, phase: "domain", ...(doc ? { doc } : {}), identifiers, slots,
-    bindings: declares ? { kind: "static", rules: identifiers.filter(i => i.declaration).map(i => ({ kind: "declaration" as const, identifier: i.name, type: declares! })) } : { kind: "none" },
+    bindings: declares ? { kind: "static", rules: identifiers.filter(i => i.declaration).map(i => ({ kind: "declaration" as const, identifier: i.name, type: name(arg(unwrapOption(holes.get(i.name)!)))! })) } : { kind: "none" },
     validation: { kind: "hook", fn: `form/${formName}/validate` },
     elaboration: { kind: "hook", fn: `form/${formName}/construct` },
     resultType: head(resultType) === "fn" ? {kind:"hook",fn:`form/${formName}/result-type`} : { kind: "constant", type: name(resultType) ?? declares ?? "Unit" },
@@ -219,18 +219,24 @@ function validLiteral(e: SExpr, type: SExpr): boolean {
   return true;
 }
 
-export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDescriptorRegistry, hostedBuiltins?: HostedMetaBuiltinsFactory, hostedDsls: import("../descriptor/meta-builtins.js").MetaBuiltinsContext["hostedDsls"] = new Map()): readonly ElaborationHook[] {
+export interface LinkedFormContext {
+  readonly environment: () => Env;
+  readonly evaluateHole: (expression: SExpr, type: SExpr) => KValue;
+  readonly run: (expression: SExpr, environment: Env, builtins: Record<string,BuiltinFn>) => KValue;
+}
+
+export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDescriptorRegistry, hostedBuiltins?: HostedMetaBuiltinsFactory, hostedDsls: import("../descriptor/meta-builtins.js").MetaBuiltinsContext["hostedDsls"] = new Map(), linked?: LinkedFormContext): readonly ElaborationHook[] {
   const spec = descriptor.surface;
   if (!spec) return [];
   const execute = (input: HookInput, kind: "construct" | "validate" | "result-type") => Effect.gen(function* () {
     const values = matchFormSyntax(spec, input.rawExpr);
-    let env = Env.empty();
+    let env = linked?.environment() ?? Env.empty();
     const converted = new Map<string,KValue>();
     const childDiagnostics: Diagnostic[] = [];
     for (const [n,t] of spec.holes) {
       const e = values.get(n);
       const u = unwrapOption(t);
-      let value: KValue = e ? datum(e) : null;
+      let value: KValue = e ? linked ? linked.evaluateHole(e, u) : datum(e) : null;
       if (e && head(u) === "Record" && e._tag === "Map") value = e.pairs.map(([k,v])=>[datum(k),datum(v)]);
 
       converted.set(`:${n}`,value); env = env.bind(n,value);
@@ -304,7 +310,9 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
       },
     };
     const constructors = [...spec.types].filter(([,type]) => head(type) === "Tagged" || head(type) === "Brand").map(([typeName,type]) => list(type,[sym(type,"type"),sym(type,typeName),type]));
-    const run = (expression: SExpr) => evaluateExprs([...constructors,...spec.helpers,expression],{env,builtins,stepLimit:100_000}).pipe(Effect.map(r=>r.value));
+    const run = (expression: SExpr) => linked
+      ? Effect.try({try: () => linked.run(expression,env,builtins),catch: error => new ElaborationError({message: error instanceof Error ? error.message : String(error),hookName:descriptor.name,phase:kind})})
+      : evaluateExprs([...constructors,...spec.helpers,expression],{env,builtins,stepLimit:100_000}).pipe(Effect.map(r=>r.value));
     const invoke = (fn: SExpr) => run(list(fn,[fn,sym(fn,"__holes")]));
     for (const [n,t] of spec.holes) {
       const e = values.get(n), u = unwrapOption(t);
@@ -359,8 +367,10 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
       const diagnostics: Diagnostic[] = [...childDiagnostics];
       for (const [n, e] of values) {
         const t = spec.holes.get(n)!;
-        if (!validLiteral(e, t)) diagnostics.push({ severity: "error", message: `${n} does not match its declared hole type`, loc: e.loc });
         const u = unwrapOption(t);
+        const syntaxHole = ["Declares","Refers","Expr"].includes(head(u) ?? "") || ["Symbol","Type","Syntax","RuntimeExpr"].includes(name(u) ?? "");
+        const problems = linked && !syntaxHole ? contractErrors(converted.get(`:${n}`)!,t,spec.types,n) : validLiteral(e,t) ? [] : [`${n} does not match its declared hole type`];
+        for (const message of problems) diagnostics.push({severity:"error",message,loc:e.loc});
         if (n === "layout" && registry) {
           const keys = (hole: string) => new Set(values.get(hole)?._tag === "Map" ? (values.get(hole) as Extract<SExpr,{_tag:"Map"}>).pairs.flatMap(([key])=>fieldName(key) ?? []) : []);
           const state=values.get("state");
@@ -387,8 +397,8 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
             const declaring = declared ? registry?.get(declared.formName) : undefined;
             const classification = [...(declaring?.surface?.holes.values() ?? [])].find(t => head(t) === "Declares");
             const actual = classification ? typeName(arg(classification)) : input.semanticEnv.getBindingType(value.name) ?? declared?.type;
-            if (!declared && !actual) diagnostics.push({severity:"error", message:`Unknown reference ${value.name}`, loc:value.loc});
-            else if (actual && name(arg(type)) && (actual._tag !== "TCon" || actual.name !== name(arg(type)))) diagnostics.push({severity:"error", message:`${value.name} is ${showType(actual)}, expected ${name(arg(type))}`, loc:value.loc});
+            if (!declared && !actual) diagnostics.push({code:linked ? "elaborate/unknown-reference" : "elaborate/hole-type",severity:"error", message:`Unknown reference ${value.name}`, loc:value.loc});
+            else if (actual && name(arg(type)) && (actual._tag !== "TCon" || actual.name !== name(arg(type)))) diagnostics.push({code:linked ? "elaborate/reference-type" : "elaborate/hole-type",severity:"error", message:`${value.name} is ${showType(actual)}, expected ${name(arg(type))}`, loc:value.loc});
           }
         };
         checkReferences(e, u);

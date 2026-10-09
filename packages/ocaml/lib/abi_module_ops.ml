@@ -6,7 +6,10 @@ let with_graph ~with_session (request : Abi_request.t) k =
         else "request.forma"
       in
       let source_id = Option.value ~default:default_id request.source_id in
-      match Session_module.graph session ~source_id ~source:request.source with
+      match
+        Session_module.graph ?projects:request.projects session ~source_id
+          ~source:request.source
+      with
       | Error diagnostics -> Abi_response.typecheck_diagnostics_json diagnostics
       | Ok graph -> k session graph)
 
@@ -100,6 +103,8 @@ let interfaces ?checked (graph : Module_graph.t) =
                                  Module_signatures.syntax_json (renamed body) );
                              ] );
                        ]
+                 | _ when List.mem b.kind [ "declaration"; "form"; "macro" ] ->
+                     fields
                  | _ -> (
                      match (scheme, expression) with
                      | Some (Type_env.Forall (vars, _, _, _) as scheme), Some e
@@ -125,6 +130,28 @@ let interfaces ?checked (graph : Module_graph.t) =
                              ]
                          with Module_graph.Error _ -> fields)
                      | _ -> fields)
+               in
+               let fields =
+                 match
+                   (List.assoc_opt "data" fields, List.assoc_opt "scheme" fields)
+                 with
+                 | Some (Ir_json.Object data), Some scheme ->
+                     List.map
+                       (fun (k, v) ->
+                         ( k,
+                           if k = "data" then
+                             Ir_json.Object (data @ [ ("scheme", scheme) ])
+                           else v ))
+                       fields
+                 | _ -> fields
+               in
+               let fields =
+                 match List.assoc_opt "scheme" fields with
+                 | Some scheme
+                   when Module_contract.contains (Ir_json.to_string scheme)
+                          "Declaration" ->
+                     List.remove_assoc "scheme" fields
+                 | _ -> fields
                in
                Ir_json.Object fields)
              m.interface.exports
@@ -178,7 +205,8 @@ let typecheck ~with_session request =
       match
         Module_runtime.check
           ~prepare:(Abi_type_policy.apply request)
-          ~core_env:session.Session.core_env ~core_types:session.core_types
+          ~core_env:(Session_module.graph_core_env session graph)
+          ~core_types:(Session_module.graph_core_types session graph)
           graph
       with
       | Error diagnostics -> Abi_response.typecheck_diagnostics_json diagnostics

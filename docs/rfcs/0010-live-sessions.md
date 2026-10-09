@@ -1,4 +1,4 @@
-# RFC 0005: Live sessions and redefinition
+# RFC 0010: Live sessions and redefinition
 
 | | |
 | --- | --- |
@@ -244,7 +244,7 @@ as facts in a database. Further operations:
 
 A program that changes its own definitions does so through a host builtin
 that calls `proposeChange`. Each such call is a permission point under
-[RFC 0007](./0007-checked-evaluation.md), and the host decides whether to
+[RFC 0012](./0012-checked-evaluation.md), and the host decides whether to
 commit.
 
 ## Alternatives considered

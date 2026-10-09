@@ -21,7 +21,25 @@ let rec value_of_syntax = function
            (fun (key, value) -> (value_of_syntax key, value_of_syntax value))
            entries)
 
-let rec syntax_of_value = function
+let syntax_arguments : (Value.t * Ast.expr) list ref = ref []
+
+let with_syntax_arguments expressions f =
+  let previous = !syntax_arguments in
+  let rec argument expression =
+    let value = match expression with
+      | Ast.List (_,xs) -> Value.VList (List.map argument xs)
+      | Ast.Vector (_,xs) -> Value.VVector (List.map argument xs)
+      | Ast.Map (_,pairs) -> Value.VMap (List.map (fun (k,v)->argument k,argument v) pairs)
+      | expression -> value_of_syntax expression in
+    syntax_arguments := (value,expression)::!syntax_arguments;
+    value in
+  Fun.protect ~finally:(fun ()->syntax_arguments:=previous) (fun ()->f (List.map argument expressions))
+
+let rec syntax_of_value value =
+  match List.find_opt (fun (original,_)->original == value) !syntax_arguments with
+  | Some (_,expression) -> Ok expression
+  | None -> syntax_of_generated_value value
+and syntax_of_generated_value = function
   | Value.VNil -> Ok (Reader.Nil generated_span)
   | Value.VBool value -> Ok (Reader.Bool (generated_span, value))
   | Value.VInt value -> Ok (Reader.Int (generated_span, value))

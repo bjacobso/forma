@@ -8,3 +8,5 @@ val quasiquote :
   eval:(Ast.expr -> (Value.t, diagnostic list) result) ->
   Ast.expr list ->
   (Value.t, diagnostic list) result
+
+val with_syntax_arguments : Ast.expr list -> (Value.t list -> 'a) -> 'a

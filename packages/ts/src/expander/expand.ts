@@ -11,6 +11,7 @@ import {
   copySourceTrace,
   markExpansion,
   sourceLocOf,
+  sourceOriginsOf,
   tagExpandedExpr,
 } from "../evaluator/source-trace.js";
 import type { BuiltinFn, KMacro, KValue } from "../evaluator/types.js";
@@ -171,7 +172,10 @@ function expandExpr(
       if (binding !== undefined && isKMacro(binding)) {
         const args = expr.items.slice(1);
         const result = evaluateMacro(binding, args, builtins, macroStepLimit);
-        const expanded = markExpansion(expr, result, args);
+        const hygienic = binding.name.includes("__forma_")
+          ? hygienicExpansion(result, args, state)
+          : result;
+        const expanded = markExpansion(expr, hygienic, args);
         tagExpandedExpr(expanded, { macroName: binding.name, loc: sourceLocOf(expr) }, args);
         return expandExpr(
           normalizeCoreProgram([expanded])[0]!,
@@ -722,4 +726,95 @@ function isTopLevelDefMacro(expr: SExpr): expr is SExpr & { _tag: "List" } {
     expr.items[0]?._tag === "Sym" &&
     expr.items[0].name === "__macro"
   );
+}
+
+/** Freshen template binders while retaining the lexical context of caller syntax. */
+function hygienicExpansion(
+  expression: SExpr,
+  args: readonly SExpr[],
+  state: ExpandState,
+): SExpr {
+  const authored = new Set<SExpr>();
+  const collect = (e: SExpr): void => {
+    authored.add(e);
+    if (e._tag === "List" || e._tag === "Vector") e.items.forEach(collect);
+    else if (e._tag === "Map")
+      e.pairs.forEach(([k, v]) => {
+        collect(k);
+        collect(v);
+      });
+  };
+  args.forEach(collect);
+  const caller = (e: SExpr) =>
+    authored.has(e) ||
+    sourceOriginsOf(e).some((origin) => authored.has(origin));
+  const walk = (e: SExpr, bindings: ReadonlyMap<string, string>): SExpr => {
+    if (caller(e)) return e;
+    if (e._tag === "Sym")
+      return bindings.has(e.name)
+        ? copySourceTrace(e, { ...e, name: bindings.get(e.name)! })
+        : e;
+    if (e._tag === "Map")
+      return copySourceTrace(e, {
+        ...e,
+        pairs: e.pairs.map(
+          ([k, v]) => [walk(k, bindings), walk(v, bindings)] as const,
+        ),
+      });
+    if (e._tag !== "List" && e._tag !== "Vector") return e;
+    const bind = (pattern: SExpr, local: Map<string, string>): SExpr => {
+      if (caller(pattern)) return pattern;
+      if (pattern._tag === "Sym") {
+        if (pattern.name === "&" || pattern.name === "...") return pattern;
+        const fresh = `macro__forma_local_${state.bindingCounter++}`;
+        local.set(pattern.name, fresh);
+        return copySourceTrace(pattern, { ...pattern, name: fresh });
+      }
+      if (pattern._tag === "Vector")
+        return { ...pattern, items: pattern.items.map((p) => bind(p, local)) };
+      if (pattern._tag === "Map")
+        return {
+          ...pattern,
+          pairs: pattern.pairs.map(([k, v]) => [k, bind(v, local)] as const),
+        };
+      return pattern;
+    };
+    if (e._tag === "List" && e.items[0]?._tag === "Sym") {
+      const head = e.items[0].name;
+      if (head === "quote" || head === "quasiquote") return e;
+      if (head === "fn" && e.items[1]?._tag === "Vector") {
+        const local = new Map(bindings),
+          params = bind(e.items[1], local);
+        return copySourceTrace(e, {
+          ...e,
+          items: [
+            e.items[0],
+            params,
+            ...e.items.slice(2).map((v) => walk(v, local)),
+          ],
+        });
+      }
+      if (head === "let" && e.items[1]?._tag === "Vector") {
+        const local = new Map(bindings),
+          pairs: SExpr[] = [];
+        for (let i = 0; i + 1 < e.items[1].items.length; i += 2) {
+          const value = walk(e.items[1].items[i + 1]!, local);
+          pairs.push(bind(e.items[1].items[i]!, local), value);
+        }
+        return copySourceTrace(e, {
+          ...e,
+          items: [
+            e.items[0],
+            { ...e.items[1], items: pairs },
+            ...e.items.slice(2).map((v) => walk(v, local)),
+          ],
+        });
+      }
+    }
+    return copySourceTrace(e, {
+      ...e,
+      items: e.items.map((v) => walk(v, bindings)),
+    });
+  };
+  return walk(expression, new Map());
 }

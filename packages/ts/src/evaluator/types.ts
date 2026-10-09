@@ -127,6 +127,7 @@ export type BuiltinFn = (
  */
 export interface KernelOptions {
   readonly stepLimit: number;
+  readonly includePrelude?: boolean;
   readonly builtins?: Record<string, BuiltinFn>;
   readonly env?: Env;
   /** Receives the value of every observed expression. */

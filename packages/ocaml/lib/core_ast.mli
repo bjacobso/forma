@@ -15,6 +15,7 @@ type type_expr =
   | TEFun of Ast.span * type_expr list * type_expr
   | TEApp of Ast.span * type_expr * type_expr list
   | TERow of Ast.span * (string * type_expr) list * string option
+  | TERowOp of Ast.span * string * type_expr list * (Ast.span * string) list
 
 type param = { node : node; name : string }
 type pattern = PCon of string * string list | PWild | PData of Ast.expr

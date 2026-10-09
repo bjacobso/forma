@@ -2,9 +2,17 @@ type source = { id : string; source : string }
 (** Host-resolved, isolated file modules. This library performs no filesystem
     IO. *)
 
+type project = {
+  project_id : string;
+  base : string;
+  prelude : string option;
+  modules : string list;
+}
+
 type resolver = specifier:string -> importer:string -> source option
 type identity = { module_id : string; declaration : string }
 type type_scheme = { parameters : string list; syntax : Ir_json.t }
+type declaration = { classification : string; form : identity; span : Ast.span }
 
 type binding = {
   name : string;
@@ -13,9 +21,27 @@ type binding = {
   kind : string;
   constructors : string list;
   scheme : type_scheme option;
+  declaration : declaration option;
+  schema : Ir_json.t option;
+  data : Ir_json.t option;
+  form : Ir_json.t option;
 }
 
 type interface = { module_id : string; exports : binding list }
+
+type compile_time = {
+  environment : unit -> Env.t;
+  read : string -> Value.t;
+  forms : unit -> (string * linked_form) list;
+  types : (string * Ast.expr) list;
+  origins : (string, Ir_json.t list) Hashtbl.t;
+}
+
+and linked_form = {
+  definition : Ast.expr;
+  owner : compile_time;
+  form_identity : identity;
+}
 
 type resolved_module = {
   id : string;
@@ -26,6 +52,7 @@ type resolved_module = {
   imports : (string * binding) list;
   namespace_imports : binding list;
   interface : interface;
+  compile_time : compile_time option;
 }
 
 type t = { entry : string; modules : resolved_module list }
@@ -71,7 +98,7 @@ let source_resolver sources ~specifier ~importer =
     List.find_opt (fun (s : source) -> normalize_id s.id = id) sources
     |> Option.map (fun (s : source) -> { s with id })
 
-let symbol identity =
+let symbol (identity : identity) =
   let hex value =
     String.to_seq value
     |> Seq.map (fun c -> Printf.sprintf "%02x" (Char.code c))
@@ -93,11 +120,9 @@ let kind = function
   | ( "type" | "class" | "error" | "service" | "layer" | "macro" | "form"
     | "typeclass" ) as h ->
       Some h
-  | "entity" | "query" | "command" | "view" | "rule" | "protocol" ->
-      Some "value"
   | _ -> None
 
-let later b = List.mem b.kind [ "macro"; "form"; "typeclass"; "compile-time" ]
+let later b = List.mem b.kind [ "typeclass" ]
 
 let contains hay needle =
   let lh = String.length hay and ln = String.length needle in
@@ -145,13 +170,14 @@ let core_types =
     "OntologyRuntime";
     "Action";
     "Declares";
+    "Refers";
     "FormDescriptor";
   ]
 
 let rec bound_names = function
   | Ast.Symbol (_, n)
-    when Surface.is_lower n && not (List.mem n [ "nil"; "true"; "false"; "&" ])
-    ->
+    when (Surface.is_lower n || String.starts_with ~prefix:"@" n)
+         && not (List.mem n [ "nil"; "true"; "false"; "&" ]) ->
       [ n ]
   | Ast.Map (_, pairs) ->
       List.concat_map
@@ -185,6 +211,39 @@ let interface_json (i : interface) =
                     ("kind", str b.kind);
                     ("constructors", Ir_json.Array (List.map str b.constructors));
                   ]
+                 @ (match b.declaration with
+                   | None -> []
+                   | Some d ->
+                       [
+                         ( "declaration",
+                           Ir_json.Object
+                             [
+                               ("classification", str d.classification);
+                               ( "form",
+                                 Ir_json.Object
+                                   [
+                                     ("moduleId", str d.form.module_id);
+                                     ("declaration", str d.form.declaration);
+                                   ] );
+                               ( "span",
+                                 Ir_json.Object
+                                   [
+                                     ("sourceId", str d.span.source_id);
+                                     ( "startOffset",
+                                       Ir_json.Int d.span.start_offset );
+                                     ("endOffset", Ir_json.Int d.span.end_offset);
+                                   ] );
+                             ] );
+                       ])
+                 @ (match b.schema with
+                   | None -> []
+                   | Some schema -> [ ("schema", schema) ])
+                 @ (match b.data with
+                   | None -> []
+                   | Some data -> [ ("data", data) ])
+                 @ (match b.form with
+                   | None -> []
+                   | Some form -> [ ("form", form) ])
                  @
                  match b.scheme with
                  | None -> []

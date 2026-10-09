@@ -1,4 +1,4 @@
-# RFC 0006: Signatures as contracts
+# RFC 0011: Signatures as contracts
 
 | | |
 | --- | --- |
@@ -25,7 +25,7 @@ generators, and protocol servers. Today a host that exposes a Forma function
 to such a system must restate its contract by hand.
 
 The prompting case is a coding agent built on Forma
-([RFC 0005](./0005-live-sessions.md) describes the evaluation). In oh-my-lisp,
+([RFC 0010](./0010-live-sessions.md) describes the evaluation). In oh-my-lisp,
 a tool is a documented public function; its parameter schema comes from the
 function's argument destructuring plus optional annotations, and its docstring
 is the description the model reads. In Forma the declared type carries more
@@ -100,6 +100,15 @@ The emitter targets JSON Schema 2020-12. It describes the JSON form that the
 host decodes into Forma values and encodes from them. That form follows the
 existing Effect Schema mapping: record keys without the leading colon,
 keyword literals as strings, absent optional fields omitted.
+
+The emitter maps normalized types, not authored syntax. A signature written
+with the closed-shape record operations of [RFC 0005](./0005-row-operations.md)
+must produce the same schema as the equivalent literal record. The emitter is
+therefore one more consumer of the shared normalization service proposed in
+[RFC 0007](./0007-type-normalization.md), alongside contextual Option coercion
+and Effect schema projection. Until that service exists, it has to reduce those
+operations itself, with fixtures that compare each computed record against its
+literal form.
 
 | Forma type | JSON Schema |
 | --- | --- |
@@ -182,7 +191,7 @@ For the signature above, `parameters` is
   against the binding's parameter types. Failures are diagnostics with a
   JSON path and the expected and actual shapes in `details`, for example
   `parameters.limit: expected integer, got string`. `callBinding`
-  ([RFC 0005](./0005-live-sessions.md)) accepts the same `json` form.
+  ([RFC 0010](./0010-live-sessions.md)) accepts the same `json` form.
 - The mapping is a pure library function in `@formalang/ts`, applied to
   `ModuleInterface` values. Hosts for either engine use the same function, so
   the OCaml engine needs no separate emitter.

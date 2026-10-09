@@ -1,0 +1,18 @@
+(import "./stripe.forma" [PriceDecl PriceIR])
+(export picklist-of selected-price)
+
+(type PicklistDecl Symbol)
+(type PicklistIR {:kind "Picklist" :name Symbol :entries (List String)})
+(type SelectedIR {:kind "Selected" :name Symbol :price Symbol})
+
+(define entry-label [price] (get (get price :data) :label))
+
+(form (picklist-of name prices)
+  :types {:name (Declares PicklistDecl) :prices (List Any)}
+  :ir PicklistIR
+  {:kind "Picklist" :name name :entries (map entry-label prices)})
+
+(form (selected-price name price)
+  :types {:name (Declares PicklistDecl) :price (Refers PriceDecl)}
+  :ir SelectedIR
+  {:kind "Selected" :name name :price price})

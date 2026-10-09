@@ -25,6 +25,7 @@ let lowercase_initial name =
   Char.lowercase_ascii first = first && Char.uppercase_ascii first <> first
 
 let rec collect_implicit acc = function
+  | Core_ast.TERowOp (_, _, operands, _) -> List.fold_left collect_implicit acc operands
   | Core_ast.TESym (_, name)
     when lowercase_initial name && not (List.mem name ("true" :: "false" :: builtin_type_names)) ->
       name :: acc

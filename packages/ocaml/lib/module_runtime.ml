@@ -6,6 +6,7 @@ type checked = {
 }
 
 type instance = {
+  module_id : string;
   source : string;
   dependencies : instance list;
   env : Eval.env;
@@ -154,7 +155,7 @@ let check ?(prepare = fun env _ -> Ok env) ~core_env ~core_types
         else Error diagnostics
     | (m : Module_graph.resolved_module) :: ms -> (
         let initial = imported_types m environments @ core_types in
-        match Eval.expand_program_with_env core_env m.expressions with
+        match Eval.expand_program_with_env (match m.compile_time with Some state -> state.environment () | None -> core_env) m.expressions with
         | Error ds ->
             Error
               (List.map
@@ -162,6 +163,13 @@ let check ?(prepare = fun env _ -> Ok env) ~core_env ~core_types
                    Type_diagnostic.make ?span:d.span d.code d.message)
                  ds)
         | Ok (expanded, _) -> (
+            let rec references = function
+              | Ast.Symbol (_,n)->[n]
+              | Ast.List (_,xs) | Ast.Vector (_,xs)->List.concat_map references xs
+              | Ast.Map (_,pairs)->List.concat_map (fun (k,v)->references k @ references v) pairs
+              | _->[] in
+            let symbols=List.concat_map references expanded in
+            let initial=initial @ List.concat_map (fun (_,env)->List.filter (fun (n,_)->Module_graph.contains n "__forma_" && List.mem n symbols) env) environments in
             match
               Descriptor_contract.validate_unified_forms
                 (local_type_metadata core_env m)
@@ -222,8 +230,16 @@ let imported_env ~core_env (m : Module_graph.resolved_module) dependencies =
              b.constructors)
       imported
   in
+  let rec references = function
+    | Ast.Symbol (_,n) when Module_graph.contains n "__forma_" -> [n]
+    | Ast.List (_,xs) | Ast.Vector (_,xs)->List.concat_map references xs
+    | Ast.Map (_,pairs)->List.concat_map (fun (k,v)->references k @ references v) pairs
+    | _->[] in
+  let allowed=allowed @ List.concat_map references m.expressions in
   let bindings =
-    List.concat_map (fun i -> Env.visible_bindings i.env) dependencies
+    List.concat_map (fun i ->
+      let hex=String.to_seq i.module_id |> Seq.map (fun c->Printf.sprintf "%02x" (Char.code c)) |> List.of_seq |> String.concat "" in
+      Env.visible_bindings i.env |> List.filter (fun (n,_)->Module_graph.contains n ("__forma_"^hex^"_d"))) dependencies
     |> List.filter (fun (n, _) -> List.mem n allowed)
   in
   Env.extend bindings core_env
@@ -296,7 +312,7 @@ let initialize ?(entry_expressions = true) ~core_env ~core_types
                  && List.for_all2 ( == ) i.dependencies dependency_instances ->
               loop ms
           | _ -> (
-              let env = imported_env ~core_env m dependency_instances in
+              let env = imported_env ~core_env m (Hashtbl.fold (fun _ i acc->i::acc) instances dependency_instances) in
               match
                 Eval.evaluate_program_with_env env
                   (List.filter definition m.expressions)
@@ -310,6 +326,7 @@ let initialize ?(entry_expressions = true) ~core_env ~core_types
               | Ok (value, env) ->
                   Hashtbl.replace instances m.id
                     {
+                      module_id = m.id;
                       source = m.source;
                       dependencies = dependency_instances;
                       env;
@@ -342,6 +359,6 @@ let imports ~core_env ~core_types (graph : Module_graph.t) instances =
           graph.modules
       in
       ( imported_env ~core_env entry
-          (List.map (Hashtbl.find instances) entry.dependencies),
+          (Hashtbl.fold (fun _ i acc->i::acc) instances []),
         entry.expressions ))
     initialized

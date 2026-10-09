@@ -104,14 +104,14 @@ describe("isolated file modules", () => {
       );
     }
   });
-  test("duplicate imports and exports and unsupported compile-time exports fail", () => {
+  test("duplicate imports and exports fail; macros are exportable", () => {
     expect(() =>
       graph('(import "./id.forma" [identity identity])', [id]),
     ).toThrow(/conflicts/);
     expect(() => graph("(export x x) (define x 1)")).toThrow(
       /Duplicate export/,
     );
-    expect(() => graph("(export m) (macro (m x) x)")).toThrow(/stage 2/);
+    expect(graph("(export m) (macro (m x) x)").modules[0]!.interface.exports[0]!.kind).toBe("macro");
   });
   test("lexical binders shadow imports", () => {
     expect(
