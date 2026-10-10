@@ -7,5 +7,15 @@
       }
     ]
   },
-  "success": false
+  "success": false,
+  "expectation": {
+    "kind": "error",
+    "diagnostic": {
+      "code": "lower/type-expression",
+      "span": {
+        "start": 5,
+        "end": 16
+      }
+    }
+  }
 }

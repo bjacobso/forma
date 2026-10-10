@@ -49,6 +49,15 @@ function parseEffectTypeSet(expr: SExpr, setName: "ErrorSet" | "RequirementSet")
  *   {:name Str :* r}            -> TERow (legacy open record with row variable)
  */
 export function parseTypeExpr(expr: SExpr): TypeExpr {
+  try { return parseTypeExprInner(expr); }
+  catch (error) {
+    if (!(error instanceof InferenceError)) throw error;
+    throw new InferenceError({message:error.message.replace(/ \(at offset \d+\)$/, ""),
+      origin:error.origin ?? {nodeId:`type:${expr.loc.start}`, kind:"type-expression", span:spanOf(expr)},
+      details:{code:"lower/type-expression",...error.details}});
+  }
+}
+function parseTypeExprInner(expr: SExpr): TypeExpr {
   const span = spanOf(expr);
 
   switch (expr._tag) {

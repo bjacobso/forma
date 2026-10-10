@@ -108,7 +108,7 @@ export function resolveConstraint(
     if (depth > MAX_RESOLUTION_DEPTH) {
       const ctx = yield* InferContext;
       return yield* ctx.fail(origin, {
-        message: `Instance resolution depth exceeded for ${constraint.className}`,
+        code: "typecheck/instance-depth", message: `Instance resolution depth exceeded for ${constraint.className}`,
       });
     }
 
@@ -171,7 +171,7 @@ export function resolveConstraint(
 
     // No matching instance found
     return yield* ctx.fail(origin, {
-      message: `No instance found for ${constraint.className} ${resolvedArgs.map(showTypeSimple).join(" ")}`,
+      code: "typecheck/missing-instance", message: `No instance found for ${constraint.className} ${resolvedArgs.map(showTypeSimple).join(" ")}`,
     });
   });
 }
@@ -242,7 +242,7 @@ export function checkCoherence(
         return yield* ctx.fail(
           { nodeId: "", span: { start: 0, end: 0 }, kind: "instance" },
           {
-            message: `Overlapping instance for ${className}`,
+            code: "typecheck/overlapping-instance", message: `Overlapping instance for ${className}`,
           },
         );
       }

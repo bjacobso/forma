@@ -12,5 +12,31 @@
     ],
     "type": "Number"
   },
-  "success": true
+  "success": true,
+  "expectation": {
+    "kind": "warning",
+    "diagnostic": {
+      "severity": "warning",
+      "message": "Duplicate match arm for constructor 'Some'",
+      "span": {
+        "start": 66,
+        "end": 116
+      }
+    }
+  },
+  "typescript": {
+    "reason": "TypeScript retains the qualified constructor name Option.Some in warnings; OCaml prints the unqualified name Some.",
+    "expectation": {
+      "kind": "warning",
+      "diagnostic": {
+        "code": "typecheck/diagnostic",
+        "severity": "warning",
+        "span": {
+          "start": 66,
+          "end": 116
+        },
+        "message": "Duplicate match arm for constructor 'Option.Some'"
+      }
+    }
+  }
 }

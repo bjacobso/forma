@@ -254,7 +254,7 @@ export const typeExprToType = (
           const alias = (yield* Ref.get(ctx.typeAliases)).get(texpr.con.name);
           const params = (yield* Ref.get(ctx.typeAliasParams)).get(texpr.con.name);
           if (alias && params) {
-            if (params.length !== texpr.args.length) return yield* ctx.fail({nodeId:`alias:${texpr.span.start}`,span:texpr.span,kind:"type-application"}, {message:`${texpr.con.name} expects ${params.length} type arguments`});
+            if (params.length !== texpr.args.length) return yield* ctx.fail({nodeId:`alias:${texpr.span.start}`,span:texpr.span,kind:"type-application"}, {code: "typecheck/kind-mismatch", message:`${texpr.con.name} expects ${params.length} type arguments`});
             if (tvarMap.has(`__resolvingAlias:${texpr.con.name}`)) return TApp(TCon(texpr.con.name), yield* Effect.forEach(texpr.args, arg => typeExprToType(arg, tvarMap, rvarMap)));
             const variables = new Map(tvarMap).set(`__resolvingAlias:${texpr.con.name}`, TCon(texpr.con.name));
             for (let i = 0; i < params.length; i++) variables.set(params[i]!, yield* typeExprToType(texpr.args[i]!, tvarMap, rvarMap));
@@ -263,7 +263,7 @@ export const typeExprToType = (
         }
         if (texpr.con._tag === "TESym" && texpr.con.name === "Brand" && texpr.args.length === 2) {
           const nominal = texpr.args[0]!;
-          if (nominal._tag !== "TESym") return yield* ctx.fail({nodeId: `brand:${texpr.span.start}`, span: texpr.span, kind: "Brand"}, {message: "Brand name must be a symbol"});
+          if (nominal._tag !== "TESym") return yield* ctx.fail({nodeId: `brand:${texpr.span.start}`, span: texpr.span, kind: "Brand"}, {code: "typecheck/type-parameters", message: "Brand name must be a symbol"});
           return TApp(TCon("Brand"), [TCon(nominal.name), yield* typeExprToType(texpr.args[1]!, tvarMap, rvarMap)]);
         }
 
@@ -279,7 +279,7 @@ export const typeExprToType = (
 
         if (texpr.con._tag === "TESym") {
           const arity = new Map([["List", 1], ["Option", 1], ["Id", 1], ["Map", 2], ["Result", 2], ["Brand", 2], ["Effect", 3]]).get(texpr.con.name);
-          if (arity !== undefined && arity !== texpr.args.length) return yield* ctx.fail({nodeId:`kind:${texpr.span.start}`,span:texpr.span,kind:"type-application"}, {message:`${texpr.con.name} expects ${arity} type arguments`});
+          if (arity !== undefined && arity !== texpr.args.length) return yield* ctx.fail({nodeId:`kind:${texpr.span.start}`,span:texpr.span,kind:"type-application"}, {code: "typecheck/kind-mismatch", message:`${texpr.con.name} expects ${arity} type arguments`});
         }
         // (List Num), (Map Str Num)
         const con = yield* typeExprToType(texpr.con, tvarMap, rvarMap);
@@ -287,7 +287,7 @@ export const typeExprToType = (
         for (const arg of texpr.args) {
           args.push(yield* typeExprToType(arg, tvarMap, rvarMap));
         }
-        if (con._tag === "TCon" && con.name === "Map" && !validMapKey(args[0]!)) return yield* ctx.fail({nodeId:`map:${texpr.span.start}`,span:texpr.span,kind:"map-key"}, {message:"Map keys must be String, a String brand, or a union of keyword or string literals"});
+        if (con._tag === "TCon" && con.name === "Map" && !validMapKey(args[0]!)) return yield* ctx.fail({nodeId:`map:${texpr.span.start}`,span:texpr.span,kind:"map-key"}, {code: "typecheck/map-key", message:"Map keys must be String, a String brand, or a union of keyword or string literals"});
         return TApp(con, args);
       }
 
@@ -474,7 +474,7 @@ const inferOperationalSucceed = (
     const ctx = yield* InferContext;
     if (expr.args.length !== 1) {
       return yield* ctx.fail(originOf(expr, "succeed"), {
-        message: "succeed expects exactly one value.",
+        code: "typecheck/arity", message: "succeed expects exactly one value.",
       });
     }
 
@@ -505,7 +505,7 @@ const inferEffectDo = (
             span: binding.span,
             kind: "effect-bind",
           },
-          { message: `Effect bind expects Effect, received ${showType(resolvedBindingType)}.` },
+          { code: "typecheck/type-mismatch", message: `Effect bind expects Effect, received ${showType(resolvedBindingType)}.` },
         );
       }
 
@@ -644,10 +644,10 @@ const inferApp = (
     }
 
     if (expr.fn._tag === "Var" && expr.fn.name === "__dictionary") {
-      if (expr.args.length !== 1) return yield* ctx.fail(originOf(expr,"map-construction"),{message:"Map construction expects one record"});
+      if (expr.args.length !== 1) return yield* ctx.fail(originOf(expr,"map-construction"),{code: "typecheck/arity", message:"Map construction expects one record"});
       const record = yield* inferExpr(env, expr.args[0]!);
       if (record._tag === "TApp" && record.con._tag === "TCon" && record.con.name === "Map") return record;
-      if (record._tag !== "TRow") return yield* ctx.fail(originOf(expr,"map-construction"),{message:"Map construction requires a record"});
+      if (record._tag !== "TRow") return yield* ctx.fail(originOf(expr,"map-construction"),{code: "typecheck/expected-map", message:"Map construction requires a record"});
       const fields = [...flattenRow(record.row).fields];
       let value = fields.length ? fields[0]![1] : yield* ctx.freshTVar;
       for (const [,type] of fields.slice(1)) value = yield* joinType(value,type,originOf(expr,"map-values"));
@@ -677,7 +677,7 @@ const inferApp = (
       const count=expr.args.length;
       const minimum=["+","*"].includes(op) ? 0 : op==="/" ? 2 : 1;
       const exact=["abs","sqrt","floor","ceil","round"].includes(op) ? 1 : ["mod","pow","<","<=",">",">="].includes(op) ? 2 : undefined;
-      if (count<minimum || exact!==undefined && count!==exact) return yield* ctx.fail(originOf(expr,"numeric-arity"),{message:`${op} expects ${exact ?? `${minimum}+`} argument(s)`});
+      if (count<minimum || exact!==undefined && count!==exact) return yield* ctx.fail(originOf(expr,"numeric-arity"),{code: "typecheck/arity", message:`${op} expects ${exact ?? `${minimum}+`} argument(s)`});
       if (["<","<=",">",">="].includes(op)) return tBool;
       if (["floor","ceil","round","mod"].includes(op)) return TCon("Int");
       if (["/","pow","sqrt"].includes(op)) return tNum;
@@ -718,6 +718,8 @@ const inferApp = (
         yield* emitAmbientEffect(applyERow(subst,current.effect ?? EEmpty),originOf(expr,"app"));
         return applyType(subst,current.res);
       } else {
+        if (i > 0 && current._tag !== "TVar" && !(current._tag === "TCon" && current.name === "Unknown"))
+          return yield* ctx.fail(originOf(expr,"app"), {code:"typecheck/arity", message:"Too many arguments for this function"});
         const argT=yield* inferExpr(envN,expr.args[i]!);
         const applied=yield* applyFnWithEffect(current,argT,originOf(expr,"app"));
         yield* emitAmbientEffect(applied.effect,originOf(expr,"app"));
@@ -762,7 +764,7 @@ const inferApply = (
     const ctx = yield* InferContext;
     if (expr.args.length < 2) {
       return yield* ctx.fail(originOf(expr, "app"), {
-        message: "apply expects a function and a trailing list of args",
+        code: "typecheck/arity", message: "apply expects a function and a trailing list of args",
       });
     }
 

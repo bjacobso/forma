@@ -9,9 +9,9 @@
     "endOffset": 260
   },
   "details": {
+    "code": "typecheck/type-mismatch",
     "message": "Type application arity mismatch",
     "left": "Set<Console.print>",
-    "right": "Set<>",
-    "code": "typecheck/type-mismatch"
+    "right": "Set<>"
   }
 }

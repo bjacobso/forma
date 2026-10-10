@@ -341,16 +341,29 @@ export interface SourceDocument {
 }
 
 export interface LoadSourceRequest extends SourceDocument {
+  readonly timings?: boolean | undefined;
   readonly sessionId: string;
 }
 
+/** Absent phases were not executed by this engine during load. Durations are milliseconds. */
+export interface LoadPhaseTimings {
+  readonly parseMs?: number;
+  readonly evalMs?: number;
+  readonly typecheckMs?: number;
+  readonly metacheckMs?: number;
+  readonly elaborateMs?: number;
+  readonly storeMs?: number;
+}
+
 export interface LoadSourceResult {
+  readonly timings?: LoadPhaseTimings;
   readonly sourceId: string;
   readonly formCount: number;
   readonly diagnostics: readonly Diagnostic[];
 }
 
 export interface LoadSourceBundleRequest {
+  readonly timings?: boolean | undefined;
   readonly sessionId: string;
   readonly sources: readonly SourceDocument[];
 }

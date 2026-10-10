@@ -415,7 +415,7 @@ const nextToken = (state: LexerState): Token => {
 
   throw new ParseError({
     message: `Unexpected character: '${ch}'`,
-    loc: makeLoc(state, startPos, startLine, startCol),
+    loc: { ...makeLoc(state, startPos, startLine, startCol), end: startPos + ch.length },
   });
 };
 
@@ -571,7 +571,7 @@ const readToken = (state: LexerState): Token => {
 
   throw new ParseError({
     message: `Unexpected character: '${ch}'`,
-    loc: makeLoc(state, startPos, startLine, startCol),
+    loc: { ...makeLoc(state, startPos, startLine, startCol), end: startPos + ch.length },
   });
 };
 

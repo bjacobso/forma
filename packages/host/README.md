@@ -42,3 +42,18 @@ require a separately built artifact: set `FORMA_OCAML_CLI` for the native CLI,
 or `FORMA_OCAML_JS` for the portable JavaScript engine.
 
 Forma is pre-alpha. See https://forma-lang.com for documentation and demos.
+
+The package also supplies the TypeScript `forma` executable:
+
+```sh
+forma request '{"op":"typecheck","source":"(+ 1 2)"}'
+forma daemon
+forma file typecheck path/to/main.forma
+```
+
+The daemon accepts one JSON request per line, preserves sessions, and continues
+serving after request errors. `@formalang/host/json-abi` exports the boundary
+schemas and dispatcher. See [File modules](https://forma-lang.com/modules) for
+filesystem commands, debug operations, diagnostic contracts, and load timings.
+From a source checkout, build both TypeScript packages and run
+`node packages/host/dist/cli.mjs`.

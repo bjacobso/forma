@@ -11,5 +11,15 @@
       }
     ]
   },
-  "success": false
+  "success": false,
+  "expectation": {
+    "kind": "error",
+    "diagnostic": {
+      "code": "typecheck/occurs-check",
+      "span": {
+        "start": 8,
+        "end": 13
+      }
+    }
+  }
 }

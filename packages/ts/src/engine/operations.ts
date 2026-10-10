@@ -1,3 +1,4 @@
+import { validateHostTypes, hostTypeNames } from "./type-policy.js";
 import { checkSessionTypes } from "./session-validation.js";
 import { bootstrapFromSources, type BootstrappedPrelude } from "../descriptor/bootstrap.js";
 import { descriptorFormProvider } from "../type/unified-form-provider.js";
@@ -272,6 +273,9 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
   const sourceId = request.sourceId ?? (!request.source && request.session?.orderedSources("source").length === 1
     ? request.session.orderedSources("source")[0]!.id : "source");
   const source = sourceFromRequest(request);
+  try { validateHostTypes(request, source); } catch (error) {
+    return { sourceId, pass: "typecheck", diagnostics: [diagnosticFromUnknown(error, "typecheck", sourceId)] };
+  }
   if (source !== undefined && (request.session?.projects.length || /\((?:import|export|export-from)\s/.test(source))) {
     try {
       const graph = graphFromRequest(request, sourceId, source);
@@ -699,6 +703,7 @@ export function moduleCheckOptions(request: TypecheckRequest): import("../module
 export function typeInferOptions(
   request: Pick<TypecheckRequest, "hostBuiltins" | "typePolicy">,
 ): Type.InferOptions {
+  validateHostTypes(request);
   const builtinScheme = builtinSchemeFromRequest(request);
   const unboundSymbolType = unboundSymbolTypeFromPolicy(request.typePolicy);
   return {
@@ -791,6 +796,7 @@ function primitiveType(name: string): Type.Type {
     case "Unknown":
       return Type.tUnknown;
     default:
+      if (!hostTypeNames.has(name)) throw new Type.InferenceError({ message: `Unknown host type ${name}`, details: { code: "typecheck/host-builtin" } });
       return Type.TCon(name);
   }
 }

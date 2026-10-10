@@ -7,10 +7,10 @@ import {
   TsLanguageHost,
 } from "../packages/host/dist/index.mjs";
 
-const [entry, output, engine = "native"] = process.argv.slice(2);
+const [entry, output, engine = "ts"] = process.argv.slice(2);
 if (!entry || !output || !["native", "ts"].includes(engine)) {
   console.error(
-    "Usage: node scripts/link-forma-modules.mjs <entry.forma> <output-directory> [native|ts]",
+    "Usage: node scripts/link-forma-modules.mjs <entry.forma> <output-directory> [ts|native]",
   );
   process.exit(64);
 }

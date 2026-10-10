@@ -37,6 +37,10 @@
     "./types": {
       "types": "./dist/types.d.mts",
       "import": "./dist/types.mjs"
+    },
+    "./json-abi": {
+      "types": "./dist/json-abi.d.mts",
+      "import": "./dist/json-abi.mjs"
     }
   },
   "files": [
@@ -57,5 +61,8 @@
     "@types/node": "^24.10.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.8"
+  },
+  "bin": {
+    "forma": "./dist/cli.mjs"
   }
 }

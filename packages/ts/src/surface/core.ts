@@ -41,7 +41,7 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
   if (h && obsolete.has(h)) throw new Error(`Use ${obsolete.get(h)} instead of ${h}`);
   if (h === ":" && e.items.length === 3) {
     const errors = typeSyntaxErrors(e.items[2]!, schemaMetadata);
-    if (errors.length) throw new Error(errors.join("; "));
+    if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:e.items[2]!.loc, details:{code:"surface/invalid-form"}});
     return e;
   }
   if (top && (h === "class" || h === "error")) {
@@ -50,7 +50,7 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
     const options=e.items.slice(e.items[2]?._tag === "Map" ? 3 : 2);
     for (let i=0;i<options.length;i+=2) {const value=options[i+1]; if (i>0 || h!=="error" || name(options[i])!==":status" || value?._tag!=="Num" || !Number.isInteger(value.value) || value.value<400 || value.value>599) throw new Error("error options support :status with an HTTP error status (400–599)");}
     const errors = typeSyntaxErrors(fields, schemaMetadata);
-    if (errors.length) throw new Error(errors.join("; "));
+    if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:e.items[2]!.loc, details:{code:"surface/invalid-form"}});
     return call(e, "__record-type", e.items[1]!, fields, sym(e, h));
   }
   if (top && h === "type" && e.items.length === 3) {
@@ -64,7 +64,7 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
     }), { loc: problem.expression.loc });
     const errors = head(t) === "Brand" && t._tag === "List" && t.items.length === 2
       ? typeSyntaxErrors(t.items[1]!, schemaMetadata) : typeSyntaxErrors(t, schemaMetadata);
-    if (errors.length) throw new Error(errors.join("; "));
+    if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:e.items[2]!.loc, details:{code:"surface/invalid-form"}});
     if (head(t) === "Tagged" && t._tag === "List") {
       const arms = t.items.slice(name(t.items[1]) === ":tag" ? 3 : 1).map(a => a._tag === "Sym" ? list(a, [a]) : a);
       const declaration = call(e, "__sum-type", n._tag === "Sym" ? list(n, [n]) : n, ...arms, call(t,":tag", name(t.items[1]) === ":tag" ? t.items[2]! : sym(t,"_tag")));

@@ -14,6 +14,7 @@ export function lowerFn(lower: LowerFn, span: Span, items: readonly SExpr[]): Co
   if (items.length < 3) {
     throw new InferenceError({ message: "fn requires parameters and body" });
   }
+  if (items[1]?._tag !== "Vector") throw new InferenceError({message:"fn parameters must be a vector"});
   const paramsItems = asVector(items[1]!, "fn params");
 
   const params: ReturnType<typeof mkParam>[] = [];
@@ -70,6 +71,7 @@ export function lowerLet(lower: LowerFn, span: Span, items: readonly SExpr[]): C
   if (items.length < 3) {
     throw new InferenceError({ message: "let requires bindings and body" });
   }
+  if (items[1]?._tag !== "Vector" || items[1].items.length % 2 !== 0) throw new InferenceError({message:"let requires a vector of binding/value pairs"});
   const pairs = bindingPairs(items[1]!, "let");
 
   if (pairs.some(({ value }) => effectBindValue(value) !== undefined)) {
