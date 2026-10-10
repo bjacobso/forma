@@ -1,3 +1,4 @@
+import { isKFloat, printFloat } from "./types.js";
 /**
  * Quasiquote Evaluation
  *
@@ -227,7 +228,8 @@ export function kValueToSExpr(value: KValue): SExpr {
   if (isKKeyword(value) || isKSymbol(value)) return T.Sym(value.name,synLoc);
   if (value === null) return T.Sym("nil", synLoc);
   if (typeof value === "boolean") return T.Bool(value, synLoc);
-  if (typeof value === "number") return T.Num(value, synLoc);
+  if (isKFloat(value)) return T.Num(value.value, synLoc, "float");
+  if (typeof value === "number") return T.Num(value, synLoc, "int");
   if (typeof value === "string") {
     return T.Str(value, synLoc);
   }

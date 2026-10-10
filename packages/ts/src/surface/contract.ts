@@ -1,3 +1,4 @@
+import { isNumeric, kEquals, numericDatum } from "../evaluator/types.js";
 import { resolveTypeAlias, optionalType } from "./type-alias.js";
 import { isKKeyword, isKSymbol, mapKey, mapKeyValue } from "../evaluator/types.js";
 import type { SExpr } from "../reader/types.js";
@@ -15,7 +16,7 @@ export function protocolType(t: SExpr, types: ReadonlyMap<string, SExpr> = new M
   if (t._tag === "Str" || t._tag === "Num" || t._tag === "Bool") return { literal: [t.value] };
   if (name(t)?.startsWith(":")) return {literal:[name(t)!.slice(1)]};
   const n = name(t);
-  if (n) return ["String","Symbol","Keyword"].includes(n) ? {type:"string"} : ["Int","Number"].includes(n) ? {type:"number"} : n === "Bool" ? {type:"boolean"} : n === "Unit" ? {type:"null"} : ["Type","Syntax","RuntimeExpr","Any","Json"].includes(n) ? {type:"unknown"} : {ref:n};
+  if (n) return ["String","Symbol","Keyword"].includes(n) ? {type:"string"} : n === "Int" ? {type:"integer"} : ["Float","Number","Num"].includes(n) ? {type:"number"} : n === "Bool" ? {type:"boolean"} : n === "Unit" ? {type:"null"} : ["Type","Syntax","RuntimeExpr","Any","Json"].includes(n) ? {type:"unknown"} : {ref:n};
   if (t._tag === "List") {
     if (head(t) === "List") return {array:descend(t.items[1]!)};
     if (head(t) === "Map" || head(t) === "Record") return {record:descend(t.items.at(-1)!)};
@@ -75,9 +76,9 @@ export function contractErrors(value: KValue, t: SExpr, types: ReadonlyMap<strin
       ...(h === "Map" && t.items.length === 3 ? contractErrors(mapKeyValue(k),t.items[1]!,types,`${path}.key`,seen) : []),
       ...contractErrors(v,t.items.at(-1)!,types,`${path}.${k}`,seen)]) : [`${path} must be a map`];
   }
-  if (t._tag === "Str" || t._tag === "Num" || t._tag === "Bool") return value === t.value ? [] : [`${path} must equal ${JSON.stringify(t.value)}`];
+  if (t._tag === "Str" || t._tag === "Num" || t._tag === "Bool") return kEquals(value, t._tag === "Num" ? numericDatum(t) : t.value) ? [] : [`${path} must equal ${JSON.stringify(t.value)}`];
   if (n?.startsWith(":")) return isKKeyword(value) && value.name === n ? [] : [`${path} must equal ${n}`];
-  const valid = n === "String" ? typeof value === "string" : n === "Symbol" ? isKSymbol(value) : n === "Keyword" ? isKKeyword(value) : n === "Int" ? typeof value === "number" && Number.isInteger(value) : n === "Number" ? typeof value === "number" : n === "Bool" ? typeof value === "boolean" : n === "Unit" ? value === null : ["Any", "Type", "Syntax", "RuntimeExpr", "Json"].includes(n ?? "");
+  const valid = n === "String" ? typeof value === "string" : n === "Symbol" ? isKSymbol(value) : n === "Keyword" ? isKKeyword(value) : n === "Int" ? typeof value === "number" && Number.isSafeInteger(value) : ["Float", "Number", "Num"].includes(n ?? "") ? isNumeric(value) : n === "Bool" ? typeof value === "boolean" : n === "Unit" ? value === null : ["Any", "Type", "Syntax", "RuntimeExpr", "Json"].includes(n ?? "");
   return valid ? [] : [`${path} must be ${n}`];
 }
 

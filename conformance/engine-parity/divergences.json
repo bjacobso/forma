@@ -1,4 +1,206 @@
 {
   "version": 1,
-  "cases": []
+  "cases": [
+    {
+      "id": "canonical-int-number",
+      "pass": "typecheck",
+      "surface": "numeric-types",
+      "reason": "TypeScript displays its distinct floating type as Float; the frozen OCaml type printer uses Number for TFloat. Numeric names remain unnormalized.",
+      "differences": [
+        {
+          "path": "/type",
+          "typescript": "List<Float>",
+          "ocaml": "List<Number>"
+        }
+      ]
+    },
+    {
+      "id": "canonical-qualified-constructor",
+      "pass": "typecheck",
+      "surface": "numeric-types",
+      "reason": "TypeScript displays its distinct floating type as Float; the frozen OCaml type printer uses Number for TFloat. Numeric names remain unnormalized.",
+      "differences": [
+        {
+          "path": "/type",
+          "typescript": "Float",
+          "ocaml": "Number"
+        }
+      ]
+    },
+    {
+      "id": "review-numeric-parameters",
+      "pass": "typecheck",
+      "surface": "numeric-types",
+      "reason": "TypeScript displays its distinct floating type as Float; the frozen OCaml type printer uses Number for TFloat. Numeric names remain unnormalized.",
+      "differences": [
+        {
+          "path": "/type",
+          "typescript": "Float",
+          "ocaml": "Number"
+        }
+      ]
+    },
+    {
+      "id": "review-higher-kinded-numeric",
+      "pass": "typecheck",
+      "surface": "numeric-types",
+      "reason": "TypeScript displays its distinct floating type as Float; the frozen OCaml type printer uses Number for TFloat. Numeric names remain unnormalized.",
+      "differences": [
+        {
+          "path": "/type",
+          "typescript": "List<Float>",
+          "ocaml": "List<Number>"
+        }
+      ]
+    },
+    {
+      "id": "row-operations/tagged-valid",
+      "pass": "typecheck",
+      "surface": "numeric-types",
+      "reason": "TypeScript displays its distinct floating type as Float; the frozen OCaml type printer uses Number for TFloat. Numeric names remain unnormalized.",
+      "differences": [
+        {
+          "path": "/type",
+          "typescript": "Float",
+          "ocaml": "Number"
+        }
+      ]
+    },
+    {
+      "id": "numeric-integral-float-literals",
+      "pass": "typecheck",
+      "surface": "numeric-types",
+      "reason": "TypeScript displays its distinct floating type as Float; the frozen OCaml type printer uses Number for TFloat. Numeric names remain unnormalized.",
+      "differences": [
+        {
+          "path": "/type",
+          "typescript": "List<Float>",
+          "ocaml": "List<Number>"
+        }
+      ]
+    },
+    {
+      "id": "numeric-mixed-arithmetic",
+      "pass": "typecheck",
+      "surface": "numeric-types",
+      "reason": "TypeScript displays its distinct floating type as Float; the frozen OCaml type printer uses Number for TFloat. Numeric names remain unnormalized.",
+      "differences": [
+        {
+          "path": "/type",
+          "typescript": "List<Float>",
+          "ocaml": "List<Number>"
+        }
+      ]
+    },
+    {
+      "id": "numeric-integral-division",
+      "pass": "typecheck",
+      "surface": "numeric-types",
+      "reason": "TypeScript displays its distinct floating type as Float; the frozen OCaml type printer uses Number for TFloat. Numeric names remain unnormalized.",
+      "differences": [
+        {
+          "path": "/type",
+          "typescript": "List<Float>",
+          "ocaml": "List<Number>"
+        }
+      ]
+    },
+    {
+      "id": "numeric-float-annotation",
+      "pass": "typecheck",
+      "surface": "numeric-types",
+      "reason": "TypeScript accepts the explicit Float annotation; the frozen OCaml public syntax rejects it in favor of Number.",
+      "differences": [
+        {
+          "path": "/diagnostics/0/code",
+          "typescript": {
+            "missing": true
+          },
+          "ocaml": "surface/invalid-form"
+        },
+        {
+          "path": "/diagnostics/0/missing",
+          "typescript": true,
+          "ocaml": {
+            "missing": true
+          }
+        },
+        {
+          "path": "/diagnostics/0/phase",
+          "typescript": {
+            "missing": true
+          },
+          "ocaml": "typecheck"
+        },
+        {
+          "path": "/diagnostics/0/severity",
+          "typescript": {
+            "missing": true
+          },
+          "ocaml": "error"
+        },
+        {
+          "path": "/diagnostics/0/span/endOffset",
+          "typescript": {
+            "missing": true
+          },
+          "ocaml": 10
+        },
+        {
+          "path": "/diagnostics/0/span/missing",
+          "typescript": true,
+          "ocaml": {
+            "missing": true
+          }
+        },
+        {
+          "path": "/diagnostics/0/span/sourceId",
+          "typescript": {
+            "missing": true
+          },
+          "ocaml": "engine-parity/numeric-float-annotation"
+        },
+        {
+          "path": "/diagnostics/0/span/startOffset",
+          "typescript": {
+            "missing": true
+          },
+          "ocaml": 5
+        },
+        {
+          "path": "/type",
+          "typescript": "Float",
+          "ocaml": {
+            "missing": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "numeric-number-alias",
+      "pass": "typecheck",
+      "surface": "numeric-types",
+      "reason": "TypeScript displays its distinct floating type as Float; the frozen OCaml type printer uses Number for TFloat. Numeric names remain unnormalized.",
+      "differences": [
+        {
+          "path": "/type",
+          "typescript": "Float",
+          "ocaml": "Number"
+        }
+      ]
+    },
+    {
+      "id": "numeric-quoted-floats",
+      "pass": "typecheck",
+      "surface": "numeric-types",
+      "reason": "The frozen OCaml printer displays TFloat as Number; TypeScript displays Float. Quotation preserves its numeric kind.",
+      "differences": [
+        {
+          "path": "/type",
+          "typescript": "Float",
+          "ocaml": "Number"
+        }
+      ]
+    }
+  ]
 }

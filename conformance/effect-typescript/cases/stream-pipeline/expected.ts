@@ -1,5 +1,10 @@
 import { Context, Effect, Schema, Stream } from "effect";
 
+const __formaInt = (value: number): number => {
+  if (!Number.isSafeInteger(value)) throw new RangeError("Int outside the safe integer range");
+  return value === 0 ? 0 : value;
+};
+
 export const Reading = Schema.Struct({
   sensor: Schema.String,
   celsius: Schema.Number,
@@ -46,9 +51,9 @@ export const hotReadings = (
 export const sumOfSquares = (n: number): Effect.Effect<number> =>
   Effect.gen(function* () {
     return yield* Stream.runFold(
-      Stream.map(Stream.range(1, n), (i) => i * i),
+      Stream.map(Stream.range(1, n), (i) => __formaInt(i * i)),
       (): number => 0,
-      (total, square) => total + square,
+      (total, square) => __formaInt(total + square),
     );
   });
 

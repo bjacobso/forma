@@ -1,6 +1,7 @@
+import { isNumeric } from "../evaluator/types.js";
 import { Effect } from "effect";
 import type { BuiltinFn, KValue } from "../evaluator/types.js";
-import { asList, asKFn, asNumber, isKList, isKMap, mapKey, TypeCheckError } from "../evaluator/types.js";
+import { asList, asKFn, asNumber, asInt, isKList, isKMap, mapKey, TypeCheckError } from "../evaluator/types.js";
 import { KernelTypeError, ArityError } from "../diagnostic/errors.js";
 
 export const list: BuiltinFn = (args) => {
@@ -81,7 +82,7 @@ export const nth: BuiltinFn = (args) => {
   if (args.length !== 2)
     return Effect.fail(new ArityError({ name: "nth", expected: 2, got: args.length }));
   const coll = asList(args[0]!, "nth");
-  const idx = asNumber(args[1]!, "nth");
+  const idx = asInt(args[1]!, "nth");
   if (idx < 0 || idx >= coll.length) return Effect.succeed(null);
   return Effect.succeed(coll[idx]!);
 };
@@ -114,7 +115,7 @@ export const sortBy: BuiltinFn = (args, apply) => {
       keyed.push({ item, key });
     }
     keyed.sort((a, b) => {
-      if (typeof a.key === "number" && typeof b.key === "number") return a.key - b.key;
+      if (isNumeric(a.key) && isNumeric(b.key)) return asNumber(a.key,"sort-by") - asNumber(b.key,"sort-by");
       if (typeof a.key === "string" && typeof b.key === "string") return a.key.localeCompare(b.key);
       return 0;
     });

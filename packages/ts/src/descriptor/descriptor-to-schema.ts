@@ -330,9 +330,10 @@ function resolveTypeSchema(
     case "Str":
     case "Symbol":
       return "Schema.String";
+    case "Int":
+      return "Schema.Int";
     case "Number":
     case "Num":
-    case "Int":
     case "Float":
       return "Schema.Number";
     case "Boolean":

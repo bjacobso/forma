@@ -1,5 +1,10 @@
 import { Context, Effect, Layer, Option, Record, Schema, Stream } from "effect";
 
+const __formaInt = (value: number): number => {
+  if (!Number.isSafeInteger(value)) throw new RangeError("Int outside the safe integer range");
+  return value === 0 ? 0 : value;
+};
+
 export const Role = Schema.Literals(["admin", "member"]);
 export type Role = typeof Role.Type;
 
@@ -45,7 +50,7 @@ export class Greeter extends Context.Service<
   }
 >()("Greeter") {}
 
-export const negNeg = (x: number): number => -(-x);
+export const negNeg = (x: number): number => __formaInt(-__formaInt(-x));
 
 export const priceTag = (amount: string): string => `cost: \${amount} \`${amount}\``;
 
@@ -62,8 +67,8 @@ export const lookup = (
   Record.get(counts, key);
 
 export const rebound = (x: number): number => {
-  const x2 = x + 1;
-  const x3 = x2 * 10;
+  const x2 = __formaInt(x + 1);
+  const x3 = __formaInt(x2 * 10);
   return x3;
 };
 
@@ -92,7 +97,7 @@ export const lowerAll = (names: ReadonlyArray<string>): ReadonlyArray<string> =>
   return names.map(f);
 };
 
-export const scale = (x: number): number => x * factor;
+export const scale = (x: number): number => __formaInt(x * factor);
 
 export const invite = (name: string): Effect.Effect<Member, never, Store> =>
   Effect.gen(function* () {
@@ -159,7 +164,7 @@ export const largest = (sizes: ReadonlyArray<number>): Effect.Effect<Shape> =>
     );
   });
 
-export const negLiteral: number = -(-1);
+export const negLiteral: number = __formaInt(-(-1));
 
 export const answer: number = negNeg(42);
 

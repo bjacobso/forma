@@ -1,3 +1,4 @@
+import { parseOcamlJson } from "../../packages/host/dist/index.mjs";
 import { createRequire } from "node:module";
 
 const jsPath = process.argv[2];
@@ -6,7 +7,7 @@ const { formaOcaml } = createRequire(import.meta.url)(jsPath);
 if (typeof formaOcaml?.handleJson !== "function") throw new Error("Missing OCaml JS handleJson export");
 process.on("message", payload => {
   try {
-    process.send({ value: JSON.parse(formaOcaml.handleJson(JSON.stringify(payload))) });
+    process.send({ value: parseOcamlJson(formaOcaml.handleJson(JSON.stringify(payload))) });
   } catch (error) {
     process.send({ error: String(error) });
   }

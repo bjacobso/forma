@@ -1,3 +1,5 @@
+import { isFloatLiteral } from "./reader/types.js";
+import { printFloat } from "./evaluator/types.js";
 /**
  * Lisp Formatter / Pretty Printer
  *
@@ -28,10 +30,19 @@ function escapeString(s: string): string {
 }
 
 
+function numberSource(expr: SExpr & { _tag: "Num" }): string {
+  if (!isFloatLiteral(expr)) return String(expr.value);
+  // The reader accepts overflowing exponents as IEEE infinities. Keep them
+  // readable as numbers instead of formatting an unbound `Infinity` symbol.
+  if (expr.value === Infinity) return "1e400";
+  if (expr.value === -Infinity) return "-1e400";
+  return printFloat(expr.value);
+}
+
 function flat(expr: SExpr): string {
   switch (expr._tag) {
     case "Num":
-      return String(expr.value);
+      return numberSource(expr);
     case "Str":
       return `"${escapeString(expr.value)}"`;
     case "Bool":
@@ -70,7 +81,7 @@ function lines(
 
   switch (expr._tag) {
     case "Num":
-      return [`${pad}${expr.value}`];
+      return [`${pad}${numberSource(expr)}`];
     case "Str":
       return [`${pad}"${escapeString(expr.value)}"`];
     case "Bool":

@@ -113,7 +113,7 @@ test("the REPL uses edited modules, replaces scratch definitions, and clears its
   await exercise(({ get, send, child }) =>
     Effect.gen(function* () {
       yield* send(Workspace.Message.SubmitRepl());
-      expect(Workspace.activeProject(get()).transcript.at(-1)).toMatchObject({ output: "42", type: "Number" });
+      expect(Workspace.activeProject(get()).transcript.at(-1)).toMatchObject({ output: "42", type: "Float" });
       yield* send(Workspace.Message.OpenFile({ sourceId: "math.forma" }));
       const row = editorOf(get()).analysis!.rows.find((row) =>
         row.text.startsWith("define double"),

@@ -1,0 +1,51 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "numeric-quoted-floats",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "float",
+        "value": 1
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 6,
+                "sourceId": "engine-parity/numeric-quoted-floats",
+                "startOffset": 1
+              },
+              "value": "quote"
+            },
+            {
+              "kind": "float",
+              "span": {
+                "endOffset": 10,
+                "sourceId": "engine-parity/numeric-quoted-floats",
+                "startOffset": 7
+              },
+              "value": 1
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 11,
+            "sourceId": "engine-parity/numeric-quoted-floats",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Number"
+    }
+  },
+  "version": 1
+}

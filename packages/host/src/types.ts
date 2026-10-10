@@ -56,7 +56,8 @@ interface RetainedValueProjection {
 export type ValueProjection =
   | ({ readonly kind: "nil" } & RetainedValueProjection)
   | ({ readonly kind: "bool"; readonly value: boolean } & RetainedValueProjection)
-  | ({ readonly kind: "int" | "float"; readonly value: number } & RetainedValueProjection)
+  | ({ readonly kind: "int"; readonly value: number } & RetainedValueProjection)
+  | ({ readonly kind: "float"; readonly value: number | "NaN" | "Infinity" | "-Infinity" | "-0" } & RetainedValueProjection)
   | ({ readonly kind: "string"; readonly value: string } & RetainedValueProjection)
   | ({ readonly kind: "keyword"; readonly value: string } & RetainedValueProjection)
   | ({ readonly kind: "symbol"; readonly value: string } & RetainedValueProjection)

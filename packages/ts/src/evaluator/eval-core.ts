@@ -1,3 +1,4 @@
+import { numericDatum } from "./types.js";
 import { KKeyword, mapKey, quotedDatum } from "./types.js";
 import { Effect, Ref } from "effect";
 import type { SExpr, Loc } from "../reader/index.js";
@@ -62,7 +63,7 @@ function evalUnobserved(
     try {
       switch (expr._tag) {
         case "Num":
-          return expr.value;
+          return numericDatum(expr);
         case "Str":
           return expr.value;
         case "Bool":

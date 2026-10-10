@@ -16,14 +16,14 @@ describe("review regressions", () => {
     ['(define f [n] (match n 0 "z" 1 "o" _ "m")) (f 1)', 'String'],
     ['(define id [x] x) (id (if true :a :b))', 'Union<:a, :b>'],
     ['(= (/ 4 2) 2)', 'Bool'],
-    ['(define pair [a b] [a b]) (pair 1 2.5)', 'List<Number>'],
+    ['(define pair [a b] [a b]) (pair 1 2.5)', 'List<Float>'],
   ])("infers %s", async (source, expected) => {
     expect(await infer(source)).toBe(expected);
   });
 
   test("higher-kinded application preserves numeric subtyping", async () => {
     const source=readFileSync(new URL("../../../conformance/fixtures/typecheck/typeclass-hkt-instance-success/source.lisp",import.meta.url),"utf8");
-    expect(await infer(source)).toBe("List<Number>");
+    expect(await infer(source)).toBe("List<Float>");
   });
 
   test.each([

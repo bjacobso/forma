@@ -1,3 +1,4 @@
+import { numericDatum } from "../evaluator/types.js";
 import { KKeyword, mapKey, quotedDatum } from "../evaluator/types.js";
 /**
  * Core compilation — recursive descent dispatch for SExpr → bytecode.
@@ -95,7 +96,7 @@ function compileUnobserved(
 
   switch (expr._tag) {
     case "Num": {
-      const idx = addConstant(chunk, expr.value);
+      const idx = addConstant(chunk, numericDatum(expr));
       emit(chunk, Op.CONST, trace);
       emitU16(chunk, idx, trace);
       return;

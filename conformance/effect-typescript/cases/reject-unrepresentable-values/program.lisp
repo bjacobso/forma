@@ -2,8 +2,8 @@
 (: huge Number)
 (define huge 1e400)
 
-(: unsafe Int)
-(define unsafe 9007199254740993)
+;; Unsafe Int literals are rejected by the reader (numeric-types.test.ts).
+
 
 (: weights (Map String Int))
 (define weights {"__proto__" 1 "a" 2 "b" 3})

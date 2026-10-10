@@ -122,7 +122,7 @@ describe("forma-language-server over stdio", () => {
       textDocument: { uri },
       position: { line: 1, character: 2 },
     });
-    expect(JSON.stringify(hover["result"])).toContain("double : Number -> Number");
+    expect(JSON.stringify(hover["result"])).toContain("double : Float -> Float");
 
     const definition = await client.request("textDocument/definition", {
       textDocument: { uri },

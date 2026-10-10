@@ -17,6 +17,7 @@ import {
   EEmpty,
   EExtend,
   tNum,
+  tFloat,
   tStr,
   tBool,
   tNil,
@@ -119,6 +120,7 @@ const typeConNames = new Set([
   // Canonical internal names
   "Number",
   "Int",
+  "Float",
   "String",
   "Boolean",
   "Unit",
@@ -538,7 +540,8 @@ const inferLit = (expr: CoreExpr & { _tag: "Lit" }): Effect.Effect<Type, never, 
     if (expr.lit._tag === "LKeyword") return TCon(expr.lit.value);
 
     return expr.lit._tag === "LInt"
-      ? Number.isInteger(expr.lit.value) ? TCon("Int") : tNum
+      ? TCon("Int")
+      : expr.lit._tag === "LFloat" ? tFloat
       : expr.lit._tag === "LString"
         ? tStr
         : expr.lit._tag === "LBool"
@@ -671,17 +674,17 @@ const inferApp = (
       const args: Type[] = [];
       for (const arg of expr.args) {
         const t = yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst),env),arg);
-        yield* assignType(t,op === "mod" ? TCon("Int") : tNum,originOf(expr,"numeric-argument"));
+        yield* assignType(t,op === "mod" ? TCon("Int") : tFloat,originOf(expr,"numeric-argument"));
         args.push(applyType(yield* Ref.get(ctx.subst),t));
       }
       const count=expr.args.length;
-      const minimum=["+","*"].includes(op) ? 0 : op==="/" ? 2 : 1;
+      const minimum=["+","*"].includes(op) ? 0 : 1;
       const exact=["abs","sqrt","floor","ceil","round"].includes(op) ? 1 : ["mod","pow","<","<=",">",">="].includes(op) ? 2 : undefined;
       if (count<minimum || exact!==undefined && count!==exact) return yield* ctx.fail(originOf(expr,"numeric-arity"),{code: "typecheck/arity", message:`${op} expects ${exact ?? `${minimum}+`} argument(s)`});
       if (["<","<=",">",">="].includes(op)) return tBool;
       if (["floor","ceil","round","mod"].includes(op)) return TCon("Int");
-      if (["/","pow","sqrt"].includes(op)) return tNum;
-      return args.every(t=>t._tag === "TCon" && t.name === "Int") ? TCon("Int") : tNum;
+      if (["/","pow","sqrt"].includes(op)) return tFloat;
+      return args.every(t=>t._tag === "TCon" && t.name === "Int") ? TCon("Int") : tFloat;
     }
     let fnT = yield* inferExpr(env, expr.fn);
     // Solve repeated unconstrained parameters together, using their common

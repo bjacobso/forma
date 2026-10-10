@@ -143,6 +143,12 @@
       "typescript": "shared TypeScript expectations; hooks, scoped bindings, typed slots, and authored expression spans",
       "ocaml": "reference thesis-gate sources and diagnostic goldens",
       "reason": "The TypeScript gate checks all 22 sources separately from the parity runner. TypeScript locates repeated-slot, macro-argument, and record-field failures at their authored values; OCaml goldens sometimes cover the enclosing slot, macro call, or record. Workspace recovery can retain a result type alongside diagnostics."
+    },
+    {
+      "id": "numeric-types",
+      "status": "intentional-difference",
+      "fixture": "cases.json (numeric-*); packages/host/test/numeric-projections.test.ts",
+      "reason": "TypeScript preserves Int/Float kinds and uses safe integers with checked overflow. Frozen OCaml has 63-bit Ints, displays Float as Number and rejects explicit Float annotations. Number/Num are Float aliases consistently in TypeScript; the OCaml host policy aliases them to Int. Numeric names and projection kinds are not normalized by the comparator."
     }
   ],
   "comparisonModel": {

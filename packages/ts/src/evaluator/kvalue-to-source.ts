@@ -1,3 +1,4 @@
+import { isKFloat, printFloat } from "./types.js";
 /**
  * KValue → Lisp Source String
  *
@@ -29,6 +30,7 @@ export function printKValue(value: KValue): string {
   if (isKKeyword(value) || isKSymbol(value)) return value.name;
   if (value === null) return "nil";
   if (typeof value === "boolean") return value ? "true" : "false";
+  if (isKFloat(value)) return printFloat(value.value);
   if (typeof value === "number") return String(value);
   if (typeof value === "string") {
     // Keywords (start with :) are printed as bare symbols
@@ -69,7 +71,7 @@ export function printKValue(value: KValue): string {
 function printSExpr(expr: import("../reader/types.js").SExpr): string {
   switch (expr._tag) {
     case "Num":
-      return String(expr.value);
+      return expr.numericKind === "float" ? printFloat(expr.value) : String(expr.value);
     case "Str":
       return `"${escapeString(expr.value)}"`;
     case "Bool":

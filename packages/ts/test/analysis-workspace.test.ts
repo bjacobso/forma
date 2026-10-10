@@ -33,7 +33,7 @@ describe("AnalysisWorkspace", () => {
     const source = "(define double (fn [n] (twice n)))\n(double base)";
     const analysis = workspace(source).analysis("doc.lisp");
     expect(analysis.diagnostics).toEqual([]);
-    expect(analysis.resultType).toBe("Number");
+    expect(analysis.resultType).toBe("Float");
     expect(analysis.typeEnv.get("base")).toBeDefined();
   });
 
@@ -66,7 +66,7 @@ describe("AnalysisWorkspace", () => {
     const source = "(define double (fn [n] (* n 2)))\n(double base)";
     const ws = workspace(source);
     expect(ws.hover("doc.lisp", at(source, "double", 1, 1))?.markdown).toContain(
-      "double : Number -> Number",
+      "double : Float -> Float",
     );
     const prelude = ws.hover("doc.lisp", at(source, "base", 1));
     expect(prelude?.markdown).toContain("base : Int");

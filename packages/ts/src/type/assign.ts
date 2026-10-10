@@ -6,7 +6,7 @@ import { applyType } from "./substitution.js";
 import { unify } from "./unify.js";
 import { InferenceError, type Origin } from "./errors.js";
 
-/** Assignment is directional: every Int is a Number; arbitrary Numbers are not Ints. */
+/** Assignment is directional: every Int is a Float; arbitrary Floats are not Ints. */
 export const assignType = (actual: Type, expected: Type, origin: Origin): Effect.Effect<void,InferenceError,InferContext> => Effect.gen(function* () {
   const ctx = yield* InferContext, subst = yield* Ref.get(ctx.subst);
   const a = applyType(subst,actual), b = applyType(subst,expected);
@@ -30,9 +30,9 @@ export const assignType = (actual: Type, expected: Type, origin: Origin): Effect
   }
   if (a._tag === "TCon") {
     const primitive=literalBase(a.name);
-    if (primitive && b._tag === "TCon" && (primitive===b.name || primitive==="Int" && b.name==="Number")) return;
+    if (primitive && b._tag === "TCon" && (primitive===b.name || primitive==="Int" && b.name==="Float")) return;
   }
-  if (a._tag === "TCon" && a.name === "Int" && b._tag === "TCon" && b.name === "Number") return;
+  if (a._tag === "TCon" && a.name === "Int" && b._tag === "TCon" && b.name === "Float") return;
   if (a._tag === "TFun" && b._tag === "TFun") {
     yield* assignType(b.arg,a.arg,origin);
     yield* assignType(a.res,b.res,origin);
@@ -64,7 +64,7 @@ export const assignType = (actual: Type, expected: Type, origin: Origin): Effect
   })));
 });
 
-/** Common numeric supertype for branches and collections, without narrowing Numbers to Int. */
+/** Common numeric supertype for branches and collections, without narrowing Floats to Int. */
 export const joinType = (left: Type, right: Type, origin: Origin): Effect.Effect<Type,InferenceError,InferContext> => Effect.gen(function* () {
   const ctx = yield* InferContext, subst = yield* Ref.get(ctx.subst);
   const a = applyType(subst,left), b = applyType(subst,right);
@@ -83,7 +83,7 @@ export const joinType = (left: Type, right: Type, origin: Origin): Effect.Effect
       return TRow(row);
     }
   }
-  if (a._tag === 'TCon' && b._tag === 'TCon' && ['Int','Number'].includes(a.name) && ['Int','Number'].includes(b.name)) return a.name === b.name ? a : {_tag:'TCon',name:'Number'};
+  if (a._tag === 'TCon' && b._tag === 'TCon' && ['Int','Float'].includes(a.name) && ['Int','Float'].includes(b.name)) return a.name === b.name ? a : {_tag:'TCon',name:'Float'};
   if (a._tag === 'TApp' && b._tag === 'TApp' && a.con._tag === 'TCon' && b.con._tag === 'TCon' && a.con.name === b.con.name && a.args.length === b.args.length) {
     const args: Type[]=[];
     for (let i=0;i<a.args.length;i++) args.push(yield* joinType(a.args[i]!,b.args[i]!,origin));
@@ -95,5 +95,5 @@ export const joinType = (left: Type, right: Type, origin: Origin): Effect.Effect
 
 function literalBase(name: string): string | undefined {
   if (name.startsWith(":")) return "Keyword";
-  try { const value=JSON.parse(name); return typeof value==="string" ? "String" : typeof value==="boolean" ? "Bool" : typeof value==="number" ? Number.isInteger(value) ? "Int" : "Number" : undefined; } catch { return; }
+  try { const value=JSON.parse(name); return typeof value==="string" ? "String" : typeof value==="boolean" ? "Bool" : typeof value==="number" ? /[.eE]/.test(name) ? "Float" : "Int" : undefined; } catch { return; }
 }

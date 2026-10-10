@@ -1,0 +1,21 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "numeric-float-annotation",
+  "outputs": {
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "surface/invalid-form",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 10,
+            "sourceId": "engine-parity/numeric-float-annotation",
+            "startOffset": 5
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

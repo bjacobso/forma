@@ -58,3 +58,5 @@ export {
 } from "./evaluator/types.js";
 
 export { KKeyword, KSymbol, isKKeyword, isKSymbol, mapKey, mapKeyValue } from "./evaluator/types.js";
+
+export { KFloat, isKFloat, isNumeric, printFloat, asInt, checkedInt } from "./evaluator/types.js";

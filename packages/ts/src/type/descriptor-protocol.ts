@@ -1,3 +1,4 @@
+import { numericDatum } from "../evaluator/types.js";
 /** Descriptor rules run in the active HM context, including lexical bindings and substitutions. */
 import { Effect, Ref } from "effect";
 import type { BootstrappedPrelude } from "../descriptor/bootstrap.js";
@@ -38,7 +39,7 @@ function expressionValue(expr: SExpr): KValue {
     ["span", new Map<string,KValue>([["source-id",expr.loc.sourceId ?? "source"],["start-offset",expr.loc.start],["end-offset",expr.loc.end]])],
   ]);
   if (["Str", "Num", "Bool"].includes(expr._tag)) {
-    base.set("kind", "literal"); base.set("value", (expr as SExpr & { value: KValue }).value);
+    base.set("kind", "literal"); base.set("value", expr._tag === "Num" ? numericDatum(expr) : (expr as SExpr & { value: KValue }).value);
   } else if (expr._tag === "Sym") {
     base.set("kind", expr.name === "nil" ? "literal" : "variable");
     if (expr.name === "nil") base.set("value",null); else base.set("name",expr.name);
