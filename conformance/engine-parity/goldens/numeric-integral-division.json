@@ -1,0 +1,125 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "numeric-integral-division",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "items": [
+          {
+            "kind": "float",
+            "value": 2
+          },
+          {
+            "kind": "float",
+            "value": 2
+          }
+        ],
+        "kind": "list"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 3,
+                    "sourceId": "engine-parity/numeric-integral-division",
+                    "startOffset": 2
+                  },
+                  "value": "/"
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 5,
+                    "sourceId": "engine-parity/numeric-integral-division",
+                    "startOffset": 4
+                  },
+                  "value": 6
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 7,
+                    "sourceId": "engine-parity/numeric-integral-division",
+                    "startOffset": 6
+                  },
+                  "value": 3
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 8,
+                "sourceId": "engine-parity/numeric-integral-division",
+                "startOffset": 1
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 11,
+                    "sourceId": "engine-parity/numeric-integral-division",
+                    "startOffset": 10
+                  },
+                  "value": "/"
+                },
+                {
+                  "kind": "float",
+                  "span": {
+                    "endOffset": 16,
+                    "sourceId": "engine-parity/numeric-integral-division",
+                    "startOffset": 12
+                  },
+                  "value": 12
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 18,
+                    "sourceId": "engine-parity/numeric-integral-division",
+                    "startOffset": 17
+                  },
+                  "value": 2
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 20,
+                    "sourceId": "engine-parity/numeric-integral-division",
+                    "startOffset": 19
+                  },
+                  "value": 3
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 21,
+                "sourceId": "engine-parity/numeric-integral-division",
+                "startOffset": 9
+              }
+            }
+          ],
+          "kind": "vector",
+          "span": {
+            "endOffset": 22,
+            "sourceId": "engine-parity/numeric-integral-division",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "List<Number>"
+    }
+  },
+  "version": 1
+}

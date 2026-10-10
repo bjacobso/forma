@@ -1,5 +1,10 @@
 import { Context, Effect, Layer, Option, Record, Schema, Scope } from "effect";
 
+const __formaInt = (value: number): number => {
+  if (!Number.isSafeInteger(value)) throw new RangeError("Int outside the safe integer range");
+  return value === 0 ? 0 : value;
+};
+
 export const Connection = Schema.Struct({
   id: Schema.String,
 });
@@ -43,7 +48,7 @@ export const addRow = (
   row: Row,
 ): { readonly [key: string]: number } => ({
   ...totals,
-  [row.region]: Option.getOrElse(Record.get(totals, row.region), (): number => 0) + row.amount,
+  [row.region]: __formaInt(Option.getOrElse(Record.get(totals, row.region), (): number => 0) + row.amount),
 });
 
 export const connection = (name: string): Effect.Effect<Connection, never, Pool | Scope.Scope> =>
@@ -77,7 +82,7 @@ export const publish = (
     return yield* Effect.ensuring(
       Effect.gen(function* () {
         const totals = yield* regionalTotals(sql);
-        const grand = Record.values(totals).reduce((total, item) => total + item, 0);
+        const grand = __formaInt(Record.values(totals).reduce((total, item) => total + item, 0));
         yield* reportStore.save("grand-total", grand);
         return grand;
       }),

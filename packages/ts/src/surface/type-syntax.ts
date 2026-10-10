@@ -2,7 +2,7 @@ import type { SExpr } from "../reader/types.js";
 import { head, name } from "./effect.js";
 import { splitTypeMetadata } from "./domain.js";
 
-const legacy = new Map(Object.entries({Str:"String",Num:"Number",Nil:"Unit",Boolean:"Bool",Array:"List",Vector:"List",Optional:"Option",Float:"Number",Uint8Array:"Bytes",string:"String",integer:"Int",number:"Number",boolean:"Bool"}));
+const legacy = new Map(Object.entries({Str:"String",Nil:"Unit",Boolean:"Bool",Array:"List",Vector:"List",Optional:"Option",Uint8Array:"Bytes",string:"String",integer:"Int",number:"Number",boolean:"Bool"}));
 export const schemaMetadata = new Set([":doc", ":pattern", ":title", ":identifier"]);
 const fieldMetadata = new Set([":indexed", ":doc", ":default"]);
 
@@ -97,7 +97,7 @@ export function typeSyntaxErrors(expression: SExpr, allowedMetadata: ReadonlySet
 
 /** Resolve names in an authored type against its declaration environment. */
 export function unknownTypeReferences(expression: SExpr, isKnown: (name: string) => boolean): readonly string[] {
-  const primitives = new Set(["String", "Int", "Number", "Bool", "Unit", "Json", "Any", "Unknown", "Never", "Symbol", "Keyword", "Type", "Syntax", "RuntimeExpr", "Bytes", "DateTime", "Duration", "List", "Option", "Map", "Record", "Union", "Tagged", "Id", "Brand", "Result", "->", "Effect", "Stream", "Layer", "Fiber", "Ref", "RefCell", "Scope", "OntologyRuntime"]);
+  const primitives = new Set(["String", "Int", "Float", "Number", "Num", "Bool", "Unit", "Json", "Any", "Unknown", "Never", "Symbol", "Keyword", "Type", "Syntax", "RuntimeExpr", "Bytes", "DateTime", "Duration", "List", "Option", "Map", "Record", "Union", "Tagged", "Id", "Brand", "Result", "->", "Effect", "Stream", "Layer", "Fiber", "Ref", "RefCell", "Scope", "OntologyRuntime"]);
   const visit = (expr: SExpr): readonly string[] => {
     const type = splitTypeMetadata(expr).type;
     if (type._tag === "List" && ["Pick", "Omit", "Merge"].includes(head(type) ?? "")) {

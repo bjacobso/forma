@@ -78,7 +78,7 @@ describe("unified core surface and runtime semantics", () => {
     expect(await evaluate("'unbound")).toMatchObject({ _tag: 'KSymbol', name: 'unbound' });
   });
   test("module signatures can appear after definitions", async () => {
-    expect(await Effect.runPromise(Type.inferSourceStr('(define plus [x] (+ x 1)) (: plus (-> Number Number)) (plus 2)'))).toBe('Number');
+    expect(await Effect.runPromise(Type.inferSourceStr('(define plus [x] (+ x 1)) (: plus (-> Number Number)) (plus 2)'))).toBe('Float');
   });
 });
 
@@ -128,7 +128,7 @@ describe('canonical semantics', () => {
   test('tagged values have exactly their declared discriminator and fields', async () => {
     const source='(type Shape (Tagged :tag kind (Circle {:radius Number}) Point)) [(Circle {:radius 3}) Point (match (Circle {:radius 4}) (Circle {:radius r}) r Point 0)]';
     expect(await evaluate(source)).toEqual([new Map<string,string | number>([[":kind","Circle"],[":radius",3]]),new Map([[":kind","Point"]]),4]);
-    expect(await Effect.runPromise(Type.inferSourceStr('(type Shape (Tagged (Circle {:radius Number}) Point)) (match (Circle {:radius 4}) (Circle {:radius r}) r Point 0)'))).toBe('Number');
+    expect(await Effect.runPromise(Type.inferSourceStr('(type Shape (Tagged (Circle {:radius Number}) Point)) (match (Circle {:radius 4}) (Circle {:radius r}) r Point 0)'))).toBe('Float');
   });
   test('field access follows lexical scope', async () => {
     expect(await evaluate('(define record {:count 7}) (let [other record] other.count)')).toBe(7);
@@ -189,7 +189,7 @@ describe('typed form contracts and shared binding patterns', () => {
   test('constructors and nested record patterns work in functions and let', async () => {
     const source='(type Shape (Tagged (Circle {:radius Number}) Point)) (define area [(Circle {:radius r})] (* r r)) (let [(Circle {:radius r}) (Circle {:radius 3})] (+ r (area (Circle {:radius 4}))))';
     expect(await evaluate(source)).toBe(19);
-    expect(await Effect.runPromise(Type.inferSourceStr(source))).toBe('Number');
+    expect(await Effect.runPromise(Type.inferSourceStr(source))).toBe('Float');
   });
   test('keyword and symbol construction preserve runtime kinds', async () => {
     expect(await evaluate('[(keyword "color") (sym "name")]')).toMatchObject([{_tag:'KKeyword',name:':color'},{_tag:'KSymbol',name:'name'}]);
@@ -235,14 +235,14 @@ describe('typed form module semantics', () => {
 
 describe('canonical numeric types', () => {
   test('integers, real numbers and Bool have distinct canonical types', async () => {
-    for (const [source,type] of [['42','Int'],['1.5','Number'],['true','Bool'],['(+ 1 2)','Int'],['(/ 1 2)','Number'],['(floor 1.5)','Int'],['(if true 1 2.5)','Number']]) {
+    for (const [source,type] of [['42','Int'],['1.5','Float'],['true','Bool'],['(+ 1 2)','Int'],['(/ 1 2)','Float'],['(floor 1.5)','Int'],['(if true 1 2.5)','Float']]) {
       expect(await Effect.runPromise(Type.inferSourceStr(source!))).toBe(type);
     }
   });
-  test('Int widens to Number but fractional division cannot promise Int', async () => {
+  test('Int widens to Float but fractional division cannot promise Int', async () => {
     expect(await Effect.runPromise(Type.inferSourceStr('(: inc (-> Int Int)) (define inc [n] (+ n 1)) (inc 2)'))).toBe('Int');
-    expect(await Effect.runPromise(Type.inferSourceStr('(: real Number) (define real 1) real'))).toBe('Number');
-    await expect(Effect.runPromise(Type.inferSourceStr('(: half (-> Int Int)) (define half [n] (/ n 2))'))).rejects.toThrow('Number');
+    expect(await Effect.runPromise(Type.inferSourceStr('(: real Float) (define real 1) real'))).toBe('Float');
+    await expect(Effect.runPromise(Type.inferSourceStr('(: half (-> Int Int)) (define half [n] (/ n 2))'))).rejects.toThrow('Float');
     await expect(Effect.runPromise(Type.inferSourceStr('(if 1 true false)'))).rejects.toThrow('Bool');
   });
 });
@@ -296,7 +296,7 @@ describe('constructor scope',()=>{
   test('qualified constructors preserve their wire tag and payload shape',async()=>{
     const source='(type Shape (Tagged :tag kind (Circle {:radius Number}) Point)) (match (Shape.Circle {:radius 2}) (Shape.Circle {:radius radius}) radius Shape.Point 0)';
     expect(await evaluate(source)).toBe(2);
-    expect(await Effect.runPromise(Type.inferSourceStr(source))).toBe('Number');
+    expect(await Effect.runPromise(Type.inferSourceStr(source))).toBe('Float');
   });
 });
 
@@ -655,7 +655,7 @@ describe('unified syntax integration boundaries', () => {
     const prelude=bootstrapFromSources('', '(type (Box a) {:value a :note (Option String)}) (type Envelope {:data (Box Int) :meta {:enabled Bool}})');
     const descriptor=buildProtocolObjectDescriptors([...prelude.descriptions.list()]).find(d=>d.name==='Envelope')!;
     expect(emitProtocolInterface(descriptor).join("\n")).toContain('readonly data: { readonly value: number; readonly note?: string }');
-    expect(emitProtocolObjectSchema(descriptor).join("\n")).toContain('data: Schema.Struct({ value: Schema.Number, note: Schema.optionalKey(Schema.String) })');
+    expect(emitProtocolObjectSchema(descriptor).join("\n")).toContain('data: Schema.Struct({ value: Schema.Int, note: Schema.optionalKey(Schema.String) })');
     expect(emitProtocolObjectSchema(descriptor).join("\n")).toContain('enabled: Schema.Boolean');
   });
   test('form patterns determine formatter layout without rewriting declaration heads', () => {
@@ -670,7 +670,7 @@ describe('unified syntax integration boundaries', () => {
 
 
 describe("canonical boundary diagnostics", () => {
-  test.each(["(def value 1)","(defn value [x] x)","(lambda [x] x)","(let* [x 1] x)","(: value Num) (define value 1)","(type Values (Array String))","(type Old [(name String)])"])("rejects obsolete grammar: %s", async source => {
+  test.each(["(def value 1)","(defn value [x] x)","(lambda [x] x)","(let* [x 1] x)","(type Values (Array String))","(type Old [(name String)])"])("rejects obsolete grammar: %s", async source => {
     await expect(evaluate(source)).rejects.toThrow();
   });
   test("canonical HTTP declarations elaborate with types, error status, methods and parameters", () => {

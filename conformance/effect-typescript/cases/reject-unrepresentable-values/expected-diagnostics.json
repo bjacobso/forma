@@ -14,16 +14,6 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/number",
-      "message": "This integer is outside JavaScript's safe range (±9007199254740991) and would lose precision.",
-      "line": 6,
-      "column": 16,
-      "endLine": 6,
-      "endColumn": 32
-    },
-    {
-      "phase": "check",
-      "severity": "error",
       "code": "mechanics/record-key",
       "message": "__proto__ cannot be a map key: JavaScript treats it as the prototype.",
       "line": 9,

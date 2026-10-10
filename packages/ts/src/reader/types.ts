@@ -80,6 +80,7 @@ export interface Str {
 
 export interface Num {
   readonly _tag: "Num";
+  readonly numericKind?: "int" | "float";
   readonly value: number;
   readonly loc: Loc;
 }
@@ -138,11 +139,16 @@ export const Str = (value: string, loc: Loc): Str => ({
   loc,
 });
 
-export const Num = (value: number, loc: Loc): Num => ({
+export const Num = (value: number, loc: Loc, numericKind: "int" | "float" = Number.isInteger(value) ? "int" : "float"): Num => ({
   _tag: "Num",
-  value,
+  numericKind,
+  value: numericKind === "int" && value === 0 ? 0 : value,
   loc,
 });
+
+/** Old externally supplied S-expressions may omit the lexical kind. */
+export const isFloatLiteral = (expr: Num): boolean => expr.numericKind === "float" ||
+  expr.numericKind === undefined && !Number.isInteger(expr.value);
 
 export const Bool = (value: boolean, loc: Loc): Bool => ({
   _tag: "Bool",

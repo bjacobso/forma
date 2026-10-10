@@ -1,4 +1,13 @@
+import { KFloat, isKFloat, isNumeric, kEquals } from "../evaluator/types.js";
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
+
+function numericLiteral(value: unknown, kind: unknown): unknown {
+  return typeof value === "number" && (kind === "float" || !Number.isInteger(value)) ? new KFloat(value) : value;
+}
+
+function literalMatches(pattern: unknown, value: unknown): boolean {
+  return isKFloat(pattern) === isKFloat(value) && valuesEqual(pattern, value);
+}
 
 export type MechanicsRuntimeValue = unknown;
 
@@ -271,7 +280,7 @@ async function evaluateValue(
 
   switch (value["kind"]) {
     case "Literal":
-      return value["value"];
+      return numericLiteral(value["value"], value["numericKind"]);
     case "Var": {
       const name = stringField(value, "name");
       if (name === "nil") return null;
@@ -362,9 +371,9 @@ async function patternMatches(
       return true;
     }
     case "Literal":
-      return valuesEqual(pattern["value"], value);
+      return literalMatches(numericLiteral(pattern["value"], pattern["numericKind"]), value);
     case "Expr":
-      return valuesEqual(evaluateExprLiteral(pattern["source"]), value);
+      return literalMatches(evaluateExprLiteral(pattern["source"]), value);
     case "List":
     case "Vector": {
       if (!Array.isArray(value)) return false;
@@ -395,6 +404,7 @@ async function patternMatches(
 }
 
 function valuesEqual(left: MechanicsRuntimeValue, right: MechanicsRuntimeValue): boolean {
+  if (isNumeric(left) && isNumeric(right)) return kEquals(left,right);
   if (Object.is(left, right)) return true;
 
   if (Array.isArray(left) && Array.isArray(right)) {
@@ -484,8 +494,8 @@ function evaluateExprLiteral(source: JsonValue | undefined): MechanicsRuntimeVal
   switch (source["kind"]) {
     case "Symbol":
       return typeof source["name"] === "string" ? source["name"] : source;
+    case "Number": return numericLiteral(source["value"], source["numericKind"]);
     case "String":
-    case "Number":
     case "Bool":
       return source["value"];
     default:

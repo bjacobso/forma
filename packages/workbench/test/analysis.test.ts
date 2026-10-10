@@ -19,8 +19,8 @@ describe("analyzing a program", () => {
       );
       return node === undefined ? undefined : analysis.types[node.id];
     };
-    expect(typeOf("(map with-tax [40 250 1200])")).toBe("List<Number>");
-    expect(typeOf("(* amount tax-rate)")).toBe("Number");
+    expect(typeOf("(map with-tax [40 250 1200])")).toBe("List<Float>");
+    expect(typeOf("(* amount tax-rate)")).toBe("Float");
     // The sample has no errors yet; the workflow's dataflow is checked by the app.
     expect(analysis.diagnostics).toEqual([]);
   });

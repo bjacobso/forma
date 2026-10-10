@@ -1,0 +1,153 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "numeric-ieee-division",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "items": [
+          {
+            "kind": "float",
+            "value": "NaN"
+          },
+          {
+            "kind": "float",
+            "value": "Infinity"
+          },
+          {
+            "kind": "float",
+            "value": "-Infinity"
+          }
+        ],
+        "kind": "list"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 3,
+                    "sourceId": "engine-parity/numeric-ieee-division",
+                    "startOffset": 2
+                  },
+                  "value": "/"
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 5,
+                    "sourceId": "engine-parity/numeric-ieee-division",
+                    "startOffset": 4
+                  },
+                  "value": 0
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 7,
+                    "sourceId": "engine-parity/numeric-ieee-division",
+                    "startOffset": 6
+                  },
+                  "value": 0
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 8,
+                "sourceId": "engine-parity/numeric-ieee-division",
+                "startOffset": 1
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 11,
+                    "sourceId": "engine-parity/numeric-ieee-division",
+                    "startOffset": 10
+                  },
+                  "value": "/"
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 13,
+                    "sourceId": "engine-parity/numeric-ieee-division",
+                    "startOffset": 12
+                  },
+                  "value": 1
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 15,
+                    "sourceId": "engine-parity/numeric-ieee-division",
+                    "startOffset": 14
+                  },
+                  "value": 0
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 16,
+                "sourceId": "engine-parity/numeric-ieee-division",
+                "startOffset": 9
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 19,
+                    "sourceId": "engine-parity/numeric-ieee-division",
+                    "startOffset": 18
+                  },
+                  "value": "/"
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 22,
+                    "sourceId": "engine-parity/numeric-ieee-division",
+                    "startOffset": 20
+                  },
+                  "value": -1
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 24,
+                    "sourceId": "engine-parity/numeric-ieee-division",
+                    "startOffset": 23
+                  },
+                  "value": 0
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 25,
+                "sourceId": "engine-parity/numeric-ieee-division",
+                "startOffset": 17
+              }
+            }
+          ],
+          "kind": "vector",
+          "span": {
+            "endOffset": 26,
+            "sourceId": "engine-parity/numeric-ieee-division",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    }
+  },
+  "version": 1
+}

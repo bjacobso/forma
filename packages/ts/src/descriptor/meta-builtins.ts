@@ -1,3 +1,4 @@
+import { numericDatum, isKFloat } from "../evaluator/types.js";
 import { parse, toSExprMany } from "../reader/index.js";
 import { metaText } from "./meta-types.js";
 import { syntaxForDatum } from "../surface/datum.js";
@@ -300,7 +301,7 @@ export function createMetaBuiltins(
           case "Str":
             return expr.value;
           case "Num":
-            return expr.value;
+            return numericDatum(expr);
           case "Bool":
             return expr.value;
           case "Sym":
@@ -319,8 +320,9 @@ export function createMetaBuiltins(
         return "Boolean";
       case "Str":
         return "String";
+      case "Number":
       case "Num":
-        return "Number";
+        return "Float";
       case "Nil":
         return "Unit";
       default:
@@ -538,7 +540,7 @@ export function createMetaBuiltins(
               case "Str":
                 return sexpr.value;
               case "Num":
-                return sexpr.value;
+                return numericDatum(sexpr);
               case "Bool":
                 return sexpr.value;
               case "Sym": {
@@ -1147,7 +1149,7 @@ export function createMetaBuiltins(
             case "Str":
               return value.value;
             case "Num":
-              return value.value;
+              return numericDatum(value);
             case "Bool":
               return value.value;
             case "Sym":

@@ -1,0 +1,171 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "numeric-rounding",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "items": [
+          {
+            "kind": "int",
+            "value": 2
+          },
+          {
+            "kind": "int",
+            "value": 3
+          },
+          {
+            "kind": "int",
+            "value": -1
+          },
+          {
+            "kind": "int",
+            "value": -1
+          }
+        ],
+        "kind": "list"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 7,
+                    "sourceId": "engine-parity/numeric-rounding",
+                    "startOffset": 2
+                  },
+                  "value": "floor"
+                },
+                {
+                  "kind": "float",
+                  "span": {
+                    "endOffset": 11,
+                    "sourceId": "engine-parity/numeric-rounding",
+                    "startOffset": 8
+                  },
+                  "value": 2
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 12,
+                "sourceId": "engine-parity/numeric-rounding",
+                "startOffset": 1
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 18,
+                    "sourceId": "engine-parity/numeric-rounding",
+                    "startOffset": 14
+                  },
+                  "value": "ceil"
+                },
+                {
+                  "kind": "float",
+                  "span": {
+                    "endOffset": 22,
+                    "sourceId": "engine-parity/numeric-rounding",
+                    "startOffset": 19
+                  },
+                  "value": 2.1
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 23,
+                "sourceId": "engine-parity/numeric-rounding",
+                "startOffset": 13
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 30,
+                    "sourceId": "engine-parity/numeric-rounding",
+                    "startOffset": 25
+                  },
+                  "value": "round"
+                },
+                {
+                  "kind": "float",
+                  "span": {
+                    "endOffset": 35,
+                    "sourceId": "engine-parity/numeric-rounding",
+                    "startOffset": 31
+                  },
+                  "value": -1.5
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 36,
+                "sourceId": "engine-parity/numeric-rounding",
+                "startOffset": 24
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 41,
+                    "sourceId": "engine-parity/numeric-rounding",
+                    "startOffset": 38
+                  },
+                  "value": "mod"
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 44,
+                    "sourceId": "engine-parity/numeric-rounding",
+                    "startOffset": 42
+                  },
+                  "value": -5
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 46,
+                    "sourceId": "engine-parity/numeric-rounding",
+                    "startOffset": 45
+                  },
+                  "value": 2
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 47,
+                "sourceId": "engine-parity/numeric-rounding",
+                "startOffset": 37
+              }
+            }
+          ],
+          "kind": "vector",
+          "span": {
+            "endOffset": 48,
+            "sourceId": "engine-parity/numeric-rounding",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "List<Int>"
+    }
+  },
+  "version": 1
+}

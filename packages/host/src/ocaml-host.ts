@@ -1,3 +1,4 @@
+import { parseOcamlJson } from "./ocaml-json.js";
 import * as Modules from "@formalang/ts/modules";
 import type { PackageableDeclaration } from "@formalang/ts/artifact";
 import { spawn } from "node:child_process";
@@ -9,7 +10,7 @@ import type { Interface as ReadlineInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 
 import { diagnosticFromAbi, typeProjection } from "./abi-projections.js";
-import { printProjectedValue, projectInlineValue } from "./value-projections.js";
+import { floatProjectionValue, printProjectedValue, projectInlineValue } from "./value-projections.js";
 import type {
   AbortEvaluationRequest,
   AbortEvaluationResult,
@@ -903,7 +904,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
         );
       });
     });
-    return JSON.parse(output) as AbiResponse;
+    return parseOcamlJson(output) as AbiResponse;
   }
 
   private async sessionRequest(payload: Record<string, unknown>): Promise<AbiResponse> {
@@ -911,7 +912,7 @@ export class NodeOcamlLanguageHost implements LanguageHost {
       typeof payload["sessionId"] === "string"
         ? this.#moduleProjects.get(payload["sessionId"])
         : undefined;
-    return JSON.parse(await this.daemonRequest(JSON.stringify({
+    return parseOcamlJson(await this.daemonRequest(JSON.stringify({
           ...payload,
           ...(payload["projects"] === undefined && projects
             ? { projects }
@@ -1088,7 +1089,7 @@ function astFromOcaml(value: unknown, fallbackSourceId: string): AstNode {
     case "float":
       return {
         kind,
-        value: typeof record["value"] === "number" ? record["value"] : 0,
+        value: Number(record["value"]),
         ...(span ? { span } : {}),
       };
     case "string":
@@ -1140,8 +1141,9 @@ function valueFromOcaml(value: unknown): ValueProjection {
     case "bool":
       return { kind: "bool", value: record["value"] === true };
     case "int":
-    case "float":
       return { kind, value: typeof record["value"] === "number" ? record["value"] : 0 };
+    case "float":
+      return { kind, value: floatProjectionValue(Number(record["value"])) };
     case "string":
     case "symbol":
     case "keyword":

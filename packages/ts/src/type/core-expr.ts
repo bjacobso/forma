@@ -42,6 +42,7 @@ export interface Span {
 
 export type Lit =
   | { readonly _tag: "LInt"; readonly value: number }
+  | { readonly _tag: "LFloat"; readonly value: number }
   | { readonly _tag: "LString"; readonly value: string }
   | { readonly _tag: "LBool"; readonly value: boolean }
   | { readonly _tag: "LKeyword"; readonly value: string }
@@ -49,6 +50,7 @@ export type Lit =
   | { readonly _tag: "LQuoted"; readonly value: SExpr }
   | { readonly _tag: "LNil" };
 
+export const LFloat = (value: number): Lit => ({ _tag: "LFloat", value });
 export const LInt = (value: number): Lit => ({ _tag: "LInt", value });
 export const LString = (value: string): Lit => ({ _tag: "LString", value });
 export const LBool = (value: boolean): Lit => ({ _tag: "LBool", value });

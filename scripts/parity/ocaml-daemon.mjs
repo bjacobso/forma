@@ -1,3 +1,4 @@
+import { parseOcamlJson } from "../../packages/host/dist/index.mjs";
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 
@@ -54,7 +55,7 @@ export class OcamlDaemon {
       this.#child.stdin.write(`${JSON.stringify(payload)}\n`);
     });
     try {
-      return JSON.parse(line);
+      return parseOcamlJson(line);
     } catch {
       throw new Error(`Invalid OCaml daemon response: ${line}`);
     }

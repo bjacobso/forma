@@ -1,5 +1,10 @@
 import { Effect, Option, Record, Result, Schema } from "effect";
 
+const __formaInt = (value: number): number => {
+  if (!Number.isSafeInteger(value)) throw new RangeError("Int outside the safe integer range");
+  return value === 0 ? 0 : value;
+};
+
 export const Tier = Schema.Literals(["free", "pro", "enterprise"]);
 export type Tier = typeof Tier.Type;
 
@@ -28,16 +33,16 @@ export class EmptyCart extends Schema.TaggedError<EmptyCart>()("EmptyCart", {
 }) {}
 
 export const subtotal = (items: ReadonlyArray<LineItem>): number =>
-  items.reduce<number>((total, item) => total + item.quantity * item["unit-cents"], 0);
+  items.reduce<number>((total, item) => __formaInt(total + __formaInt(item.quantity * item["unit-cents"])), 0);
 
 export const discountFor = (customer: Customer): Discount =>
   Option.getOrElse(Record.get(tierDiscounts, customer.tier), (): Discount => ({ type: "None" }));
 
 export const applyDiscount = (discount: Discount, cents: number): number =>
   discount.type === "Percent"
-    ? cents - Math.trunc(cents * discount.rate / 100)
+    ? __formaInt(cents - __formaInt(Math.trunc(__formaInt(cents * discount.rate) / 100)))
     : discount.type === "Fixed"
-      ? Math.max(0, cents - discount.cents)
+      ? __formaInt(Math.max(0, __formaInt(cents - discount.cents)))
       : cents;
 
 export const tierLabel = (tier: Tier): string =>

@@ -12,7 +12,7 @@ describe("transactional session loading", () => {
     const { host, sessionId } = await session();
     await host.configureSession({ sessionId, variables: [{ name: "configured", value: { kind: "int", value: 4 } }] });
     expect((await host.loadSource({ sessionId, sourceId: "core", kind: "prelude", source: "(define answer (+ configured 1))" })).diagnostics).toEqual([]);
-    expect(await host.replSubmit({ sessionId, source: "answer" })).toMatchObject({ status: "completed", result: { value: { kind: "int", value: 5 }, type: { display: "Number" } } });
+    expect(await host.replSubmit({ sessionId, source: "answer" })).toMatchObject({ status: "completed", result: { value: { kind: "int", value: 5 }, type: { display: "Int" } } });
   });
 
   it("rejects a prelude that evaluates but does not type, without changing the session", async () => {
@@ -116,8 +116,8 @@ it("commits suspended REPL submissions only after a successful host result", asy
   if (state.status !== "host-call") throw Error("Expected suspended host call");
   const result = await host.resumeHostCall({ sessionId, evaluationId: state.call.evaluationId, callId: state.call.callId,
     result: { ok: true, value: { kind: "int", value: 42 } } });
-  expect(result).toMatchObject({ status: "completed", result: { type: { display: "Number" } } });
-  expect(await host.replSubmit({ sessionId, source: "answer" })).toMatchObject({ status: "completed", result: { value: { kind: "int", value: 42 }, type: { display: "Number" } } });
+  expect(result).toMatchObject({ status: "completed", result: { type: { display: "Int" } } });
+  expect(await host.replSubmit({ sessionId, source: "answer" })).toMatchObject({ status: "completed", result: { value: { kind: "int", value: 42 }, type: { display: "Int" } } });
   const failed = await host.replSubmit({ sessionId, source: "(define leaked (host-add 1 2))" });
   if (failed.status !== "host-call") throw Error("Expected suspended host call");
   expect(await host.resumeHostCall({ sessionId, evaluationId: failed.call.evaluationId, callId: failed.call.callId,

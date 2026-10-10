@@ -15,7 +15,7 @@ import * as Syntax from "@formalang/ts/syntax";
 import * as VM from "@formalang/ts/vm";
 
 import { typeProjection } from "./abi-projections.js";
-import { keyStringFromProjection, projectInlineValue } from "./value-projections.js";
+import { floatProjectionValue, keyStringFromProjection, projectInlineValue } from "./value-projections.js";
 import type {
   AbortEvaluationRequest,
   AbortEvaluationResult,
@@ -121,14 +121,15 @@ interface TsPendingEvaluation {
   readonly completion: Promise<EvaluationState>;
 }
 
+
+
 function valueProjection(value: KValue): ValueProjection {
   if (Evaluator.isKKeyword(value)) return {kind:"keyword",value:value.name};
   if (Evaluator.isKSymbol(value)) return {kind:"symbol",value:value.name};
   if (value === null) return { kind: "nil" };
   if (typeof value === "boolean") return { kind: "bool", value };
-  if (typeof value === "number") {
-    return Number.isInteger(value) ? { kind: "int", value } : { kind: "float", value };
-  }
+  if (Evaluator.isKFloat(value)) return { kind: "float", value: floatProjectionValue(value.value) };
+  if (typeof value === "number") return { kind: "int", value };
   if (typeof value === "string") return { kind: "string", value };
   if (Array.isArray(value)) return { kind: "list", items: value.map(valueProjection) };
   if (Evaluator.isKMap(value)) {
@@ -1225,11 +1226,12 @@ export class TsLanguageHost implements LanguageHost {
     if (typeof value === "boolean") {
       return this.#maybeRetainProjectedValue(session, value, { kind: "bool", value }, retainValues);
     }
+    if (Evaluator.isKFloat(value)) return this.#maybeRetainProjectedValue(session, value, { kind: "float", value: floatProjectionValue(value.value) }, retainValues);
     if (typeof value === "number") {
       return this.#maybeRetainProjectedValue(
         session,
         value,
-        Number.isInteger(value) ? { kind: "int", value } : { kind: "float", value },
+        { kind: "int", value },
         retainValues,
       );
     }
@@ -1498,9 +1500,9 @@ function kValueFromProjection(value: ValueProjection): KValue {
   switch (value.kind) {
     case "nil":
       return null;
+    case "float": return new Evaluator.KFloat(Number(value.value));
+    case "int": return Evaluator.checkedInt(value.value, "host Int projection");
     case "bool":
-    case "int":
-    case "float":
     case "string": return value.value;
     case "keyword": return Evaluator.KKeyword(value.value);
     case "symbol": return Evaluator.KSymbol(value.value);

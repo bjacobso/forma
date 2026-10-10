@@ -1,5 +1,10 @@
 import { Context, Duration, Effect, Fiber, Option, Ref, Schedule, Schema } from "effect";
 
+const __formaInt = (value: number): number => {
+  if (!Number.isSafeInteger(value)) throw new RangeError("Int outside the safe integer range");
+  return value === 0 ? 0 : value;
+};
+
 export const Profile = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
@@ -64,7 +69,7 @@ export const dashboard = (
     return {
       profile: parts.profile,
       activity: parts.activity,
-      score: 10 * parts.activity.events,
+      score: __formaInt(10 * parts.activity.events),
     };
   });
 
@@ -113,7 +118,7 @@ export const trackAll = (names: ReadonlyArray<string>): Effect.Effect<number, ne
       names,
       (name) => Effect.gen(function* () {
         yield* Effect.sleep(Duration.millis(1));
-        yield* Ref.update(counter, (n) => n + 1);
+        yield* Ref.update(counter, (n) => __formaInt(n + 1));
         return yield* metrics.track(name, 1);
       }),
       { concurrency: "unbounded" },

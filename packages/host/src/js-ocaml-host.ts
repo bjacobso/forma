@@ -1,10 +1,11 @@
+import { parseOcamlJson } from "./ocaml-json.js";
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { diagnosticFromAbi, typeProjection } from "./abi-projections.js";
-import { projectInlineValue } from "./value-projections.js";
+import { floatProjectionValue, projectInlineValue } from "./value-projections.js";
 import type {
   AbortEvaluationRequest,
   AbortEvaluationResult,
@@ -408,7 +409,7 @@ export class JsOcamlLanguageHost implements LanguageHost {
         );
       });
     });
-    return JSON.parse(output) as AbiResponse;
+    return parseOcamlJson(output) as AbiResponse;
   }
 }
 
@@ -449,7 +450,7 @@ function astFromOcaml(value: unknown, fallbackSourceId: string): AstNode {
     case "float":
       return {
         kind,
-        value: typeof record["value"] === "number" ? record["value"] : 0,
+        value: Number(record["value"]),
         ...(span ? { span } : {}),
       };
     case "string":
@@ -501,8 +502,9 @@ function valueFromOcaml(value: unknown): ValueProjection {
     case "bool":
       return { kind: "bool", value: record["value"] === true };
     case "int":
-    case "float":
       return { kind, value: typeof record["value"] === "number" ? record["value"] : 0 };
+    case "float":
+      return { kind, value: floatProjectionValue(Number(record["value"])) };
     case "string":
     case "symbol":
     case "keyword":

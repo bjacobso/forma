@@ -1,0 +1,99 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "numeric-integral-float-literals",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "items": [
+          {
+            "kind": "int",
+            "value": 1
+          },
+          {
+            "kind": "float",
+            "value": 1
+          },
+          {
+            "kind": "float",
+            "value": 1
+          },
+          {
+            "kind": "float",
+            "value": 1
+          },
+          {
+            "kind": "float",
+            "value": "-0"
+          }
+        ],
+        "kind": "list"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/numeric-integral-float-literals",
+                "startOffset": 1
+              },
+              "value": 1
+            },
+            {
+              "kind": "float",
+              "span": {
+                "endOffset": 6,
+                "sourceId": "engine-parity/numeric-integral-float-literals",
+                "startOffset": 3
+              },
+              "value": 1
+            },
+            {
+              "kind": "float",
+              "span": {
+                "endOffset": 10,
+                "sourceId": "engine-parity/numeric-integral-float-literals",
+                "startOffset": 7
+              },
+              "value": 1
+            },
+            {
+              "kind": "float",
+              "span": {
+                "endOffset": 14,
+                "sourceId": "engine-parity/numeric-integral-float-literals",
+                "startOffset": 11
+              },
+              "value": 1
+            },
+            {
+              "kind": "float",
+              "span": {
+                "endOffset": 19,
+                "sourceId": "engine-parity/numeric-integral-float-literals",
+                "startOffset": 15
+              },
+              "value": -0
+            }
+          ],
+          "kind": "vector",
+          "span": {
+            "endOffset": 20,
+            "sourceId": "engine-parity/numeric-integral-float-literals",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "List<Number>"
+    }
+  },
+  "version": 1
+}

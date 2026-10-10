@@ -1,3 +1,4 @@
+import { isKFloat } from "../evaluator/types.js";
 /** Load phases are pure queries over parsed forms; only the host commits their results.
  * Keep form results separate so RFC 0004 stage 5 can memoize them by syntax identity.
  */
@@ -228,7 +229,7 @@ export function checkSessionTypes(request: TypecheckRequest & { readonly session
 
 function configuredBindingType(env: Env, name: string): Type.Type {
   const value = env.lookup(name);
-  return typeof value === "number" ? Type.tNum : typeof value === "string" ? Type.tStr
+  return isKFloat(value) ? Type.tFloat : typeof value === "number" ? Type.tInt : typeof value === "string" ? Type.tStr
     : typeof value === "boolean" ? Type.tBool : value === null ? Type.tNil : Type.tUnknown;
 }
 

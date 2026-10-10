@@ -1,3 +1,4 @@
+import { isKFloat } from "./types.js";
 import { Effect } from "effect";
 import type { SExpr, Loc } from "../reader/index.js";
 import { KernelTypeError, ArityError } from "../diagnostic/errors.js";
@@ -23,8 +24,9 @@ import { applyKFn } from "./eval-core.js";
  */
 export function canonicalRuntimeTypeName(name: string): string {
   switch (name) {
+    case "Number":
     case "Num":
-      return "Number";
+      return "Float";
     case "Str":
       return "String";
     case "Bool":
@@ -40,7 +42,8 @@ export function runtimeTypeName(val: KValue): string {
   if (val === null) return "Unit";
   if (Array.isArray(val)) return "List";
   if (val instanceof Map) return "Map";
-  if (typeof val === "number") return Number.isInteger(val) ? "Int" : "Number";
+  if (isKFloat(val)) return "Float";
+  if (typeof val === "number") return "Int";
   if (isKKeyword(val)) return "Keyword";
   if (typeof val === "string") return "String";
   if (typeof val === "boolean") return "Boolean";
@@ -242,7 +245,7 @@ export function makeDispatchWrapper(
         }
 
         const tn = runtimeTypeName(dispatchArg);
-        const impl = data.implementations.get(tn) ?? (tn === "Int" ? data.implementations.get("Number") : undefined);
+        const impl = data.implementations.get(tn);
 
         if (!impl) {
           return yield* new KernelTypeError({

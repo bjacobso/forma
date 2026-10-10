@@ -76,3 +76,13 @@ report (default: `.context/parity-report.json`). The same filters work with
 `--typescript-only`. `node scripts/parity-engines.mjs --list` lists fixtures and
 matrix gaps without requiring an engine build. `test:all` and `release:check`
 continue to include live comparison while OCaml exists.
+
+The numeric cases retain Int/Float literal and value kinds, including integral
+Float results, division, rounding, equality, quotation and printing. Numeric type
+names are **not** normalized. The reviewed `numeric-types` matrix row records the
+frozen OCaml printer's `Number` spelling for Float and rejection of explicit Float
+annotations. TypeScript uses checked safe integers instead of native 63-bit
+integers. Host tests cover retained values, explicit Float inputs, host call
+results, plain JSON, nonfinite Float payloads and signed zero. The host/parity
+transport decoder repairs OCaml's invalid JSON numeric tokens (`2.`, `nan`, `inf`)
+without changing numeric kinds or quoted text.

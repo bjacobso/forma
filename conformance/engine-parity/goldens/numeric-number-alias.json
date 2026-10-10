@@ -1,0 +1,106 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "numeric-number-alias",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "int",
+        "value": 2
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/numeric-number-alias",
+                "startOffset": 1
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 4,
+                "sourceId": "engine-parity/numeric-number-alias",
+                "startOffset": 3
+              },
+              "value": "x"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 11,
+                "sourceId": "engine-parity/numeric-number-alias",
+                "startOffset": 5
+              },
+              "value": "Number"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 12,
+            "sourceId": "engine-parity/numeric-number-alias",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 20,
+                "sourceId": "engine-parity/numeric-number-alias",
+                "startOffset": 14
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 22,
+                "sourceId": "engine-parity/numeric-number-alias",
+                "startOffset": 21
+              },
+              "value": "x"
+            },
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 24,
+                "sourceId": "engine-parity/numeric-number-alias",
+                "startOffset": 23
+              },
+              "value": 2
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 25,
+            "sourceId": "engine-parity/numeric-number-alias",
+            "startOffset": 13
+          }
+        },
+        {
+          "kind": "symbol",
+          "span": {
+            "endOffset": 27,
+            "sourceId": "engine-parity/numeric-number-alias",
+            "startOffset": 26
+          },
+          "value": "x"
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Number"
+    }
+  },
+  "version": 1
+}

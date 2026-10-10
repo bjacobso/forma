@@ -1,6 +1,7 @@
 import type { KernelObserver } from "./observation.js";
 import type { Effect } from "effect";
 import type { SExpr } from "../reader/index.js";
+import { isFloatLiteral } from "../reader/types.js";
 import type { Env } from "../Env.js";
 import type { KernelError } from "../diagnostic/errors.js";
 
@@ -10,6 +11,7 @@ import type { KernelError } from "../diagnostic/errors.js";
 export type KValue =
   | string
   | number
+  | KFloat
   | boolean
   | null
   | readonly KValue[]
@@ -21,6 +23,48 @@ export type KValue =
   | KSymbol
   | KMacro
   | KMeta;
+
+/** Float identity survives integral results, quotation, and retained values. */
+export class KFloat {
+  readonly _tag = "KFloat";
+  constructor(readonly value: number) {}
+  toString(): string { return printFloat(this.value); }
+}
+
+export function isKFloat(value: unknown): value is KFloat {
+  return value instanceof KFloat;
+}
+
+export function isNumeric(value: unknown): value is number | KFloat {
+  return typeof value === "number" || isKFloat(value);
+}
+
+export function printFloat(value: number): string {
+  if (Object.is(value, -0)) return "-0.0";
+  const text = String(value);
+  return Number.isFinite(value) && !/[.eE]/.test(text) ? `${text}.0` : text;
+}
+
+export function checkedInt(value: number, context: string): number {
+  if (!Number.isSafeInteger(value)) {
+    throw new TypeCheckError(context, "Int in the safe integer range", String(value));
+  }
+  return value === 0 ? 0 : value;
+}
+
+export function asInt(value: KValue, context: string): number {
+  if (typeof value !== "number") throw new TypeCheckError(context, "Int", describeType(value));
+  return checkedInt(value, context);
+}
+
+export function numericDatum(expr: SExpr & { _tag: "Num" }): number | KFloat {
+  return isFloatLiteral(expr)
+    ? new KFloat(expr.value) : checkedInt(expr.value, "literal");
+}
+
+export function numericResult(value: number, float: boolean, context: string): number | KFloat {
+  return float ? new KFloat(value) : checkedInt(value, context);
+}
 
 /** A homogeneous dictionary preserves optional lookup independently of record access. */
 export class KDictionary extends Map<string, KValue> {}
@@ -50,7 +94,8 @@ export function mapKey(v: KValue): string | undefined {
 export function mapKeyValue(k: string): KValue { return k.startsWith("\0str:") ? k.slice(5) : k.startsWith("\0sym:") ? KSymbol(k.slice(5)) : k.startsWith(":") ? KKeyword(k) : k; }
 export function quotedDatum(e: SExpr): KValue {
   switch (e._tag) {
-    case "Num": case "Str": case "Bool": return e.value;
+    case "Num": return numericDatum(e);
+    case "Str": case "Bool": return e.value;
     case "Sym": return e.name === "nil" ? null : e.name.startsWith(":") ? KKeyword(e.name) : KSymbol(e.name);
     case "List": case "Vector": return e.items.map(quotedDatum);
     case "Map": return new Map(e.pairs.map(([k,v])=>[mapKey(quotedDatum(k)) ?? "",quotedDatum(v)]));
@@ -180,6 +225,7 @@ export function isKMap(v: KValue): v is ReadonlyMap<string, KValue> {
 }
 
 export function asNumber(v: KValue, context: string): number {
+  if (isKFloat(v)) return v.value;
   if (typeof v !== "number") {
     throw new TypeCheckError(context, "number", describeType(v));
   }
@@ -212,7 +258,8 @@ export function describeType(v: KValue): string {
   if (isKKeyword(v)) return "keyword";
   if (isKSymbol(v)) return "symbol";
   if (typeof v === "string") return "string";
-  if (typeof v === "number") return "number";
+  if (isKFloat(v)) return "Float";
+  if (typeof v === "number") return "Int";
   if (typeof v === "boolean") return "boolean";
   if (isKBuiltin(v)) return "function";
   if (isKFn(v)) return "function";
@@ -268,8 +315,18 @@ export function isTruthy(v: KValue): boolean {
 /**
  * Structural equality for KValues.
  */
+function containsNaN(value: KValue): boolean {
+  if (isKFloat(value)) return Number.isNaN(value.value);
+  if (Array.isArray(value)) return value.some(containsNaN);
+  if (value instanceof Map) {
+    for (const item of value.values()) if (containsNaN(item)) return true;
+  }
+  return false;
+}
+
 export function kEquals(a: KValue, b: KValue): boolean {
-  if (a === b) return true;
+  if (isNumeric(a) && isNumeric(b)) return asNumber(a, "=") === asNumber(b, "=");
+  if (a === b) return !containsNaN(a);
   if (a === null || b === null) return false;
   if (typeof a !== typeof b) return false;
   if (typeof a === "number" || typeof a === "string" || typeof a === "boolean") {

@@ -1,5 +1,10 @@
 import type { ProjectValueResult, ValueProjection } from "./types.js";
 
+export function floatProjectionValue(value: number): number | "NaN" | "Infinity" | "-Infinity" | "-0" {
+  if (Object.is(value, -0)) return "-0";
+  return Number.isFinite(value) ? value : String(value) as "NaN" | "Infinity" | "-Infinity";
+}
+
 export function projectInlineValue(
   value: ValueProjection,
   projections: readonly string[],
@@ -30,8 +35,12 @@ export function printProjectedValue(value: ValueProjection): string {
       return "nil";
     case "bool":
     case "int":
-    case "float":
       return String(value.value);
+    case "float": {
+      if (value.value === "-0") return "-0.0";
+      const text = String(value.value);
+      return typeof value.value === "number" && Number.isFinite(value.value) && !/[.eE]/.test(text) ? `${Object.is(value.value, -0) ? "-0" : text}.0` : text;
+    }
     case "string":
       return JSON.stringify(value.value);
     case "keyword":
@@ -56,9 +65,12 @@ export function plainJsonFromValue(value: ValueProjection): unknown {
   switch (value.kind) {
     case "nil":
       return null;
+    case "float": {
+      const number = Number(value.value);
+      return Number.isFinite(number) ? number : null;
+    }
     case "bool":
     case "int":
-    case "float":
     case "string":
     case "keyword":
     case "symbol":

@@ -35,7 +35,7 @@
       "phase": "check",
       "severity": "error",
       "code": "mechanics/type-mismatch",
-      "message": "Expected Int, but this is Number.",
+      "message": "Expected Int, but this is Float.",
       "line": 23,
       "column": 12,
       "endLine": 23,

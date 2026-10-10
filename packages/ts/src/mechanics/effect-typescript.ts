@@ -43,6 +43,7 @@ import {
   stringItems,
   typeFromJson,
   type MType,
+  widenLiteral,
   type Provenance,
 } from "./types.js";
 
@@ -163,7 +164,9 @@ type Mode = "return" | "discard";
 
 class Generator {
   private readonly imports = new Set<Module>();
-  private readonly reserved = new Set<string>([...effectModules, ...generatedGlobals]);
+  private needsIntCheck = false;
+  private needsMod = false;
+  private readonly reserved = new Set<string>([...effectModules, ...generatedGlobals, "__formaInt", "__formaMod"]);
   private serviceVars = new Map<string, string>();
   private contextVar: string | undefined;
   private typeVariables = new Map<number,string>();
@@ -222,6 +225,19 @@ class Generator {
     for (const constant of orderConstants(constants, constantDependencies(this.declarations))) sections.push(this.constantLines(constant));
     for (const layer of orderLayers(layers)) sections.push(this.layerLines(layer));
 
+    if (this.needsIntCheck || this.needsMod) sections.unshift([
+      "const __formaInt = (value: number): number => {",
+      "  if (!Number.isSafeInteger(value)) throw new RangeError(\"Int outside the safe integer range\");",
+      "  return value === 0 ? 0 : value;",
+      "};",
+      ...(this.needsMod ? [
+        "const __formaMod = (left: number, right: number): number => {",
+        "  __formaInt(left); __formaInt(right);",
+        "  if (right === 0) throw new RangeError(\"mod requires a nonzero divisor\");",
+        "  return __formaInt(left % right);",
+        "};",
+      ] : []),
+    ]);
     const imports = [...this.imports].sort();
     const header = imports.length > 0 ? [`import { ${imports.join(", ")} } from "effect";`, ""] : [];
     const body = sections.map((lines) => lines.join("\n")).join("\n\n");
@@ -1069,7 +1085,14 @@ class Generator {
       resultType: () => this.typeTs(overload.result),
       fresh: (preferred) => scope.bind(`builtin:${preferred}`, preferred),
     };
-    const body = overload.emit(params.map((param) => atom(param)), emit);
+    let body = overload.emit(params.map((param) => atom(param)), emit);
+    if (name === "mod") {
+      this.needsMod = true;
+      body = `__formaMod(${params.join(", ")})`;
+    } else if (["abs", "floor", "ceil", "round", "quot", "sum"].includes(name) && overload.result.kind === "prim" && overload.result.name === "Int") {
+      this.needsIntCheck = true;
+      body = `__formaInt(${body})`;
+    }
     return { code: `(${typed.join(", ")}) => ${arrowBody(body)}`, prec: Prec.Arrow };
   }
 
@@ -1166,27 +1189,46 @@ class Generator {
           fresh: (preferred) => scope.bind(`builtin:${preferred}`, preferred),
         };
         const contextualArgs = call.overload.contextualArgs ?? [];
-        const code = call.overload.emit(
+        let code = call.overload.emit(
           args.map((item, index) =>
             // Callbacks are contextually typed by the method they are passed to.
             contextualArgs.includes(index) || this.isCallback(item) ? this.contextualValue(item, names, indent) : this.value(item, names, indent),
           ),
           emit,
         );
+        if (call.name === "mod") {
+          this.needsMod = true;
+          return atom(`__formaMod(${args.map(arg => this.value(arg, names, indent).code).join(", ")})`);
+        }
+        if (["abs", "floor", "ceil", "round", "quot", "sum"].includes(call.name) && call.overload.result.kind === "prim" && call.overload.result.name === "Int") {
+          this.needsIntCheck = true;
+          return atom(`__formaInt(${code})`);
+        }
         return { code, prec: call.overload.prec ?? Prec.Postfix };
       }
       case "arithmetic": {
+        const resultType = this.info.valueTypes.get(node);
+        const int = resultType && widenLiteral(resultType).kind === "prim" && (widenLiteral(resultType) as MType & { name: string }).name === "Int";
+        const checked = (code: string, prec: number): Expr => {
+          if (!int) return { code, prec };
+          this.needsIntCheck = true;
+          return atom(`__formaInt(${code})`);
+        };
         if (call.operator === "max" || call.operator === "min") {
-          return atom(`Math.${call.operator}(${args.map((_, index) => this.value(args[index], names, indent).code).join(", ")})`);
+          return checked(`Math.${call.operator}(${args.map(arg => this.value(arg, names, indent).code).join(", ")})`, Prec.Postfix);
         }
         if (args.length === 1 && call.operator === "-") {
-          // `- -x` must not become the decrement operator `--x`.
           const negated = operand(0, Prec.Unary);
-          return { code: negated.startsWith("-") ? `-(${negated})` : `-${negated}`, prec: Prec.Unary };
+          return checked(negated.startsWith("-") ? `-(${negated})` : `-${negated}`, Prec.Unary);
         }
-        const prec = call.operator === "*" ? Prec.Multiplicative : Prec.Additive;
-        const parts = args.map((_, index) => operand(index, index === 0 ? prec : prec + 1));
-        return { code: parts.join(` ${call.operator} `), prec };
+        const prec = ["*", "/"].includes(call.operator) ? Prec.Multiplicative : Prec.Additive;
+        if (args.length === 0) return atom(call.operator === "*" ? "1" : "0");
+        let result: Expr = this.value(args[0], names, indent);
+        for (let index = 1; index < args.length; index++) {
+          const left = result.prec < prec ? `(${result.code})` : result.code;
+          result = checked(`${left} ${call.operator} ${operand(index, prec + 1)}`, prec);
+        }
+        return result;
       }
       case "equality":
         return {
@@ -1464,7 +1506,7 @@ class Generator {
           case "String":
             return "string";
           case "Int":
-          case "Number":
+          case "Float":
             return "number";
           case "Bool":
             return "boolean";
@@ -1656,7 +1698,9 @@ function configReader(name: string): string {
   switch (name) {
     case "Int":
       return "int";
+    case "Float":
     case "Number":
+    case "Num":
       return "number";
     case "Bool":
       return "boolean";

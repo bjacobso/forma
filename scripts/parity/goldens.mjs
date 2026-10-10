@@ -6,7 +6,7 @@ export function stableJson(value) {
     : value !== null && typeof value === "object"
       ? Object.fromEntries(Object.keys(value).sort().map(key => [key, sort(value[key])]))
       : value;
-  return `${JSON.stringify(sort(value), null, 2)}\n`;
+  return `${JSON.stringify(sort(value), (_key, value) => Object.is(value, -0) ? JSON.rawJSON("-0") : value, 2)}\n`;
 }
 
 export function checkDivergence(differences, divergence) {
