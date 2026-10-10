@@ -1572,8 +1572,20 @@ body {
   width: auto;
 }
 
-.fh-spread > .fh-spread__story--wide + .fh-pair {
+.fh-spread > .fh-spread__story--wide + .fh-pair,
+.fh-spread > .fh-spread__body + .fh-pair {
   margin-top: 40px;
+}
+
+/* The /foldkit page shows captures of the workbench app in windows. */
+.fh-window > img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.fh-effect--words div {
+  grid-template-columns: 72px 1fr;
 }
 
 .fh-eyebrow + h1 {

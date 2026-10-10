@@ -33,6 +33,7 @@ export default defineConfig({
       { text: "Vision", link: "/vision" },
       { text: "Language", link: "/language" },
       { text: "Effect", link: "/effect" },
+      { text: "Foldkit", link: "/foldkit" },
       { text: "Architecture", link: "/architecture" },
     ],
     sidebar: [
@@ -45,6 +46,7 @@ export default defineConfig({
           { text: "Forma for Effect", link: "/effect" },
           { text: "Effect reference", link: "/effect/reference" },
           { text: "Prelude HTTP API spike", link: "/effect/http-api" },
+          { text: "Forma for Foldkit", link: "/foldkit" },
         ],
       },
       {

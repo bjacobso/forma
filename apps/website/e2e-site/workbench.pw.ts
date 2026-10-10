@@ -47,3 +47,26 @@ test("links the examples gallery to the workbench while preserving the design do
     .getByRole("link", { name: "Examples", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Choose a program to inspect.", exact: true })).toBeVisible();
 });
+
+test("the Foldkit page shows workbench captures and opens the live app", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("response", (response) => {
+    if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`);
+  });
+
+  await page.goto("/");
+  await page.getByRole("navigation", { name: "Main Navigation" })
+    .getByRole("link", { name: "Foldkit", exact: true }).click();
+  await expect(page).toHaveURL(/\/foldkit$/);
+  await expect(page.getByRole("heading", { name: "Put a typed language inside a Foldkit app.", level: 1 }))
+    .toBeVisible();
+  for (const image of await page.locator(".fh-window > img").all()) {
+    await image.scrollIntoViewIfNeeded();
+    await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBe(1440);
+  }
+  await page.locator(".fh-hero").getByRole("link", { name: /Open the workbench/ }).click();
+  await expect(page).toHaveURL(/\/workbench\/demo\/$/);
+  await expect(page.getByText("14 forms · 0 errors · 2 warnings")).toBeVisible();
+  expect(errors).toEqual([]);
+});
