@@ -20,7 +20,9 @@
 4. Define the JavaScript/Wasm distribution model for the OCaml engine and the
    eventual public `@forma` packages.
 5. Add a supported consumer-prelude SDK and document how to build a complete
-   typed domain language.
+   typed domain language. [Extensions and generators (0014)](./rfcs/0014-extensions-and-generators.md)
+   proposes preludes that define DSLs and registered generators that turn their
+   validated IR into Effect TypeScript, Foldkit TypeScript, XML, and other outputs.
 
 ## Record row rollout
 
