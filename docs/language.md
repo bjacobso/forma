@@ -6,10 +6,28 @@ for diagnostics, formatting, and structural editing.
 
 ## Values and expressions
 
-The primitive types are `Unit`, `Bool`, `Int`, `Number`, `String`, `Keyword`, and
-`Symbol`. Integers can be used where a `Number` is expected. Strings, keywords, and
+The primitive types are `Unit`, `Bool`, `Int`, `Float`, `String`, `Keyword`, and
+`Symbol`. Integers can be used where a `Float` is expected. Strings, keywords, and
 quoted symbols are distinct values: `"ready"`, `:ready`, and `'ready` do not compare
 equal. `nil` has type `Unit`.
+
+`1` is Int; `1.0` and `1e0` are Float even when their value is integral.
+`Number` and `Num` are legacy aliases for Float in the TypeScript engine.
+`+`, `-`, `*`, `min`, `max`, and `abs` return Int when all operands are Int,
+otherwise Float. `/` always returns Float; `mod` requires Int operands and a
+nonzero divisor. `floor`, `ceil`, and `round` return Int (`round` sends ties toward
+positive infinity). Assignment from Int to Float is permitted without retagging
+the value. Equality compares numeric values, so `(= 2 2.0)` is true; numeric
+literal patterns distinguish their kinds.
+
+Int uses JavaScript's safe range, −9007199254740991 through 9007199254740991.
+Out-of-range literals and arithmetic results fail instead of wrapping. Float
+uses IEEE 754, including NaN, infinities, and signed zero; division by zero follows
+IEEE rules. NaN does not equal itself. Rounding nonfinite or out-of-range values
+fails. Values print as `2` and `2.0`; `str` uses the OCaml spelling `2.` for an
+integral Float. Tagged host values retain their kinds; plain JSON erases them and
+encodes nonfinite values as null. See the [numeric design decision](./design-decisions#distinct-int-and-float-values)
+for engine and generated TypeScript boundaries.
 
 Parentheses call a function or introduce a special form. Braces always contain
 records or dictionaries. Square brackets contain lists; their elements share a
@@ -38,7 +56,7 @@ same module.
 
 (define distance [point]
   (+ point.x point.y))
-(: distance (-> {:x Number :y Number} Number))
+(: distance (-> {:x Float :y Float} Float))
 ```
 
 `fn` makes an anonymous function. `let` binds values in lexical scope. `if` requires
@@ -116,8 +134,8 @@ constructors. Capitalized constructor names distinguish them from lowercase
 binding patterns.
 
 ```lisp
-(type Shape (Tagged (Circle {:radius Number}) (Square {:side Number}) Point))
-(: area (-> Shape Number))
+(type Shape (Tagged (Circle {:radius Float}) (Square {:side Float}) Point))
+(: area (-> Shape Float))
 (define area [shape]
   (match shape
     (Circle {:radius radius}) (* 3.14159 radius radius)
@@ -193,7 +211,7 @@ hole types specify how those arguments parse and check.
 | --- | --- |
 | `(Declares T)` | Introduces a declaration name of type `T` |
 | `(Refers T)` | Resolves a name to a declaration of type `T` |
-| `String`, `Int`, `Symbol`, `Keyword` | Parses a literal |
+| `String`, `Int`, `Float`, `Symbol`, `Keyword` | Parses a literal |
 | `Type` | Parses a type expression |
 | `(Expr T)` | Checks an expression at `T` |
 | `(Record T)` | Supplies record members with type `T` |
