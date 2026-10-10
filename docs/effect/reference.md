@@ -174,12 +174,12 @@ are stricter than TypeScript:
 - `=` and `includes?` compare only primitives, enums, and brands, because
   records would be compared by reference;
 - `str` and `to-string` accept only primitives, not records;
-- `Int` is a subtype of `Number`, so `(/ a b)` cannot flow into an `Int` (use
+- `Int` can flow into `Float` (`Number` and `Num` are legacy Float aliases), so `(/ a b)` cannot flow into an `Int` (use
   `quot`);
 - `let` cannot silently run an effect.
 
-Integral literals such as `0` are `Int`. To start a `Number` accumulator from
-`0`, write `(: 0 Number)`.
+Whole-number literals such as `0` are `Int`; `0.0` is `Float`. Use `0.0` to
+start a Float accumulator. Int results are checked against the safe integer range.
 
 Each rejection case in the conformance suite records whether TypeScript would
 also reject the code generated with the checker bypassed.

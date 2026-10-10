@@ -21,7 +21,10 @@ for (const suite of ["reader", "typecheck"] as const) {
         if (expected.kind === "success") {
           expect(result.diagnostics.filter(d => d.severity === "error")).toEqual([]);
           if (!expected.allowDiagnostics) expect(result.diagnostics).toEqual([]);
-          if (suite === "typecheck") expect("display" in result && result.display).toBeTruthy();
+          if (suite === "typecheck") {
+            expect("display" in result && result.display).toBeTruthy();
+            if (stored.typescript?.numericType) expect("display" in result && result.display).toBe(stored.typescript.numericType);
+          }
         } else {
           expect(result.diagnostics).toHaveLength(1);
           const d = result.diagnostics[0]!;
