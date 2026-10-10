@@ -1,0 +1,1 @@
+(: (literal-type true) String)

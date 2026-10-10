@@ -1,0 +1,32 @@
+[
+  {
+    "diagnostic": {
+      "span": {
+        "sourceId": "thesis-gate/repeated-errors.lisp",
+        "startOffset": 17,
+        "endOffset": 32
+      },
+      "severity": "error",
+      "code": "typecheck/type-mismatch",
+      "message": "Expected Bool to match String.",
+      "notes": [],
+      "fixes": []
+    },
+    "spannedText": "(:item \"first\")"
+  },
+  {
+    "diagnostic": {
+      "span": {
+        "sourceId": "thesis-gate/repeated-errors.lisp",
+        "startOffset": 35,
+        "endOffset": 51
+      },
+      "severity": "error",
+      "code": "typecheck/type-mismatch",
+      "message": "Expected Bool to match String.",
+      "notes": [],
+      "fixes": []
+    },
+    "spannedText": "(:item \"second\")"
+  }
+]

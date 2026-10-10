@@ -1,0 +1,144 @@
+{
+  "checked-bool.lisp": {
+    "resultType": "Bool",
+    "diagnostics": []
+  },
+  "checked-string.lisp": {
+    "resultType": null,
+    "diagnostics": [
+      {
+        "code": "typecheck/type-mismatch",
+        "text": "\"not-bool\""
+      }
+    ]
+  },
+  "expanded-bool.lisp": {
+    "resultType": "Declaration",
+    "diagnostics": []
+  },
+  "expanded-string.lisp": {
+    "resultType": "Declaration",
+    "diagnostics": [
+      {
+        "code": "typecheck/type-mismatch",
+        "text": "\"not-bool\""
+      }
+    ]
+  },
+  "expected-echo.lisp": {
+    "resultType": "Bool",
+    "diagnostics": []
+  },
+  "inferred-bool.lisp": {
+    "resultType": "Bool",
+    "diagnostics": []
+  },
+  "inferred-string.lisp": {
+    "resultType": "String",
+    "diagnostics": []
+  },
+  "mismatch.lisp": {
+    "resultType": null,
+    "diagnostics": [
+      {
+        "code": "typecheck/type-mismatch",
+        "text": "(literal-type true)"
+      }
+    ]
+  },
+  "nested-field-bool.lisp": {
+    "resultType": "Declaration",
+    "diagnostics": []
+  },
+  "nested-field-string.lisp": {
+    "resultType": "Declaration",
+    "diagnostics": [
+      {
+        "code": "typecheck/type-mismatch",
+        "text": "\"not-bool\""
+      }
+    ]
+  },
+  "query-bool.lisp": {
+    "resultType": "List<{:name String}>",
+    "diagnostics": []
+  },
+  "query-scope-bool.lisp": {
+    "resultType": "List<{:status String}>",
+    "diagnostics": []
+  },
+  "query-scope-global.lisp": {
+    "resultType": null,
+    "diagnostics": [
+      {
+        "code": "typecheck/unbound-symbol",
+        "text": "status"
+      }
+    ]
+  },
+  "query-string.lisp": {
+    "resultType": "List<{:name String}>",
+    "diagnostics": [
+      {
+        "code": "typecheck/type-mismatch",
+        "text": "name"
+      }
+    ]
+  },
+  "record-bool.lisp": {
+    "resultType": "RecordDef",
+    "diagnostics": []
+  },
+  "record-string.lisp": {
+    "resultType": "RecordDef",
+    "diagnostics": [
+      {
+        "code": "elaborate/form-check",
+        "text": "\"yes\""
+      }
+    ]
+  },
+  "repeated-bool.lisp": {
+    "resultType": "Declaration",
+    "diagnostics": []
+  },
+  "repeated-errors.lisp": {
+    "resultType": "Declaration",
+    "diagnostics": [
+      {
+        "code": "typecheck/type-mismatch",
+        "text": "\"first\""
+      },
+      {
+        "code": "typecheck/type-mismatch",
+        "text": "\"second\""
+      }
+    ]
+  },
+  "repeated-string.lisp": {
+    "resultType": "Declaration",
+    "diagnostics": [
+      {
+        "code": "typecheck/type-mismatch",
+        "text": "\"not-bool\""
+      }
+    ]
+  },
+  "typed-field-bool.lisp": {
+    "resultType": "Declaration",
+    "diagnostics": []
+  },
+  "typed-field-string.lisp": {
+    "resultType": "Declaration",
+    "diagnostics": [
+      {
+        "code": "typecheck/type-mismatch",
+        "text": "\"not-bool\""
+      }
+    ]
+  },
+  "typed.lisp": {
+    "resultType": "String",
+    "diagnostics": []
+  }
+}

@@ -126,6 +126,8 @@ export function lowerProgram(
     const result: CoreExpr[] = [];
     for (const expr of expanded) {
       if (isTypeSig(expr)) continue;
+      if (isDef(expr) && expr.items[1]?._tag === "Sym" && dslProvider?.isMetaDefinition?.(expr.items[1].name)) continue;
+      if (["__form-descriptor", "__form-hook", "__elaboration"].includes(head(expr) ?? "")) continue;
       if (head(expr) === "form") {
         const descriptor = parseUnifiedForm(expr, formTypes)!;
         result.push(CTypeDef({start:expr.loc.start,end:expr.loc.end},descriptor.name,undefined,undefined,undefined,"form"));

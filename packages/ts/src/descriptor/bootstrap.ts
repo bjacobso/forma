@@ -37,6 +37,8 @@ import type {
 // =============================================================================
 
 export interface BootstrappedPrelude {
+  readonly sources?: readonly string[];
+  readonly typingHooks?: ReadonlyMap<string, MetaFnDecl>;
   readonly payloadContracts?: PayloadContracts;
   readonly formBuiltins?: HostedMetaBuiltinsFactory;
   readonly descriptions: FormDescriptorRegistry;
@@ -129,15 +131,24 @@ export function bootstrapFromSources(
   const helpers = [...compiler.helpers,...domain.helpers,...additional.flatMap(prelude=>prelude.helpers)];
   const derivedHooks: MetaFnDecl[] = [];
   for (const descriptor of descriptions.list()) {
-    const strategies = [["bindings",descriptor.bindings], ["validate",descriptor.validation], ["construct",descriptor.elaboration], ["result-type",descriptor.resultType]] as const;
+    const strategies = [["bindings",descriptor.bindings], ["validate",descriptor.validation], ["construct",descriptor.elaboration], ["result-type",descriptor.resultType],
+      ["infer",descriptor.inferHook ? {kind:"hook",fn:descriptor.inferHook} : {kind:"none"}],
+      ["check",descriptor.checkHook ? {kind:"hook",fn:descriptor.checkHook} : {kind:"none"}]] as const;
     for (const [kind,strategy] of strategies) {
       if (strategy.kind !== "hook" && strategy.kind !== "composite") continue;
-      const definition = helpers.find(expr=>expr._tag === "List" && name(expr.items[1])===strategy.fn);
-      if (definition?._tag !== "List" || definition.items[2]?._tag !== "Vector" || definition.items[2].items.length !== 1) continue;
-      const parameter = definition.items[2].items[0];
-      const functionBody = definition.items.length === 4 ? definition.items[3]! : { _tag:"List" as const,loc:definition.loc,items:[{_tag:"Sym" as const,name:"do",loc:definition.loc},...definition.items.slice(3)] };
+      const hookName = strategy.fn;
+      if (!hookName) continue;
+      const definition = helpers.find(expr=>expr._tag === "List" && name(expr.items[1])===hookName);
+      if (definition?._tag !== "List") continue;
+      const value = definition.items[2];
+      const lambda = value?._tag === "List" && head(value) === "fn" ? value : undefined;
+      const parameters = value?._tag === "Vector" ? value : lambda?.items[1];
+      if (parameters?._tag !== "Vector" || parameters.items.length !== 1) continue;
+      const parameter = parameters.items[0];
+      const bodies = lambda ? lambda.items.slice(2) : definition.items.slice(3);
+      const functionBody = bodies.length === 1 ? bodies[0]! : { _tag:"List" as const,loc:definition.loc,items:[{_tag:"Sym" as const,name:"do",loc:definition.loc},...bodies] };
       const body: SExpr = { _tag:"List",loc:definition.loc,items:[{_tag:"Sym",loc:definition.loc,name:"let"},{_tag:"Vector",loc:definition.loc,items:[parameter!,{_tag:"Sym",loc:definition.loc,name:"input"}]},functionBody] };
-      derivedHooks.push({name:strategy.fn,kind,inputType:"NormalizedForm",outputType:kind === "construct" ? descriptor.produces ?? "IR" : kind === "result-type" ? "Type" : kind === "validate" ? "Diagnostics" : "Bindings",capabilities:[],body,helpers:reachableHelpers([functionBody],helpers,new Set(patternBindings(parameter!)))});
+      derivedHooks.push({name:hookName,kind,inputType:"NormalizedForm",outputType:kind === "construct" ? descriptor.produces ?? "IR" : ["result-type", "infer", "check"].includes(kind) ? "Type" : kind === "validate" ? "Diagnostics" : "Bindings",capabilities:[],body,helpers:reachableHelpers([functionBody],helpers,new Set(patternBindings(parameter!)))});
     }
   }
   const allMetaFns = [
@@ -147,7 +158,7 @@ export function bootstrapFromSources(
     ...additional.flatMap((a) => a.metaFns),
     ...[...hostedDsls.values()].flatMap((hostedDsl) => hostedDsl.metaFns),
   ];
-  const deduped = new Map(allMetaFns.map((m) => [m.name, m]));
+  const deduped = new Map(allMetaFns.map((m) => [m.name, {...m, helpers: reachableHelpers([m.body],helpers,new Set(["input"]))}]));
   validateMetaFnDeclarations([...deduped.values()]);
   const hostedMetaBuiltins = mergeHostedMetaBuiltins(
     options.hostedMetaBuiltins,
@@ -180,6 +191,8 @@ export function bootstrapFromSources(
   validateConstructedByReferences(descriptions.list(), elaborationDescriptors);
 
   return {
+    sources: [compilerSource, domainSource, ...additionalSources],
+    typingHooks: deduped,
     ...(hostedMetaBuiltins ? {formBuiltins: hostedMetaBuiltins} : {}),
     payloadContracts: payloadContractsFromSources([compilerSource, domainSource, ...additionalSources]),
     descriptions,
@@ -315,7 +328,7 @@ function validateConstructedByReferences(
   }
 }
 
-function elaborationMentionsChild(descriptor: ElaborationDescriptor, childForm: string): boolean {
+export function elaborationMentionsChild(descriptor: ElaborationDescriptor, childForm: string): boolean {
   return descriptor.fields.some((field) => fieldMentionsChild(field, childForm));
 }
 

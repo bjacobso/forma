@@ -46,20 +46,6 @@ export class FormDescriptorSyntaxError extends Error {
   }
 }
 
-function validateDomainHookReference(
-  formName: string,
-  section: string,
-  hookName: string,
-  phase: "meta" | "domain",
-): void {
-  if (phase !== "domain") return;
-  if (hookName.includes("/")) return;
-  throw new FormDescriptorSyntaxError(
-    formName,
-    section,
-    `Domain form '${formName}' must use slash hook names in '${section}', got '${hookName}'`,
-  );
-}
 
 function parseParentConstructSpec(
   elaboration: string,
@@ -68,8 +54,9 @@ function parseParentConstructSpec(
   let child: string | undefined;
   for (let index = 0; index < options.length; index += 2) {
     const key = options[index] ? trySym(options[index]!) : undefined;
-    const value = options[index + 1] ? trySym(options[index + 1]!) : undefined;
-    if (key === ":child" && value) child = value;
+    const target = options[index + 1];
+    const value = target?._tag === "Str" ? target.value : target ? trySym(target) : undefined;
+    if (key === ":child" && value) child = value.replace(/^:/, "");
   }
   return { elaboration, ...(child != null ? { child } : {}) };
 }
@@ -142,11 +129,11 @@ export function parseFormDescriptor(expr: SExpr): FormDescriptor | undefined {
   let inferHook: string | undefined;
   let checkHook: string | undefined;
   let constructedBy: ParentConstructSpec | undefined;
-  let sawStaticResultType = false;
 
   // Iterate keyword-headed children
   for (let i = 1; i < args.length; i++) {
-    const child = args[i]!;
+    const item = args[i]!;
+    const child: SExpr = item._tag === "Vector" ? {...item,_tag:"List"} : item;
     const kw = headSym(child);
     if (!kw || !kw.startsWith(":")) continue;
 
@@ -210,51 +197,52 @@ export function parseFormDescriptor(expr: SExpr): FormDescriptor | undefined {
       }
 
       case ":bindings-fn": {
-        const fn = childTail[0] && trySym(childTail[0]);
-        if (fn) bindingsHook = fn;
+        const fn = childTail[0]?._tag === "Str" ? childTail[0].value : childTail[0] && trySym(childTail[0]);
+        if (fn) bindingsHook = fn.replace(/^:/, "");
         break;
       }
 
       case ":validate-fn": {
-        const fn = childTail[0] && trySym(childTail[0]);
-        if (fn) validateHook = fn;
+        const fn = childTail[0]?._tag === "Str" ? childTail[0].value : childTail[0] && trySym(childTail[0]);
+        if (fn) validateHook = fn.replace(/^:/, "");
         break;
       }
 
       case ":construct-fn": {
-        const fn = childTail[0] && trySym(childTail[0]);
-        if (fn) constructHook = fn;
+        const fn = childTail[0]?._tag === "Str" ? childTail[0].value : childTail[0] && trySym(childTail[0]);
+        if (fn) constructHook = fn.replace(/^:/, "");
         break;
       }
 
       case ":constructed-by": {
-        const name = childTail[0] && trySym(childTail[0]);
-        if (name) constructedBy = parseParentConstructSpec(name, childTail.slice(1));
+        const name = childTail[0]?._tag === "Str" ? childTail[0].value : childTail[0] && trySym(childTail[0]);
+        if (name) constructedBy = parseParentConstructSpec(name.replace(/^:/,""), childTail.slice(1));
         break;
       }
 
       case ":result-type-fn": {
-        const fn = childTail[0] && trySym(childTail[0]);
-        if (fn) resultTypeHook = fn;
+        const fn = childTail[0]?._tag === "Str" ? childTail[0].value : childTail[0] && trySym(childTail[0]);
+        if (fn) resultTypeHook = fn.replace(/^:/, "");
         break;
       }
 
+      case ":infer":
       case ":infer-fn": {
-        const fn = childTail[0] && trySym(childTail[0]);
-        if (fn) inferHook = fn;
+        const fn = childTail[0]?._tag === "Str" ? childTail[0].value : childTail[0] && trySym(childTail[0]);
+        if (fn) inferHook = fn.replace(/^:/, "");
         break;
       }
 
+      case ":check":
       case ":check-fn": {
-        const fn = childTail[0] && trySym(childTail[0]);
-        if (fn) checkHook = fn;
+        const fn = childTail[0]?._tag === "Str" ? childTail[0].value : childTail[0] && trySym(childTail[0]);
+        if (fn) checkHook = fn.replace(/^:/, "");
         break;
       }
 
       case ":result-type": {
         const first = childTail[0];
         const parsed = first ? parseStaticResultType(first) : undefined;
-        sawStaticResultType = true;
         if (parsed) resultType = parsed;
         break;
       }
@@ -327,25 +315,9 @@ export function parseFormDescriptor(expr: SExpr): FormDescriptor | undefined {
     }
   }
 
-  if (bindingsHook) validateDomainHookReference(name, ":bindings-fn", bindingsHook, phase);
-  if (validateHook) validateDomainHookReference(name, ":validate-fn", validateHook, phase);
-  if (constructHook) validateDomainHookReference(name, ":construct-fn", constructHook, phase);
-  if (resultTypeHook) {
-    validateDomainHookReference(name, ":result-type-fn", resultTypeHook, phase);
-  }
-  if (inferHook) validateDomainHookReference(name, ":infer-fn", inferHook, phase);
-  if (checkHook) validateDomainHookReference(name, ":check-fn", checkHook, phase);
   // NOTE: `:elaborates` and `:construct-fn` can coexist — the opcodes run
   // during the binding/elaboration phase while the hook constructs IR.
-  if (phase === "domain" && resultTypeHook && sawStaticResultType) {
-    throw new FormDescriptorSyntaxError(
-      name,
-      ":result-type",
-      `Domain form '${name}' cannot declare both ':result-type' and ':result-type-fn'`,
-    );
-  }
 
-  // Hook overrides static for bindings/result type; validation can compose static checks with a hook.
   if (bindingsHook) {
     bindings =
       bindings.kind === "static"
@@ -364,7 +336,7 @@ export function parseFormDescriptor(expr: SExpr): FormDescriptor | undefined {
         ? { kind: "composite", opcodes: elaboration.opcodes, fn: constructHook }
         : { kind: "hook", fn: constructHook };
   }
-  if (resultTypeHook) {
+  if (resultTypeHook && resultType.kind !== "constant") {
     resultType = { kind: "hook", fn: resultTypeHook };
   }
 
@@ -529,7 +501,8 @@ function parseProtocolDescriptorForms(expr: SExpr): FormDescriptor[] {
 function parseExtensions(exprs: readonly SExpr[]): DescriptorExtensions | undefined {
   const extensions: Record<string, DescriptorExtensionValue> = {};
 
-  for (const expr of exprs) {
+  for (const raw of exprs) {
+    const expr = extensionClause(raw);
     const key = normalizeExtensionKey(headSym(expr));
     if (!key) continue;
     extensions[key] = mergeExtensionValue(extensions[key], parseExtensionArgs(tail(expr)));
@@ -687,7 +660,13 @@ function toKebabCase(value: string): string {
     .toLowerCase();
 }
 
-function parseExtensionArgs(args: readonly SExpr[]): DescriptorExtensionValue {
+function extensionClause(expr: SExpr): SExpr {
+  return expr._tag === "Vector" && expr.items[0]?._tag === "Sym" && expr.items[0].name.startsWith(":")
+    ? {...expr, _tag:"List"} : expr;
+}
+
+function parseExtensionArgs(rawArgs: readonly SExpr[]): DescriptorExtensionValue {
+  const args = rawArgs.map(extensionClause);
   if (args.length === 0) return null;
   if (
     args.every((arg) => {
@@ -895,9 +874,9 @@ function parseSlot(expr: SExpr): SlotSpec | undefined {
   }
 
   let childShape: ChildFormShape | undefined;
-  if (childFormName) {
+  if (childFormName || childIdentifiers.length || childSlots.length) {
     childShape = {
-      formName: childFormName,
+      formName: childFormName ?? name,
       identifiers: childIdentifiers,
       slots: childSlots,
       ...(positionalSlots.length > 0 ? { positionalSlots } : {}),

@@ -4,6 +4,7 @@ import { flattenRow, TCon, TRow, REmpty, RExtend, type Row } from "./types.js";
 import type { TypeEnv } from "./substitution.js";
 import { applyType } from "./substitution.js";
 import type { CoreExpr } from "./core-expr.js";
+import { getInferDslProvider } from "./infer-state.js";
 import { InferContext } from "./context.js";
 import { InferenceError } from "./errors.js";
 import { assignType } from "./assign.js";
@@ -18,6 +19,15 @@ export function literalType(expr: CoreExpr): Type | undefined {
 export const checkExpr = (env: TypeEnv, expr: CoreExpr, expected: Type): Effect.Effect<Type,InferenceError,InferContext> => Effect.gen(function* () {
   const ctx=yield* InferContext;
   const target=applyType(yield* Ref.get(ctx.subst),expected);
+  if (expr._tag === "DSLForm") {
+    const provider = getInferDslProvider();
+    const actual = provider?.typeApplication ? yield* provider.typeApplication(env, expr, target) : undefined;
+    if (actual) {
+      yield* assignType(actual, target, originOf(expr,"descriptor-check"));
+      yield* ctx.recordType(expr.id, actual);
+      return target;
+    }
+  }
   const literal=literalType(expr);
   if (literal && target._tag !== "TVar") {
     const snapshot = yield* Ref.get(ctx.subst);

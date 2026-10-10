@@ -230,3 +230,5 @@ export type {
   GenerateEffectSchemaModuleOptions,
 } from "./descriptor/descriptor-to-schema.js";
 export { generateEffectSchemaModule } from "./descriptor/descriptor-to-schema.js";
+
+export { checkDescriptors, type DescriptorSource, type CheckDescriptorsOptions } from "./descriptor/check-descriptors.js";
