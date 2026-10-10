@@ -253,7 +253,10 @@ async function compareFormaZero(report, ts, daemon, jsDaemon) {
           ts.Evaluator.evaluate(`${prelude}\n${source}`, evaluationOptions), layer,
         ));
         const value = result.value;
-        return { kind: typeof value === "string" ? "string" : typeof value === "boolean" ? "bool" : Number.isInteger(value) ? "int" : "float", value };
+        if (ts.Evaluator.isKFloat(value)) {
+          return { kind: "float", value: Number.isFinite(value.value) ? value.value : String(value.value) };
+        }
+        return { kind: typeof value === "string" ? "string" : typeof value === "boolean" ? "bool" : "int", value };
       });
       const values = [];
       for (const { target, sessionId } of sessions) values.push(await capture(async () => {
