@@ -1,3 +1,4 @@
+import * as Artifact from "@formalang/ts/artifact";
 import * as Modules from "@formalang/ts/modules";
 import { Effect, Ref } from "effect";
 import * as Builtins from "@formalang/ts/builtins";
@@ -233,7 +234,7 @@ export class TsLanguageHost implements LanguageHost {
       engine: "forma-typescript",
       engineVersion: "0.0.0",
       hostAbiVersion: "0.1.0",
-      sourceLoadSemantics: "parse-and-store",
+      sourceLoadSemantics: "validate-and-store",
       capabilities: [
         "parse",
         "expand",
@@ -244,6 +245,7 @@ export class TsLanguageHost implements LanguageHost {
         "loadSource",
         "loadSourceBundle",
         "evaluateInSession",
+        "replSubmit",
         "callValue",
         "resumeHostCall",
         "abortEvaluation",
@@ -262,6 +264,10 @@ export class TsLanguageHost implements LanguageHost {
         "sourceToOutline",
         "outlineToSource",
         "formSlots",
+        "emit",
+        "emitMany",
+        "emitBackends",
+        "artifactSummary",
       ],
     };
   }
@@ -314,54 +320,60 @@ export class TsLanguageHost implements LanguageHost {
     const kind = request.kind === "prelude" ? "prelude" : "source";
     const sourceId =
       kind === "source" ? Modules.normalizeModuleId(request.sourceId) : request.sourceId;
-    const timings: import("./types.js").LoadPhaseTimings & { parseMs?: number; evalMs?: number; storeMs?: number } = {};
+    const timings: { -readonly [K in keyof import("./types.js").LoadPhaseTimings]: import("./types.js").LoadPhaseTimings[K] } = {};
     const parseStart = performance.now();
     const parsed = Engine.parseSource({ sourceId, source: request.source });
     timings.parseMs = performance.now() - parseStart;
     const timingResult = () => request.timings ? { timings: { ...timings } } : {};
     if (parsed.diagnostics.some((d) => d.severity === "error"))
       return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics: parsed.diagnostics };
-    const previousPrelude = session.language.preludes.get(request.sourceId);
-    const previousParsed = session.language.parsedPreludes.get(request.sourceId);
-    const storeStart = performance.now();
-    session.language.rememberSource({ id: sourceId, text: request.source, kind });
-    if (parsed.diagnostics.length === 0) {
-      session.language.rememberParsedSource(kind, sourceId, parsed.exprs);
-      timings.storeMs = performance.now() - storeStart;
-      if (kind === "prelude") {
-        const evalStart = performance.now();
-        try {
-          session.language.env = (
-            await Effect.runPromise(
-              Evaluator.evaluateExprs(session.language.coreExpressions(), {
-                env: session.language.configurationEnv,
-                builtins: Builtins.defaultBuiltins,
-                stepLimit: session.defaultStepLimit,
-              }),
-            )
-          ).env;
-          timings.evalMs = performance.now() - evalStart;
-        } catch (error) {
-          timings.evalMs = performance.now() - evalStart;
-          if (previousPrelude) session.language.preludes.set(request.sourceId, previousPrelude);
-          else session.language.preludes.delete(request.sourceId);
-          if (previousParsed) session.language.parsedPreludes.set(request.sourceId, previousParsed);
-          else session.language.parsedPreludes.delete(request.sourceId);
-          return {
-            ...timingResult(),
-            sourceId: request.sourceId,
-            formCount: parsed.ast.length,
-            diagnostics: [Engine.diagnosticFromUnknown(error, "evaluate", request.sourceId)],
-          };
-        }
+    if (kind === "source") {
+      const validation = Engine.validateSourceLoad(session.language, sourceId, parsed.exprs, request.source);
+      if (validation.diagnostics.some(d => d.severity === "error"))
+        return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics: validation.diagnostics };
+    } else {
+      const surfaceErrors = parsed.exprs.flatMap(expr => Engine.validateSurface(sourceId, expr));
+      if (surfaceErrors.length) return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics: surfaceErrors };
+      const sources = session.language.orderedSources("prelude").map(s => ({
+        sourceId: s.id, text: s.id === sourceId ? request.source : s.text,
+      }));
+      if (!sources.some(s => s.sourceId === sourceId)) sources.push({ sourceId, text: request.source });
+      const typecheckStart = performance.now();
+      const checked = Engine.validatePreludeTypes(sources, session, session.language.configurationEnv);
+      timings.typecheckMs = performance.now() - typecheckStart;
+      if (checked.diagnostics.some(d => d.severity === "error"))
+        return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics: checked.diagnostics };
+      // A detached candidate keeps failed evaluation/type/metacheck loads atomic,
+      // including source order, fingerprints and the inferred scope.
+      const candidate = LanguageSession.openSession({ id: session.sessionId });
+      for (const source of sources) {
+        candidate.rememberSource({ id: source.sourceId, text: source.text, kind: "prelude" });
+        candidate.rememberParsedSource("prelude", source.sourceId,
+          source.sourceId === sourceId ? parsed.exprs : session.language.parsedPreludes.get(source.sourceId)!);
+      }
+      const evalStart = performance.now();
+      try {
+        const evaluated = await Effect.runPromise(Evaluator.evaluateExprs(candidate.coreExpressions(), {
+          env: session.language.configurationEnv, builtins: Builtins.defaultBuiltins,
+          stepLimit: session.defaultStepLimit,
+        }));
+        timings.evalMs = performance.now() - evalStart;
+        const metacheckStart = performance.now();
+        const diagnostics = Engine.validatePreludeMetacheck(evaluated.env, candidate.orderedSources("prelude").flatMap(source => candidate.parsedPreludes.get(source.id) ?? []));
+        timings.metacheckMs = performance.now() - metacheckStart;
+        if (diagnostics.some(d => d.severity === "error")) return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics };
+        session.language.env = evaluated.env;
+        session.language.scope = checked.scope!;
+      } catch (error) {
+        timings.evalMs ??= performance.now() - evalStart;
+        return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics: [Engine.diagnosticFromUnknown(error, "evaluate", sourceId)] };
       }
     }
-    return {
-      ...timingResult(),
-      sourceId,
-      formCount: parsed.ast.length,
-      diagnostics: parsed.diagnostics,
-    };
+    const storeStart = performance.now();
+    session.language.rememberSource({ id: sourceId, text: request.source, kind });
+    session.language.rememberParsedSource(kind, sourceId, parsed.exprs);
+    timings.storeMs = performance.now() - storeStart;
+    return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics: parsed.diagnostics };
   }
 
   async loadSourceBundle(request: LoadSourceBundleRequest): Promise<LoadSourceBundleResult> {
@@ -435,6 +447,17 @@ export class TsLanguageHost implements LanguageHost {
         ],
       };
     }
+  }
+
+  async emit(request: import("./types.js").EmitRequest): Promise<Artifact.EmitResult> {
+    return Artifact.emit({ ...request, session: this.#requireSession(request.sessionId).language });
+  }
+  async emitMany(request: import("./types.js").EmitRequest): Promise<ReturnType<typeof Artifact.emitMany>> {
+    return Artifact.emitMany({ ...request, session: this.#requireSession(request.sessionId).language });
+  }
+  async emitBackends(): Promise<ReturnType<typeof Artifact.emitBackends>> { return Artifact.emitBackends(); }
+  async artifactSummary(request: import("./types.js").EmitRequest): Promise<ReturnType<typeof Artifact.artifactSummary>> {
+    return Artifact.artifactSummary({ ...request, session: this.#requireSession(request.sessionId).language });
   }
 
   async parse(request: ParseRequest): Promise<ParseResult> {
@@ -559,6 +582,32 @@ export class TsLanguageHost implements LanguageHost {
         ...(observations ? { observations } : {}),
       },
     };
+  }
+
+  async replSubmit(request: EvaluateInSessionRequest & { readonly source: string }): Promise<EvaluationState> {
+    const session = this.#requireSession(request.sessionId);
+    const sourceId = request.sourceId ?? `repl-${this.#nextEvaluationId++}`;
+    const parsed = Engine.parseSource({ sourceId, source: request.source });
+    if (parsed.diagnostics.some(d => d.severity === "error")) return { status: "failed", diagnostics: parsed.diagnostics };
+    const checked = Engine.checkReplSubmission(session.language, sourceId, request.source, session);
+    if (checked.diagnostics.some(d => d.severity === "error")) return { status: "failed", diagnostics: checked.diagnostics };
+    const commit = (env: Env) => {
+      session.language.env = env;
+      session.language.scope = { ...session.language.scope, typeEnv: checked.typeEnv, inferenceState: checked.inferenceState };
+      session.language.rememberSource({ id: sourceId, text: request.source });
+      session.language.rememberParsedSource("source", sourceId, parsed.exprs);
+    };
+    const type = typeProjection(checked.display);
+    if (session.hostBuiltins.length) return this.#evaluateInSessionWithHostBuiltins(session,
+      { ...request, sourceId }, request.source, session.language.env, { commit, type });
+    const result = await Engine.evaluateInSession({ session: session.language, sourceId,
+      source: request.source, env: session.language.env, stepLimit: request.stepLimit ?? session.defaultStepLimit,
+      ...(request.observe ? { observe: engineObservation(request.observe) } : {}) });
+    if (result.diagnostics.length) return { status: "failed", diagnostics: result.diagnostics };
+    commit(result.env!);
+    return { status: "completed", result: { value: this.#projectValue(session, result.value, request.retainValues),
+      printed: result.printed, steps: result.steps, type, diagnostics: checked.diagnostics,
+      ...(request.observe ? { observations: this.#observations(session, sourceId, request, result, request.retainValues) } : {}) } };
   }
 
   #observations(
@@ -1021,6 +1070,7 @@ export class TsLanguageHost implements LanguageHost {
     request: EvaluateInSessionRequest,
     source: string,
     env: Env,
+    repl?: { readonly commit: (env: Env) => void; readonly type: import("./types.js").TypeProjection },
   ): Promise<EvaluationState> {
     const sourceId = request.sourceId ?? "session";
     let expressions:readonly Reader.SExpr[];
@@ -1054,6 +1104,7 @@ export class TsLanguageHost implements LanguageHost {
             ...(observations ? { observations } : {}),
           };
         }
+        if (repl && !evaluation.aborted) repl.commit(result.env!);
         return {
           status: "completed",
           result: {
@@ -1061,6 +1112,7 @@ export class TsLanguageHost implements LanguageHost {
             printed: Evaluator.printKValue(result.value),
             steps: result.steps,
             diagnostics: [],
+            ...(repl ? { type: repl.type } : {}),
             ...(observations ? { observations } : {}),
           },
         };
@@ -1080,6 +1132,7 @@ export class TsLanguageHost implements LanguageHost {
       ),
     )
       .then((result): EvaluationState => {
+        if (repl && !evaluation.aborted) repl.commit(result.env);
         return {
           status: "completed",
           result: {
@@ -1087,6 +1140,7 @@ export class TsLanguageHost implements LanguageHost {
             printed: Evaluator.printKValue(result.value),
             steps: result.steps,
             diagnostics: [],
+            ...(repl ? { type: repl.type } : {}),
           },
         };
       })

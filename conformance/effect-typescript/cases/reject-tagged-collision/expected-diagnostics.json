@@ -1,0 +1,15 @@
+{
+  "typescript": "not-projected",
+  "diagnostics": [
+    {
+      "phase": "project",
+      "severity": "error",
+      "code": "surface/invalid-form",
+      "message": "Tagged record payload must be disjoint from discriminator :kind (at offset 39)",
+      "line": 1,
+      "column": 40,
+      "endLine": 1,
+      "endColumn": 45
+    }
+  ]
+}

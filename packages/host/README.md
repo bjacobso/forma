@@ -24,6 +24,15 @@ codec; and `formSlots`, which reports a descriptor form's present and empty
 slots with insertions for editor placeholders. Check a host's capabilities before relying on them; the
 OCaml adapters do not implement them yet and ignore `observe`.
 
+The TypeScript host exposes session `emit`, `emitMany`, `emitBackends`, and
+`artifactSummary` operations. `canonical-ir` is the implemented backend.
+It validates canonical payloads, descriptor contracts, named validators and
+HTTP contracts before returning an artifact; failures return diagnostics.
+The TypeScript envelope is `language-ts-artifact/v1`, with modules, type
+summaries and a SHA-256 declarations hash. It intentionally differs from
+OCaml's envelope and MD5 hash. Check `version().capabilities` when using the
+optional methods through `LanguageHost`.
+
 `analyzeEditor` accepts the `hostBuiltins` and `typePolicy` that `typecheck`
 does, or takes them from a session, so calls to host builtins are typed. A top-level form that does not type
 is reported and the forms around it are still typed.

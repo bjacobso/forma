@@ -75,6 +75,33 @@ function parseTypeExprInner(expr: SExpr): TypeExpr {
         throw new InferenceError({ message: "Type expression must start with a symbol" });
       }
 
+      if (head.name === "Pick" || head.name === "Omit" || head.name === "Merge") {
+        const fail = (message: string, at: SExpr = expr): never => {
+          throw new InferenceError({
+            message,
+            origin: { nodeId: `row-operation:${at.loc.start}`, span: spanOf(at), kind: "row-operation" },
+            details: { code: "typecheck/row-operation" },
+          });
+        };
+        if (items.length !== 3) fail(`${head.name} expects two arguments`);
+        if (head.name === "Merge") return {
+          _tag: "TERowOp", span, op: head.name,
+          operands: items.slice(1).map(parseTypeExpr), keys: [],
+        };
+        const keys = items[2]!;
+        if (keys._tag !== "Vector") return fail(`${head.name} field names must be a vector of keywords`, keys);
+        const seen = new Set<string>();
+        return {
+          _tag: "TERowOp", span, op: head.name, operands: [parseTypeExpr(items[1]!)],
+          keys: keys.items.map(key => {
+            if (key._tag !== "Sym" || !key.name.startsWith(":")) return fail(`${head.name} field names must be keywords`, key);
+            if (seen.has(key.name)) fail(`Duplicate ${head.name} field ${key.name}`, key);
+            seen.add(key.name);
+            return { label: key.name, span: spanOf(key) };
+          }),
+        };
+      }
+
       // Function type: (-> A B C) means A -> B -> C
       if (head.name === "->") {
         if (items.length < 3) {

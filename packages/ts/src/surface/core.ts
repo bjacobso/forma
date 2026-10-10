@@ -1,5 +1,6 @@
 import { copySourceTrace } from "../evaluator/source-trace.js";
-import { typeSyntaxErrors, schemaMetadata } from "./type-syntax.js";
+import { typeSyntaxErrors, schemaMetadata, taggedPayloadProblem } from "./type-syntax.js";
+import { InferenceError } from "../diagnostic/errors.js";
 import { resolveConstructors } from "./constructor-scope.js";
 import { coerceProgram } from "./coerce.js";
 import { lowerMembers, moduleBindings } from "./members.js";
@@ -55,6 +56,12 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
   if (top && h === "type" && e.items.length === 3) {
     const n = e.items[1]!;
     const t = e.items[2]!;
+    const problem = taggedPayloadProblem(t);
+    if (problem) throw Object.assign(new InferenceError({
+      message: problem.message,
+      origin: { nodeId: `tagged-payload:${problem.expression.loc.start}`, span: { start: problem.expression.loc.start, end: problem.expression.loc.end }, kind: "tagged-payload" },
+      details: { code: "surface/invalid-form" },
+    }), { loc: problem.expression.loc });
     const errors = head(t) === "Brand" && t._tag === "List" && t.items.length === 2
       ? typeSyntaxErrors(t.items[1]!, schemaMetadata) : typeSyntaxErrors(t, schemaMetadata);
     if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:e.items[2]!.loc, details:{code:"surface/invalid-form"}});

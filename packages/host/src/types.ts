@@ -235,6 +235,8 @@ export interface ObservationResult {
 export interface EvaluationResult {
   readonly value: ValueProjection;
   readonly printed?: string | undefined;
+  /** Inferred result type of a successful REPL submission. */
+  readonly type?: TypeProjection | undefined;
   readonly projected?: Record<string, unknown> | undefined;
   readonly steps?: number | undefined;
   readonly diagnostics: readonly Diagnostic[];
@@ -257,7 +259,7 @@ export interface VersionResult {
   readonly hostAbiVersion: string;
   readonly capabilities: readonly string[];
   /** What loadSource does before returning. Consumers can call typecheck explicitly for either engine. */
-  readonly sourceLoadSemantics?: "parse-and-store" | "apply-declarations" | "unsupported";
+  readonly sourceLoadSemantics?: "parse-and-store" | "validate-and-store" | "apply-declarations" | "unsupported";
   readonly capabilityNotes?: readonly {
     readonly capability: string;
     readonly status: "ready" | "partial" | "unsupported";
@@ -856,6 +858,10 @@ export type ModuleLinkResult = LinkedEffectProgram;
 
 export interface LanguageHost {
   readonly name: string;
+  emit?(request: EmitRequest): Promise<import("@formalang/ts/artifact").EmitResult>;
+  emitMany?(request: EmitRequest): Promise<ReturnType<typeof import("@formalang/ts/artifact").emitMany>>;
+  emitBackends?(): Promise<ReturnType<typeof import("@formalang/ts/artifact").emitBackends>>;
+  artifactSummary?(request: EmitRequest): Promise<ReturnType<typeof import("@formalang/ts/artifact").artifactSummary>>;
   version(): Promise<VersionResult>;
   openSession(request?: OpenSessionRequest): Promise<OpenSessionResult>;
   configureSession(request: ConfigureSessionRequest): Promise<ConfigureSessionResult>;
@@ -868,6 +874,8 @@ export interface LanguageHost {
   typecheck(request: TypecheckRequest): Promise<TypecheckResult>;
   evaluate(request: EvaluateRequest): Promise<EvaluationResult>;
   evaluateInSession(request: EvaluateInSessionRequest): Promise<EvaluationState>;
+  /** Atomically typecheck and evaluate, retaining bindings and types on success. */
+  replSubmit?(request: EvaluateInSessionRequest & { readonly source: string }): Promise<EvaluationState>;
   callValue(request: CallValueRequest): Promise<EvaluationState>;
   resumeHostCall(request: ResumeHostCallRequest): Promise<EvaluationState>;
   abortEvaluation(request: AbortEvaluationRequest): Promise<AbortEvaluationResult>;
@@ -887,4 +895,13 @@ export interface LanguageHost {
   sourceToOutline?(request: SourceToOutlineRequest): Promise<SourceToOutlineResult>;
   outlineToSource?(request: OutlineToSourceRequest): Promise<OutlineToSourceResult>;
   formSlots?(request: FormSlotsRequest): Promise<FormSlotsResult>;
+}
+
+
+/** Session artifact operations; canonical IR is the only implemented backend. */
+export interface EmitRequest {
+  readonly sessionId: string;
+  readonly sourceId?: string;
+  readonly sourceIds?: readonly string[];
+  readonly backend?: string;
 }

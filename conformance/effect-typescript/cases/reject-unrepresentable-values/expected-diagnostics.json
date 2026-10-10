@@ -50,16 +50,6 @@
       "column": 22,
       "endLine": 14,
       "endColumn": 28
-    },
-    {
-      "phase": "check",
-      "severity": "error",
-      "code": "mechanics/discriminator-field",
-      "message": "Variant Circle has a field named kind, which is the union's tag.",
-      "line": 16,
-      "column": 31,
-      "endLine": 17,
-      "endColumn": 18
     }
   ]
 }

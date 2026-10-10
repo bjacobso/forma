@@ -1,0 +1,254 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-open-row",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "string",
+        "value": "Ada"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/canonical-open-row",
+                "startOffset": 1
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 7,
+                "sourceId": "engine-parity/canonical-open-row",
+                "startOffset": 3
+              },
+              "value": "read"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 11,
+                    "sourceId": "engine-parity/canonical-open-row",
+                    "startOffset": 9
+                  },
+                  "value": "->"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 18,
+                          "sourceId": "engine-parity/canonical-open-row",
+                          "startOffset": 13
+                        },
+                        "value": ":name"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 25,
+                          "sourceId": "engine-parity/canonical-open-row",
+                          "startOffset": 19
+                        },
+                        "value": "String"
+                      }
+                    },
+                    {
+                      "key": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 27,
+                          "sourceId": "engine-parity/canonical-open-row",
+                          "startOffset": 26
+                        },
+                        "value": "&"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 29,
+                          "sourceId": "engine-parity/canonical-open-row",
+                          "startOffset": 28
+                        },
+                        "value": "r"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 30,
+                    "sourceId": "engine-parity/canonical-open-row",
+                    "startOffset": 12
+                  }
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 37,
+                    "sourceId": "engine-parity/canonical-open-row",
+                    "startOffset": 31
+                  },
+                  "value": "String"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 38,
+                "sourceId": "engine-parity/canonical-open-row",
+                "startOffset": 8
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 39,
+            "sourceId": "engine-parity/canonical-open-row",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 47,
+                "sourceId": "engine-parity/canonical-open-row",
+                "startOffset": 41
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 52,
+                "sourceId": "engine-parity/canonical-open-row",
+                "startOffset": 48
+              },
+              "value": "read"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 60,
+                    "sourceId": "engine-parity/canonical-open-row",
+                    "startOffset": 54
+                  },
+                  "value": "person"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 61,
+                "sourceId": "engine-parity/canonical-open-row",
+                "startOffset": 53
+              }
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 73,
+                "sourceId": "engine-parity/canonical-open-row",
+                "startOffset": 62
+              },
+              "value": "person.name"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 74,
+            "sourceId": "engine-parity/canonical-open-row",
+            "startOffset": 40
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 80,
+                "sourceId": "engine-parity/canonical-open-row",
+                "startOffset": 76
+              },
+              "value": "read"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 87,
+                      "sourceId": "engine-parity/canonical-open-row",
+                      "startOffset": 82
+                    },
+                    "value": ":name"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "span": {
+                      "endOffset": 93,
+                      "sourceId": "engine-parity/canonical-open-row",
+                      "startOffset": 88
+                    },
+                    "value": "Ada"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 98,
+                      "sourceId": "engine-parity/canonical-open-row",
+                      "startOffset": 94
+                    },
+                    "value": ":age"
+                  },
+                  "value": {
+                    "kind": "int",
+                    "span": {
+                      "endOffset": 101,
+                      "sourceId": "engine-parity/canonical-open-row",
+                      "startOffset": 99
+                    },
+                    "value": 37
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 102,
+                "sourceId": "engine-parity/canonical-open-row",
+                "startOffset": 81
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 103,
+            "sourceId": "engine-parity/canonical-open-row",
+            "startOffset": 75
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "String"
+    }
+  },
+  "version": 1
+}

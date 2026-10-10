@@ -1,0 +1,11 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "review-stateless-form-definition",
+  "outputs": {
+    "typecheck": {
+      "diagnostics": [],
+      "type": "FormDescriptor"
+    }
+  },
+  "version": 1
+}

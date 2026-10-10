@@ -6,6 +6,29 @@ const legacy = new Map(Object.entries({Str:"String",Num:"Number",Nil:"Unit",Bool
 export const schemaMetadata = new Set([":doc", ":pattern", ":title", ":identifier"]);
 const fieldMetadata = new Set([":indexed", ":doc", ":default"]);
 
+/** Find the authored field (or unknown tail) that could overwrite a tag. */
+export function taggedPayloadProblem(expression: SExpr): { expression: SExpr; message: string } | undefined {
+  if (head(expression) === "Tagged" && expression._tag === "List") {
+    const args = expression.items.slice(1);
+    const custom = name(args[0]) === ":tag";
+    const discriminator = `:${(custom ? name(args[1]) ?? "_tag" : "_tag").replace(/^:/, "")}`;
+    for (const arm of custom ? args.slice(2) : args) {
+      const payload = arm._tag === "List" ? arm.items[1] : undefined;
+      if (payload?._tag !== "Map") continue;
+      for (const [key] of payload.pairs) {
+        if (name(key) === discriminator) return { expression: key, message: `Tagged record payload must be disjoint from discriminator ${discriminator}` };
+        if (name(key) === "&") return { expression: key, message: "Tagged record payload requires a closed record; open-row disjointness is not supported" };
+      }
+    }
+  }
+  const children = expression._tag === "Map" ? expression.pairs.map(([,value]) => value)
+    : expression._tag === "List" || expression._tag === "Vector" ? expression.items : [];
+  for (const child of children) {
+    const problem = taggedPayloadProblem(child);
+    if (problem) return problem;
+  }
+}
+
 /** Syntax holes keep types as syntax; checking them must not evaluate authored code. */
 export function typeSyntaxErrors(expression: SExpr, allowedMetadata: ReadonlySet<string> = fieldMetadata): readonly string[] {
   const errors: string[] = [];
@@ -48,14 +71,23 @@ export function typeSyntaxErrors(expression: SExpr, allowedMetadata: ReadonlySet
       if (args.length < 1 || args.length > 3) errors.push("Effect expects a success type and optional error and requirement sets");
       if (h !== "Layer" && args[0]) errors.push(...typeSyntaxErrors(args[0], allowedMetadata));
       for (const set of args.slice(h === "Layer" ? 0 : 1)) if (set._tag !== "Vector" || set.items.some(e => e._tag !== "Sym" || e.name.startsWith(":"))) errors.push("Effect sets require vectors of type symbols");
+    } else if (h === "Pick" || h === "Omit" || h === "Merge") {
+      // The type parser retains key spans when validating arity and syntax.
+      for (const arg of args.slice(0, h === "Merge" ? 2 : 1)) errors.push(...typeSyntaxErrors(arg, allowedMetadata));
     } else if (h === "Tagged") {
       const arms = name(args[0]) === ":tag" ? args.slice(2) : args;
+      const discriminator = `:${(name(args[0]) === ":tag" ? name(args[1]) ?? "_tag" : "_tag").replace(/^:/, "")}`;
       for (const arm of arms) {
         const ctor = arm._tag === "List" ? name(arm.items[0]) : name(arm);
         if (!ctor || !/^[A-Z]/.test(ctor)) errors.push("Tagged constructors require capitalized names");
         if (arm._tag === "List") {
           if (arm.items.length !== 2) errors.push("Tagged constructors accept one payload type");
-          if (arm.items[1]) errors.push(...typeSyntaxErrors(arm.items[1], allowedMetadata));
+          const payload = arm.items[1];
+          if (payload) errors.push(...typeSyntaxErrors(payload, allowedMetadata));
+          if (payload?._tag === "Map") {
+            if (payload.pairs.some(([key]) => name(key) === discriminator)) errors.push(`Tagged record payload must be disjoint from discriminator ${discriminator}`);
+            if (payload.pairs.some(([key]) => name(key) === "&")) errors.push("Tagged record payload requires a closed record; open-row disjointness is not supported");
+          }
         }
       }
     } else for (const arg of args) errors.push(...typeSyntaxErrors(arg, allowedMetadata));
@@ -68,6 +100,9 @@ export function unknownTypeReferences(expression: SExpr, isKnown: (name: string)
   const primitives = new Set(["String", "Int", "Number", "Bool", "Unit", "Json", "Any", "Unknown", "Never", "Symbol", "Keyword", "Type", "Syntax", "RuntimeExpr", "Bytes", "DateTime", "Duration", "List", "Option", "Map", "Record", "Union", "Tagged", "Id", "Brand", "Result", "->", "Effect", "Stream", "Layer", "Fiber", "Ref", "RefCell", "Scope", "OntologyRuntime"]);
   const visit = (expr: SExpr): readonly string[] => {
     const type = splitTypeMetadata(expr).type;
+    if (type._tag === "List" && ["Pick", "Omit", "Merge"].includes(head(type) ?? "")) {
+      return type.items.slice(1, head(type) === "Merge" ? 3 : 2).flatMap(visit);
+    }
     if (type._tag === "Sym") return type.name.startsWith(":") || /^[a-z]/.test(type.name) || primitives.has(type.name) || isKnown(type.name) ? [] : [`Unknown type ${type.name}`];
     if (type._tag === "Map") return type.pairs.flatMap(([,value]) => visit(value));
     if (type._tag === "List") {

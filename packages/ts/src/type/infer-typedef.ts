@@ -181,6 +181,10 @@ const validateMechanicsTypeRefs = (
     const visit = (expr: TypeExpr): Effect.Effect<void, InferenceError, InferContext> =>
       Effect.gen(function* () {
         switch (expr._tag) {
+          case "TERowOp": {
+            for (const operand of expr.operands) yield* visit(operand);
+            return;
+          }
           case "TESym": {
             const name = expr.name;
             if (

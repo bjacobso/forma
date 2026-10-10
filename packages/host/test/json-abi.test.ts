@@ -55,6 +55,13 @@ describe("JSON process ABI", () => {
     expect((loaded.value as {timings:unknown}).timings).not.toHaveProperty("typecheckMs");
     expect(await request(abi,{op:"typecheck",sessionId,sourceId:"main.forma"})).toMatchObject({ok:true});
     expect(await request(abi,{op:"typecheckCoreTyped",sessionId,sourceId:"main.forma"})).toMatchObject({ok:true,typedCore:expect.any(Array)});
+    const prelude = await request(abi,{op:"loadSource",sessionId,sourceId:"helpers.forma",kind:"prelude",source:"(define answer 42)",timings:true});
+    expect(prelude).toMatchObject({ok:true,value:{timings:{parseMs:expect.any(Number),typecheckMs:expect.any(Number),evalMs:expect.any(Number),metacheckMs:expect.any(Number),storeMs:expect.any(Number)}}});
+    const beforeRejectedLoad = await request(abi,{op:"typecheck",sessionId,source:"answer"});
+    const rejected = await request(abi,{op:"loadSource",sessionId,sourceId:"helpers.forma",kind:"prelude",source:'(define answer (+ 1 "bad"))',timings:true});
+    expect(rejected).toMatchObject({ok:false,value:{timings:{parseMs:expect.any(Number),typecheckMs:expect.any(Number)}}});
+    expect((rejected.value as {timings:unknown}).timings).not.toHaveProperty("storeMs");
+    expect(await request(abi,{op:"typecheck",sessionId,source:"answer"})).toMatchObject({ok:true,type:beforeRejectedLoad.type});
     await request(abi,{op:"closeSession",sessionId});
   });
   it("hashes form structure independently of layout and source identity", async () => {

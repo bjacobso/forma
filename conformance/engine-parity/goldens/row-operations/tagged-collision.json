@@ -1,0 +1,142 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/tagged-collision",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/tagged-collision",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 9,
+                "sourceId": "engine-parity/row-operations/tagged-collision",
+                "startOffset": 6
+              },
+              "value": "Bad"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 17,
+                    "sourceId": "engine-parity/row-operations/tagged-collision",
+                    "startOffset": 11
+                  },
+                  "value": "Tagged"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 24,
+                        "sourceId": "engine-parity/row-operations/tagged-collision",
+                        "startOffset": 19
+                      },
+                      "value": "Value"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 31,
+                              "sourceId": "engine-parity/row-operations/tagged-collision",
+                              "startOffset": 26
+                            },
+                            "value": ":_tag"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 38,
+                              "sourceId": "engine-parity/row-operations/tagged-collision",
+                              "startOffset": 32
+                            },
+                            "value": "String"
+                          }
+                        },
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 45,
+                              "sourceId": "engine-parity/row-operations/tagged-collision",
+                              "startOffset": 39
+                            },
+                            "value": ":value"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 49,
+                              "sourceId": "engine-parity/row-operations/tagged-collision",
+                              "startOffset": 46
+                            },
+                            "value": "Int"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 50,
+                        "sourceId": "engine-parity/row-operations/tagged-collision",
+                        "startOffset": 25
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 51,
+                    "sourceId": "engine-parity/row-operations/tagged-collision",
+                    "startOffset": 18
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 52,
+                "sourceId": "engine-parity/row-operations/tagged-collision",
+                "startOffset": 10
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 53,
+            "sourceId": "engine-parity/row-operations/tagged-collision",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "surface/invalid-form",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 31,
+            "sourceId": "engine-parity/row-operations/tagged-collision",
+            "startOffset": 26
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

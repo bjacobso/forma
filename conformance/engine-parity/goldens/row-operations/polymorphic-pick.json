@@ -1,0 +1,427 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/polymorphic-pick",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 15,
+                    "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                    "startOffset": 7
+                  },
+                  "value": "Selected"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 17,
+                    "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                    "startOffset": 16
+                  },
+                  "value": "a"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 18,
+                "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                "startOffset": 6
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 24,
+                    "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                    "startOffset": 20
+                  },
+                  "value": "Pick"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 32,
+                          "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                          "startOffset": 26
+                        },
+                        "value": ":value"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 34,
+                          "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                          "startOffset": 33
+                        },
+                        "value": "a"
+                      }
+                    },
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 42,
+                          "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                          "startOffset": 35
+                        },
+                        "value": ":unused"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 47,
+                          "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                          "startOffset": 43
+                        },
+                        "value": "Bool"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 48,
+                    "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                    "startOffset": 25
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 56,
+                        "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                        "startOffset": 50
+                      },
+                      "value": ":value"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 57,
+                    "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                    "startOffset": 49
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 58,
+                "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                "startOffset": 19
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 59,
+            "sourceId": "engine-parity/row-operations/polymorphic-pick",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 62,
+                "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                "startOffset": 61
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 67,
+                "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                "startOffset": 63
+              },
+              "value": "read"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 71,
+                    "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                    "startOffset": 69
+                  },
+                  "value": "->"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 81,
+                        "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                        "startOffset": 73
+                      },
+                      "value": "Selected"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 83,
+                        "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                        "startOffset": 82
+                      },
+                      "value": "a"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 84,
+                    "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                    "startOffset": 72
+                  }
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 86,
+                    "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                    "startOffset": 85
+                  },
+                  "value": "a"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 87,
+                "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                "startOffset": 68
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 88,
+            "sourceId": "engine-parity/row-operations/polymorphic-pick",
+            "startOffset": 60
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                "startOffset": 90
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 101,
+                "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                "startOffset": 97
+              },
+              "value": "read"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 109,
+                    "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                    "startOffset": 103
+                  },
+                  "value": "record"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 110,
+                "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                "startOffset": 102
+              }
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 123,
+                "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                "startOffset": 111
+              },
+              "value": "record.value"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 124,
+            "sourceId": "engine-parity/row-operations/polymorphic-pick",
+            "startOffset": 89
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 129,
+                "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                "startOffset": 126
+              },
+              "value": "let"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 132,
+                    "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                    "startOffset": 131
+                  },
+                  "value": "_"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 138,
+                        "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                        "startOffset": 134
+                      },
+                      "value": "read"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 146,
+                              "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                              "startOffset": 140
+                            },
+                            "value": ":value"
+                          },
+                          "value": {
+                            "kind": "int",
+                            "span": {
+                              "endOffset": 148,
+                              "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                              "startOffset": 147
+                            },
+                            "value": 1
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 149,
+                        "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                        "startOffset": 139
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 150,
+                    "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                    "startOffset": 133
+                  }
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 151,
+                "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                "startOffset": 130
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 157,
+                    "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                    "startOffset": 153
+                  },
+                  "value": "read"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 165,
+                          "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                          "startOffset": 159
+                        },
+                        "value": ":value"
+                      },
+                      "value": {
+                        "kind": "string",
+                        "span": {
+                          "endOffset": 170,
+                          "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                          "startOffset": 166
+                        },
+                        "value": "ok"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 171,
+                    "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                    "startOffset": 158
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 172,
+                "sourceId": "engine-parity/row-operations/polymorphic-pick",
+                "startOffset": 152
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 173,
+            "sourceId": "engine-parity/row-operations/polymorphic-pick",
+            "startOffset": 125
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "String"
+    }
+  },
+  "version": 1
+}

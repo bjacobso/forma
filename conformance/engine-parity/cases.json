@@ -573,6 +573,776 @@
       "passes": [
         "typecheck"
       ]
+    },
+    {
+      "id": "row-operations/pick-alias",
+      "sourceFile": "../row-operations/pick-alias.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "{:name String}",
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/omit-alias",
+      "sourceFile": "../row-operations/omit-alias.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "{:name String}",
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/merge",
+      "sourceFile": "../row-operations/merge.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "{:age Int :name String}",
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/nested",
+      "sourceFile": "../row-operations/nested.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "{:b String}",
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/empty-pick",
+      "sourceFile": "../row-operations/empty-pick.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "{}",
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/empty-omit",
+      "sourceFile": "../row-operations/empty-omit.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "{:a Int}",
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/omit-all",
+      "sourceFile": "../row-operations/omit-all.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "{}",
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/merge-empty",
+      "sourceFile": "../row-operations/merge-empty.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "{:a Int}",
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/polymorphic-pick",
+      "sourceFile": "../row-operations/polymorphic-pick.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "String",
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/polymorphic-merge",
+      "sourceFile": "../row-operations/polymorphic-merge.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "String",
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/polymorphic-omit",
+      "sourceFile": "../row-operations/polymorphic-omit.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "String",
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/tagged-valid",
+      "sourceFile": "../row-operations/tagged-valid.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "Number",
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/tagged-custom-valid",
+      "sourceFile": "../row-operations/tagged-custom-valid.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "String",
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/merge-overlap",
+      "sourceFile": "../row-operations/merge-overlap.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "typecheck/row-operation",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/merge-overlap",
+                "startOffset": 10,
+                "endOffset": 35
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Merge requires disjoint records; duplicate field :a"
+    },
+    {
+      "id": "row-operations/merge-overlap-alias",
+      "sourceFile": "../row-operations/merge-overlap-alias.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "typecheck/row-operation",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                "startOffset": 56,
+                "endOffset": 74
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Merge requires disjoint records; duplicate field :a"
+    },
+    {
+      "id": "row-operations/pick-missing",
+      "sourceFile": "../row-operations/pick-missing.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "typecheck/row-operation",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/pick-missing",
+                "startOffset": 26,
+                "endOffset": 34
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Pick field :missing is not present in the record"
+    },
+    {
+      "id": "row-operations/omit-missing",
+      "sourceFile": "../row-operations/omit-missing.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "typecheck/row-operation",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/omit-missing",
+                "startOffset": 26,
+                "endOffset": 34
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Omit field :missing is not present in the record"
+    },
+    {
+      "id": "row-operations/pick-open",
+      "sourceFile": "../row-operations/pick-open.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "typecheck/row-operation",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/pick-open",
+                "startOffset": 16,
+                "endOffset": 28
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Pick requires a closed record; open-row constraints are not supported"
+    },
+    {
+      "id": "row-operations/omit-open",
+      "sourceFile": "../row-operations/omit-open.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "typecheck/row-operation",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/omit-open",
+                "startOffset": 16,
+                "endOffset": 28
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Omit requires a closed record; open-row constraints are not supported"
+    },
+    {
+      "id": "row-operations/merge-open",
+      "sourceFile": "../row-operations/merge-open.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "typecheck/row-operation",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/merge-open",
+                "startOffset": 26,
+                "endOffset": 41
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Merge requires a closed record; open-row constraints are not supported"
+    },
+    {
+      "id": "row-operations/unresolved-shape",
+      "sourceFile": "../row-operations/unresolved-shape.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "typecheck/row-operation",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/unresolved-shape",
+                "startOffset": 25,
+                "endOffset": 26
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Pick requires a known closed record shape; unresolved row operations are not supported"
+    },
+    {
+      "id": "row-operations/non-record",
+      "sourceFile": "../row-operations/non-record.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "typecheck/row-operation",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/non-record",
+                "startOffset": 16,
+                "endOffset": 22
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Pick expects a record type"
+    },
+    {
+      "id": "row-operations/pick-duplicate-key",
+      "sourceFile": "../row-operations/pick-duplicate-key.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "typecheck/row-operation",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/pick-duplicate-key",
+                "startOffset": 29,
+                "endOffset": 31
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Duplicate Pick field :a"
+    },
+    {
+      "id": "row-operations/omit-duplicate-key",
+      "sourceFile": "../row-operations/omit-duplicate-key.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "typecheck/row-operation",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/omit-duplicate-key",
+                "startOffset": 29,
+                "endOffset": 31
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Duplicate Omit field :a"
+    },
+    {
+      "id": "row-operations/invalid-key",
+      "sourceFile": "../row-operations/invalid-key.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "typecheck/row-operation",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/invalid-key",
+                "startOffset": 26,
+                "endOffset": 31
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Pick field names must be keywords"
+    },
+    {
+      "id": "row-operations/invalid-key-vector",
+      "sourceFile": "../row-operations/invalid-key-vector.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "typecheck/row-operation",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/invalid-key-vector",
+                "startOffset": 25,
+                "endOffset": 27
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Pick field names must be a vector of keywords"
+    },
+    {
+      "id": "row-operations/arity",
+      "sourceFile": "../row-operations/arity.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "typecheck/row-operation",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/arity",
+                "startOffset": 10,
+                "endOffset": 26
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Merge expects two arguments"
+    },
+    {
+      "id": "row-operations/tagged-collision",
+      "sourceFile": "../row-operations/tagged-collision.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "surface/invalid-form",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/tagged-collision",
+                "startOffset": 26,
+                "endOffset": 31
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Tagged record payload must be disjoint from discriminator :_tag"
+    },
+    {
+      "id": "row-operations/tagged-custom-collision",
+      "sourceFile": "../row-operations/tagged-custom-collision.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "surface/invalid-form",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/tagged-custom-collision",
+                "startOffset": 36,
+                "endOffset": 41
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Tagged record payload must be disjoint from discriminator :kind"
+    },
+    {
+      "id": "row-operations/tagged-open",
+      "sourceFile": "../row-operations/tagged-open.lisp",
+      "passes": [
+        "parse",
+        "typecheck"
+      ],
+      "expected": {
+        "typecheck": {
+          "diagnostics": [
+            {
+              "code": "surface/invalid-form",
+              "severity": "error",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "engine-parity/row-operations/tagged-open",
+                "startOffset": 41,
+                "endOffset": 42
+              }
+            }
+          ]
+        }
+      },
+      "expectedMessage": "Tagged record payload requires a closed record; open-row disjointness is not supported"
+    },
+    {
+      "id": "row-operations/projection-function",
+      "sourceFile": "../row-operations/projection-function.lisp",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "{:name String}",
+          "diagnostics": []
+        },
+        "evaluate": {
+          "value": {
+            "kind": "map",
+            "entries": [
+              {
+                "key": {
+                  "kind": "keyword",
+                  "value": ":name"
+                },
+                "value": {
+                  "kind": "string",
+                  "value": "Ada"
+                }
+              }
+            ]
+          },
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/merge-function",
+      "sourceFile": "../row-operations/merge-function.lisp",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "{:age Int :name String}",
+          "diagnostics": []
+        },
+        "evaluate": {
+          "value": {
+            "kind": "map",
+            "entries": [
+              {
+                "key": {
+                  "kind": "keyword",
+                  "value": ":age"
+                },
+                "value": {
+                  "kind": "int",
+                  "value": 37
+                }
+              },
+              {
+                "key": {
+                  "kind": "keyword",
+                  "value": ":name"
+                },
+                "value": {
+                  "kind": "string",
+                  "value": "Ada"
+                }
+              }
+            ]
+          },
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/ascription",
+      "sourceFile": "../row-operations/ascription.lisp",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "{:name String}",
+          "diagnostics": []
+        },
+        "evaluate": {
+          "value": {
+            "kind": "map",
+            "entries": [
+              {
+                "key": {
+                  "kind": "keyword",
+                  "value": ":name"
+                },
+                "value": {
+                  "kind": "string",
+                  "value": "Ada"
+                }
+              }
+            ]
+          },
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "id": "row-operations/optional-field",
+      "sourceFile": "../row-operations/optional-field.lisp",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ],
+      "expected": {
+        "typecheck": {
+          "type": "{:nickname Option<String>}",
+          "diagnostics": []
+        },
+        "evaluate": {
+          "value": {
+            "kind": "map",
+            "entries": [
+              {
+                "key": {
+                  "kind": "keyword",
+                  "value": ":nickname"
+                },
+                "value": {
+                  "kind": "map",
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "value": ":_tag"
+                      },
+                      "value": {
+                        "kind": "string",
+                        "value": "Some"
+                      }
+                    },
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "value": ":value"
+                      },
+                      "value": {
+                        "kind": "string",
+                        "value": "Ada"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "diagnostics": []
+        }
+      }
     }
   ]
 }

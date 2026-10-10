@@ -85,7 +85,7 @@ export interface RecordField {
 // ---------------------------------------------------------------------------
 
 /** Type expression AST — parsed from source, converted to Type during inference */
-export type TypeExpr = TESym | TEFun | TEApp | TERow;
+export type TypeExpr = TESym | TEFun | TEApp | TERow | TERowOp;
 
 /** Type symbol: Num, Str, Bool, or type variable (lowercase) */
 export interface TESym {
@@ -116,6 +116,15 @@ export interface TERow {
   readonly span: Span;
   readonly fields: readonly { label: string; type: TypeExpr }[];
   readonly tail?: string | undefined; // row variable name, if open
+}
+
+/** Built-in row computation; field names are syntax, never value expressions. */
+export interface TERowOp {
+  readonly _tag: "TERowOp";
+  readonly span: Span;
+  readonly op: "Pick" | "Omit" | "Merge";
+  readonly operands: readonly TypeExpr[];
+  readonly keys: readonly { readonly label: string; readonly span: Span }[];
 }
 
 // TypeExpr constructors

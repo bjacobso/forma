@@ -1,0 +1,140 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/tagged-custom-collision",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/tagged-custom-collision",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 9,
+                "sourceId": "engine-parity/row-operations/tagged-custom-collision",
+                "startOffset": 6
+              },
+              "value": "Bad"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 17,
+                    "sourceId": "engine-parity/row-operations/tagged-custom-collision",
+                    "startOffset": 11
+                  },
+                  "value": "Tagged"
+                },
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 22,
+                    "sourceId": "engine-parity/row-operations/tagged-custom-collision",
+                    "startOffset": 18
+                  },
+                  "value": ":tag"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 27,
+                    "sourceId": "engine-parity/row-operations/tagged-custom-collision",
+                    "startOffset": 23
+                  },
+                  "value": "kind"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 34,
+                        "sourceId": "engine-parity/row-operations/tagged-custom-collision",
+                        "startOffset": 29
+                      },
+                      "value": "Value"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 41,
+                              "sourceId": "engine-parity/row-operations/tagged-custom-collision",
+                              "startOffset": 36
+                            },
+                            "value": ":kind"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 48,
+                              "sourceId": "engine-parity/row-operations/tagged-custom-collision",
+                              "startOffset": 42
+                            },
+                            "value": "String"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 49,
+                        "sourceId": "engine-parity/row-operations/tagged-custom-collision",
+                        "startOffset": 35
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 50,
+                    "sourceId": "engine-parity/row-operations/tagged-custom-collision",
+                    "startOffset": 28
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 51,
+                "sourceId": "engine-parity/row-operations/tagged-custom-collision",
+                "startOffset": 10
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 52,
+            "sourceId": "engine-parity/row-operations/tagged-custom-collision",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "surface/invalid-form",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 41,
+            "sourceId": "engine-parity/row-operations/tagged-custom-collision",
+            "startOffset": 36
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

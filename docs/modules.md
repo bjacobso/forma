@@ -229,10 +229,10 @@ spans, comments, and whitespace. OCaml uses MD5, so digest strings differ across
 engines. These are structural change hints, not persistent artifact identities.
 
 `loadSource` and `loadSourceBundle` accept `timings: true`. Load results include
-millisecond durations for the phases executed (`parseMs`, `storeMs`, and
-`evalMs` for preludes). The timing contract also reserves `typecheckMs`,
-`metacheckMs`, and `elaborateMs`; absent phases were not run. TypeScript's load
-semantics remain parse and store, so timings do not imply load-validation parity.
+millisecond durations for the phases executed: `parseMs` and `storeMs`, plus
+`typecheckMs`, `evalMs`, and `metacheckMs` for preludes. The timing contract also
+reserves `elaborateMs`; absent phases were not run. Failed loads include timings
+for phases completed before the diagnostic and preserve the session snapshot.
 
 `linkEffectModules` returns one `.ts` file per module, the generated entry filename,
 portable interfaces, declarations, and diagnostics. Files contain real relative

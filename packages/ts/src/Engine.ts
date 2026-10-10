@@ -46,3 +46,4 @@ export { debugCore, type CoreDebugResult } from "./engine/debug.js";
 export { lowerCore, typecheckCore, typecheckCoreTyped } from "./engine/debug.js";
 export { incrementalSummary, parseSummary, type IncrementalSummary } from "./engine/incremental.js";
 export { validateHostTypes } from "./engine/type-policy.js";
+export { validateSurface, validateSourceLoad, validatePreludeTypes, validatePreludeMetacheck, checkReplSubmission } from "./engine/session-validation.js";

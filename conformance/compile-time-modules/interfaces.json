@@ -1,0 +1,3790 @@
+[
+  {
+    "exports": [
+      {
+        "constructors": [],
+        "identity": {
+          "declaration": "PriceDecl",
+          "moduleId": "stripe.forma"
+        },
+        "kind": "type",
+        "name": "PriceDecl",
+        "schema": "Symbol",
+        "scheme": {
+          "parameters": [],
+          "type": "Symbol"
+        },
+        "symbol": "PriceDecl__forma_7374726970652e666f726d61_d50726963654465636c"
+      },
+      {
+        "constructors": [],
+        "identity": {
+          "declaration": "PriceIR",
+          "moduleId": "stripe.forma"
+        },
+        "kind": "type",
+        "name": "PriceIR",
+        "schema": {
+          "fields": [
+            [
+              ":kind",
+              "Price"
+            ],
+            [
+              ":name",
+              "Symbol"
+            ],
+            [
+              ":label",
+              "String"
+            ],
+            [
+              ":amount",
+              "Int"
+            ]
+          ]
+        },
+        "scheme": {
+          "parameters": [],
+          "type": {
+            "fields": [
+              [
+                ":kind",
+                "Price"
+              ],
+              [
+                ":name",
+                "Symbol"
+              ],
+              [
+                ":label",
+                "String"
+              ],
+              [
+                ":amount",
+                "Int"
+              ]
+            ]
+          }
+        },
+        "symbol": "PriceIR__forma_7374726970652e666f726d61_d50726963654952"
+      },
+      {
+        "constructors": [],
+        "form": {
+          "completionShape": "(price__forma_7374726970652e666f726d61_d7072696365 name label amount)",
+          "dependencies": [],
+          "doc": "Declare an inspectable Stripe price.",
+          "holes": {
+            "fields": [
+              [
+                ":name",
+                [
+                  "Declares",
+                  "PriceDecl__forma_7374726970652e666f726d61_d50726963654465636c"
+                ]
+              ],
+              [
+                ":label",
+                "String"
+              ],
+              [
+                ":amount",
+                "Int"
+              ]
+            ]
+          },
+          "options": {
+            "fields": [
+              [
+                ":types",
+                {
+                  "fields": [
+                    [
+                      ":name",
+                      [
+                        "Declares",
+                        "PriceDecl__forma_7374726970652e666f726d61_d50726963654465636c"
+                      ]
+                    ],
+                    [
+                      ":label",
+                      "String"
+                    ],
+                    [
+                      ":amount",
+                      "Int"
+                    ]
+                  ]
+                }
+              ],
+              [
+                ":ir",
+                "PriceIR__forma_7374726970652e666f726d61_d50726963654952"
+              ],
+              [
+                ":check",
+                [
+                  "fn",
+                  [
+                    "holes"
+                  ],
+                  [
+                    "if",
+                    [
+                      "<",
+                      [
+                        "get",
+                        "holes",
+                        ":amount"
+                      ],
+                      0
+                    ],
+                    [
+                      {
+                        "fields": [
+                          [
+                            ":severity",
+                            "error"
+                          ],
+                          [
+                            ":slot",
+                            "amount"
+                          ],
+                          [
+                            ":message",
+                            "Price amount must be nonnegative"
+                          ]
+                        ]
+                      }
+                    ],
+                    []
+                  ]
+                ]
+              ]
+            ]
+          },
+          "pattern": [
+            "name",
+            "label",
+            "amount"
+          ],
+          "projection": {
+            "fields": [
+              [
+                ":kind",
+                "Price"
+              ],
+              [
+                ":name",
+                "name"
+              ],
+              [
+                ":label",
+                [
+                  "display-label__forma_7374726970652e666f726d61_d646973706c61792d6c6162656c",
+                  "label"
+                ]
+              ],
+              [
+                ":amount",
+                "amount"
+              ]
+            ]
+          }
+        },
+        "identity": {
+          "declaration": "price",
+          "moduleId": "stripe.forma"
+        },
+        "kind": "form",
+        "name": "price",
+        "symbol": "price__forma_7374726970652e666f726d61_d7072696365"
+      }
+    ],
+    "moduleId": "stripe.forma"
+  },
+  {
+    "exports": [
+      {
+        "constructors": [],
+        "data": {
+          "contract": {
+            "fields": [
+              [
+                ":kind",
+                "Price"
+              ],
+              [
+                ":name",
+                "Symbol"
+              ],
+              [
+                ":label",
+                "String"
+              ],
+              [
+                ":amount",
+                "Int"
+              ]
+            ]
+          },
+          "provenance": [
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/identity",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity/moduleId",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/identity/moduleId",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity/declaration",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/identity/declaration",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/classification",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/classification",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/kind",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/kind",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/name",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/name",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/label",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/label",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/amount",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/amount",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            }
+          ],
+          "scheme": {
+            "parameters": [],
+            "type": {
+              "fields": [
+                [
+                  ":identity",
+                  {
+                    "fields": [
+                      [
+                        ":moduleId",
+                        "String"
+                      ],
+                      [
+                        ":declaration",
+                        "String"
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  ":classification",
+                  "Symbol"
+                ],
+                [
+                  ":data",
+                  {
+                    "fields": [
+                      [
+                        ":kind",
+                        "Price"
+                      ],
+                      [
+                        ":name",
+                        "Symbol"
+                      ],
+                      [
+                        ":label",
+                        "String"
+                      ],
+                      [
+                        ":amount",
+                        "Int"
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            }
+          },
+          "value": {
+            "record": [
+              [
+                {
+                  "keyword": ":identity"
+                },
+                {
+                  "record": [
+                    [
+                      {
+                        "keyword": ":moduleId"
+                      },
+                      "billing.forma"
+                    ],
+                    [
+                      {
+                        "keyword": ":declaration"
+                      },
+                      "Annual"
+                    ]
+                  ]
+                }
+              ],
+              [
+                {
+                  "keyword": ":classification"
+                },
+                {
+                  "symbol": "PriceDecl__forma_7374726970652e666f726d61_d50726963654465636c"
+                }
+              ],
+              [
+                {
+                  "keyword": ":data"
+                },
+                {
+                  "record": [
+                    [
+                      {
+                        "keyword": ":kind"
+                      },
+                      "Price"
+                    ],
+                    [
+                      {
+                        "keyword": ":name"
+                      },
+                      {
+                        "symbol": "Annual__forma_62696c6c696e672e666f726d61_d416e6e75616c"
+                      }
+                    ],
+                    [
+                      {
+                        "keyword": ":label"
+                      },
+                      "Stripe: Annual"
+                    ],
+                    [
+                      {
+                        "keyword": ":amount"
+                      },
+                      12000
+                    ]
+                  ]
+                }
+              ]
+            ]
+          }
+        },
+        "declaration": {
+          "classification": "PriceDecl__forma_7374726970652e666f726d61_d50726963654465636c",
+          "form": {
+            "declaration": "price",
+            "moduleId": "stripe.forma"
+          },
+          "span": {
+            "endOffset": 110,
+            "sourceId": "billing.forma",
+            "startOffset": 104
+          }
+        },
+        "identity": {
+          "declaration": "Annual",
+          "moduleId": "billing.forma"
+        },
+        "kind": "declaration",
+        "name": "Annual",
+        "symbol": "Annual__forma_62696c6c696e672e666f726d61_d416e6e75616c"
+      },
+      {
+        "constructors": [],
+        "data": {
+          "contract": {
+            "fields": [
+              [
+                ":kind",
+                "Price"
+              ],
+              [
+                ":name",
+                "Symbol"
+              ],
+              [
+                ":label",
+                "String"
+              ],
+              [
+                ":amount",
+                "Int"
+              ]
+            ]
+          },
+          "provenance": [
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/identity",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity/moduleId",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/identity/moduleId",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity/declaration",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/identity/declaration",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/classification",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/classification",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/kind",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/kind",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/name",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/name",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/label",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/label",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/amount",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/amount",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            }
+          ],
+          "scheme": {
+            "parameters": [],
+            "type": {
+              "fields": [
+                [
+                  ":identity",
+                  {
+                    "fields": [
+                      [
+                        ":moduleId",
+                        "String"
+                      ],
+                      [
+                        ":declaration",
+                        "String"
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  ":classification",
+                  "Symbol"
+                ],
+                [
+                  ":data",
+                  {
+                    "fields": [
+                      [
+                        ":kind",
+                        "Price"
+                      ],
+                      [
+                        ":name",
+                        "Symbol"
+                      ],
+                      [
+                        ":label",
+                        "String"
+                      ],
+                      [
+                        ":amount",
+                        "Int"
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            }
+          },
+          "value": {
+            "record": [
+              [
+                {
+                  "keyword": ":identity"
+                },
+                {
+                  "record": [
+                    [
+                      {
+                        "keyword": ":moduleId"
+                      },
+                      "billing.forma"
+                    ],
+                    [
+                      {
+                        "keyword": ":declaration"
+                      },
+                      "Monthly"
+                    ]
+                  ]
+                }
+              ],
+              [
+                {
+                  "keyword": ":classification"
+                },
+                {
+                  "symbol": "PriceDecl__forma_7374726970652e666f726d61_d50726963654465636c"
+                }
+              ],
+              [
+                {
+                  "keyword": ":data"
+                },
+                {
+                  "record": [
+                    [
+                      {
+                        "keyword": ":kind"
+                      },
+                      "Price"
+                    ],
+                    [
+                      {
+                        "keyword": ":name"
+                      },
+                      {
+                        "symbol": "Monthly__forma_62696c6c696e672e666f726d61_d4d6f6e74686c79"
+                      }
+                    ],
+                    [
+                      {
+                        "keyword": ":label"
+                      },
+                      "Stripe: Monthly"
+                    ],
+                    [
+                      {
+                        "keyword": ":amount"
+                      },
+                      1200
+                    ]
+                  ]
+                }
+              ]
+            ]
+          }
+        },
+        "declaration": {
+          "classification": "PriceDecl__forma_7374726970652e666f726d61_d50726963654465636c",
+          "form": {
+            "declaration": "price",
+            "moduleId": "stripe.forma"
+          },
+          "span": {
+            "endOffset": 80,
+            "sourceId": "billing.forma",
+            "startOffset": 73
+          }
+        },
+        "identity": {
+          "declaration": "Monthly",
+          "moduleId": "billing.forma"
+        },
+        "kind": "declaration",
+        "name": "Monthly",
+        "symbol": "Monthly__forma_62696c6c696e672e666f726d61_d4d6f6e74686c79"
+      },
+      {
+        "constructors": [],
+        "data": {
+          "provenance": [
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/0",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/identity",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/identity",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/0/identity",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/identity",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/identity/moduleId",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/identity/moduleId",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/0/identity/moduleId",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/identity/moduleId",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/identity/declaration",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/identity/declaration",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/0/identity/declaration",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/identity/declaration",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/classification",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/classification",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/0/classification",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/classification",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/0/data",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data/kind",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data/kind",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/0/data/kind",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data/kind",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data/name",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data/name",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/0/data/name",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data/name",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data/label",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data/label",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/0/data/label",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data/label",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data/amount",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data/amount",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/0/data/amount",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/0/data/amount",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/1",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/identity",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/identity",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/1/identity",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/identity",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/identity/moduleId",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/identity/moduleId",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/1/identity/moduleId",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/identity/moduleId",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/identity/declaration",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/identity/declaration",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/1/identity/declaration",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/identity/declaration",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/classification",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/classification",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/1/classification",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/classification",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/1/data",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data/kind",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data/kind",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/1/data/kind",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data/kind",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data/name",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data/name",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/1/data/name",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data/name",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data/label",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data/label",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/1/data/label",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data/label",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data/amount",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data/amount",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/1/data/amount",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/1/data/amount",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            }
+          ],
+          "scheme": {
+            "parameters": [],
+            "type": [
+              "List",
+              "Declaration"
+            ]
+          },
+          "value": [
+            {
+              "record": [
+                [
+                  {
+                    "keyword": ":identity"
+                  },
+                  {
+                    "record": [
+                      [
+                        {
+                          "keyword": ":moduleId"
+                        },
+                        "billing.forma"
+                      ],
+                      [
+                        {
+                          "keyword": ":declaration"
+                        },
+                        "Monthly"
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  {
+                    "keyword": ":classification"
+                  },
+                  {
+                    "symbol": "PriceDecl__forma_7374726970652e666f726d61_d50726963654465636c"
+                  }
+                ],
+                [
+                  {
+                    "keyword": ":data"
+                  },
+                  {
+                    "record": [
+                      [
+                        {
+                          "keyword": ":kind"
+                        },
+                        "Price"
+                      ],
+                      [
+                        {
+                          "keyword": ":name"
+                        },
+                        {
+                          "symbol": "Monthly__forma_62696c6c696e672e666f726d61_d4d6f6e74686c79"
+                        }
+                      ],
+                      [
+                        {
+                          "keyword": ":label"
+                        },
+                        "Stripe: Monthly"
+                      ],
+                      [
+                        {
+                          "keyword": ":amount"
+                        },
+                        1200
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            },
+            {
+              "record": [
+                [
+                  {
+                    "keyword": ":identity"
+                  },
+                  {
+                    "record": [
+                      [
+                        {
+                          "keyword": ":moduleId"
+                        },
+                        "billing.forma"
+                      ],
+                      [
+                        {
+                          "keyword": ":declaration"
+                        },
+                        "Annual"
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  {
+                    "keyword": ":classification"
+                  },
+                  {
+                    "symbol": "PriceDecl__forma_7374726970652e666f726d61_d50726963654465636c"
+                  }
+                ],
+                [
+                  {
+                    "keyword": ":data"
+                  },
+                  {
+                    "record": [
+                      [
+                        {
+                          "keyword": ":kind"
+                        },
+                        "Price"
+                      ],
+                      [
+                        {
+                          "keyword": ":name"
+                        },
+                        {
+                          "symbol": "Annual__forma_62696c6c696e672e666f726d61_d416e6e75616c"
+                        }
+                      ],
+                      [
+                        {
+                          "keyword": ":label"
+                        },
+                        "Stripe: Annual"
+                      ],
+                      [
+                        {
+                          "keyword": ":amount"
+                        },
+                        12000
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        },
+        "identity": {
+          "declaration": "prices",
+          "moduleId": "billing.forma"
+        },
+        "kind": "value",
+        "name": "prices",
+        "symbol": "prices__forma_62696c6c696e672e666f726d61_d707269636573"
+      }
+    ],
+    "moduleId": "billing.forma"
+  },
+  {
+    "exports": [
+      {
+        "constructors": [],
+        "form": {
+          "completionShape": "(picklist-of__forma_73616c6573666f7263652e666f726d61_d7069636b6c6973742d6f66 name prices)",
+          "dependencies": [
+            "stripe.forma"
+          ],
+          "holes": {
+            "fields": [
+              [
+                ":name",
+                [
+                  "Declares",
+                  "PicklistDecl__forma_73616c6573666f7263652e666f726d61_d5069636b6c6973744465636c"
+                ]
+              ],
+              [
+                ":prices",
+                [
+                  "List",
+                  "Any"
+                ]
+              ]
+            ]
+          },
+          "options": {
+            "fields": [
+              [
+                ":types",
+                {
+                  "fields": [
+                    [
+                      ":name",
+                      [
+                        "Declares",
+                        "PicklistDecl__forma_73616c6573666f7263652e666f726d61_d5069636b6c6973744465636c"
+                      ]
+                    ],
+                    [
+                      ":prices",
+                      [
+                        "List",
+                        "Any"
+                      ]
+                    ]
+                  ]
+                }
+              ],
+              [
+                ":ir",
+                "PicklistIR__forma_73616c6573666f7263652e666f726d61_d5069636b6c6973744952"
+              ]
+            ]
+          },
+          "pattern": [
+            "name",
+            "prices"
+          ],
+          "projection": {
+            "fields": [
+              [
+                ":kind",
+                "Picklist"
+              ],
+              [
+                ":name",
+                "name"
+              ],
+              [
+                ":entries",
+                [
+                  "map",
+                  "entry-label__forma_73616c6573666f7263652e666f726d61_d656e7472792d6c6162656c",
+                  "prices"
+                ]
+              ]
+            ]
+          }
+        },
+        "identity": {
+          "declaration": "picklist-of",
+          "moduleId": "salesforce.forma"
+        },
+        "kind": "form",
+        "name": "picklist-of",
+        "symbol": "picklist-of__forma_73616c6573666f7263652e666f726d61_d7069636b6c6973742d6f66"
+      },
+      {
+        "constructors": [],
+        "form": {
+          "completionShape": "(selected-price__forma_73616c6573666f7263652e666f726d61_d73656c65637465642d7072696365 name price)",
+          "dependencies": [
+            "stripe.forma"
+          ],
+          "holes": {
+            "fields": [
+              [
+                ":name",
+                [
+                  "Declares",
+                  "PicklistDecl__forma_73616c6573666f7263652e666f726d61_d5069636b6c6973744465636c"
+                ]
+              ],
+              [
+                ":price",
+                [
+                  "Refers",
+                  "PriceDecl__forma_7374726970652e666f726d61_d50726963654465636c"
+                ]
+              ]
+            ]
+          },
+          "options": {
+            "fields": [
+              [
+                ":types",
+                {
+                  "fields": [
+                    [
+                      ":name",
+                      [
+                        "Declares",
+                        "PicklistDecl__forma_73616c6573666f7263652e666f726d61_d5069636b6c6973744465636c"
+                      ]
+                    ],
+                    [
+                      ":price",
+                      [
+                        "Refers",
+                        "PriceDecl__forma_7374726970652e666f726d61_d50726963654465636c"
+                      ]
+                    ]
+                  ]
+                }
+              ],
+              [
+                ":ir",
+                "SelectedIR__forma_73616c6573666f7263652e666f726d61_d53656c65637465644952"
+              ]
+            ]
+          },
+          "pattern": [
+            "name",
+            "price"
+          ],
+          "projection": {
+            "fields": [
+              [
+                ":kind",
+                "Selected"
+              ],
+              [
+                ":name",
+                "name"
+              ],
+              [
+                ":price",
+                "price"
+              ]
+            ]
+          }
+        },
+        "identity": {
+          "declaration": "selected-price",
+          "moduleId": "salesforce.forma"
+        },
+        "kind": "form",
+        "name": "selected-price",
+        "symbol": "selected-price__forma_73616c6573666f7263652e666f726d61_d73656c65637465642d7072696365"
+      }
+    ],
+    "moduleId": "salesforce.forma"
+  },
+  {
+    "exports": [
+      {
+        "constructors": [],
+        "data": {
+          "contract": {
+            "fields": [
+              [
+                ":kind",
+                "Picklist"
+              ],
+              [
+                ":name",
+                "Symbol"
+              ],
+              [
+                ":entries",
+                [
+                  "List",
+                  "String"
+                ]
+              ]
+            ]
+          },
+          "provenance": [
+            {
+              "identity": {
+                "declaration": "BillingPlan",
+                "moduleId": "main.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 173,
+                "sourceId": "main.forma",
+                "startOffset": 133
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "entry-label",
+                "moduleId": "salesforce.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 307,
+                "sourceId": "salesforce.forma",
+                "startOffset": 248
+              }
+            },
+            {
+              "identity": {
+                "declaration": "BillingPlan",
+                "moduleId": "main.forma"
+              },
+              "path": "/identity",
+              "span": {
+                "endOffset": 173,
+                "sourceId": "main.forma",
+                "startOffset": 133
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/identity",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "entry-label",
+                "moduleId": "salesforce.forma"
+              },
+              "path": "/identity",
+              "span": {
+                "endOffset": 307,
+                "sourceId": "salesforce.forma",
+                "startOffset": 248
+              }
+            },
+            {
+              "identity": {
+                "declaration": "BillingPlan",
+                "moduleId": "main.forma"
+              },
+              "path": "/identity/moduleId",
+              "span": {
+                "endOffset": 173,
+                "sourceId": "main.forma",
+                "startOffset": 133
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity/moduleId",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity/moduleId",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/identity/moduleId",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity/moduleId",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "entry-label",
+                "moduleId": "salesforce.forma"
+              },
+              "path": "/identity/moduleId",
+              "span": {
+                "endOffset": 307,
+                "sourceId": "salesforce.forma",
+                "startOffset": 248
+              }
+            },
+            {
+              "identity": {
+                "declaration": "BillingPlan",
+                "moduleId": "main.forma"
+              },
+              "path": "/identity/declaration",
+              "span": {
+                "endOffset": 173,
+                "sourceId": "main.forma",
+                "startOffset": 133
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity/declaration",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity/declaration",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/identity/declaration",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity/declaration",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "entry-label",
+                "moduleId": "salesforce.forma"
+              },
+              "path": "/identity/declaration",
+              "span": {
+                "endOffset": 307,
+                "sourceId": "salesforce.forma",
+                "startOffset": 248
+              }
+            },
+            {
+              "identity": {
+                "declaration": "BillingPlan",
+                "moduleId": "main.forma"
+              },
+              "path": "/classification",
+              "span": {
+                "endOffset": 173,
+                "sourceId": "main.forma",
+                "startOffset": 133
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/classification",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/classification",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/classification",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/classification",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "entry-label",
+                "moduleId": "salesforce.forma"
+              },
+              "path": "/classification",
+              "span": {
+                "endOffset": 307,
+                "sourceId": "salesforce.forma",
+                "startOffset": 248
+              }
+            },
+            {
+              "identity": {
+                "declaration": "BillingPlan",
+                "moduleId": "main.forma"
+              },
+              "path": "/data",
+              "span": {
+                "endOffset": 173,
+                "sourceId": "main.forma",
+                "startOffset": 133
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "entry-label",
+                "moduleId": "salesforce.forma"
+              },
+              "path": "/data",
+              "span": {
+                "endOffset": 307,
+                "sourceId": "salesforce.forma",
+                "startOffset": 248
+              }
+            },
+            {
+              "identity": {
+                "declaration": "BillingPlan",
+                "moduleId": "main.forma"
+              },
+              "path": "/data/kind",
+              "span": {
+                "endOffset": 173,
+                "sourceId": "main.forma",
+                "startOffset": 133
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/kind",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/kind",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/kind",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/kind",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "entry-label",
+                "moduleId": "salesforce.forma"
+              },
+              "path": "/data/kind",
+              "span": {
+                "endOffset": 307,
+                "sourceId": "salesforce.forma",
+                "startOffset": 248
+              }
+            },
+            {
+              "identity": {
+                "declaration": "BillingPlan",
+                "moduleId": "main.forma"
+              },
+              "path": "/data/name",
+              "span": {
+                "endOffset": 173,
+                "sourceId": "main.forma",
+                "startOffset": 133
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/name",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/name",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/name",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/name",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "entry-label",
+                "moduleId": "salesforce.forma"
+              },
+              "path": "/data/name",
+              "span": {
+                "endOffset": 307,
+                "sourceId": "salesforce.forma",
+                "startOffset": 248
+              }
+            },
+            {
+              "identity": {
+                "declaration": "BillingPlan",
+                "moduleId": "main.forma"
+              },
+              "path": "/data/entries",
+              "span": {
+                "endOffset": 173,
+                "sourceId": "main.forma",
+                "startOffset": 133
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/entries",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/entries",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/entries",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/entries",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "entry-label",
+                "moduleId": "salesforce.forma"
+              },
+              "path": "/data/entries",
+              "span": {
+                "endOffset": 307,
+                "sourceId": "salesforce.forma",
+                "startOffset": 248
+              }
+            },
+            {
+              "identity": {
+                "declaration": "BillingPlan",
+                "moduleId": "main.forma"
+              },
+              "path": "/data/entries/0",
+              "span": {
+                "endOffset": 173,
+                "sourceId": "main.forma",
+                "startOffset": 133
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/entries/0",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/entries/0",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/entries/0",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/entries/0",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "entry-label",
+                "moduleId": "salesforce.forma"
+              },
+              "path": "/data/entries/0",
+              "span": {
+                "endOffset": 307,
+                "sourceId": "salesforce.forma",
+                "startOffset": 248
+              }
+            },
+            {
+              "identity": {
+                "declaration": "BillingPlan",
+                "moduleId": "main.forma"
+              },
+              "path": "/data/entries/1",
+              "span": {
+                "endOffset": 173,
+                "sourceId": "main.forma",
+                "startOffset": 133
+              }
+            },
+            {
+              "identity": {
+                "declaration": "prices",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/entries/1",
+              "span": {
+                "endOffset": 159,
+                "sourceId": "billing.forma",
+                "startOffset": 127
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/entries/1",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/entries/1",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Annual",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/entries/1",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "billing.forma",
+                "startOffset": 97
+              }
+            },
+            {
+              "identity": {
+                "declaration": "entry-label",
+                "moduleId": "salesforce.forma"
+              },
+              "path": "/data/entries/1",
+              "span": {
+                "endOffset": 307,
+                "sourceId": "salesforce.forma",
+                "startOffset": 248
+              }
+            }
+          ],
+          "scheme": {
+            "parameters": [],
+            "type": {
+              "fields": [
+                [
+                  ":identity",
+                  {
+                    "fields": [
+                      [
+                        ":moduleId",
+                        "String"
+                      ],
+                      [
+                        ":declaration",
+                        "String"
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  ":classification",
+                  "Symbol"
+                ],
+                [
+                  ":data",
+                  {
+                    "fields": [
+                      [
+                        ":kind",
+                        "Picklist"
+                      ],
+                      [
+                        ":name",
+                        "Symbol"
+                      ],
+                      [
+                        ":entries",
+                        [
+                          "List",
+                          "String"
+                        ]
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            }
+          },
+          "value": {
+            "record": [
+              [
+                {
+                  "keyword": ":identity"
+                },
+                {
+                  "record": [
+                    [
+                      {
+                        "keyword": ":moduleId"
+                      },
+                      "main.forma"
+                    ],
+                    [
+                      {
+                        "keyword": ":declaration"
+                      },
+                      "BillingPlan"
+                    ]
+                  ]
+                }
+              ],
+              [
+                {
+                  "keyword": ":classification"
+                },
+                {
+                  "symbol": "PicklistDecl__forma_73616c6573666f7263652e666f726d61_d5069636b6c6973744465636c"
+                }
+              ],
+              [
+                {
+                  "keyword": ":data"
+                },
+                {
+                  "record": [
+                    [
+                      {
+                        "keyword": ":kind"
+                      },
+                      "Picklist"
+                    ],
+                    [
+                      {
+                        "keyword": ":name"
+                      },
+                      {
+                        "symbol": "BillingPlan__forma_6d61696e2e666f726d61_d42696c6c696e67506c616e"
+                      }
+                    ],
+                    [
+                      {
+                        "keyword": ":entries"
+                      },
+                      [
+                        "Stripe: Monthly",
+                        "Stripe: Annual"
+                      ]
+                    ]
+                  ]
+                }
+              ]
+            ]
+          }
+        },
+        "declaration": {
+          "classification": "PicklistDecl__forma_73616c6573666f7263652e666f726d61_d5069636b6c6973744465636c",
+          "form": {
+            "declaration": "picklist-of",
+            "moduleId": "salesforce.forma"
+          },
+          "span": {
+            "endOffset": 157,
+            "sourceId": "main.forma",
+            "startOffset": 146
+          }
+        },
+        "identity": {
+          "declaration": "BillingPlan",
+          "moduleId": "main.forma"
+        },
+        "kind": "declaration",
+        "name": "BillingPlan",
+        "symbol": "BillingPlan__forma_6d61696e2e666f726d61_d42696c6c696e67506c616e"
+      },
+      {
+        "constructors": [],
+        "data": {
+          "contract": {
+            "fields": [
+              [
+                ":kind",
+                "Selected"
+              ],
+              [
+                ":name",
+                "Symbol"
+              ],
+              [
+                ":price",
+                "Symbol"
+              ]
+            ]
+          },
+          "provenance": [
+            {
+              "identity": {
+                "declaration": "DefaultPrice",
+                "moduleId": "main.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 219,
+                "sourceId": "main.forma",
+                "startOffset": 174
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "DefaultPrice",
+                "moduleId": "main.forma"
+              },
+              "path": "/identity",
+              "span": {
+                "endOffset": 219,
+                "sourceId": "main.forma",
+                "startOffset": 174
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/identity",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "DefaultPrice",
+                "moduleId": "main.forma"
+              },
+              "path": "/identity/moduleId",
+              "span": {
+                "endOffset": 219,
+                "sourceId": "main.forma",
+                "startOffset": 174
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity/moduleId",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/identity/moduleId",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "DefaultPrice",
+                "moduleId": "main.forma"
+              },
+              "path": "/identity/declaration",
+              "span": {
+                "endOffset": 219,
+                "sourceId": "main.forma",
+                "startOffset": 174
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/identity/declaration",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/identity/declaration",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "DefaultPrice",
+                "moduleId": "main.forma"
+              },
+              "path": "/classification",
+              "span": {
+                "endOffset": 219,
+                "sourceId": "main.forma",
+                "startOffset": 174
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/classification",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/classification",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "DefaultPrice",
+                "moduleId": "main.forma"
+              },
+              "path": "/data",
+              "span": {
+                "endOffset": 219,
+                "sourceId": "main.forma",
+                "startOffset": 174
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "DefaultPrice",
+                "moduleId": "main.forma"
+              },
+              "path": "/data/kind",
+              "span": {
+                "endOffset": 219,
+                "sourceId": "main.forma",
+                "startOffset": 174
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/kind",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/kind",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "DefaultPrice",
+                "moduleId": "main.forma"
+              },
+              "path": "/data/name",
+              "span": {
+                "endOffset": 219,
+                "sourceId": "main.forma",
+                "startOffset": 174
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/name",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/name",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            },
+            {
+              "identity": {
+                "declaration": "DefaultPrice",
+                "moduleId": "main.forma"
+              },
+              "path": "/data/price",
+              "span": {
+                "endOffset": 219,
+                "sourceId": "main.forma",
+                "startOffset": 174
+              }
+            },
+            {
+              "identity": {
+                "declaration": "Monthly",
+                "moduleId": "billing.forma"
+              },
+              "path": "/data/price",
+              "span": {
+                "endOffset": 96,
+                "sourceId": "billing.forma",
+                "startOffset": 66
+              }
+            },
+            {
+              "identity": {
+                "declaration": "display-label",
+                "moduleId": "stripe.forma"
+              },
+              "path": "/data/price",
+              "span": {
+                "endOffset": 182,
+                "sourceId": "stripe.forma",
+                "startOffset": 129
+              }
+            }
+          ],
+          "scheme": {
+            "parameters": [],
+            "type": {
+              "fields": [
+                [
+                  ":identity",
+                  {
+                    "fields": [
+                      [
+                        ":moduleId",
+                        "String"
+                      ],
+                      [
+                        ":declaration",
+                        "String"
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  ":classification",
+                  "Symbol"
+                ],
+                [
+                  ":data",
+                  {
+                    "fields": [
+                      [
+                        ":kind",
+                        "Selected"
+                      ],
+                      [
+                        ":name",
+                        "Symbol"
+                      ],
+                      [
+                        ":price",
+                        "Symbol"
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            }
+          },
+          "value": {
+            "record": [
+              [
+                {
+                  "keyword": ":identity"
+                },
+                {
+                  "record": [
+                    [
+                      {
+                        "keyword": ":moduleId"
+                      },
+                      "main.forma"
+                    ],
+                    [
+                      {
+                        "keyword": ":declaration"
+                      },
+                      "DefaultPrice"
+                    ]
+                  ]
+                }
+              ],
+              [
+                {
+                  "keyword": ":classification"
+                },
+                {
+                  "symbol": "PicklistDecl__forma_73616c6573666f7263652e666f726d61_d5069636b6c6973744465636c"
+                }
+              ],
+              [
+                {
+                  "keyword": ":data"
+                },
+                {
+                  "record": [
+                    [
+                      {
+                        "keyword": ":kind"
+                      },
+                      "Selected"
+                    ],
+                    [
+                      {
+                        "keyword": ":name"
+                      },
+                      {
+                        "symbol": "DefaultPrice__forma_6d61696e2e666f726d61_d44656661756c745072696365"
+                      }
+                    ],
+                    [
+                      {
+                        "keyword": ":price"
+                      },
+                      {
+                        "symbol": "Monthly__forma_62696c6c696e672e666f726d61_d4d6f6e74686c79"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            ]
+          }
+        },
+        "declaration": {
+          "classification": "PicklistDecl__forma_73616c6573666f7263652e666f726d61_d5069636b6c6973744465636c",
+          "form": {
+            "declaration": "selected-price",
+            "moduleId": "salesforce.forma"
+          },
+          "span": {
+            "endOffset": 202,
+            "sourceId": "main.forma",
+            "startOffset": 190
+          }
+        },
+        "identity": {
+          "declaration": "DefaultPrice",
+          "moduleId": "main.forma"
+        },
+        "kind": "declaration",
+        "name": "DefaultPrice",
+        "symbol": "DefaultPrice__forma_6d61696e2e666f726d61_d44656661756c745072696365"
+      }
+    ],
+    "moduleId": "main.forma"
+  }
+]

@@ -1,0 +1,142 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/omit-open",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/omit-open",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 9,
+                "sourceId": "engine-parity/row-operations/omit-open",
+                "startOffset": 6
+              },
+              "value": "Bad"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 15,
+                    "sourceId": "engine-parity/row-operations/omit-open",
+                    "startOffset": 11
+                  },
+                  "value": "Omit"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 19,
+                          "sourceId": "engine-parity/row-operations/omit-open",
+                          "startOffset": 17
+                        },
+                        "value": ":a"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 23,
+                          "sourceId": "engine-parity/row-operations/omit-open",
+                          "startOffset": 20
+                        },
+                        "value": "Int"
+                      }
+                    },
+                    {
+                      "key": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 25,
+                          "sourceId": "engine-parity/row-operations/omit-open",
+                          "startOffset": 24
+                        },
+                        "value": "&"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 27,
+                          "sourceId": "engine-parity/row-operations/omit-open",
+                          "startOffset": 26
+                        },
+                        "value": "r"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 28,
+                    "sourceId": "engine-parity/row-operations/omit-open",
+                    "startOffset": 16
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 32,
+                        "sourceId": "engine-parity/row-operations/omit-open",
+                        "startOffset": 30
+                      },
+                      "value": ":a"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 33,
+                    "sourceId": "engine-parity/row-operations/omit-open",
+                    "startOffset": 29
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 34,
+                "sourceId": "engine-parity/row-operations/omit-open",
+                "startOffset": 10
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 35,
+            "sourceId": "engine-parity/row-operations/omit-open",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/row-operation",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 28,
+            "sourceId": "engine-parity/row-operations/omit-open",
+            "startOffset": 16
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}
