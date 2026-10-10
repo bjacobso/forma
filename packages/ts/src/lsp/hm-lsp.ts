@@ -250,7 +250,7 @@ export function analyzeLsp(
 
     // Collect all nodes and build typed spans
     const allNodes: CoreExpr[] = [];
-    for (const expr of coreExprs) {
+    for (const expr of [...coreExprs, ...yield* Ref.get(ctxService.hookNodes)]) {
       allNodes.push(...collectNodes(expr));
     }
 

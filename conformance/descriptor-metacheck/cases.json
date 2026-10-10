@@ -1,0 +1,69 @@
+[
+  {
+    "name": "malformed-extensions",
+    "source": "(__form-descriptor define-malformed-extensions\n  (:identifier name)\n  (:extensions not-an-extension-entry))",
+    "code": "descriptor/extensions",
+    "text": "not-an-extension-entry"
+  },
+  {
+    "name": "malformed-extension-clause",
+    "source": "(__form-descriptor bad/extensions (:extensions (:editor bad-clause)))",
+    "code": "descriptor/extensions",
+    "text": "bad-clause"
+  },
+  {
+    "name": "malformed-hook",
+    "source": "(__form-descriptor bad/hook (:infer-fn hook/one hook/two))",
+    "code": "descriptor/hook-clause",
+    "text": "(:infer-fn hook/one hook/two)"
+  },
+  {
+    "name": "unresolved-hook",
+    "source": "(__form-descriptor define-unresolved-artifact-hook (:construct-fn missing-artifact-hook/construct))",
+    "code": "descriptor/unresolved-hook",
+    "text": "(:construct-fn missing-artifact-hook/construct)"
+  },
+  {
+    "name": "meta-kind",
+    "source": "(__form-hook bad/kind (:kind check infer) (:body true))",
+    "code": "descriptor/meta-kind",
+    "text": "(:kind check infer)"
+  },
+  {
+    "name": "constructed-by-target",
+    "source": "(__form-descriptor bad/parent (:constructed-by 42))",
+    "code": "descriptor/constructed-by",
+    "text": "(:constructed-by 42)"
+  },
+  {
+    "name": "constructed-by-options",
+    "source": "(__form-descriptor bad/parent (:constructed-by parent/construct :unknown child))",
+    "code": "descriptor/constructed-by",
+    "text": ":unknown"
+  },
+  {
+    "name": "unknown-slot",
+    "source": "(__form-descriptor thing (:slots (slot doc value)))\n(thing (:dco \"text\"))",
+    "code": "descriptor/unknown-slot",
+    "text": "(:dco \"text\")"
+  },
+  {
+    "name": "surface-unknown-slot",
+    "source": "\n(entity Employee {:name (Option String)}\n  :dco \"Employee record\")\n",
+    "code": "surface/invalid-form",
+    "text": "(entity Employee {:name (Option String)}\n  :dco \"Employee record\")",
+    "ontology": true
+  },
+  {
+    "name": "missing-hook-kind",
+    "source": "(__form-hook bad/kind (:body true))",
+    "code": "descriptor/meta-kind",
+    "text": "(__form-hook bad/kind (:body true))"
+  },
+  {
+    "name": "missing-hook-body",
+    "source": "(__form-hook bad/body (:kind check))",
+    "code": "descriptor/hook-clause",
+    "text": "(__form-hook bad/body (:kind check))"
+  }
+]

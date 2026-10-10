@@ -93,7 +93,8 @@ export function parseMetaFnDecl(expr: SExpr): MetaFnDecl | undefined {
   let body: SExpr | undefined;
 
   for (let i = 1; i < args.length; i++) {
-    const child = args[i]!;
+    const item = args[i]!;
+    const child: SExpr = item._tag === "Vector" ? {...item,_tag:"List"} : item;
     const kw = headSym(child);
     if (!kw || !kw.startsWith(":")) continue;
 
@@ -101,7 +102,8 @@ export function parseMetaFnDecl(expr: SExpr): MetaFnDecl | undefined {
 
     switch (kw) {
       case ":kind": {
-        const val = childTail[0] && trySym(childTail[0]);
+        const raw = childTail[0]?._tag === "Str" ? childTail[0].value : childTail[0] && trySym(childTail[0]);
+        const val = raw?.replace(/^:/, "");
         if (val && val in HOOK_KIND_MAP) {
           kind = HOOK_KIND_MAP[val];
         } else {
@@ -157,20 +159,6 @@ export function parseMetaFnDecl(expr: SExpr): MetaFnDecl | undefined {
       `__form-hook '${name}' is missing required section ':kind'`,
     );
   }
-  if (!inputType) {
-    throw new MetaFnSyntaxError(
-      name,
-      ":input",
-      `__form-hook '${name}' is missing required section ':input'`,
-    );
-  }
-  if (!outputType) {
-    throw new MetaFnSyntaxError(
-      name,
-      ":output",
-      `__form-hook '${name}' is missing required section ':output'`,
-    );
-  }
   if (!body) {
     throw new MetaFnSyntaxError(
       name,
@@ -182,8 +170,8 @@ export function parseMetaFnDecl(expr: SExpr): MetaFnDecl | undefined {
   return {
     name,
     kind,
-    inputType,
-    outputType,
+    inputType: inputType ?? "FormMetaInput",
+    outputType: outputType ?? "Type",
     capabilities,
     ...(doc != null ? { doc } : {}),
     body,

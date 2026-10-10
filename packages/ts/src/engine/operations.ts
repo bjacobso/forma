@@ -1,6 +1,7 @@
 import { validateHostTypes, hostTypeNames } from "./type-policy.js";
 import { checkSessionTypes } from "./session-validation.js";
 import { bootstrapFromSources, type BootstrappedPrelude } from "../descriptor/bootstrap.js";
+import { descriptorFormProvider } from "../type/unified-form-provider.js";
 import { elaborateSources } from "../descriptor/elaborate.js";
 import { head } from "../surface/effect.js";
 import { parse as parseSurface, toSExprMany } from "../reader/index.js";
@@ -310,7 +311,8 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
     const formErrors = formDiagnostics(request, sourceId, source);
     if (formErrors.some(d=>d.severity === "error")) return {sourceId, pass:"typecheck", diagnostics:formErrors};
     if (request.session) {
-      const checked = checkSessionTypes({ ...mergedRequest, session: request.session, source: mergedSource }, sourceId);
+      const provider = descriptorFormProvider(typecheckPreludes.get(request.session)!.prelude);
+      const checked = checkSessionTypes({ ...mergedRequest, session: request.session, source: mergedSource }, sourceId, provider);
       return { ...checked, diagnostics: [...formErrors, ...checked.diagnostics] };
     }
     const inferOptions = typeInferOptions(mergedRequest);
@@ -324,7 +326,7 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
         : [Type.showType(result.type)];
     const diagnostics = result.diagnostics.map(
       (diagnostic): Diagnostic => ({
-        code: "typecheck/diagnostic",
+        code: diagnostic.code ?? "typecheck/diagnostic",
         severity: diagnostic.severity,
         message: diagnostic.message,
         phase: "typecheck",

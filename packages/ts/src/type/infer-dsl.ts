@@ -105,6 +105,10 @@ export const inferDSLForm = (
     const ctx = yield* InferContext;
     const _inferDslProvider = getInferDslProvider();
     const _inferRawExprs = getInferRawExprs();
+    if (_inferDslProvider?.typeApplication) {
+      const type = yield* _inferDslProvider.typeApplication(env, expr);
+      if (type) return type;
+    }
 
     // Find the raw SExpr corresponding to this DSLForm (by span matching).
     // Needed for type bindings and expression-specific result types.

@@ -138,7 +138,7 @@ export function inferenceDiagnostics(sourceId: string, result: LspResult): reado
   return [
     ...result.errors.map(error => ({ code: error.diagnosticCode ?? "typecheck/error", severity: "error" as const, message: error.message, phase: "typecheck" as const,
       ...(error.span ? { span: { sourceId, startOffset: error.span.start, endOffset: error.span.end } } : {}) })),
-    ...result.diagnostics.map(d => ({ code: "typecheck/diagnostic", severity: d.severity, message: d.message, phase: "typecheck" as const,
+    ...result.diagnostics.map(d => ({ code: d.code ?? "typecheck/diagnostic", severity: d.severity, message: d.message, phase: "typecheck" as const,
       ...(d.span ? { span: { sourceId, startOffset: d.span.start, endOffset: d.span.end } } : {}) })),
   ];
 }
@@ -209,8 +209,12 @@ export function validatePreludeTypes(
 }
 
 /** Analyze a session snapshot using retained schemes rather than typing every binding as Any. */
-export function checkSessionTypes(request: TypecheckRequest & { readonly session: LanguageSession; readonly source: string }, sourceId: string): import("./operations.js").TypecheckResult {
-  const result = Effect.runSync(analyzeLsp(request.source, analyzeOptions(request.session.scope, typeInferOptions(request))));
+export function checkSessionTypes(request: TypecheckRequest & { readonly session: LanguageSession; readonly source: string }, sourceId: string, dslProvider?: Type.DSLTypeProvider): import("./operations.js").TypecheckResult {
+  const result = Effect.runSync(analyzeLsp(request.source, {
+    ...analyzeOptions(request.session.scope, typeInferOptions(request)),
+    ...(dslProvider ? {dslProvider} : {}),
+    macroEnv: request.session.scope.macroEnv ?? request.session.env.flatten(),
+  }));
   const display = result.resultTypeString;
   return {
     sourceId, pass: "typecheck", ...(display ? { display, type: typeProjection(display) } : {}),

@@ -459,7 +459,7 @@ function analyzeDocument(
   }
   for (const diagnostic of result.diagnostics) {
     diagnostics.push({
-      code: `${diagnostic.source}/diagnostic`,
+      code: diagnostic.code ?? `${diagnostic.source}/diagnostic`,
       severity: diagnostic.severity,
       message: diagnostic.message,
       phase: "typecheck",
@@ -470,7 +470,13 @@ function analyzeDocument(
       },
     });
   }
-  if (parsed.errors.length === 0) diagnostics.push(...formDiagnostics(sourceId, text, scope));
+  if (parsed.errors.length === 0) diagnostics.push(...formDiagnostics(sourceId, text, scope).filter(diagnostic => {
+    if (diagnostic.code === "elaborate/unknown-form") return false;
+    return diagnostic.code !== "elaborate/hole-type" || !diagnostics.some(existing =>
+      existing.span && diagnostic.span && existing.span.startOffset >= diagnostic.span.startOffset &&
+      existing.span.endOffset <= diagnostic.span.endOffset &&
+      ["elaborate/form-check", "typecheck/type-mismatch", "typecheck/unbound-symbol"].includes(existing.code));
+  }));
   return {
     sourceId,
     ...(result.resultTypeString !== undefined ? { resultType: result.resultTypeString } : {}),
@@ -495,7 +501,7 @@ function formDiagnostics(sourceId: string, text: string, scope: Scope): readonly
   if (!described) return [];
   try {
     return elaborateSources([{ sourceId, source: text }], { prelude }).diagnostics.filter(
-      (diagnostic) => diagnostic.span?.sourceId === sourceId,
+      (diagnostic) => diagnostic.span?.sourceId === sourceId && diagnostic.code !== "elaborate/no-construct-hook",
     );
   } catch {
     return [];

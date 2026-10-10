@@ -1,0 +1,15 @@
+{
+  "diagnostic": {
+    "span": {
+      "sourceId": "thesis-gate/expanded-string.lisp",
+      "startOffset": 0,
+      "endOffset": 25
+    },
+    "severity": "error",
+    "code": "typecheck/type-mismatch",
+    "message": "Expected Bool to match String.",
+    "notes": [],
+    "fixes": []
+  },
+  "spannedText": "(bool-wrapper \"not-bool\")"
+}

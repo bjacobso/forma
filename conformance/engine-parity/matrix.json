@@ -135,6 +135,14 @@
       "status": "compared",
       "fixture": "../artifacts/payload-cases.json and descriptor-cases.json",
       "reason": "TypeScript runs registered canonical payload schemas for every ontology kind, named validators, descriptor contracts and HTTP checks; Effect Schema diagnostic wording and nested span precision differ from OCaml."
+    },
+    {
+      "id": "descriptor-typing",
+      "status": "intentional-difference",
+      "fixture": "../thesis-gate",
+      "typescript": "shared TypeScript expectations; hooks, scoped bindings, typed slots, and authored expression spans",
+      "ocaml": "reference thesis-gate sources and diagnostic goldens",
+      "reason": "The TypeScript gate checks all 22 sources separately from the parity runner. TypeScript locates repeated-slot, macro-argument, and record-field failures at their authored values; OCaml goldens sometimes cover the enclosing slot, macro call, or record. Workspace recovery can retain a result type alongside diagnostics."
     }
   ],
   "comparisonModel": {

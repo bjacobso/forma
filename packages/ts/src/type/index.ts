@@ -155,6 +155,7 @@ export {
   type TypedSpan,
   type LspError,
 } from "../lsp/hm-lsp.js";
+export { descriptorFormProvider } from "./unified-form-provider.js";
 export type { DSLTypeProvider, DSLSlotInfo, SlotMode } from "./dsl-provider.js";
 
 // ---------------------------------------------------------------------------
@@ -162,6 +163,7 @@ export type { DSLTypeProvider, DSLSlotInfo, SlotMode } from "./dsl-provider.js";
 // ---------------------------------------------------------------------------
 
 export interface InferOptions {
+  readonly macroEnv?: import("../Env.js").Env;
   /** Optional DSL type provider for recognizing and type-checking DSL forms */
   readonly dslProvider?: import("./dsl-provider.js").DSLTypeProvider;
   /** Optional host-specific builtin type schemes. */
@@ -199,7 +201,7 @@ export function inferSource(
 
     resetNodeIds();
     const coreExprs = yield* Effect.try({
-      try: () => lowerProgram(exprs, dslProvider),
+      try: () => lowerProgram(exprs, dslProvider, options?.macroEnv ? {macroEnv:options.macroEnv} : {}),
       catch: (e) => {
         if (e instanceof InferenceError) return e;
         if (e instanceof Error && "loc" in e) {
@@ -267,7 +269,7 @@ export function inferSourceAll(
 
     resetNodeIds();
     const coreExprs = yield* Effect.try({
-      try: () => lowerProgram(exprs, dslProvider),
+      try: () => lowerProgram(exprs, dslProvider, options?.macroEnv ? {macroEnv:options.macroEnv} : {}),
       catch: (e) => {
         if (e instanceof InferenceError) return e;
         if (e instanceof Error && "loc" in e) {

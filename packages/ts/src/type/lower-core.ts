@@ -341,5 +341,5 @@ function lowerDSLForm(span: Span, name: string, expr: SExpr): CoreExpr {
     expectedType: slot.expectedType,
   }));
 
-  return CDSLForm(span, name, children);
+  return { ...CDSLForm(span, name, children), rawExpr: expr };
 }
