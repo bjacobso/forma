@@ -7,7 +7,7 @@ export const PROTOCOL_TYPE_EXTENSION_KEY = "protocol/type";
 export const PROTOCOL_ENUM_EXTENSION_KEY = "protocol/enum";
 export const PROTOCOL_CATALOG_EXTENSION_KEY = "protocol/catalog";
 
-export type ProtocolPrimitiveType = "string" | "number" | "boolean" | "null" | "unknown";
+export type ProtocolPrimitiveType = "string" | "number" | "integer" | "boolean" | "null" | "unknown";
 
 export type ProtocolScalarLiteral = string | number | boolean | null;
 
@@ -190,9 +190,12 @@ function primitiveType(name: string): ProtocolPrimitiveType | undefined {
     case "string":
     case "str":
       return "string";
-    case "number":
+    case "float": return "number";
+    case "int":
+    case "integer":
+      return "integer";
     case "num":
-      return "number";
+    case "number": return "number";
     case "boolean":
     case "bool":
       return "boolean";

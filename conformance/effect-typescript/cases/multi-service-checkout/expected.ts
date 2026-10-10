@@ -1,5 +1,10 @@
 import { Context, Effect, Layer, Option, Record, Schema } from "effect";
 
+const __formaInt = (value: number): number => {
+  if (!Number.isSafeInteger(value)) throw new RangeError("Int outside the safe integer range");
+  return value === 0 ? 0 : value;
+};
+
 export const Sku = Schema.String.pipe(Schema.brand("Sku"));
 export type Sku = typeof Sku.Type;
 
@@ -77,7 +82,8 @@ export class Checkout extends Context.Service<
   }
 >()("Checkout") {}
 
-export const lineTotal = (line: OrderLine, unitCents: number): number => line.quantity * unitCents;
+export const lineTotal = (line: OrderLine, unitCents: number): number =>
+  __formaInt(line.quantity * unitCents);
 
 export const priceLines = (
   lines: ReadonlyArray<OrderLine>,
@@ -93,7 +99,7 @@ export const priceLines = (
         return yield* Effect.fail(new InvalidOrder({ reason: `unknown sku ${line.sku}` }));
       }
     }));
-    return totals.reduce((total, item) => total + item, 0);
+    return __formaInt(totals.reduce((total, item) => total + item, 0));
   });
 
 export const reserveAll = (

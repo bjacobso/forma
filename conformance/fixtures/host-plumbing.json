@@ -14,8 +14,7 @@
     {
       "id": "host-builtin",
       "request": {"op":"typecheck","sourceId":"host-builtin","source":"(runtime-add 1 2)","typePolicy":{"defaultBuiltinScheme":"none"},"hostBuiltins":[{"name":"runtime-add","arity":2,"typeScheme":{"kind":"function","params":[{"kind":"type","name":"Int"},{"kind":"type","name":"Int"}],"result":{"kind":"type","name":"Int"}},"handler":{"kind":"host-effect","effect":"runtime/add"}}]},
-      "expected": {"ok":true,"type":"Int","diagnostics":[]},
-      "typescript": {"reason":"Numeric host scheme aliases remain Number in TypeScript, including Int and Float.","expected":{"ok":true,"type":"Number","diagnostics":[]}}
+      "expected": {"ok":true,"type":"Int","diagnostics":[]}
     }
   ],
   "incremental": {

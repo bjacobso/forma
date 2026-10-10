@@ -194,7 +194,10 @@ export const mono = (type: Type): Scheme => Scheme([], [], type, [], []);
 // Well-known types
 // ---------------------------------------------------------------------------
 
-export const tNum = TCon("Number");
+export const tInt = TCon("Int");
+export const tFloat = TCon("Float");
+/** Legacy Number/Num aliases denote Float; prefer explicit Int/Float. */
+export const tNum = tFloat;
 export const tStr = TCon("String");
 export const tBool = TCon("Bool");
 export const tNil = TCon("Unit");
@@ -344,8 +347,9 @@ function showPublicTypeName(name: string): string {
   switch (name) {
     // Legacy fallback translations — kept so any residual serialized type
     // representations from pre-migration data still display correctly.
+    case "Number":
     case "Num":
-      return "Number";
+      return "Float";
     case "Str":
       return "String";
     case "Boolean":

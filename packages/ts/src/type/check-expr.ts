@@ -1,3 +1,4 @@
+import { printFloat } from "../evaluator/types.js";
 import { Effect, Ref } from "effect";
 import type { Type } from "./types.js";
 import { flattenRow, TCon, TRow, REmpty, RExtend, type Row } from "./types.js";
@@ -14,7 +15,7 @@ import { inferExpr, inferLam, originOf } from "./infer-core.js";
 export function literalType(expr: CoreExpr): Type | undefined {
   if (expr._tag !== "Lit") return;
   const lit=expr.lit;
-  return TCon(lit._tag === "LQuoted" ? "Syntax" : lit._tag === "LSymbol" ? "Symbol" : lit._tag === "LKeyword" ? lit.value : lit._tag === "LNil" ? "Unit" : JSON.stringify(lit.value));
+  return TCon(lit._tag === "LQuoted" ? "Syntax" : lit._tag === "LSymbol" ? "Symbol" : lit._tag === "LKeyword" ? lit.value : lit._tag === "LNil" ? "Unit" : lit._tag === "LFloat" ? printFloat(lit.value) : JSON.stringify(lit.value));
 }
 export const checkExpr = (env: TypeEnv, expr: CoreExpr, expected: Type): Effect.Effect<Type,InferenceError,InferContext> => Effect.gen(function* () {
   const ctx=yield* InferContext;

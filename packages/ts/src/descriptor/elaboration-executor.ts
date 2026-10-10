@@ -1,3 +1,4 @@
+import { numericDatum, isKFloat } from "../evaluator/types.js";
 import { Effect } from "effect";
 import type { KValue } from "../evaluator/types.js";
 import { headSym, tail } from "../reader/types.js";
@@ -253,7 +254,7 @@ function positional(input: HookInput | NormalizedChildForm, index: number): KVal
     case "Str":
       return typeof value.value === "string" ? value.value : null;
     case "Num":
-      return typeof value.value === "number" ? value.value : null;
+      return typeof value.value === "number" ? numericDatum(value as unknown as SExpr & { _tag: "Num" }) : null;
     case "Bool":
       return typeof value.value === "boolean" ? value.value : null;
     default:

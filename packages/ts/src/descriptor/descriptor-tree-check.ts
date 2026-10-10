@@ -1,3 +1,4 @@
+import { isFloatLiteral } from "../reader/types.js";
 import type { FormDescriptor, SlotSpec, ValidationCheck } from "./FormDescriptor.js";
 import {
   readDescriptorTreeComponentSpec,
@@ -20,6 +21,8 @@ export interface DescriptorTreeDiagnostic {
 export type DescriptorTreePropType =
   | "string"
   | "number"
+  | "int"
+  | "float"
   | "boolean"
   | "expression"
   | "array"
@@ -42,6 +45,8 @@ export interface DescriptorTreeComponentSchema {
 type SimpleType =
   | "string"
   | "number"
+  | "int"
+  | "float"
   | "boolean"
   | "null"
   | "list"
@@ -155,11 +160,10 @@ function propTypeFromSlot(slot: SlotSpec): DescriptorTreePropType {
     case "Str":
     case "Symbol":
       return "string";
+    case "Int": return "int";
     case "Number":
     case "Num":
-    case "Int":
-    case "Float":
-      return "number";
+    case "Float": return "float";
     case "Boolean":
     case "Bool":
       return "boolean";
@@ -197,6 +201,8 @@ function simpleTypeFromStateKind(kind: string | undefined): SimpleType {
   switch (kind) {
     case "string":
       return "string";
+    case "int": return "int";
+    case "float": return "float";
     case "number":
       return "number";
     case "boolean":
@@ -241,7 +247,7 @@ function inferExprType(expr: SExpr, ctx: TreeContext, componentPath: string): Si
     case "Str":
       return "string";
     case "Num":
-      return "number";
+      return isFloatLiteral(expr) ? "float" : "int";
     case "Bool":
       return "boolean";
     case "Vector":
@@ -317,7 +323,7 @@ function inferExprType(expr: SExpr, ctx: TreeContext, componentPath: string): Si
       return "any";
     case "length":
       if (args[0]) inferExprType(args[0], ctx, componentPath);
-      return "number";
+      return "int";
     case "not":
     case "nil?":
       if (args[0]) inferExprType(args[0], ctx, componentPath);
@@ -354,10 +360,10 @@ function inferExprType(expr: SExpr, ctx: TreeContext, componentPath: string): Si
     case "+":
     case "-":
     case "*":
-    case "/":
-      if (args[0]) inferExprType(args[0], ctx, componentPath);
-      if (args[1]) inferExprType(args[1], ctx, componentPath);
-      return "number";
+    case "/": {
+      const types = args.map(arg => inferExprType(arg, ctx, componentPath));
+      return headSym(expr) !== "/" && types.every(type => type === "int") ? "int" : "float";
+    }
     case "pipe": {
       const inputType = args[0] ? inferExprType(args[0], ctx, componentPath) : "unknown";
       let outputType = inputType;
@@ -469,12 +475,12 @@ function validatePropValue(
     return;
   }
 
-  if (propSchema.type === "number" && value._tag === "List") {
+  if (["number", "int", "float"].includes(propSchema.type)) {
     const exprType = inferExprType(value, ctx, componentPath);
-    if (exprType !== "number" && exprType !== "any" && exprType !== "unknown") {
+    if (exprType !== "any" && exprType !== "unknown" && !(propSchema.type === "int" ? exprType === "int" : ["number", "int", "float"].includes(exprType))) {
       ctx.diagnostics.push({
         severity: "warning",
-        message: `Prop '${propName}' expects a number but expression has type '${exprType}'`,
+        message: `Prop '${propName}' expects ${propSchema.type} but expression has type '${exprType}'`,
         component: componentPath,
       });
     }

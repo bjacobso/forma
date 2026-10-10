@@ -423,6 +423,7 @@ export function tsProtocolType(type: ProtocolTypeDescriptor): string {
   switch (type.kind) {
     case "string":
       return "string";
+    case "integer":
     case "number":
       return "number";
     case "boolean":
@@ -457,6 +458,7 @@ export function schemaProtocolType(
   switch (type.kind) {
     case "string":
       return "Schema.String";
+    case "integer": return "Schema.Int";
     case "number":
       return "Schema.Number";
     case "boolean":

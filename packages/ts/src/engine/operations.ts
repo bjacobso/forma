@@ -588,7 +588,7 @@ function astFromSExpr(sourceId: string, expr: Reader.SExpr): AstNode {
       return { kind: "string", value: expr.value, span: spanFromLoc(sourceId, expr.loc) };
     case "Num":
       return {
-        kind: Number.isInteger(expr.value) ? "int" : "float",
+        kind: expr.numericKind ?? (Number.isInteger(expr.value) ? "int" : "float"),
         value: expr.value,
         span: spanFromLoc(sourceId, expr.loc),
       };
@@ -778,11 +778,12 @@ function typeFromSchemeExpr(expr: TypeSchemeExpr): Type.Type {
 
 function primitiveType(name: string): Type.Type {
   switch (name) {
+    case "Int":
+      return Type.tInt;
     case "Number":
     case "Num":
-    case "Int":
     case "Float":
-      return Type.tNum;
+      return Type.tFloat;
     case "String":
     case "Str":
       return Type.tStr;

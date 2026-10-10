@@ -1,0 +1,204 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "numeric-equality-patterns",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "items": [
+          {
+            "kind": "bool",
+            "value": true
+          },
+          {
+            "kind": "bool",
+            "value": true
+          },
+          {
+            "kind": "bool",
+            "value": false
+          }
+        ],
+        "kind": "list"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 3,
+                    "sourceId": "engine-parity/numeric-equality-patterns",
+                    "startOffset": 2
+                  },
+                  "value": "="
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 5,
+                    "sourceId": "engine-parity/numeric-equality-patterns",
+                    "startOffset": 4
+                  },
+                  "value": 2
+                },
+                {
+                  "kind": "float",
+                  "span": {
+                    "endOffset": 9,
+                    "sourceId": "engine-parity/numeric-equality-patterns",
+                    "startOffset": 6
+                  },
+                  "value": 2
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 10,
+                "sourceId": "engine-parity/numeric-equality-patterns",
+                "startOffset": 1
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 13,
+                    "sourceId": "engine-parity/numeric-equality-patterns",
+                    "startOffset": 12
+                  },
+                  "value": "="
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "int",
+                      "span": {
+                        "endOffset": 16,
+                        "sourceId": "engine-parity/numeric-equality-patterns",
+                        "startOffset": 15
+                      },
+                      "value": 2
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 17,
+                    "sourceId": "engine-parity/numeric-equality-patterns",
+                    "startOffset": 14
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "float",
+                      "span": {
+                        "endOffset": 22,
+                        "sourceId": "engine-parity/numeric-equality-patterns",
+                        "startOffset": 19
+                      },
+                      "value": 2
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 23,
+                    "sourceId": "engine-parity/numeric-equality-patterns",
+                    "startOffset": 18
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 24,
+                "sourceId": "engine-parity/numeric-equality-patterns",
+                "startOffset": 11
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 31,
+                    "sourceId": "engine-parity/numeric-equality-patterns",
+                    "startOffset": 26
+                  },
+                  "value": "match"
+                },
+                {
+                  "kind": "float",
+                  "span": {
+                    "endOffset": 35,
+                    "sourceId": "engine-parity/numeric-equality-patterns",
+                    "startOffset": 32
+                  },
+                  "value": 2
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 37,
+                    "sourceId": "engine-parity/numeric-equality-patterns",
+                    "startOffset": 36
+                  },
+                  "value": 2
+                },
+                {
+                  "kind": "bool",
+                  "span": {
+                    "endOffset": 42,
+                    "sourceId": "engine-parity/numeric-equality-patterns",
+                    "startOffset": 38
+                  },
+                  "value": true
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 44,
+                    "sourceId": "engine-parity/numeric-equality-patterns",
+                    "startOffset": 43
+                  },
+                  "value": "_"
+                },
+                {
+                  "kind": "bool",
+                  "span": {
+                    "endOffset": 50,
+                    "sourceId": "engine-parity/numeric-equality-patterns",
+                    "startOffset": 45
+                  },
+                  "value": false
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 51,
+                "sourceId": "engine-parity/numeric-equality-patterns",
+                "startOffset": 25
+              }
+            }
+          ],
+          "kind": "vector",
+          "span": {
+            "endOffset": 52,
+            "sourceId": "engine-parity/numeric-equality-patterns",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "List<Bool>"
+    }
+  },
+  "version": 1
+}

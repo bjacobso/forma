@@ -1,3 +1,4 @@
+import { isKFloat } from "../evaluator/types.js";
 import { descriptorPayloadContract, descriptorValidatorNames, checkArtifactDescriptor, checkArtifactPayloadContracts, payloadContractsFromSources } from "../artifact/descriptor-contracts.js";
 import { makeArtifactValidatorRegistry } from "../artifact/validator-catalog.js";
 import { typeDefinition } from "../surface/type-alias.js";
@@ -418,6 +419,7 @@ export function toJsonValue(value: unknown): JsonValue {
   if (value === null || value === undefined) return null;
   if (isKKeyword(value as KValue) || isKSymbol(value as KValue)) return String(value);
   if (typeof value === "string" || typeof value === "boolean") return value;
+  if (isKFloat(value)) return Number.isFinite(value.value) ? value.value : null;
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (typeof value === "bigint") return value.toString();
   if (Array.isArray(value) || value instanceof Set) return [...value].map(toJsonValue);

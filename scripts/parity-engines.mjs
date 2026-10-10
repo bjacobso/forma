@@ -375,7 +375,8 @@ async function main() {
         const expected = fixture.expected?.[pass];
         if (expected !== undefined) {
           for (const [engine, actual] of [["typescript", typescript], ...(!options.typescriptOnly ? [["ocaml", ocaml]] : [])]) {
-            const differences = diffValues(expected, actual);
+            const engineExpected = engine === "typescript" ? fixture.expectedTypescript?.[pass] ?? expected : expected;
+            const differences = diffValues(engineExpected, actual);
             if (differences.length > 0) {
               report.goldenFailures.push({ id: fixture.id, pass, engine, differences });
               report.summary.goldenFailures += differences.length;

@@ -63,6 +63,8 @@ export {
   Scheme,
   mono,
   tNum,
+  tInt,
+  tFloat,
   tStr,
   tBool,
   tNil,

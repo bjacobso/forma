@@ -1248,7 +1248,7 @@ class Checker {
         { tag: "success", payload: resolved.success },
         { tag: "failure", payload: resolved.failure },
       ];
-    } else if (resolved.kind === "prim" && ["String", "Int", "Number", "Bool"].includes(resolved.name)) {
+    } else if (resolved.kind === "prim" && ["String", "Int", "Float", "Bool"].includes(resolved.name)) {
       // Primitive values match literal patterns; only Bool has finitely many cases.
       shape = { kind: "literal" };
       open = resolved.name === "Bool" ? undefined : resolved;
@@ -1616,9 +1616,9 @@ class Checker {
       }
       case "config": {
         const type = this.typeArg(args[0]);
-        const valid = type.kind === "prim" && ["String", "Int", "Number", "Bool"].includes(type.name);
+        const valid = type.kind === "prim" && ["String", "Int", "Float", "Bool"].includes(type.name);
         if (!valid) {
-          this.error(spanOf(args[0]) ?? span, "mechanics/config-type", `config reads String, Int, Number, or Bool values, not ${showType(type)}.`);
+          this.error(spanOf(args[0]) ?? span, "mechanics/config-type", `config reads String, Int, Float, or Bool values, not ${showType(type)}.`);
         }
         this.value(args[1], scope, tString);
         const fallback = option("default");
@@ -1719,12 +1719,12 @@ class Checker {
           this.error(span, "mechanics/number", "This number is too large for a JavaScript number.");
           return tUnknown;
         }
-        if (typeof value === "number" && Number.isInteger(value) && !Number.isSafeInteger(value)) {
+        if (typeof value === "number" && node["numericKind"] !== "float" && Number.isInteger(value) && !Number.isSafeInteger(value)) {
           this.error(span, "mechanics/number", "This integer is outside JavaScript's safe range (±9007199254740991) and would lose precision.");
           return tUnknown;
         }
         if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-          return { kind: "literal", value };
+          return { kind: "literal", value, ...(typeof value === "number" && node["numericKind"] === "float" ? { numericKind: "float" as const } : {}) };
         }
         return tUnknown;
       }
@@ -2116,15 +2116,15 @@ class Checker {
     const operator = arithmeticOperators.get(name);
     if (operator) {
       resolveAs({ kind: "arithmetic", operator });
-      if (args.length < (name === "-" ? 1 : 2)) {
-        this.error(span, "mechanics/arity", `${name} expects at least ${name === "-" ? 1 : 2} operands.`);
+      if (args.length < (["+", "*"].includes(name) ? 0 : 1)) {
+        this.error(span, "mechanics/arity", `${name} expects at least 1 operand.`);
       }
       let allInt = true;
       for (const arg of args) {
         const type = this.value(arg, scope, tNumber);
         if (!isAssignable(type, tInt, this.env)) allInt = false;
       }
-      return allInt ? tInt : tNumber;
+      return name === "/" ? tNumber : allInt ? tInt : tNumber;
     }
     const overloads = builtins.get(name);
     if (overloads) return this.builtin(node, name, overloads, args, scope, span, expected);

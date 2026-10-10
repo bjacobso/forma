@@ -1,3 +1,4 @@
+import { isKFloat } from "../evaluator/types.js";
 import { Effect } from "effect";
 import { Env } from "../Env.js";
 import { defaultBuiltins } from "../Builtins.js";
@@ -38,6 +39,7 @@ import {
 } from "./graph.js";
 
 export type ModuleDataValue =
+  | { readonly float: number | string }
   | null
   | boolean
   | number
@@ -105,6 +107,7 @@ export function moduleTypeSyntax(e: SExpr): ModuleTypeSyntax {
   return e.items.map(moduleTypeSyntax);
 }
 export function moduleDataValue(value: KValue): ModuleDataValue {
+  if (isKFloat(value)) return { float: Number.isFinite(value.value) ? value.value : String(value.value) };
   if (
     value === null ||
     typeof value === "string" ||

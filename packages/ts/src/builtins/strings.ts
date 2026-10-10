@@ -1,3 +1,4 @@
+import { isKFloat, printFloat } from "../evaluator/types.js";
 import { namespaceOf } from "../surface/domain.js";
 import { Effect } from "effect";
 import type { BuiltinFn, KValue } from "../evaluator/types.js";
@@ -9,6 +10,7 @@ function stringify(v: KValue): string {
   if (v === null) return "";
   if (isKKeyword(v) || isKSymbol(v)) return v.name;
   if (typeof v === "string") return v;
+  if (isKFloat(v)) return Number.isNaN(v.value) ? "nan" : v.value === Infinity ? "inf" : v.value === -Infinity ? "-inf" : printFloat(v.value).replace(/\.0$/, ".");
   if (typeof v === "number") return String(v);
   if (typeof v === "boolean") return String(v);
   return String(v);

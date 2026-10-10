@@ -1,0 +1,262 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "numeric-float-map-reduce",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "float",
+        "value": 12
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 7,
+                "sourceId": "engine-parity/numeric-float-map-reduce",
+                "startOffset": 1
+              },
+              "value": "reduce"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 11,
+                    "sourceId": "engine-parity/numeric-float-map-reduce",
+                    "startOffset": 9
+                  },
+                  "value": "fn"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 14,
+                        "sourceId": "engine-parity/numeric-float-map-reduce",
+                        "startOffset": 13
+                      },
+                      "value": "a"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 16,
+                        "sourceId": "engine-parity/numeric-float-map-reduce",
+                        "startOffset": 15
+                      },
+                      "value": "b"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 17,
+                    "sourceId": "engine-parity/numeric-float-map-reduce",
+                    "startOffset": 12
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 20,
+                        "sourceId": "engine-parity/numeric-float-map-reduce",
+                        "startOffset": 19
+                      },
+                      "value": "+"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 22,
+                        "sourceId": "engine-parity/numeric-float-map-reduce",
+                        "startOffset": 21
+                      },
+                      "value": "a"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 24,
+                        "sourceId": "engine-parity/numeric-float-map-reduce",
+                        "startOffset": 23
+                      },
+                      "value": "b"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 25,
+                    "sourceId": "engine-parity/numeric-float-map-reduce",
+                    "startOffset": 18
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 26,
+                "sourceId": "engine-parity/numeric-float-map-reduce",
+                "startOffset": 8
+              }
+            },
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 28,
+                "sourceId": "engine-parity/numeric-float-map-reduce",
+                "startOffset": 27
+              },
+              "value": 0
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 33,
+                    "sourceId": "engine-parity/numeric-float-map-reduce",
+                    "startOffset": 30
+                  },
+                  "value": "map"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 37,
+                        "sourceId": "engine-parity/numeric-float-map-reduce",
+                        "startOffset": 35
+                      },
+                      "value": "fn"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 40,
+                            "sourceId": "engine-parity/numeric-float-map-reduce",
+                            "startOffset": 39
+                          },
+                          "value": "x"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 41,
+                        "sourceId": "engine-parity/numeric-float-map-reduce",
+                        "startOffset": 38
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 44,
+                            "sourceId": "engine-parity/numeric-float-map-reduce",
+                            "startOffset": 43
+                          },
+                          "value": "*"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 46,
+                            "sourceId": "engine-parity/numeric-float-map-reduce",
+                            "startOffset": 45
+                          },
+                          "value": "x"
+                        },
+                        {
+                          "kind": "float",
+                          "span": {
+                            "endOffset": 50,
+                            "sourceId": "engine-parity/numeric-float-map-reduce",
+                            "startOffset": 47
+                          },
+                          "value": 2
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 51,
+                        "sourceId": "engine-parity/numeric-float-map-reduce",
+                        "startOffset": 42
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 52,
+                    "sourceId": "engine-parity/numeric-float-map-reduce",
+                    "startOffset": 34
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "int",
+                      "span": {
+                        "endOffset": 55,
+                        "sourceId": "engine-parity/numeric-float-map-reduce",
+                        "startOffset": 54
+                      },
+                      "value": 1
+                    },
+                    {
+                      "kind": "int",
+                      "span": {
+                        "endOffset": 57,
+                        "sourceId": "engine-parity/numeric-float-map-reduce",
+                        "startOffset": 56
+                      },
+                      "value": 2
+                    },
+                    {
+                      "kind": "int",
+                      "span": {
+                        "endOffset": 59,
+                        "sourceId": "engine-parity/numeric-float-map-reduce",
+                        "startOffset": 58
+                      },
+                      "value": 3
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 60,
+                    "sourceId": "engine-parity/numeric-float-map-reduce",
+                    "startOffset": 53
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 61,
+                "sourceId": "engine-parity/numeric-float-map-reduce",
+                "startOffset": 29
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 62,
+            "sourceId": "engine-parity/numeric-float-map-reduce",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    }
+  },
+  "version": 1
+}

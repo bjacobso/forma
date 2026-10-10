@@ -1,3 +1,4 @@
+import { isFloatLiteral } from "../reader/types.js";
 import { parseTypeExpr } from "./type-parser.js";
 import { mapKey } from "../evaluator/types.js";
 /**
@@ -21,6 +22,7 @@ import {
   CRecord,
   CDSLForm,
   LInt,
+  LFloat,
   LString,
   LBool,
   LKeyword,
@@ -119,7 +121,7 @@ export function lower(expr: SExpr): CoreExpr {
 function lowerInner(expr: SExpr): CoreExpr {
   switch (expr._tag) {
     case "Num":
-      return CLit(spanOf(expr), LInt(expr.value));
+      return CLit(spanOf(expr), isFloatLiteral(expr) ? LFloat(expr.value) : LInt(expr.value));
     case "Str":
       return CLit(spanOf(expr), LString(expr.value));
     case "Bool":

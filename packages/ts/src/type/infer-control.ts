@@ -1,3 +1,4 @@
+import { isFloatLiteral } from "../reader/types.js";
 /**
  * Inference for control flow: if (with type narrowing) and match (with exhaustiveness).
  */
@@ -296,10 +297,10 @@ function inferDataPattern(env: TypeEnv, syntax: import("../reader/types.js").SEx
         if (ct._tag === "TFun") return yield* ctx.fail(origin,{code: "typecheck/pattern-arity", message: `Missing pattern arguments for ${ctor}`});
         yield* unify(t,ct,origin); return;
       }
-      const literal = p._tag === "Num" || p._tag === "Str" || p._tag === "Bool" ? TCon(JSON.stringify(p.value)) : p._tag === "Sym" && p.name.startsWith(":") ? TCon(p.name) : p._tag === "Sym" && p.name === "nil" ? tNil : undefined;
+      const literal = p._tag === "Num" || p._tag === "Str" || p._tag === "Bool" ? TCon(p._tag === "Num" && isFloatLiteral(p) && Number.isInteger(p.value) ? `${p.value}.0` : JSON.stringify(p.value)) : p._tag === "Sym" && p.name.startsWith(":") ? TCon(p.name) : p._tag === "Sym" && p.name === "nil" ? tNil : undefined;
       if (!literal) return yield* ctx.fail(origin,{code: "typecheck/pattern", message: "Invalid match pattern"});
       const target = applyType(yield* Ref.get(ctx.subst), t);
-      const widened = p._tag === "Num" ? TCon(Number.isInteger(p.value) ? "Int" : "Number")
+      const widened = p._tag === "Num" ? TCon(isFloatLiteral(p) ? "Float" : "Int")
         : p._tag === "Str" ? TCon("String") : p._tag === "Bool" ? TCon("Bool")
         : p._tag === "Sym" && p.name.startsWith(":") ? TCon("Keyword") : literal;
       yield* assignType(target._tag === "TVar" ? widened : literal, t, origin);

@@ -1,3 +1,5 @@
+import { numericResult, KFloat } from "../evaluator/types.js";
+import { isKFloat } from "../evaluator/types.js";
 import { KKeyword, mapKey, quotedDatum } from "../evaluator/types.js";
 /**
  * Stack-based bytecode virtual machine for the Lisp kernel.
@@ -65,8 +67,9 @@ interface DispatchWrapperData {
 
 function canonicalRuntimeTypeName(name: string): string {
   switch (name) {
+    case "Number":
     case "Num":
-      return "Number";
+      return "Float";
     case "Str":
       return "String";
     case "Bool":
@@ -82,7 +85,8 @@ function runtimeTypeName(val: KValue): string {
   if (val === null) return "Unit";
   if (Array.isArray(val)) return "List";
   if (val instanceof Map) return "Map";
-  if (typeof val === "number") return "Number";
+  if (isKFloat(val)) return "Float";
+  if (typeof val === "number") return "Int";
   if (typeof val === "string") return "String";
   if (typeof val === "boolean") return "Boolean";
   return "Unknown";
@@ -520,6 +524,16 @@ function executeVM(
       }
     }
 
+    function numericOutput(value: number, float: boolean, context: string): KValue | KernelTypeError {
+      if (float) return new KFloat(value);
+      if (Number.isSafeInteger(value)) return value === 0 ? 0 : value;
+      try { return numericResult(value, false, context); }
+      catch (error) {
+        if (!(error instanceof TypeCheckError)) throw error;
+        return new KernelTypeError({ message: error.message, expected: error.expected, got: error.got, ...errorContext() });
+      }
+    }
+
     while (true) {
       const totalSteps = yield* Ref.updateAndGet(stepCounter, (count) => count + 1);
       if (stepLimit > 0 && totalSteps > stepLimit) {
@@ -748,48 +762,70 @@ function executeVM(
 
         // ── Inline arithmetic ──────────────────────────────
         case Op.ADD: {
-          const b = expectNumber(stack.pop()!, "+");
+          const bv = stack.pop()!, av = stack.pop()!;
+          const b = expectNumber(bv, "+");
           if (b instanceof KernelTypeError) return yield* withStackTrace(b);
-          const a = expectNumber(stack.pop()!, "+");
+          const a = expectNumber(av, "+");
           if (a instanceof KernelTypeError) return yield* withStackTrace(a);
-          stack.push(a + b);
+          const result = numericOutput(a + b, typeof av !== "number" || typeof bv !== "number", "+");
+          if (result instanceof KernelTypeError) return yield* withStackTrace(result);
+          stack.push(result);
           break;
         }
         case Op.SUB: {
-          const b = expectNumber(stack.pop()!, "-");
+          const bv = stack.pop()!, av = stack.pop()!;
+          const b = expectNumber(bv, "-");
           if (b instanceof KernelTypeError) return yield* withStackTrace(b);
-          const a = expectNumber(stack.pop()!, "-");
+          const a = expectNumber(av, "-");
           if (a instanceof KernelTypeError) return yield* withStackTrace(a);
-          stack.push(a - b);
+          const result = numericOutput(a - b, typeof av !== "number" || typeof bv !== "number", "-");
+          if (result instanceof KernelTypeError) return yield* withStackTrace(result);
+          stack.push(result);
           break;
         }
         case Op.MUL: {
-          const b = expectNumber(stack.pop()!, "*");
+          const bv = stack.pop()!, av = stack.pop()!;
+          const b = expectNumber(bv, "*");
           if (b instanceof KernelTypeError) return yield* withStackTrace(b);
-          const a = expectNumber(stack.pop()!, "*");
+          const a = expectNumber(av, "*");
           if (a instanceof KernelTypeError) return yield* withStackTrace(a);
-          stack.push(a * b);
+          const result = numericOutput(a * b, typeof av !== "number" || typeof bv !== "number", "*");
+          if (result instanceof KernelTypeError) return yield* withStackTrace(result);
+          stack.push(result);
           break;
         }
         case Op.DIV: {
-          const b = expectNumber(stack.pop()!, "/");
+          const bv = stack.pop()!, av = stack.pop()!;
+          const b = expectNumber(bv, "/");
           if (b instanceof KernelTypeError) return yield* withStackTrace(b);
-          const a = expectNumber(stack.pop()!, "/");
+          const a = expectNumber(av, "/");
           if (a instanceof KernelTypeError) return yield* withStackTrace(a);
-          stack.push(b === 0 ? Infinity : a / b);
+          const result = numericOutput(a / b, true, "/");
+          if (result instanceof KernelTypeError) return yield* withStackTrace(result);
+          stack.push(result);
           break;
         }
         case Op.MOD: {
-          const b = expectNumber(stack.pop()!, "mod");
+          const bv = stack.pop()!, av = stack.pop()!;
+          const b = expectNumber(bv, "mod");
           if (b instanceof KernelTypeError) return yield* withStackTrace(b);
-          const a = expectNumber(stack.pop()!, "mod");
+          const a = expectNumber(av, "mod");
           if (a instanceof KernelTypeError) return yield* withStackTrace(a);
-          stack.push(a % b);
+          if (typeof av !== "number" || typeof bv !== "number" || b === 0) return yield* withStackTrace(new KernelTypeError({ message: "mod requires Int operands and a nonzero divisor", expected: "Int operands and nonzero divisor", got: "invalid mod operands", ...errorContext() }));
+          const result = numericOutput(a % b, typeof av !== "number" || typeof bv !== "number", "mod");
+          if (result instanceof KernelTypeError) return yield* withStackTrace(result);
+          stack.push(result);
           break;
         }
-        case Op.NEGATE:
-          stack[stack.length - 1] = -(stack[stack.length - 1] as number);
+        case Op.NEGATE: {
+          const value = stack.pop()!;
+          const number = expectNumber(value, "-");
+          if (number instanceof KernelTypeError) return yield* withStackTrace(number);
+          const result = numericOutput(-number, typeof value !== "number", "-");
+          if (result instanceof KernelTypeError) return yield* withStackTrace(result);
+          stack.push(result);
           break;
+        }
 
         // ── Inline comparison ──────────────────────────────
         case Op.EQ: {

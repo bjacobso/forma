@@ -14,7 +14,7 @@ it("shares typed hover facts and scoped completions", async () => {
   expect(hoverFact(analysis, offset)).toMatchObject({
     title: "amount",
     kind: "local",
-    type: "Number",
+    type: "Float",
   });
   expect(completeAt(analysis, "am", 2, offset).items.map((item) => item.label)).toContain("amount");
   expect(

@@ -27,8 +27,8 @@ describe("editor analysis around type errors", () => {
     const { result, typeOf, errorTexts } = analyze(source);
     expect(result.success).toBe(false);
     expect(errorTexts).toEqual(['(+ 1 "x")', '(+ 2 "y")']);
-    expect(typeOf("(* n (+ 1 rate))")).toBe("Number");
-    expect(typeOf("(total 100)")).toBe("Number");
+    expect(typeOf("(* n (+ 1 rate))")).toBe("Float");
+    expect(typeOf("(total 100)")).toBe("Float");
     expect(result.resultType).toBeUndefined();
   });
 
@@ -36,7 +36,7 @@ describe("editor analysis around type errors", () => {
     const source = '(define broken (+ 1 "x"))\n(define a [broken broken])\n(define b (+ broken 1))';
     const { errorTexts, typeOf } = analyze(source);
     expect(errorTexts).toEqual(['(+ 1 "x")']);
-    expect(typeOf("(+ broken 1)")).toBe("Number");
+    expect(typeOf("(+ broken 1)")).toBe("Float");
   });
 
   it("resolves types recorded before inference learned them", () => {
@@ -44,8 +44,8 @@ describe("editor analysis around type errors", () => {
       "(define twice [f x] (f (f x)))\n(twice (fn [n] (* n 2)) 4)",
     );
     expect(result.success).toBe(true);
-    expect(typeOf("(fn [n] (* n 2))")).toBe("Number -> Number");
-    expect(typeOf("n")).toBe("Number");
+    expect(typeOf("(fn [n] (* n 2))")).toBe("Float -> Float");
+    expect(typeOf("n")).toBe("Float");
   });
 });
 

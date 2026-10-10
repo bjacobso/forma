@@ -207,8 +207,8 @@ function validLiteral(e: SExpr, type: SExpr): boolean {
   if (h === "Declares" && t._tag === "List" && name(t.items[2]) === "String") return e._tag === "Str";
   if (h === "Declares" || h === "Refers" || name(t) === "Symbol") return e._tag === "Sym" && !e.name.startsWith(":");
   if (name(t) === "String") return e._tag === "Str";
-  if (name(t) === "Int") return e._tag === "Num" && Number.isInteger(e.value);
-  if (name(t) === "Number") return e._tag === "Num";
+  if (name(t) === "Int") return e._tag === "Num" && e.numericKind !== "float" && Number.isSafeInteger(e.value);
+  if (["Float", "Number", "Num"].includes(name(t) ?? "")) return e._tag === "Num";
   if (name(t) === "Bool") return e._tag === "Bool";
   if (name(t) === "Keyword") return name(e)?.startsWith(":") === true;
   if (h === "Union" && t._tag === "List") return t.items.slice(1).some(member => validLiteral(e, member));

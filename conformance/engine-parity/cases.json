@@ -740,6 +740,12 @@
           "type": "Number",
           "diagnostics": []
         }
+      },
+      "expectedTypescript": {
+        "typecheck": {
+          "type": "Float",
+          "diagnostics": []
+        }
       }
     },
     {
@@ -1343,6 +1349,101 @@
           "diagnostics": []
         }
       }
+    },
+    {
+      "id": "numeric-integral-float-literals",
+      "source": "[1 1.0 1e0 1E0 -0.0]",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "numeric-mixed-arithmetic",
+      "source": "[(+ 1 2.0) (- 5.0 2 1) (* 2.0 3) (min 2 3.0) (max 2.0 3) (abs -2.0)]",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "numeric-integral-division",
+      "source": "[(/ 6 3) (/ 12.0 2 3)]",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "numeric-rounding",
+      "source": "[(floor 2.0) (ceil 2.1) (round -1.5) (mod -5 2)]",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "numeric-equality-patterns",
+      "source": "[(= 2 2.0) (= [2] [2.0]) (match 2.0 2 true _ false)]",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "numeric-printing",
+      "source": "(str 2 \"|\" 2.0 \"|\" (* 2.0 3) \"|\" (/ 6 3))",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "numeric-quoted-floats",
+      "source": "(quote 1.0)",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "numeric-float-map-reduce",
+      "source": "(reduce (fn [a b] (+ a b)) 0 (map (fn [x] (* x 2.0)) [1 2 3]))",
+      "passes": [
+        "parse",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "numeric-float-annotation",
+      "source": "(: x Float) (define x 2.0) x",
+      "passes": [
+        "typecheck"
+      ]
+    },
+    {
+      "id": "numeric-number-alias",
+      "source": "(: x Number) (define x 2) x",
+      "passes": [
+        "parse",
+        "typecheck",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "numeric-ieee-division",
+      "source": "[(/ 0 0) (/ 1 0) (/ -1 0)]",
+      "passes": [
+        "parse",
+        "evaluate"
+      ]
     }
   ]
 }
