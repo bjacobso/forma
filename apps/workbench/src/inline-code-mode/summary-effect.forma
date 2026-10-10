@@ -1,0 +1,14 @@
+; Checked Effect counterpart of the executable kernel segment.
+(: summary (-> (Effect (List {:account String :open Int})
+                       [Unavailable]
+                       [Issues.list-open Accounts.list-active])))
+(define summary []
+  (do! [issues (Issues.list-open)
+        accounts (Accounts.list-active)]
+    (succeed
+      (map (fn [account]
+             {:account account
+              :open (count (filter (fn [issue]
+                                     (starts-with? issue (str account "/")))
+                                   issues))})
+           accounts))))

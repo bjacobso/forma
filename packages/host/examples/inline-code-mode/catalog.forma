@@ -1,0 +1,10 @@
+; Host-owned catalog. These declarations describe contracts, never grants.
+(error Unavailable {:message String})
+(error WriteRejected {:message String})
+
+(service Issues
+  (: list-open (-> (Effect (List String) [Unavailable] [])))
+  (: close (-> String (Effect Bool [Unavailable WriteRejected] []))))
+
+(service Accounts
+  (: list-active (-> (Effect (List String) [Unavailable] []))))
