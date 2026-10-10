@@ -2,10 +2,10 @@
 // the same workloads to run against a separately built baseline checkout.
 import { performance } from "node:perf_hooks";
 import { resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { Effect } from "effect";
 
-const root = resolve(process.argv[2] ?? new URL("..", import.meta.url).pathname);
+const root = resolve(process.argv[2] ?? fileURLToPath(new URL("..", import.meta.url)));
 const load = name => import(pathToFileURL(resolve(root, `packages/ts/dist/${name}.mjs`)).href);
 const { parse, toSExprMany } = await load("Reader");
 const { compileProgram, runChunk } = await load("VM");
