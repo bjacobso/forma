@@ -74,6 +74,7 @@ export default defineConfig({
           { text: "0011: Signatures as contracts", link: "/rfcs/0011-signatures-as-contracts" },
           { text: "0012: Checked evaluation", link: "/rfcs/0012-checked-evaluation" },
           { text: "0013: A runnable host", link: "/rfcs/0013-runnable-host" },
+          { text: "0014: Library preludes", link: "/rfcs/0014-library-preludes" },
         ],
       },
       {

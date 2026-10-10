@@ -20,7 +20,9 @@
 4. Define the JavaScript/Wasm distribution model for the OCaml engine and the
    eventual public `@forma` packages.
 5. Add a supported consumer-prelude SDK and document how to build a complete
-   typed domain language.
+   typed domain language. [Library preludes (0014)](./rfcs/0014-library-preludes.md)
+   proposes how Effect, Foldkit, and other libraries would become preludes with
+   their own compile targets.
 
 ## Record row rollout
 
