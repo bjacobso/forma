@@ -10,7 +10,12 @@ import type { FormDescriptor } from "./FormDescriptor.js";
 import { elaborationMentionsChild, type BootstrappedPrelude } from "./bootstrap.js";
 import type { Diagnostic, Span } from "../diagnostic/diagnostic.js";
 
-export interface DescriptorSource { readonly sourceId: string; readonly source: string }
+export interface DescriptorSource {
+  readonly sourceId: string;
+  readonly source: string;
+  /** Reuse syntax after the caller has checked parser diagnostics. */
+  readonly expressions?: readonly SExpr[];
+}
 export interface CheckDescriptorsOptions {
   readonly prelude?: BootstrappedPrelude | undefined;
   /** Extra native or session-owned hooks, after dependencies have loaded. */
@@ -30,6 +35,7 @@ const keywordHead = (e: SExpr) => items(e)[0]?._tag === "Sym" && (items(e)[0] as
 export function checkDescriptors(sources: readonly DescriptorSource[], options: CheckDescriptorsOptions = {}): readonly Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
   const parsed = sources.map(source => {
+    if (source.expressions) return { ...source, expressions: source.expressions };
     const result = parse(source.source);
     for (const error of result.errors) diagnostics.push({code:"parse/syntax",severity:"error",phase:"parse",message:error.message,span:{sourceId:source.sourceId,startOffset:error.loc?.start ?? 0,endOffset:error.loc?.end ?? 0}});
     return {...source, expressions:toSExprMany(result.redTree)};

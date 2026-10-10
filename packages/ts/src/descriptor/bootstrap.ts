@@ -70,6 +70,8 @@ export interface BootstrappedHostedDsl {
 }
 
 export interface BootstrapOptions {
+  /** Session loading checks references after evaluation, with located diagnostics. */
+  readonly checkReferences?: boolean;
   readonly additionalSources?: readonly string[];
   readonly hostedMetaBuiltins?: HostedMetaBuiltinsFactory;
   readonly hostedDsls?: readonly HostedDsl[];
@@ -186,9 +188,9 @@ export function bootstrapFromSources(
   }
 
   for (const descriptor of descriptions.list()) for (const hook of unifiedFormHooks(descriptor,descriptions,hostedMetaBuiltins,hostedDsls)) elaboration.registerHook(hook);
-  validateDescriptorHookReferences(descriptions.list(), elaboration);
-  validateElaborationDescriptorReferences(elaborationDescriptors.list(), descriptions);
-  validateConstructedByReferences(descriptions.list(), elaborationDescriptors);
+  if (options.checkReferences !== false) {
+    validateDescriptorReferences({ descriptions, elaboration, elaborationDescriptors });
+  }
 
   return {
     sources: [compilerSource, domainSource, ...additionalSources],
@@ -395,23 +397,35 @@ function mergeHostedMetaBuiltins(
     Object.assign({}, ...factories.map((factory) => factory(semanticEnv, context)));
 }
 
+/** Preserve bootstrap's cross-registry invariants after deferred session checks. */
+export function validateDescriptorReferences(
+  prelude: Pick<BootstrappedPrelude, "descriptions" | "elaboration" | "elaborationDescriptors">,
+  resolveHook?: (name: string) => boolean,
+): void {
+  validateDescriptorHookReferences(prelude.descriptions.list(), prelude.elaboration, resolveHook);
+  validateElaborationDescriptorReferences(prelude.elaborationDescriptors.list(), prelude.descriptions);
+  validateConstructedByReferences(prelude.descriptions.list(), prelude.elaborationDescriptors);
+}
+
 function validateDescriptorHookReferences(
   descriptors: readonly FormDescriptor[],
   elaboration: ElaborationRegistry,
+  resolveHook?: (name: string) => boolean,
 ): void {
   for (const descriptor of descriptors) {
     // Meta-phase bootstrap forms still rely on transitional seed behavior.
     if (descriptor.phase !== "domain") continue;
 
     validateDescriptorStaticReferences(descriptor);
-    validateHookReference(descriptor, "bindings", "bindings", descriptor.bindings, elaboration);
-    validateHookReference(descriptor, "validation", "validate", descriptor.validation, elaboration);
+    validateHookReference(descriptor, "bindings", "bindings", descriptor.bindings, elaboration, resolveHook);
+    validateHookReference(descriptor, "validation", "validate", descriptor.validation, elaboration, resolveHook);
     validateHookReference(
       descriptor,
       "elaboration",
       "construct",
       descriptor.elaboration,
       elaboration,
+      resolveHook,
     );
     validateHookReference(
       descriptor,
@@ -419,6 +433,7 @@ function validateDescriptorHookReferences(
       "result-type",
       descriptor.resultType,
       elaboration,
+      resolveHook,
     );
   }
 }
@@ -508,11 +523,13 @@ function validateHookReference(
     | FormDescriptor["elaboration"]
     | FormDescriptor["resultType"],
   elaboration: ElaborationRegistry,
+  resolveHook?: (name: string) => boolean,
 ): void {
   if (strategy.kind !== "hook" && strategy.kind !== "composite") return;
 
   const hook = elaboration.getHook(strategy.fn);
   if (!hook) {
+    if (resolveHook?.(strategy.fn)) return;
     throw new Error(
       `Form '${descriptor.name}' references missing ${strategyName} hook '${strategy.fn}'`,
     );

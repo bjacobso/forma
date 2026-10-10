@@ -43,7 +43,7 @@
       "typescript": "validate-and-store",
       "ocaml": "apply-declarations",
       "fixture": "../session-load",
-      "reason": "Both validate sources structurally and apply checked preludes atomically. OCaml retains its legacy capability label; descriptor hook metacheck is pending in TypeScript."
+      "reason": "Both validate sources structurally and apply typed, descriptor-metachecked preludes atomically. TypeScript checks hook references during load, including artifact contracts and validators; OCaml retains its legacy capability label and checks artifact hook references at emission."
     },
     {
       "id": "typed-authority",

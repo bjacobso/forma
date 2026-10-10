@@ -51,6 +51,9 @@ const observe = Schema.optionalKey(Schema.Struct({
   maxRecords: Schema.optionalKey(Schema.Int), maxItems: Schema.optionalKey(Schema.Int),
   maxDepth: Schema.optionalKey(Schema.Int), maxStringLength: Schema.optionalKey(Schema.Int),
 }));
+const evaluation = { ...session, variables, stepLimit, observe, evaluationId: optionalString,
+  retainValues: Schema.optionalKey(Schema.Literals(["none", "functions", "all"])) };
+const artifact = { ...session, sourceId: optionalString, sourceIds: Schema.optionalKey(Schema.Array(id)), backend: optionalString };
 /** Unsupported operations return abi/unsupported-op; known operations decode strictly. */
 export const JsonRequest = Schema.Union([
   operation("version", {}), operation("openSession", { defaultStepLimit: stepLimit }),
@@ -62,7 +65,11 @@ export const JsonRequest = Schema.Union([
   operation("expand", sessionSource),
   ...(["typecheck", "typecheckCore", "typecheckCoreTyped", "lowerCore"] as const).map(op => operation(op, { ...sessionSource, ...configuration, result: Schema.optionalKey(Schema.Literals(["summary", "per-expression"])) })),
   operation("evaluate", { ...source, variables, stepLimit, observe }),
-  operation("evaluateInSession", { ...sessionSource, ...session, variables, stepLimit, observe, evaluationId: optionalString, retainValues: Schema.optionalKey(Schema.Literals(["none", "functions", "all"])) }),
+  operation("evaluateInSession", { ...sessionSource, ...evaluation }),
+  operation("replSubmit", { ...source, ...evaluation }),
+  operation("emit", { ...artifact, source: optionalString }),
+  ...(["emitMany", "artifactSummary"] as const).map(op => operation(op, artifact)),
+  operation("emitBackends", {}),
   operation("callValue", { ...session, valueRef: id, args: Schema.Array(value), stepLimit, evaluationId: optionalString }),
   operation("resumeHostCall", { ...session, evaluationId: id, callId: id, result: Schema.Union([
     Schema.Struct({ok: Schema.Literal(true), value}),
@@ -105,7 +112,7 @@ export class JsonAbi {
     let request: JsonRequest;
     try { request = Schema.decodeUnknownSync(JsonRequest)(input, { onExcessProperty: "error" }); }
     catch (error) {
-      const supported = ["version", "openSession", "configureSession", "loadSource", "loadSourceBundle", "closeSession", "resetSession", "sessionInfo", "parse", "parseAst", "parseSummary", "incrementalSummary", "expand", "typecheck", "typecheckCore", "typecheckCoreTyped", "lowerCore", "evaluate", "evaluateInSession", "moduleGraph", "linkEffectModules", "callValue", "resumeHostCall", "abortEvaluation", "projectValue", "releaseValue"];
+      const supported = ["version", "openSession", "configureSession", "loadSource", "loadSourceBundle", "closeSession", "resetSession", "sessionInfo", "parse", "parseAst", "parseSummary", "incrementalSummary", "expand", "typecheck", "typecheckCore", "typecheckCoreTyped", "lowerCore", "evaluate", "evaluateInSession", "replSubmit", "emit", "emitMany", "emitBackends", "artifactSummary", "moduleGraph", "linkEffectModules", "callValue", "resumeHostCall", "abortEvaluation", "projectValue", "releaseValue"];
       return errorResponse(supported.includes(op) ? "abi/invalid-request" : "abi/unsupported-op", String(error));
     }
     if ("sessionId" in request && request.sessionId) {
@@ -125,6 +132,15 @@ export class JsonAbi {
       case "closeSession": { const result = await this.host.closeSession(request); this.sessions.delete(request.sessionId); return envelope(result); }
       case "resetSession": return envelope(await this.host.resetSession(request));
       case "sessionInfo": return envelope(await this.host.sessionInfo(request));
+      case "emitBackends": return envelope(await this.host.emitBackends());
+      case "emit": case "artifactSummary": {
+        const result = request.op === "emit" ? await this.host.emit(request) : await this.host.artifactSummary(request);
+        return envelope(result, result.diagnostics);
+      }
+      case "emitMany": {
+        const result = await this.host.emitMany(request);
+        return envelope(result, result.results.flatMap(r => r.diagnostics));
+      }
       case "parse": case "parseAst": case "parseSummary": case "incrementalSummary": {
         const result = await this.host.parse(request);
         if (request.op === "parseSummary") return envelope({ formCount: result.ast.length }, result.diagnostics);
@@ -144,9 +160,10 @@ export class JsonAbi {
         return { ...envelope(result.core, result.diagnostics), ...(result.display ? {type: result.display} : {}), ...(result.typedCore ? {typedCore: result.typedCore} : {}) };
       }
       case "evaluate": { const result = await this.host.evaluate(request); return envelope(result.value, result.diagnostics); }
-      case "evaluateInSession": {
-        const result = await this.host.evaluateInSession(request);
-        return envelope(result, result.status === "failed" ? result.diagnostics : result.status === "completed" ? result.result.diagnostics : []);
+      case "evaluateInSession": case "replSubmit": {
+        const result = request.op === "replSubmit" ? await this.host.replSubmit(request) : await this.host.evaluateInSession(request);
+        return { ...envelope(result, result.status === "failed" ? result.diagnostics : result.status === "completed" ? result.result.diagnostics : []),
+          ...(result.status === "completed" && result.result.type ? { type: result.result.type.display } : {}) };
       }
       case "callValue": case "resumeHostCall": {
         const result = request.op === "callValue" ? await this.host.callValue(request) : await this.host.resumeHostCall(request);
