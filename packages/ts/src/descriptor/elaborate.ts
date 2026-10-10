@@ -143,6 +143,9 @@ export function elaborateSources(
       if (n) descriptorSpans.set(n, sourceLocator(source, sourceId)(e.loc));
     }
   }
+  // Keep these checks for standalone elaboration and document-owned descriptors.
+  // Failed session preludes never commit, so their load diagnostics cannot be
+  // reported again here. Each phase reports its own diagnostic set once.
   diagnostics.push(...checkArtifactPayloadContracts(contracts, name => contractSpans.get(name)));
   for (const descriptor of descriptions.list()) {
     const span = descriptorSpans.get(descriptor.name);

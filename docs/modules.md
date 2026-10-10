@@ -214,7 +214,36 @@ The exported `@formalang/host/json-abi` entry provides `JsonRequest`, `JsonRespo
 `TypeScheme`, and `JsonValueProjection` Effect schemas and a `JsonAbi` dispatcher.
 Its operations cover parsing, expansion, typechecking, evaluation, modules,
 session configuration, loading, retained values, and suspended host calls.
-Descriptor artifact operations and REPL submission are separate interfaces.
+It also dispatches `emit`, `emitMany`, `emitBackends`, `artifactSummary`, and
+stateful typed `replSubmit`. Artifact requests use `sessionId`, `sourceId` or
+`sourceIds`, and optional `backend` (only `canonical-ir` is implemented).
+`emit` also accepts inline `source`, with optional `sourceId` (default `request`),
+against the loaded preludes without storing it. With no selection, the host emits
+all loaded sources. `sourceId` takes precedence over `sourceIds`.
+`replSubmit` requires `sessionId` and `source`, accepts the session evaluation
+options, and retains bindings and types only on success. Its completed envelope
+includes the display string in `type`.
+
+These request names match the native ABI. Responses retain the TypeScript host
+projections inside `value`: REPL results have `status` and `result` (or a suspended
+host call), whereas native results expose `id`, `formCount`, `value`, and `type`
+directly inside `value`. `emitMany` returns per-source `artifacts` arrays, whereas
+native returns a per-source `artifact`. TypeScript uses its validated
+`language-ts-artifact/v1` package and SHA-256 canonical JSON hashes; native uses
+CanonicalIr v1 and MD5. Summary failures return diagnostics instead of native's
+aggregate counts across failing sources. Artifact cache counters remain absent.
+Failure diagnostics also appear once at the envelope level; `emitMany` preserves
+successful per-source results when another source fails.
+
+The remaining optional `LanguageHost` methods are editor APIs:
+`analyzeEditor`, `identifySyntax`, `symbolIndex`, `findReferences`, `applyEditScript`,
+`describeNodes`, `editScriptSchema`, `sourceToOutline`, `outlineToSource`, and
+`formSlots`. They remain available through the in-process host, which carries
+syntax identities and editor projections; this process ABI covers compiler and
+session operations. `elaborate` and `elaborateMany` are native ABI operations,
+not methods of `LanguageHost`. TypeScript's standalone `elaborateProgram` and
+`elaborateSources` APIs in `@formalang/ts/descriptor` return declaration projections;
+use session `emit`/`emitMany` for validated, packaged artifacts.
 Host schemes reject unknown names and malformed structure, including nested
 schemes; numeric host aliases `Int`, `Float`, `Number`, and `Num` still mean
 `Number`. Invalid configuration names its JSON path and locates the affected

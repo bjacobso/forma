@@ -60,9 +60,10 @@ export const emptyScope: Scope = {
 export function buildPreludeScopes(
   preludes: readonly SourceText[],
   inferOptions: MakeInferContextOptions | undefined,
+  bootstrappedPrelude?: BootstrappedPrelude,
 ): PreludeScopes {
   if (preludes.length === 0) return { layers: [], scope: emptyScope };
-  const prelude = bootstrapPreludes(preludes);
+  const prelude = bootstrappedPrelude ?? bootstrapPreludes(preludes);
   const formProvider = prelude ? descriptorFormProvider(prelude) : undefined;
   let scope: Scope = { ...emptyScope, formProvider, prelude };
   const layers: PreludeLayer[] = [];
