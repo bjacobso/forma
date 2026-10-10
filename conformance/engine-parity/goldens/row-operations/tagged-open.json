@@ -1,0 +1,161 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/tagged-open",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/tagged-open",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 10,
+                    "sourceId": "engine-parity/row-operations/tagged-open",
+                    "startOffset": 7
+                  },
+                  "value": "Bad"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 12,
+                    "sourceId": "engine-parity/row-operations/tagged-open",
+                    "startOffset": 11
+                  },
+                  "value": "r"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 13,
+                "sourceId": "engine-parity/row-operations/tagged-open",
+                "startOffset": 6
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 21,
+                    "sourceId": "engine-parity/row-operations/tagged-open",
+                    "startOffset": 15
+                  },
+                  "value": "Tagged"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 28,
+                        "sourceId": "engine-parity/row-operations/tagged-open",
+                        "startOffset": 23
+                      },
+                      "value": "Value"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 36,
+                              "sourceId": "engine-parity/row-operations/tagged-open",
+                              "startOffset": 30
+                            },
+                            "value": ":value"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 40,
+                              "sourceId": "engine-parity/row-operations/tagged-open",
+                              "startOffset": 37
+                            },
+                            "value": "Int"
+                          }
+                        },
+                        {
+                          "key": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 42,
+                              "sourceId": "engine-parity/row-operations/tagged-open",
+                              "startOffset": 41
+                            },
+                            "value": "&"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 44,
+                              "sourceId": "engine-parity/row-operations/tagged-open",
+                              "startOffset": 43
+                            },
+                            "value": "r"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 45,
+                        "sourceId": "engine-parity/row-operations/tagged-open",
+                        "startOffset": 29
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 46,
+                    "sourceId": "engine-parity/row-operations/tagged-open",
+                    "startOffset": 22
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 47,
+                "sourceId": "engine-parity/row-operations/tagged-open",
+                "startOffset": 14
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 48,
+            "sourceId": "engine-parity/row-operations/tagged-open",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "surface/invalid-form",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 42,
+            "sourceId": "engine-parity/row-operations/tagged-open",
+            "startOffset": 41
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

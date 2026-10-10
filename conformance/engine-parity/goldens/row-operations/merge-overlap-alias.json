@@ -1,0 +1,207 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/merge-overlap-alias",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 10,
+                "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                "startOffset": 6
+              },
+              "value": "Left"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 14,
+                      "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                      "startOffset": 12
+                    },
+                    "value": ":a"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 18,
+                      "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                      "startOffset": 15
+                    },
+                    "value": "Int"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 19,
+                "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                "startOffset": 11
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 20,
+            "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 26,
+                "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                "startOffset": 22
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 32,
+                "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                "startOffset": 27
+              },
+              "value": "Right"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 36,
+                      "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                      "startOffset": 34
+                    },
+                    "value": ":a"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 43,
+                      "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                      "startOffset": 37
+                    },
+                    "value": "String"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 44,
+                "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                "startOffset": 33
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 45,
+            "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+            "startOffset": 21
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 51,
+                "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                "startOffset": 47
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 55,
+                "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                "startOffset": 52
+              },
+              "value": "Bad"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 62,
+                    "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                    "startOffset": 57
+                  },
+                  "value": "Merge"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 67,
+                    "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                    "startOffset": 63
+                  },
+                  "value": "Left"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 73,
+                    "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                    "startOffset": 68
+                  },
+                  "value": "Right"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 74,
+                "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+                "startOffset": 56
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 75,
+            "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+            "startOffset": 46
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/row-operation",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 74,
+            "sourceId": "engine-parity/row-operations/merge-overlap-alias",
+            "startOffset": 56
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

@@ -158,6 +158,12 @@ export function parseFormDescriptor(expr: SExpr): FormDescriptor | undefined {
         break;
       }
 
+      case ":identifier": {
+        const name = childTail[0] && trySym(childTail[0]);
+        if (name) identifiers.push({ name, kind: "Symbol", declaration: true });
+        break;
+      }
+
       case ":identifiers": {
         for (const idExpr of childTail) {
           const id = parseIdentifier(idExpr);

@@ -97,6 +97,7 @@ let uppercase_initial name =
   Char.uppercase_ascii first = first && Char.lowercase_ascii first <> first
 
 let rec validate_schema_refs env owner = function
+  | Core_ast.TERowOp (_, _, operands, _) -> validate_schema_refs_many env owner operands
   | Core_ast.TESym (span, name) ->
       if
         mechanics_builtin_type name || lowercase_initial name

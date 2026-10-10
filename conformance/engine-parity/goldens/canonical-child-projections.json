@@ -1,0 +1,22 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-child-projections",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 4,
+        "payload": {
+          "kind": "Tree",
+          "total": 5
+        },
+        "sourceId": "engine-parity/canonical-child-projections",
+        "span": {
+          "endOffset": 320,
+          "sourceId": "engine-parity/canonical-child-projections",
+          "startOffset": 296
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -64,9 +64,15 @@ for (const declaration of result.declarations) {
 result.diagnostics.map(formatDiagnostic); // ["model.lisp:4:1: Unknown form 'frobnicate'"]
 ```
 
-Declarations have the `PackageableDeclaration` shape accepted by
-`@formalang/ts/artifact`, and packaged artifacts keep two pieces of
-provenance per declaration:
+Declarations have the unvalidated `PackageableDeclaration` shape.
+`validateDeclarations(session, declarations)` returns immutable
+`ValidatedDeclaration` snapshots or diagnostics; `packageArtifact` accepts
+only those snapshots. Canonical payload schemas cover every ontology kind.
+Descriptors select named validators and payload contracts through their
+artifact extension; hosts can extend `ArtifactValidatorRegistry` and pass it
+as `validatorRegistry` to elaboration or emission.
+
+Packaged artifacts keep two pieces of provenance per declaration:
 
 - `origin` is `{ kind: "authored" }`, or `{ kind: "expanded", macros }` when a
   top-level call to a `define-macro` in the same source produced the form. The
@@ -82,6 +88,16 @@ may refer across files. Runtime string literals inside payloads stay tagged
 `elaborateProgramOrThrow` when a single `ElaborationFailure` is preferable.
 Typed validate and infer hooks are not run here; they belong to the type
 checker.
+
+Session `emit`, `emitMany`, `emitBackends`, and `artifactSummary` are exported
+from `@formalang/ts/artifact`. The implemented backend is `canonical-ir`.
+Emission elaborates loaded sources, validates declarations and HTTP contracts,
+then packages an `ir.json` artifact with modules, provenance, declaration/type
+summaries, and a derived manifest. TypeScript's `language-ts-artifact/v1`
+envelope retains declaration wrappers and uses SHA-256 over sorted-key
+canonical payload JSON. OCaml retains its v1 envelope and MD5 hash; shared
+fixtures check the declaration and module projections instead of requiring
+identical envelopes.
 
 ## Ontology DSL
 

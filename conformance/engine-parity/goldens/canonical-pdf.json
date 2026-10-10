@@ -1,0 +1,61 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-pdf",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 0,
+        "payload": {
+          "kind": "PdfMapping",
+          "mappings": [
+            {
+              "kind": "Direct",
+              "pdfField": "Name",
+              "source": "document/name"
+            },
+            {
+              "expr": {
+                "expr": [
+                  "str",
+                  {
+                    "$forma.runtimeExpr": "string-literal",
+                    "value": "Hello"
+                  }
+                ],
+                "kind": "raw-expr"
+              },
+              "kind": "Computed",
+              "pdfField": "Greeting"
+            },
+            {
+              "cases": [
+                {
+                  "assignments": [
+                    {
+                      "kind": "Set",
+                      "pdfField": "Status",
+                      "value": true
+                    }
+                  ],
+                  "kind": "Case",
+                  "when": "active"
+                }
+              ],
+              "kind": "Switch",
+              "source": "document/status"
+            }
+          ],
+          "name": "example",
+          "templateBlob": "blob:1"
+        },
+        "sourceId": "engine-parity/canonical-pdf",
+        "span": {
+          "endOffset": 174,
+          "sourceId": "engine-parity/canonical-pdf",
+          "startOffset": 0
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,77 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "keyword-map",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "string",
+        "value": "Ada"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 4,
+                "sourceId": "engine-parity/keyword-map",
+                "startOffset": 1
+              },
+              "value": "get"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 11,
+                      "sourceId": "engine-parity/keyword-map",
+                      "startOffset": 6
+                    },
+                    "value": ":name"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "span": {
+                      "endOffset": 17,
+                      "sourceId": "engine-parity/keyword-map",
+                      "startOffset": 12
+                    },
+                    "value": "Ada"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 18,
+                "sourceId": "engine-parity/keyword-map",
+                "startOffset": 5
+              }
+            },
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 24,
+                "sourceId": "engine-parity/keyword-map",
+                "startOffset": 19
+              },
+              "value": ":name"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 25,
+            "sourceId": "engine-parity/keyword-map",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    }
+  },
+  "version": 1
+}

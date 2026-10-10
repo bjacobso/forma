@@ -1,0 +1,120 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/unresolved-shape",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/unresolved-shape",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 15,
+                    "sourceId": "engine-parity/row-operations/unresolved-shape",
+                    "startOffset": 7
+                  },
+                  "value": "Selected"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 17,
+                    "sourceId": "engine-parity/row-operations/unresolved-shape",
+                    "startOffset": 16
+                  },
+                  "value": "r"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 18,
+                "sourceId": "engine-parity/row-operations/unresolved-shape",
+                "startOffset": 6
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 24,
+                    "sourceId": "engine-parity/row-operations/unresolved-shape",
+                    "startOffset": 20
+                  },
+                  "value": "Pick"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 26,
+                    "sourceId": "engine-parity/row-operations/unresolved-shape",
+                    "startOffset": 25
+                  },
+                  "value": "r"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 30,
+                        "sourceId": "engine-parity/row-operations/unresolved-shape",
+                        "startOffset": 28
+                      },
+                      "value": ":a"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 31,
+                    "sourceId": "engine-parity/row-operations/unresolved-shape",
+                    "startOffset": 27
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 32,
+                "sourceId": "engine-parity/row-operations/unresolved-shape",
+                "startOffset": 19
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 33,
+            "sourceId": "engine-parity/row-operations/unresolved-shape",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/row-operation",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 26,
+            "sourceId": "engine-parity/row-operations/unresolved-shape",
+            "startOffset": 25
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

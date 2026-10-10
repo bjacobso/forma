@@ -1,0 +1,60 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "boolean",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "bool",
+        "value": true
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/boolean",
+                "startOffset": 1
+              },
+              "value": "="
+            },
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 4,
+                "sourceId": "engine-parity/boolean",
+                "startOffset": 3
+              },
+              "value": 1
+            },
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 6,
+                "sourceId": "engine-parity/boolean",
+                "startOffset": 5
+              },
+              "value": 1
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 7,
+            "sourceId": "engine-parity/boolean",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Bool"
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,289 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-generic-record-alias",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "int",
+        "value": 42
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/canonical-generic-record-alias",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 10,
+                    "sourceId": "engine-parity/canonical-generic-record-alias",
+                    "startOffset": 7
+                  },
+                  "value": "Box"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 12,
+                    "sourceId": "engine-parity/canonical-generic-record-alias",
+                    "startOffset": 11
+                  },
+                  "value": "a"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 13,
+                "sourceId": "engine-parity/canonical-generic-record-alias",
+                "startOffset": 6
+              }
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 21,
+                      "sourceId": "engine-parity/canonical-generic-record-alias",
+                      "startOffset": 15
+                    },
+                    "value": ":value"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 23,
+                      "sourceId": "engine-parity/canonical-generic-record-alias",
+                      "startOffset": 22
+                    },
+                    "value": "a"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 24,
+                "sourceId": "engine-parity/canonical-generic-record-alias",
+                "startOffset": 14
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 25,
+            "sourceId": "engine-parity/canonical-generic-record-alias",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 28,
+                "sourceId": "engine-parity/canonical-generic-record-alias",
+                "startOffset": 27
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 33,
+                "sourceId": "engine-parity/canonical-generic-record-alias",
+                "startOffset": 29
+              },
+              "value": "read"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 37,
+                    "sourceId": "engine-parity/canonical-generic-record-alias",
+                    "startOffset": 35
+                  },
+                  "value": "->"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 42,
+                        "sourceId": "engine-parity/canonical-generic-record-alias",
+                        "startOffset": 39
+                      },
+                      "value": "Box"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 46,
+                        "sourceId": "engine-parity/canonical-generic-record-alias",
+                        "startOffset": 43
+                      },
+                      "value": "Int"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 47,
+                    "sourceId": "engine-parity/canonical-generic-record-alias",
+                    "startOffset": 38
+                  }
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 51,
+                    "sourceId": "engine-parity/canonical-generic-record-alias",
+                    "startOffset": 48
+                  },
+                  "value": "Int"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 52,
+                "sourceId": "engine-parity/canonical-generic-record-alias",
+                "startOffset": 34
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 53,
+            "sourceId": "engine-parity/canonical-generic-record-alias",
+            "startOffset": 26
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 61,
+                "sourceId": "engine-parity/canonical-generic-record-alias",
+                "startOffset": 55
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 66,
+                "sourceId": "engine-parity/canonical-generic-record-alias",
+                "startOffset": 62
+              },
+              "value": "read"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 71,
+                    "sourceId": "engine-parity/canonical-generic-record-alias",
+                    "startOffset": 68
+                  },
+                  "value": "box"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 72,
+                "sourceId": "engine-parity/canonical-generic-record-alias",
+                "startOffset": 67
+              }
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 82,
+                "sourceId": "engine-parity/canonical-generic-record-alias",
+                "startOffset": 73
+              },
+              "value": "box.value"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 83,
+            "sourceId": "engine-parity/canonical-generic-record-alias",
+            "startOffset": 54
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 89,
+                "sourceId": "engine-parity/canonical-generic-record-alias",
+                "startOffset": 85
+              },
+              "value": "read"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 97,
+                      "sourceId": "engine-parity/canonical-generic-record-alias",
+                      "startOffset": 91
+                    },
+                    "value": ":value"
+                  },
+                  "value": {
+                    "kind": "int",
+                    "span": {
+                      "endOffset": 100,
+                      "sourceId": "engine-parity/canonical-generic-record-alias",
+                      "startOffset": 98
+                    },
+                    "value": 42
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 101,
+                "sourceId": "engine-parity/canonical-generic-record-alias",
+                "startOffset": 90
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 102,
+            "sourceId": "engine-parity/canonical-generic-record-alias",
+            "startOffset": 84
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Int"
+    }
+  },
+  "version": 1
+}

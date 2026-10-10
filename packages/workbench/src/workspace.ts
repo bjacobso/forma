@@ -58,7 +58,7 @@ export const layer = (
 
 const Source = S.Struct({ sourceId: S.String, source: S.String });
 const File = S.Struct({ sourceId: S.String, source: S.String, editor: S.NullOr(Workbench.Model) });
-const Entry = S.Struct({ input: S.String, output: S.String, ok: S.Boolean, sourceId: S.String });
+const Entry = S.Struct({ input: S.String, output: S.String, type: S.optional(S.String), ok: S.Boolean, sourceId: S.String });
 const ProjectModel = S.Struct({
   id: S.String,
   title: S.String,
@@ -109,6 +109,7 @@ export const Message = defineMessageUnion({
     output: S.String,
     ok: S.Boolean,
     declarations: S.String,
+    type: S.optional(S.String),
   },
   Child: {
     project: S.String,
@@ -556,6 +557,7 @@ export const update = (model: Model, message: Message): Return => {
       sourceId,
       input,
       output,
+      type,
       ok,
       declarations,
     }) => {
@@ -569,6 +571,7 @@ export const update = (model: Model, message: Message): Return => {
             ...owner.transcript,
             {
               input,
+              ...(type ? { type } : {}),
               output:
                 version === owner.version
                   ? output
@@ -824,6 +827,7 @@ export const view = defineView<Model, Message>((model, h) => {
                       h.small([], [entry.sourceId]),
                       h.pre([], [`› ${entry.input}`]),
                       h.pre([], [entry.output]),
+                      ...(entry.type ? [h.small([], [`Type: ${entry.type}`])] : []),
                     ],
                   ),
                 ),

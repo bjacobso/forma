@@ -1,0 +1,442 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-expected-constructor",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "int",
+        "value": 7
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 7,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 6
+              },
+              "value": "A"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 15,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 9
+                  },
+                  "value": "Tagged"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 21,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 16
+                  },
+                  "value": "Empty"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 22,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 8
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 23,
+            "sourceId": "engine-parity/canonical-expected-constructor",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 29,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 25
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 31,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 30
+              },
+              "value": "B"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 39,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 33
+                  },
+                  "value": "Tagged"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 45,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 40
+                  },
+                  "value": "Empty"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 46,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 32
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 47,
+            "sourceId": "engine-parity/canonical-expected-constructor",
+            "startOffset": 24
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 50,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 49
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 55,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 51
+              },
+              "value": "make"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 59,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 57
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 63,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 60
+                  },
+                  "value": "Int"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 65,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 64
+                  },
+                  "value": "A"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 66,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 56
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 67,
+            "sourceId": "engine-parity/canonical-expected-constructor",
+            "startOffset": 48
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 75,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 69
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 80,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 76
+              },
+              "value": "make"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 83,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 82
+                  },
+                  "value": "n"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 84,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 81
+              }
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 90,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 85
+              },
+              "value": "Empty"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 91,
+            "sourceId": "engine-parity/canonical-expected-constructor",
+            "startOffset": 68
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 94,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 93
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 98,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 95
+              },
+              "value": "use"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 102,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 100
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 104,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 103
+                  },
+                  "value": "B"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 108,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 105
+                  },
+                  "value": "Int"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 109,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 99
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 110,
+            "sourceId": "engine-parity/canonical-expected-constructor",
+            "startOffset": 92
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 118,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 112
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 122,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 119
+              },
+              "value": "use"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 125,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 124
+                  },
+                  "value": "b"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 126,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 123
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 133,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 128
+                  },
+                  "value": "match"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 135,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 134
+                  },
+                  "value": "b"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 141,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 136
+                  },
+                  "value": "Empty"
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 143,
+                    "sourceId": "engine-parity/canonical-expected-constructor",
+                    "startOffset": 142
+                  },
+                  "value": 7
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 144,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 127
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 145,
+            "sourceId": "engine-parity/canonical-expected-constructor",
+            "startOffset": 111
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 150,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 147
+              },
+              "value": "use"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 156,
+                "sourceId": "engine-parity/canonical-expected-constructor",
+                "startOffset": 151
+              },
+              "value": "Empty"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 157,
+            "sourceId": "engine-parity/canonical-expected-constructor",
+            "startOffset": 146
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Int"
+    }
+  },
+  "version": 1
+}

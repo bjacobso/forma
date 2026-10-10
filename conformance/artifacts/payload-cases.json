@@ -1,0 +1,281 @@
+{
+  "reference": "packages/ocaml/scripts/emit.mjs",
+  "cases": [
+    {
+      "sourceId": "emit/malformed-query-payload",
+      "source": "\n(__form-descriptor define-malformed-query-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-query-payload/construct)\n  (:result-type (constant List)))\n\n(__form-hook malformed-query-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output QueryDef)\n  (:body\n    (construct/declaration\n      :kind \"Query\"\n      :name (meta/declaration-name input)\n      :from 42\n      :select [\"employee/name\"]\n      :$summary (construct/summary\n        :kind \"Query\"\n        :name (meta/declaration-name input)\n        :resultType \"List\"))))\n\n(define-malformed-query-payload malformed-query-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/query-payload",
+        "form": "(define-malformed-query-payload malformed-query-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-record-payload",
+      "source": "\n(__form-descriptor define-malformed-record-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-record-payload/construct)\n  (:result-type (constant RecordDef)))\n\n(__form-hook malformed-record-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output RecordDef)\n  (:body\n    (construct/declaration\n      :kind \"Record\"\n      :id \"record:malformed\"\n      :entity \"Employee\"\n      :fields (construct/object \"\" \"bad\")\n      :$summary (construct/summary\n        :kind \"Record\"\n        :name \"record:malformed\"\n        :resultType \"RecordDef\"))))\n\n(define-malformed-record-payload malformed-record-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/record-payload",
+        "form": "(define-malformed-record-payload malformed-record-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-entity-payload",
+      "source": "\n(__form-descriptor define-malformed-entity-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-entity-payload/construct)\n  (:result-type (constant SchemaDecl)))\n\n(__form-hook malformed-entity-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output SchemaDecl)\n  (:body\n    (construct/declaration\n      :kind \"Entity\"\n      :name \"MalformedEntity\"\n      :fieldTypes (construct/object \"\" \"String\")\n      :fields [(construct/object :name \"\" :type \"String\")]\n      :$summary (construct/summary\n        :kind \"Entity\"\n        :name \"MalformedEntity\"\n        :resultType \"SchemaDecl\"))))\n\n(define-malformed-entity-payload malformed-entity-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/entity-payload",
+        "form": "(define-malformed-entity-payload malformed-entity-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-edge-payload",
+      "source": "\n(__form-descriptor define-malformed-edge-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-edge-payload/construct)\n  (:result-type (constant RelationDef)))\n\n(__form-hook malformed-edge-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output RelationDef)\n  (:body\n    (construct/declaration\n      :kind \"Relation\"\n      :name \"malformed-edge\"\n      :source \"Employee\"\n      :target \"Department\"\n      :fields [(construct/object :name \"\" :type \"String\")]\n      :$summary (construct/summary\n        :kind \"Relation\"\n        :name \"malformed-edge\"\n        :resultType \"RelationDef\"))))\n\n(define-malformed-edge-payload malformed-edge-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/edge-payload",
+        "form": "(define-malformed-edge-payload malformed-edge-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-link-payload",
+      "source": "\n(__form-descriptor define-malformed-link-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-link-payload/construct)\n  (:result-type (constant LinkDef)))\n\n(__form-hook malformed-link-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output LinkDef)\n  (:body\n    (construct/declaration\n      :kind \"Link\"\n      :relation \"employee-department\"\n      :source \"Employee\"\n      :target \"Department\"\n      :fields [(construct/object :name \"\" :value \"employee:1\")]\n      :$summary (construct/summary\n        :kind \"Link\"\n        :name \"malformed-link\"\n        :resultType \"LinkDef\"))))\n\n(define-malformed-link-payload malformed-link-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/edge-payload",
+        "form": "(define-malformed-link-payload malformed-link-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-operation-payload",
+      "source": "\n(__form-descriptor define-malformed-operation-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-operation-payload/construct)\n  (:result-type (constant ActionDef)))\n\n(__form-hook malformed-operation-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output ActionDef)\n  (:body\n    (construct/declaration\n      :kind \"Action\"\n      :name \"malformed-operation\"\n      :inputs [(construct/object :name \"\" :type \"String\")]\n      :do (construct/object :kind \"noop\")\n      :$summary (construct/summary\n        :kind \"Action\"\n        :name \"malformed-operation\"\n        :resultType \"ActionDef\"))))\n\n(define-malformed-operation-payload malformed-operation-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/operation-payload",
+        "form": "(define-malformed-operation-payload malformed-operation-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-surface-payload",
+      "source": "\n(__form-descriptor define-malformed-surface-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-surface-payload/construct)\n  (:result-type (constant ViewDef)))\n\n(__form-hook malformed-surface-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output ViewDef)\n  (:body\n    (construct/declaration\n      :kind \"View\"\n      :name \"malformed-surface\"\n      :columns [(construct/object :name \"\" :label \"Broken\")]\n      :$summary (construct/summary\n        :kind \"View\"\n        :name \"malformed-surface\"\n        :resultType \"ViewDef\"))))\n\n(define-malformed-surface-payload malformed-surface-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/surface-payload",
+        "form": "(define-malformed-surface-payload malformed-surface-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-workspace-payload",
+      "source": "\n(__form-descriptor define-malformed-workspace-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-workspace-payload/construct)\n  (:result-type (constant WorkspaceDef)))\n\n(__form-hook malformed-workspace-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output WorkspaceDef)\n  (:body\n    (construct/declaration\n      :kind \"Workspace\"\n      :name \"malformed-workspace\"\n      :views [\"\"]\n      :$summary (construct/summary\n        :kind \"Workspace\"\n        :name \"malformed-workspace\"\n        :resultType \"WorkspaceDef\"))))\n\n(define-malformed-workspace-payload malformed-workspace-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/surface-payload",
+        "form": "(define-malformed-workspace-payload malformed-workspace-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-rule-payload",
+      "source": "\n(__form-descriptor define-malformed-rule-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-rule-payload/construct)\n  (:result-type (constant ConstraintDef)))\n\n(__form-hook malformed-rule-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output ConstraintDef)\n  (:body\n    (construct/declaration\n      :kind \"Constraint\"\n      :name \"malformed-rule\"\n      :entity \"Employee\"\n      :severity \"error\"\n      :when (construct/object :kind \"query\")\n      :message \"Broken rule\"\n      :resolutions [(construct/object :label 42)]\n      :$summary (construct/summary\n        :kind \"Constraint\"\n        :name \"malformed-rule\"\n        :resultType \"ConstraintDef\"))))\n\n(define-malformed-rule-payload malformed-rule-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/rule-payload",
+        "form": "(define-malformed-rule-payload malformed-rule-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-workflow-payload",
+      "source": "\n(__form-descriptor define-malformed-workflow-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-workflow-payload/construct)\n  (:result-type (constant ProcessDef)))\n\n(__form-hook malformed-workflow-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output ProcessDef)\n  (:body\n    (construct/declaration\n      :kind \"Process\"\n      :name \"malformed-workflow\"\n      :trigger (construct/object :kind \"Trigger\" :triggerKind \"manual\")\n      :nodes [(construct/object :kind \"Node\" :id \"\")]\n      :edges []\n      :$summary (construct/summary\n        :kind \"Process\"\n        :name \"malformed-workflow\"\n        :resultType \"ProcessDef\"))))\n\n(define-malformed-workflow-payload malformed-workflow-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/workflow-payload",
+        "form": "(define-malformed-workflow-payload malformed-workflow-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-task-payload",
+      "source": "\n(__form-descriptor define-malformed-task-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-task-payload/construct)\n  (:result-type (constant TaskDefinitionDef)))\n\n(__form-hook malformed-task-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output TaskDefinitionDef)\n  (:body\n    (construct/declaration\n      :kind \"TaskDefinition\"\n      :name \"malformed-task\"\n      :title \"Malformed task\"\n      :inputs [(construct/object :name \"\" :type \"String\")]\n      :$summary (construct/summary\n        :kind \"TaskDefinition\"\n        :name \"malformed-task\"\n        :resultType \"TaskDefinitionDef\"))))\n\n(define-malformed-task-payload malformed-task-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/workflow-payload",
+        "form": "(define-malformed-task-payload malformed-task-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-content-payload",
+      "source": "\n(__form-descriptor define-malformed-content-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-content-payload/construct)\n  (:result-type (constant DocumentDef)))\n\n(__form-hook malformed-content-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output DocumentDef)\n  (:body\n    (construct/declaration\n      :kind \"Document\"\n      :name \"malformed-content\"\n      :pages [(construct/object :kind \"Page\" :assignee \"\" :fields [])]\n      :$summary (construct/summary\n        :kind \"Document\"\n        :name \"malformed-content\"\n        :resultType \"DocumentDef\"))))\n\n(define-malformed-content-payload malformed-content-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/content-payload",
+        "form": "(define-malformed-content-payload malformed-content-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-content-locale-payload",
+      "source": "\n(__form-descriptor define-malformed-content-locale-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-content-locale-payload/construct)\n  (:result-type (constant DocumentLocaleDef)))\n\n(__form-hook malformed-content-locale-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output DocumentLocaleDef)\n  (:body\n    (construct/declaration\n      :kind \"DocumentLocale\"\n      :documentName \"malformed-content\"\n      :locale \"en\"\n      :roles [(construct/object :name nil :label \"Broken role\")]\n      :sections []\n      :fields []\n      :$summary (construct/summary\n        :kind \"DocumentLocale\"\n        :name \"malformed-content-locale\"\n        :resultType \"DocumentLocaleDef\"))))\n\n(define-malformed-content-locale-payload malformed-content-locale-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/content-payload",
+        "form": "(define-malformed-content-locale-payload malformed-content-locale-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-content-localized-payload",
+      "source": "\n(__form-descriptor define-malformed-content-localized-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-content-localized-payload/construct)\n  (:result-type (constant DocumentLocalizedDef)))\n\n(__form-hook malformed-content-localized-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output DocumentLocalizedDef)\n  (:body\n    (construct/declaration\n      :kind \"DocumentLocalized\"\n      :documentName \"malformed-content\"\n      :locales [\"\"]\n      :$summary (construct/summary\n        :kind \"DocumentLocalized\"\n        :name \"malformed-content-localized\"\n        :resultType \"DocumentLocalizedDef\"))))\n\n(define-malformed-content-localized-payload malformed-content-localized-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/content-payload",
+        "form": "(define-malformed-content-localized-payload malformed-content-localized-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-content-mapping-payload",
+      "source": "\n(__form-descriptor define-malformed-content-mapping-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind]) (:string-fields [kind]))))\n  (:construct-fn malformed-content-mapping-payload/construct)\n  (:result-type (constant PdfMappingDef)))\n\n(__form-hook malformed-content-mapping-payload/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output PdfMappingDef)\n  (:body\n    (construct/declaration\n      :kind \"PdfMapping\"\n      :name \"malformed-content-mapping\"\n      :templateBlob \"sha256-placeholder\"\n      :mappings [(construct/object\n        :kind \"Switch\"\n        :source \"status\"\n        :cases [(construct/object\n          :when \"active\"\n          :assignments [(construct/object :pdfField \"Active Checkbox\")])])]\n      :$summary (construct/summary\n        :kind \"PdfMapping\"\n        :name \"malformed-content-mapping\"\n        :resultType \"PdfMappingDef\"))))\n\n(define-malformed-content-mapping-payload malformed-content-mapping-payload)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/content-payload",
+        "form": "(define-malformed-content-mapping-payload malformed-content-mapping-payload)"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-payload-contract",
+      "source": "\n(__form-descriptor define-malformed-payload-contract\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind 42]))))\n  (:construct-fn malformed-payload-contract/construct)\n  (:result-type (constant MalformedPayloadContractDef)))\n\n(__form-hook malformed-payload-contract/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output MalformedPayloadContractDef)\n  (:body\n    (construct/declaration\n      :kind \"MalformedPayloadContract\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"MalformedPayloadContract\"\n        :name (meta/declaration-name input)\n        :resultType \"MalformedPayloadContractDef\"))))\n\n(define-malformed-payload-contract malformed-payload-contract)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/descriptor-payload"
+      }
+    },
+    {
+      "sourceId": "emit/missing-payload-field",
+      "source": "\n(__form-descriptor define-missing-payload-field\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind name externalId]))))\n  (:construct-fn missing-payload-field/construct)\n  (:result-type (constant MissingPayloadFieldDef)))\n\n(__form-hook missing-payload-field/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output MissingPayloadFieldDef)\n  (:body\n    (construct/declaration\n      :kind \"MissingPayloadField\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"MissingPayloadField\"\n        :name (meta/declaration-name input)\n        :resultType \"MissingPayloadFieldDef\"))))\n\n(define-missing-payload-field missing-payload-field)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/summary-mismatch"
+      }
+    },
+    {
+      "sourceId": "emit/object-payload-field",
+      "source": "\n(__form-descriptor define-object-payload-field\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:required-fields [kind name metadata]))))\n  (:construct-fn object-payload-field/construct)\n  (:result-type (constant ObjectPayloadFieldDef)))\n\n(__form-hook object-payload-field/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output ObjectPayloadFieldDef)\n  (:body\n    (construct/declaration\n      :kind \"ObjectPayloadField\"\n      :name (meta/declaration-name input)\n      :metadata (construct/object :source \"descriptor\")\n      :$summary (construct/summary\n        :kind \"ObjectPayloadField\"\n        :name (meta/declaration-name input)\n        :resultType \"ObjectPayloadFieldDef\"))))\n\n(define-object-payload-field object-payload-field)\n",
+      "expected": {
+        "ok": true
+      }
+    },
+    {
+      "sourceId": "emit/typed-payload-field",
+      "source": "\n(__form-descriptor define-typed-payload-field\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload\n        (:required-fields [kind name metadata tags])\n        (:literal-fields [[kind \"TypedPayloadField\"]])\n        (:string-fields [kind name])\n        (:object-fields [metadata])\n        (:array-fields [tags]))))\n  (:construct-fn typed-payload-field/construct)\n  (:result-type (constant TypedPayloadFieldDef)))\n\n(__form-hook typed-payload-field/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output TypedPayloadFieldDef)\n  (:body\n    (construct/declaration\n      :kind \"TypedPayloadField\"\n      :name (meta/declaration-name input)\n      :metadata (construct/object :source \"descriptor\")\n      :tags [\"contract\"]\n      :$summary (construct/summary\n        :kind \"TypedPayloadField\"\n        :name (meta/declaration-name input)\n        :resultType \"TypedPayloadFieldDef\"))))\n\n(define-typed-payload-field typed-payload-field)\n",
+      "expected": {
+        "ok": true
+      }
+    },
+    {
+      "sourceId": "emit/mismatched-payload-kind",
+      "source": "\n(__form-descriptor define-mismatched-payload-kind\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload\n        (:required-fields [kind name])\n        (:literal-fields [[kind \"ExpectedPayloadKind\"]]))))\n  (:construct-fn mismatched-payload-kind/construct)\n  (:result-type (constant MismatchedPayloadKindDef)))\n\n(__form-hook mismatched-payload-kind/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output MismatchedPayloadKindDef)\n  (:body\n    (construct/declaration\n      :kind \"ActualPayloadKind\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"ActualPayloadKind\"\n        :name (meta/declaration-name input)\n        :resultType \"MismatchedPayloadKindDef\"))))\n\n(define-mismatched-payload-kind mismatched-payload-kind)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/summary-mismatch"
+      }
+    },
+    {
+      "sourceId": "emit/mismatched-payload-field-kind",
+      "source": "\n(__form-descriptor define-mismatched-payload-field-kind\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload\n        (:required-fields [kind name metadata])\n        (:object-fields [metadata]))))\n  (:construct-fn mismatched-payload-field-kind/construct)\n  (:result-type (constant MismatchedPayloadFieldKindDef)))\n\n(__form-hook mismatched-payload-field-kind/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output MismatchedPayloadFieldKindDef)\n  (:body\n    (construct/declaration\n      :kind \"MismatchedPayloadFieldKind\"\n      :name (meta/declaration-name input)\n      :metadata \"not-an-object\"\n      :$summary (construct/summary\n        :kind \"MismatchedPayloadFieldKind\"\n        :name (meta/declaration-name input)\n        :resultType \"MismatchedPayloadFieldKindDef\"))))\n\n(define-mismatched-payload-field-kind mismatched-payload-field-kind)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/summary-mismatch"
+      }
+    },
+    {
+      "sourceId": "emit/conflicting-payload-field-kind",
+      "source": "\n(__form-descriptor define-conflicting-payload-field-kind\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload\n        (:required-fields [kind name metadata])\n        (:string-fields [metadata])\n        (:object-fields [metadata]))))\n  (:construct-fn conflicting-payload-field-kind/construct)\n  (:result-type (constant ConflictingPayloadFieldKindDef)))\n\n(__form-hook conflicting-payload-field-kind/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output ConflictingPayloadFieldKindDef)\n  (:body\n    (construct/declaration\n      :kind \"ConflictingPayloadFieldKind\"\n      :name (meta/declaration-name input)\n      :metadata (construct/object :source \"descriptor\")\n      :$summary (construct/summary\n        :kind \"ConflictingPayloadFieldKind\"\n        :name (meta/declaration-name input)\n        :resultType \"ConflictingPayloadFieldKindDef\"))))\n\n(define-conflicting-payload-field-kind conflicting-payload-field-kind)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/descriptor-payload"
+      }
+    },
+    {
+      "sourceId": "emit/literal-payload-object-field",
+      "source": "\n(__form-descriptor define-literal-payload-object-field\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload\n        (:required-fields [kind name metadata])\n        (:literal-fields [[metadata \"expected\"]])\n        (:object-fields [metadata]))))\n  (:construct-fn literal-payload-object-field/construct)\n  (:result-type (constant LiteralPayloadObjectFieldDef)))\n\n(__form-hook literal-payload-object-field/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output LiteralPayloadObjectFieldDef)\n  (:body\n    (construct/declaration\n      :kind \"LiteralPayloadObjectField\"\n      :name (meta/declaration-name input)\n      :metadata (construct/object :source \"descriptor\")\n      :$summary (construct/summary\n        :kind \"LiteralPayloadObjectField\"\n        :name (meta/declaration-name input)\n        :resultType \"LiteralPayloadObjectFieldDef\"))))\n\n(define-literal-payload-object-field literal-payload-object-field)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/descriptor-payload"
+      }
+    },
+    {
+      "sourceId": "emit/unknown-payload-clause",
+      "source": "\n(__form-descriptor define-unknown-payload-clause\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload\n        (:required-fieldz [kind name])\n        (:string-fields [kind name]))))\n  (:construct-fn unknown-payload-clause/construct)\n  (:result-type (constant UnknownPayloadClauseDef)))\n\n(__form-hook unknown-payload-clause/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output UnknownPayloadClauseDef)\n  (:body\n    (construct/declaration\n      :kind \"UnknownPayloadClause\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"UnknownPayloadClause\"\n        :name (meta/declaration-name input)\n        :resultType \"UnknownPayloadClauseDef\"))))\n\n(define-unknown-payload-clause unknown-payload-clause)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/descriptor-payload"
+      }
+    },
+    {
+      "sourceId": "emit/payload-contract-alias",
+      "source": "\n(__payload-contract BasePayloadContract\n  (:required-fields [kind name])\n  (:string-fields [kind name]))\n\n(__payload-contract MetadataPayloadContract\n  (:required-fields [metadata])\n  (:object-fields [metadata]))\n\n(__payload-contract TagsPayloadContract\n  (:required-fields [tags])\n  (:array-fields [tags]))\n\n(__payload-contract SharedPayloadContract\n  (:contract [BasePayloadContract MetadataPayloadContract])\n  (:literal-fields [[kind \"SharedPayload\"]]))\n\n(__form-descriptor define-payload-contract-alias\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload\n        (:contract [SharedPayloadContract TagsPayloadContract]))))\n  (:construct-fn payload-contract-alias/construct)\n  (:result-type (constant PayloadContractAliasDef)))\n\n(__form-hook payload-contract-alias/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output PayloadContractAliasDef)\n  (:body\n    (construct/declaration\n      :kind \"SharedPayload\"\n      :name (meta/declaration-name input)\n      :metadata (construct/object :source \"contract\")\n      :tags [\"shared\"]\n      :$summary (construct/summary\n        :kind \"SharedPayload\"\n        :name (meta/declaration-name input)\n        :resultType \"PayloadContractAliasDef\"))))\n\n(define-payload-contract-alias payload-contract-alias)\n",
+      "expected": {
+        "ok": true
+      }
+    },
+    {
+      "sourceId": "emit/unknown-payload-contract",
+      "source": "\n(__form-descriptor define-unknown-payload-contract\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:contract MissingPayloadContract))))\n  (:construct-fn unknown-payload-contract/construct)\n  (:result-type (constant UnknownPayloadContractDef)))\n\n(__form-hook unknown-payload-contract/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output UnknownPayloadContractDef)\n  (:body\n    (construct/declaration\n      :kind \"UnknownPayloadContract\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"UnknownPayloadContract\"\n        :name (meta/declaration-name input)\n        :resultType \"UnknownPayloadContractDef\"))))\n\n(define-unknown-payload-contract unknown-payload-contract)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/descriptor-payload"
+      }
+    },
+    {
+      "sourceId": "emit/recursive-payload-contract",
+      "source": "\n(__payload-contract RecursivePayloadContract\n  (:contract RecursivePayloadContract)\n  (:required-fields [kind name])\n  (:string-fields [kind name]))\n\n(__form-descriptor define-recursive-payload-contract\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:contract RecursivePayloadContract))))\n  (:construct-fn recursive-payload-contract/construct)\n  (:result-type (constant RecursivePayloadContractDef)))\n\n(__form-hook recursive-payload-contract/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output RecursivePayloadContractDef)\n  (:body\n    (construct/declaration\n      :kind \"RecursivePayloadContract\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"RecursivePayloadContract\"\n        :name (meta/declaration-name input)\n        :resultType \"RecursivePayloadContractDef\"))))\n\n(define-recursive-payload-contract recursive-payload-contract)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/descriptor-payload"
+      }
+    },
+    {
+      "sourceId": "emit/duplicate-payload-contract-reference",
+      "source": "\n(__payload-contract DuplicatePayloadBase\n  (:required-fields [kind name])\n  (:string-fields [kind name]))\n\n(__form-descriptor define-duplicate-payload-contract-reference\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:contract [DuplicatePayloadBase DuplicatePayloadBase]))))\n  (:construct-fn duplicate-payload-contract-reference/construct)\n  (:result-type (constant DuplicatePayloadContractReferenceDef)))\n\n(__form-hook duplicate-payload-contract-reference/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output DuplicatePayloadContractReferenceDef)\n  (:body\n    (construct/declaration\n      :kind \"DuplicatePayloadContractReference\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"DuplicatePayloadContractReference\"\n        :name (meta/declaration-name input)\n        :resultType \"DuplicatePayloadContractReferenceDef\"))))\n\n(define-duplicate-payload-contract-reference duplicate-payload-contract-reference)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/descriptor-payload"
+      }
+    },
+    {
+      "sourceId": "emit/conflicting-inherited-payload-contract",
+      "source": "\n(__payload-contract StringMetadataPayload\n  (:required-fields [kind name metadata])\n  (:string-fields [kind name metadata]))\n\n(__payload-contract ObjectMetadataPayload\n  (:required-fields [metadata])\n  (:object-fields [metadata]))\n\n(__form-descriptor define-conflicting-inherited-payload-contract\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:contract [StringMetadataPayload ObjectMetadataPayload]))))\n  (:construct-fn conflicting-inherited-payload-contract/construct)\n  (:result-type (constant ConflictingInheritedPayloadContractDef)))\n\n(__form-hook conflicting-inherited-payload-contract/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output ConflictingInheritedPayloadContractDef)\n  (:body\n    (construct/declaration\n      :kind \"ConflictingInheritedPayloadContract\"\n      :name (meta/declaration-name input)\n      :metadata (construct/object :source \"descriptor\")\n      :$summary (construct/summary\n        :kind \"ConflictingInheritedPayloadContract\"\n        :name (meta/declaration-name input)\n        :resultType \"ConflictingInheritedPayloadContractDef\"))))\n\n(define-conflicting-inherited-payload-contract conflicting-inherited-payload-contract)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/descriptor-payload"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-payload-contract-alias",
+      "source": "\n(__payload-contract MalformedPayloadContract\n  not-a-payload-clause)\n\n(__form-descriptor define-malformed-payload-contract-alias\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:contract MalformedPayloadContract))))\n  (:construct-fn malformed-payload-contract-alias/construct)\n  (:result-type (constant MalformedPayloadContractAliasDef)))\n\n(__form-hook malformed-payload-contract-alias/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output MalformedPayloadContractAliasDef)\n  (:body\n    (construct/declaration\n      :kind \"MalformedPayloadContract\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"MalformedPayloadContract\"\n        :name (meta/declaration-name input)\n        :resultType \"MalformedPayloadContractAliasDef\"))))\n\n(define-malformed-payload-contract-alias malformed-payload-contract-alias)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/descriptor-payload"
+      }
+    },
+    {
+      "sourceId": "emit/unknown-validator",
+      "source": "\n(__form-descriptor define-unknown-validator\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:validators [missing-validator])))\n  (:construct-fn unknown-validator/construct)\n  (:result-type (constant UnknownValidatorDef)))\n\n(__form-hook unknown-validator/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output UnknownValidatorDef)\n  (:body\n    (construct/declaration\n      :kind \"UnknownValidator\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"UnknownValidator\"\n        :name (meta/declaration-name input)\n        :resultType \"UnknownValidatorDef\"))))\n\n(define-unknown-validator unknown-validator)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/unknown-validator"
+      }
+    },
+    {
+      "sourceId": "emit/malformed-validator",
+      "source": "\n(__form-descriptor define-malformed-validator\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:validators [http 42])))\n  (:construct-fn malformed-validator/construct)\n  (:result-type (constant MalformedValidatorDef)))\n\n(__form-hook malformed-validator/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output MalformedValidatorDef)\n  (:body\n    (construct/declaration\n      :kind \"MalformedValidator\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"MalformedValidator\"\n        :name (meta/declaration-name input)\n        :resultType \"MalformedValidatorDef\"))))\n\n(define-malformed-validator malformed-validator)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/descriptor-validators"
+      }
+    },
+    {
+      "sourceId": "emit/duplicate-validator",
+      "source": "\n(__form-descriptor define-duplicate-validator\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:validators [http http])))\n  (:construct-fn duplicate-validator/construct)\n  (:result-type (constant DuplicateValidatorDef)))\n\n(__form-hook duplicate-validator/construct\n  (:kind construct)\n  (:input FormMetaInput)\n  (:output DuplicateValidatorDef)\n  (:body\n    (construct/declaration\n      :kind \"DuplicateValidator\"\n      :name (meta/declaration-name input)\n      :$summary (construct/summary\n        :kind \"DuplicateValidator\"\n        :name (meta/declaration-name input)\n        :resultType \"DuplicateValidatorDef\"))))\n\n(define-duplicate-validator duplicate-validator)\n",
+      "expected": {
+        "ok": false,
+        "code": "artifact/descriptor-validators"
+      }
+    }
+  ]
+}

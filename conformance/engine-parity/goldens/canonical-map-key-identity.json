@@ -1,0 +1,200 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-map-key-identity",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "items": [
+          {
+            "kind": "int",
+            "value": 1
+          },
+          {
+            "kind": "string",
+            "value": "two"
+          }
+        ],
+        "kind": "list"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 4,
+                "sourceId": "engine-parity/canonical-map-key-identity",
+                "startOffset": 1
+              },
+              "value": "let"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 12,
+                    "sourceId": "engine-parity/canonical-map-key-identity",
+                    "startOffset": 6
+                  },
+                  "value": "record"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 16,
+                          "sourceId": "engine-parity/canonical-map-key-identity",
+                          "startOffset": 14
+                        },
+                        "value": ":x"
+                      },
+                      "value": {
+                        "kind": "int",
+                        "span": {
+                          "endOffset": 18,
+                          "sourceId": "engine-parity/canonical-map-key-identity",
+                          "startOffset": 17
+                        },
+                        "value": 1
+                      }
+                    },
+                    {
+                      "key": {
+                        "kind": "string",
+                        "span": {
+                          "endOffset": 23,
+                          "sourceId": "engine-parity/canonical-map-key-identity",
+                          "startOffset": 19
+                        },
+                        "value": ":x"
+                      },
+                      "value": {
+                        "kind": "string",
+                        "span": {
+                          "endOffset": 29,
+                          "sourceId": "engine-parity/canonical-map-key-identity",
+                          "startOffset": 24
+                        },
+                        "value": "two"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 30,
+                    "sourceId": "engine-parity/canonical-map-key-identity",
+                    "startOffset": 13
+                  }
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 31,
+                "sourceId": "engine-parity/canonical-map-key-identity",
+                "startOffset": 5
+              }
+            },
+            {
+              "items": [
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 37,
+                        "sourceId": "engine-parity/canonical-map-key-identity",
+                        "startOffset": 34
+                      },
+                      "value": "get"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 44,
+                        "sourceId": "engine-parity/canonical-map-key-identity",
+                        "startOffset": 38
+                      },
+                      "value": "record"
+                    },
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 47,
+                        "sourceId": "engine-parity/canonical-map-key-identity",
+                        "startOffset": 45
+                      },
+                      "value": ":x"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 48,
+                    "sourceId": "engine-parity/canonical-map-key-identity",
+                    "startOffset": 33
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 53,
+                        "sourceId": "engine-parity/canonical-map-key-identity",
+                        "startOffset": 50
+                      },
+                      "value": "get"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 60,
+                        "sourceId": "engine-parity/canonical-map-key-identity",
+                        "startOffset": 54
+                      },
+                      "value": "record"
+                    },
+                    {
+                      "kind": "string",
+                      "span": {
+                        "endOffset": 65,
+                        "sourceId": "engine-parity/canonical-map-key-identity",
+                        "startOffset": 61
+                      },
+                      "value": ":x"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 66,
+                    "sourceId": "engine-parity/canonical-map-key-identity",
+                    "startOffset": 49
+                  }
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 67,
+                "sourceId": "engine-parity/canonical-map-key-identity",
+                "startOffset": 32
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 68,
+            "sourceId": "engine-parity/canonical-map-key-identity",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    }
+  },
+  "version": 1
+}

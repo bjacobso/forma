@@ -1,0 +1,148 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/empty-pick",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/row-operations/empty-pick",
+                "startOffset": 1
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 8,
+                "sourceId": "engine-parity/row-operations/empty-pick",
+                "startOffset": 3
+              },
+              "value": "empty"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 14,
+                    "sourceId": "engine-parity/row-operations/empty-pick",
+                    "startOffset": 10
+                  },
+                  "value": "Pick"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 18,
+                          "sourceId": "engine-parity/row-operations/empty-pick",
+                          "startOffset": 16
+                        },
+                        "value": ":a"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 22,
+                          "sourceId": "engine-parity/row-operations/empty-pick",
+                          "startOffset": 19
+                        },
+                        "value": "Int"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 23,
+                    "sourceId": "engine-parity/row-operations/empty-pick",
+                    "startOffset": 15
+                  }
+                },
+                {
+                  "items": [],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 26,
+                    "sourceId": "engine-parity/row-operations/empty-pick",
+                    "startOffset": 24
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 27,
+                "sourceId": "engine-parity/row-operations/empty-pick",
+                "startOffset": 9
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 28,
+            "sourceId": "engine-parity/row-operations/empty-pick",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 36,
+                "sourceId": "engine-parity/row-operations/empty-pick",
+                "startOffset": 30
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 42,
+                "sourceId": "engine-parity/row-operations/empty-pick",
+                "startOffset": 37
+              },
+              "value": "empty"
+            },
+            {
+              "entries": [],
+              "kind": "map",
+              "span": {
+                "endOffset": 45,
+                "sourceId": "engine-parity/row-operations/empty-pick",
+                "startOffset": 43
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 46,
+            "sourceId": "engine-parity/row-operations/empty-pick",
+            "startOffset": 29
+          }
+        },
+        {
+          "kind": "symbol",
+          "span": {
+            "endOffset": 52,
+            "sourceId": "engine-parity/row-operations/empty-pick",
+            "startOffset": 47
+          },
+          "value": "empty"
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "{}"
+    }
+  },
+  "version": 1
+}

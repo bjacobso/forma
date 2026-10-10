@@ -1,0 +1,34 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-present-null",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 3,
+        "payload": {
+          "kind": "Null",
+          "value": null
+        },
+        "sourceId": "engine-parity/canonical-present-null",
+        "span": {
+          "endOffset": 194,
+          "sourceId": "engine-parity/canonical-present-null",
+          "startOffset": 185
+        }
+      },
+      {
+        "formIndex": 4,
+        "payload": {
+          "kind": "Null"
+        },
+        "sourceId": "engine-parity/canonical-present-null",
+        "span": {
+          "endOffset": 203,
+          "sourceId": "engine-parity/canonical-present-null",
+          "startOffset": 195
+        }
+      }
+    ]
+  },
+  "version": 1
+}

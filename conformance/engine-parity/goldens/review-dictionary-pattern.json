@@ -1,0 +1,18 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "review-dictionary-pattern",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "int",
+        "value": 1
+      }
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Int"
+    }
+  },
+  "version": 1
+}

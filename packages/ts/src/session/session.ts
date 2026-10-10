@@ -1,3 +1,4 @@
+import { emptyScope, type Scope } from "../analysis/scope.js";
 import type { SExpr } from "../reader/types.js";
 import { Env } from "../Env.js";
 import {
@@ -44,6 +45,7 @@ export class LanguageSession {
   readonly id: string;
   env: Env;
   configurationEnv: Env;
+  scope: Scope = emptyScope;
   projects: NonNullable<
     import("../modules/graph.js").ModuleCoreOptions["projects"]
   >;
@@ -116,7 +118,7 @@ export class LanguageSession {
         (expression) =>
           expression._tag === "List" &&
           expression.items[0]?._tag === "Sym" &&
-          ["define", ":", "type", "class", "error", "macro"].includes(
+          ["define", ":", "type", "class", "error", "macro", "typeclass", "instance"].includes(
             expression.items[0].name,
           ),
       );
@@ -159,6 +161,7 @@ export class LanguageSession {
     this.env = Env.empty();
     this.configurationEnv = this.env;
     this.projects = [];
+    this.scope = emptyScope;
     this.#nextSourceOrder = 0;
   }
 }

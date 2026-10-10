@@ -1,0 +1,28 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-record-update",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "string",
+        "value": "Ada"
+      }
+    },
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/open-record",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 56,
+            "sourceId": "engine-parity/canonical-record-update",
+            "startOffset": 29
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,75 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-document",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 1,
+        "payload": {
+          "description": "Employment form",
+          "kind": "Document",
+          "name": "i9",
+          "pages": [
+            {
+              "assignee": "employee",
+              "dependsOn": [],
+              "fields": [
+                {
+                  "content": "Welcome",
+                  "kind": "Field",
+                  "options": [],
+                  "path": "i9/intro",
+                  "required": false,
+                  "type": "content"
+                },
+                {
+                  "binding": {
+                    "attribute": "employee/name",
+                    "entity": "Employee",
+                    "kind": "AttributeBinding"
+                  },
+                  "kind": "Field",
+                  "label": "Name",
+                  "options": [],
+                  "path": "i9/name",
+                  "required": true,
+                  "type": "text"
+                }
+              ],
+              "kind": "Page",
+              "sectionId": "employee-information"
+            }
+          ]
+        },
+        "sourceId": "engine-parity/canonical-document",
+        "span": {
+          "endOffset": 212,
+          "sourceId": "engine-parity/canonical-document",
+          "startOffset": 33
+        }
+      },
+      {
+        "formIndex": 0,
+        "payload": {
+          "fields": [
+            {
+              "indexed": false,
+              "name": "employee/name",
+              "required": true,
+              "type": "String"
+            }
+          ],
+          "kind": "Entity",
+          "name": "Employee"
+        },
+        "sourceId": "engine-parity/canonical-document",
+        "span": {
+          "endOffset": 32,
+          "sourceId": "engine-parity/canonical-document",
+          "startOffset": 0
+        }
+      }
+    ]
+  },
+  "version": 1
+}

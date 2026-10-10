@@ -1,0 +1,21 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "review-stateless-form-error",
+  "outputs": {
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "elaborate/hole-type",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 112,
+            "sourceId": "engine-parity/review-stateless-form-error",
+            "startOffset": 110
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

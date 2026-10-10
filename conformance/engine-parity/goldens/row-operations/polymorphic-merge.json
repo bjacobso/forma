@@ -1,0 +1,458 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/polymorphic-merge",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 15,
+                    "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                    "startOffset": 7
+                  },
+                  "value": "Envelope"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 17,
+                    "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                    "startOffset": 16
+                  },
+                  "value": "a"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 18,
+                "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                "startOffset": 6
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 25,
+                    "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                    "startOffset": 20
+                  },
+                  "value": "Merge"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 33,
+                          "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                          "startOffset": 27
+                        },
+                        "value": ":value"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 35,
+                          "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                          "startOffset": 34
+                        },
+                        "value": "a"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 36,
+                    "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                    "startOffset": 26
+                  }
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 41,
+                          "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                          "startOffset": 38
+                        },
+                        "value": ":id"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 45,
+                          "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                          "startOffset": 42
+                        },
+                        "value": "Int"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 46,
+                    "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                    "startOffset": 37
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 47,
+                "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                "startOffset": 19
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 48,
+            "sourceId": "engine-parity/row-operations/polymorphic-merge",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 51,
+                "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                "startOffset": 50
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 56,
+                "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                "startOffset": 52
+              },
+              "value": "read"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 60,
+                    "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                    "startOffset": 58
+                  },
+                  "value": "->"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 70,
+                        "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                        "startOffset": 62
+                      },
+                      "value": "Envelope"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 72,
+                        "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                        "startOffset": 71
+                      },
+                      "value": "a"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 73,
+                    "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                    "startOffset": 61
+                  }
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 75,
+                    "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                    "startOffset": 74
+                  },
+                  "value": "a"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 76,
+                "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                "startOffset": 57
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 77,
+            "sourceId": "engine-parity/row-operations/polymorphic-merge",
+            "startOffset": 49
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 85,
+                "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                "startOffset": 79
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 90,
+                "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                "startOffset": 86
+              },
+              "value": "read"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 98,
+                    "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                    "startOffset": 92
+                  },
+                  "value": "record"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 99,
+                "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                "startOffset": 91
+              }
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 112,
+                "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                "startOffset": 100
+              },
+              "value": "record.value"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 113,
+            "sourceId": "engine-parity/row-operations/polymorphic-merge",
+            "startOffset": 78
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 118,
+                "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                "startOffset": 115
+              },
+              "value": "let"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 121,
+                    "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                    "startOffset": 120
+                  },
+                  "value": "_"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 127,
+                        "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                        "startOffset": 123
+                      },
+                      "value": "read"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 132,
+                              "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                              "startOffset": 129
+                            },
+                            "value": ":id"
+                          },
+                          "value": {
+                            "kind": "int",
+                            "span": {
+                              "endOffset": 134,
+                              "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                              "startOffset": 133
+                            },
+                            "value": 1
+                          }
+                        },
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 141,
+                              "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                              "startOffset": 135
+                            },
+                            "value": ":value"
+                          },
+                          "value": {
+                            "kind": "bool",
+                            "span": {
+                              "endOffset": 146,
+                              "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                              "startOffset": 142
+                            },
+                            "value": true
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 147,
+                        "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                        "startOffset": 128
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 148,
+                    "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                    "startOffset": 122
+                  }
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 149,
+                "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                "startOffset": 119
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 155,
+                    "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                    "startOffset": 151
+                  },
+                  "value": "read"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 160,
+                          "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                          "startOffset": 157
+                        },
+                        "value": ":id"
+                      },
+                      "value": {
+                        "kind": "int",
+                        "span": {
+                          "endOffset": 162,
+                          "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                          "startOffset": 161
+                        },
+                        "value": 2
+                      }
+                    },
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 169,
+                          "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                          "startOffset": 163
+                        },
+                        "value": ":value"
+                      },
+                      "value": {
+                        "kind": "string",
+                        "span": {
+                          "endOffset": 174,
+                          "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                          "startOffset": 170
+                        },
+                        "value": "ok"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 175,
+                    "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                    "startOffset": 156
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 176,
+                "sourceId": "engine-parity/row-operations/polymorphic-merge",
+                "startOffset": 150
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 177,
+            "sourceId": "engine-parity/row-operations/polymorphic-merge",
+            "startOffset": 114
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "String"
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,402 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/merge-function",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "entries": [
+          {
+            "key": {
+              "kind": "keyword",
+              "value": ":age"
+            },
+            "value": {
+              "kind": "int",
+              "value": 37
+            }
+          },
+          {
+            "key": {
+              "kind": "keyword",
+              "value": ":name"
+            },
+            "value": {
+              "kind": "string",
+              "value": "Ada"
+            }
+          }
+        ],
+        "kind": "map"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/row-operations/merge-function",
+                "startOffset": 1
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 10,
+                "sourceId": "engine-parity/row-operations/merge-function",
+                "startOffset": 3
+              },
+              "value": "combine"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 14,
+                    "sourceId": "engine-parity/row-operations/merge-function",
+                    "startOffset": 12
+                  },
+                  "value": "->"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 21,
+                          "sourceId": "engine-parity/row-operations/merge-function",
+                          "startOffset": 16
+                        },
+                        "value": ":name"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 28,
+                          "sourceId": "engine-parity/row-operations/merge-function",
+                          "startOffset": 22
+                        },
+                        "value": "String"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 29,
+                    "sourceId": "engine-parity/row-operations/merge-function",
+                    "startOffset": 15
+                  }
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 35,
+                          "sourceId": "engine-parity/row-operations/merge-function",
+                          "startOffset": 31
+                        },
+                        "value": ":age"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 39,
+                          "sourceId": "engine-parity/row-operations/merge-function",
+                          "startOffset": 36
+                        },
+                        "value": "Int"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 40,
+                    "sourceId": "engine-parity/row-operations/merge-function",
+                    "startOffset": 30
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 47,
+                        "sourceId": "engine-parity/row-operations/merge-function",
+                        "startOffset": 42
+                      },
+                      "value": "Merge"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 54,
+                              "sourceId": "engine-parity/row-operations/merge-function",
+                              "startOffset": 49
+                            },
+                            "value": ":name"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 61,
+                              "sourceId": "engine-parity/row-operations/merge-function",
+                              "startOffset": 55
+                            },
+                            "value": "String"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 62,
+                        "sourceId": "engine-parity/row-operations/merge-function",
+                        "startOffset": 48
+                      }
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 68,
+                              "sourceId": "engine-parity/row-operations/merge-function",
+                              "startOffset": 64
+                            },
+                            "value": ":age"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 72,
+                              "sourceId": "engine-parity/row-operations/merge-function",
+                              "startOffset": 69
+                            },
+                            "value": "Int"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 73,
+                        "sourceId": "engine-parity/row-operations/merge-function",
+                        "startOffset": 63
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 74,
+                    "sourceId": "engine-parity/row-operations/merge-function",
+                    "startOffset": 41
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 75,
+                "sourceId": "engine-parity/row-operations/merge-function",
+                "startOffset": 11
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 76,
+            "sourceId": "engine-parity/row-operations/merge-function",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 84,
+                "sourceId": "engine-parity/row-operations/merge-function",
+                "startOffset": 78
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 92,
+                "sourceId": "engine-parity/row-operations/merge-function",
+                "startOffset": 85
+              },
+              "value": "combine"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 98,
+                    "sourceId": "engine-parity/row-operations/merge-function",
+                    "startOffset": 94
+                  },
+                  "value": "left"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 104,
+                    "sourceId": "engine-parity/row-operations/merge-function",
+                    "startOffset": 99
+                  },
+                  "value": "right"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 105,
+                "sourceId": "engine-parity/row-operations/merge-function",
+                "startOffset": 93
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 112,
+                    "sourceId": "engine-parity/row-operations/merge-function",
+                    "startOffset": 107
+                  },
+                  "value": "merge"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 117,
+                    "sourceId": "engine-parity/row-operations/merge-function",
+                    "startOffset": 113
+                  },
+                  "value": "left"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 123,
+                    "sourceId": "engine-parity/row-operations/merge-function",
+                    "startOffset": 118
+                  },
+                  "value": "right"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 124,
+                "sourceId": "engine-parity/row-operations/merge-function",
+                "startOffset": 106
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 125,
+            "sourceId": "engine-parity/row-operations/merge-function",
+            "startOffset": 77
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 134,
+                "sourceId": "engine-parity/row-operations/merge-function",
+                "startOffset": 127
+              },
+              "value": "combine"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 141,
+                      "sourceId": "engine-parity/row-operations/merge-function",
+                      "startOffset": 136
+                    },
+                    "value": ":name"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "span": {
+                      "endOffset": 147,
+                      "sourceId": "engine-parity/row-operations/merge-function",
+                      "startOffset": 142
+                    },
+                    "value": "Ada"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 148,
+                "sourceId": "engine-parity/row-operations/merge-function",
+                "startOffset": 135
+              }
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 154,
+                      "sourceId": "engine-parity/row-operations/merge-function",
+                      "startOffset": 150
+                    },
+                    "value": ":age"
+                  },
+                  "value": {
+                    "kind": "int",
+                    "span": {
+                      "endOffset": 157,
+                      "sourceId": "engine-parity/row-operations/merge-function",
+                      "startOffset": 155
+                    },
+                    "value": 37
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 158,
+                "sourceId": "engine-parity/row-operations/merge-function",
+                "startOffset": 149
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 159,
+            "sourceId": "engine-parity/row-operations/merge-function",
+            "startOffset": 126
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "{:age Int :name String}"
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,101 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/non-record",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/non-record",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 9,
+                "sourceId": "engine-parity/row-operations/non-record",
+                "startOffset": 6
+              },
+              "value": "Bad"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 15,
+                    "sourceId": "engine-parity/row-operations/non-record",
+                    "startOffset": 11
+                  },
+                  "value": "Pick"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 22,
+                    "sourceId": "engine-parity/row-operations/non-record",
+                    "startOffset": 16
+                  },
+                  "value": "String"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 26,
+                        "sourceId": "engine-parity/row-operations/non-record",
+                        "startOffset": 24
+                      },
+                      "value": ":a"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 27,
+                    "sourceId": "engine-parity/row-operations/non-record",
+                    "startOffset": 23
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 28,
+                "sourceId": "engine-parity/row-operations/non-record",
+                "startOffset": 10
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 29,
+            "sourceId": "engine-parity/row-operations/non-record",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/row-operation",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 22,
+            "sourceId": "engine-parity/row-operations/non-record",
+            "startOffset": 16
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

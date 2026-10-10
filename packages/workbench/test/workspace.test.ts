@@ -113,7 +113,7 @@ test("the REPL uses edited modules, replaces scratch definitions, and clears its
   await exercise(({ get, send, child }) =>
     Effect.gen(function* () {
       yield* send(Workspace.Message.SubmitRepl());
-      expect(Workspace.activeProject(get()).transcript.at(-1)?.output).toBe("42");
+      expect(Workspace.activeProject(get()).transcript.at(-1)).toMatchObject({ output: "42", type: "Number" });
       yield* send(Workspace.Message.OpenFile({ sourceId: "math.forma" }));
       const row = editorOf(get()).analysis!.rows.find((row) =>
         row.text.startsWith("define double"),
@@ -142,6 +142,9 @@ test("the REPL uses edited modules, replaces scratch definitions, and clears its
       });
       yield* send(Workspace.Message.ClearRepl());
       yield* send(Workspace.Message.SetReplInput({ value: "scratch" }));
+      yield* send(Workspace.Message.SubmitRepl());
+      expect(Workspace.activeProject(get()).transcript.at(-1)?.ok).toBe(false);
+      yield* send(Workspace.Message.SetReplInput({ value: '(if true 1 "bad")' }));
       yield* send(Workspace.Message.SubmitRepl());
       expect(Workspace.activeProject(get()).transcript.at(-1)?.ok).toBe(false);
     }),

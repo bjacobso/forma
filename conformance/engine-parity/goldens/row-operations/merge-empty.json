@@ -1,0 +1,197 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/merge-empty",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "engine-parity/row-operations/merge-empty",
+                "startOffset": 1
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 7,
+                "sourceId": "engine-parity/row-operations/merge-empty",
+                "startOffset": 3
+              },
+              "value": "kept"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 14,
+                    "sourceId": "engine-parity/row-operations/merge-empty",
+                    "startOffset": 9
+                  },
+                  "value": "Merge"
+                },
+                {
+                  "entries": [],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 17,
+                    "sourceId": "engine-parity/row-operations/merge-empty",
+                    "startOffset": 15
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 24,
+                        "sourceId": "engine-parity/row-operations/merge-empty",
+                        "startOffset": 19
+                      },
+                      "value": "Merge"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 28,
+                              "sourceId": "engine-parity/row-operations/merge-empty",
+                              "startOffset": 26
+                            },
+                            "value": ":a"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 32,
+                              "sourceId": "engine-parity/row-operations/merge-empty",
+                              "startOffset": 29
+                            },
+                            "value": "Int"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 33,
+                        "sourceId": "engine-parity/row-operations/merge-empty",
+                        "startOffset": 25
+                      }
+                    },
+                    {
+                      "entries": [],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 36,
+                        "sourceId": "engine-parity/row-operations/merge-empty",
+                        "startOffset": 34
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 37,
+                    "sourceId": "engine-parity/row-operations/merge-empty",
+                    "startOffset": 18
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 38,
+                "sourceId": "engine-parity/row-operations/merge-empty",
+                "startOffset": 8
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 39,
+            "sourceId": "engine-parity/row-operations/merge-empty",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 47,
+                "sourceId": "engine-parity/row-operations/merge-empty",
+                "startOffset": 41
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 52,
+                "sourceId": "engine-parity/row-operations/merge-empty",
+                "startOffset": 48
+              },
+              "value": "kept"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 56,
+                      "sourceId": "engine-parity/row-operations/merge-empty",
+                      "startOffset": 54
+                    },
+                    "value": ":a"
+                  },
+                  "value": {
+                    "kind": "int",
+                    "span": {
+                      "endOffset": 58,
+                      "sourceId": "engine-parity/row-operations/merge-empty",
+                      "startOffset": 57
+                    },
+                    "value": 1
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 59,
+                "sourceId": "engine-parity/row-operations/merge-empty",
+                "startOffset": 53
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 60,
+            "sourceId": "engine-parity/row-operations/merge-empty",
+            "startOffset": 40
+          }
+        },
+        {
+          "kind": "symbol",
+          "span": {
+            "endOffset": 65,
+            "sourceId": "engine-parity/row-operations/merge-empty",
+            "startOffset": 61
+          },
+          "value": "kept"
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "{:a Int}"
+    }
+  },
+  "version": 1
+}

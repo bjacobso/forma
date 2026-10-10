@@ -1,0 +1,153 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/merge-open",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/merge-open",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 9,
+                "sourceId": "engine-parity/row-operations/merge-open",
+                "startOffset": 6
+              },
+              "value": "Bad"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 16,
+                    "sourceId": "engine-parity/row-operations/merge-open",
+                    "startOffset": 11
+                  },
+                  "value": "Merge"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 20,
+                          "sourceId": "engine-parity/row-operations/merge-open",
+                          "startOffset": 18
+                        },
+                        "value": ":a"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 24,
+                          "sourceId": "engine-parity/row-operations/merge-open",
+                          "startOffset": 21
+                        },
+                        "value": "Int"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 25,
+                    "sourceId": "engine-parity/row-operations/merge-open",
+                    "startOffset": 17
+                  }
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 29,
+                          "sourceId": "engine-parity/row-operations/merge-open",
+                          "startOffset": 27
+                        },
+                        "value": ":b"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 36,
+                          "sourceId": "engine-parity/row-operations/merge-open",
+                          "startOffset": 30
+                        },
+                        "value": "String"
+                      }
+                    },
+                    {
+                      "key": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 38,
+                          "sourceId": "engine-parity/row-operations/merge-open",
+                          "startOffset": 37
+                        },
+                        "value": "&"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 40,
+                          "sourceId": "engine-parity/row-operations/merge-open",
+                          "startOffset": 39
+                        },
+                        "value": "r"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 41,
+                    "sourceId": "engine-parity/row-operations/merge-open",
+                    "startOffset": 26
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 42,
+                "sourceId": "engine-parity/row-operations/merge-open",
+                "startOffset": 10
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 43,
+            "sourceId": "engine-parity/row-operations/merge-open",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/row-operation",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 41,
+            "sourceId": "engine-parity/row-operations/merge-open",
+            "startOffset": 26
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

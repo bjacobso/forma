@@ -27,6 +27,7 @@ import {
   variadicFnType,
   showType,
   flattenRow,
+  buildRow,
 } from "./types.js";
 import { applyType, applyEnv, type TypeEnv, applyERow } from "./substitution.js";
 import { assignType, joinType } from "./assign.js";
@@ -161,6 +162,37 @@ export const typeExprToType = (
     const ctx = yield* InferContext;
 
     switch (texpr._tag) {
+      case "TERowOp": {
+        const fail = (message: string, span = texpr.span) => ctx.fail(
+          { nodeId: `row-operation:${span.start}`, span, kind: "row-operation" },
+          { message, code: "typecheck/row-operation" },
+        );
+        const operands: Map<string, Type>[] = [];
+        for (const operand of texpr.operands) {
+          const type = applyType(yield* Ref.get(ctx.subst), yield* typeExprToType(operand, tvarMap, rvarMap));
+          if (type._tag === "TVar") return yield* fail(`${texpr.op} requires a known closed record shape; unresolved row operations are not supported`, operand.span);
+          if (type._tag !== "TRow") return yield* fail(`${texpr.op} expects a record type`, operand.span);
+          const { fields, tail } = flattenRow(type.row);
+          if (tail._tag !== "REmpty") return yield* fail(`${texpr.op} requires a closed record; open-row constraints are not supported`, operand.span);
+          operands.push(fields);
+        }
+        const fields = new Map(operands[0]!);
+        if (texpr.op === "Merge") {
+          for (const [label, type] of operands[1]!) {
+            if (fields.has(label)) return yield* fail(`Merge requires disjoint records; duplicate field ${label}`);
+            fields.set(label, type);
+          }
+        } else {
+          for (const key of texpr.keys) {
+            if (!fields.has(key.label)) return yield* fail(`${texpr.op} field ${key.label} is not present in the record`, key.span);
+          }
+          const selected = new Set(texpr.keys.map(key => key.label));
+          for (const label of fields.keys()) {
+            if (selected.has(label) !== (texpr.op === "Pick")) fields.delete(label);
+          }
+        }
+        return TRow(buildRow(fields, REmpty));
+      }
       case "TESym": {
         const name = texpr.name;
 

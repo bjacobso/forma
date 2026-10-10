@@ -1,0 +1,148 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "canonical-int-number",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "items": [
+          {
+            "kind": "int",
+            "value": 3
+          },
+          {
+            "kind": "float",
+            "value": 0.5
+          },
+          {
+            "kind": "int",
+            "value": 1
+          }
+        ],
+        "kind": "list"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 3,
+                    "sourceId": "engine-parity/canonical-int-number",
+                    "startOffset": 2
+                  },
+                  "value": "+"
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 5,
+                    "sourceId": "engine-parity/canonical-int-number",
+                    "startOffset": 4
+                  },
+                  "value": 1
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 7,
+                    "sourceId": "engine-parity/canonical-int-number",
+                    "startOffset": 6
+                  },
+                  "value": 2
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 8,
+                "sourceId": "engine-parity/canonical-int-number",
+                "startOffset": 1
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 11,
+                    "sourceId": "engine-parity/canonical-int-number",
+                    "startOffset": 10
+                  },
+                  "value": "/"
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 13,
+                    "sourceId": "engine-parity/canonical-int-number",
+                    "startOffset": 12
+                  },
+                  "value": 1
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 15,
+                    "sourceId": "engine-parity/canonical-int-number",
+                    "startOffset": 14
+                  },
+                  "value": 2
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 16,
+                "sourceId": "engine-parity/canonical-int-number",
+                "startOffset": 9
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 23,
+                    "sourceId": "engine-parity/canonical-int-number",
+                    "startOffset": 18
+                  },
+                  "value": "floor"
+                },
+                {
+                  "kind": "float",
+                  "span": {
+                    "endOffset": 27,
+                    "sourceId": "engine-parity/canonical-int-number",
+                    "startOffset": 24
+                  },
+                  "value": 1.5
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 28,
+                "sourceId": "engine-parity/canonical-int-number",
+                "startOffset": 17
+              }
+            }
+          ],
+          "kind": "vector",
+          "span": {
+            "endOffset": 29,
+            "sourceId": "engine-parity/canonical-int-number",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "List<Number>"
+    }
+  },
+  "version": 1
+}

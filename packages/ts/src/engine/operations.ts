@@ -1,3 +1,4 @@
+import { checkSessionTypes } from "./session-validation.js";
 import { bootstrapFromSources, type BootstrappedPrelude } from "../descriptor/bootstrap.js";
 import { descriptorFormProvider } from "../type/unified-form-provider.js";
 import { elaborateSources } from "../descriptor/elaborate.js";
@@ -305,10 +306,12 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
   try {
     const formErrors = formDiagnostics(request, sourceId, source);
     if (formErrors.some(d=>d.severity === "error")) return {sourceId, pass:"typecheck", diagnostics:formErrors};
-    const inferOptions = {
-      ...typeInferOptions(mergedRequest),
-      ...(request.session ? { dslProvider: descriptorFormProvider(typecheckPreludes.get(request.session)!.prelude), macroEnv: request.session.env } : {}),
-    };
+    if (request.session) {
+      const provider = descriptorFormProvider(typecheckPreludes.get(request.session)!.prelude);
+      const checked = checkSessionTypes({ ...mergedRequest, session: request.session, source: mergedSource }, sourceId, provider);
+      return { ...checked, diagnostics: [...formErrors, ...checked.diagnostics] };
+    }
+    const inferOptions = typeInferOptions(mergedRequest);
     const result =
       mergedRequest.result === "per-expression"
         ? Effect.runSync(Type.inferSourceAll(mergedSource, inferOptions))

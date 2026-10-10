@@ -1,3 +1,4 @@
+import { payloadContractsFromSources, type PayloadContracts } from "../artifact/descriptor-contracts.js";
 import { typeDefinition } from "../surface/type-alias.js";
 /**
  * Bootstrap — load prelude sources and register form descriptors + __form-hook hooks.
@@ -38,6 +39,7 @@ import type {
 export interface BootstrappedPrelude {
   readonly sources?: readonly string[];
   readonly typingHooks?: ReadonlyMap<string, MetaFnDecl>;
+  readonly payloadContracts?: PayloadContracts;
   readonly formBuiltins?: HostedMetaBuiltinsFactory;
   readonly descriptions: FormDescriptorRegistry;
   readonly elaboration: ElaborationRegistry;
@@ -192,6 +194,7 @@ export function bootstrapFromSources(
     sources: [compilerSource, domainSource, ...additionalSources],
     typingHooks: deduped,
     ...(hostedMetaBuiltins ? {formBuiltins: hostedMetaBuiltins} : {}),
+    payloadContracts: payloadContractsFromSources([compilerSource, domainSource, ...additionalSources]),
     descriptions,
     elaboration,
     elaborationDescriptors,

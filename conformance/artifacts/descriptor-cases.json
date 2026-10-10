@@ -1,0 +1,40 @@
+{
+  "reference": "packages/ocaml/scripts/descriptor-preludes.mjs",
+  "cases": [
+    {
+      "label": "unknown artifact validator",
+      "code": "artifact/unknown-validator",
+      "includes": "missing-validator",
+      "sourceId": "descriptor-metacheck/unknown-validator",
+      "source": "\n(__form-descriptor define-unknown-validator\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:validators [missing-validator])))\n  (:construct-fn missing-validator/construct)\n  (:result-type (constant UnknownValidatorDef)))\n"
+    },
+    {
+      "label": "unknown payload contract",
+      "code": "artifact/descriptor-payload",
+      "includes": "MissingPayloadContract",
+      "sourceId": "descriptor-metacheck/unknown-payload-contract",
+      "source": "\n(__form-descriptor define-unknown-payload-contract\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload (:contract MissingPayloadContract))))\n  (:construct-fn unknown-payload-contract/construct)\n  (:result-type (constant UnknownPayloadContractDef)))\n"
+    },
+    {
+      "label": "malformed standalone payload contract",
+      "code": "artifact/descriptor-payload",
+      "includes": "payload clauses with textual clause names",
+      "sourceId": "descriptor-metacheck/malformed-payload-contract",
+      "source": "\n(__payload-contract MalformedPayloadContract\n  not-a-payload-clause)\n"
+    },
+    {
+      "label": "malformed artifact payload block",
+      "code": "artifact/descriptor-payload",
+      "includes": "must be a map of clauses",
+      "sourceId": "descriptor-metacheck/malformed-artifact-payload",
+      "source": "\n(__form-descriptor define-malformed-artifact-payload\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:payload \"not-a-map\")))\n  (:construct-fn malformed-artifact-payload/construct)\n  (:result-type (constant MalformedArtifactPayloadDef)))\n"
+    },
+    {
+      "label": "missing artifact summary requirements",
+      "code": "artifact/descriptor-summary",
+      "includes": "must declare :construct-fn",
+      "sourceId": "descriptor-metacheck/missing-artifact-summary",
+      "source": "\n(__form-descriptor define-missing-artifact-summary\n  (:identifier name)\n  (:extensions\n    (:artifact\n      (:validators [http]))))\n"
+    }
+  ]
+}

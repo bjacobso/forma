@@ -1,0 +1,283 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "row-operations/tagged-custom-valid",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 11,
+                "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                "startOffset": 6
+              },
+              "value": "Shape"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 19,
+                    "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                    "startOffset": 13
+                  },
+                  "value": "Tagged"
+                },
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 24,
+                    "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                    "startOffset": 20
+                  },
+                  "value": ":tag"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 29,
+                    "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                    "startOffset": 25
+                  },
+                  "value": "kind"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 37,
+                        "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                        "startOffset": 31
+                      },
+                      "value": "Circle"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 44,
+                              "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                              "startOffset": 39
+                            },
+                            "value": ":_tag"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 51,
+                              "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                              "startOffset": 45
+                            },
+                            "value": "String"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 52,
+                        "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                        "startOffset": 38
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 53,
+                    "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                    "startOffset": 30
+                  }
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 59,
+                    "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                    "startOffset": 54
+                  },
+                  "value": "Point"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 60,
+                "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                "startOffset": 12
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 61,
+            "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 68,
+                "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                "startOffset": 63
+              },
+              "value": "match"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 76,
+                    "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                    "startOffset": 70
+                  },
+                  "value": "Circle"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 83,
+                          "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                          "startOffset": 78
+                        },
+                        "value": ":_tag"
+                      },
+                      "value": {
+                        "kind": "string",
+                        "span": {
+                          "endOffset": 93,
+                          "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                          "startOffset": 84
+                        },
+                        "value": "payload"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 94,
+                    "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                    "startOffset": 77
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 95,
+                "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                "startOffset": 69
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 103,
+                    "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                    "startOffset": 97
+                  },
+                  "value": "Circle"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 110,
+                          "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                          "startOffset": 105
+                        },
+                        "value": ":_tag"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 115,
+                          "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                          "startOffset": 111
+                        },
+                        "value": "text"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 116,
+                    "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                    "startOffset": 104
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 117,
+                "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                "startOffset": 96
+              }
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 122,
+                "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                "startOffset": 118
+              },
+              "value": "text"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 128,
+                "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                "startOffset": 123
+              },
+              "value": "Point"
+            },
+            {
+              "kind": "string",
+              "span": {
+                "endOffset": 135,
+                "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+                "startOffset": 129
+              },
+              "value": "none"
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 136,
+            "sourceId": "engine-parity/row-operations/tagged-custom-valid",
+            "startOffset": 62
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "String"
+    }
+  },
+  "version": 1
+}
