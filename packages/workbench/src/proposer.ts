@@ -1,5 +1,5 @@
 import { Effect, Schema as S } from "effect";
-import { LanguageModel } from "effect/unstable/ai";
+import { LanguageModel } from "effect/ai";
 import type { NodeDescription } from "@formalang/host/types";
 import type { Analysis } from "./analysis.js";
 import { Script, refactoring } from "./edits.js";

@@ -24,8 +24,8 @@ automatically.
 For the Effect 4 migration, publish the `@formalang/ts` minor release and the
 related package updates from the changeset before changing consumers. Consumers
 using the Effect 3 alias for Forma can then upgrade Forma, install
-`effect@4.0.0-rc.112`, remove that alias, and import `Effect` from `effect`.
-Keep the dependency on this exact release candidate until Forma and the
+`effect@4.0.3`, remove that alias, and import `Effect` from `effect`.
+Keep the dependency on this exact release until Forma and the
 consumer agree on a later Effect 4 version.
 
 ## First publication

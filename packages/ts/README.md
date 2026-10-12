@@ -222,7 +222,7 @@ pnpm --filter @formalang/ts typecheck
 
 ## Effect 4 consumer migration
 
-The next release uses `effect@4.0.0-rc.112` in its public Effect types and
+The next release uses `effect@4.0.3` in its public Effect types and
 runtime. Consumers should install that same version, remove any Effect 3 alias
 used only for Forma, and import `Effect` directly from `effect`. Generated
 Effect TypeScript and Schema modules now target the Effect 4 APIs, including

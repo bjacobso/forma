@@ -99,7 +99,7 @@ by their declared names. In expressions, `(Ref T)` is an Effect reference, and
 | `(sleep 10)`, `(timeout eff 50)` | `Effect.sleep`, `Effect.timeout` (fails with `TimeoutError`) |
 | `(retry eff :times 3 :schedule (exponential 10))`, `(repeat eff :schedule (spaced 100))` | `Effect.retry`, `Effect.repeat` with `Schedule.exponential`, `spaced`, `fixed`, `recurs`, `jittered` |
 | `(ref-make v)`, `(ref-get r)`, `(ref-set r v)`, `(ref-update r f)` | `Ref.make`, `Ref.get`, `Ref.set`, `Ref.update` |
-| `(config Int "PORT" :default 8080)` | `Config.withDefault(Config.int("PORT"), 8080)` (fails with `ConfigError`) |
+| `(config Int "PORT" :default 8080)` | `Config.withDefault(Config.Int("PORT"), 8080)` (fails with `ConfigError`) |
 | `(decode User input)` | `Schema.decodeUnknownEffect(User)(input)` (fails with `SchemaError`) |
 | `(provide eff AppLive)` | `Effect.provide`. Services used inside are resolved inside the provided effect. |
 | `(log "message" value)` | `Effect.log` |

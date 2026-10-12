@@ -38,7 +38,7 @@ export const health = (_request: {}): Effect.Effect<string> =>
   Effect.gen(function* () {
     return "ok";
   });
-import { HttpApi, HttpApiBuilder, HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
+import { HttpApi, HttpApiBuilder, HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 
 export const Shop = HttpApi.make("Shop").add(HttpApiGroup.make("users").add(HttpApiEndpoint.get("get-user", "/users/:id", { "success": User, "error": [UserNotFound.annotate({"httpApiStatus":404})], "params": Schema.Struct({ id: UserId }) }), HttpApiEndpoint.post("create-user", "/users", { "success": User, "error": [], "payload": User })), HttpApiGroup.make("system").add(HttpApiEndpoint.get("health", "/health", { "success": Schema.String, "error": [] })));
 

@@ -161,7 +161,7 @@ export function generateHttpApiProgram(
   const statements = [
     mechanics.code!.trimEnd(),
     ...(imports.length
-      ? [`import { ${imports.join(", ")} } from "effect/unstable/httpapi";`]
+      ? [`import { ${imports.join(", ")} } from "effect/http-api";`]
       : []),
     ...(target.includes("Schema.") &&
     !/^import .*\bSchema\b.* from "effect";/m.test(mechanics.code!)
@@ -187,8 +187,8 @@ export function generateHttpApiBuilders(): { readonly code: string } {
     forms: ["endpoint", "group", "api"],
     imports: [
       'import { Schema } from "effect";',
-      'import { HttpApi, HttpApiEndpoint, HttpApiGroup, type HttpApiSchema } from "effect/unstable/httpapi";',
-      'import type { HttpRouter } from "effect/unstable/http";',
+      'import { HttpApi, HttpApiEndpoint, HttpApiGroup, type HttpApiSchema } from "effect/http-api";',
+      'import type { HttpRouter } from "effect/http";',
       "type ErrorSchema<S> = S extends HttpApiSchema.WithHeaders<infer Inner, Schema.Top> ? Inner : S;",
       "type ErrorSchemas<S extends readonly Schema.Top[]> = [Extract<ErrorSchema<S[number]>, HttpApiSchema.StreamSchema>] extends [never] ? S : never;",
     ],

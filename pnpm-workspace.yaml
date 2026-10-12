@@ -1,3 +1,30 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# Alchemy's ranges already accept 4.0.3. Keep its used companions pinned.
+# Foldkit's plugin pins platform packages to 4.0.0; this patch upgrade is
+# validated by the workbench dev-server and assembled-site browser suites.
+overrides:
+  "alchemy>@effect/sql-d1": 4.0.3
+  "alchemy>@effect/sql-sqlite-do": 4.0.3
+  "alchemy>@effect/vitest": 4.0.3
+  "@foldkit/vite-plugin@0.27.1>@effect/platform-node": 4.0.3
+  "@foldkit/vite-plugin@0.27.1>@effect/platform-node-shared": 4.0.3
+
+# Exact upstream 4.0.0 peers, tested here with 4.0.3. All other peers
+# retain pnpm's normal checking; do not broaden these to whole-package rules.
+peerDependencyRules:
+  allowedVersions:
+    "foldkit@0.168.0>effect": 4.0.3
+    "foldkit@0.168.0>@effect/platform-browser": 4.0.3
+    "@foldkit/ui@0.168.0>effect": 4.0.3
+    "@foldkit/vite-plugin@0.27.1>effect": 4.0.3
+    # The pinned, unpublished Foldworks tarballs still declare ^0.156.0.
+    # These exact packages are exercised by Forma's workbench tests.
+    "@foldworks/agent@0.1.0>foldkit": 0.168.0
+    "@foldworks/code-editor@0.1.0>foldkit": 0.168.0
+    "@foldworks/outliner@0.0.0>foldkit": 0.168.0
+    "@foldworks/text-intelligence@0.0.0>foldkit": 0.168.0
+    "@foldworks/ui@0.2.0>foldkit": 0.168.0
+    "@foldworks/ui@0.2.0>@foldkit/ui": 0.168.0

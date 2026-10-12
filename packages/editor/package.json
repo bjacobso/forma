@@ -47,7 +47,7 @@
     "@formalang/host": "workspace:*",
     "@lezer/highlight": "^1.2.1",
     "@lezer/lr": "^1.4.2",
-    "effect": "4.0.0-rc.112"
+    "effect": "4.0.3"
   },
   "devDependencies": {
     "@lezer/generator": "^1.7.2",
@@ -55,7 +55,7 @@
     "@types/react": "^19.2.16",
     "@types/react-dom": "^19.2.3",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.8"
+    "vitest": "5.0.4"
   },
   "peerDependencies": {
     "react": "^19.0.0",

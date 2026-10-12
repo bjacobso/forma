@@ -98,7 +98,7 @@ Status key:
 
 | Effect construct | Forma surface | Status | Case |
 | --- | --- | --- | --- |
-| `Config.string/int/number/boolean`, `withDefault` | `(config Type "NAME" :default v)` | supported | config-and-logging |
+| `Config.String/Int/Number/Boolean`, `withDefault` | `(config Type "NAME" :default v)` | supported | config-and-logging |
 | `Effect.log` | `(log ...)` | supported | config-and-logging, multi-service-checkout |
 | `Stream` | `stream-of`, `stream-range`, `stream-map`, `stream-filter`, `stream-take`, `stream-map-effect`, `stream-run-collect`, `stream-run-fold`, `stream-run-for-each`, `(Stream A [E] [R])` | partial | stream-pipeline. Sinks, chunking, merging, and Stream-specific error handling are missing. |
 

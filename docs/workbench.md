@@ -229,7 +229,7 @@ prompt, the selected and focused node ids, `describeNodes` for them, and the
 analysis facts for those rows, return an answer. The default implementation
 is a deterministic local matcher, which is also the test fixture. A model
 fills the same contract through `LanguageModel.generateObject` from
-`effect/unstable/ai` with Forma's `EditScript` schema, as Foldworks's
+`effect/ai` with Forma's `EditScript` schema, as Foldworks's
 `@foldworks/generative-ui` does for UI. `modelProposer()` captures an explicitly supplied `LanguageModel` and returns
 a `Proposer` for `WorkbenchConfig.proposer`. Its structured schema covers every
 edit operation; the host then validates the script against the current identity,

@@ -7,7 +7,7 @@ import { PrepareEdit } from "./edit-commands.js";
 import { CodeEditor } from "@foldworks/code-editor";
 import { editSource, setPane, sourceAnalysis, sourceOperation } from "./source-update.js";
 import { Command, Update } from "foldkit";
-import { evo } from "foldkit/struct";
+import { modifyFields } from "foldkit/struct";
 import { Outliner, type Policy } from "@foldworks/outliner";
 
 import { ValueTree } from "@foldworks/ui";
@@ -49,7 +49,7 @@ const foldOutliner = (model: Model, message: Outliner.Message): UpdateReturn =>
     update: (outline: Outliner.Model, event: Outliner.Message) =>
       Outliner.update(outline, event, policy),
     read: (parent: Model) => Option.some(parent.outline),
-    write: (parent: Model, outline: Outliner.Model) => evo(parent, { outline: () => outline }),
+    write: (parent: Model, outline: Outliner.Model) => modifyFields(parent, { outline: () => outline }),
     toParentMessage: (event: Outliner.Message) => Message.GotOutlinerMessage({ message: event }),
   })(model, message);
 
@@ -497,24 +497,24 @@ const updateModel = (model: Model, message: Message): UpdateReturn =>
     },
     LoadedProgram: ({ document, rows }) => {
       const loaded = foldOutliner(
-        evo(model, { failure: () => null }),
+        modifyFields(model, { failure: () => null }),
         Outliner.Message.Load({ items: fromRows(rows) }),
       );
       // The document describes the outline's current revision.
       return analyze(
-        evo(loaded.model, {
+        modifyFields(loaded.model, {
           document: () => ({ ...document, revision: loaded.model.outline.revision }),
         }),
       );
     },
-    FailedProgram: ({ reason }) => ({ model: evo(model, { failure: () => reason }) }),
+    FailedProgram: ({ reason }) => ({ model: modifyFields(model, { failure: () => reason }) }),
     // Only the latest revision is analyzed; earlier requests were overtaken by typing.
     AnalysisDue: ({ revision }) =>
       revision === model.outline.revision ? analyze(model) : { model },
     Analyzed: ({ analysis }) => received(model, analysis),
     FailedAnalysis: ({ revision, reason }) =>
       revision === model.outline.revision
-        ? { model: evo(model, { failure: () => reason }) }
+        ? { model: modifyFields(model, { failure: () => reason }) }
         : { model },
   });
 

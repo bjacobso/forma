@@ -14,10 +14,10 @@ export class Misconfigured extends Schema.TaggedError<Misconfigured>()("Misconfi
 
 export const settings: Effect.Effect<ServerSettings, Config.ConfigError> =
   Effect.gen(function* () {
-    const host = yield* Config.string("HOST");
-    const port = yield* Config.withDefault(Config.int("PORT"), 8080);
-    const debug = yield* Config.withDefault(Config.boolean("DEBUG"), false);
-    const ratio = yield* Config.withDefault(Config.number("SAMPLE_RATIO"), 0.5);
+    const host = yield* Config.String("HOST");
+    const port = yield* Config.withDefault(Config.Int("PORT"), 8080);
+    const debug = yield* Config.withDefault(Config.Boolean("DEBUG"), false);
+    const ratio = yield* Config.withDefault(Config.Number("SAMPLE_RATIO"), 0.5);
     yield* Effect.log("loaded settings for", host);
     return { host, port, debug, ratio };
   });
