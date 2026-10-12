@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { readNativeReferenceFileSync as readFileSync } from "../../../conformance/ocaml-reference/read.mjs";
+import { } from "node:fs";
 
 export const corpusGoldenPath = new URL("../../../conformance/corpus-emission/expected.json", import.meta.url);
 export const corpusGolden = JSON.parse(readFileSync(corpusGoldenPath, "utf8"));

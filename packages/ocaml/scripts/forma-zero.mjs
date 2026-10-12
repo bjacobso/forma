@@ -1,10 +1,11 @@
+import { readNativeReferenceFileSync as readFileSync } from "../../../conformance/ocaml-reference/read.mjs";
 // Forma Zero conformance suite — runs the shared fixtures in
 // packages/conformance/forma-zero against the OCaml engine.
 // The same fixtures run against @formalang/ts via
 // packages/ts/test/forma-zero.test.ts.
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 
 const packageDir = resolve(import.meta.dirname, "..");

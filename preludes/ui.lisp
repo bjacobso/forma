@@ -51,7 +51,7 @@
 (form
   (rows {:keys [gap visible]} child ...)
   :types
-    {:gap (Option Number) :visible (Option (Expr Bool)) :child (List component)}
+    {:gap (Option Float) :visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "rows" {"gap" gap "visible" visible} child))
 (define
@@ -69,7 +69,7 @@
 (form
   (columns {:keys [gap visible]} child ...)
   :types
-    {:gap (Option Number) :visible (Option (Expr Bool)) :child (List component)}
+    {:gap (Option Float) :visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "columns" {"gap" gap "visible" visible} child))
 (define
@@ -555,7 +555,7 @@
   (grid {:keys [columns visible]} child ...)
   :types
     {
-      :columns (Option Number)
+      :columns (Option Float)
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
@@ -576,7 +576,7 @@
   (aspect-ratio {:keys [ratio visible]} child ...)
   :types
     {
-      :ratio (Option Number)
+      :ratio (Option Float)
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
@@ -595,7 +595,7 @@
               :children "none"}}}))
 (form
   (spacer {:keys [height visible]})
-  :types {:height (Option Number) :visible (Option (Expr Bool))}
+  :types {:height (Option Float) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "spacer" {"height" height "visible" visible} []))
 (define
@@ -916,7 +916,7 @@
     {
       :columns (Option Json)
       :filters (Option Json)
-      :page-size (Option Number)
+      :page-size (Option Float)
       :default-sort (Option Json)
       :empty-state (Option String)
       :visible (Option (Expr Bool))
@@ -1085,7 +1085,7 @@
 (form
   (stat-group {:keys [gap visible]} child ...)
   :types
-    {:gap (Option Number) :visible (Option (Expr Bool)) :child (List component)}
+    {:gap (Option Float) :visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "stat-group" {"gap" gap "visible" visible} child))
 (define
@@ -1106,7 +1106,7 @@
   :types
     {
       :text (Option (Expr a))
-      :level (Option Number)
+      :level (Option Float)
       :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "heading" {"text" text "level" level "visible" visible} []))
@@ -1560,9 +1560,9 @@
       :default-value (Option (Expr a))
       :label (Option (Expr a))
       :description (Option (Expr a))
-      :min (Option Number)
-      :max (Option Number)
-      :step (Option Number)
+      :min (Option Float)
+      :max (Option Float)
+      :step (Option Float)
       :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component
@@ -1631,7 +1631,7 @@
               :children "none"}}}))
 (form
   (skeleton {:keys [lines visible]})
-  :types {:lines (Option Number) :visible (Option (Expr Bool))}
+  :types {:lines (Option Float) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "skeleton" {"lines" lines "visible" visible} []))
 (define

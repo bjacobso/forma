@@ -2926,7 +2926,7 @@ export function typeFromValueSyntax(node: JsonValue | undefined, env: TypeEnviro
   if (!isRecord(node)) return undefined;
   if (node["kind"] === "Var") {
     const name = String(node["name"]);
-    const json: JsonValue = ["String", "Int", "Float", "Number", "Bool", "Unit", "Json", "Bytes", "DateTime"].includes(name)
+    const json: JsonValue = ["String", "Int", "Float", "Bool", "Unit", "Json", "Bytes", "DateTime"].includes(name)
       ? { kind: "Primitive", name }
       : { kind: "Ref", name };
     return typeFromJson(json, env);

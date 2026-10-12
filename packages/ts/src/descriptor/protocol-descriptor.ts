@@ -185,6 +185,7 @@ function asLiteralArray(
 }
 
 function primitiveType(name: string): ProtocolPrimitiveType | undefined {
+  if (name === "Number" || name === "Num") throw new Error(`${name} is no longer supported. Use Int or Float.`);
   const normalized = name.toLowerCase();
   switch (normalized) {
     case "string":
@@ -194,7 +195,6 @@ function primitiveType(name: string): ProtocolPrimitiveType | undefined {
     case "int":
     case "integer":
       return "integer";
-    case "num":
     case "number": return "number";
     case "boolean":
     case "bool":

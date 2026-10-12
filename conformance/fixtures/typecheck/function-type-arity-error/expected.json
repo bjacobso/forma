@@ -17,5 +17,18 @@
         "end": 16
       }
     }
+  },
+  "typescript": {
+    "reason": "TypeScript diagnostic locations follow canonical Int/Float annotations; the frozen native reference uses its original numeric type vocabulary.",
+    "expectation": {
+      "kind": "error",
+      "diagnostic": {
+        "code": "lower/type-expression",
+        "span": {
+          "start": 5,
+          "end": 15
+        }
+      }
+    }
   }
 }

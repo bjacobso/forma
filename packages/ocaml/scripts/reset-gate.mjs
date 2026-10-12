@@ -1,4 +1,5 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readNativeReferenceFileSync as readFileSync } from "../../../conformance/ocaml-reference/read.mjs";
+import { readdirSync, statSync } from "node:fs";
 import { corpusGolden } from "./gates.mjs";
 
 const cwd = new URL("..", import.meta.url);

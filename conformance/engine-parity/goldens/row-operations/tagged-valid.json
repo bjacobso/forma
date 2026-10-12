@@ -61,7 +61,7 @@
                           "value": {
                             "kind": "symbol",
                             "span": {
-                              "endOffset": 43,
+                              "endOffset": 42,
                               "sourceId": "engine-parity/row-operations/tagged-valid",
                               "startOffset": 37
                             },
@@ -71,7 +71,7 @@
                       ],
                       "kind": "map",
                       "span": {
-                        "endOffset": 44,
+                        "endOffset": 43,
                         "sourceId": "engine-parity/row-operations/tagged-valid",
                         "startOffset": 28
                       }
@@ -79,7 +79,7 @@
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 45,
+                    "endOffset": 44,
                     "sourceId": "engine-parity/row-operations/tagged-valid",
                     "startOffset": 20
                   }
@@ -87,16 +87,16 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 51,
+                    "endOffset": 50,
                     "sourceId": "engine-parity/row-operations/tagged-valid",
-                    "startOffset": 46
+                    "startOffset": 45
                   },
                   "value": "Point"
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 52,
+                "endOffset": 51,
                 "sourceId": "engine-parity/row-operations/tagged-valid",
                 "startOffset": 12
               }
@@ -104,7 +104,7 @@
           ],
           "kind": "list",
           "span": {
-            "endOffset": 53,
+            "endOffset": 52,
             "sourceId": "engine-parity/row-operations/tagged-valid",
             "startOffset": 0
           }
@@ -114,9 +114,9 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 60,
+                "endOffset": 59,
                 "sourceId": "engine-parity/row-operations/tagged-valid",
-                "startOffset": 55
+                "startOffset": 54
               },
               "value": "match"
             },
@@ -125,9 +125,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 68,
+                    "endOffset": 67,
                     "sourceId": "engine-parity/row-operations/tagged-valid",
-                    "startOffset": 62
+                    "startOffset": 61
                   },
                   "value": "Circle"
                 },
@@ -137,18 +137,18 @@
                       "key": {
                         "kind": "keyword",
                         "span": {
-                          "endOffset": 77,
+                          "endOffset": 76,
                           "sourceId": "engine-parity/row-operations/tagged-valid",
-                          "startOffset": 70
+                          "startOffset": 69
                         },
                         "value": ":radius"
                       },
                       "value": {
                         "kind": "int",
                         "span": {
-                          "endOffset": 79,
+                          "endOffset": 78,
                           "sourceId": "engine-parity/row-operations/tagged-valid",
-                          "startOffset": 78
+                          "startOffset": 77
                         },
                         "value": 3
                       }
@@ -156,17 +156,17 @@
                   ],
                   "kind": "map",
                   "span": {
-                    "endOffset": 80,
+                    "endOffset": 79,
                     "sourceId": "engine-parity/row-operations/tagged-valid",
-                    "startOffset": 69
+                    "startOffset": 68
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 81,
+                "endOffset": 80,
                 "sourceId": "engine-parity/row-operations/tagged-valid",
-                "startOffset": 61
+                "startOffset": 60
               }
             },
             {
@@ -174,9 +174,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 89,
+                    "endOffset": 88,
                     "sourceId": "engine-parity/row-operations/tagged-valid",
-                    "startOffset": 83
+                    "startOffset": 82
                   },
                   "value": "Circle"
                 },
@@ -186,18 +186,18 @@
                       "key": {
                         "kind": "keyword",
                         "span": {
-                          "endOffset": 98,
+                          "endOffset": 97,
                           "sourceId": "engine-parity/row-operations/tagged-valid",
-                          "startOffset": 91
+                          "startOffset": 90
                         },
                         "value": ":radius"
                       },
                       "value": {
                         "kind": "symbol",
                         "span": {
-                          "endOffset": 105,
+                          "endOffset": 104,
                           "sourceId": "engine-parity/row-operations/tagged-valid",
-                          "startOffset": 99
+                          "startOffset": 98
                         },
                         "value": "radius"
                       }
@@ -205,52 +205,52 @@
                   ],
                   "kind": "map",
                   "span": {
-                    "endOffset": 106,
+                    "endOffset": 105,
                     "sourceId": "engine-parity/row-operations/tagged-valid",
-                    "startOffset": 90
+                    "startOffset": 89
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 107,
+                "endOffset": 106,
                 "sourceId": "engine-parity/row-operations/tagged-valid",
-                "startOffset": 82
+                "startOffset": 81
               }
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 114,
+                "endOffset": 113,
                 "sourceId": "engine-parity/row-operations/tagged-valid",
-                "startOffset": 108
+                "startOffset": 107
               },
               "value": "radius"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 120,
+                "endOffset": 119,
                 "sourceId": "engine-parity/row-operations/tagged-valid",
-                "startOffset": 115
+                "startOffset": 114
               },
               "value": "Point"
             },
             {
               "kind": "int",
               "span": {
-                "endOffset": 122,
+                "endOffset": 121,
                 "sourceId": "engine-parity/row-operations/tagged-valid",
-                "startOffset": 121
+                "startOffset": 120
               },
               "value": 0
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 123,
+            "endOffset": 122,
             "sourceId": "engine-parity/row-operations/tagged-valid",
-            "startOffset": 54
+            "startOffset": 53
           }
         }
       ],

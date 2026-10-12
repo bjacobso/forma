@@ -74,10 +74,10 @@
 ;; and builtins used as values.
 (type
   Shape
-  (Tagged :tag kind (Circle {:radius Number}) (Square {:side Number})))
+  (Tagged :tag kind (Circle {:radius Float}) (Square {:side Float})))
 (: default-role (Effect Role))
 (define default-role (succeed "admin"))
-(: circles (-> (List Number) (Effect (List Shape))))
+(: circles (-> (List Float) (Effect (List Shape))))
 (define
   circles
   [radii]
@@ -98,7 +98,7 @@
   by-name
   [members]
   (let [next (assoc members "b" {:name "b" :role "member"})] next))
-(: largest (-> (List Number) (Effect Shape)))
+(: largest (-> (List Float) (Effect Shape)))
 (define
   largest
   [sizes]

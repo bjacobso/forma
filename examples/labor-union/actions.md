@@ -26,7 +26,7 @@
       :globalHrId (Option String)
       :hireEventId (Option String)
       :address (Option String)
-      :startDate Number
+      :startDate Float
       :cbaId (Option String)
       :positionId (Option (Id Position))}
     (Action Bool)))
@@ -75,7 +75,7 @@
   (->
     Employee
     {
-      :dueDate (Option Number)
+      :dueDate (Option Float)
       :templateVersion (Option String)
       :placementId (Option (Id Placement))
       :cbaId (Option (Id CollectiveBargainingAgreement))}
@@ -121,7 +121,7 @@
       true)))
 (: collect-form (-> Employee (Action Bool)))
 (define collect-form [employee] (do! [_ (emit! "collect-form")] true))
-(: submit-union-authorization-card (-> Employee Number (Action Bool)))
+(: submit-union-authorization-card (-> Employee Float (Action Bool)))
 (define
   submit-union-authorization-card
   [employee timestamp]
@@ -146,7 +146,7 @@
       true)))
 (:
   emit-card-completed-webhook
-  (-> ExecutedAuthorizationDocument Number (Action Bool)))
+  (-> ExecutedAuthorizationDocument Float (Action Bool)))
 (define
   emit-card-completed-webhook
   [document timestamp]

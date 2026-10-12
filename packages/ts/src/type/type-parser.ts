@@ -40,13 +40,13 @@ function parseEffectTypeSet(expr: SExpr, setName: "ErrorSet" | "RequirementSet")
  * Parse a type expression from SExpr.
  *
  * Supported forms:
- *   Num, Str, Bool, Nil, String, Unit, Number, Boolean, a, b
+ *   Int, Float, Bool, String, Unit, a, b
  *                               -> TESym (type constants or variables)
  *   (-> A B C)                  -> TEFun (function type, last is return)
  *   (List A), (Map K V)         -> TEApp (type application)
  *   [(name String)]             -> TERow (closed record)
  *   [(name String) ...]         -> TERow (open record with synthetic row variable)
- *   {:name Str :age Num}        -> TERow (legacy closed record)
+ *   {:name String :age Int}        -> TERow (legacy closed record)
  *   {:name Str :* r}            -> TERow (legacy open record with row variable)
  */
 export function parseTypeExpr(expr: SExpr): TypeExpr {
@@ -63,6 +63,7 @@ function parseTypeExprInner(expr: SExpr): TypeExpr {
 
   switch (expr._tag) {
     case "Sym":
+      if (expr.name === "Number" || expr.name === "Num") throw new InferenceError({message: `${expr.name} is no longer supported. Use Int or Float.`});
       return TESym(span, expr.name);
 
     case "List": {
@@ -163,7 +164,7 @@ function parseTypeExprInner(expr: SExpr): TypeExpr {
     }
 
     case "Map": {
-      // Record type: {:name Str :age Num} or {:name Str :* r}
+      // Record type: {:name String :age Int} or {:name Str :* r}
       const fields: { label: string; type: TypeExpr }[] = [];
       let tail: string | undefined;
 

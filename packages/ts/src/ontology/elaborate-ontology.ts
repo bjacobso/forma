@@ -127,8 +127,6 @@ export const ontologyScalarTypes: ReadonlySet<string> = new Set([
   "Keyword",
   "Int",
   "Float",
-  "Number",
-  "Num",
   "Decimal",
   "Bool",
   "Boolean",

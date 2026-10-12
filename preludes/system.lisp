@@ -11,13 +11,13 @@
 ; =============================================================================
 (attribute _schema/type String
   :doc "Entity type discriminant for platform-owned entities.")
-(attribute _schema/created-at (Option Number)
+(attribute _schema/created-at (Option Float)
   :doc "Creation timestamp in epoch milliseconds.")
-(attribute _schema/updated-at (Option Number)
+(attribute _schema/updated-at (Option Float)
   :doc "Last update timestamp in epoch milliseconds.")
 (attribute _schema/created-by (Option String)
   :doc "Actor or principal responsible for creation.")
-(attribute _schema/version (Option Number)
+(attribute _schema/version (Option Float)
   :doc "Version marker for versioned system definitions.")
 (attribute _schema/enabled (Option Bool)
   :doc "Soft-delete / enablement flag for platform-owned entities.")
@@ -31,7 +31,7 @@
 (entity EntityType
   {
     :_type/name (String :indexed true)
-    :_type/version (Number :indexed true)
+    :_type/version (Float :indexed true)
     :_type/description (Option String)
     :_type/plural (Option String)}
   :tier :meta
@@ -48,8 +48,8 @@
     :_attr/default (Option String)
     :_attr/description (Option String)
     :_attr/belongs-to (String :indexed true)
-    :_attr/validation-min (Option Number)
-    :_attr/validation-max (Option Number)
+    :_attr/validation-min (Option Float)
+    :_attr/validation-max (Option Float)
     :_attr/validation-pattern (Option String)
     :_attr/validation-format (Option String)
     :_attr/validation-enum (Option Json)
@@ -84,14 +84,14 @@
     :_meta/description (Option String)
     :_meta/validation (Option Json)
     :_meta/deprecated (Option Bool)
-    :_meta/deprecated-at (Option Number)}
+    :_meta/deprecated-at (Option Float)}
   :doc "Registry entry describing a known attribute name and its metadata."
   :role "schema-definition"
   :id-pattern "_meta/attribute:{attributeName}")
 (entity RelationshipType
   {
     :_schema/relationship-type-name (String :indexed true)
-    :_meta/version (Number :indexed true)
+    :_meta/version (Float :indexed true)
     :_meta/source-type String
     :_meta/target-type String
     :_meta/definition Json}
@@ -101,7 +101,7 @@
 (entity SavedQuery
   {
     :_schema/query-name (String :indexed true)
-    :_meta/version (Number :indexed true)
+    :_meta/version (Float :indexed true)
     :_meta/display-name String
     :_meta/definition Json
     :_meta/tags (Option Json)}
@@ -131,7 +131,7 @@
   {
     :action/name (String :indexed true)
     :action/object-type (String :indexed true)
-    :action/version (Number :indexed true)
+    :action/version (Float :indexed true)
     :action/definition Json}
   :doc "Versioned action definition available to processes and UI."
   :role "system-metadata"
@@ -148,7 +148,7 @@
 (entity Process
   {
     :name (String :indexed true)
-    :version (Number :indexed true)
+    :version (Float :indexed true)
     :definition Json}
   :doc "Versioned workflow/process definition."
   :role "system-metadata"
@@ -164,7 +164,7 @@
     :guidance-ref (Option String)
     :inputs (Option Json)
     :scope (Option Json)
-    :version (Number :indexed true)}
+    :version (Float :indexed true)}
   :doc "Reusable ontology-authored task definition."
   :role "system-metadata"
   :id-pattern "_task-definition/{name}/v{version}")
@@ -183,21 +183,21 @@
     :type String
     :status String
     :priority String
-    :due-date (Option Number)
-    :reminder-date (Option Number)
+    :due-date (Option Float)
+    :reminder-date (Option Float)
     :tags (Option Json)
     :metadata (Option Json)
-    :version (Option Number)
-    :created-at (Option Number)
+    :version (Option Float)
+    :created-at (Option Float)
     :created-by (Option String)
-    :updated-at (Option Number)
-    :completed-at (Option Number)
+    :updated-at (Option Float)
+    :completed-at (Option Float)
     :completed-by (Option String)
     :resolution (Option String)
     :assigned-to (Option String)
     :assigned-role (Option String)
     :assigned-team (Option String)
-    :assigned-at (Option Number)
+    :assigned-at (Option Float)
     :assigned-by (Option String)
     :entity-id (Option String)
     :entity-type (Option String)
@@ -222,8 +222,8 @@
     :input (Option Json)
     :output (Option Json)
     :error (Option Json)
-    :started-at (Number :indexed true)
-    :completed-at (Option Number :indexed true)}
+    :started-at (Float :indexed true)
+    :completed-at (Option Float :indexed true)}
   :doc "Audit receipt for a host-executed runtime effect."
   :role "runtime-record"
   :id-pattern "_effect-execution/{ulid}")
@@ -236,8 +236,8 @@
     :severity String
     :message String
     :status String
-    :detected-at Number
-    :status-changed-at (Option Number)
+    :detected-at Float
+    :status-changed-at (Option Float)
     :status-changed-by (Option String)
     :notes (Option String)
     :resolution-action-id (Option String)
@@ -251,13 +251,13 @@
     :entity-id String
     :entity-type String
     :status String
-    :due-date (Option Number)
-    :completed-at (Option Number)
+    :due-date (Option Float)
+    :completed-at (Option Float)
     :completed-sections (Option Json)
     :data (Option Json)
     :context (Option Json)
     :assignments (Option Json)
-    :created-at Number}
+    :created-at Float}
   :role "runtime-record"
   :id-pattern "document-instance:{ulid}")
 (entity SectionSubmission
@@ -265,7 +265,7 @@
     :document-section-submission/instance-id String
     :document-section-submission/section-id String
     :document-section-submission/submitted-by String
-    :document-section-submission/submitted-at Number
+    :document-section-submission/submitted-at Float
     :document-section-submission/data Json
     :document-section-submission/signature (Option String)}
   :role "runtime-record"
@@ -282,7 +282,7 @@
     :assigned-entity-id (Option String)
     :assigned-entity-type (Option String)
     :role (Option String)
-    :due-date (Option Number)
+    :due-date (Option Float)
     :is-blocked Bool
     :blocked-by (Option String)
     :status String}
@@ -292,7 +292,7 @@
   {
     :exec/action-id String
     :exec/action-name String
-    :exec/action-version Number
+    :exec/action-version Float
     :exec/entity-type String
     :exec/target-entity String
     :exec/parameters Json
@@ -300,8 +300,8 @@
     :exec/task-id (Option String)
     :exec/result (Option Json)
     :exec/created-by (Option String)
-    :exec/created-at (Option Number)
-    :exec/completed-at (Option Number)
+    :exec/created-at (Option Float)
+    :exec/completed-at (Option Float)
     :exec/completed-by (Option String)
     :exec/rejection-reason (Option String)}
   :role "runtime-record"
@@ -310,12 +310,12 @@
   {
     :process-instance/definition-id String
     :process-instance/status String
-    :process-instance/triggered-at Number
+    :process-instance/triggered-at Float
     :process-instance/triggered-by String
     :process-instance/entity-id (Option String)
     :process-instance/entity-type (Option String)
     :process-instance/context (Option Json)
-    :process-instance/completed-at (Option Number)
+    :process-instance/completed-at (Option Float)
     :process-instance/error (Option String)}
   :role "runtime-record"
   :id-pattern "_process-inst:{ulid}")
@@ -324,11 +324,11 @@
     :node-exec/instance-id String
     :node-exec/node-id String
     :node-exec/status String
-    :node-exec/started-at (Option Number)
-    :node-exec/completed-at (Option Number)
+    :node-exec/started-at (Option Float)
+    :node-exec/completed-at (Option Float)
     :node-exec/output (Option Json)
     :node-exec/error (Option String)
-    :node-exec/wake-at (Option Number)
+    :node-exec/wake-at (Option Float)
     :node-exec/task-ref (Option String)}
   :role "runtime-record"
   :id-pattern "_node-exec:{instanceId}:{nodeId}")
@@ -355,7 +355,7 @@
     :pdf-fill/entity-id (Option String)
     :pdf-fill/output-blob-hash String
     :pdf-fill/output-filename String
-    :pdf-fill/filled-at Number
+    :pdf-fill/filled-at Float
     :pdf-fill/unmapped-fields (Option Json)}
   :role "runtime-record"
   :id-pattern "pdf-fill/{ulid}")

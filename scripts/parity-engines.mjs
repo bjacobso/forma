@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Effect } from "effect";
+import { readNativeReferenceFileSync, nativeReferenceEdits, remapNativeReferenceSpans } from "../conformance/ocaml-reference/read.mjs";
 import {
   diffValues,
   normalizeAst,
@@ -202,7 +203,7 @@ async function emitOcamlEffectIr(sourceId, source, daemon, preludes = []) {
   const opened = checkOk("openSession", await daemon.request({ op: "openSession" }));
   const sessionId = opened.sessionId;
   try {
-    for (const filename of preludes) checkOk(`loadPrelude ${filename}`, await daemon.request({op: "loadPrelude", sessionId, sourceId: `preludes/${filename.replace(/\.lisp$/, "")}.lisp`, source: readFileSync(resolve(repoRoot, `preludes/${filename.replace(/\.lisp$/, "")}.lisp`), "utf8")}));
+    for (const filename of preludes) checkOk(`loadPrelude ${filename}`, await daemon.request({op: "loadPrelude", sessionId, sourceId: `preludes/${filename.replace(/\.lisp$/, "")}.lisp`, source: readNativeReferenceFileSync(resolve(repoRoot, `preludes/${filename.replace(/\.lisp$/, "")}.lisp`), "utf8")}));
     checkOk("loadSource", await daemon.request({ op: "loadSource", sessionId, sourceId, source }));
     const emitted = checkOk("emit", await daemon.request({ op: "emit", sessionId, sourceId, backend: "canonical-ir" }));
     const content = emitted.artifacts?.[0]?.content;
@@ -335,6 +336,16 @@ async function main() {
       if (!selected(fixture.id)) continue;
       const source = fixture.source ?? readFileSync(resolve(suiteDir, fixture.sourceFile), "utf8");
       const sourceId = `engine-parity/${fixture.id}`;
+      const sourceNative = fixture.sourceFile ? readNativeReferenceFileSync(resolve(suiteDir, fixture.sourceFile), "utf8") : fixture.sourceNative ?? source;
+      let inlineDelta = 0;
+      const edits = fixture.sourceFile ? nativeReferenceEdits(resolve(suiteDir, fixture.sourceFile)) : sourceNative === source ? [] : ts.Reader.tokenizeWithTrivia(sourceNative).map(item => item.token)
+        .filter(token => token.type === "symbol" && ["Number", "Num"].includes(token.name))
+        .map(token => {
+          const edit = {start: token.loc.start - inlineDelta, before: token.name, after: "Float"};
+          inlineDelta += token.name.length - 5;
+          return edit;
+        });
+      const reference = value => remapNativeReferenceSpans(value, sourceId, edits);
       for (const pass of fixture.passes) {
         if (process.env.FORMA_PARITY_TRACE) console.error(`${fixture.id}/${pass}`);
         if (pass === "canonical-ir") {
@@ -347,22 +358,23 @@ async function main() {
               if (!result.ok) throw new Error(`TS domain projection failed: ${JSON.stringify(result.diagnostics)}`);
               return normalizeTsDeclarations(result.declarations);
             }),
-            nativeOutput(() => emitOcamlEffectIr(sourceId, source, daemon, fixture.preludes ?? ["kernel", "compiler", "ontology"])),
+            nativeOutput(async () => reference(await emitOcamlEffectIr(sourceId, sourceNative, daemon, fixture.preludes ?? ["kernel", "compiler", "ontology"]))),
           ]);
-          if (jsDaemon) addGoldenCheck(report, fixture.id, pass, "ocaml-js", await capture(() => emitOcamlEffectIr(sourceId, source, jsDaemon, fixture.preludes ?? ["kernel", "compiler", "ontology"])), ocaml);
+          if (jsDaemon) addGoldenCheck(report, fixture.id, pass, "ocaml-js", await capture(async () => reference(await emitOcamlEffectIr(sourceId, sourceNative, jsDaemon, fixture.preludes ?? ["kernel", "compiler", "ontology"]))), ocaml);
           addComparison(report, fixture.id, pass, typescript, ocaml);
           continue;
         }
         if (pass === "effect-ir") {
           const [typescript, ocaml] = await Promise.all([
             capture(() => projectTsEffectIr(sourceId, source, ts)),
-            nativeOutput(() => emitOcamlEffectIr(sourceId, source, daemon)),
+            nativeOutput(async () => reference(await emitOcamlEffectIr(sourceId, sourceNative, daemon))),
           ]);
-          if (jsDaemon) addGoldenCheck(report, fixture.id, pass, "ocaml-js", await capture(() => emitOcamlEffectIr(sourceId, source, jsDaemon)), ocaml);
+          if (jsDaemon) addGoldenCheck(report, fixture.id, pass, "ocaml-js", await capture(async () => reference(await emitOcamlEffectIr(sourceId, sourceNative, jsDaemon))), ocaml);
           addComparison(report, fixture.id, pass, typescript, ocaml);
           continue;
         }
         const request = { sourceId, source };
+        const nativeRequest = {sourceId, source: sourceNative};
         const project = pass === "parse" || pass === "expand"
           ? normalizeAst
           : pass === "typecheck"
@@ -370,9 +382,9 @@ async function main() {
             : normalizeEvaluate;
         const [typescript, ocaml] = await Promise.all([
           capture(async () => project(await tsHost[pass](request))),
-          nativeOutput(async () => project(await ocamlHost[pass](request))),
+          nativeOutput(async () => reference(project(await ocamlHost[pass](nativeRequest)))),
         ]);
-        if (jsHost) addGoldenCheck(report, fixture.id, pass, "ocaml-js", await capture(async () => project(await jsHost[pass](request))), ocaml);
+        if (jsHost) addGoldenCheck(report, fixture.id, pass, "ocaml-js", await capture(async () => reference(project(await jsHost[pass](nativeRequest)))), ocaml);
         addComparison(report, fixture.id, pass, typescript, ocaml,
           fixture.typeAliases ? { normalization: { typeAliases: fixture.typeAliases } } : {});
         const expected = fixture.expected?.[pass];

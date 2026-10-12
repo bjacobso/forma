@@ -12,7 +12,7 @@ Movies catalog example in canonical ontology syntax.
 ```lisp
 (entity Studio {:name String})
 (entity Movie
-  {:title String :release-year (Option Number) :studio (Option (Id Studio))})
+  {:title String :release-year (Option Float) :studio (Option (Id Studio))})
 ```
 
 ```lisp

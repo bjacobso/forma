@@ -1,5 +1,5 @@
 ;; Patterns must name real cases, bind only payloads, and stay reachable.
-(type Shape (Tagged :tag kind (Circle {:radius Number}) (Square {:side Number})))
+(type Shape (Tagged :tag kind (Circle {:radius Float}) (Square {:side Float})))
 
 (: describe (-> Shape (Effect String [] [])))
 (define describe [shape]

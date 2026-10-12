@@ -152,9 +152,7 @@ const directives = new Set(["import", "export", "export-from"]);
 export const coreTypeNames = new Set([
   "String",
   "Int",
-  "Number",
   "Float",
-  "Num",
   "Bool",
   "Unit",
   "Json",

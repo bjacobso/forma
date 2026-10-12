@@ -1,4 +1,5 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readNativeReferenceFileSync as readFileSync } from "../../../conformance/ocaml-reference/read.mjs";
+import { readdirSync } from "node:fs";
 import { relative, resolve } from "node:path";
 
 export const packageDir = resolve(import.meta.dirname, "..");

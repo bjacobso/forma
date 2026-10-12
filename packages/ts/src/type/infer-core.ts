@@ -118,14 +118,12 @@ export function attachEffectToOperationType(opType: Type, effectName: string): T
 /** Well-known type names that map to TCon — both canonical and legacy spellings */
 const typeConNames = new Set([
   // Canonical internal names
-  "Number",
   "Int",
   "Float",
   "String",
   "Boolean",
   "Unit",
   // Legacy spellings still accepted in type annotations
-  "Num",
   "Str",
   "Bool",
   "Nil",
@@ -211,7 +209,10 @@ export const typeExprToType = (
         switch (name) {
           case "Num":
           case "Number":
-            return tNum;
+            return yield* ctx.fail(
+              {nodeId: `type:${texpr.span.start}`, span: texpr.span, kind: "type-expression"},
+              {code: "typecheck/retired-type", message: `${name} is no longer supported. Use Int or Float.`},
+            );
           case "Str":
           case "String":
             return tStr;

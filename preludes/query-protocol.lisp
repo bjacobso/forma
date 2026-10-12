@@ -40,8 +40,8 @@
   QuerySource
   (Union QueryTypeSource QueryEntitySource QueryCteSource QueryViewSource))
 (type QueryOneHop {:kind "one"})
-(type QueryManyHop {:kind "many" :min (Option Number) :max Number})
-(type QueryClosureHop {:kind "closure" :limit Number})
+(type QueryManyHop {:kind "many" :min (Option Float) :max Float})
+(type QueryClosureHop {:kind "closure" :limit Float})
 (type QueryHop (Union QueryOneHop QueryManyHop QueryClosureHop))
 (type
   QueryJoin
@@ -60,19 +60,19 @@
 (type QueryValueShape {:kind "value" :expr QueryValueExpr})
 (type
   QueryListShape
-  {:kind "list" :of QueryShape :limit (Option Number) :distinct (Option Bool)})
+  {:kind "list" :of QueryShape :limit (Option Float) :distinct (Option Bool)})
 (type
   QueryShape
   (Union QueryObjectShape QueryPickShape QueryValueShape QueryListShape))
 (type QueryOrder {:expr QueryValueExpr :dir SortDir :nulls (Option NullsOrder)})
-(type QueryPage {:first Number :after (Option String)})
+(type QueryPage {:first Float :after (Option String)})
 (type
   QueryOptions
   {
-    :maxJoins (Option Number)
-    :maxHops (Option Number)
-    :maxCost (Option Number)
-    :timeoutMs (Option Number)})
+    :maxJoins (Option Float)
+    :maxHops (Option Float)
+    :maxCost (Option Float)
+    :timeoutMs (Option Float)})
 (type QueryDefs {:ctes (Option (Map String SubqueryPlan))})
 (type
   SubqueryPlan
@@ -102,7 +102,7 @@
     :page (Option QueryPage)
     :options (Option QueryOptions)})
 (type PageInfo {:nextCursor (Option String) :hasMore Bool})
-(type QueryStats {:scannedFacts (Option Number) :elapsedMs (Option Number)})
+(type QueryStats {:scannedFacts (Option Float) :elapsedMs (Option Float)})
 (type
   QueryResult
   {

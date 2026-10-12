@@ -1,5 +1,6 @@
+import { readNativeReferenceFileSync as readFileSync } from "../../../conformance/ocaml-reference/read.mjs";
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 
 const cwd = new URL("..", import.meta.url);
 const nativeCli = new URL("dist/native/forma_cli.exe", cwd).pathname;

@@ -56,6 +56,8 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
   if (top && h === "type" && e.items.length === 3) {
     const n = e.items[1]!;
     const t = e.items[2]!;
+    const declaredName = name(n) ?? head(n);
+    if (declaredName === "Number" || declaredName === "Num") throw Object.assign(new Error(`${declaredName} is no longer supported. Use Int or Float.`), {loc:n.loc});
     const problem = taggedPayloadProblem(t);
     if (problem) throw Object.assign(new InferenceError({
       message: problem.message,
@@ -85,9 +87,21 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
     for (let i = 2; i < e.items.length; i++) {
       const a = e.items[i]!;
       if (name(a) === ":extends" && e.items[i + 1]) args.push(e.items[++i]!);
-      else args.push(head(a) === ":" && a._tag === "List" ? list(a, a.items.slice(1)) : a);
+      else {
+        if (head(a) === ":" && a._tag === "List" && a.items[2]) {
+          const errors = typeSyntaxErrors(a.items[2], schemaMetadata);
+          if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:a.items[2].loc});
+        }
+        args.push(head(a) === ":" && a._tag === "List" ? list(a, a.items.slice(1)) : a);
+      }
     }
     return call(e, "__typeclass", e.items[1]!, ...args);
+  }
+  if (top && h === "instance" && e.items[1]?._tag === "List") {
+    for (const type of e.items[1].items.slice(1)) {
+      const errors = typeSyntaxErrors(type, schemaMetadata);
+      if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:type.loc});
+    }
   }
   if (h === "define" && e.items[1]?._tag === "Sym" && e.items[2]?._tag === "Vector" && e.items.length >= 4) {
     return call(e, "define", e.items[1], normalizeCore(call(e, "fn", e.items[2], ...e.items.slice(3))));

@@ -61,21 +61,21 @@
     :i9-citizenship-status (Option String)
     :i9-section-1-signed (Option Bool)
     :status String
-    :hire-date (Option Number)
+    :hire-date (Option Float)
     :address (Option (Id Address))})
 (entity JobType
   {
     :jobtype/name String
     :jobtype/description (Option String)
-    :jobtype/hourly-rate (Option Number)
-    :jobtype/bill-rate (Option Number)})
+    :jobtype/hourly-rate (Option Float)
+    :jobtype/bill-rate (Option Float)})
 (entity Placement
   {
-    :start-date Number
-    :end-date (Option Number)
+    :start-date Float
+    :end-date (Option Float)
     :status String
-    :pay-rate (Option Number)
-    :bill-rate (Option Number)
+    :pay-rate (Option Float)
+    :bill-rate (Option Float)
     :employee (Option (Id Employee))
     :client (Option (Id Client))
     :employer (Option (Id Employer))
@@ -87,8 +87,8 @@
     :onboardingtask/document-name (Option String)
     :onboardingtask/status String
     :onboardingtask/priority String
-    :onboardingtask/due-date (Option Number)
-    :onboardingtask/completed-at (Option Number)
+    :onboardingtask/due-date (Option Float)
+    :onboardingtask/completed-at (Option Float)
     :onboardingtask/assignee-role String
     :onboardingtask/employee (Option (Id Employee))
     :onboardingtask/placement (Option (Id Placement))
@@ -98,9 +98,9 @@
     :name String
     :type String
     :status String
-    :created-at (Option Number)
-    :signed-at (Option Number)
-    :expires-at (Option Number)
+    :created-at (Option Float)
+    :signed-at (Option Float)
+    :expires-at (Option Float)
     :source-document (Option String)
     :document-instance-id (Option String)
     :document-submission-id (Option String)
@@ -109,22 +109,22 @@
     :employee (Option (Id Employee))})
 (relation works-at Employee Employer
   {
-    :start-date (Option Number)
-    :end-date (Option Number)
+    :start-date (Option Float)
+    :end-date (Option Float)
     :status (Option String)})
 (relation placed-at Employee Client
   {
-    :start-date (Option Number)
-    :end-date (Option Number)
+    :start-date (Option Float)
+    :end-date (Option Float)
     :employer (Option String)
     :jobtype (Option String)
     :status (Option String)})
 (relation serves-client Employer Client
-  {:since (Option Number) :contract-type (Option String)})
+  {:since (Option Float) :contract-type (Option String)})
 (relation governed-by Employer Policy
-  {:since (Option Number) :overridden (Option Bool)})
-(relation assigned-task Employee OnboardingTask {:assigned-at (Option Number)})
-(relation has-document Employee Document {:uploaded-at (Option Number)})
+  {:since (Option Float) :overridden (Option Bool)})
+(relation assigned-task Employee OnboardingTask {:assigned-at (Option Float)})
+(relation has-document Employee Document {:uploaded-at (Option Float)})
 ```
 
 ```

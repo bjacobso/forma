@@ -22,10 +22,18 @@ describe("host type configuration", () => {
     expect(check({typePolicy:{unboundSymbols:[{match:{kind:"regex",value:"x"},type:{kind:"any"}}]}},"1").diagnostics[0]?.code).toBe("typecheck/type-policy");
     expect(check({typePolicy:{defaultBuiltinScheme:"wat"}},"1").diagnostics[0]?.code).toBe("typecheck/type-policy");
   });
-  it.each(["Int","Float","Number","Num"])("preserves the host numeric alias %s", name => {
+  it.each(["Int","Float"])("preserves the canonical host numeric type %s", name => {
     const result = check({hostBuiltins:[{name:"external",typeScheme:{kind:"type",name}}]});
     expect(result.diagnostics).toEqual([]);
     expect(result.display).toBe(name === "Int" ? "Int" : "Float");
+  });
+  it.each(["Number", "Num"])("rejects retired host type %s with a migration diagnostic", name => {
+    for (const typeScheme of [{kind:"type",name}, {kind:"list",item:{kind:"type",name}}]) {
+      const result = check({hostBuiltins:[{name:"external",typeScheme}]});
+      expect(result.diagnostics[0]).toMatchObject({code:"typecheck/host-builtin",span:{sourceId:"author.forma",startOffset:0,endOffset:8}});
+      expect(result.diagnostics[0]?.message).toContain(`${name} is no longer supported. Use Int or Float.`);
+    }
+    expect(check({typePolicy:{unboundSymbols:[{match:{kind:"exact",value:"external"},type:{kind:"type",name}}]}}).diagnostics[0]?.message).toContain("Use Int or Float");
   });
   it("keeps typed core annotations attached to author nodes", () => {
     const result = debugCore({sourceId:"author.forma",source:"(+ 1 2)"},"typecheckCoreTyped");

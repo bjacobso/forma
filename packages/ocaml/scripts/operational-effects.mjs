@@ -1,5 +1,6 @@
+import { readNativeReferenceFileSync as readFileSync } from "../../../conformance/ocaml-reference/read.mjs";
 import { spawn } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { packageDir } from "./corpus.mjs";

@@ -44,7 +44,7 @@ Package resolution and compile-time library imports remain proposals.
 | `(type UserId (Brand String))` | `Schema.String.pipe(Schema.brand("UserId"))`; construct with `(UserId "u-1")` |
 | `(type Role (Union :admin :member))` | `Schema.Literals(["admin", "member"])` |
 | `(Tuple A B)`, `(Union A B)`, `(List T)`, `(Map String T)` | tuple, union, array, and dictionary schemas |
-| `(type Shape (Tagged :tag kind (Circle {:radius Number}) (Square {:side Number})))` | a union of records with a literal `kind` field |
+| `(type Shape (Tagged :tag kind (Circle {:radius Float}) (Square {:side Float})))` | a union of records with a literal `kind` field |
 | `(class Customer {:name String})` | `class Customer extends Schema.Class<Customer>("Customer")({...})`; construct with `(Customer {:name "Ada"})` |
 | `(error NotFound {:id String})` | `class NotFound extends Schema.TaggedError<NotFound>()("NotFound", {...})` |
 | `(service Users (: find (-> String (Effect (Option User)))))` | `Context.Service` with a typed `find` method |
@@ -174,7 +174,7 @@ are stricter than TypeScript:
 - `=` and `includes?` compare only primitives, enums, and brands, because
   records would be compared by reference;
 - `str` and `to-string` accept only primitives, not records;
-- `Int` can flow into `Float` (`Number` and `Num` are legacy Float aliases), so `(/ a b)` cannot flow into an `Int` (use
+- `Int` can flow into `Float` (`Number` and `Num` are rejected type names), so `(/ a b)` cannot flow into an `Int` (use
   `quot`);
 - `let` cannot silently run an effect.
 

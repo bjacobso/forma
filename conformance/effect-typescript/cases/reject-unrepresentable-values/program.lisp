@@ -1,5 +1,5 @@
 ;; Values TypeScript or Effect cannot represent faithfully.
-(: huge Number)
+(: huge Float)
 (define huge 1e400)
 
 ;; Unsafe Int literals are rejected by the reader (numeric-types.test.ts).

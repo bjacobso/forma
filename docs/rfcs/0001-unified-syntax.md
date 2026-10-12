@@ -1,5 +1,9 @@
 # RFC 0001: One language, one syntax
 
+Numeric vocabulary in this historical proposal is superseded by the
+[distinct Int and Float decision](../design-decisions.md#distinct-int-and-float-values).
+Current source rejects `Number` and `Num`.
+
 | | |
 | --- | --- |
 | Status | Implemented grammar; remaining design proposals are identified below |

@@ -1,6 +1,6 @@
 ;; Configuration is read with typed Config values and defaults, a missing
 ;; required value fails with ConfigError, and progress is logged.
-(type ServerSettings {:host String :port Int :debug Bool :ratio Number})
+(type ServerSettings {:host String :port Int :debug Bool :ratio Float})
 (error Misconfigured {:reason String})
 (: settings (Effect ServerSettings [ConfigError] []))
 (define
@@ -14,7 +14,7 @@
       debug
       (config Bool "DEBUG" :default false)
       ratio
-      (config Number "SAMPLE_RATIO" :default 0.5)
+      (config Float "SAMPLE_RATIO" :default 0.5)
       _
       (log "loaded settings for" host)]
     (succeed {:host host :port port :debug debug :ratio ratio})))

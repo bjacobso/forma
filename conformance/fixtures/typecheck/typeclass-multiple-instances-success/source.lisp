@@ -1,5 +1,5 @@
 (typeclass (Eq a) (: eq (-> a a Bool)))
-(instance (Eq Num)
+(instance (Eq Float)
   (define eq  [a b] (= a b)))
 (instance (Eq Str)
   (define eq  [a b] (= a b)))

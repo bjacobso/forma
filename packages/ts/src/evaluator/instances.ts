@@ -24,9 +24,7 @@ import { applyKFn } from "./eval-core.js";
  */
 export function canonicalRuntimeTypeName(name: string): string {
   switch (name) {
-    case "Number":
-    case "Num":
-      return "Float";
+
     case "Str":
       return "String";
     case "Bool":

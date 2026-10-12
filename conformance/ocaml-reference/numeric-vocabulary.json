@@ -1,0 +1,1050 @@
+{
+  "version": 1,
+  "files": {
+    "preludes/action-protocol.lisp": {
+      "canonicalHash": "c91e7d332f663be24e57e40d882d5194c4dcc6175433f22b160c535dda540f65",
+      "legacyHash": "5571835e074d89779605ade06eb711be7f8892c9a63f7ae1ce2ec3b66b82d309",
+      "edits": [
+        {
+          "start": 617,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 641,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "preludes/canonical-runtime-protocol.lisp": {
+      "canonicalHash": "185e39579a668aa43bf181c83e3e0c88f6a69a0fdf97813766eb818544dfffd7",
+      "legacyHash": "4e2e9737a4f54fd8ac62bce3afe53ff6b0ed0284a5535754a27350a8004571d4",
+      "edits": [
+        {
+          "start": 284,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 301,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 362,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "preludes/query-protocol.lisp": {
+      "canonicalHash": "fb56a09083113d6d75c2b0bc0963ca356b4f3cccd159b5a12a0dce1b0922a8e9",
+      "legacyHash": "31cf2ad6bee53310e60913657a0341f07ffc181fe5a14e0752d95c26868ccf31",
+      "edits": [
+        {
+          "start": 1810,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1822,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1876,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2461,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2692,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2770,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2798,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2826,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2856,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3664,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3690,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "preludes/system.lisp": {
+      "canonicalHash": "d67fe03a5fa5fcf5c15750f9176eb058bc05d0e7793691b906df49ec042e75bd",
+      "legacyHash": "6690876591db017ba278c9cdc6b4ba7736b1957fb81842551ee11198ae869a01",
+      "edits": [
+        {
+          "start": 713,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 810,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1008,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1597,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2199,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2240,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3506,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3775,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 4143,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 5269,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 5883,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 6356,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 7021,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 7055,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 7135,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 7166,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 7229,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 7262,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 7463,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 8294,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 8341,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 8688,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 8725,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 9098,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 9131,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 9274,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 9580,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 10084,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 10356,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 10603,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 10641,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 10930,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 11163,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 11431,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 11474,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 11585,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 12559,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "preludes/ui.lisp": {
+      "canonicalHash": "30f837026e00c0a6daa8df358f8956d75334be5cbed99f75456815cfdbca3aa8",
+      "legacyHash": "c8af9c39b6da4ed2431c1471140c38a967fbd20b69e23d395293a8543905e9fb",
+      "edits": [
+        {
+          "start": 1591,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2090,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 14483,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 15028,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 15517,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 24155,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 28348,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 28904,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 40680,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 40706,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 40733,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 42396,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "preludes/viewspec-protocol.lisp": {
+      "canonicalHash": "1015a443cf0c1a997f397d2330237781004e2fe21c9c9f72eb931d764bb4d1b5",
+      "legacyHash": "53c996ac7ebdf5bfb89efd5e36da9bb948a266bd1abeb0b578fd2afdf4968004",
+      "edits": [
+        {
+          "start": 10947,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 13405,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "examples/bizops/README.md": {
+      "canonicalHash": "066625f9dc1c8e225f9b6bf2db2f66ab29f72cb8fcbd204fc0ef0d698b91a95f",
+      "legacyHash": "71d6995e2704b8add4ad4f76e5ceff877fa22a49cc68f09b60c15d957b4e1822",
+      "edits": [
+        {
+          "start": 241,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "examples/insurance/README.md": {
+      "canonicalHash": "4c5edabe4518a1891ecf288f8ecbb9625fbed97d0d8c83e636290b976e3f3b38",
+      "legacyHash": "fd6fe3759c7e72b96e06ebfceb92f617403a3f55b12a79a2805de95f864fcbab",
+      "edits": [
+        {
+          "start": 264,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "examples/labor-union/actions.md": {
+      "canonicalHash": "86114e767bbde4e3dd4f5025d6fce8929e220854b9337379ca50d9c21244bbf9",
+      "legacyHash": "dbbb633ac24491a4e49a2a4617a2836f6724bc5693f97af5cfd52a81e379d581",
+      "edits": [
+        {
+          "start": 719,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2130,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3865,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 4765,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "examples/labor-union/schema.md": {
+      "canonicalHash": "a62e56208e372a87ef1fcf2651304c16d03fe2cd907e0b960cb3218b9ae49659",
+      "legacyHash": "adc89dad74f8877a9a3d8282b6221218e39a75795191bb687138d282a15a7d66",
+      "edits": [
+        {
+          "start": 1839,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2280,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2318,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3094,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3141,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3632,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 4251,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "examples/law-firm/actions.md": {
+      "canonicalHash": "3b13e663aa2834ea99d57642ca9b0b1e6bb41f2cd79d8de39fe45141774e921a",
+      "legacyHash": "397d08cb1ecae5a89da013d5cfc2feb4e60bdf4421e0211fe20e1c2034ec9029",
+      "edits": [
+        {
+          "start": 996,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3421,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3921,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 5041,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 5884,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 6969,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 7391,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 7420,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 7494,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 8582,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 9268,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 9600,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 10271,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "examples/law-firm/schema.md": {
+      "canonicalHash": "4da6ef6e4497a111ad0e0f1958032dbe0ba6dbae32ce8c2c08e8dcb9ff4783d6",
+      "legacyHash": "ea81822049f3322eb0ce25ad12217d641e0d673d0149b339063925c53f874b2a",
+      "edits": [
+        {
+          "start": 1675,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1709,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1736,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1900,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1945,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2229,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2382,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2429,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2700,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2742,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2957,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3005,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3179,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3208,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3237,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3505,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "examples/movies/README.md": {
+      "canonicalHash": "1d3fa155edf4db82526dccd5b083d9888c7b62c23367a9a36e08387274e1cfe3",
+      "legacyHash": "a92067d5b1be2a58a89d5c8f7b4e55629c67d61cc164d1de639b379676bc2c55",
+      "edits": [
+        {
+          "start": 210,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "examples/performance-reviews/README.md": {
+      "canonicalHash": "76ee992673c088d2ef5fabbc63dfbd37cde879e64f1fdf0df7a425452db72137",
+      "legacyHash": "f09d074164c3fde7a75ed9d14ea88a56642c0c601212607212f1736fc018392a",
+      "edits": [
+        {
+          "start": 278,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "examples/staffing/actions.md": {
+      "canonicalHash": "4c9dba4f78f4bfdecd76f7ab9f597cbc1bb2a84d27c013bce46898e52d118acb",
+      "legacyHash": "d78a1be7c74f0f8d16f68554e083c70a66c47aaa30059e9ebb6f1046088ca4c9",
+      "edits": [
+        {
+          "start": 916,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1726,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "examples/staffing/schema.md": {
+      "canonicalHash": "fac496d9d2a14c92de34e3299b0ead1f193a70c2faa2acfd22d90c5a91fa291f",
+      "legacyHash": "006132f4602930c1012131d9785fc9f8415dc125c194dba89c884ebed0e30ab8",
+      "edits": [
+        {
+          "start": 1532,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1695,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1733,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1780,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1808,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1856,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1886,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2330,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2378,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2680,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2710,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2741,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3053,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3082,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3183,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3212,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3366,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3462,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3567,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3639,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/effect-typescript/cases/config-and-logging/program.lisp": {
+      "canonicalHash": "ebf65efe0221cf7277a45690509ab49d39f21680c018419d19cffa509bc9d56f",
+      "legacyHash": "c5577943f8f54589aab31aaa6a787d83c07f5de04f9b1d83edba20f023e1f73c",
+      "edits": [
+        {
+          "start": 204,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 509,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/effect-typescript/cases/edge-cases/program.lisp": {
+      "canonicalHash": "9cb27526c48a89db73508208f36e7b27227fd194f0bf8dffd9cc8c9b98898e2a",
+      "legacyHash": "3475277f39e0cac29bf454384496b87b5d1eca1de50d5734ec59ef9d47605c84",
+      "edits": [
+        {
+          "start": 2800,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2823,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 2925,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 3527,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/effect-typescript/cases/reject-match-patterns/program.lisp": {
+      "canonicalHash": "87b61fc3ee03b046b2e9e6ac5c3a88d9571ba54087ea354fd3822e6c95d53311",
+      "legacyHash": "7308458d91ff7c17eebc3eb0bdc736204ca891391e33626f367f656f7b3d49a2",
+      "edits": [
+        {
+          "start": 121,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 144,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/effect-typescript/cases/reject-tagged-collision/program.lisp": {
+      "canonicalHash": "17160ee76c1c150dd3a72edb8c9447c86c2f228f8ffcc96602cd47d432415d34",
+      "legacyHash": "de1d6923bfa00f0a174140691433e27864546294af9cf0af7fb745283fb62006",
+      "edits": [
+        {
+          "start": 60,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/effect-typescript/cases/reject-unrepresentable-values/program.lisp": {
+      "canonicalHash": "21f25e08f33d7dc83a3c4f61f0861504596fbe2344c61742fd67513da2ecf48e",
+      "legacyHash": "5dee230cff580a700503feccd6012aed4cfb1539b94beb4791c8ca4f0f330d30",
+      "edits": [
+        {
+          "start": 68,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/effect-typescript/cases/schemas-and-decoding/program.lisp": {
+      "canonicalHash": "1d93c2e57f20accabe4c8a4c98bd147ccf333255223859f96387c9300d0d9911",
+      "legacyHash": "52170387ab947bacb36d239b410195f7649173c76e677a13ef37eb159ad34995",
+      "edits": [
+        {
+          "start": 267,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 273,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 344,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 375,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 389,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 711,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 919,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/effect-typescript/cases/stream-pipeline/program.lisp": {
+      "canonicalHash": "597ee88993f3757e761efb53102b579ede3513411f80e3b040104f9582d5834e",
+      "legacyHash": "1e50756d3aa440cca21fa824d221fc23df2c3a586c39afd36d9ee947aaf29b39",
+      "edits": [
+        {
+          "start": 292,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 510,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 684,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1619,
+          "before": "Number",
+          "after": "Float"
+        },
+        {
+          "start": 1754,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/fixtures/typecheck/fn-vector-destructure-success/source.lisp": {
+      "canonicalHash": "953cfc487cfaf899a3789c664560d12e8409da645bcdc2fbffa75a9a7985bf59",
+      "legacyHash": "6f507292edf87103bb9de75ae99ab3d03412c9848a7b2fc0ac5fbaf96a69eb7f",
+      "edits": [
+        {
+          "start": 26,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/fixtures/typecheck/function-type-arity-error/source.lisp": {
+      "canonicalHash": "94218c6ee07e20dcaac0125f77da869858a80c028eeca9ee0fb81865bc0e3289",
+      "legacyHash": "7a10025688e9d230ec1a02ee3358a7bf49e4fef9989737c1068eff1fa86b7187",
+      "edits": [
+        {
+          "start": 9,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/fixtures/typecheck/typeclass-aliased-missing-instance-error/source.lisp": {
+      "canonicalHash": "01fa5c8f1793931239bdbd4dfa589783932ed8e8db7d4bab90ef453903016069",
+      "legacyHash": "971c1abfb603d7e1fdfa27645553c064de29a23afd253a0d502a6d978a394211",
+      "edits": [
+        {
+          "start": 54,
+          "before": "Num",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/fixtures/typecheck/typeclass-generalized-missing-instance-error/source.lisp": {
+      "canonicalHash": "1159faeb01fbcd83fcaeb080f0286383a43cdbb5c7e7a5be32ed0559ff59d600",
+      "legacyHash": "c78dec74851abb608c5258465dc47bdb3a300146588f063f6f49e18bb6b03169",
+      "edits": [
+        {
+          "start": 54,
+          "before": "Num",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/fixtures/typecheck/typeclass-higher-order-missing-instance-error/source.lisp": {
+      "canonicalHash": "78d6bf6d50de1e4a72f611969eb1d3b68d0dc9c150d1bac00107fe75e3fa2710",
+      "legacyHash": "ae7dc3fb1b48165f58d3e201c5a2ba41d53923df74b1ff116bbc272c3b134b9e",
+      "edits": [
+        {
+          "start": 54,
+          "before": "Num",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/fixtures/typecheck/typeclass-instance-method-type-error/source.lisp": {
+      "canonicalHash": "a0f89b9c472a48cd1f1c96b3c6f1a4b547ac8815898b32060789ae336a100201",
+      "legacyHash": "7f558711f6a9c304ced9edf056aebb0a708a79cc84a533d315ddd70840c1a9dd",
+      "edits": [
+        {
+          "start": 60,
+          "before": "Num",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/fixtures/typecheck/typeclass-missing-instance-error/source.lisp": {
+      "canonicalHash": "8c11adea65900e8b6802e1356d39cfc00594673cc4a660880e0f78e15c883aea",
+      "legacyHash": "026d81e04f72aeb73963c052905bc700726cacb2df1e31ca33094d6ad7a6efb6",
+      "edits": [
+        {
+          "start": 54,
+          "before": "Num",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/fixtures/typecheck/typeclass-multiple-instances-success/source.lisp": {
+      "canonicalHash": "fdef4c19e0cf24b91acf555a1a579683d108a93564cc79688162201243d271d7",
+      "legacyHash": "7cd0badb815e26eff798e9a7a0f2f6a0dcabf8aaa82bd543dae69dba2853aa71",
+      "edits": [
+        {
+          "start": 54,
+          "before": "Num",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/fixtures/typecheck/typeclass-superclass-success/source.lisp": {
+      "canonicalHash": "3fd952e423954db078cd101a348b17d6ebcbb7b8856d294374dca3b9a5d5e68d",
+      "legacyHash": "06918d97029642f27802a2305e5a0bff646520d58884364cd56c869c124c42c5",
+      "edits": [
+        {
+          "start": 98,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/fixtures/typecheck/unknown-typeclass-instance-error/source.lisp": {
+      "canonicalHash": "e68e014577a7a5b6ac319e688ad73e11d4c8d3f9bcbb9210c388c8b9a1de3714",
+      "legacyHash": "33ad32bfa307d544d3f7c2aff2ea2cb973cce6dc07a10917bc2d5632b6d69e52",
+      "edits": [
+        {
+          "start": 23,
+          "before": "Num",
+          "after": "Float"
+        }
+      ]
+    },
+    "conformance/row-operations/tagged-valid.lisp": {
+      "canonicalHash": "7f7e5418fbd0d9185e42fd1c002f2ac009f7cbb24c4f636f89d0b5830cc9201c",
+      "legacyHash": "0899ac6f66a49bb55f6998e21cff854aa17452a9cb57875dee27bd763ff82c2a",
+      "edits": [
+        {
+          "start": 37,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    },
+    "preludes/ontology.lisp": {
+      "canonicalHash": "1fffdad128ae072050aff68c49384b7d621cfd9f87b621bc15dce954af93f1f2",
+      "legacyHash": "b74051d66ca29aa974e483a4520de952ef0ea8fd43ec0f54ed1a2266e123a7ab",
+      "edits": [
+        {
+          "start": 53048,
+          "before": "Number",
+          "after": "Float"
+        }
+      ]
+    }
+  }
+}

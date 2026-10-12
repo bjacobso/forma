@@ -1,5 +1,6 @@
+import { readNativeReferenceFileSync as readFileSync } from "../../../conformance/ocaml-reference/read.mjs";
 import assert from "node:assert/strict";
-import {readFileSync, writeFileSync} from "node:fs";
+import {writeFileSync} from "node:fs";
 import {resolve} from "node:path";
 import {OcamlDaemon} from "../../../scripts/parity/ocaml-daemon.mjs";
 import {requireNativeCli} from "./require-build.mjs";

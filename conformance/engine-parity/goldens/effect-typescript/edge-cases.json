@@ -15,9 +15,9 @@
                 "kind": "Var",
                 "name": "radii",
                 "span": {
-                  "endOffset": 3008,
+                  "endOffset": 3005,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3003
+                  "startOffset": 3000
                 }
               },
               {
@@ -28,35 +28,35 @@
                         "kind": "Var",
                         "name": ">",
                         "span": {
-                          "endOffset": 3047,
+                          "endOffset": 3044,
                           "sourceId": "engine-parity/effect-typescript/edge-cases",
-                          "startOffset": 3046
+                          "startOffset": 3043
                         }
                       },
                       {
                         "kind": "Var",
                         "name": "r",
                         "span": {
-                          "endOffset": 3049,
+                          "endOffset": 3046,
                           "sourceId": "engine-parity/effect-typescript/edge-cases",
-                          "startOffset": 3048
+                          "startOffset": 3045
                         }
                       },
                       {
                         "kind": "Literal",
                         "span": {
-                          "endOffset": 3051,
+                          "endOffset": 3048,
                           "sourceId": "engine-parity/effect-typescript/edge-cases",
-                          "startOffset": 3050
+                          "startOffset": 3047
                         },
                         "value": 1
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 3052,
+                      "endOffset": 3049,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3045
+                      "startOffset": 3042
                     }
                   },
                   "effect": {
@@ -64,18 +64,18 @@
                     "kind": "Effect",
                     "requirements": [],
                     "span": {
-                      "endOffset": 2956,
+                      "endOffset": 2953,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 2935
+                      "startOffset": 2932
                     },
                     "success": {
                       "item": {
                         "kind": "Ref",
                         "name": "Shape",
                         "span": {
-                          "endOffset": 2954,
+                          "endOffset": 2951,
                           "sourceId": "engine-parity/effect-typescript/edge-cases",
-                          "startOffset": 2949
+                          "startOffset": 2946
                         }
                       },
                       "kind": "Array"
@@ -87,18 +87,18 @@
                       "kind": "Effect",
                       "requirements": [],
                       "span": {
-                        "endOffset": 2956,
+                        "endOffset": 2953,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 2935
+                        "startOffset": 2932
                       },
                       "success": {
                         "item": {
                           "kind": "Ref",
                           "name": "Shape",
                           "span": {
-                            "endOffset": 2954,
+                            "endOffset": 2951,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 2949
+                            "startOffset": 2946
                           }
                         },
                         "kind": "Array"
@@ -106,9 +106,9 @@
                     },
                     "kind": "Succeed",
                     "span": {
-                      "endOffset": 3140,
+                      "endOffset": 3137,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3106
+                      "startOffset": 3103
                     },
                     "value": {
                       "entries": [
@@ -120,17 +120,17 @@
                               "name": ":kind"
                             },
                             "span": {
-                              "endOffset": 3121,
+                              "endOffset": 3118,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3116
+                              "startOffset": 3113
                             }
                           },
                           "value": {
                             "kind": "Literal",
                             "span": {
-                              "endOffset": 3130,
+                              "endOffset": 3127,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3122
+                              "startOffset": 3119
                             },
                             "value": "Square"
                           }
@@ -143,35 +143,35 @@
                               "name": ":side"
                             },
                             "span": {
-                              "endOffset": 3136,
+                              "endOffset": 3133,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3131
+                              "startOffset": 3128
                             }
                           },
                           "value": {
                             "kind": "Var",
                             "name": "r",
                             "span": {
-                              "endOffset": 3138,
+                              "endOffset": 3135,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3137
+                              "startOffset": 3134
                             }
                           }
                         }
                       ],
                       "kind": "Record",
                       "span": {
-                        "endOffset": 3139,
+                        "endOffset": 3136,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3115
+                        "startOffset": 3112
                       }
                     }
                   },
                   "kind": "If",
                   "span": {
-                    "endOffset": 3141,
+                    "endOffset": 3138,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3033
+                    "startOffset": 3030
                   },
                   "then": {
                     "effect": {
@@ -179,18 +179,18 @@
                       "kind": "Effect",
                       "requirements": [],
                       "span": {
-                        "endOffset": 2956,
+                        "endOffset": 2953,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 2935
+                        "startOffset": 2932
                       },
                       "success": {
                         "item": {
                           "kind": "Ref",
                           "name": "Shape",
                           "span": {
-                            "endOffset": 2954,
+                            "endOffset": 2951,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 2949
+                            "startOffset": 2946
                           }
                         },
                         "kind": "Array"
@@ -198,9 +198,9 @@
                     },
                     "kind": "Succeed",
                     "span": {
-                      "endOffset": 3097,
+                      "endOffset": 3094,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3061
+                      "startOffset": 3058
                     },
                     "value": {
                       "entries": [
@@ -212,17 +212,17 @@
                               "name": ":kind"
                             },
                             "span": {
-                              "endOffset": 3076,
+                              "endOffset": 3073,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3071
+                              "startOffset": 3068
                             }
                           },
                           "value": {
                             "kind": "Literal",
                             "span": {
-                              "endOffset": 3085,
+                              "endOffset": 3082,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3077
+                              "startOffset": 3074
                             },
                             "value": "Circle"
                           }
@@ -235,27 +235,27 @@
                               "name": ":radius"
                             },
                             "span": {
-                              "endOffset": 3093,
+                              "endOffset": 3090,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3086
+                              "startOffset": 3083
                             }
                           },
                           "value": {
                             "kind": "Var",
                             "name": "r",
                             "span": {
-                              "endOffset": 3095,
+                              "endOffset": 3092,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3094
+                              "startOffset": 3091
                             }
                           }
                         }
                       ],
                       "kind": "Record",
                       "span": {
-                        "endOffset": 3096,
+                        "endOffset": 3093,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3070
+                        "startOffset": 3067
                       }
                     }
                   }
@@ -265,9 +265,9 @@
                   "r"
                 ],
                 "span": {
-                  "endOffset": 3142,
+                  "endOffset": 3139,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3013
+                  "startOffset": 3010
                 }
               }
             ],
@@ -276,18 +276,18 @@
               "kind": "Effect",
               "requirements": [],
               "span": {
-                "endOffset": 2956,
+                "endOffset": 2953,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2935
+                "startOffset": 2932
               },
               "success": {
                 "item": {
                   "kind": "Ref",
                   "name": "Shape",
                   "span": {
-                    "endOffset": 2954,
+                    "endOffset": 2951,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 2949
+                    "startOffset": 2946
                   }
                 },
                 "kind": "Array"
@@ -296,9 +296,9 @@
             "kind": "Combinator",
             "name": "for-each",
             "span": {
-              "endOffset": 3143,
+              "endOffset": 3140,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 2989
+              "startOffset": 2986
             }
           },
           "effect": {
@@ -306,18 +306,18 @@
             "kind": "Effect",
             "requirements": [],
             "span": {
-              "endOffset": 2956,
+              "endOffset": 2953,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 2935
+              "startOffset": 2932
             },
             "success": {
               "item": {
                 "kind": "Ref",
                 "name": "Shape",
                 "span": {
-                  "endOffset": 2954,
+                  "endOffset": 2951,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 2949
+                  "startOffset": 2946
                 }
               },
               "kind": "Array"
@@ -333,9 +333,9 @@
                   "kind": "Primitive",
                   "name": "Number",
                   "span": {
-                    "endOffset": 2933,
+                    "endOffset": 2930,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 2927
+                    "startOffset": 2925
                   }
                 },
                 "kind": "Array"
@@ -345,9 +345,9 @@
         },
         "sourceId": "engine-parity/effect-typescript/edge-cases",
         "span": {
-          "endOffset": 3144,
+          "endOffset": 3141,
           "sourceId": "engine-parity/effect-typescript/edge-cases",
-          "startOffset": 2959
+          "startOffset": 2956
         }
       },
       {
@@ -362,32 +362,32 @@
               "kind": "Effect",
               "requirements": [],
               "span": {
-                "endOffset": 2864,
+                "endOffset": 2862,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2851
+                "startOffset": 2849
               },
               "success": {
                 "kind": "Ref",
                 "name": "Role",
                 "span": {
-                  "endOffset": 2863,
+                  "endOffset": 2861,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 2859
+                  "startOffset": 2857
                 }
               }
             },
             "kind": "Succeed",
             "span": {
-              "endOffset": 2904,
+              "endOffset": 2902,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 2887
+              "startOffset": 2885
             },
             "value": {
               "kind": "Literal",
               "span": {
-                "endOffset": 2903,
+                "endOffset": 2901,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2896
+                "startOffset": 2894
               },
               "value": "admin"
             }
@@ -397,17 +397,17 @@
             "kind": "Effect",
             "requirements": [],
             "span": {
-              "endOffset": 2864,
+              "endOffset": 2862,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 2851
+              "startOffset": 2849
             },
             "success": {
               "kind": "Ref",
               "name": "Role",
               "span": {
-                "endOffset": 2863,
+                "endOffset": 2861,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2859
+                "startOffset": 2857
               }
             }
           },
@@ -418,9 +418,9 @@
         },
         "sourceId": "engine-parity/effect-typescript/edge-cases",
         "span": {
-          "endOffset": 2905,
+          "endOffset": 2903,
           "sourceId": "engine-parity/effect-typescript/edge-cases",
-          "startOffset": 2866
+          "startOffset": 2864
         }
       },
       {
@@ -1359,25 +1359,25 @@
               "kind": "Effect",
               "requirements": [],
               "span": {
-                "endOffset": 3552,
+                "endOffset": 3548,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3538
+                "startOffset": 3534
               },
               "success": {
                 "kind": "Ref",
                 "name": "Shape",
                 "span": {
-                  "endOffset": 3551,
+                  "endOffset": 3547,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3546
+                  "startOffset": 3542
                 }
               }
             },
             "kind": "Pure",
             "span": {
-              "endOffset": 3711,
+              "endOffset": 3707,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 3585
+              "startOffset": 3581
             },
             "value": {
               "items": [
@@ -1385,9 +1385,9 @@
                   "kind": "Var",
                   "name": "stream-run-fold",
                   "span": {
-                    "endOffset": 3601,
+                    "endOffset": 3597,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3586
+                    "startOffset": 3582
                   }
                 },
                 {
@@ -1396,26 +1396,26 @@
                       "kind": "Var",
                       "name": "stream-of",
                       "span": {
-                        "endOffset": 3616,
+                        "endOffset": 3612,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3607
+                        "startOffset": 3603
                       }
                     },
                     {
                       "kind": "Var",
                       "name": "sizes",
                       "span": {
-                        "endOffset": 3622,
+                        "endOffset": 3618,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3617
+                        "startOffset": 3613
                       }
                     }
                   ],
                   "kind": "List",
                   "span": {
-                    "endOffset": 3623,
+                    "endOffset": 3619,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3606
+                    "startOffset": 3602
                   }
                 },
                 {
@@ -1424,9 +1424,9 @@
                       "kind": "Var",
                       "name": "Shape",
                       "span": {
-                        "endOffset": 3634,
+                        "endOffset": 3630,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3629
+                        "startOffset": 3625
                       }
                     },
                     {
@@ -1439,17 +1439,17 @@
                               "name": ":kind"
                             },
                             "span": {
-                              "endOffset": 3641,
+                              "endOffset": 3637,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3636
+                              "startOffset": 3632
                             }
                           },
                           "value": {
                             "kind": "Literal",
                             "span": {
-                              "endOffset": 3650,
+                              "endOffset": 3646,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3642
+                              "startOffset": 3638
                             },
                             "value": "Square"
                           }
@@ -1462,17 +1462,17 @@
                               "name": ":side"
                             },
                             "span": {
-                              "endOffset": 3656,
+                              "endOffset": 3652,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3651
+                              "startOffset": 3647
                             }
                           },
                           "value": {
                             "kind": "Literal",
                             "span": {
-                              "endOffset": 3658,
+                              "endOffset": 3654,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3657
+                              "startOffset": 3653
                             },
                             "value": 0
                           }
@@ -1480,17 +1480,17 @@
                       ],
                       "kind": "Record",
                       "span": {
-                        "endOffset": 3659,
+                        "endOffset": 3655,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3635
+                        "startOffset": 3631
                       }
                     }
                   ],
                   "kind": "List",
                   "span": {
-                    "endOffset": 3660,
+                    "endOffset": 3656,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3628
+                    "startOffset": 3624
                   }
                 },
                 {
@@ -1499,9 +1499,9 @@
                       "kind": "Var",
                       "name": "fn",
                       "span": {
-                        "endOffset": 3668,
+                        "endOffset": 3664,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3666
+                        "startOffset": 3662
                       }
                     },
                     {
@@ -1510,26 +1510,26 @@
                           "kind": "Var",
                           "name": "acc",
                           "span": {
-                            "endOffset": 3673,
+                            "endOffset": 3669,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3670
+                            "startOffset": 3666
                           }
                         },
                         {
                           "kind": "Var",
                           "name": "size",
                           "span": {
-                            "endOffset": 3678,
+                            "endOffset": 3674,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3674
+                            "startOffset": 3670
                           }
                         }
                       ],
                       "kind": "Vector",
                       "span": {
-                        "endOffset": 3679,
+                        "endOffset": 3675,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3669
+                        "startOffset": 3665
                       }
                     },
                     {
@@ -1542,17 +1542,17 @@
                               "name": ":kind"
                             },
                             "span": {
-                              "endOffset": 3686,
+                              "endOffset": 3682,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3681
+                              "startOffset": 3677
                             }
                           },
                           "value": {
                             "kind": "Literal",
                             "span": {
-                              "endOffset": 3695,
+                              "endOffset": 3691,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3687
+                              "startOffset": 3683
                             },
                             "value": "Circle"
                           }
@@ -1565,43 +1565,43 @@
                               "name": ":radius"
                             },
                             "span": {
-                              "endOffset": 3703,
+                              "endOffset": 3699,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3696
+                              "startOffset": 3692
                             }
                           },
                           "value": {
                             "kind": "Var",
                             "name": "size",
                             "span": {
-                              "endOffset": 3708,
+                              "endOffset": 3704,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3704
+                              "startOffset": 3700
                             }
                           }
                         }
                       ],
                       "kind": "Record",
                       "span": {
-                        "endOffset": 3709,
+                        "endOffset": 3705,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3680
+                        "startOffset": 3676
                       }
                     }
                   ],
                   "kind": "List",
                   "span": {
-                    "endOffset": 3710,
+                    "endOffset": 3706,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3665
+                    "startOffset": 3661
                   }
                 }
               ],
               "kind": "List",
               "span": {
-                "endOffset": 3711,
+                "endOffset": 3707,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3585
+                "startOffset": 3581
               }
             }
           },
@@ -1610,17 +1610,17 @@
             "kind": "Effect",
             "requirements": [],
             "span": {
-              "endOffset": 3552,
+              "endOffset": 3548,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 3538
+              "startOffset": 3534
             },
             "success": {
               "kind": "Ref",
               "name": "Shape",
               "span": {
-                "endOffset": 3551,
+                "endOffset": 3547,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3546
+                "startOffset": 3542
               }
             }
           },
@@ -1634,9 +1634,9 @@
                   "kind": "Primitive",
                   "name": "Number",
                   "span": {
-                    "endOffset": 3536,
+                    "endOffset": 3532,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3530
+                    "startOffset": 3527
                   }
                 },
                 "kind": "Array"
@@ -1646,9 +1646,9 @@
         },
         "sourceId": "engine-parity/effect-typescript/edge-cases",
         "span": {
-          "endOffset": 3712,
+          "endOffset": 3708,
           "sourceId": "engine-parity/effect-typescript/edge-cases",
-          "startOffset": 3555
+          "startOffset": 3551
         }
       },
       {
@@ -1667,9 +1667,9 @@
                       "kind": "Effect",
                       "requirements": [],
                       "span": {
-                        "endOffset": 3180,
+                        "endOffset": 3177,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3153
+                        "startOffset": 3150
                       },
                       "success": {
                         "items": [
@@ -1677,18 +1677,18 @@
                             "kind": "Ref",
                             "name": "Shape",
                             "span": {
-                              "endOffset": 3173,
+                              "endOffset": 3170,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3168
+                              "startOffset": 3165
                             }
                           },
                           {
                             "kind": "Ref",
                             "name": "Role",
                             "span": {
-                              "endOffset": 3178,
+                              "endOffset": 3175,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3174
+                              "startOffset": 3171
                             }
                           }
                         ],
@@ -1697,9 +1697,9 @@
                     },
                     "kind": "Succeed",
                     "span": {
-                      "endOffset": 3237,
+                      "endOffset": 3234,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3201
+                      "startOffset": 3198
                     },
                     "value": {
                       "entries": [
@@ -1711,17 +1711,17 @@
                               "name": ":kind"
                             },
                             "span": {
-                              "endOffset": 3216,
+                              "endOffset": 3213,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3211
+                              "startOffset": 3208
                             }
                           },
                           "value": {
                             "kind": "Literal",
                             "span": {
-                              "endOffset": 3225,
+                              "endOffset": 3222,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3217
+                              "startOffset": 3214
                             },
                             "value": "Circle"
                           }
@@ -1734,17 +1734,17 @@
                               "name": ":radius"
                             },
                             "span": {
-                              "endOffset": 3233,
+                              "endOffset": 3230,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3226
+                              "startOffset": 3223
                             }
                           },
                           "value": {
                             "kind": "Literal",
                             "span": {
-                              "endOffset": 3235,
+                              "endOffset": 3232,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3234
+                              "startOffset": 3231
                             },
                             "value": 1
                           }
@@ -1752,9 +1752,9 @@
                       ],
                       "kind": "Record",
                       "span": {
-                        "endOffset": 3236,
+                        "endOffset": 3233,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3210
+                        "startOffset": 3207
                       }
                     }
                   },
@@ -1764,9 +1764,9 @@
                       "kind": "Effect",
                       "requirements": [],
                       "span": {
-                        "endOffset": 3180,
+                        "endOffset": 3177,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3153
+                        "startOffset": 3150
                       },
                       "success": {
                         "items": [
@@ -1774,18 +1774,18 @@
                             "kind": "Ref",
                             "name": "Shape",
                             "span": {
-                              "endOffset": 3173,
+                              "endOffset": 3170,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3168
+                              "startOffset": 3165
                             }
                           },
                           {
                             "kind": "Ref",
                             "name": "Role",
                             "span": {
-                              "endOffset": 3178,
+                              "endOffset": 3175,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3174
+                              "startOffset": 3171
                             }
                           }
                         ],
@@ -1794,16 +1794,16 @@
                     },
                     "kind": "Succeed",
                     "span": {
-                      "endOffset": 3256,
+                      "endOffset": 3253,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3238
+                      "startOffset": 3235
                     },
                     "value": {
                       "kind": "Literal",
                       "span": {
-                        "endOffset": 3255,
+                        "endOffset": 3252,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3247
+                        "startOffset": 3244
                       },
                       "value": "member"
                     }
@@ -1811,9 +1811,9 @@
                 ],
                 "kind": "EffectVector",
                 "span": {
-                  "endOffset": 3257,
+                  "endOffset": 3254,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3200
+                  "startOffset": 3197
                 }
               }
             ],
@@ -1822,9 +1822,9 @@
               "kind": "Effect",
               "requirements": [],
               "span": {
-                "endOffset": 3180,
+                "endOffset": 3177,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3153
+                "startOffset": 3150
               },
               "success": {
                 "items": [
@@ -1832,18 +1832,18 @@
                     "kind": "Ref",
                     "name": "Shape",
                     "span": {
-                      "endOffset": 3173,
+                      "endOffset": 3170,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3168
+                      "startOffset": 3165
                     }
                   },
                   {
                     "kind": "Ref",
                     "name": "Role",
                     "span": {
-                      "endOffset": 3178,
+                      "endOffset": 3175,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3174
+                      "startOffset": 3171
                     }
                   }
                 ],
@@ -1853,9 +1853,9 @@
             "kind": "Combinator",
             "name": "all",
             "span": {
-              "endOffset": 3258,
+              "endOffset": 3255,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 3195
+              "startOffset": 3192
             }
           },
           "effect": {
@@ -1863,9 +1863,9 @@
             "kind": "Effect",
             "requirements": [],
             "span": {
-              "endOffset": 3180,
+              "endOffset": 3177,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 3153
+              "startOffset": 3150
             },
             "success": {
               "items": [
@@ -1873,18 +1873,18 @@
                   "kind": "Ref",
                   "name": "Shape",
                   "span": {
-                    "endOffset": 3173,
+                    "endOffset": 3170,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3168
+                    "startOffset": 3165
                   }
                 },
                 {
                   "kind": "Ref",
                   "name": "Role",
                   "span": {
-                    "endOffset": 3178,
+                    "endOffset": 3175,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3174
+                    "startOffset": 3171
                   }
                 }
               ],
@@ -1898,9 +1898,9 @@
         },
         "sourceId": "engine-parity/effect-typescript/edge-cases",
         "span": {
-          "endOffset": 3259,
+          "endOffset": 3256,
           "sourceId": "engine-parity/effect-typescript/edge-cases",
-          "startOffset": 3182
+          "startOffset": 3179
         }
       },
       {
@@ -2182,9 +2182,9 @@
                 "kind": "Var",
                 "name": "let",
                 "span": {
-                  "endOffset": 3447,
+                  "endOffset": 3444,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3444
+                  "startOffset": 3441
                 }
               },
               {
@@ -2193,9 +2193,9 @@
                     "kind": "Var",
                     "name": "next",
                     "span": {
-                      "endOffset": 3453,
+                      "endOffset": 3450,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3449
+                      "startOffset": 3446
                     }
                   },
                   {
@@ -2204,26 +2204,26 @@
                         "kind": "Var",
                         "name": "assoc",
                         "span": {
-                          "endOffset": 3460,
+                          "endOffset": 3457,
                           "sourceId": "engine-parity/effect-typescript/edge-cases",
-                          "startOffset": 3455
+                          "startOffset": 3452
                         }
                       },
                       {
                         "kind": "Var",
                         "name": "members",
                         "span": {
-                          "endOffset": 3468,
+                          "endOffset": 3465,
                           "sourceId": "engine-parity/effect-typescript/edge-cases",
-                          "startOffset": 3461
+                          "startOffset": 3458
                         }
                       },
                       {
                         "kind": "Literal",
                         "span": {
-                          "endOffset": 3472,
+                          "endOffset": 3469,
                           "sourceId": "engine-parity/effect-typescript/edge-cases",
-                          "startOffset": 3469
+                          "startOffset": 3466
                         },
                         "value": "b"
                       },
@@ -2237,17 +2237,17 @@
                                 "name": ":name"
                               },
                               "span": {
-                                "endOffset": 3479,
+                                "endOffset": 3476,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3474
+                                "startOffset": 3471
                               }
                             },
                             "value": {
                               "kind": "Literal",
                               "span": {
-                                "endOffset": 3483,
+                                "endOffset": 3480,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3480
+                                "startOffset": 3477
                               },
                               "value": "b"
                             }
@@ -2260,17 +2260,17 @@
                                 "name": ":role"
                               },
                               "span": {
-                                "endOffset": 3489,
+                                "endOffset": 3486,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3484
+                                "startOffset": 3481
                               }
                             },
                             "value": {
                               "kind": "Literal",
                               "span": {
-                                "endOffset": 3498,
+                                "endOffset": 3495,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3490
+                                "startOffset": 3487
                               },
                               "value": "member"
                             }
@@ -2278,42 +2278,42 @@
                         ],
                         "kind": "Record",
                         "span": {
-                          "endOffset": 3499,
+                          "endOffset": 3496,
                           "sourceId": "engine-parity/effect-typescript/edge-cases",
-                          "startOffset": 3473
+                          "startOffset": 3470
                         }
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 3500,
+                      "endOffset": 3497,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3454
+                      "startOffset": 3451
                     }
                   }
                 ],
                 "kind": "Vector",
                 "span": {
-                  "endOffset": 3501,
+                  "endOffset": 3498,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3448
+                  "startOffset": 3445
                 }
               },
               {
                 "kind": "Var",
                 "name": "next",
                 "span": {
-                  "endOffset": 3506,
+                  "endOffset": 3503,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3502
+                  "startOffset": 3499
                 }
               }
             ],
             "kind": "List",
             "span": {
-              "endOffset": 3507,
+              "endOffset": 3504,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 3443
+              "startOffset": 3440
             }
           },
           "kind": "FunctionDef",
@@ -2326,9 +2326,9 @@
                   "kind": "Primitive",
                   "name": "String",
                   "span": {
-                    "endOffset": 3380,
+                    "endOffset": 3377,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3374
+                    "startOffset": 3371
                   }
                 },
                 "kind": "Map",
@@ -2336,9 +2336,9 @@
                   "kind": "Ref",
                   "name": "Member",
                   "span": {
-                    "endOffset": 3387,
+                    "endOffset": 3384,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3381
+                    "startOffset": 3378
                   }
                 }
               }
@@ -2349,9 +2349,9 @@
               "kind": "Primitive",
               "name": "String",
               "span": {
-                "endOffset": 3400,
+                "endOffset": 3397,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3394
+                "startOffset": 3391
               }
             },
             "kind": "Map",
@@ -2359,18 +2359,18 @@
               "kind": "Ref",
               "name": "Member",
               "span": {
-                "endOffset": 3407,
+                "endOffset": 3404,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3401
+                "startOffset": 3398
               }
             }
           }
         },
         "sourceId": "engine-parity/effect-typescript/edge-cases",
         "span": {
-          "endOffset": 3508,
+          "endOffset": 3505,
           "sourceId": "engine-parity/effect-typescript/edge-cases",
-          "startOffset": 3411
+          "startOffset": 3408
         }
       },
       {
@@ -2482,7 +2482,35 @@
                 "kind": "Var",
                 "name": "let",
                 "span": {
-                  "endOffset": 3790,
+                  "endOffset": 3786,
+                  "sourceId": "engine-parity/effect-typescript/edge-cases",
+                  "startOffset": 3783
+                }
+              },
+              {
+                "items": [
+                  {
+                    "kind": "Var",
+                    "name": "f",
+                    "span": {
+                      "endOffset": 3789,
+                      "sourceId": "engine-parity/effect-typescript/edge-cases",
+                      "startOffset": 3788
+                    }
+                  },
+                  {
+                    "kind": "Var",
+                    "name": "downcase",
+                    "span": {
+                      "endOffset": 3798,
+                      "sourceId": "engine-parity/effect-typescript/edge-cases",
+                      "startOffset": 3790
+                    }
+                  }
+                ],
+                "kind": "Vector",
+                "span": {
+                  "endOffset": 3799,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
                   "startOffset": 3787
                 }
@@ -2491,73 +2519,45 @@
                 "items": [
                   {
                     "kind": "Var",
-                    "name": "f",
+                    "name": "map",
                     "span": {
-                      "endOffset": 3793,
+                      "endOffset": 3804,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3792
+                      "startOffset": 3801
                     }
                   },
                   {
                     "kind": "Var",
-                    "name": "downcase",
+                    "name": "f",
                     "span": {
-                      "endOffset": 3802,
-                      "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3794
-                    }
-                  }
-                ],
-                "kind": "Vector",
-                "span": {
-                  "endOffset": 3803,
-                  "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3791
-                }
-              },
-              {
-                "items": [
-                  {
-                    "kind": "Var",
-                    "name": "map",
-                    "span": {
-                      "endOffset": 3808,
+                      "endOffset": 3806,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
                       "startOffset": 3805
                     }
                   },
                   {
                     "kind": "Var",
-                    "name": "f",
-                    "span": {
-                      "endOffset": 3810,
-                      "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3809
-                    }
-                  },
-                  {
-                    "kind": "Var",
                     "name": "names",
                     "span": {
-                      "endOffset": 3816,
+                      "endOffset": 3812,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3811
+                      "startOffset": 3807
                     }
                   }
                 ],
                 "kind": "List",
                 "span": {
-                  "endOffset": 3817,
+                  "endOffset": 3813,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3804
+                  "startOffset": 3800
                 }
               }
             ],
             "kind": "List",
             "span": {
-              "endOffset": 3818,
+              "endOffset": 3814,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 3786
+              "startOffset": 3782
             }
           },
           "kind": "FunctionDef",
@@ -2570,9 +2570,9 @@
                   "kind": "Primitive",
                   "name": "String",
                   "span": {
-                    "endOffset": 3742,
+                    "endOffset": 3738,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3736
+                    "startOffset": 3732
                   }
                 },
                 "kind": "Array"
@@ -2584,9 +2584,9 @@
               "kind": "Primitive",
               "name": "String",
               "span": {
-                "endOffset": 3756,
+                "endOffset": 3752,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3750
+                "startOffset": 3746
               }
             },
             "kind": "Array"
@@ -2594,9 +2594,9 @@
         },
         "sourceId": "engine-parity/effect-typescript/edge-cases",
         "span": {
-          "endOffset": 3819,
+          "endOffset": 3815,
           "sourceId": "engine-parity/effect-typescript/edge-cases",
-          "startOffset": 3760
+          "startOffset": 3756
         }
       },
       {
@@ -3094,9 +3094,9 @@
                 "kind": "Var",
                 "name": "let",
                 "span": {
-                  "endOffset": 3308,
+                  "endOffset": 3305,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3305
+                  "startOffset": 3302
                 }
               },
               {
@@ -3105,9 +3105,9 @@
                     "kind": "Var",
                     "name": "rs",
                     "span": {
-                      "endOffset": 3312,
+                      "endOffset": 3309,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3310
+                      "startOffset": 3307
                     }
                   },
                   {
@@ -3119,9 +3119,9 @@
                           "name": ":"
                         },
                         "span": {
-                          "endOffset": 3347,
+                          "endOffset": 3344,
                           "sourceId": "engine-parity/effect-typescript/edge-cases",
-                          "startOffset": 3313
+                          "startOffset": 3310
                         }
                       },
                       {
@@ -3129,27 +3129,27 @@
                           {
                             "kind": "Literal",
                             "span": {
-                              "endOffset": 3324,
+                              "endOffset": 3321,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3317
+                              "startOffset": 3314
                             },
                             "value": "admin"
                           },
                           {
                             "kind": "Literal",
                             "span": {
-                              "endOffset": 3333,
+                              "endOffset": 3330,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3325
+                              "startOffset": 3322
                             },
                             "value": "member"
                           }
                         ],
                         "kind": "Vector",
                         "span": {
-                          "endOffset": 3334,
+                          "endOffset": 3331,
                           "sourceId": "engine-parity/effect-typescript/edge-cases",
-                          "startOffset": 3316
+                          "startOffset": 3313
                         }
                       },
                       {
@@ -3158,59 +3158,59 @@
                             "kind": "Var",
                             "name": "Array",
                             "span": {
-                              "endOffset": 3346,
+                              "endOffset": 3343,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3335
+                              "startOffset": 3332
                             }
                           },
                           {
                             "kind": "Var",
                             "name": "Role",
                             "span": {
-                              "endOffset": 3345,
+                              "endOffset": 3342,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3341
+                              "startOffset": 3338
                             }
                           }
                         ],
                         "kind": "List",
                         "span": {
-                          "endOffset": 3346,
+                          "endOffset": 3343,
                           "sourceId": "engine-parity/effect-typescript/edge-cases",
-                          "startOffset": 3335
+                          "startOffset": 3332
                         }
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 3347,
+                      "endOffset": 3344,
                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                      "startOffset": 3313
+                      "startOffset": 3310
                     }
                   }
                 ],
                 "kind": "Vector",
                 "span": {
-                  "endOffset": 3348,
+                  "endOffset": 3345,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3309
+                  "startOffset": 3306
                 }
               },
               {
                 "kind": "Var",
                 "name": "rs",
                 "span": {
-                  "endOffset": 3351,
+                  "endOffset": 3348,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3349
+                  "startOffset": 3346
                 }
               }
             ],
             "kind": "List",
             "span": {
-              "endOffset": 3352,
+              "endOffset": 3349,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 3304
+              "startOffset": 3301
             }
           },
           "kind": "FunctionDef",
@@ -3221,9 +3221,9 @@
               "kind": "Ref",
               "name": "Role",
               "span": {
-                "endOffset": 3283,
+                "endOffset": 3280,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3279
+                "startOffset": 3276
               }
             },
             "kind": "Array"
@@ -3231,9 +3231,9 @@
         },
         "sourceId": "engine-parity/effect-typescript/edge-cases",
         "span": {
-          "endOffset": 3353,
+          "endOffset": 3350,
           "sourceId": "engine-parity/effect-typescript/edge-cases",
-          "startOffset": 3287
+          "startOffset": 3284
         }
       },
       {
@@ -3245,35 +3245,35 @@
                 "kind": "Var",
                 "name": "*",
                 "span": {
-                  "endOffset": 3904,
+                  "endOffset": 3900,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3903
+                  "startOffset": 3899
                 }
               },
               {
                 "kind": "Var",
                 "name": "x",
                 "span": {
-                  "endOffset": 3906,
+                  "endOffset": 3902,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3905
+                  "startOffset": 3901
                 }
               },
               {
                 "kind": "Var",
                 "name": "factor",
                 "span": {
-                  "endOffset": 3913,
+                  "endOffset": 3909,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3907
+                  "startOffset": 3903
                 }
               }
             ],
             "kind": "List",
             "span": {
-              "endOffset": 3914,
+              "endOffset": 3910,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 3902
+              "startOffset": 3898
             }
           },
           "kind": "FunctionDef",
@@ -3285,9 +3285,9 @@
                 "kind": "Primitive",
                 "name": "Int",
                 "span": {
-                  "endOffset": 3877,
+                  "endOffset": 3873,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3874
+                  "startOffset": 3870
                 }
               }
             }
@@ -3296,17 +3296,17 @@
             "kind": "Primitive",
             "name": "Int",
             "span": {
-              "endOffset": 3881,
+              "endOffset": 3877,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 3878
+              "startOffset": 3874
             }
           }
         },
         "sourceId": "engine-parity/effect-typescript/edge-cases",
         "span": {
-          "endOffset": 3915,
+          "endOffset": 3911,
           "sourceId": "engine-parity/effect-typescript/edge-cases",
-          "startOffset": 3884
+          "startOffset": 3880
         }
       },
       {
@@ -3853,7 +3853,7 @@
             "discriminator": "kind",
             "kind": "TaggedUnion",
             "span": {
-              "endOffset": 2833,
+              "endOffset": 2831,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
               "startOffset": 2765
             },
@@ -3867,13 +3867,13 @@
                         "kind": "Primitive",
                         "name": "Number",
                         "span": {
-                          "endOffset": 2806,
+                          "endOffset": 2805,
                           "sourceId": "engine-parity/effect-typescript/edge-cases",
                           "startOffset": 2800
                         }
                       },
                       "span": {
-                        "endOffset": 2806,
+                        "endOffset": 2805,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
                         "startOffset": 2800
                       }
@@ -3881,13 +3881,13 @@
                   ],
                   "kind": "Struct",
                   "span": {
-                    "endOffset": 2807,
+                    "endOffset": 2806,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
                     "startOffset": 2791
                   }
                 },
                 "span": {
-                  "endOffset": 2808,
+                  "endOffset": 2807,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
                   "startOffset": 2783
                 },
@@ -3902,29 +3902,29 @@
                         "kind": "Primitive",
                         "name": "Number",
                         "span": {
-                          "endOffset": 2830,
+                          "endOffset": 2828,
                           "sourceId": "engine-parity/effect-typescript/edge-cases",
-                          "startOffset": 2824
+                          "startOffset": 2823
                         }
                       },
                       "span": {
-                        "endOffset": 2830,
+                        "endOffset": 2828,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 2824
+                        "startOffset": 2823
                       }
                     }
                   ],
                   "kind": "Struct",
                   "span": {
-                    "endOffset": 2831,
+                    "endOffset": 2829,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 2817
+                    "startOffset": 2816
                   }
                 },
                 "span": {
-                  "endOffset": 2832,
+                  "endOffset": 2830,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 2809
+                  "startOffset": 2808
                 },
                 "tag": "Square"
               }
@@ -3933,7 +3933,7 @@
         },
         "sourceId": "engine-parity/effect-typescript/edge-cases",
         "span": {
-          "endOffset": 2834,
+          "endOffset": 2832,
           "sourceId": "engine-parity/effect-typescript/edge-cases",
           "startOffset": 2749
         }
@@ -4185,26 +4185,26 @@
             "kind": "Primitive",
             "name": "Int",
             "span": {
-              "endOffset": 3929,
+              "endOffset": 3925,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 3926
+              "startOffset": 3922
             }
           },
           "value": {
             "kind": "Literal",
             "span": {
-              "endOffset": 3947,
+              "endOffset": 3943,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 3946
+              "startOffset": 3942
             },
             "value": 2
           }
         },
         "sourceId": "engine-parity/effect-typescript/edge-cases",
         "span": {
-          "endOffset": 3948,
+          "endOffset": 3944,
           "sourceId": "engine-parity/effect-typescript/edge-cases",
-          "startOffset": 3931
+          "startOffset": 3927
         }
       },
       {
@@ -4266,9 +4266,9 @@
             "kind": "Primitive",
             "name": "Int",
             "span": {
-              "endOffset": 3833,
+              "endOffset": 3829,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 3830
+              "startOffset": 3826
             }
           },
           "value": {
@@ -4277,34 +4277,34 @@
                 "kind": "Var",
                 "name": "scale",
                 "span": {
-                  "endOffset": 3856,
+                  "endOffset": 3852,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3851
+                  "startOffset": 3847
                 }
               },
               {
                 "kind": "Literal",
                 "span": {
-                  "endOffset": 3858,
+                  "endOffset": 3854,
                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                  "startOffset": 3857
+                  "startOffset": 3853
                 },
                 "value": 3
               }
             ],
             "kind": "List",
             "span": {
-              "endOffset": 3859,
+              "endOffset": 3855,
               "sourceId": "engine-parity/effect-typescript/edge-cases",
-              "startOffset": 3850
+              "startOffset": 3846
             }
           }
         },
         "sourceId": "engine-parity/effect-typescript/edge-cases",
         "span": {
-          "endOffset": 3860,
+          "endOffset": 3856,
           "sourceId": "engine-parity/effect-typescript/edge-cases",
-          "startOffset": 3835
+          "startOffset": 3831
         }
       }
     ],
@@ -8543,7 +8543,7 @@
                           "value": {
                             "kind": "symbol",
                             "span": {
-                              "endOffset": 2806,
+                              "endOffset": 2805,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
                               "startOffset": 2800
                             },
@@ -8553,7 +8553,7 @@
                       ],
                       "kind": "map",
                       "span": {
-                        "endOffset": 2807,
+                        "endOffset": 2806,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
                         "startOffset": 2791
                       }
@@ -8561,7 +8561,7 @@
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 2808,
+                    "endOffset": 2807,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
                     "startOffset": 2783
                   }
@@ -8571,9 +8571,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 2816,
+                        "endOffset": 2815,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 2810
+                        "startOffset": 2809
                       },
                       "value": "Square"
                     },
@@ -8583,18 +8583,18 @@
                           "key": {
                             "kind": "keyword",
                             "span": {
-                              "endOffset": 2823,
+                              "endOffset": 2822,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 2818
+                              "startOffset": 2817
                             },
                             "value": ":side"
                           },
                           "value": {
                             "kind": "symbol",
                             "span": {
-                              "endOffset": 2830,
+                              "endOffset": 2828,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 2824
+                              "startOffset": 2823
                             },
                             "value": "Number"
                           }
@@ -8602,23 +8602,23 @@
                       ],
                       "kind": "map",
                       "span": {
-                        "endOffset": 2831,
+                        "endOffset": 2829,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 2817
+                        "startOffset": 2816
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 2832,
+                    "endOffset": 2830,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 2809
+                    "startOffset": 2808
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 2833,
+                "endOffset": 2831,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
                 "startOffset": 2765
               }
@@ -8626,7 +8626,7 @@
           ],
           "kind": "list",
           "span": {
-            "endOffset": 2834,
+            "endOffset": 2832,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
             "startOffset": 2749
           }
@@ -8636,18 +8636,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 2837,
+                "endOffset": 2835,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2836
+                "startOffset": 2834
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 2850,
+                "endOffset": 2848,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2838
+                "startOffset": 2836
               },
               "value": "default-role"
             },
@@ -8656,35 +8656,35 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 2858,
+                    "endOffset": 2856,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 2852
+                    "startOffset": 2850
                   },
                   "value": "Effect"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 2863,
+                    "endOffset": 2861,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 2859
+                    "startOffset": 2857
                   },
                   "value": "Role"
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 2864,
+                "endOffset": 2862,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2851
+                "startOffset": 2849
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 2865,
+            "endOffset": 2863,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 2835
+            "startOffset": 2833
           }
         },
         {
@@ -8692,18 +8692,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 2873,
+                "endOffset": 2871,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2867
+                "startOffset": 2865
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 2886,
+                "endOffset": 2884,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2874
+                "startOffset": 2872
               },
               "value": "default-role"
             },
@@ -8712,35 +8712,35 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 2895,
+                    "endOffset": 2893,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 2888
+                    "startOffset": 2886
                   },
                   "value": "succeed"
                 },
                 {
                   "kind": "string",
                   "span": {
-                    "endOffset": 2903,
+                    "endOffset": 2901,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 2896
+                    "startOffset": 2894
                   },
                   "value": "admin"
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 2904,
+                "endOffset": 2902,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2887
+                "startOffset": 2885
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 2905,
+            "endOffset": 2903,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 2866
+            "startOffset": 2864
           }
         },
         {
@@ -8748,18 +8748,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 2908,
+                "endOffset": 2906,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2907
+                "startOffset": 2905
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 2916,
+                "endOffset": 2914,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2909
+                "startOffset": 2907
               },
               "value": "circles"
             },
@@ -8768,9 +8768,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 2920,
+                    "endOffset": 2918,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 2918
+                    "startOffset": 2916
                   },
                   "value": "->"
                 },
@@ -8779,27 +8779,27 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 2926,
+                        "endOffset": 2924,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 2922
+                        "startOffset": 2920
                       },
                       "value": "List"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 2933,
+                        "endOffset": 2930,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 2927
+                        "startOffset": 2925
                       },
                       "value": "Number"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 2934,
+                    "endOffset": 2931,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 2921
+                    "startOffset": 2919
                   }
                 },
                 {
@@ -8807,9 +8807,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 2942,
+                        "endOffset": 2939,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 2936
+                        "startOffset": 2933
                       },
                       "value": "Effect"
                     },
@@ -8818,51 +8818,51 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 2948,
+                            "endOffset": 2945,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 2944
+                            "startOffset": 2941
                           },
                           "value": "List"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 2954,
+                            "endOffset": 2951,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 2949
+                            "startOffset": 2946
                           },
                           "value": "Shape"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 2955,
+                        "endOffset": 2952,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 2943
+                        "startOffset": 2940
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 2956,
+                    "endOffset": 2953,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 2935
+                    "startOffset": 2932
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 2957,
+                "endOffset": 2954,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2917
+                "startOffset": 2915
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 2958,
+            "endOffset": 2955,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 2906
+            "startOffset": 2904
           }
         },
         {
@@ -8870,18 +8870,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 2966,
+                "endOffset": 2963,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2960
+                "startOffset": 2957
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 2976,
+                "endOffset": 2973,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2969
+                "startOffset": 2966
               },
               "value": "circles"
             },
@@ -8890,18 +8890,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 2985,
+                    "endOffset": 2982,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 2980
+                    "startOffset": 2977
                   },
                   "value": "radii"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 2986,
+                "endOffset": 2983,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2979
+                "startOffset": 2976
               }
             },
             {
@@ -8909,18 +8909,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 2998,
+                    "endOffset": 2995,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 2990
+                    "startOffset": 2987
                   },
                   "value": "for-each"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3008,
+                    "endOffset": 3005,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3003
+                    "startOffset": 3000
                   },
                   "value": "radii"
                 },
@@ -8929,9 +8929,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3016,
+                        "endOffset": 3013,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3014
+                        "startOffset": 3011
                       },
                       "value": "fn"
                     },
@@ -8940,18 +8940,18 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3025,
+                            "endOffset": 3022,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3024
+                            "startOffset": 3021
                           },
                           "value": "r"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 3026,
+                        "endOffset": 3023,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3023
+                        "startOffset": 3020
                       }
                     },
                     {
@@ -8959,9 +8959,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3036,
+                            "endOffset": 3033,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3034
+                            "startOffset": 3031
                           },
                           "value": "if"
                         },
@@ -8970,36 +8970,36 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 3047,
+                                "endOffset": 3044,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3046
+                                "startOffset": 3043
                               },
                               "value": ">"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 3049,
+                                "endOffset": 3046,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3048
+                                "startOffset": 3045
                               },
                               "value": "r"
                             },
                             {
                               "kind": "int",
                               "span": {
-                                "endOffset": 3051,
+                                "endOffset": 3048,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3050
+                                "startOffset": 3047
                               },
                               "value": 1
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 3052,
+                            "endOffset": 3049,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3045
+                            "startOffset": 3042
                           }
                         },
                         {
@@ -9007,9 +9007,9 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 3069,
+                                "endOffset": 3066,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3062
+                                "startOffset": 3059
                               },
                               "value": "succeed"
                             },
@@ -9019,18 +9019,18 @@
                                   "key": {
                                     "kind": "keyword",
                                     "span": {
-                                      "endOffset": 3076,
+                                      "endOffset": 3073,
                                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                      "startOffset": 3071
+                                      "startOffset": 3068
                                     },
                                     "value": ":kind"
                                   },
                                   "value": {
                                     "kind": "string",
                                     "span": {
-                                      "endOffset": 3085,
+                                      "endOffset": 3082,
                                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                      "startOffset": 3077
+                                      "startOffset": 3074
                                     },
                                     "value": "Circle"
                                   }
@@ -9039,18 +9039,18 @@
                                   "key": {
                                     "kind": "keyword",
                                     "span": {
-                                      "endOffset": 3093,
+                                      "endOffset": 3090,
                                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                      "startOffset": 3086
+                                      "startOffset": 3083
                                     },
                                     "value": ":radius"
                                   },
                                   "value": {
                                     "kind": "symbol",
                                     "span": {
-                                      "endOffset": 3095,
+                                      "endOffset": 3092,
                                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                      "startOffset": 3094
+                                      "startOffset": 3091
                                     },
                                     "value": "r"
                                   }
@@ -9058,17 +9058,17 @@
                               ],
                               "kind": "map",
                               "span": {
-                                "endOffset": 3096,
+                                "endOffset": 3093,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3070
+                                "startOffset": 3067
                               }
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 3097,
+                            "endOffset": 3094,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3061
+                            "startOffset": 3058
                           }
                         },
                         {
@@ -9076,9 +9076,9 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 3114,
+                                "endOffset": 3111,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3107
+                                "startOffset": 3104
                               },
                               "value": "succeed"
                             },
@@ -9088,18 +9088,18 @@
                                   "key": {
                                     "kind": "keyword",
                                     "span": {
-                                      "endOffset": 3121,
+                                      "endOffset": 3118,
                                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                      "startOffset": 3116
+                                      "startOffset": 3113
                                     },
                                     "value": ":kind"
                                   },
                                   "value": {
                                     "kind": "string",
                                     "span": {
-                                      "endOffset": 3130,
+                                      "endOffset": 3127,
                                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                      "startOffset": 3122
+                                      "startOffset": 3119
                                     },
                                     "value": "Square"
                                   }
@@ -9108,18 +9108,18 @@
                                   "key": {
                                     "kind": "keyword",
                                     "span": {
-                                      "endOffset": 3136,
+                                      "endOffset": 3133,
                                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                      "startOffset": 3131
+                                      "startOffset": 3128
                                     },
                                     "value": ":side"
                                   },
                                   "value": {
                                     "kind": "symbol",
                                     "span": {
-                                      "endOffset": 3138,
+                                      "endOffset": 3135,
                                       "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                      "startOffset": 3137
+                                      "startOffset": 3134
                                     },
                                     "value": "r"
                                   }
@@ -9127,49 +9127,49 @@
                               ],
                               "kind": "map",
                               "span": {
-                                "endOffset": 3139,
+                                "endOffset": 3136,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3115
+                                "startOffset": 3112
                               }
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 3140,
+                            "endOffset": 3137,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3106
+                            "startOffset": 3103
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 3141,
+                        "endOffset": 3138,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3033
+                        "startOffset": 3030
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3142,
+                    "endOffset": 3139,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3013
+                    "startOffset": 3010
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3143,
+                "endOffset": 3140,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 2989
+                "startOffset": 2986
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3144,
+            "endOffset": 3141,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 2959
+            "startOffset": 2956
           }
         },
         {
@@ -9177,18 +9177,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 3147,
+                "endOffset": 3144,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3146
+                "startOffset": 3143
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3152,
+                "endOffset": 3149,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3148
+                "startOffset": 3145
               },
               "value": "pair"
             },
@@ -9197,9 +9197,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3160,
+                    "endOffset": 3157,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3154
+                    "startOffset": 3151
                   },
                   "value": "Effect"
                 },
@@ -9208,52 +9208,52 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3167,
+                        "endOffset": 3164,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3162
+                        "startOffset": 3159
                       },
                       "value": "Tuple"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3173,
+                        "endOffset": 3170,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3168
+                        "startOffset": 3165
                       },
                       "value": "Shape"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3178,
+                        "endOffset": 3175,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3174
+                        "startOffset": 3171
                       },
                       "value": "Role"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3179,
+                    "endOffset": 3176,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3161
+                    "startOffset": 3158
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3180,
+                "endOffset": 3177,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3153
+                "startOffset": 3150
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3181,
+            "endOffset": 3178,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3145
+            "startOffset": 3142
           }
         },
         {
@@ -9261,18 +9261,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3189,
+                "endOffset": 3186,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3183
+                "startOffset": 3180
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3194,
+                "endOffset": 3191,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3190
+                "startOffset": 3187
               },
               "value": "pair"
             },
@@ -9281,9 +9281,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3199,
+                    "endOffset": 3196,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3196
+                    "startOffset": 3193
                   },
                   "value": "all"
                 },
@@ -9294,9 +9294,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3209,
+                            "endOffset": 3206,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3202
+                            "startOffset": 3199
                           },
                           "value": "succeed"
                         },
@@ -9306,18 +9306,18 @@
                               "key": {
                                 "kind": "keyword",
                                 "span": {
-                                  "endOffset": 3216,
+                                  "endOffset": 3213,
                                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                  "startOffset": 3211
+                                  "startOffset": 3208
                                 },
                                 "value": ":kind"
                               },
                               "value": {
                                 "kind": "string",
                                 "span": {
-                                  "endOffset": 3225,
+                                  "endOffset": 3222,
                                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                  "startOffset": 3217
+                                  "startOffset": 3214
                                 },
                                 "value": "Circle"
                               }
@@ -9326,18 +9326,18 @@
                               "key": {
                                 "kind": "keyword",
                                 "span": {
-                                  "endOffset": 3233,
+                                  "endOffset": 3230,
                                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                  "startOffset": 3226
+                                  "startOffset": 3223
                                 },
                                 "value": ":radius"
                               },
                               "value": {
                                 "kind": "int",
                                 "span": {
-                                  "endOffset": 3235,
+                                  "endOffset": 3232,
                                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                  "startOffset": 3234
+                                  "startOffset": 3231
                                 },
                                 "value": 1
                               }
@@ -9345,17 +9345,17 @@
                           ],
                           "kind": "map",
                           "span": {
-                            "endOffset": 3236,
+                            "endOffset": 3233,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3210
+                            "startOffset": 3207
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 3237,
+                        "endOffset": 3234,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3201
+                        "startOffset": 3198
                       }
                     },
                     {
@@ -9363,51 +9363,51 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3246,
+                            "endOffset": 3243,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3239
+                            "startOffset": 3236
                           },
                           "value": "succeed"
                         },
                         {
                           "kind": "string",
                           "span": {
-                            "endOffset": 3255,
+                            "endOffset": 3252,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3247
+                            "startOffset": 3244
                           },
                           "value": "member"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 3256,
+                        "endOffset": 3253,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3238
+                        "startOffset": 3235
                       }
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 3257,
+                    "endOffset": 3254,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3200
+                    "startOffset": 3197
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3258,
+                "endOffset": 3255,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3195
+                "startOffset": 3192
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3259,
+            "endOffset": 3256,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3182
+            "startOffset": 3179
           }
         },
         {
@@ -9415,18 +9415,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 3262,
+                "endOffset": 3259,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3261
+                "startOffset": 3258
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3268,
+                "endOffset": 3265,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3263
+                "startOffset": 3260
               },
               "value": "roles"
             },
@@ -9435,9 +9435,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3272,
+                    "endOffset": 3269,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3270
+                    "startOffset": 3267
                   },
                   "value": "->"
                 },
@@ -9446,43 +9446,43 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3278,
+                        "endOffset": 3275,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3274
+                        "startOffset": 3271
                       },
                       "value": "List"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3283,
+                        "endOffset": 3280,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3279
+                        "startOffset": 3276
                       },
                       "value": "Role"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3284,
+                    "endOffset": 3281,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3273
+                    "startOffset": 3270
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3285,
+                "endOffset": 3282,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3269
+                "startOffset": 3266
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3286,
+            "endOffset": 3283,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3260
+            "startOffset": 3257
           }
         },
         {
@@ -9490,18 +9490,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3294,
+                "endOffset": 3291,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3288
+                "startOffset": 3285
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3300,
+                "endOffset": 3297,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3295
+                "startOffset": 3292
               },
               "value": "roles"
             },
@@ -9509,9 +9509,9 @@
               "items": [],
               "kind": "vector",
               "span": {
-                "endOffset": 3303,
+                "endOffset": 3300,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3301
+                "startOffset": 3298
               }
             },
             {
@@ -9519,9 +9519,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3308,
+                    "endOffset": 3305,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3305
+                    "startOffset": 3302
                   },
                   "value": "let"
                 },
@@ -9530,9 +9530,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3312,
+                        "endOffset": 3309,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3310
+                        "startOffset": 3307
                       },
                       "value": "rs"
                     },
@@ -9541,9 +9541,9 @@
                         {
                           "kind": "keyword",
                           "span": {
-                            "endOffset": 3315,
+                            "endOffset": 3312,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3314
+                            "startOffset": 3311
                           },
                           "value": ":"
                         },
@@ -9552,27 +9552,27 @@
                             {
                               "kind": "string",
                               "span": {
-                                "endOffset": 3324,
+                                "endOffset": 3321,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3317
+                                "startOffset": 3314
                               },
                               "value": "admin"
                             },
                             {
                               "kind": "string",
                               "span": {
-                                "endOffset": 3333,
+                                "endOffset": 3330,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3325
+                                "startOffset": 3322
                               },
                               "value": "member"
                             }
                           ],
                           "kind": "vector",
                           "span": {
-                            "endOffset": 3334,
+                            "endOffset": 3331,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3316
+                            "startOffset": 3313
                           }
                         },
                         {
@@ -9580,68 +9580,68 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 3340,
+                                "endOffset": 3337,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3336
+                                "startOffset": 3333
                               },
                               "value": "List"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 3345,
+                                "endOffset": 3342,
                                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                "startOffset": 3341
+                                "startOffset": 3338
                               },
                               "value": "Role"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 3346,
+                            "endOffset": 3343,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3335
+                            "startOffset": 3332
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 3347,
+                        "endOffset": 3344,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3313
+                        "startOffset": 3310
                       }
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 3348,
+                    "endOffset": 3345,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3309
+                    "startOffset": 3306
                   }
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3351,
+                    "endOffset": 3348,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3349
+                    "startOffset": 3346
                   },
                   "value": "rs"
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3352,
+                "endOffset": 3349,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3304
+                "startOffset": 3301
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3353,
+            "endOffset": 3350,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3287
+            "startOffset": 3284
           }
         },
         {
@@ -9649,18 +9649,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 3356,
+                "endOffset": 3353,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3355
+                "startOffset": 3352
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3364,
+                "endOffset": 3361,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3357
+                "startOffset": 3354
               },
               "value": "by-name"
             },
@@ -9669,9 +9669,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3368,
+                    "endOffset": 3365,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3366
+                    "startOffset": 3363
                   },
                   "value": "->"
                 },
@@ -9680,36 +9680,36 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3373,
+                        "endOffset": 3370,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3370
+                        "startOffset": 3367
                       },
                       "value": "Map"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3380,
+                        "endOffset": 3377,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3374
+                        "startOffset": 3371
                       },
                       "value": "String"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3387,
+                        "endOffset": 3384,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3381
+                        "startOffset": 3378
                       },
                       "value": "Member"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3388,
+                    "endOffset": 3385,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3369
+                    "startOffset": 3366
                   }
                 },
                 {
@@ -9717,52 +9717,52 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3393,
+                        "endOffset": 3390,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3390
+                        "startOffset": 3387
                       },
                       "value": "Map"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3400,
+                        "endOffset": 3397,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3394
+                        "startOffset": 3391
                       },
                       "value": "String"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3407,
+                        "endOffset": 3404,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3401
+                        "startOffset": 3398
                       },
                       "value": "Member"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3408,
+                    "endOffset": 3405,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3389
+                    "startOffset": 3386
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3409,
+                "endOffset": 3406,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3365
+                "startOffset": 3362
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3410,
+            "endOffset": 3407,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3354
+            "startOffset": 3351
           }
         },
         {
@@ -9770,18 +9770,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3418,
+                "endOffset": 3415,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3412
+                "startOffset": 3409
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3428,
+                "endOffset": 3425,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3421
+                "startOffset": 3418
               },
               "value": "by-name"
             },
@@ -9790,18 +9790,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3439,
+                    "endOffset": 3436,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3432
+                    "startOffset": 3429
                   },
                   "value": "members"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 3440,
+                "endOffset": 3437,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3431
+                "startOffset": 3428
               }
             },
             {
@@ -9809,9 +9809,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3447,
+                    "endOffset": 3444,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3444
+                    "startOffset": 3441
                   },
                   "value": "let"
                 },
@@ -9820,9 +9820,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3453,
+                        "endOffset": 3450,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3449
+                        "startOffset": 3446
                       },
                       "value": "next"
                     },
@@ -9831,27 +9831,27 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3460,
+                            "endOffset": 3457,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3455
+                            "startOffset": 3452
                           },
                           "value": "assoc"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3468,
+                            "endOffset": 3465,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3461
+                            "startOffset": 3458
                           },
                           "value": "members"
                         },
                         {
                           "kind": "string",
                           "span": {
-                            "endOffset": 3472,
+                            "endOffset": 3469,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3469
+                            "startOffset": 3466
                           },
                           "value": "b"
                         },
@@ -9861,18 +9861,18 @@
                               "key": {
                                 "kind": "keyword",
                                 "span": {
-                                  "endOffset": 3479,
+                                  "endOffset": 3476,
                                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                  "startOffset": 3474
+                                  "startOffset": 3471
                                 },
                                 "value": ":name"
                               },
                               "value": {
                                 "kind": "string",
                                 "span": {
-                                  "endOffset": 3483,
+                                  "endOffset": 3480,
                                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                  "startOffset": 3480
+                                  "startOffset": 3477
                                 },
                                 "value": "b"
                               }
@@ -9881,18 +9881,18 @@
                               "key": {
                                 "kind": "keyword",
                                 "span": {
-                                  "endOffset": 3489,
+                                  "endOffset": 3486,
                                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                  "startOffset": 3484
+                                  "startOffset": 3481
                                 },
                                 "value": ":role"
                               },
                               "value": {
                                 "kind": "string",
                                 "span": {
-                                  "endOffset": 3498,
+                                  "endOffset": 3495,
                                   "sourceId": "engine-parity/effect-typescript/edge-cases",
-                                  "startOffset": 3490
+                                  "startOffset": 3487
                                 },
                                 "value": "member"
                               }
@@ -9900,50 +9900,50 @@
                           ],
                           "kind": "map",
                           "span": {
-                            "endOffset": 3499,
+                            "endOffset": 3496,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3473
+                            "startOffset": 3470
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 3500,
+                        "endOffset": 3497,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3454
+                        "startOffset": 3451
                       }
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 3501,
+                    "endOffset": 3498,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3448
+                    "startOffset": 3445
                   }
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3506,
+                    "endOffset": 3503,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3502
+                    "startOffset": 3499
                   },
                   "value": "next"
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3507,
+                "endOffset": 3504,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3443
+                "startOffset": 3440
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3508,
+            "endOffset": 3505,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3411
+            "startOffset": 3408
           }
         },
         {
@@ -9951,18 +9951,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 3511,
+                "endOffset": 3508,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3510
+                "startOffset": 3507
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3519,
+                "endOffset": 3516,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3512
+                "startOffset": 3509
               },
               "value": "largest"
             },
@@ -9971,9 +9971,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3523,
+                    "endOffset": 3520,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3521
+                    "startOffset": 3518
                   },
                   "value": "->"
                 },
@@ -9982,27 +9982,27 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3529,
+                        "endOffset": 3526,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3525
+                        "startOffset": 3522
                       },
                       "value": "List"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3536,
+                        "endOffset": 3532,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3530
+                        "startOffset": 3527
                       },
                       "value": "Number"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3537,
+                    "endOffset": 3533,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3524
+                    "startOffset": 3521
                   }
                 },
                 {
@@ -10010,43 +10010,43 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3545,
+                        "endOffset": 3541,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3539
+                        "startOffset": 3535
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3551,
+                        "endOffset": 3547,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3546
+                        "startOffset": 3542
                       },
                       "value": "Shape"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3552,
+                    "endOffset": 3548,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3538
+                    "startOffset": 3534
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3553,
+                "endOffset": 3549,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3520
+                "startOffset": 3517
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3554,
+            "endOffset": 3550,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3509
+            "startOffset": 3506
           }
         },
         {
@@ -10054,18 +10054,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3562,
+                "endOffset": 3558,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3556
+                "startOffset": 3552
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3572,
+                "endOffset": 3568,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3565
+                "startOffset": 3561
               },
               "value": "largest"
             },
@@ -10074,18 +10074,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3581,
+                    "endOffset": 3577,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3576
+                    "startOffset": 3572
                   },
                   "value": "sizes"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 3582,
+                "endOffset": 3578,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3575
+                "startOffset": 3571
               }
             },
             {
@@ -10093,9 +10093,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3601,
+                    "endOffset": 3597,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3586
+                    "startOffset": 3582
                   },
                   "value": "stream-run-fold"
                 },
@@ -10104,27 +10104,27 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3616,
+                        "endOffset": 3612,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3607
+                        "startOffset": 3603
                       },
                       "value": "stream-of"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3622,
+                        "endOffset": 3618,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3617
+                        "startOffset": 3613
                       },
                       "value": "sizes"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3623,
+                    "endOffset": 3619,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3606
+                    "startOffset": 3602
                   }
                 },
                 {
@@ -10132,9 +10132,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3634,
+                        "endOffset": 3630,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3629
+                        "startOffset": 3625
                       },
                       "value": "Shape"
                     },
@@ -10144,18 +10144,18 @@
                           "key": {
                             "kind": "keyword",
                             "span": {
-                              "endOffset": 3641,
+                              "endOffset": 3637,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3636
+                              "startOffset": 3632
                             },
                             "value": ":kind"
                           },
                           "value": {
                             "kind": "string",
                             "span": {
-                              "endOffset": 3650,
+                              "endOffset": 3646,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3642
+                              "startOffset": 3638
                             },
                             "value": "Square"
                           }
@@ -10164,18 +10164,18 @@
                           "key": {
                             "kind": "keyword",
                             "span": {
-                              "endOffset": 3656,
+                              "endOffset": 3652,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3651
+                              "startOffset": 3647
                             },
                             "value": ":side"
                           },
                           "value": {
                             "kind": "int",
                             "span": {
-                              "endOffset": 3658,
+                              "endOffset": 3654,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3657
+                              "startOffset": 3653
                             },
                             "value": 0
                           }
@@ -10183,17 +10183,17 @@
                       ],
                       "kind": "map",
                       "span": {
-                        "endOffset": 3659,
+                        "endOffset": 3655,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3635
+                        "startOffset": 3631
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3660,
+                    "endOffset": 3656,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3628
+                    "startOffset": 3624
                   }
                 },
                 {
@@ -10201,9 +10201,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3668,
+                        "endOffset": 3664,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3666
+                        "startOffset": 3662
                       },
                       "value": "fn"
                     },
@@ -10212,27 +10212,27 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3673,
+                            "endOffset": 3669,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3670
+                            "startOffset": 3666
                           },
                           "value": "acc"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3678,
+                            "endOffset": 3674,
                             "sourceId": "engine-parity/effect-typescript/edge-cases",
-                            "startOffset": 3674
+                            "startOffset": 3670
                           },
                           "value": "size"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 3679,
+                        "endOffset": 3675,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3669
+                        "startOffset": 3665
                       }
                     },
                     {
@@ -10241,18 +10241,18 @@
                           "key": {
                             "kind": "keyword",
                             "span": {
-                              "endOffset": 3686,
+                              "endOffset": 3682,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3681
+                              "startOffset": 3677
                             },
                             "value": ":kind"
                           },
                           "value": {
                             "kind": "string",
                             "span": {
-                              "endOffset": 3695,
+                              "endOffset": 3691,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3687
+                              "startOffset": 3683
                             },
                             "value": "Circle"
                           }
@@ -10261,18 +10261,18 @@
                           "key": {
                             "kind": "keyword",
                             "span": {
-                              "endOffset": 3703,
+                              "endOffset": 3699,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3696
+                              "startOffset": 3692
                             },
                             "value": ":radius"
                           },
                           "value": {
                             "kind": "symbol",
                             "span": {
-                              "endOffset": 3708,
+                              "endOffset": 3704,
                               "sourceId": "engine-parity/effect-typescript/edge-cases",
-                              "startOffset": 3704
+                              "startOffset": 3700
                             },
                             "value": "size"
                           }
@@ -10280,33 +10280,33 @@
                       ],
                       "kind": "map",
                       "span": {
-                        "endOffset": 3709,
+                        "endOffset": 3705,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3680
+                        "startOffset": 3676
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3710,
+                    "endOffset": 3706,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3665
+                    "startOffset": 3661
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3711,
+                "endOffset": 3707,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3585
+                "startOffset": 3581
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3712,
+            "endOffset": 3708,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3555
+            "startOffset": 3551
           }
         },
         {
@@ -10314,18 +10314,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 3715,
+                "endOffset": 3711,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3714
+                "startOffset": 3710
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3725,
+                "endOffset": 3721,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3716
+                "startOffset": 3712
               },
               "value": "lower-all"
             },
@@ -10334,9 +10334,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3729,
+                    "endOffset": 3725,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3727
+                    "startOffset": 3723
                   },
                   "value": "->"
                 },
@@ -10345,27 +10345,27 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3735,
+                        "endOffset": 3731,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3731
+                        "startOffset": 3727
                       },
                       "value": "List"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3742,
+                        "endOffset": 3738,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3736
+                        "startOffset": 3732
                       },
                       "value": "String"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3743,
+                    "endOffset": 3739,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3730
+                    "startOffset": 3726
                   }
                 },
                 {
@@ -10373,43 +10373,43 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3749,
+                        "endOffset": 3745,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3745
+                        "startOffset": 3741
                       },
                       "value": "List"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3756,
+                        "endOffset": 3752,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3750
+                        "startOffset": 3746
                       },
                       "value": "String"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3757,
+                    "endOffset": 3753,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3744
+                    "startOffset": 3740
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3758,
+                "endOffset": 3754,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3726
+                "startOffset": 3722
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3759,
+            "endOffset": 3755,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3713
+            "startOffset": 3709
           }
         },
         {
@@ -10417,18 +10417,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3767,
+                "endOffset": 3763,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3761
+                "startOffset": 3757
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3777,
+                "endOffset": 3773,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3768
+                "startOffset": 3764
               },
               "value": "lower-all"
             },
@@ -10437,18 +10437,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3784,
+                    "endOffset": 3780,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3779
+                    "startOffset": 3775
                   },
                   "value": "names"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 3785,
+                "endOffset": 3781,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3778
+                "startOffset": 3774
               }
             },
             {
@@ -10456,9 +10456,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3790,
+                    "endOffset": 3786,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3787
+                    "startOffset": 3783
                   },
                   "value": "let"
                 },
@@ -10467,27 +10467,27 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3793,
+                        "endOffset": 3789,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3792
+                        "startOffset": 3788
                       },
                       "value": "f"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3802,
+                        "endOffset": 3798,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3794
+                        "startOffset": 3790
                       },
                       "value": "downcase"
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 3803,
+                    "endOffset": 3799,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3791
+                    "startOffset": 3787
                   }
                 },
                 {
@@ -10495,52 +10495,52 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3808,
+                        "endOffset": 3804,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3805
+                        "startOffset": 3801
                       },
                       "value": "map"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3810,
+                        "endOffset": 3806,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3809
+                        "startOffset": 3805
                       },
                       "value": "f"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3816,
+                        "endOffset": 3812,
                         "sourceId": "engine-parity/effect-typescript/edge-cases",
-                        "startOffset": 3811
+                        "startOffset": 3807
                       },
                       "value": "names"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3817,
+                    "endOffset": 3813,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3804
+                    "startOffset": 3800
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3818,
+                "endOffset": 3814,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3786
+                "startOffset": 3782
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3819,
+            "endOffset": 3815,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3760
+            "startOffset": 3756
           }
         },
         {
@@ -10548,36 +10548,36 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 3822,
+                "endOffset": 3818,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3821
+                "startOffset": 3817
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3829,
+                "endOffset": 3825,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3823
+                "startOffset": 3819
               },
               "value": "scaled"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3833,
+                "endOffset": 3829,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3830
+                "startOffset": 3826
               },
               "value": "Int"
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3834,
+            "endOffset": 3830,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3820
+            "startOffset": 3816
           }
         },
         {
@@ -10585,18 +10585,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3842,
+                "endOffset": 3838,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3836
+                "startOffset": 3832
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3849,
+                "endOffset": 3845,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3843
+                "startOffset": 3839
               },
               "value": "scaled"
             },
@@ -10605,35 +10605,35 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3856,
+                    "endOffset": 3852,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3851
+                    "startOffset": 3847
                   },
                   "value": "scale"
                 },
                 {
                   "kind": "int",
                   "span": {
-                    "endOffset": 3858,
+                    "endOffset": 3854,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3857
+                    "startOffset": 3853
                   },
                   "value": 3
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3859,
+                "endOffset": 3855,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3850
+                "startOffset": 3846
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3860,
+            "endOffset": 3856,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3835
+            "startOffset": 3831
           }
         },
         {
@@ -10641,18 +10641,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 3863,
+                "endOffset": 3859,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3862
+                "startOffset": 3858
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3869,
+                "endOffset": 3865,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3864
+                "startOffset": 3860
               },
               "value": "scale"
             },
@@ -10661,11 +10661,20 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3873,
+                    "endOffset": 3869,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3871
+                    "startOffset": 3867
                   },
                   "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 3873,
+                    "sourceId": "engine-parity/effect-typescript/edge-cases",
+                    "startOffset": 3870
+                  },
+                  "value": "Int"
                 },
                 {
                   "kind": "symbol",
@@ -10675,30 +10684,21 @@
                     "startOffset": 3874
                   },
                   "value": "Int"
-                },
-                {
-                  "kind": "symbol",
-                  "span": {
-                    "endOffset": 3881,
-                    "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3878
-                  },
-                  "value": "Int"
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3882,
+                "endOffset": 3878,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3870
+                "startOffset": 3866
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3883,
+            "endOffset": 3879,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3861
+            "startOffset": 3857
           }
         },
         {
@@ -10706,20 +10706,39 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3891,
+                "endOffset": 3887,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3885
+                "startOffset": 3881
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3897,
+                "endOffset": 3893,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3892
+                "startOffset": 3888
               },
               "value": "scale"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 3896,
+                    "sourceId": "engine-parity/effect-typescript/edge-cases",
+                    "startOffset": 3895
+                  },
+                  "value": "x"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 3897,
+                "sourceId": "engine-parity/effect-typescript/edge-cases",
+                "startOffset": 3894
+              }
             },
             {
               "items": [
@@ -10730,59 +10749,40 @@
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
                     "startOffset": 3899
                   },
-                  "value": "x"
-                }
-              ],
-              "kind": "vector",
-              "span": {
-                "endOffset": 3901,
-                "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3898
-              }
-            },
-            {
-              "items": [
-                {
-                  "kind": "symbol",
-                  "span": {
-                    "endOffset": 3904,
-                    "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3903
-                  },
                   "value": "*"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3906,
+                    "endOffset": 3902,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3905
+                    "startOffset": 3901
                   },
                   "value": "x"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3913,
+                    "endOffset": 3909,
                     "sourceId": "engine-parity/effect-typescript/edge-cases",
-                    "startOffset": 3907
+                    "startOffset": 3903
                   },
                   "value": "factor"
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3914,
+                "endOffset": 3910,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3902
+                "startOffset": 3898
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3915,
+            "endOffset": 3911,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3884
+            "startOffset": 3880
           }
         },
         {
@@ -10790,36 +10790,36 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 3918,
+                "endOffset": 3914,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3917
+                "startOffset": 3913
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3925,
+                "endOffset": 3921,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3919
+                "startOffset": 3915
               },
               "value": "factor"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3929,
+                "endOffset": 3925,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3926
+                "startOffset": 3922
               },
               "value": "Int"
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3930,
+            "endOffset": 3926,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3916
+            "startOffset": 3912
           }
         },
         {
@@ -10827,36 +10827,36 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3938,
+                "endOffset": 3934,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3932
+                "startOffset": 3928
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3945,
+                "endOffset": 3941,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3939
+                "startOffset": 3935
               },
               "value": "factor"
             },
             {
               "kind": "int",
               "span": {
-                "endOffset": 3947,
+                "endOffset": 3943,
                 "sourceId": "engine-parity/effect-typescript/edge-cases",
-                "startOffset": 3946
+                "startOffset": 3942
               },
               "value": 2
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3948,
+            "endOffset": 3944,
             "sourceId": "engine-parity/effect-typescript/edge-cases",
-            "startOffset": 3931
+            "startOffset": 3927
           }
         }
       ],

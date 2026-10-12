@@ -37,9 +37,7 @@ export function compileInstance(
 
   const canonicalRuntimeTypeName = (name: string): string => {
     switch (name) {
-      case "Number":
-      case "Num":
-        return "Float";
+
       case "Str":
         return "String";
       case "Bool":

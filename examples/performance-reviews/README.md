@@ -14,7 +14,7 @@ Performance review cycle example in canonical ontology syntax.
 (entity Review
   {
     :employee-name String
-    :rating (Option Number)
+    :rating (Option Float)
     :cycle (Option (Id ReviewCycle))})
 ```
 

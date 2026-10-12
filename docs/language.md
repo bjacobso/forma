@@ -12,7 +12,7 @@ quoted symbols are distinct values: `"ready"`, `:ready`, and `'ready` do not com
 equal. `nil` has type `Unit`.
 
 `1` is Int; `1.0` and `1e0` are Float even when their value is integral.
-`Number` and `Num` are legacy aliases for Float in the TypeScript engine.
+`Number` and `Num` are rejected. Use `Int` or `Float` explicitly.
 `+`, `-`, `*`, `min`, `max`, and `abs` return Int when all operands are Int,
 otherwise Float. `/` always returns Float; `mod` requires Int operands and a
 nonzero divisor. `floor`, `ceil`, and `round` return Int (`round` sends ties toward

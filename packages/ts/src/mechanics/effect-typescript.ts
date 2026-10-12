@@ -1699,8 +1699,6 @@ function configReader(name: string): string {
     case "Int":
       return "Int";
     case "Float":
-    case "Number":
-    case "Num":
       return "Number";
     case "Bool":
       return "Boolean";
