@@ -4,7 +4,7 @@ import { datum } from "./datum.js";
 import { typeCheckDescriptorTree } from "../descriptor/descriptor-tree-check.js";
 import { coerceProgram } from "./coerce.js";
 import { reachableHelpers } from "./helpers.js";
-import { typeSyntaxErrors, unknownTypeReferences } from "./type-syntax.js";
+import { typeSyntaxErrors, retiredNumericTypeErrors, unknownTypeReferences } from "./type-syntax.js";
 import { KernelTypeError } from "../diagnostic/errors.js";
 import { KKeyword, KSymbol, mapKey, mapKeyValue, isKKeyword, isKSymbol } from "../evaluator/types.js";
 import { Effect, Layer } from "effect";
@@ -84,7 +84,7 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
     const n = fieldName(k);
     if (!n || !name(k)?.startsWith(":")) throw new Error("form :types keys must be keywords");
     if (holes.has(n)) throw new Error(`Duplicate hole type ${n}`);
-    const errors = typeSyntaxErrors(t);
+    const errors = retiredNumericTypeErrors(t);
     if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:t.loc});
     holes.set(n, t);
   }

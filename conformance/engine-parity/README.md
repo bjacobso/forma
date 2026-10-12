@@ -1,13 +1,13 @@
 # Engine parity goldens
 
 `goldens/<case-id>.json` stores native OCaml's normalized output for every
-surface in `cases.json`: 100 cases and 195 outputs (62 parse, 1 expand,
-70 typecheck, 35 evaluate, 13 effect IR, 14 canonical IR). The 13 Forma Zero
+surface in `cases.json`: 112 cases and 227 outputs (73 parse, 1 expand,
+80 typecheck, 46 evaluate, 13 effect IR, 14 canonical IR). The 13 Forma Zero
 evaluation cases retain their existing goldens in `../forma-zero/expected.json`.
 These expectations preserve the current pre-alpha behavior, including diagnostic
 codes and author offsets; they do not imply parity for untested features.
 
-Six session load and retained-value comparisons use the reviewed expectations
+Eight session load and retained-value comparisons use the reviewed expectations
 in `../session-load/loads.json`. They run in TypeScript-only mode and against
 both OCaml targets in live mode.
 
@@ -48,8 +48,9 @@ TypeScript value, OCaml value). The run fails on new, changed, or resolved
 differences, and on duplicate or stale entries. Review the report and edit this
 file deliberately before recapturing a changed reference.
 
-The current allowlist is empty: TypeScript matches the references for all 214
-selected outputs.
+The current allowlist contains 22 exact numeric vocabulary and annotation
+differences across 248 selected comparisons (including Forma Zero and session
+loads).
 The historical `parse-nil` gap is resolved for the selected fixtures, and the two
 selected operational-effects typecheck cases agree. Other Effect programs are
 checked by the mechanics checker; HM typecheck parity for those programs is not
@@ -67,8 +68,10 @@ provenance. It drops line/column duplicates, generated value references,
 artifact envelope metadata, and diagnostic prose using `scripts/parity/compare.mjs`.
 Map entries are sorted by key because insertion order is not part of the map
 value contract. Type name aliases are declared on individual fixtures; the
-operational-effects fixtures map OCaml `Str` to canonical `String`. No additional
-span stripping or compiler semantic changes are part of capture.
+operational-effects fixtures map OCaml `Str` to canonical `String`. Numeric type names and value kinds are never collapsed. The native
+[input vocabulary manifest](../ocaml-reference/README.md) retains the frozen
+compiler's original annotations, and its spans are mapped back to current
+authored positions. Other offsets remain unchanged.
 
 Use `pnpm parity:engines --case operational-effects` to narrow a check, or
 `pnpm parity:engines --report .context/custom-report.json` to save its detailed
@@ -80,8 +83,8 @@ continue to include live comparison while OCaml exists.
 The numeric cases retain Int/Float literal and value kinds, including integral
 Float results, division, rounding, equality, quotation and printing. Numeric type
 names are **not** normalized. The reviewed `numeric-types` matrix row records the
-frozen OCaml printer's `Number` spelling for Float and rejection of explicit Float
-annotations. TypeScript uses checked safe integers instead of native 63-bit
+frozen OCaml printer's `Number` spelling for Float, its rejection of explicit
+Float annotations, and TypeScript's immediate rejection of Number/Num. TypeScript uses checked safe integers instead of native 63-bit
 integers. Host tests cover retained values, explicit Float inputs, host call
 results, plain JSON, nonfinite Float payloads and signed zero. The host/parity
 transport decoder repairs OCaml's invalid JSON numeric tokens (`2.`, `nan`, `inf`)

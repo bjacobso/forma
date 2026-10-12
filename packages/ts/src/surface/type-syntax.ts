@@ -6,6 +6,11 @@ const legacy = new Map(Object.entries({Str:"String",Nil:"Unit",Boolean:"Bool",Ar
 export const schemaMetadata = new Set([":doc", ":pattern", ":title", ":identifier"]);
 const fieldMetadata = new Set([":indexed", ":doc", ":default"]);
 
+/** Retire numeric aliases in contexts whose other legacy names are still accepted. */
+export function retiredNumericTypeErrors(expression: SExpr): readonly string[] {
+  return typeSyntaxErrors(expression).filter(message => /^(Number|Num) is no longer supported\./.test(message));
+}
+
 /** Find the authored field (or unknown tail) that could overwrite a tag. */
 export function taggedPayloadProblem(expression: SExpr): { expression: SExpr; message: string } | undefined {
   if (head(expression) === "Tagged" && expression._tag === "List") {

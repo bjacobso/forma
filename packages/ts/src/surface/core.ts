@@ -1,5 +1,5 @@
 import { copySourceTrace } from "../evaluator/source-trace.js";
-import { typeSyntaxErrors, schemaMetadata, taggedPayloadProblem } from "./type-syntax.js";
+import { typeSyntaxErrors, retiredNumericTypeErrors, schemaMetadata, taggedPayloadProblem } from "./type-syntax.js";
 import { InferenceError } from "../diagnostic/errors.js";
 import { resolveConstructors } from "./constructor-scope.js";
 import { coerceProgram } from "./coerce.js";
@@ -89,7 +89,7 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
       if (name(a) === ":extends" && e.items[i + 1]) args.push(e.items[++i]!);
       else {
         if (head(a) === ":" && a._tag === "List" && a.items[2]) {
-          const errors = typeSyntaxErrors(a.items[2], schemaMetadata);
+          const errors = retiredNumericTypeErrors(a.items[2]);
           if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:a.items[2].loc});
         }
         args.push(head(a) === ":" && a._tag === "List" ? list(a, a.items.slice(1)) : a);
@@ -99,7 +99,7 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
   }
   if (top && h === "instance" && e.items[1]?._tag === "List") {
     for (const type of e.items[1].items.slice(1)) {
-      const errors = typeSyntaxErrors(type, schemaMetadata);
+      const errors = retiredNumericTypeErrors(type);
       if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:type.loc});
     }
   }
