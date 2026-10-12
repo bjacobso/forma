@@ -3,7 +3,10 @@
  */
 import * as Type from "../Type.js";
 import { Effect } from "effect";
-import { bootstrapFromSources, type BootstrappedPrelude } from "../descriptor/bootstrap.js";
+import { bootstrapFromSources, validateDescriptorReferences, type BootstrappedPrelude } from "../descriptor/bootstrap.js";
+import { checkDescriptors, type DescriptorSource } from "../descriptor/check-descriptors.js";
+import { checkArtifactDescriptor, checkArtifactPayloadContracts } from "../artifact/descriptor-contracts.js";
+import { makeArtifactValidatorRegistry } from "../artifact/validator-catalog.js";
 import { createMetaBuiltins } from "../descriptor/meta-builtins.js";
 import { SimpleSemanticEnvironment } from "../descriptor/SemanticEnvironment.js";
 import { reachableHelpers } from "../surface/helpers.js";
@@ -172,7 +175,7 @@ function descriptorTypingInputs(
   return {
     helpers,
     sources: parsed.map(({ sourceId, text, expressions }) => {
-      const omitted = expressions.filter(expr => ["form", "__form-descriptor", "__form-hook", "__elaboration"].includes(head(expr) ?? "")
+      const omitted = expressions.filter(expr => ["form", "__form-descriptor", "__form-hook", "__elaboration", "__payload-contract"].includes(head(expr) ?? "")
         || head(expr) === "define" && expr._tag === "List" && helpers.has(name(expr.items[1]) ?? ""));
       for (const expr of omitted) text = text.slice(0, expr.loc.start) + text.slice(expr.loc.start, expr.loc.end).replace(/[^\r\n]/g, " ") + text.slice(expr.loc.end);
       return { sourceId, text };
@@ -188,7 +191,7 @@ export function validatePreludeTypes(
 ): { readonly scope?: Scope; readonly diagnostics: readonly Diagnostic[] } {
   try {
     // Bootstrap errors must be fatal here; editor analysis deliberately recovers them.
-    const prelude = bootstrapFromSources("", "", ...sources.map(s => s.text));
+    const prelude = bootstrapFromSources("", "", ...sources.map(s => s.text), { checkReferences: false });
     const inputs = descriptorTypingInputs(sources, prelude);
     const inferOptions = typeInferOptions(options);
     const scopes = buildPreludeScopes(inputs.sources, {
@@ -196,12 +199,18 @@ export function validatePreludeTypes(
       unboundSymbolType: name => inputs.helpers.has(name) ? Type.tUnknown
         : configurationEnv?.has(name) ? configuredBindingType(configurationEnv, name)
         : inferOptions.unboundSymbolType?.(name),
-    });
+    }, prelude);
     const typeEnv = new Map(scopes.scope.typeEnv);
     for (const helper of inputs.helpers) if (!typeEnv.has(helper)) typeEnv.set(helper, Type.mono(Type.tUnknown));
     return { scope: { ...scopes.scope, typeEnv, prelude, formProvider: descriptorFormProvider(prelude) },
       diagnostics: scopes.layers.flatMap(layer => inferenceDiagnostics(layer.sourceId, layer.analysis)) };
   } catch (error) {
+    // Bootstrap parsers can reject malformed metadata before a scope exists.
+    // Prefer the metachecker's author locations and specific codes in that case.
+    const metadataDiagnostics = checkDescriptors(sources.map(s => ({ sourceId: s.sourceId, source: s.text })), {
+      checkReferences: false,
+    });
+    if (metadataDiagnostics.some(d => d.severity === "error")) return { diagnostics: metadataDiagnostics };
     const source = sources.at(-1);
     const diagnostic = diagnosticFromUnknown(error, "typecheck", source?.sourceId ?? "prelude");
     return { diagnostics: [{ ...diagnostic, span: diagnostic.span ?? { sourceId: source?.sourceId ?? "prelude", startOffset: 0, endOffset: source?.text.length ?? 0 } }] };
@@ -259,10 +268,36 @@ export function checkReplSubmission(session: LanguageSession, sourceId: string, 
   return { typeEnv, inferenceState, display: result.resultTypeString ?? "Unit", diagnostics: inferenceDiagnostics(sourceId, result) };
 }
 
-/** Descriptor metacheck seam: wire Descriptor_metacheck.validate's TS port here
- * when the descriptor workspace exports it. Bootstrap validation is already run,
- * but hook body/type contracts are intentionally owned by that workspace.
- */
-export function validatePreludeMetacheck(_env: import("../Env.js").Env, _expressions: readonly SExpr[]): readonly Diagnostic[] {
-  return [];
+/** Validate the complete candidate prelude before its environment is committed. */
+export function validatePreludeMetacheck(env: Env, sources: readonly DescriptorSource[], prelude: BootstrappedPrelude): readonly Diagnostic[] {
+  const registry = makeArtifactValidatorRegistry();
+  const contracts = prelude.payloadContracts ?? new Map();
+  const spans = new Map<string, import("../diagnostic/diagnostic.js").Span>();
+  const parsed = sources.map(source => ({ ...source, expressions: source.expressions ?? toSExprMany(parse(source.source).redTree) }));
+  for (const source of parsed) for (const expr of source.expressions) {
+    if (head(expr) !== "__payload-contract" || expr._tag !== "List") continue;
+    const contractName = name(expr.items[1]);
+    if (contractName) spans.set(contractName, located(source.sourceId, expr, "", "").span!);
+  }
+  const diagnostics = [
+    ...checkDescriptors(parsed, {
+      prelude,
+      resolveHook: hook => env.has(hook),
+      checkForm: (form, span) => checkArtifactDescriptor(form, { registry, contracts, span }),
+    }),
+    ...checkArtifactPayloadContracts(contracts, contractName => spans.get(contractName)),
+  ];
+  if (diagnostics.some(d => d.severity === "error")) return diagnostics;
+  try { validateDescriptorReferences(prelude, hook => env.has(hook)); }
+  catch (error) {
+    // Bootstrap also owns hook-kind and elaboration projection invariants.
+    const message = error instanceof Error ? error.message : String(error);
+    const targetName = /^(?:Form|Elaboration) '([^']+)'/.exec(message)?.[1];
+    for (const source of parsed) {
+      const expr = source.expressions.find(expr => expr._tag === "List" && name(expr.items[1]) === targetName);
+      if (expr) return [located(source.sourceId, expr, "descriptor/reference", message)];
+    }
+    return [diagnosticFromUnknown(error, "typecheck", sources.at(-1)?.sourceId ?? "prelude")];
+  }
+  return diagnostics;
 }

@@ -3,11 +3,13 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { bootstrapFromSources } from "../src/descriptor/bootstrap.js";
 import { checkDescriptors } from "../src/descriptor/check-descriptors.js";
+import { parse, toSExprMany } from "../src/reader/index.js";
 const cases = JSON.parse(readFileSync(resolve(import.meta.dirname,"../../../conformance/descriptor-metacheck/cases.json"),"utf8")) as {name:string;source:string;code:string;text:string;ontology?:boolean}[];
 describe("shared descriptor metacheck fixtures", () => {
   for (const test of cases) it(test.name, () => {
     const prelude=test.ontology ? bootstrapFromSources("","",readFileSync(resolve(import.meta.dirname,"../../../preludes/ontology.lisp"),"utf8")) : undefined;
     const diagnostics=checkDescriptors([{sourceId:test.name,source:test.source}],{prelude});
+    expect(checkDescriptors([{sourceId:test.name,source:test.source,expressions:toSExprMany(parse(test.source).redTree)}],{prelude})).toEqual(diagnostics);
     const diagnostic=diagnostics.find(d=>d.code===test.code);
     expect(diagnostic).toBeDefined();
     expect(diagnostic?.span?.sourceId).toBe(test.name);

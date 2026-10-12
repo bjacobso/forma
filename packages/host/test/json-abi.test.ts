@@ -1,5 +1,6 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync } from "node:fs";
+import { createInterface } from "node:readline";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -83,6 +84,58 @@ describe("JSON process ABI", () => {
     expect(responses).toHaveLength(5);
     expect(responses.map(r=>r.ok)).toEqual([false,false,false,false,true]);
   });
+  it("decodes artifact and REPL requests strictly and exposes backend discovery through the CLI", async () => {
+    const abi = new JsonAbi();
+    const { sessionId } = (await request(abi, { op: "openSession" })).value as { sessionId: string };
+    for (const input of [
+      { op: "emit", sourceIds: [9] }, { op: "emitMany", backend: 9 },
+      { op: "artifactSummary", sourceId: 9 }, { op: "replSubmit", source: 9 },
+      { op: "replSubmit" }, { op: "emitBackends", extra: true },
+    ]) expect(await request(abi, { sessionId, ...input })).toMatchObject({ ok: false, diagnostics: [{ code: "abi/invalid-request" }] });
+    const result = spawnSync(process.execPath, [cli, "request", JSON.stringify({ op: "emitBackends" })], { encoding: "utf8" });
+    expect(result.status, result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({ ok: true, value: { defaultBackend: "canonical-ir", backends: [{ name: "canonical-ir" }] } });
+  });
+
+  it("emits and summarizes sources and retains typed REPL state through a daemon after failures", async () => {
+    const child = spawn(process.execPath, [cli, "daemon"], { stdio: ["pipe", "pipe", "pipe"] });
+    const lines = createInterface({ input: child.stdout })[Symbol.asyncIterator]();
+    let stderr = "";
+    child.stderr.on("data", data => { stderr += data; });
+    const send = async (input: unknown) => {
+      child.stdin.write(JSON.stringify(input) + "\n");
+      const line = await lines.next();
+      if (line.done) throw Error(`Daemon exited: ${stderr}`);
+      return JSON.parse(line.value);
+    };
+    try {
+      const { sessionId } = (await send({ op: "openSession" })).value;
+      for (const name of ["compiler.lisp", "ontology.lisp"]) expect(await send({ op: "loadSource", sessionId, sourceId: name, kind: "prelude", source: readFileSync(resolve(import.meta.dirname, "../../../preludes", name), "utf8") })).toMatchObject({ ok: true });
+      expect(await send({ op: "loadSource", sessionId, sourceId: "people.forma", source: "(entity Person {:name String})" })).toMatchObject({ ok: true });
+      expect(await send({ op: "emit", sessionId, sourceId: "people.forma" })).toMatchObject({ ok: true, diagnostics: [], value: { artifactCount: 1, artifacts: [{ content: { declarationCount: 1 } }] } });
+      expect(await send({ op: "artifactSummary", sessionId, sourceIds: ["people.forma"] })).toMatchObject({ ok: true, value: { sourceCount: 1, declarationCount: 1, kindCounts: { Entity: 1 } } });
+      expect(await send({ op: "emitMany", sessionId, sourceIds: ["people.forma", "missing"] })).toMatchObject({ ok: false, diagnostics: [{ code: "abi/unknown-source" }], value: { sourceCount: 2, emittedCount: 1, results: [{ sourceId: "people.forma", ok: true }, { sourceId: "missing", ok: false }] } });
+      expect(await send({ op: "emit", sessionId, backend: "missing" })).toMatchObject({ ok: false, diagnostics: [{ code: "abi/unsupported-backend" }] });
+      const before = await send({ op: "sessionInfo", sessionId });
+      // Inline emission replaces only the detached snapshot, including on failure.
+      expect(await send({ op: "emit", sessionId, sourceId: "people.forma", source: "(entity Animal {:name String})" })).toMatchObject({ ok: true });
+      expect(await send({ op: "emit", sessionId, source: "(entity Broken)" })).toMatchObject({ ok: false });
+      expect(await send({ op: "sessionInfo", sessionId })).toEqual(before);
+      expect(await send({ op: "artifactSummary", sessionId })).toMatchObject({ ok: true, value: { declarationCount: 1 } });
+      expect(await send({ op: "replSubmit", sessionId, source: "(define keep-value [x] x)" })).toMatchObject({ ok: true, type: expect.stringContaining("->"), value: { status: "completed" } });
+      expect(await send({ op: "replSubmit", sessionId, source: "(keep-value 42)" })).toMatchObject({ ok: true, type: "Int", value: { result: { value: { kind: "int", value: 42 } } } });
+      expect(await send({ op: "replSubmit", sessionId, source: '(keep-value "kept")' })).toMatchObject({ ok: true, type: "String" });
+      expect(await send({ op: "replSubmit", sessionId, source: '(define leaked (+ 1 "bad"))' })).toMatchObject({ ok: false, value: { status: "failed" } });
+      expect(await send({ op: "replSubmit", sessionId, source: "(" })).toMatchObject({ ok: false });
+      expect(await send({ op: "replSubmit", sessionId, source: "(keep-value true)" })).toMatchObject({ ok: true, type: "Bool" });
+      expect(await send({ op: "replSubmit", sessionId, source: "leaked" })).toMatchObject({ ok: false });
+      expect(await send({ op: "version" })).toMatchObject({ ok: true });
+    } finally {
+      child.stdin.end();
+      child.kill();
+    }
+  }, 30_000);
+
   it("accepts requests on stdin and resolves file modules with author diagnostics", () => {
     const result = spawnSync(process.execPath,[cli,"request"],{input:JSON.stringify({op:"parseSummary",source:"1 2"}),encoding:"utf8"});
     expect(JSON.parse(result.stdout)).toMatchObject({ok:true,value:{formCount:2}});

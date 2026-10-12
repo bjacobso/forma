@@ -1,4 +1,4 @@
-import type { LanguageSession } from "../session/session.js";
+import { LanguageSession } from "../session/session.js";
 import type { Diagnostic } from "../diagnostic/diagnostic.js";
 import { diagnosticFromUnknown } from "../diagnostic/diagnostic.js";
 import { bootstrapFromSources } from "../descriptor/bootstrap.js";
@@ -11,6 +11,7 @@ import { canonicalPayload, packageArtifact, validateDeclarations, type ArtifactP
 
 export interface EmitRequest {
   readonly session: LanguageSession;
+  readonly source?: string;
   readonly sourceId?: string;
   readonly sourceIds?: readonly string[];
   readonly backend?: string;
@@ -33,6 +34,16 @@ export function emitBackends() {
 
 /** Explicit elaboration → validation → immutable packaging boundary. */
 export function emit(request: EmitRequest): EmitResult {
+  if (request.source !== undefined) {
+    const { source, ...options } = request;
+    const session = new LanguageSession({ id: request.session.id, env: request.session.env, projects: request.session.projects });
+    for (const kind of ["prelude", "source"] as const) for (const input of request.session.orderedSources(kind)) {
+      session.rememberSource({ id: input.id, text: input.text, kind });
+    }
+    const sourceId = request.sourceId ?? "request";
+    session.rememberSource({ id: sourceId, text: source });
+    return emit({ ...options, session, sourceId });
+  }
   const sourceIds = request.sourceId ? [request.sourceId] : request.sourceIds ?? request.session.orderedSources("source").map(s => s.id).sort();
   const error = (code: string, message: string): EmitResult => ({ ok: false, diagnostics: [{ code, message, severity: "error", phase: "emit" }] });
   if (request.backend !== undefined && request.backend !== "canonical-ir") return error("abi/unsupported-backend", `Unsupported emit backend ${JSON.stringify(request.backend)}.`);

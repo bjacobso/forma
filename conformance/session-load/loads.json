@@ -60,6 +60,28 @@
         "kind": "int",
         "value": 42
       }
+    },
+    {
+      "id": "atomic-prelude-metacheck-error",
+      "initial": {
+        "sourceId": "core.forma",
+        "kind": "prelude",
+        "source": "(define answer 42)"
+      },
+      "load": {
+        "sourceId": "core.forma",
+        "kind": "prelude",
+        "source": "(define answer 43) (__payload-contract Invalid (:contract Missing))"
+      },
+      "expected": {
+        "ok": false,
+        "located": true
+      },
+      "evaluate": "answer",
+      "expectedValue": {
+        "kind": "int",
+        "value": 42
+      }
     }
   ]
 }

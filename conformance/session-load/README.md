@@ -14,7 +14,8 @@ replacement and deletion of declarations, and restoration after invalid edits.
 `loads.json` is compared by `pnpm parity:engines` (including TypeScript-only
 mode): successful structural loads,
 located surface errors, checked preludes, and unchanged values after a failed
-prelude replacement. Diagnostic codes for HM errors remain engine-specific.
+prelude replacement due to typing or a descriptor payload metacheck. Diagnostic
+codes for HM errors remain engine-specific.
 The direct TypeScript elaborator reports missing schema references with
 `elaborate/hole-type`; OCaml's artifact path reports `elaborate/unknown-reference`.
 Both are stored in the scenario expectations.

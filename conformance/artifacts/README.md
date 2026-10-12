@@ -31,7 +31,7 @@ its declaration wrappers and hashes sorted-key canonical payload JSON with
 SHA-256; OCaml's `CanonicalIr` v1 uses MD5 and serialization order. The decision
 is recorded in `../engine-parity/matrix.json`.
 
-The descriptor metacheck integration seam is `checkArtifactDescriptor`, with
+Prelude loading calls `checkArtifactDescriptor` through `checkDescriptors`, with
 `checkArtifactPayloadContracts` for named contracts. Both return diagnostics and
 accept source locations; they do not bootstrap, evaluate, or perform I/O.
 

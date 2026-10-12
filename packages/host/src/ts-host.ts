@@ -359,7 +359,9 @@ export class TsLanguageHost implements LanguageHost {
         }));
         timings.evalMs = performance.now() - evalStart;
         const metacheckStart = performance.now();
-        const diagnostics = Engine.validatePreludeMetacheck(evaluated.env, candidate.orderedSources("prelude").flatMap(source => candidate.parsedPreludes.get(source.id) ?? []));
+        const diagnostics = Engine.validatePreludeMetacheck(evaluated.env,
+          sources.map(source => ({ sourceId: source.sourceId, source: source.text,
+            expressions: candidate.parsedPreludes.get(source.sourceId)! })), checked.scope!.prelude!);
         timings.metacheckMs = performance.now() - metacheckStart;
         if (diagnostics.some(d => d.severity === "error")) return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics };
         session.language.env = evaluated.env;

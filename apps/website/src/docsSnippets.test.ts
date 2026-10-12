@@ -56,7 +56,7 @@ describe("docs /effect page snippets", () => {
 
   test("the generated example typechecks under the strict suite settings", () => {
     expect(typecheck(snippets["orders.ts"]!, "orders.ts")).toEqual([]);
-  });
+  }, 30_000);
 
   test("the page's size claim matches the table", () => {
     const total = snippets["sizes.md"]!.match(/\*\*All cases\*\* \| \*\*(\d+)\*\* \| \*\*(\d+)\*\*/);

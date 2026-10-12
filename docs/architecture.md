@@ -32,18 +32,20 @@ adapt the TypeScript engine, the native OCaml daemon, or the JavaScript OCaml
 artifact to that contract.
 
 The TypeScript `forma` CLI and native OCaml daemon use newline-delimited JSON. Long-lived sessions retain
-loaded sources, generalized definitions, artifact caches, and suspended host
-calls. One-shot requests remain available for simple compiler invocations.
+loaded sources, generalized definitions, and suspended host calls. Native OCaml
+also retains artifact caches; TypeScript artifact caching remains planned.
+One-shot requests remain available for simple compiler invocations.
 
 `version().sourceLoadSemantics` reports `validate-and-store` for the TypeScript
 host: source loads validate surface grammar, descriptor application structure,
 module directives, and duplicate global declaration identities. References and
 expression types are checked during analysis. Prelude loads evaluate and infer
 types before atomically committing their scope; replacing a prelude rebuilds
-that scope so removed bindings do not survive. Descriptor hooks and hosted
-helpers are checked by bootstrap for shape; their type contracts remain a
-metacheck seam pending the descriptor port. Kernel definitions continue through
-HM inference. The native OCaml host retains its legacy
+that scope so removed bindings do not survive. Prelude metachecks validate descriptor clauses, hook references, slot references,
+artifact validators, summary requirements, and named payload contracts against
+the complete bootstrapped prelude and evaluated environment. Descriptor typing
+hooks run during application inference; hosted helpers retain their meta
+evaluation contract. Kernel definitions continue through HM inference. The native OCaml host retains its legacy
 `apply-declarations` label. The JavaScript OCaml adapter does not support
 persistent loading.
 

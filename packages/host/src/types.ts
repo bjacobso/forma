@@ -901,6 +901,8 @@ export interface LanguageHost {
 /** Session artifact operations; canonical IR is the only implemented backend. */
 export interface EmitRequest {
   readonly sessionId: string;
+  /** Emit inline source against loaded preludes without storing it in the session. */
+  readonly source?: string;
   readonly sourceId?: string;
   readonly sourceIds?: readonly string[];
   readonly backend?: string;
