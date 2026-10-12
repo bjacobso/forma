@@ -7,7 +7,7 @@ test("shows live values and loads a retained collection in the inspector", async
   await expect(prices.getByRole("button", { name: /^Inspect/ })).toContainText("43.3");
   await prices.getByRole("button", { name: /^Inspect/ }).click();
   const inspector = page.getByRole("complementary", { name: "Inspector" });
-  await expect(inspector).toContainText("List<Number>");
+  await expect(inspector).toContainText("List<Float>");
   await inspector.getByRole("treeitem").first().click();
   await expect(inspector.getByRole("treeitem", { name: "0: 43.3" })).toBeVisible();
   await expect(inspector.getByRole("treeitem", { name: "2: 1299" })).toBeVisible();
