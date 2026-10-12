@@ -1,5 +1,10 @@
 import { Context, Effect, Schema } from "effect";
 
+const __formaInt = (value: number): number => {
+  if (!Number.isSafeInteger(value)) throw new RangeError("Int outside the safe integer range");
+  return value === 0 ? 0 : value;
+};
+
 export const Model = Schema.Struct({
   count: Schema.Int,
   status: Schema.Literals(["idle", "loading", "failed"]),
@@ -35,9 +40,9 @@ export class CounterStore extends Context.Service<
 
 export const elmUpdate = (model: Model, message: Msg): ElmTransition =>
   message._tag === "Increment"
-    ? { model: { ...model, count: model.count + 1 }, commands: [] }
+    ? { model: { ...model, count: __formaInt(model.count + 1) }, commands: [] }
     : message._tag === "Decrement"
-      ? { model: { ...model, count: model.count - 1 }, commands: [] }
+      ? { model: { ...model, count: __formaInt(model.count - 1) }, commands: [] }
       : message._tag === "Load"
         ? { model: { ...model, status: "loading" }, commands: ["load-count"] }
         : message._tag === "GotCount"

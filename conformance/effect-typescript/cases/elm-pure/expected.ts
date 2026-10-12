@@ -1,5 +1,10 @@
 import { Schema } from "effect";
 
+const __formaInt = (value: number): number => {
+  if (!Number.isSafeInteger(value)) throw new RangeError("Int outside the safe integer range");
+  return value === 0 ? 0 : value;
+};
+
 export const Model = Schema.Struct({
   count: Schema.Int,
 });
@@ -18,7 +23,7 @@ export type ElmTransition = typeof ElmTransition.Type;
 
 export const elmUpdate = (state: Model, event: Msg): ElmTransition =>
   event._tag === "Bump"
-    ? (() => { const next = { model: { ...state, count: state.count + 1 } }; return next; })()
+    ? (() => { const next = { model: { ...state, count: __formaInt(state.count + 1) } }; return next; })()
     : state.count === 0 ? { model: state } : { model: { count: 0 } };
 
 export const elmInitial: ElmTransition = { model: { count: 0 } };

@@ -5,7 +5,7 @@ strict.lisp:8:39 error mechanics/str
   str joins strings, numbers, and booleans, not Money.
 
 strict.lisp:11:19 error mechanics/type-mismatch
-  Expected Int, but this is Number.
+  Expected Int, but this is Float.
 
 strict.lisp:14:31 error mechanics/condition
   Conditions must be Bool, but this is Int.
