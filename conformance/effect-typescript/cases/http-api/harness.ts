@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { Effect, Layer, Schema } from "effect";
-import { HttpRouter, HttpServer } from "effect/unstable/http";
-import { HttpApiBuilder } from "effect/unstable/httpapi";
+import { HttpRouter, HttpServer } from "effect/http";
+import { HttpApiBuilder } from "effect/http-api";
 import { Shop, ShopUsersLive, ShopSystemLive, User, UserId, UserNotFound, UserRepo } from "./expected.js";
 import { Api, Group, Endpoint } from "./builders.js";
 

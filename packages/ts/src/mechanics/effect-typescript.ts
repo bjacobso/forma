@@ -882,7 +882,7 @@ class Generator {
       case "config": {
         this.use("Config");
         const type = this.typeArg(args[0]);
-        const reader = `Config.${type.kind === "prim" ? configReader(type.name) : "string"}(${this.value(args[1], names, indent).code})`;
+        const reader = `Config.${type.kind === "prim" ? configReader(type.name) : "String"}(${this.value(args[1], names, indent).code})`;
         const fallback = option("default");
         return fallback === undefined ? reader : call("Config.withDefault", [() => reader, (inner) => this.value(fallback, names, inner).code]);
       }
@@ -1655,13 +1655,13 @@ function bindService(names: Names, service: string): string {
 function configReader(name: string): string {
   switch (name) {
     case "Int":
-      return "int";
+      return "Int";
     case "Number":
-      return "number";
+      return "Number";
     case "Bool":
-      return "boolean";
+      return "Boolean";
     default:
-      return "string";
+      return "String";
   }
 }
 

@@ -176,15 +176,25 @@ Linking rewrites `pnpm-lock.yaml` with local paths. Do not commit it;
 
 Validated with Foldworks main at `695695e`. The
 manifest ranges describe the minimum intended releases, while that unpublished
-checkout currently has older version numbers. Foldkit and @foldkit/ui are
-0.156.0, Effect is 4.0.0-rc.112, and StyleX is 0.19.0. The workbench has no
-local Foldworks patches. Once the primitives are released, unlink, generate
+checkout currently has older version numbers. Forma uses Foldkit and @foldkit/ui
+0.168.0, @foldkit/vite-plugin 0.27.1, Effect 4.0.3, and StyleX 0.19.0. The
+workbench has no local Foldworks patches. Once the primitives are released, unlink, generate
 a registry lockfile, recheck, and remove `private` before publication.
 
-CI, deployment, and release build jobs first validate the existing registry
-dependencies with a frozen install, then build the pinned Foldworks commit and
-link its packages for that job. Release metadata jobs install only the registry
-dependencies, and release versioning regenerates only their lockfile. The
+Foldkit's exact Effect 4.0.0 peers and the plugin's platform 4.0.0 dependencies
+are tested with 4.0.3 using scoped peer exceptions and dependency overrides in
+`pnpm-workspace.yaml`. The pinned Foldworks packages still declare Foldkit
+^0.156.0 peers; exact package exceptions let them share Forma's tested 0.168.0
+runtime. Revalidate these exceptions when upgrading either dependency. The
+workbench unit tests, standalone browser tests, and assembled-site browser tests
+exercise this combination. Vitest 5 satisfies @effect/vitest 4.0.3's peer range.
+
+CI, deployment, and release build jobs first validate the published registry
+dependencies, including Foldkit, with a frozen install, then build the pinned
+Foldworks commit and link its packages for that job. Release metadata jobs install only the registry
+dependencies: the registry install temporarily omits only unpublished
+`@foldworks/*` dependencies from the two workbench manifests and restores them
+afterward. Release versioning regenerates that same registry lockfile. The
 temporary tarballs, hook, and linked lockfile changes are never committed.
 Once the workbench is public and its release lockfile exists, all jobs use the
 full frozen registry install.

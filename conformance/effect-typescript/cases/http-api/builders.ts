@@ -1,6 +1,6 @@
 import { Schema } from "effect";
-import { HttpApi, HttpApiEndpoint, HttpApiGroup, type HttpApiSchema } from "effect/unstable/httpapi";
-import type { HttpRouter } from "effect/unstable/http";
+import { HttpApi, HttpApiEndpoint, HttpApiGroup, type HttpApiSchema } from "effect/http-api";
+import type { HttpRouter } from "effect/http";
 type ErrorSchema<S> = S extends HttpApiSchema.WithHeaders<infer Inner, Schema.Top> ? Inner : S;
 type ErrorSchemas<S extends readonly Schema.Top[]> = [Extract<ErrorSchema<S[number]>, HttpApiSchema.StreamSchema>] extends [never] ? S : never;
 

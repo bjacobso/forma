@@ -1,7 +1,7 @@
 # Prelude-defined HTTP APIs
 
 `preludes/http-api.lisp` is a declaration DSL targeting
-`effect@4.0.0-rc.112` and `effect/unstable/httpapi`. Its `form` declarations
+`effect@4.0.3` and `effect/http-api`. Its `form` declarations
 define syntax, typed IR, and TypeScript emission together. A second generator
 derives a TypeScript builder DSL from those same declarations.
 
@@ -53,8 +53,8 @@ an HTTP schema annotation. Serve it using the pinned Effect APIs:
 
 ```ts
 import { Layer } from "effect";
-import { HttpRouter, HttpServer } from "effect/unstable/http";
-import { HttpApiBuilder } from "effect/unstable/httpapi";
+import { HttpRouter, HttpServer } from "effect/http";
+import { HttpApiBuilder } from "effect/http-api";
 import { Shop, ShopUsersLive } from "./shop.js";
 
 const routes = HttpApiBuilder.layer(Shop).pipe(
