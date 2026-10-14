@@ -2,7 +2,7 @@ packages:
   - "apps/*"
   - "packages/*"
 
-# Alchemy's ranges already accept 4.0.3. Keep its used companions pinned.
+# Keep Alchemy's used Effect companions pinned to the same patch.
 # Foldkit's plugin pins platform packages to 4.0.0; this patch upgrade is
 # validated by the workbench dev-server and assembled-site browser suites.
 overrides:
