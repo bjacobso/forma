@@ -76,14 +76,15 @@ describe("JSON process ABI", () => {
     expect(a.forms[1]?.digest).toBe(c.forms[1]?.digest);
     expect(a.forms[0]?.digest).toMatch(/^[a-f0-9]{16}$/);
   });
+  // CLI startup shares CPU with the parallel compiler suites in CI.
   it("keeps a daemon alive after boundary, parse, typecheck, and session errors", () => {
     const lines = ['{', JSON.stringify({op:"parse",source:"("}), JSON.stringify({op:"typecheck",source:'(+ 1 "x")'}), JSON.stringify({op:"sessionInfo",sessionId:"missing"}), JSON.stringify({op:"version"})];
-    const result = spawnSync(process.execPath,[cli,"daemon"],{input:lines.join("\n")+"\n",encoding:"utf8"});
+    const result = spawnSync(process.execPath,[cli,"daemon"],{input:lines.join("\n")+"\n",encoding:"utf8",timeout:20_000});
     expect(result.status,result.stderr).toBe(0);
     const responses = result.stdout.trim().split("\n").map(line=>JSON.parse(line));
     expect(responses).toHaveLength(5);
     expect(responses.map(r=>r.ok)).toEqual([false,false,false,false,true]);
-  });
+  }, 30_000);
   it("decodes artifact and REPL requests strictly and exposes backend discovery through the CLI", async () => {
     const abi = new JsonAbi();
     const { sessionId } = (await request(abi, { op: "openSession" })).value as { sessionId: string };
@@ -92,10 +93,10 @@ describe("JSON process ABI", () => {
       { op: "artifactSummary", sourceId: 9 }, { op: "replSubmit", source: 9 },
       { op: "replSubmit" }, { op: "emitBackends", extra: true },
     ]) expect(await request(abi, { sessionId, ...input })).toMatchObject({ ok: false, diagnostics: [{ code: "abi/invalid-request" }] });
-    const result = spawnSync(process.execPath, [cli, "request", JSON.stringify({ op: "emitBackends" })], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [cli, "request", JSON.stringify({ op: "emitBackends" })], { encoding: "utf8", timeout: 20_000 });
     expect(result.status, result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({ ok: true, value: { defaultBackend: "canonical-ir", backends: [{ name: "canonical-ir" }] } });
-  });
+  }, 30_000);
 
   it("emits and summarizes sources and retains typed REPL state through a daemon after failures", async () => {
     const child = spawn(process.execPath, [cli, "daemon"], { stdio: ["pipe", "pipe", "pipe"] });

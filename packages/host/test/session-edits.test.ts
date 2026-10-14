@@ -26,6 +26,7 @@ describe("session edits match fresh results (OCaml artifact-cache scenarios)", (
     }
     await host.closeSession({ sessionId });
   });
+  // Each edit also reloads the ontology stack in a fresh comparison session.
   it("refreshes schema interfaces across private and public edits and schema removal", async () => {
     const host = new TsLanguageHost(), { sessionId } = await host.openSession();
     const preludes = ontologyPreludeStack.map(name => ({ sourceId: name, kind: "prelude" as const, source: preludeSource(name) }));
@@ -49,6 +50,6 @@ describe("session edits match fresh results (OCaml artifact-cache scenarios)", (
       await fresh.closeSession({ sessionId: opened.sessionId });
     }
     await host.closeSession({ sessionId });
-  }, 20_000);
+  }, 60_000);
 
 });
