@@ -1,7 +1,9 @@
+import { generateEffectProgram } from "@formalang/ts/mechanics";
+import { elmCommandSource, elmCommandBrokenSource } from "./elmPageSources";
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
-import { homeSnippetDir, homeSnippets } from "./docsSnippets";
+import { homeSnippetDir, homeSnippets, elmPageSnippets, elmSnippetDir } from "./docsSnippets";
 import { effectPageSnippets, effectSnippetDir, typecheck } from "./effectPageSnippets";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
@@ -72,5 +74,33 @@ describe("docs /effect page snippets", () => {
       expect(snippets[name]).toBeDefined();
       expect(page).toContain(`snippets/effect/${name}`);
     }
+  });
+});
+
+
+describe("docs /elm page snippets", () => {
+  test("the live command edit produces one located undeclared failure", () => {
+    expect(generateEffectProgram(elmCommandSource).diagnostics).toEqual([]);
+    const result = generateEffectProgram(elmCommandBrokenSource);
+    expect(result.diagnostics).toHaveLength(1);
+    expect(result.diagnostics[0]).toMatchObject({ code: "mechanics/undeclared-error", span: { startLine: 10 } });
+  });
+  const snippets = elmPageSnippets();
+  const dir = resolve(repoRoot, elmSnippetDir);
+  if (update) {
+    mkdirSync(dir, { recursive: true });
+    for (const [name, content] of Object.entries(snippets)) writeFileSync(resolve(dir, name), content);
+  }
+  test("contains exactly the generated files", () => {
+    expect(readdirSync(dir).sort()).toEqual(Object.keys(snippets).sort());
+  });
+  test.each(Object.keys(snippets))("%s matches engine output", name => {
+    expect(readFileSync(resolve(dir, name), "utf8")).toBe(snippets[name]);
+  });
+  test("output typechecks against the pinned Foldkit under strict settings", () => {
+    expect(typecheck(snippets["counter.ts"]!, "elm-counter.ts")).toEqual([]);
+  }, 30_000);
+  test("the documented source matches the executed conformance case", () => {
+    expect(snippets["counter.lisp"]).toBe(readFileSync(resolve(repoRoot, "conformance/effect-typescript/cases/elm-counter/program.lisp"), "utf8"));
   });
 });

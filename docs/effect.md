@@ -178,7 +178,7 @@ pageClass: forma-index forma-effect
 <div class="fh-section__head">
 <p class="fh-label"><span>05</span> Size, honestly</p>
 <h2 id="size-heading">Less to write, but not ten times less.</h2>
-<p>Across the conformance programs, the generated TypeScript is about 1.2 times as many lines as the Forma source, and roughly 1.4 times as many characters. Part of that is formatting. One program is longer in Forma than in TypeScript. Brevity is a side effect. The reasons to use Forma are what it checks and how it reports problems.</p>
+<p>Across the conformance programs, the generated TypeScript is about 1.3 times as many lines as the Forma source, and roughly 1.6 times as many characters. Part of that is formatting. One program is longer in Forma than in TypeScript. Brevity is a side effect. The reasons to use Forma are what it checks and how it reports problems.</p>
 </div>
 <div class="fh-table">
 
@@ -245,7 +245,7 @@ pageClass: forma-index forma-effect
 <article><h3>Adopting it gradually</h3><p>An existing Effect codebase has schemas and services in TypeScript. Forma cannot refer to them, so today you would redeclare them. There is no importer in either direction.</p></article>
 <article><h3>Generated code in review</h3><p>It is undecided whether output is checked in and reviewed as a diff, or generated at build time and trusted. Each choice changes how teams review and how version upgrades land.</p></article>
 <article><h3>The Effect version</h3><p>The target is exactly <code>effect@4.0.3</code>, a stable release. Following Effect's releases means re-validating the generator, and supporting two Effect versions at once has not been considered.</p></article>
-<article><h3>The platform layer</h3><p>HTTP APIs, SQL, RPC, workers, and observability are where most Effect applications spend their code. A <a href="/effect/http-api">prelude-defined HttpApi spike</a> generates endpoints, groups, checked handlers, and a TypeScript builder DSL for Effect 4. Middleware and the broader platform surface still sit behind hand-written service layers.</p></article>
+<article><h3>The platform layer</h3><p>HTTP APIs, SQL, RPC, workers, and observability are where most Effect applications spend their code. A <a href="/effect/http-api">prelude-defined HttpApi spike</a> generates endpoints, groups, checked handlers, and a TypeScript builder DSL for Effect 4. A separate <a href="/elm">Foldkit app prototype</a> checks frontend commands, messages, update, and view; shared API client generation remains proposed. Middleware and the broader platform surface still sit behind hand-written service layers.</p></article>
 <article><h3>Testing in Forma</h3><p>Tests are TypeScript harnesses written against the generated module. Forma has no way to write tests, test layers, or property checks in Forma itself.</p></article>
 <article><h3>Two checkers</h3><p>The general HM checker and the Effect checker disagree on these programs. The live embeds on this page use the Effect checker for diagnostics, body types, and generation. Convergence and language-server routing are still open.</p></article>
 </div>

@@ -9,6 +9,15 @@
 - Cross-engine host, editor analysis, language server, and conformance suites.
 - Browser compiler explorer with live intermediate stages.
 
+## Elm-style application prototype
+
+The [Foldkit prelude prototype](/elm) generates Effect / Foldkit TypeScript with
+exhaustive message updates, typed command recovery, and pure Hiccup views. It is
+TypeScript-engine only, with a strict golden and headless conformance harness.
+Command arguments, subscriptions, richer views, editor/worker integration, and
+shared HttpApi server/client declarations remain proposed work. There is no
+OCaml parity or production-readiness claim.
+
 ## Next
 
 1. Tighten the shared language specification around observable cross-engine
