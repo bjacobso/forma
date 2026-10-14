@@ -1,0 +1,15 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "elm/unmapped-error",
+      "message": "Command load-count must map CounterUnavailable to a message.",
+      "line": 11,
+      "column": 1,
+      "endLine": 12,
+      "endColumn": 33
+    }
+  ]
+}

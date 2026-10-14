@@ -1566,7 +1566,9 @@ body {
 
 /* The /effect page shows compiler diagnostics side by side; wrap them instead of scrolling. */
 .forma-effect div.language-txt pre,
-.forma-effect div.language-txt pre code {
+.forma-effect div.language-txt pre code,
+.forma-elm div.language-txt pre,
+.forma-elm div.language-txt pre code {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   width: auto;

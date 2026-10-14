@@ -1,0 +1,15 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "elm/unknown-command",
+      "message": "with accepts declared command names as keywords.",
+      "line": 18,
+      "column": 45,
+      "endLine": 18,
+      "endColumn": 50
+    }
+  ]
+}

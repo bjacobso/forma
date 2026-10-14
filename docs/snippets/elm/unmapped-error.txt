@@ -1,0 +1,2 @@
+counter.lisp:11:1 error elm/unmapped-error
+  Command load-count must map CounterUnavailable to a message.

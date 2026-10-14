@@ -1,0 +1,15 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected Msg, but this is \"Increment\".",
+      "line": 26,
+      "column": 25,
+      "endLine": 26,
+      "endColumn": 36
+    }
+  ]
+}

@@ -131,6 +131,10 @@
     "./node": {
       "types": "./dist/Node.d.mts",
       "import": "./dist/Node.mjs"
+    },
+    "./elm": {
+      "types": "./dist/Elm.d.mts",
+      "import": "./dist/Elm.mjs"
     }
   },
   "files": [

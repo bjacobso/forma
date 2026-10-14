@@ -1,0 +1,2 @@
+counter.lisp:15:1 error mechanics/non-exhaustive-match
+  update does not handle Decrement.

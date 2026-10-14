@@ -1,3 +1,4 @@
+import { elmCommandSource, elmCommandBrokenSource } from "../elmPageSources";
 import { ordersSource, ordersUndeclaredSource, strictSource } from "../effectPageSources";
 import { contractSource, undeclaredCapabilitySource } from "../pipelines/sources";
 import { getPipeline } from "../pipelines";
@@ -15,6 +16,9 @@ export interface WorkbenchExample {
 }
 
 export const workbenchExamples: readonly WorkbenchExample[] = [
+  { id: "elm-command", title: "Elm command recovery", file: "counter-command.forma", source: elmCommandSource,
+    broken: elmCommandBrokenSource, prompt: "Remove command recovery. load-message promises no typed failures, but fetch-count can still fail. Restore the mapping to LoadFailed.",
+    dialect: "effect", passes: ["parse", "typecheck"] },
   { id: "contracts", title: "Effect contracts", file: "log.forma", source: contractSource,
     broken: undeclaredCapabilitySource, prompt: "Remove Console.print from the signature. The body still needs it.",
     dialect: "effect", passes: ["parse", "typecheck"] },
