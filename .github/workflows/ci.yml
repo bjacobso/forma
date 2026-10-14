@@ -72,6 +72,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - uses: ./.github/actions/install
+      - name: Check deployment CLI startup
+        run: pnpm exec alchemy --help
       - run: pnpm check
       - run: pnpm --filter @formalang/website exec playwright install --with-deps chromium
       - run: pnpm test:visual

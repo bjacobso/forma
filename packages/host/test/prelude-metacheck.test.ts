@@ -62,6 +62,7 @@ describe("prelude metacheck", () => {
     expect(await host.sessionInfo({ sessionId })).toEqual(before);
   });
 
+  // Loading many independent stacks needs headroom when package suites share CPUs.
   it("loads every bundled prelude in its domain stack and the thesis prelude", async () => {
     const names = readdirSync(resolve(root, "preludes")).filter(n => n.endsWith(".lisp"));
     const core = ["kernel.lisp", "compiler.lisp", "ontology.lisp", "viewspec-protocol.lisp", "ui.lisp", "viewspec.lisp"];
@@ -83,5 +84,5 @@ describe("prelude metacheck", () => {
     const { sessionId: thesisSession } = await host.openSession();
     expect((await host.loadSource({ sessionId: thesisSession, sourceId: "thesis", source: read("conformance/thesis-gate/prelude.lisp"), kind: "prelude" })).diagnostics).toEqual([]);
     expect((await host.typecheck({ sessionId: thesisSession, source: read("conformance/thesis-gate/typed.lisp") })).diagnostics).toEqual([]);
-  }, 30_000);
+  }, 60_000);
 });

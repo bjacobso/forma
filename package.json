@@ -44,7 +44,7 @@
     "@changesets/cli": "3.0.2",
     "@effect/platform-node": "4.0.3",
     "@types/node": "^25.9.1",
-    "alchemy": "2.0.0-beta.76",
+    "alchemy": "2.0.0-beta.83",
     "effect": "4.0.3",
     "@fontsource-variable/ibm-plex-sans": "^5.2.8",
     "@fontsource/ibm-plex-mono": "^5.2.6",
