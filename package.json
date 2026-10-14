@@ -52,7 +52,8 @@
     "turbo": "^2.9.16",
     "typescript": "^6.0.3",
     "vitepress": "2.0.0-alpha.18",
-    "vitest": "5.0.4"
+    "vitest": "5.0.4",
+    "foldkit": "0.168.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

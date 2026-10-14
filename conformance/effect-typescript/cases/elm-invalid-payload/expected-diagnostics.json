@@ -1,0 +1,15 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected Int, but this is \"wrong\".",
+      "line": 12,
+      "column": 28,
+      "endLine": 12,
+      "endColumn": 35
+    }
+  ]
+}

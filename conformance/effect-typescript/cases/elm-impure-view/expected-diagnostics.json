@@ -1,0 +1,25 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "mechanics/pure-service",
+      "message": "View expression cannot call CounterStore.get: functions and constants have no services in scope.",
+      "line": 25,
+      "column": 12,
+      "endLine": 25,
+      "endColumn": 30
+    },
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected String, but this is (Effect Int [CounterUnavailable] [CounterStore.get]).",
+      "line": 25,
+      "column": 12,
+      "endLine": 25,
+      "endColumn": 30
+    }
+  ]
+}

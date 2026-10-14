@@ -125,7 +125,7 @@ export function elaborateEffectProgram(
   if (surfaceErrors.length) return {ok:false,declarations:[],diagnostics:surfaceErrors};
   try { exprs = normalizeEffectProgram(lowerOntologyOperations(authored)); }
   catch (error) { return {ok:false, declarations:[], diagnostics:[surfaceDiagnostic(error, authored[0])]}; }
-  const stray = strayForms(exprs);
+  const stray = effectProgramStrayForms(exprs);
   if (stray.length > 0) {
     return {
       ok: false,
@@ -210,7 +210,7 @@ function isParseError(error: unknown): error is { readonly message: string; read
  * that is not a mechanics form, which would silently drop a typo'd
  * `define-servce` or a `define` without a signature.
  */
-function strayForms(exprs: readonly SExpr[]): readonly { readonly expr: SExpr; readonly message: string }[] {
+export function effectProgramStrayForms(exprs: readonly SExpr[]): readonly { readonly expr: SExpr; readonly message: string }[] {
   const signatures = new Map<string, SExpr>();
   const defined = new Set<string>();
   for (const expr of exprs) {

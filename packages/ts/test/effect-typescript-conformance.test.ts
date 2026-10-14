@@ -17,6 +17,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import ts from "typescript";
 import { Mechanics } from "../src/index.js";
+import { generateElmProgram } from "../src/Elm.js";
 import { generateHttpApiProgram, generateHttpApiBuilders } from "../src/HttpApi.js";
 import { parse } from "../src/reader/parser.js";
 import { toSExprMany } from "../src/reader/to-sexpr.js";
@@ -60,7 +61,10 @@ function sourceId(item: ConformanceCase): string {
 }
 
 const isHttpApiCase = (item: ConformanceCase): boolean => existsSync(resolve(item.dir, "http-api.json"));
-const generate = (item: ConformanceCase) => isHttpApiCase(item)
+const isElmCase = (item: ConformanceCase): boolean => existsSync(resolve(item.dir, "elm.json"));
+const generate = (item: ConformanceCase) => isElmCase(item)
+  ? generateElmProgram(item.source, {sourceId:sourceId(item)})
+  : isHttpApiCase(item)
   ? generateHttpApiProgram(item.source, {sourceId:sourceId(item)})
   : Mechanics.generateEffectProgram(item.source, {sourceId:sourceId(item)});
 
@@ -69,15 +73,15 @@ interface DiagnosticRecord {
   readonly severity: string;
   readonly code: string;
   readonly message: string;
-  readonly line?: number;
-  readonly column?: number;
-  readonly endLine?: number;
-  readonly endColumn?: number;
+  readonly line?: number | undefined;
+  readonly column?: number | undefined;
+  readonly endLine?: number | undefined;
+  readonly endColumn?: number | undefined;
 }
 
 function diagnosticRecords(source: string, item: ConformanceCase): readonly DiagnosticRecord[] {
-  return Mechanics.elaborateEffectProgram(source, { sourceId: sourceId(item) }).diagnostics.map((diagnostic) => ({
-    phase: diagnostic.phase,
+  return (isElmCase(item) ? generateElmProgram(source, { sourceId: sourceId(item) }) : Mechanics.elaborateEffectProgram(source, { sourceId: sourceId(item) })).diagnostics.map((diagnostic) => ({
+    phase: diagnostic.phase ?? "check",
     severity: diagnostic.severity,
     code: diagnostic.code,
     message: diagnostic.message,
@@ -107,6 +111,7 @@ function typescriptVerdicts(): ReadonlyMap<string, TypeScriptVerdict> {
   const result = new Map<string, TypeScriptVerdict>();
   const files = new Map<string, string>();
   for (const item of negative) {
+    if (isElmCase(item)) { result.set(item.name, "not-generated"); continue; }
     let parsed: ReturnType<typeof parse>;
     try {
       parsed = parse(item.source);
@@ -280,7 +285,7 @@ describe("Effect TypeScript conformance", () => {
       expect(actual.diagnostics.some((diagnostic) => diagnostic.severity === "error")).toBe(true);
       expect(actual.diagnostics.every((diagnostic) => diagnostic.line !== undefined)).toBe(true);
       expect(actual).toEqual(expected);
-      expect(Mechanics.generateEffectProgram(item.source, { sourceId: sourceId(item) }).code).toBeUndefined();
+      expect(generate(item).code).toBeUndefined();
     }, 60_000);
   });
 });

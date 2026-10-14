@@ -126,6 +126,20 @@ the operational combinators above still use the mechanics compiler. See
 | Hosted runtime (`makeMechanicsRuntime`) | partial | Executes only the original body forms. |
 | OCaml engine | partial | It projects identical mechanics IR for every positive case: `pnpm parity:engines` reports zero `effect-ir` differences. It has no checker or Effect TypeScript generator of its own; the TypeScript checker accepts its IR. Gaps are listed in `../engine-parity/matrix.json`. |
 
+## Elm-style app prototype (TypeScript engine only)
+
+`generateElmProgram` bootstraps `preludes/elm.lisp` independently and lowers its
+expressions through the existing mechanics checker. `elm-counter` checks an exact
+Foldkit 0.168.0 / Effect 4.0.3 golden, strict TypeScript without escapes, declaration
+artifacts, mounting types, and headless init/update/command success and recovery.
+Exact rejection fixtures cover exhaustive update, unmapped command errors,
+catch-all error mapping, impure view/update, message payloads, and unknown commands.
+
+Views support div/span/button, class, and click-message expressions. One app and
+message union per source; commands wrap zero-argument Effect values. Subscriptions,
+command arguments, richer DOM, source maps, worker/editor integration, module
+linking, and shared HttpApi client generation are absent. This adds no OCaml parity.
+
 ## Baseline: `main` at `30d7db4`
 
 This is the inventory taken before the conformance suite existed. It was
