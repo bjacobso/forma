@@ -11,10 +11,6 @@
   "comparison": {
     "mode": "sexpr"
   },
-  "knownDivergence": {
-    "reason": "The TypeScript reader exposes colon-prefixed forms as Sym nodes, while the OCaml parseAst ABI exposes them as keyword nodes. Descriptor consumers inspect this AST shape directly.",
-    "owner": "forma-ocaml"
-  },
   "expected": {
     "file": "expected.json"
   }

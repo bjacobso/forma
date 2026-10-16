@@ -123,7 +123,7 @@ export const pipelines: readonly PipelineDef[] = [
       language: "json",
       output: schemaDeclarationsJson(),
       notice:
-        "Pinned output of the OCaml engine's canonical-ir backend for this exact source (conformance/fixtures/canonical-ir, checked in CI). The browser engine does not run ontology elaboration yet, so edits do not change this pane.",
+        "Pinned canonical-ir output for this exact source (conformance/fixtures/canonical-ir, checked against the TypeScript engine in CI). The browser engine does not run ontology elaboration yet, so edits do not change this pane.",
     },
     narration: [
       {
@@ -140,7 +140,7 @@ export const pipelines: readonly PipelineDef[] = [
       },
       {
         stage: "target",
-        md: "Elaboration resolves `Employee`, checks that `:where` is boolean, projects the selected fields, and emits typed declarations. This is the artifact the OCaml engine produces for this source.",
+        md: "Elaboration resolves `Employee`, checks that `:where` is boolean, projects the selected fields, and emits typed declarations. This is the stored canonical IR artifact for this source.",
       },
     ],
   },

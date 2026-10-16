@@ -44,10 +44,10 @@ type. The mechanism is general and contains no agent concepts.
   binding identity, a declaration kind, constructors, and an optional
   `scheme` of quantified parameters and type syntax as JSON. For `type`,
   `class`, `error`, and `service` declarations the scheme holds the
-  declaration body (`packages/ts/src/modules/check.ts`). The native OCaml
-  host returns the same type from its `moduleGraph` operation; the two
-  engines' schemes are not yet compared by a fixture. Interfaces carry no
-  documentation or source spans.
+  declaration body (`packages/ts/src/modules/check.ts`). Interfaces carry no
+  documentation or source spans. (When this RFC was written, the native OCaml
+  host also returned this type from its `moduleGraph` operation; the OCaml
+  engine has since been removed.)
 - **JSON Schema.** The only emitter is `editScriptJsonSchema()`
   (`packages/ts/src/editor/edit-script.ts`), which describes edit scripts,
   not Forma types.
@@ -197,8 +197,7 @@ For the signature above, `parameters` is
   `parameters.limit: expected integer, got string`. `callBinding`
   ([RFC 0010](./0010-live-sessions.md)) accepts the same `json` form.
 - The mapping is a pure library function in `@formalang/ts`, applied to
-  `ModuleInterface` values. Hosts for either engine use the same function, so
-  the OCaml engine needs no separate emitter.
+  `ModuleInterface` values, so every host uses the same function.
 
 ## Alternatives considered
 
@@ -222,7 +221,7 @@ For the signature above, `parameters` is
 
 ## Implementation stages and validation
 
-1. **Signature metadata.** Parse `:doc` and `:title` on `:` in both engines;
+1. **Signature metadata.** Parse `:doc` and `:title` on `:`;
    carry `doc`, `title`, and `span` in `ModuleBinding`. Fixtures in
    `conformance/modules/` check that interface output includes them and that
    unknown keys are rejected at their spans.
@@ -237,9 +236,9 @@ For the signature above, `parameters` is
    TypeScript host. Tests decode valid and invalid arguments and check
    diagnostic paths; a round trip of encode, validate, and decode preserves
    values for every supported case.
-4. **Engine comparison.** The parity runner compares both engines'
-   `moduleGraph` schemes for the fixture modules, so the shared mapping
-   produces the same contracts from either engine.
+4. **Engine comparison.** Dropped: the OCaml engine was removed, so there is
+   no second `moduleGraph` implementation to compare. Stored goldens for the
+   fixture modules pin the TypeScript engine's schemes and contracts.
 
 ## Decisions still required
 

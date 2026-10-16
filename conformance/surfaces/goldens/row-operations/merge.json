@@ -1,0 +1,209 @@
+{
+  "id": "row-operations/merge",
+  "outputs": {
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "surfaces/row-operations/merge",
+                "startOffset": 1
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 7,
+                "sourceId": "surfaces/row-operations/merge",
+                "startOffset": 3
+              },
+              "value": "pair"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 14,
+                    "sourceId": "surfaces/row-operations/merge",
+                    "startOffset": 9
+                  },
+                  "value": "Merge"
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 21,
+                          "sourceId": "surfaces/row-operations/merge",
+                          "startOffset": 16
+                        },
+                        "value": ":name"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 28,
+                          "sourceId": "surfaces/row-operations/merge",
+                          "startOffset": 22
+                        },
+                        "value": "String"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 29,
+                    "sourceId": "surfaces/row-operations/merge",
+                    "startOffset": 15
+                  }
+                },
+                {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 35,
+                          "sourceId": "surfaces/row-operations/merge",
+                          "startOffset": 31
+                        },
+                        "value": ":age"
+                      },
+                      "value": {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 39,
+                          "sourceId": "surfaces/row-operations/merge",
+                          "startOffset": 36
+                        },
+                        "value": "Int"
+                      }
+                    }
+                  ],
+                  "kind": "map",
+                  "span": {
+                    "endOffset": 40,
+                    "sourceId": "surfaces/row-operations/merge",
+                    "startOffset": 30
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 41,
+                "sourceId": "surfaces/row-operations/merge",
+                "startOffset": 8
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 42,
+            "sourceId": "surfaces/row-operations/merge",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 50,
+                "sourceId": "surfaces/row-operations/merge",
+                "startOffset": 44
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 55,
+                "sourceId": "surfaces/row-operations/merge",
+                "startOffset": 51
+              },
+              "value": "pair"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 61,
+                      "sourceId": "surfaces/row-operations/merge",
+                      "startOffset": 57
+                    },
+                    "value": ":age"
+                  },
+                  "value": {
+                    "kind": "int",
+                    "span": {
+                      "endOffset": 64,
+                      "sourceId": "surfaces/row-operations/merge",
+                      "startOffset": 62
+                    },
+                    "value": 37
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 70,
+                      "sourceId": "surfaces/row-operations/merge",
+                      "startOffset": 65
+                    },
+                    "value": ":name"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "span": {
+                      "endOffset": 76,
+                      "sourceId": "surfaces/row-operations/merge",
+                      "startOffset": 71
+                    },
+                    "value": "Ada"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 77,
+                "sourceId": "surfaces/row-operations/merge",
+                "startOffset": 56
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 78,
+            "sourceId": "surfaces/row-operations/merge",
+            "startOffset": 43
+          }
+        },
+        {
+          "kind": "symbol",
+          "span": {
+            "endOffset": 83,
+            "sourceId": "surfaces/row-operations/merge",
+            "startOffset": 79
+          },
+          "value": "pair"
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "{:age Int :name String}"
+    }
+  },
+  "version": 1
+}

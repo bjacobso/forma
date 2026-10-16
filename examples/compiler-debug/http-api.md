@@ -1,9 +1,9 @@
 # HTTP API
 
 Compiler fixture for declarative HTTP API authoring. This is intentionally kept
-outside the registered product examples; the OCaml corpus uses it to keep the
-canonical HTTP API IR shape golden-stable while the TypeScript runtime
-translator is still pending.
+outside the registered product examples; the corpus emission check
+(`conformance/artifacts/corpus-golden.json`) counts its declarations while the
+TypeScript runtime translator is still pending.
 
 ```lisp
 (type DebugBlobHash (Brand String))

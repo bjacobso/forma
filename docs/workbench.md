@@ -56,7 +56,7 @@ note describes the embed contract, themes, and the next language-service work.
   include Foldkit. The website build serves this app's separate bundle at
   `/workbench/demo/`, linked from the docs and playground.
 - **Host first.** Everything that can go through `LanguageHost` does, so a
-  worker-backed or OCaml host can replace the in-process TypeScript host
+  worker-backed host can replace the in-process TypeScript host
   without changing the workbench. Two things go to `@formalang/ts` directly:
   reading one row's text in a view (`identifySyntax`, which is synchronous and
   pure) and elaboration, which the host ABI does not expose yet.
@@ -342,7 +342,7 @@ Not in the first release:
   would be a new language service.
 - **Independent top-level forms.** Evaluation stops at the first failure, as
   Language services records; later rows show no values until it is fixed.
-- A worker-backed host, the OCaml host, persistence, and the
+- A worker-backed host, persistence, and the
   outliner's virtualization.
 
 ## Implementation

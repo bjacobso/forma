@@ -61,8 +61,8 @@ export function Home() {
           <strong>Live</strong> examples run <code>@formalang/ts</code> in a Web Worker, so edits
           recompile as you type. <strong>Preview</strong> examples also show a target that is not
           recomputed from your edits, and the target pane says where it comes from. The entities
-          example, for instance, shows the OCaml engine's pinned{" "}
-          <Dfn term="elaboration">elaboration</Dfn> output.
+          example, for instance, shows pinned{" "}
+          <Dfn term="elaboration">elaboration</Dfn> output that CI checks against the engine.
         </p>
         <p>Forma is pre-alpha. APIs, syntax, and artifact formats will change.</p>
       </section>

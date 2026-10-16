@@ -4,7 +4,7 @@
 | --- | --- |
 | Status | Proposed; not implemented |
 | Created | 2026-10-16 |
-| Scope | Expression-scoped service implementations, partial delegation, requirement discharge, Effect TypeScript lowering, engine projection |
+| Scope | Expression-scoped service implementations, partial delegation, requirement discharge, Effect TypeScript lowering, effect IR projection |
 | Direction | `provide` accepts an inline `implement` expression that captures lexical values; closed requirement sets and portable IR are unchanged |
 
 ## Summary
@@ -65,9 +65,9 @@ with `Effect<A, E, R>` over closed sets, service capabilities, and typed
 implementations at the runtime boundary and do not require continuation
 capture or row-polymorphic reuse, and that "open effect rows, dynamic
 handlers, and resumable continuations are not a live implementation lane."
-Both engines still reject the legacy forms by name: `type/lower-core.ts`
-reports "Legacy algebraic effect form 'handle' is no longer supported", and
-OCaml's `lower.ml` reports `lower/legacy-effect`.
+The engine still rejects the legacy forms by name: `type/lower-core.ts`
+reports "Legacy algebraic effect form 'handle' is no longer supported". (The
+since-removed OCaml engine reported `lower/legacy-effect`.)
 
 This RFC stays inside that decision:
 
@@ -115,10 +115,11 @@ scope, as [RFC 0003](./0003-direct-style-effects.md) already records.
 - **HM checker.** `COVERAGE.md` states that the HM checker does not understand
   layers, `provide`, or combinators; the mechanics checker is authoritative for
   Effect programs.
-- **OCaml.** `mechanics_effect_combinator_json.ml` projects `provide` and the
-  catch forms into the same IR. OCaml has no mechanics checker or generator,
-  and the parity runner compares the projected effect IR (`effect-ir` in
-  `conformance/engine-parity/matrix.json`).
+- **Stored effect IR.** `conformance/surfaces/cases.json` pins projected
+  effect IR on its `effect-ir` surface, and `pnpm surfaces` checks the
+  TypeScript projection against the stored goldens. The goldens were
+  captured from the OCaml engine, which also projected `provide` and the
+  catch forms, before it was removed.
 
 ## Proposal
 
@@ -248,7 +249,6 @@ interface InlineLayer {
 ```
 
 `artifact/mechanics-payloads.ts` gains a contract for `provide` arguments.
-Both engines project the same node shape.
 
 ### Relation to direct-style effects
 
@@ -280,14 +280,15 @@ No other part of this RFC depends on RFC 0003.
   TypeScript harnesses that supply layers. It keeps tests out of Forma and
   cannot capture Forma values.
 
-## Engine parity
+## Conformance
 
-The TypeScript projector, checker, and generator implement this first. OCaml
-projects `InlineLayer` in `mechanics_effect_combinator_json.ml`, and new
-positive cases are added to the `effect-ir` parity surface. OCaml has no
-mechanics checker or generator, so negative cases are TypeScript-only, as they
-are for layers today. The HM checker gap recorded in `COVERAGE.md` extends to
-`implement`.
+The TypeScript projector, checker, and generator implement this. New positive
+cases are added to the `effect-ir` surface in `conformance/surfaces/`, with
+goldens written by `pnpm surfaces --update` and reviewed. Negative cases live
+with the mechanics checker tests, as they do for layers today. The HM checker
+gap recorded in `COVERAGE.md` extends to `implement`. (The earlier plan for an
+OCaml projection of `InlineLayer` was dropped when the OCaml engine was
+removed.)
 
 ## Implementation stages and validation
 
@@ -303,8 +304,8 @@ are for layers today. The HM checker gap recorded in `COVERAGE.md` extends to
 2. **Delegation.** `:delegate`, with a golden for the outer-service spread and
    negative cases for `mechanics/unused-delegate` and a delegated self-call.
    The harness asserts that delegated members reach the outer implementation.
-3. **OCaml projection.** The OCaml engine projects the positive cases, and they
-   join the `effect-ir` parity surface.
+3. **OCaml projection.** Dropped: the OCaml engine was removed. The positive
+   cases join the `effect-ir` surface in `conformance/surfaces/` with stage 1.
 4. **Runtime support.** If [RFC 0015](./0015-tests-in-forma.md) runs Effect
    tests without generating TypeScript, `makeMechanicsRuntime` gains `provide`
    for named and inline layers. Otherwise this stage is not needed.

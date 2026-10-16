@@ -129,7 +129,7 @@ export function artifactSummary(request: EmitRequest) {
   return { ok: true as const, backend: "canonical-ir" as const, diagnosticCount: content.diagnostics.length, sourceCount: content.sources.length, declarationCount: content.declarationCount, kindCounts: Object.fromEntries([...counts].sort(([a],[b]) => a.localeCompare(b))), declarationsHash: content.declarationsHash, hashAlgorithm: content.hashAlgorithm, modules: content.modules, typeSummary: content.typeSummary, diagnostics: content.diagnostics };
 }
 
-/** OCaml-compatible declaration/provenance projection for shared golden checks. */
+/** Declaration/provenance projection compared with the stored canonical IR golden. */
 export function canonicalIrProjection(artifact: ArtifactPackage) {
   return {
     declarationCount: artifact.declarationCount,

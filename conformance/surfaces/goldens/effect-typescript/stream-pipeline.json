@@ -1,0 +1,4495 @@
+{
+  "id": "effect-typescript/stream-pipeline",
+  "outputs": {
+    "effect-ir": [
+      {
+        "formIndex": 13,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "bindings": [
+              {
+                "name": "total",
+                "span": {
+                  "endOffset": 1800,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 1690
+                },
+                "value": {
+                  "effect": {
+                    "errors": [],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 1625,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 1611
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "Float",
+                      "span": {
+                        "endOffset": 1624,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1619
+                      }
+                    }
+                  },
+                  "kind": "Pure",
+                  "span": {
+                    "endOffset": 1800,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1690
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "stream-run-fold",
+                        "span": {
+                          "endOffset": 1706,
+                          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                          "startOffset": 1691
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "celsius-values",
+                            "span": {
+                              "endOffset": 1730,
+                              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                              "startOffset": 1716
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "readings",
+                            "span": {
+                              "endOffset": 1739,
+                              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                              "startOffset": 1731
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1740,
+                          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                          "startOffset": 1715
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":"
+                            },
+                            "span": {
+                              "endOffset": 1760,
+                              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                              "startOffset": 1749
+                            }
+                          },
+                          {
+                            "kind": "Literal",
+                            "span": {
+                              "endOffset": 1753,
+                              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                              "startOffset": 1752
+                            },
+                            "value": 0
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "Float",
+                            "span": {
+                              "endOffset": 1759,
+                              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                              "startOffset": 1754
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1760,
+                          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                          "startOffset": 1749
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "fn",
+                            "span": {
+                              "endOffset": 1772,
+                              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                              "startOffset": 1770
+                            }
+                          },
+                          {
+                            "items": [
+                              {
+                                "kind": "Var",
+                                "name": "sum",
+                                "span": {
+                                  "endOffset": 1777,
+                                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                  "startOffset": 1774
+                                }
+                              },
+                              {
+                                "kind": "Var",
+                                "name": "value",
+                                "span": {
+                                  "endOffset": 1783,
+                                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                  "startOffset": 1778
+                                }
+                              }
+                            ],
+                            "kind": "Vector",
+                            "span": {
+                              "endOffset": 1784,
+                              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                              "startOffset": 1773
+                            }
+                          },
+                          {
+                            "items": [
+                              {
+                                "kind": "Var",
+                                "name": "+",
+                                "span": {
+                                  "endOffset": 1787,
+                                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                  "startOffset": 1786
+                                }
+                              },
+                              {
+                                "kind": "Var",
+                                "name": "sum",
+                                "span": {
+                                  "endOffset": 1791,
+                                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                  "startOffset": 1788
+                                }
+                              },
+                              {
+                                "kind": "Var",
+                                "name": "value",
+                                "span": {
+                                  "endOffset": 1797,
+                                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                  "startOffset": 1792
+                                }
+                              }
+                            ],
+                            "kind": "List",
+                            "span": {
+                              "endOffset": 1798,
+                              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                              "startOffset": 1785
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1799,
+                          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                          "startOffset": 1769
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1800,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 1690
+                    }
+                  }
+                }
+              }
+            ],
+            "body": {
+              "effect": {
+                "errors": [],
+                "kind": "Effect",
+                "requirements": [],
+                "span": {
+                  "endOffset": 1625,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 1611
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "Float",
+                  "span": {
+                    "endOffset": 1624,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1619
+                  }
+                }
+              },
+              "kind": "Succeed",
+              "span": {
+                "endOffset": 1867,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1806
+              },
+              "value": {
+                "items": [
+                  {
+                    "kind": "Var",
+                    "name": "if",
+                    "span": {
+                      "endOffset": 1818,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 1816
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "empty?",
+                        "span": {
+                          "endOffset": 1826,
+                          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                          "startOffset": 1820
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "readings",
+                        "span": {
+                          "endOffset": 1835,
+                          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                          "startOffset": 1827
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1836,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 1819
+                    }
+                  },
+                  {
+                    "kind": "Literal",
+                    "span": {
+                      "endOffset": 1838,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 1837
+                    },
+                    "value": 0
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "/",
+                        "span": {
+                          "endOffset": 1841,
+                          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                          "startOffset": 1840
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "total",
+                        "span": {
+                          "endOffset": 1847,
+                          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                          "startOffset": 1842
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "count",
+                            "span": {
+                              "endOffset": 1854,
+                              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                              "startOffset": 1849
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "readings",
+                            "span": {
+                              "endOffset": 1863,
+                              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                              "startOffset": 1855
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1864,
+                          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                          "startOffset": 1848
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1865,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 1839
+                    }
+                  }
+                ],
+                "kind": "List",
+                "span": {
+                  "endOffset": 1866,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 1815
+                }
+              }
+            },
+            "effect": {
+              "errors": [],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 1625,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1611
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "Float",
+                "span": {
+                  "endOffset": 1624,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 1619
+                }
+              }
+            },
+            "kind": "Do",
+            "span": {
+              "endOffset": 1868,
+              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+              "startOffset": 1661
+            }
+          },
+          "effect": {
+            "errors": [],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 1625,
+              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+              "startOffset": 1611
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "Float",
+              "span": {
+                "endOffset": 1624,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1619
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "average",
+          "params": [
+            {
+              "name": "readings",
+              "type": {
+                "item": {
+                  "kind": "Ref",
+                  "name": "Reading",
+                  "span": {
+                    "endOffset": 1609,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1602
+                  }
+                },
+                "kind": "Array"
+              }
+            }
+          ]
+        },
+        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 1869,
+          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+          "startOffset": 1628
+        }
+      },
+      {
+        "formIndex": 11,
+        "payload": {
+          "authority": {
+            "capabilities": [
+              "Sensors",
+              "Sink"
+            ]
+          },
+          "body": {
+            "effect": {
+              "errors": [
+                "SensorOffline"
+              ],
+              "kind": "Effect",
+              "requirements": [
+                "Sensors",
+                "Sink"
+              ],
+              "span": {
+                "endOffset": 1285,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1241
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "Unit",
+                "span": {
+                  "endOffset": 1253,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 1249
+                }
+              }
+            },
+            "kind": "Pure",
+            "span": {
+              "endOffset": 1579,
+              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+              "startOffset": 1331
+            },
+            "value": {
+              "items": [
+                {
+                  "kind": "Var",
+                  "name": "stream-run-for-each",
+                  "span": {
+                    "endOffset": 1351,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1332
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "stream-take",
+                      "span": {
+                        "endOffset": 1368,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1357
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "stream-map-effect",
+                          "span": {
+                            "endOffset": 1393,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1376
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "stream-of",
+                              "span": {
+                                "endOffset": 1412,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1403
+                              }
+                            },
+                            {
+                              "kind": "Var",
+                              "name": "sensors",
+                              "span": {
+                                "endOffset": 1420,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1413
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 1421,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1402
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "fn",
+                              "span": {
+                                "endOffset": 1433,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1431
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "sensor",
+                                  "span": {
+                                    "endOffset": 1441,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1435
+                                  }
+                                }
+                              ],
+                              "kind": "Vector",
+                              "span": {
+                                "endOffset": 1442,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1434
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "Sensors.read",
+                                  "span": {
+                                    "endOffset": 1456,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1444
+                                  }
+                                },
+                                {
+                                  "kind": "Var",
+                                  "name": "sensor",
+                                  "span": {
+                                    "endOffset": 1463,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1457
+                                  }
+                                }
+                              ],
+                              "kind": "List",
+                              "span": {
+                                "endOffset": 1464,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1443
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 1465,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1430
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1466,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1375
+                      }
+                    },
+                    {
+                      "kind": "Var",
+                      "name": "limit",
+                      "span": {
+                        "endOffset": 1478,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1473
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 1479,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1356
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "fn",
+                      "span": {
+                        "endOffset": 1487,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1485
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "reading",
+                          "span": {
+                            "endOffset": 1502,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1495
+                          }
+                        }
+                      ],
+                      "kind": "Vector",
+                      "span": {
+                        "endOffset": 1503,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1494
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "Sink.write",
+                          "span": {
+                            "endOffset": 1521,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1511
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "str",
+                              "span": {
+                                "endOffset": 1526,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1523
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "get",
+                                  "span": {
+                                    "endOffset": 1531,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1528
+                                  }
+                                },
+                                {
+                                  "kind": "Var",
+                                  "name": "reading",
+                                  "span": {
+                                    "endOffset": 1539,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1532
+                                  }
+                                },
+                                {
+                                  "kind": "Expr",
+                                  "source": {
+                                    "kind": "Symbol",
+                                    "name": ":sensor"
+                                  },
+                                  "span": {
+                                    "endOffset": 1547,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1540
+                                  }
+                                }
+                              ],
+                              "kind": "List",
+                              "span": {
+                                "endOffset": 1548,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1527
+                              }
+                            },
+                            {
+                              "kind": "Literal",
+                              "span": {
+                                "endOffset": 1552,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1549
+                              },
+                              "value": "="
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "get",
+                                  "span": {
+                                    "endOffset": 1557,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1554
+                                  }
+                                },
+                                {
+                                  "kind": "Var",
+                                  "name": "reading",
+                                  "span": {
+                                    "endOffset": 1565,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1558
+                                  }
+                                },
+                                {
+                                  "kind": "Expr",
+                                  "source": {
+                                    "kind": "Symbol",
+                                    "name": ":celsius"
+                                  },
+                                  "span": {
+                                    "endOffset": 1574,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1566
+                                  }
+                                }
+                              ],
+                              "kind": "List",
+                              "span": {
+                                "endOffset": 1575,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1553
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 1576,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1522
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1577,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1510
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 1578,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1484
+                  }
+                }
+              ],
+              "kind": "List",
+              "span": {
+                "endOffset": 1579,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1331
+              }
+            }
+          },
+          "effect": {
+            "errors": [
+              "SensorOffline"
+            ],
+            "kind": "Effect",
+            "requirements": [
+              "Sensors",
+              "Sink"
+            ],
+            "span": {
+              "endOffset": 1285,
+              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+              "startOffset": 1241
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "Unit",
+              "span": {
+                "endOffset": 1253,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1249
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "export-first",
+          "params": [
+            {
+              "name": "sensors",
+              "type": {
+                "item": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 1235,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1229
+                  }
+                },
+                "kind": "Array"
+              }
+            },
+            {
+              "name": "limit",
+              "type": {
+                "kind": "Primitive",
+                "name": "Int",
+                "span": {
+                  "endOffset": 1240,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 1237
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 1580,
+          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+          "startOffset": 1288
+        }
+      },
+      {
+        "formIndex": 7,
+        "payload": {
+          "authority": {
+            "capabilities": [
+              "Sensors.read"
+            ]
+          },
+          "body": {
+            "effect": {
+              "errors": [
+                "SensorOffline"
+              ],
+              "kind": "Effect",
+              "requirements": [
+                "Sensors.read"
+              ],
+              "span": {
+                "endOffset": 748,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 694
+              },
+              "success": {
+                "item": {
+                  "kind": "Ref",
+                  "name": "Reading",
+                  "span": {
+                    "endOffset": 715,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 708
+                  }
+                },
+                "kind": "Array"
+              }
+            },
+            "kind": "Pure",
+            "span": {
+              "endOffset": 1004,
+              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+              "startOffset": 798
+            },
+            "value": {
+              "items": [
+                {
+                  "kind": "Var",
+                  "name": "stream-run-collect",
+                  "span": {
+                    "endOffset": 817,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 799
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "stream-filter",
+                      "span": {
+                        "endOffset": 836,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 823
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "stream-map-effect",
+                          "span": {
+                            "endOffset": 861,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 844
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "stream-of",
+                              "span": {
+                                "endOffset": 880,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 871
+                              }
+                            },
+                            {
+                              "kind": "Var",
+                              "name": "sensors",
+                              "span": {
+                                "endOffset": 888,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 881
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 889,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 870
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "fn",
+                              "span": {
+                                "endOffset": 901,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 899
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "sensor",
+                                  "span": {
+                                    "endOffset": 909,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 903
+                                  }
+                                }
+                              ],
+                              "kind": "Vector",
+                              "span": {
+                                "endOffset": 910,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 902
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "Sensors.read",
+                                  "span": {
+                                    "endOffset": 924,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 912
+                                  }
+                                },
+                                {
+                                  "kind": "Var",
+                                  "name": "sensor",
+                                  "span": {
+                                    "endOffset": 931,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 925
+                                  }
+                                }
+                              ],
+                              "kind": "List",
+                              "span": {
+                                "endOffset": 932,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 911
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 933,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 898
+                          }
+                        },
+                        {
+                          "kind": "Literal",
+                          "span": {
+                            "endOffset": 943,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 942
+                          },
+                          "value": 2
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 944,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 843
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "fn",
+                          "span": {
+                            "endOffset": 954,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 952
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "reading",
+                              "span": {
+                                "endOffset": 963,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 956
+                              }
+                            }
+                          ],
+                          "kind": "Vector",
+                          "span": {
+                            "endOffset": 964,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 955
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": ">",
+                              "span": {
+                                "endOffset": 967,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 966
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "get",
+                                  "span": {
+                                    "endOffset": 972,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 969
+                                  }
+                                },
+                                {
+                                  "kind": "Var",
+                                  "name": "reading",
+                                  "span": {
+                                    "endOffset": 980,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 973
+                                  }
+                                },
+                                {
+                                  "kind": "Expr",
+                                  "source": {
+                                    "kind": "Symbol",
+                                    "name": ":celsius"
+                                  },
+                                  "span": {
+                                    "endOffset": 989,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 981
+                                  }
+                                }
+                              ],
+                              "kind": "List",
+                              "span": {
+                                "endOffset": 990,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 968
+                              }
+                            },
+                            {
+                              "kind": "Var",
+                              "name": "threshold",
+                              "span": {
+                                "endOffset": 1000,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 991
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 1001,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 965
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1002,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 951
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 1003,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 822
+                  }
+                }
+              ],
+              "kind": "List",
+              "span": {
+                "endOffset": 1004,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 798
+              }
+            }
+          },
+          "effect": {
+            "errors": [
+              "SensorOffline"
+            ],
+            "kind": "Effect",
+            "requirements": [
+              "Sensors.read"
+            ],
+            "span": {
+              "endOffset": 748,
+              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+              "startOffset": 694
+            },
+            "success": {
+              "item": {
+                "kind": "Ref",
+                "name": "Reading",
+                "span": {
+                  "endOffset": 715,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 708
+                }
+              },
+              "kind": "Array"
+            }
+          },
+          "kind": "EffectDef",
+          "name": "hot-readings",
+          "params": [
+            {
+              "name": "sensors",
+              "type": {
+                "item": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 678,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 672
+                  }
+                },
+                "kind": "Array"
+              }
+            },
+            {
+              "name": "threshold",
+              "type": {
+                "kind": "Primitive",
+                "name": "Float",
+                "span": {
+                  "endOffset": 689,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 684
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 1005,
+          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+          "startOffset": 751
+        }
+      },
+      {
+        "formIndex": 9,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "effect": {
+              "errors": [],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 1044,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1032
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "Int",
+                "span": {
+                  "endOffset": 1043,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 1040
+                }
+              }
+            },
+            "kind": "Pure",
+            "span": {
+              "endOffset": 1197,
+              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+              "startOffset": 1080
+            },
+            "value": {
+              "items": [
+                {
+                  "kind": "Var",
+                  "name": "stream-run-fold",
+                  "span": {
+                    "endOffset": 1096,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1081
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "stream-map",
+                      "span": {
+                        "endOffset": 1112,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1102
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "stream-range",
+                          "span": {
+                            "endOffset": 1126,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1114
+                          }
+                        },
+                        {
+                          "kind": "Literal",
+                          "span": {
+                            "endOffset": 1128,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1127
+                          },
+                          "value": 1
+                        },
+                        {
+                          "kind": "Var",
+                          "name": "n",
+                          "span": {
+                            "endOffset": 1130,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1129
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1131,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1113
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "fn",
+                          "span": {
+                            "endOffset": 1135,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1133
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "i",
+                              "span": {
+                                "endOffset": 1138,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1137
+                              }
+                            }
+                          ],
+                          "kind": "Vector",
+                          "span": {
+                            "endOffset": 1139,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1136
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "*",
+                              "span": {
+                                "endOffset": 1142,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1141
+                              }
+                            },
+                            {
+                              "kind": "Var",
+                              "name": "i",
+                              "span": {
+                                "endOffset": 1144,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1143
+                              }
+                            },
+                            {
+                              "kind": "Var",
+                              "name": "i",
+                              "span": {
+                                "endOffset": 1146,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1145
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 1147,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1140
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1148,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1132
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 1149,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1101
+                  }
+                },
+                {
+                  "kind": "Literal",
+                  "span": {
+                    "endOffset": 1155,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1154
+                  },
+                  "value": 0
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "fn",
+                      "span": {
+                        "endOffset": 1163,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1161
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "total",
+                          "span": {
+                            "endOffset": 1170,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1165
+                          }
+                        },
+                        {
+                          "kind": "Var",
+                          "name": "square",
+                          "span": {
+                            "endOffset": 1177,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1171
+                          }
+                        }
+                      ],
+                      "kind": "Vector",
+                      "span": {
+                        "endOffset": 1178,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1164
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "+",
+                          "span": {
+                            "endOffset": 1181,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1180
+                          }
+                        },
+                        {
+                          "kind": "Var",
+                          "name": "total",
+                          "span": {
+                            "endOffset": 1187,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1182
+                          }
+                        },
+                        {
+                          "kind": "Var",
+                          "name": "square",
+                          "span": {
+                            "endOffset": 1194,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1188
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1195,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1179
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 1196,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1160
+                  }
+                }
+              ],
+              "kind": "List",
+              "span": {
+                "endOffset": 1197,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1080
+              }
+            }
+          },
+          "effect": {
+            "errors": [],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 1044,
+              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+              "startOffset": 1032
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "Int",
+              "span": {
+                "endOffset": 1043,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1040
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "sum-of-squares",
+          "params": [
+            {
+              "name": "n",
+              "type": {
+                "kind": "Primitive",
+                "name": "Int",
+                "span": {
+                  "endOffset": 1031,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 1028
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 1198,
+          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+          "startOffset": 1047
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "kind": "ErrorDef",
+          "name": "SensorOffline",
+          "schema": {
+            "fields": [
+              {
+                "name": "sensor",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 336,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 330
+                  }
+                },
+                "span": {
+                  "endOffset": 336,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 330
+                }
+              }
+            ],
+            "kind": "Struct"
+          }
+        },
+        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 338,
+          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+          "startOffset": 300
+        }
+      },
+      {
+        "formIndex": 5,
+        "payload": {
+          "body": {
+            "items": [
+              {
+                "kind": "Var",
+                "name": "stream-map",
+                "span": {
+                  "endOffset": 576,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 566
+                }
+              },
+              {
+                "items": [
+                  {
+                    "kind": "Var",
+                    "name": "stream-of",
+                    "span": {
+                      "endOffset": 587,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 578
+                    }
+                  },
+                  {
+                    "kind": "Var",
+                    "name": "readings",
+                    "span": {
+                      "endOffset": 596,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 588
+                    }
+                  }
+                ],
+                "kind": "List",
+                "span": {
+                  "endOffset": 597,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 577
+                }
+              },
+              {
+                "items": [
+                  {
+                    "kind": "Var",
+                    "name": "fn",
+                    "span": {
+                      "endOffset": 601,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 599
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "reading",
+                        "span": {
+                          "endOffset": 610,
+                          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                          "startOffset": 603
+                        }
+                      }
+                    ],
+                    "kind": "Vector",
+                    "span": {
+                      "endOffset": 611,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 602
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "get",
+                        "span": {
+                          "endOffset": 616,
+                          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                          "startOffset": 613
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "reading",
+                        "span": {
+                          "endOffset": 624,
+                          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                          "startOffset": 617
+                        }
+                      },
+                      {
+                        "kind": "Expr",
+                        "source": {
+                          "kind": "Symbol",
+                          "name": ":celsius"
+                        },
+                        "span": {
+                          "endOffset": 633,
+                          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                          "startOffset": 625
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 634,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 612
+                    }
+                  }
+                ],
+                "kind": "List",
+                "span": {
+                  "endOffset": 635,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 598
+                }
+              }
+            ],
+            "kind": "List",
+            "span": {
+              "endOffset": 636,
+              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+              "startOffset": 565
+            }
+          },
+          "kind": "FunctionDef",
+          "name": "celsius-values",
+          "params": [
+            {
+              "name": "readings",
+              "type": {
+                "item": {
+                  "kind": "Ref",
+                  "name": "Reading",
+                  "span": {
+                    "endOffset": 500,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 493
+                  }
+                },
+                "kind": "Array"
+              }
+            }
+          ],
+          "returns": {
+            "errors": [],
+            "item": {
+              "kind": "Primitive",
+              "name": "Float",
+              "span": {
+                "endOffset": 515,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 510
+              }
+            },
+            "kind": "Stream",
+            "requirements": [],
+            "span": {
+              "endOffset": 522,
+              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+              "startOffset": 502
+            }
+          }
+        },
+        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 637,
+          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+          "startOffset": 525
+        }
+      },
+      {
+        "formIndex": 0,
+        "payload": {
+          "kind": "SchemaDef",
+          "name": "Reading",
+          "schema": {
+            "fields": [
+              {
+                "name": "sensor",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 282,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 276
+                  }
+                },
+                "span": {
+                  "endOffset": 282,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 276
+                }
+              },
+              {
+                "name": "celsius",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "Float",
+                  "span": {
+                    "endOffset": 297,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 292
+                  }
+                },
+                "span": {
+                  "endOffset": 297,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 292
+                }
+              }
+            ],
+            "kind": "Struct",
+            "span": {
+              "endOffset": 298,
+              "sourceId": "surfaces/effect-typescript/stream-pipeline",
+              "startOffset": 267
+            }
+          }
+        },
+        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 299,
+          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+          "startOffset": 253
+        }
+      },
+      {
+        "formIndex": 2,
+        "payload": {
+          "kind": "ServiceDef",
+          "methods": [
+            {
+              "effect": {
+                "errors": [
+                  "SensorOffline"
+                ],
+                "kind": "Effect",
+                "requirements": [
+                  "Sensors.read"
+                ],
+                "span": {
+                  "endOffset": 410,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 375
+                },
+                "success": {
+                  "kind": "Ref",
+                  "name": "Reading",
+                  "span": {
+                    "endOffset": 390,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 383
+                  }
+                }
+              },
+              "name": "read",
+              "params": [
+                {
+                  "name": "arg0",
+                  "type": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 374,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 368
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "name": "Sensors"
+        },
+        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 413,
+          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+          "startOffset": 339
+        }
+      },
+      {
+        "formIndex": 3,
+        "payload": {
+          "kind": "ServiceDef",
+          "methods": [
+            {
+              "effect": {
+                "errors": [],
+                "kind": "Effect",
+                "requirements": [
+                  "Sink.write"
+                ],
+                "span": {
+                  "endOffset": 461,
+                  "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                  "startOffset": 448
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "Unit",
+                  "span": {
+                    "endOffset": 460,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 456
+                  }
+                }
+              },
+              "name": "write",
+              "params": [
+                {
+                  "name": "arg0",
+                  "type": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 447,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 441
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "name": "Sink"
+        },
+        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+        "span": {
+          "endOffset": 464,
+          "sourceId": "surfaces/effect-typescript/stream-pipeline",
+          "startOffset": 414
+        }
+      }
+    ],
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 258,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 254
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 266,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 259
+              },
+              "value": "Reading"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 275,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 268
+                    },
+                    "value": ":sensor"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 282,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 276
+                    },
+                    "value": "String"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 291,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 283
+                    },
+                    "value": ":celsius"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 297,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 292
+                    },
+                    "value": "Float"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 298,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 267
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 299,
+            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+            "startOffset": 253
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 306,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 301
+              },
+              "value": "error"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 320,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 307
+              },
+              "value": "SensorOffline"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 329,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 322
+                    },
+                    "value": ":sensor"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 336,
+                      "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                      "startOffset": 330
+                    },
+                    "value": "String"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 337,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 321
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 338,
+            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+            "startOffset": 300
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 347,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 340
+              },
+              "value": "service"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 355,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 348
+              },
+              "value": "Sensors"
+            },
+            {
+              "items": [
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 358,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 357
+                  },
+                  "value": ":"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 363,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 359
+                  },
+                  "value": "read"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 367,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 365
+                      },
+                      "value": "->"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 374,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 368
+                      },
+                      "value": "String"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 382,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 376
+                          },
+                          "value": "Effect"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 390,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 383
+                          },
+                          "value": "Reading"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 405,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 392
+                              },
+                              "value": "SensorOffline"
+                            }
+                          ],
+                          "kind": "vector",
+                          "span": {
+                            "endOffset": 406,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 391
+                          }
+                        },
+                        {
+                          "items": [],
+                          "kind": "vector",
+                          "span": {
+                            "endOffset": 409,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 407
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 410,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 375
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 411,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 364
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 412,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 356
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 413,
+            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+            "startOffset": 339
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 422,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 415
+              },
+              "value": "service"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 427,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 423
+              },
+              "value": "Sink"
+            },
+            {
+              "items": [
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 430,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 429
+                  },
+                  "value": ":"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 436,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 431
+                  },
+                  "value": "write"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 440,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 438
+                      },
+                      "value": "->"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 447,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 441
+                      },
+                      "value": "String"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 455,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 449
+                          },
+                          "value": "Effect"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 460,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 456
+                          },
+                          "value": "Unit"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 461,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 448
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 462,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 437
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 463,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 428
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 464,
+            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+            "startOffset": 414
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 467,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 466
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 482,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 468
+              },
+              "value": "celsius-values"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 486,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 484
+                  },
+                  "value": "->"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 492,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 488
+                      },
+                      "value": "List"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 500,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 493
+                      },
+                      "value": "Reading"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 501,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 487
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 509,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 503
+                      },
+                      "value": "Stream"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 515,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 510
+                      },
+                      "value": "Float"
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 518,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 516
+                      }
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 521,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 519
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 522,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 502
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 523,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 483
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 524,
+            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+            "startOffset": 465
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 532,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 526
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 549,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 535
+              },
+              "value": "celsius-values"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 561,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 553
+                  },
+                  "value": "readings"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 562,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 552
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 576,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 566
+                  },
+                  "value": "stream-map"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 587,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 578
+                      },
+                      "value": "stream-of"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 596,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 588
+                      },
+                      "value": "readings"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 597,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 577
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 601,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 599
+                      },
+                      "value": "fn"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 610,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 603
+                          },
+                          "value": "reading"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 611,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 602
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 616,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 613
+                          },
+                          "value": "get"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 624,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 617
+                          },
+                          "value": "reading"
+                        },
+                        {
+                          "kind": "keyword",
+                          "span": {
+                            "endOffset": 633,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 625
+                          },
+                          "value": ":celsius"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 634,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 612
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 635,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 598
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 636,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 565
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 637,
+            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+            "startOffset": 525
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 640,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 639
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 655,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 643
+              },
+              "value": "hot-readings"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 661,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 659
+                  },
+                  "value": "->"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 671,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 667
+                      },
+                      "value": "List"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 678,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 672
+                      },
+                      "value": "String"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 679,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 666
+                  }
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 689,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 684
+                  },
+                  "value": "Float"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 701,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 695
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 707,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 703
+                          },
+                          "value": "List"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 715,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 708
+                          },
+                          "value": "Reading"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 716,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 702
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 731,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 718
+                          },
+                          "value": "SensorOffline"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 732,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 717
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 746,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 734
+                          },
+                          "value": "Sensors.read"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 747,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 733
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 748,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 694
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 749,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 658
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 750,
+            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+            "startOffset": 638
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 758,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 752
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 773,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 761
+              },
+              "value": "hot-readings"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 784,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 777
+                  },
+                  "value": "sensors"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 794,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 785
+                  },
+                  "value": "threshold"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 795,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 776
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 817,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 799
+                  },
+                  "value": "stream-run-collect"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 836,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 823
+                      },
+                      "value": "stream-filter"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 861,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 844
+                          },
+                          "value": "stream-map-effect"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 880,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 871
+                              },
+                              "value": "stream-of"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 888,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 881
+                              },
+                              "value": "sensors"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 889,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 870
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 901,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 899
+                              },
+                              "value": "fn"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 909,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 903
+                                  },
+                                  "value": "sensor"
+                                }
+                              ],
+                              "kind": "vector",
+                              "span": {
+                                "endOffset": 910,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 902
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 924,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 912
+                                  },
+                                  "value": "Sensors.read"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 931,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 925
+                                  },
+                                  "value": "sensor"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 932,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 911
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 933,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 898
+                          }
+                        },
+                        {
+                          "kind": "int",
+                          "span": {
+                            "endOffset": 943,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 942
+                          },
+                          "value": 2
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 944,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 843
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 954,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 952
+                          },
+                          "value": "fn"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 963,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 956
+                              },
+                              "value": "reading"
+                            }
+                          ],
+                          "kind": "vector",
+                          "span": {
+                            "endOffset": 964,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 955
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 967,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 966
+                              },
+                              "value": ">"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 972,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 969
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 980,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 973
+                                  },
+                                  "value": "reading"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "span": {
+                                    "endOffset": 989,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 981
+                                  },
+                                  "value": ":celsius"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 990,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 968
+                              }
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1000,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 991
+                              },
+                              "value": "threshold"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1001,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 965
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1002,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 951
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1003,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 822
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1004,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 798
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1005,
+            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+            "startOffset": 751
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1008,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1007
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1023,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1009
+              },
+              "value": "sum-of-squares"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1027,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1025
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1031,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1028
+                  },
+                  "value": "Int"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1039,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1033
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1043,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1040
+                      },
+                      "value": "Int"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1044,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1032
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1045,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1024
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1046,
+            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+            "startOffset": 1006
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1054,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1048
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1071,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1057
+              },
+              "value": "sum-of-squares"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1076,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1075
+                  },
+                  "value": "n"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1077,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1074
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1096,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1081
+                  },
+                  "value": "stream-run-fold"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1112,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1102
+                      },
+                      "value": "stream-map"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1126,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1114
+                          },
+                          "value": "stream-range"
+                        },
+                        {
+                          "kind": "int",
+                          "span": {
+                            "endOffset": 1128,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1127
+                          },
+                          "value": 1
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1130,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1129
+                          },
+                          "value": "n"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1131,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1113
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1135,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1133
+                          },
+                          "value": "fn"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1138,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1137
+                              },
+                              "value": "i"
+                            }
+                          ],
+                          "kind": "vector",
+                          "span": {
+                            "endOffset": 1139,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1136
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1142,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1141
+                              },
+                              "value": "*"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1144,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1143
+                              },
+                              "value": "i"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1146,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1145
+                              },
+                              "value": "i"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1147,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1140
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1148,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1132
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1149,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1101
+                  }
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 1155,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1154
+                  },
+                  "value": 0
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1163,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1161
+                      },
+                      "value": "fn"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1170,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1165
+                          },
+                          "value": "total"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1177,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1171
+                          },
+                          "value": "square"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1178,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1164
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1181,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1180
+                          },
+                          "value": "+"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1187,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1182
+                          },
+                          "value": "total"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1194,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1188
+                          },
+                          "value": "square"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1195,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1179
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1196,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1160
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1197,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1080
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1198,
+            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+            "startOffset": 1047
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1201,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1200
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1216,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1204
+              },
+              "value": "export-first"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1222,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1220
+                  },
+                  "value": "->"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1228,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1224
+                      },
+                      "value": "List"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1235,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1229
+                      },
+                      "value": "String"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1236,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1223
+                  }
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1240,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1237
+                  },
+                  "value": "Int"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1248,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1242
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1253,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1249
+                      },
+                      "value": "Unit"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1268,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1255
+                          },
+                          "value": "SensorOffline"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1269,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1254
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1278,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1271
+                          },
+                          "value": "Sensors"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1283,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1279
+                          },
+                          "value": "Sink"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1284,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1270
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1285,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1241
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1286,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1219
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1287,
+            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+            "startOffset": 1199
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1295,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1289
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1310,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1298
+              },
+              "value": "export-first"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1321,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1314
+                  },
+                  "value": "sensors"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1327,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1322
+                  },
+                  "value": "limit"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1328,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1313
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1351,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1332
+                  },
+                  "value": "stream-run-for-each"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1368,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1357
+                      },
+                      "value": "stream-take"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1393,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1376
+                          },
+                          "value": "stream-map-effect"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1412,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1403
+                              },
+                              "value": "stream-of"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1420,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1413
+                              },
+                              "value": "sensors"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1421,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1402
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1433,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1431
+                              },
+                              "value": "fn"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1441,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1435
+                                  },
+                                  "value": "sensor"
+                                }
+                              ],
+                              "kind": "vector",
+                              "span": {
+                                "endOffset": 1442,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1434
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1456,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1444
+                                  },
+                                  "value": "Sensors.read"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1463,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1457
+                                  },
+                                  "value": "sensor"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 1464,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1443
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1465,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1430
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1466,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1375
+                      }
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1478,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1473
+                      },
+                      "value": "limit"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1479,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1356
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1487,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1485
+                      },
+                      "value": "fn"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1502,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1495
+                          },
+                          "value": "reading"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1503,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1494
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1521,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1511
+                          },
+                          "value": "Sink.write"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1526,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1523
+                              },
+                              "value": "str"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1531,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1528
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1539,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1532
+                                  },
+                                  "value": "reading"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "span": {
+                                    "endOffset": 1547,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1540
+                                  },
+                                  "value": ":sensor"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 1548,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1527
+                              }
+                            },
+                            {
+                              "kind": "string",
+                              "span": {
+                                "endOffset": 1552,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1549
+                              },
+                              "value": "="
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1557,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1554
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1565,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1558
+                                  },
+                                  "value": "reading"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "span": {
+                                    "endOffset": 1574,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1566
+                                  },
+                                  "value": ":celsius"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 1575,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1553
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1576,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1522
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1577,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1510
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1578,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1484
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1579,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1331
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1580,
+            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+            "startOffset": 1288
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1583,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1582
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1591,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1584
+              },
+              "value": "average"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1595,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1593
+                  },
+                  "value": "->"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1601,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1597
+                      },
+                      "value": "List"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1609,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1602
+                      },
+                      "value": "Reading"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1610,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1596
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1618,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1612
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1624,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1619
+                      },
+                      "value": "Float"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1625,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1611
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1626,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1592
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1627,
+            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+            "startOffset": 1581
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1635,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1629
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1645,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1638
+              },
+              "value": "average"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1657,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1649
+                  },
+                  "value": "readings"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1658,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1648
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1665,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1662
+                  },
+                  "value": "do!"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1683,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1678
+                      },
+                      "value": "total"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1706,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1691
+                          },
+                          "value": "stream-run-fold"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1730,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1716
+                              },
+                              "value": "celsius-values"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1739,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1731
+                              },
+                              "value": "readings"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1740,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1715
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1751,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1750
+                              },
+                              "value": ":"
+                            },
+                            {
+                              "kind": "int",
+                              "span": {
+                                "endOffset": 1753,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1752
+                              },
+                              "value": 0
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1759,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1754
+                              },
+                              "value": "Float"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1760,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1749
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1772,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1770
+                              },
+                              "value": "fn"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1777,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1774
+                                  },
+                                  "value": "sum"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1783,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1778
+                                  },
+                                  "value": "value"
+                                }
+                              ],
+                              "kind": "vector",
+                              "span": {
+                                "endOffset": 1784,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1773
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1787,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1786
+                                  },
+                                  "value": "+"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1791,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1788
+                                  },
+                                  "value": "sum"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1797,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1792
+                                  },
+                                  "value": "value"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 1798,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1785
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1799,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1769
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1800,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1690
+                      }
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 1801,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1670
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1814,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1807
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1818,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1816
+                          },
+                          "value": "if"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1826,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1820
+                              },
+                              "value": "empty?"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1835,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1827
+                              },
+                              "value": "readings"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1836,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1819
+                          }
+                        },
+                        {
+                          "kind": "int",
+                          "span": {
+                            "endOffset": 1838,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1837
+                          },
+                          "value": 0
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1841,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1840
+                              },
+                              "value": "/"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1847,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1842
+                              },
+                              "value": "total"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1854,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1849
+                                  },
+                                  "value": "count"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1863,
+                                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                    "startOffset": 1855
+                                  },
+                                  "value": "readings"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 1864,
+                                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                                "startOffset": 1848
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1865,
+                            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                            "startOffset": 1839
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1866,
+                        "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                        "startOffset": 1815
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1867,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1806
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1868,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1661
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1869,
+            "sourceId": "surfaces/effect-typescript/stream-pipeline",
+            "startOffset": 1628
+          }
+        }
+      ],
+      "diagnostics": []
+    }
+  },
+  "version": 1
+}

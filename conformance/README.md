@@ -1,17 +1,19 @@
 # @forma conformance suites
 
-Shared, implementation-neutral fixtures exercised by **both** Forma engines:
+Implementation-neutral fixtures that pin the behavior of Forma's TypeScript
+engine (`@formalang/ts`, hosted by `@formalang/host`). Forma previously had a
+second, OCaml engine; many stored expectations here were first captured from
+it and are now maintained as reviewed TypeScript expectations. See
+[Retiring the OCaml engine](../docs/engine-consolidation.md).
 
-- `@formalang/ts` — `packages/ts/test/forma-zero.test.ts` (vitest)
-- `@formalang/ocaml` — `packages/ocaml/scripts/forma-zero.mjs` (daemon ABI;
-  wired into `test:ocaml` and runnable alone via `pnpm --filter @formalang/ocaml forma-zero`)
+`forma-zero/` is the smallest of these suites. It runs in
+`packages/ts/test/forma-zero.test.ts` (vitest) and in `pnpm surfaces`. The
+directory contains:
 
-A suite is a directory containing:
-
-- `prelude.lisp` — definitions loaded once, written in the **shared dialect**;
+- `prelude.lisp` — definitions loaded before each case;
 - `cases/<name>.lisp` — one **single top-level expression** per file,
   evaluating to a **scalar** (string, int, or bool) so result comparison never
-  depends on either engine's collection encoding;
+  depends on a collection encoding;
 - `expected.json` — `name → { kind: "string" | "int" | "bool", value }`.
 
 `effect-typescript/` is a TypeScript-target suite. It elaborates Effect
@@ -21,54 +23,53 @@ diagnostics for programs Forma must reject. See its README for how to add a
 case.
 
 `fixtures/` contains the larger reader, typechecker, and canonical-artifact
-corpora used by the native implementation. The Markdown programs in
-`../examples` and the language definitions in `../preludes` complete the
-cross-target corpus.
+corpora. The Markdown programs in `../examples` and the language definitions in
+`../preludes` complete the corpus.
 
-Stored native references live in [`engine-parity/`](engine-parity/README.md),
-[`modules/`](modules/README.md), [`compile-time-modules/`](compile-time-modules/README.md),
+[`surfaces/`](surfaces/README.md) stores normalized parse, expand, typecheck,
+evaluate, and IR outputs for selected cases; `pnpm surfaces` checks TypeScript
+against them. Other stored references live in [`modules/`](modules/README.md),
+[`compile-time-modules/`](compile-time-modules/README.md),
 [`fixtures/canonical-ir/`](fixtures/canonical-ir/README.md), and
-[`corpus-emission/`](corpus-emission/README.md). Their READMEs document capture
-commands and which checks run without OCaml. Capture preserves current behavior;
-it does not extend the language or establish parity outside selected fixtures.
+[`artifacts/`](artifacts/README.md), including the example corpus counts in
+`artifacts/corpus-golden.json`. Their READMEs document which
+TypeScript tests check them and how they are updated. These expectations pin
+current behavior for the selected fixtures; they do not extend the language.
 
 `row-operations/` pins closed-record `Pick`, `Omit`, disjoint `Merge`, and
 tagged payload collisions. Its explicit expectations live in
-`engine-parity/cases.json`, with native snapshots under
-`engine-parity/goldens/row-operations/`. The TypeScript tests and engine parity
-gate check these cases, including author offsets for negative cases.
+`surfaces/cases.json`, with goldens under `surfaces/goldens/row-operations/`.
+The TypeScript tests and `pnpm surfaces` check these cases, including author
+offsets for negative cases.
 
-## The shared dialect (discovered, not designed)
+## Dialect of the forma-zero fixtures
 
-The TS engine is dynamic; the OCaml engine runs HM typechecking on every
-`loadPrelude`/`evaluate`. The intersection that actually runs on both:
+The prelude and cases were written in the intersection of what the dynamic
+TypeScript evaluator and the retired OCaml engine (which ran HM typechecking on
+every load) both accepted. They keep that style, although several of the
+constraints below came from the OCaml engine rather than from TypeScript:
 
 - forms: `define` / `fn` / `let` / `if` / `do` / `cond` / `when` / `not`,
-  plus the collection builtins common to `Builtins.defaultBuiltins` and
-  `eval_builtin*.ml`;
-- **no self-recursion** — the OCaml evaluator's closures cannot see their own
-  binding. Every derivation must be a fold (`reduce` / `map` / `filter` /
-  `flat-map`), which is no accident: it is the kernel's own claim;
-- **no variadic fns** — `& rest` params evaluate on both but are untypeable
-  on the HM engine;
-- **Vector vs List**: vector literals are `Vector`, but polymorphic collection
-  parameters get pinned to `List`; `(concat [...literal...] [])` is the
-  portable List constructor;
+  plus collection builtins from `Builtins.defaultBuiltins`;
+- **no self-recursion** — every derivation is a fold (`reduce` / `map` /
+  `filter` / `flat-map`), which is no accident: it is the kernel's own claim.
+  (The OCaml evaluator's closures could not see their own binding.);
+- **no variadic fns** — `& rest` params were untypeable on the HM engine;
+- **Vector vs List**: `(concat [...literal...] [])` is used as the List
+  constructor, because the HM engine pinned polymorphic collection parameters
+  to `List`;
 - **homogeneous collections only** — query variables are therefore plain
   strings declared in an explicit `vars` list, not tagged values, and
   unification failure is the empty collection (0-or-1-env results), not a
   sentinel;
-- maps with statically-known keyword keys are records on the HM engine; an
+- maps with statically-known keyword keys were records on the HM engine; an
   `assoc` with a runtime string key produces the dynamic map type (see
   `empty-env`);
-- avoid symbols like `e1`/`e2` — the OCaml reader lexes them as malformed
-  number literals.
+- symbols like `e1`/`e2` are avoided because the OCaml reader lexed them as
+  malformed number literals.
 
-The OCaml runner loads the prelude **one top-level form per `loadPrelude`
-request** (REPL-style): the engine generalizes a define's type when storing it
-to the session, but typechecks a multi-form program monomorphically, and the
-prelude relies on let-polymorphism between defines (`member?` is used at
-several item types).
+The TypeScript runners evaluate the prelude and each case as one program with
+the default builtins.
 
 ## forma-zero
 
@@ -84,7 +85,7 @@ executing it.
 fixpoint (admission is idempotent, so extra rounds are no-ops); a real
 substrate iterates to fixpoint.
 
-If a case passes on one engine and fails on the other, that is a **language
-parity bug**, not a kernel bug. If a behavior cannot be expressed here without
-a new builtin, that is the Roots-of-Lisp failure the suite exists to catch —
-see the operational-effects section of the [language guide](../docs/language.md).
+A case that fails after an engine change is a **language regression**, not a
+kernel bug. If a behavior cannot be expressed here without a new builtin, that
+is the Roots-of-Lisp failure the suite exists to catch — see the
+operational-effects section of the [language guide](../docs/language.md).

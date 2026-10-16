@@ -1,4 +1,0 @@
-# dune build cache + native build outputs (dist/ is ignored repo-wide)
-_build/
-*.install
-.merlin

@@ -1,0 +1,5219 @@
+{
+  "id": "effect-typescript/schemas-and-decoding",
+  "outputs": {
+    "effect-ir": [
+      {
+        "formIndex": 10,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "arms": [
+              {
+                "body": {
+                  "effect": {
+                    "errors": [],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 925,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 911
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "Float",
+                      "span": {
+                        "endOffset": 924,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 919
+                      }
+                    }
+                  },
+                  "kind": "Succeed",
+                  "span": {
+                    "endOffset": 1041,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 991
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "*",
+                        "span": {
+                          "endOffset": 1002,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1001
+                        }
+                      },
+                      {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 1007,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1003
+                        },
+                        "value": 3.14
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "get",
+                            "span": {
+                              "endOffset": 1012,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1009
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "c",
+                            "span": {
+                              "endOffset": 1014,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1013
+                            }
+                          },
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":radius"
+                            },
+                            "span": {
+                              "endOffset": 1022,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1015
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1023,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1008
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "get",
+                            "span": {
+                              "endOffset": 1028,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1025
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "c",
+                            "span": {
+                              "endOffset": 1030,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1029
+                            }
+                          },
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":radius"
+                            },
+                            "span": {
+                              "endOffset": 1038,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1031
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1039,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1024
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1040,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1000
+                    }
+                  }
+                },
+                "pattern": {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "Circle",
+                      "span": {
+                        "endOffset": 986,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 976
+                      }
+                    },
+                    {
+                      "kind": "Var",
+                      "name": "c",
+                      "span": {
+                        "endOffset": 985,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 984
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 986,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 976
+                  }
+                },
+                "span": {
+                  "endOffset": 986,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 976
+                }
+              },
+              {
+                "body": {
+                  "effect": {
+                    "errors": [],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 925,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 911
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "Float",
+                      "span": {
+                        "endOffset": 924,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 919
+                      }
+                    }
+                  },
+                  "kind": "Succeed",
+                  "span": {
+                    "endOffset": 1108,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1064
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "*",
+                        "span": {
+                          "endOffset": 1075,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1074
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "get",
+                            "span": {
+                              "endOffset": 1080,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1077
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "r",
+                            "span": {
+                              "endOffset": 1082,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1081
+                            }
+                          },
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":width"
+                            },
+                            "span": {
+                              "endOffset": 1089,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1083
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1090,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1076
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "get",
+                            "span": {
+                              "endOffset": 1095,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1092
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "r",
+                            "span": {
+                              "endOffset": 1097,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1096
+                            }
+                          },
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":height"
+                            },
+                            "span": {
+                              "endOffset": 1105,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1098
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1106,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1091
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1107,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1073
+                    }
+                  }
+                },
+                "pattern": {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "Rectangle",
+                      "span": {
+                        "endOffset": 1059,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1046
+                      }
+                    },
+                    {
+                      "kind": "Var",
+                      "name": "r",
+                      "span": {
+                        "endOffset": 1058,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1057
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 1059,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1046
+                  }
+                },
+                "span": {
+                  "endOffset": 1059,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1046
+                }
+              },
+              {
+                "body": {
+                  "effect": {
+                    "errors": [],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 925,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 911
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "Float",
+                      "span": {
+                        "endOffset": 924,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 919
+                      }
+                    }
+                  },
+                  "kind": "Succeed",
+                  "span": {
+                    "endOffset": 1162,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1129
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "count",
+                        "span": {
+                          "endOffset": 1144,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1139
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "get",
+                            "span": {
+                              "endOffset": 1149,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1146
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "p",
+                            "span": {
+                              "endOffset": 1151,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1150
+                            }
+                          },
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":points"
+                            },
+                            "span": {
+                              "endOffset": 1159,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1152
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1160,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1145
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1161,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1138
+                    }
+                  }
+                },
+                "pattern": {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "Polygon",
+                      "span": {
+                        "endOffset": 1124,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1113
+                      }
+                    },
+                    {
+                      "kind": "Var",
+                      "name": "p",
+                      "span": {
+                        "endOffset": 1123,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1122
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 1124,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1113
+                  }
+                },
+                "span": {
+                  "endOffset": 1124,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1113
+                }
+              }
+            ],
+            "effect": {
+              "errors": [],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 925,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 911
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "Float",
+                "span": {
+                  "endOffset": 924,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 919
+                }
+              }
+            },
+            "kind": "Match",
+            "span": {
+              "endOffset": 1163,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 955
+            },
+            "value": {
+              "kind": "Var",
+              "name": "shape",
+              "span": {
+                "endOffset": 971,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 966
+              }
+            }
+          },
+          "effect": {
+            "errors": [],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 925,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 911
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "Float",
+              "span": {
+                "endOffset": 924,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 919
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "area",
+          "params": [
+            {
+              "name": "shape",
+              "type": {
+                "kind": "Ref",
+                "name": "Shape",
+                "span": {
+                  "endOffset": 910,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 905
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+        "span": {
+          "endOffset": 1164,
+          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+          "startOffset": 928
+        }
+      },
+      {
+        "formIndex": 16,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "bindings": [
+              {
+                "name": "drawing",
+                "span": {
+                  "endOffset": 1673,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1652
+                },
+                "value": {
+                  "args": [
+                    {
+                      "kind": "Var",
+                      "name": "input",
+                      "span": {
+                        "endOffset": 1672,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1667
+                      }
+                    }
+                  ],
+                  "effect": {
+                    "errors": [
+                      "InvalidDrawing"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 1345,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1309
+                    },
+                    "success": {
+                      "kind": "Ref",
+                      "name": "Drawing",
+                      "span": {
+                        "endOffset": 1324,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1317
+                      }
+                    }
+                  },
+                  "kind": "OperationCall",
+                  "operation": "parse-drawing",
+                  "span": {
+                    "endOffset": 1673,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1652
+                  }
+                }
+              },
+              {
+                "name": "size",
+                "span": {
+                  "endOffset": 1718,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1691
+                },
+                "value": {
+                  "args": [
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "get",
+                          "span": {
+                            "endOffset": 1701,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1698
+                          }
+                        },
+                        {
+                          "kind": "Var",
+                          "name": "drawing",
+                          "span": {
+                            "endOffset": 1709,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1702
+                          }
+                        },
+                        {
+                          "kind": "Expr",
+                          "source": {
+                            "kind": "Symbol",
+                            "name": ":shape"
+                          },
+                          "span": {
+                            "endOffset": 1716,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1710
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1717,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1697
+                      }
+                    }
+                  ],
+                  "effect": {
+                    "errors": [],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 925,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 911
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "Float",
+                      "span": {
+                        "endOffset": 924,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 919
+                      }
+                    }
+                  },
+                  "kind": "OperationCall",
+                  "operation": "area",
+                  "span": {
+                    "endOffset": 1718,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1691
+                  }
+                }
+              },
+              {
+                "name": "tone",
+                "span": {
+                  "endOffset": 1765,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1736
+                },
+                "value": {
+                  "args": [
+                    {
+                      "items": [
+                        {
+                          "kind": "Var",
+                          "name": "get",
+                          "span": {
+                            "endOffset": 1748,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1745
+                          }
+                        },
+                        {
+                          "kind": "Var",
+                          "name": "drawing",
+                          "span": {
+                            "endOffset": 1756,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1749
+                          }
+                        },
+                        {
+                          "kind": "Expr",
+                          "source": {
+                            "kind": "Symbol",
+                            "name": ":color"
+                          },
+                          "span": {
+                            "endOffset": 1763,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1757
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 1764,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1744
+                      }
+                    }
+                  ],
+                  "effect": {
+                    "errors": [],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 1200,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1185
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "String",
+                      "span": {
+                        "endOffset": 1199,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1193
+                      }
+                    }
+                  },
+                  "kind": "OperationCall",
+                  "operation": "warmth",
+                  "span": {
+                    "endOffset": 1765,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1736
+                  }
+                }
+              },
+              {
+                "name": "label",
+                "pure": true,
+                "span": {
+                  "endOffset": 1810,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1790
+                },
+                "value": {
+                  "effect": {
+                    "errors": [
+                      "InvalidDrawing"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 1579,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1544
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "String",
+                      "span": {
+                        "endOffset": 1558,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1552
+                      }
+                    }
+                  },
+                  "kind": "Pure",
+                  "span": {
+                    "endOffset": 1810,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1790
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "get",
+                        "span": {
+                          "endOffset": 1794,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1791
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "drawing",
+                        "span": {
+                          "endOffset": 1802,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1795
+                        }
+                      },
+                      {
+                        "kind": "Expr",
+                        "source": {
+                          "kind": "Symbol",
+                          "name": ":label"
+                        },
+                        "span": {
+                          "endOffset": 1809,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1803
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1810,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1790
+                    }
+                  }
+                }
+              }
+            ],
+            "body": {
+              "effect": {
+                "errors": [
+                  "InvalidDrawing"
+                ],
+                "kind": "Effect",
+                "requirements": [],
+                "span": {
+                  "endOffset": 1579,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1544
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 1558,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1552
+                  }
+                }
+              },
+              "kind": "Succeed",
+              "span": {
+                "endOffset": 2045,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1817
+              },
+              "value": {
+                "items": [
+                  {
+                    "kind": "Var",
+                    "name": "str",
+                    "span": {
+                      "endOffset": 1836,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1833
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "get",
+                        "span": {
+                          "endOffset": 1849,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1846
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "drawing",
+                        "span": {
+                          "endOffset": 1857,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1850
+                        }
+                      },
+                      {
+                        "kind": "Expr",
+                        "source": {
+                          "kind": "Symbol",
+                          "name": ":title"
+                        },
+                        "span": {
+                          "endOffset": 1864,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1858
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1865,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1845
+                    }
+                  },
+                  {
+                    "kind": "Literal",
+                    "span": {
+                      "endOffset": 1878,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1874
+                    },
+                    "value": ": "
+                  },
+                  {
+                    "kind": "Var",
+                    "name": "tone",
+                    "span": {
+                      "endOffset": 1891,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1887
+                    }
+                  },
+                  {
+                    "kind": "Literal",
+                    "span": {
+                      "endOffset": 1903,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1900
+                    },
+                    "value": " "
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "get",
+                        "span": {
+                          "endOffset": 1916,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1913
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "get",
+                            "span": {
+                              "endOffset": 1921,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1918
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "drawing",
+                            "span": {
+                              "endOffset": 1929,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1922
+                            }
+                          },
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":shape"
+                            },
+                            "span": {
+                              "endOffset": 1936,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 1930
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1937,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1917
+                        }
+                      },
+                      {
+                        "kind": "Expr",
+                        "source": {
+                          "kind": "Symbol",
+                          "name": ":kind"
+                        },
+                        "span": {
+                          "endOffset": 1943,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1938
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1944,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1912
+                    }
+                  },
+                  {
+                    "kind": "Literal",
+                    "span": {
+                      "endOffset": 1964,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1953
+                    },
+                    "value": " of area "
+                  },
+                  {
+                    "kind": "Var",
+                    "name": "size",
+                    "span": {
+                      "endOffset": 1977,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1973
+                    }
+                  },
+                  {
+                    "kind": "Literal",
+                    "span": {
+                      "endOffset": 1990,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1986
+                    },
+                    "value": " ["
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "get-or-else",
+                        "span": {
+                          "endOffset": 2011,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 2000
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "label",
+                        "span": {
+                          "endOffset": 2017,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 2012
+                        }
+                      },
+                      {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 2030,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 2018
+                        },
+                        "value": "unlabelled"
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 2031,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1999
+                    }
+                  },
+                  {
+                    "kind": "Literal",
+                    "span": {
+                      "endOffset": 2043,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 2040
+                    },
+                    "value": "]"
+                  }
+                ],
+                "kind": "List",
+                "span": {
+                  "endOffset": 2044,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1832
+                }
+              }
+            },
+            "effect": {
+              "errors": [
+                "InvalidDrawing"
+              ],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 1579,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1544
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1558,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1552
+                }
+              }
+            },
+            "kind": "Do",
+            "span": {
+              "endOffset": 2046,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 1621
+            }
+          },
+          "effect": {
+            "errors": [
+              "InvalidDrawing"
+            ],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 1579,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 1544
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "String",
+              "span": {
+                "endOffset": 1558,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1552
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "describe-drawing",
+          "params": [
+            {
+              "name": "input",
+              "type": {
+                "kind": "Primitive",
+                "name": "Json",
+                "span": {
+                  "endOffset": 1543,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1539
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+        "span": {
+          "endOffset": 2047,
+          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+          "startOffset": 1582
+        }
+      },
+      {
+        "formIndex": 14,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "binding": "_",
+            "body": {
+              "args": [
+                {
+                  "kind": "TypeArg",
+                  "span": {
+                    "endOffset": 1410,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1403
+                  },
+                  "type": {
+                    "kind": "Ref",
+                    "name": "Drawing",
+                    "span": {
+                      "endOffset": 1410,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1403
+                    }
+                  }
+                },
+                {
+                  "kind": "Var",
+                  "name": "input",
+                  "span": {
+                    "endOffset": 1416,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1411
+                  }
+                }
+              ],
+              "effect": {
+                "errors": [
+                  "InvalidDrawing"
+                ],
+                "kind": "Effect",
+                "requirements": [],
+                "span": {
+                  "endOffset": 1345,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1309
+                },
+                "success": {
+                  "kind": "Ref",
+                  "name": "Drawing",
+                  "span": {
+                    "endOffset": 1324,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1317
+                  }
+                }
+              },
+              "kind": "Combinator",
+              "name": "decode",
+              "span": {
+                "endOffset": 1417,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1395
+              }
+            },
+            "effect": {
+              "errors": [
+                "InvalidDrawing"
+              ],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 1345,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1309
+              },
+              "success": {
+                "kind": "Ref",
+                "name": "Drawing",
+                "span": {
+                  "endOffset": 1324,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1317
+                }
+              }
+            },
+            "errorType": "SchemaError",
+            "handler": {
+              "effect": {
+                "errors": [
+                  "InvalidDrawing"
+                ],
+                "kind": "Effect",
+                "requirements": [],
+                "span": {
+                  "endOffset": 1345,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1309
+                },
+                "success": {
+                  "kind": "Ref",
+                  "name": "Drawing",
+                  "span": {
+                    "endOffset": 1324,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1317
+                  }
+                }
+              },
+              "error": {
+                "errorType": "InvalidDrawing",
+                "kind": "Error",
+                "payload": {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "Expr",
+                        "source": {
+                          "kind": "Symbol",
+                          "name": ":message"
+                        },
+                        "span": {
+                          "endOffset": 1473,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1465
+                        }
+                      },
+                      "value": {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 1509,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 1474
+                        },
+                        "value": "drawing does not match the schema"
+                      }
+                    }
+                  ],
+                  "kind": "Record",
+                  "span": {
+                    "endOffset": 1510,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1464
+                  }
+                },
+                "span": {
+                  "endOffset": 1511,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1448
+                }
+              },
+              "kind": "Fail",
+              "span": {
+                "endOffset": 1512,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1442
+              }
+            },
+            "kind": "Catch",
+            "span": {
+              "endOffset": 1513,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 1384
+            }
+          },
+          "effect": {
+            "errors": [
+              "InvalidDrawing"
+            ],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 1345,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 1309
+            },
+            "success": {
+              "kind": "Ref",
+              "name": "Drawing",
+              "span": {
+                "endOffset": 1324,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1317
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "parse-drawing",
+          "params": [
+            {
+              "name": "input",
+              "type": {
+                "kind": "Primitive",
+                "name": "Json",
+                "span": {
+                  "endOffset": 1308,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1304
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+        "span": {
+          "endOffset": 1514,
+          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+          "startOffset": 1348
+        }
+      },
+      {
+        "formIndex": 12,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "arms": [
+              {
+                "body": {
+                  "effect": {
+                    "errors": [],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 1200,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1185
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "String",
+                      "span": {
+                        "endOffset": 1199,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1193
+                      }
+                    }
+                  },
+                  "kind": "Succeed",
+                  "span": {
+                    "endOffset": 1261,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1245
+                  },
+                  "value": {
+                    "kind": "Literal",
+                    "span": {
+                      "endOffset": 1260,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1254
+                    },
+                    "value": "warm"
+                  }
+                },
+                "pattern": {
+                  "kind": "Literal",
+                  "span": {
+                    "endOffset": 1244,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1239
+                  },
+                  "value": "red"
+                },
+                "span": {
+                  "endOffset": 1244,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1239
+                }
+              },
+              {
+                "body": {
+                  "effect": {
+                    "errors": [],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 1200,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1185
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "String",
+                      "span": {
+                        "endOffset": 1199,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1193
+                      }
+                    }
+                  },
+                  "kind": "Succeed",
+                  "span": {
+                    "endOffset": 1280,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1264
+                  },
+                  "value": {
+                    "kind": "Literal",
+                    "span": {
+                      "endOffset": 1279,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 1273
+                    },
+                    "value": "cool"
+                  }
+                },
+                "pattern": {
+                  "kind": "Var",
+                  "name": "_",
+                  "span": {
+                    "endOffset": 1263,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1262
+                  }
+                },
+                "span": {
+                  "endOffset": 1263,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1262
+                }
+              }
+            ],
+            "effect": {
+              "errors": [],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 1200,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1185
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1199,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1193
+                }
+              }
+            },
+            "kind": "Match",
+            "span": {
+              "endOffset": 1281,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 1226
+            },
+            "value": {
+              "kind": "Var",
+              "name": "color",
+              "span": {
+                "endOffset": 1238,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1233
+              }
+            }
+          },
+          "effect": {
+            "errors": [],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 1200,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 1185
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "String",
+              "span": {
+                "endOffset": 1199,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1193
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "warmth",
+          "params": [
+            {
+              "name": "color",
+              "type": {
+                "kind": "Ref",
+                "name": "Color",
+                "span": {
+                  "endOffset": 1184,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 1179
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+        "span": {
+          "endOffset": 1282,
+          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+          "startOffset": 1203
+        }
+      },
+      {
+        "formIndex": 6,
+        "payload": {
+          "kind": "ErrorDef",
+          "name": "InvalidDrawing",
+          "schema": {
+            "fields": [
+              {
+                "name": "message",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 682,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 676
+                  }
+                },
+                "span": {
+                  "endOffset": 682,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 676
+                }
+              }
+            ],
+            "kind": "Struct"
+          }
+        },
+        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+        "span": {
+          "endOffset": 684,
+          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+          "startOffset": 644
+        }
+      },
+      {
+        "formIndex": 8,
+        "payload": {
+          "body": {
+            "entries": [
+              {
+                "key": {
+                  "kind": "Expr",
+                  "source": {
+                    "kind": "Symbol",
+                    "name": ":id"
+                  },
+                  "span": {
+                    "endOffset": 774,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 771
+                  }
+                },
+                "value": {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "ShapeId",
+                      "span": {
+                        "endOffset": 783,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 776
+                      }
+                    },
+                    {
+                      "kind": "Var",
+                      "name": "id",
+                      "span": {
+                        "endOffset": 786,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 784
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 787,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 775
+                  }
+                }
+              },
+              {
+                "key": {
+                  "kind": "Expr",
+                  "source": {
+                    "kind": "Symbol",
+                    "name": ":shape"
+                  },
+                  "span": {
+                    "endOffset": 798,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 792
+                  }
+                },
+                "value": {
+                  "entries": [
+                    {
+                      "key": {
+                        "kind": "Expr",
+                        "source": {
+                          "kind": "Symbol",
+                          "name": ":kind"
+                        },
+                        "span": {
+                          "endOffset": 805,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 800
+                        }
+                      },
+                      "value": {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 814,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 806
+                        },
+                        "value": "Circle"
+                      }
+                    },
+                    {
+                      "key": {
+                        "kind": "Expr",
+                        "source": {
+                          "kind": "Symbol",
+                          "name": ":radius"
+                        },
+                        "span": {
+                          "endOffset": 822,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 815
+                        }
+                      },
+                      "value": {
+                        "kind": "Var",
+                        "name": "radius",
+                        "span": {
+                          "endOffset": 829,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 823
+                        }
+                      }
+                    }
+                  ],
+                  "kind": "Record",
+                  "span": {
+                    "endOffset": 830,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 799
+                  }
+                }
+              },
+              {
+                "key": {
+                  "kind": "Expr",
+                  "source": {
+                    "kind": "Symbol",
+                    "name": ":color"
+                  },
+                  "span": {
+                    "endOffset": 841,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 835
+                  }
+                },
+                "value": {
+                  "kind": "Literal",
+                  "span": {
+                    "endOffset": 847,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 842
+                  },
+                  "value": "red"
+                }
+              },
+              {
+                "key": {
+                  "kind": "Expr",
+                  "source": {
+                    "kind": "Symbol",
+                    "name": ":tags"
+                  },
+                  "span": {
+                    "endOffset": 857,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 852
+                  }
+                },
+                "value": {
+                  "entries": [],
+                  "kind": "Record",
+                  "span": {
+                    "endOffset": 860,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 858
+                  }
+                }
+              },
+              {
+                "key": {
+                  "kind": "Expr",
+                  "source": {
+                    "kind": "Symbol",
+                    "name": ":title"
+                  },
+                  "span": {
+                    "endOffset": 871,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 865
+                  }
+                },
+                "value": {
+                  "items": [
+                    {
+                      "kind": "Var",
+                      "name": "str",
+                      "span": {
+                        "endOffset": 876,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 873
+                      }
+                    },
+                    {
+                      "kind": "Literal",
+                      "span": {
+                        "endOffset": 886,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 877
+                      },
+                      "value": "circle "
+                    },
+                    {
+                      "kind": "Var",
+                      "name": "id",
+                      "span": {
+                        "endOffset": 889,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 887
+                      }
+                    }
+                  ],
+                  "kind": "List",
+                  "span": {
+                    "endOffset": 890,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 872
+                  }
+                }
+              }
+            ],
+            "kind": "Record",
+            "span": {
+              "endOffset": 891,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 765
+            }
+          },
+          "kind": "FunctionDef",
+          "name": "make-circle",
+          "params": [
+            {
+              "name": "id",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 710,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 704
+                }
+              }
+            },
+            {
+              "name": "radius",
+              "type": {
+                "kind": "Primitive",
+                "name": "Float",
+                "span": {
+                  "endOffset": 716,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 711
+                }
+              }
+            }
+          ],
+          "returns": {
+            "kind": "Ref",
+            "name": "Drawing",
+            "span": {
+              "endOffset": 724,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 717
+            }
+          }
+        },
+        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+        "span": {
+          "endOffset": 892,
+          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+          "startOffset": 727
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "kind": "SchemaDef",
+          "name": "Color",
+          "schema": {
+            "kind": "Literal",
+            "span": {
+              "endOffset": 246,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 221
+            },
+            "values": [
+              "red",
+              "green",
+              "blue"
+            ]
+          }
+        },
+        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+        "span": {
+          "endOffset": 247,
+          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+          "startOffset": 209
+        }
+      },
+      {
+        "formIndex": 5,
+        "payload": {
+          "kind": "SchemaDef",
+          "name": "Drawing",
+          "schema": {
+            "fields": [
+              {
+                "name": "id",
+                "schema": {
+                  "kind": "Ref",
+                  "name": "ShapeId",
+                  "span": {
+                    "endOffset": 503,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 496
+                  }
+                },
+                "span": {
+                  "endOffset": 503,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 496
+                }
+              },
+              {
+                "name": "shape",
+                "schema": {
+                  "kind": "Ref",
+                  "name": "Shape",
+                  "span": {
+                    "endOffset": 520,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 515
+                  }
+                },
+                "span": {
+                  "endOffset": 520,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 515
+                }
+              },
+              {
+                "name": "color",
+                "schema": {
+                  "kind": "Ref",
+                  "name": "Color",
+                  "span": {
+                    "endOffset": 537,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 532
+                  }
+                },
+                "span": {
+                  "endOffset": 537,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 532
+                }
+              },
+              {
+                "name": "label",
+                "schema": {
+                  "item": {
+                    "kind": "Ref",
+                    "name": "Label",
+                    "span": {
+                      "endOffset": 562,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 557
+                    }
+                  },
+                  "kind": "Optional",
+                  "span": {
+                    "endOffset": 563,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 549
+                  }
+                },
+                "span": {
+                  "endOffset": 563,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 549
+                }
+              },
+              {
+                "name": "tags",
+                "schema": {
+                  "key": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 585,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 579
+                    }
+                  },
+                  "kind": "Map",
+                  "span": {
+                    "endOffset": 593,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 574
+                  },
+                  "value": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 592,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 586
+                    }
+                  }
+                },
+                "span": {
+                  "endOffset": 593,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 574
+                }
+              },
+              {
+                "name": "title",
+                "schema": {
+                  "kind": "Annotated",
+                  "metadata": {
+                    "doc": "Human readable title"
+                  },
+                  "schema": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 641,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 605
+                    }
+                  },
+                  "span": {
+                    "endOffset": 641,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 605
+                  }
+                },
+                "span": {
+                  "endOffset": 641,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 605
+                }
+              }
+            ],
+            "kind": "Struct",
+            "span": {
+              "endOffset": 642,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 486
+            }
+          }
+        },
+        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+        "span": {
+          "endOffset": 643,
+          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+          "startOffset": 468
+        }
+      },
+      {
+        "formIndex": 4,
+        "payload": {
+          "kind": "SchemaDef",
+          "name": "Label",
+          "schema": {
+            "kind": "Union",
+            "span": {
+              "endOffset": 466,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 448
+            },
+            "variants": [
+              {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 461,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 455
+                }
+              },
+              {
+                "kind": "Primitive",
+                "name": "Int",
+                "span": {
+                  "endOffset": 465,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 462
+                }
+              }
+            ]
+          }
+        },
+        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+        "span": {
+          "endOffset": 467,
+          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+          "startOffset": 436
+        }
+      },
+      {
+        "formIndex": 2,
+        "payload": {
+          "kind": "SchemaDef",
+          "name": "Point",
+          "schema": {
+            "items": [
+              {
+                "kind": "Primitive",
+                "name": "Float",
+                "span": {
+                  "endOffset": 272,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 267
+                }
+              },
+              {
+                "kind": "Primitive",
+                "name": "Float",
+                "span": {
+                  "endOffset": 278,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 273
+                }
+              }
+            ],
+            "kind": "Tuple",
+            "span": {
+              "endOffset": 279,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 260
+            }
+          }
+        },
+        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+        "span": {
+          "endOffset": 280,
+          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+          "startOffset": 248
+        }
+      },
+      {
+        "formIndex": 3,
+        "payload": {
+          "kind": "SchemaDef",
+          "name": "Shape",
+          "schema": {
+            "discriminator": "kind",
+            "kind": "TaggedUnion",
+            "span": {
+              "endOffset": 434,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 297
+            },
+            "variants": [
+              {
+                "schema": {
+                  "fields": [
+                    {
+                      "name": "radius",
+                      "schema": {
+                        "kind": "Primitive",
+                        "name": "Float",
+                        "span": {
+                          "endOffset": 349,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 344
+                        }
+                      },
+                      "span": {
+                        "endOffset": 349,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 344
+                      }
+                    }
+                  ],
+                  "kind": "Struct",
+                  "span": {
+                    "endOffset": 350,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 335
+                  }
+                },
+                "span": {
+                  "endOffset": 351,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 327
+                },
+                "tag": "Circle"
+              },
+              {
+                "schema": {
+                  "fields": [
+                    {
+                      "name": "width",
+                      "schema": {
+                        "kind": "Primitive",
+                        "name": "Float",
+                        "span": {
+                          "endOffset": 380,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 375
+                        }
+                      },
+                      "span": {
+                        "endOffset": 380,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 375
+                      }
+                    },
+                    {
+                      "name": "height",
+                      "schema": {
+                        "kind": "Primitive",
+                        "name": "Float",
+                        "span": {
+                          "endOffset": 394,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 389
+                        }
+                      },
+                      "span": {
+                        "endOffset": 394,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 389
+                      }
+                    }
+                  ],
+                  "kind": "Struct",
+                  "span": {
+                    "endOffset": 395,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 367
+                  }
+                },
+                "span": {
+                  "endOffset": 396,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 356
+                },
+                "tag": "Rectangle"
+              },
+              {
+                "schema": {
+                  "fields": [
+                    {
+                      "name": "points",
+                      "schema": {
+                        "item": {
+                          "kind": "Ref",
+                          "name": "Point",
+                          "span": {
+                            "endOffset": 430,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 425
+                          }
+                        },
+                        "kind": "Array",
+                        "span": {
+                          "endOffset": 431,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 419
+                        }
+                      },
+                      "span": {
+                        "endOffset": 431,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 419
+                      }
+                    }
+                  ],
+                  "kind": "Struct",
+                  "span": {
+                    "endOffset": 432,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 410
+                  }
+                },
+                "span": {
+                  "endOffset": 433,
+                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                  "startOffset": 401
+                },
+                "tag": "Polygon"
+              }
+            ]
+          }
+        },
+        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+        "span": {
+          "endOffset": 435,
+          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+          "startOffset": 281
+        }
+      },
+      {
+        "formIndex": 0,
+        "payload": {
+          "kind": "SchemaDef",
+          "name": "ShapeId",
+          "schema": {
+            "kind": "Brand",
+            "name": "ShapeId",
+            "schema": {
+              "kind": "Primitive",
+              "name": "String",
+              "span": {
+                "endOffset": 206,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 200
+              }
+            },
+            "span": {
+              "endOffset": 207,
+              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+              "startOffset": 193
+            }
+          }
+        },
+        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+        "span": {
+          "endOffset": 208,
+          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+          "startOffset": 179
+        }
+      }
+    ],
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 184,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 180
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 192,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 185
+              },
+              "value": "ShapeId"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 199,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 194
+                  },
+                  "value": "Brand"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 206,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 200
+                  },
+                  "value": "String"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 207,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 193
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 208,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 179
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 214,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 210
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 220,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 215
+              },
+              "value": "Color"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 227,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 222
+                  },
+                  "value": "Union"
+                },
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 232,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 228
+                  },
+                  "value": ":red"
+                },
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 239,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 233
+                  },
+                  "value": ":green"
+                },
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 245,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 240
+                  },
+                  "value": ":blue"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 246,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 221
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 247,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 209
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 253,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 249
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 259,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 254
+              },
+              "value": "Point"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 266,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 261
+                  },
+                  "value": "Tuple"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 272,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 267
+                  },
+                  "value": "Float"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 278,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 273
+                  },
+                  "value": "Float"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 279,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 260
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 280,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 248
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 286,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 282
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 294,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 289
+              },
+              "value": "Shape"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 304,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 298
+                  },
+                  "value": "Tagged"
+                },
+                {
+                  "kind": "keyword",
+                  "span": {
+                    "endOffset": 313,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 309
+                  },
+                  "value": ":tag"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 322,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 318
+                  },
+                  "value": "kind"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 334,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 328
+                      },
+                      "value": "Circle"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 343,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 336
+                            },
+                            "value": ":radius"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 349,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 344
+                            },
+                            "value": "Float"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 350,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 335
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 351,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 327
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 366,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 357
+                      },
+                      "value": "Rectangle"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 374,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 368
+                            },
+                            "value": ":width"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 380,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 375
+                            },
+                            "value": "Float"
+                          }
+                        },
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 388,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 381
+                            },
+                            "value": ":height"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 394,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 389
+                            },
+                            "value": "Float"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 395,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 367
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 396,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 356
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 409,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 402
+                      },
+                      "value": "Polygon"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 418,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 411
+                            },
+                            "value": ":points"
+                          },
+                          "value": {
+                            "items": [
+                              {
+                                "kind": "symbol",
+                                "span": {
+                                  "endOffset": 424,
+                                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                  "startOffset": 420
+                                },
+                                "value": "List"
+                              },
+                              {
+                                "kind": "symbol",
+                                "span": {
+                                  "endOffset": 430,
+                                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                  "startOffset": 425
+                                },
+                                "value": "Point"
+                              }
+                            ],
+                            "kind": "list",
+                            "span": {
+                              "endOffset": 431,
+                              "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                              "startOffset": 419
+                            }
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 432,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 410
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 433,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 401
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 434,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 297
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 435,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 281
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 441,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 437
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 447,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 442
+              },
+              "value": "Label"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 454,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 449
+                  },
+                  "value": "Union"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 461,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 455
+                  },
+                  "value": "String"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 465,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 462
+                  },
+                  "value": "Int"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 466,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 448
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 467,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 436
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 473,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 469
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 483,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 476
+              },
+              "value": "Drawing"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 495,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 492
+                    },
+                    "value": ":id"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 503,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 496
+                    },
+                    "value": "ShapeId"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 514,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 508
+                    },
+                    "value": ":shape"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 520,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 515
+                    },
+                    "value": "Shape"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 531,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 525
+                    },
+                    "value": ":color"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 537,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 532
+                    },
+                    "value": "Color"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 548,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 542
+                    },
+                    "value": ":label"
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 556,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 550
+                        },
+                        "value": "Option"
+                      },
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 562,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 557
+                        },
+                        "value": "Label"
+                      }
+                    ],
+                    "kind": "list",
+                    "span": {
+                      "endOffset": 563,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 549
+                    }
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 573,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 568
+                    },
+                    "value": ":tags"
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 578,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 575
+                        },
+                        "value": "Map"
+                      },
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 585,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 579
+                        },
+                        "value": "String"
+                      },
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 592,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 586
+                        },
+                        "value": "String"
+                      }
+                    ],
+                    "kind": "list",
+                    "span": {
+                      "endOffset": 593,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 574
+                    }
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 604,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 598
+                    },
+                    "value": ":title"
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 612,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 606
+                        },
+                        "value": "String"
+                      },
+                      {
+                        "kind": "keyword",
+                        "span": {
+                          "endOffset": 617,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 613
+                        },
+                        "value": ":doc"
+                      },
+                      {
+                        "kind": "string",
+                        "span": {
+                          "endOffset": 640,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 618
+                        },
+                        "value": "Human readable title"
+                      }
+                    ],
+                    "kind": "list",
+                    "span": {
+                      "endOffset": 641,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 605
+                    }
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 642,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 486
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 643,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 468
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 650,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 645
+              },
+              "value": "error"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 665,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 651
+              },
+              "value": "InvalidDrawing"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 675,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 667
+                    },
+                    "value": ":message"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 682,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 676
+                    },
+                    "value": "String"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 683,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 666
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 684,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 644
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 687,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 686
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 699,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 688
+              },
+              "value": "make-circle"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 703,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 701
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 710,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 704
+                  },
+                  "value": "String"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 716,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 711
+                  },
+                  "value": "Float"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 724,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 717
+                  },
+                  "value": "Drawing"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 725,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 700
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 726,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 685
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 734,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 728
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 748,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 737
+              },
+              "value": "make-circle"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 754,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 752
+                  },
+                  "value": "id"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 761,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 755
+                  },
+                  "value": "radius"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 762,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 751
+              }
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 774,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 771
+                    },
+                    "value": ":id"
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 783,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 776
+                        },
+                        "value": "ShapeId"
+                      },
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 786,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 784
+                        },
+                        "value": "id"
+                      }
+                    ],
+                    "kind": "list",
+                    "span": {
+                      "endOffset": 787,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 775
+                    }
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 798,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 792
+                    },
+                    "value": ":shape"
+                  },
+                  "value": {
+                    "entries": [
+                      {
+                        "key": {
+                          "kind": "keyword",
+                          "span": {
+                            "endOffset": 805,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 800
+                          },
+                          "value": ":kind"
+                        },
+                        "value": {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 814,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 806
+                          },
+                          "value": "Circle"
+                        }
+                      },
+                      {
+                        "key": {
+                          "kind": "keyword",
+                          "span": {
+                            "endOffset": 822,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 815
+                          },
+                          "value": ":radius"
+                        },
+                        "value": {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 829,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 823
+                          },
+                          "value": "radius"
+                        }
+                      }
+                    ],
+                    "kind": "map",
+                    "span": {
+                      "endOffset": 830,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 799
+                    }
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 841,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 835
+                    },
+                    "value": ":color"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "span": {
+                      "endOffset": 847,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 842
+                    },
+                    "value": "red"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 857,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 852
+                    },
+                    "value": ":tags"
+                  },
+                  "value": {
+                    "entries": [],
+                    "kind": "map",
+                    "span": {
+                      "endOffset": 860,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 858
+                    }
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 871,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 865
+                    },
+                    "value": ":title"
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 876,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 873
+                        },
+                        "value": "str"
+                      },
+                      {
+                        "kind": "string",
+                        "span": {
+                          "endOffset": 886,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 877
+                        },
+                        "value": "circle "
+                      },
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 889,
+                          "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                          "startOffset": 887
+                        },
+                        "value": "id"
+                      }
+                    ],
+                    "kind": "list",
+                    "span": {
+                      "endOffset": 890,
+                      "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                      "startOffset": 872
+                    }
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 891,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 765
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 892,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 727
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 895,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 894
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 900,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 896
+              },
+              "value": "area"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 904,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 902
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 910,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 905
+                  },
+                  "value": "Shape"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 918,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 912
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 924,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 919
+                      },
+                      "value": "Float"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 925,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 911
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 926,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 901
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 927,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 893
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 935,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 929
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 942,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 938
+              },
+              "value": "area"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 951,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 946
+                  },
+                  "value": "shape"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 952,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 945
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 961,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 956
+                  },
+                  "value": "match"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 971,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 966
+                  },
+                  "value": "shape"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 983,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 977
+                      },
+                      "value": "Circle"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 985,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 984
+                      },
+                      "value": "c"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 986,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 976
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 999,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 992
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1002,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1001
+                          },
+                          "value": "*"
+                        },
+                        {
+                          "kind": "float",
+                          "span": {
+                            "endOffset": 1007,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1003
+                          },
+                          "value": 3.14
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1012,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1009
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1014,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1013
+                              },
+                              "value": "c"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1022,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1015
+                              },
+                              "value": ":radius"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1023,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1008
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1028,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1025
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1030,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1029
+                              },
+                              "value": "c"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1038,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1031
+                              },
+                              "value": ":radius"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1039,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1024
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1040,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1000
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1041,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 991
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1056,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1047
+                      },
+                      "value": "Rectangle"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1058,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1057
+                      },
+                      "value": "r"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1059,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1046
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1072,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1065
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1075,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1074
+                          },
+                          "value": "*"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1080,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1077
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1082,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1081
+                              },
+                              "value": "r"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1089,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1083
+                              },
+                              "value": ":width"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1090,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1076
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1095,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1092
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1097,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1096
+                              },
+                              "value": "r"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1105,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1098
+                              },
+                              "value": ":height"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1106,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1091
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1107,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1073
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1108,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1064
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1121,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1114
+                      },
+                      "value": "Polygon"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1123,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1122
+                      },
+                      "value": "p"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1124,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1113
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1137,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1130
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1144,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1139
+                          },
+                          "value": "count"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1149,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1146
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1151,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1150
+                              },
+                              "value": "p"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1159,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1152
+                              },
+                              "value": ":points"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1160,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1145
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1161,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1138
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1162,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1129
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1163,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 955
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1164,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 928
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1167,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1166
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1174,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1168
+              },
+              "value": "warmth"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1178,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1176
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1184,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1179
+                  },
+                  "value": "Color"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1192,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1186
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1199,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1193
+                      },
+                      "value": "String"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1200,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1185
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1201,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1175
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1202,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 1165
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1210,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1204
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1217,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1211
+              },
+              "value": "warmth"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1224,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1219
+                  },
+                  "value": "color"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1225,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1218
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1232,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1227
+                  },
+                  "value": "match"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1238,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1233
+                  },
+                  "value": "color"
+                },
+                {
+                  "kind": "string",
+                  "span": {
+                    "endOffset": 1244,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1239
+                  },
+                  "value": "red"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1253,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1246
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "kind": "string",
+                      "span": {
+                        "endOffset": 1260,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1254
+                      },
+                      "value": "warm"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1261,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1245
+                  }
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1263,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1262
+                  },
+                  "value": "_"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1272,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1265
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "kind": "string",
+                      "span": {
+                        "endOffset": 1279,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1273
+                      },
+                      "value": "cool"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1280,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1264
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1281,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1226
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1282,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 1203
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1285,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1284
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1299,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1286
+              },
+              "value": "parse-drawing"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1303,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1301
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1308,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1304
+                  },
+                  "value": "Json"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1316,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1310
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1324,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1317
+                      },
+                      "value": "Drawing"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1340,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1326
+                          },
+                          "value": "InvalidDrawing"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1341,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1325
+                      }
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1344,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1342
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1345,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1309
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1346,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1300
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1347,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 1283
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1355,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1349
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1371,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1358
+              },
+              "value": "parse-drawing"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1380,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1375
+                  },
+                  "value": "input"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1381,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1374
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1390,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1385
+                  },
+                  "value": "catch"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1402,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1396
+                      },
+                      "value": "decode"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1410,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1403
+                      },
+                      "value": "Drawing"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1416,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1411
+                      },
+                      "value": "input"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1417,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1395
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1434,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1423
+                      },
+                      "value": "SchemaError"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1436,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1435
+                      },
+                      "value": "_"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1437,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1422
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1447,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1443
+                      },
+                      "value": "fail"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1463,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1449
+                          },
+                          "value": "InvalidDrawing"
+                        },
+                        {
+                          "entries": [
+                            {
+                              "key": {
+                                "kind": "keyword",
+                                "span": {
+                                  "endOffset": 1473,
+                                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                  "startOffset": 1465
+                                },
+                                "value": ":message"
+                              },
+                              "value": {
+                                "kind": "string",
+                                "span": {
+                                  "endOffset": 1509,
+                                  "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                  "startOffset": 1474
+                                },
+                                "value": "drawing does not match the schema"
+                              }
+                            }
+                          ],
+                          "kind": "map",
+                          "span": {
+                            "endOffset": 1510,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1464
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1511,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1448
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1512,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1442
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1513,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1384
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1514,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 1348
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1517,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1516
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1534,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1518
+              },
+              "value": "describe-drawing"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1538,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1536
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1543,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1539
+                  },
+                  "value": "Json"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1551,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1545
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1558,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1552
+                      },
+                      "value": "String"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1574,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1560
+                          },
+                          "value": "InvalidDrawing"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1575,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1559
+                      }
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1578,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1576
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1579,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1544
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1580,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1535
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1581,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 1515
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1589,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1583
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1608,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1592
+              },
+              "value": "describe-drawing"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1617,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1612
+                  },
+                  "value": "input"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1618,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1611
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1625,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1622
+                  },
+                  "value": "do!"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1645,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1638
+                      },
+                      "value": "drawing"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1666,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1653
+                          },
+                          "value": "parse-drawing"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1672,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1667
+                          },
+                          "value": "input"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1673,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1652
+                      }
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1684,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1680
+                      },
+                      "value": "size"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1696,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1692
+                          },
+                          "value": "area"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1701,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1698
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1709,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1702
+                              },
+                              "value": "drawing"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1716,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1710
+                              },
+                              "value": ":shape"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1717,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1697
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1718,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1691
+                      }
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1729,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1725
+                      },
+                      "value": "tone"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1743,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1737
+                          },
+                          "value": "warmth"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1748,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1745
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1756,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1749
+                              },
+                              "value": "drawing"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1763,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1757
+                              },
+                              "value": ":color"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1764,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1744
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1765,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1736
+                      }
+                    },
+                    {
+                      "kind": "keyword",
+                      "span": {
+                        "endOffset": 1776,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1772
+                      },
+                      "value": ":let"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1789,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1784
+                          },
+                          "value": "label"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1794,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1791
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1802,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1795
+                              },
+                              "value": "drawing"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1809,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1803
+                              },
+                              "value": ":label"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1810,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1790
+                          }
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 1811,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1783
+                      }
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 1812,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1630
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1825,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1818
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1836,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1833
+                          },
+                          "value": "str"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1849,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1846
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1857,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1850
+                              },
+                              "value": "drawing"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1864,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1858
+                              },
+                              "value": ":title"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1865,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1845
+                          }
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 1878,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1874
+                          },
+                          "value": ": "
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1891,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1887
+                          },
+                          "value": "tone"
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 1903,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1900
+                          },
+                          "value": " "
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1916,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1913
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1921,
+                                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                    "startOffset": 1918
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1929,
+                                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                    "startOffset": 1922
+                                  },
+                                  "value": "drawing"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "span": {
+                                    "endOffset": 1936,
+                                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                    "startOffset": 1930
+                                  },
+                                  "value": ":shape"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 1937,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1917
+                              }
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1943,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 1938
+                              },
+                              "value": ":kind"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1944,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1912
+                          }
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 1964,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1953
+                          },
+                          "value": " of area "
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1977,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1973
+                          },
+                          "value": "size"
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 1990,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1986
+                          },
+                          "value": " ["
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 2011,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 2000
+                              },
+                              "value": "get-or-else"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 2017,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 2012
+                              },
+                              "value": "label"
+                            },
+                            {
+                              "kind": "string",
+                              "span": {
+                                "endOffset": 2030,
+                                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                                "startOffset": 2018
+                              },
+                              "value": "unlabelled"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 2031,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 1999
+                          }
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 2043,
+                            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                            "startOffset": 2040
+                          },
+                          "value": "]"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 2044,
+                        "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                        "startOffset": 1832
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 2045,
+                    "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                    "startOffset": 1817
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 2046,
+                "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+                "startOffset": 1621
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 2047,
+            "sourceId": "surfaces/effect-typescript/schemas-and-decoding",
+            "startOffset": 1582
+          }
+        }
+      ],
+      "diagnostics": []
+    }
+  },
+  "version": 1
+}

@@ -1,12 +1,9 @@
 import { expect, it } from "vitest";
-import { TsLanguageHost, NodeOcamlLanguageHost, type LanguageHost } from "../src/index.js";
+import { TsLanguageHost } from "../src/index.js";
 import { JsonAbi } from "../src/json-abi.js";
 
-it("matches live OCaml numeric tags and printing at the host boundary", async () => {
-  const hosts: LanguageHost[] = [new TsLanguageHost()];
-  const native = new NodeOcamlLanguageHost();
-  if (await native.available()) hosts.push(native);
-  for (const host of hosts) {
+it("preserves numeric tags and printing at the host boundary", async () => {
+  for (const host of [new TsLanguageHost()]) {
     const result = await host.evaluate({ source: "[2 2.0 (* 2.0 3) (/ 6 3) (floor 2.0)]" });
     expect(result.value).toMatchObject({ kind: "list", items: [
       {kind: "int", value: 2}, {kind: "float", value: 2}, {kind: "float", value: 6},

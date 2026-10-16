@@ -12,29 +12,25 @@ conversion costs to mixed arithmetic and require a different JSON/Effect boundar
 
 Int is limited to `-9007199254740991` through `9007199254740991`. Out-of-range
 literals and Int results are errors, with no wrapping or silent loss of precision.
-This deliberately differs from OCaml's 63-bit native Int range and overflow.
+This deliberately differs from the 63-bit wrapping Int of the retired OCaml engine.
 Float supports NaN, infinities, and signed zero. Division follows IEEE 754,
 including division by zero; Int `mod` requires Int operands and rejects zero.
 Rounding produces Int and rejects nonfinite or out-of-range results.
 
 `Int` and `Float` are the only numeric type names. `Number` and `Num` are
 rejected immediately with guidance to choose Int or Float; this greenfield
-language does not retain aliases or a warning period. The frozen OCaml checker
-still accepts Number, displays its floating type as Number, and rejects explicit
-Float annotations. Native conformance inputs retain that historical vocabulary
-through an exact, hash-pinned source edit manifest; the compiler is unchanged.
-Parity records these vocabulary differences explicitly and never normalizes
-numeric type names or value kinds. Numeric operations accept both types;
+language does not retain aliases or a warning period. Conformance goldens
+never normalize numeric type names or value kinds. Numeric operations accept both types;
 `+`, `-`, `*`, `min`, `max`, and `abs` return Int when every operand is Int,
 otherwise Float. `/` always returns Float. `mod`, `floor`, `ceil`, and `round`
-return Int. Assignment permits Int where Float is expected, as OCaml does;
+return Int. Assignment permits Int where Float is expected;
 that assignment does not retag the runtime value. Mixed branches and collections
 join to Float. Equality compares numeric values, so `(= 2 2.0)` is true, including
-inside collections. Numeric literal patterns remain kind-sensitive, following
-OCaml: `(match 2.0 2 true _ false)` is false. NaN does not equal itself.
+inside collections. Numeric literal patterns remain kind-sensitive:
+`(match 2.0 2 true _ false)` is false. NaN does not equal itself.
 
 Float printing retains a decimal marker (`2.0` versus `2`); string concatenation
-uses OCaml's integral Float spelling (`2.`). The lossless reader preserves the original token; formatting preserves its
+uses the integral Float spelling `2.`, inherited from the OCaml engine. The lossless reader preserves the original token; formatting preserves its
 numeric kind, including overflowing exponent literals. Tagged ABI JSON preserves Int/Float identity; plain JSON and
 host/generated TypeScript project both to JS numbers, where the schema or declared
 type supplies the distinction. Nonfinite Floats have explicit tagged ABI spellings
@@ -49,12 +45,16 @@ unsupported by the portable JSON artifact/codegen boundary. Effect schemas emit
 `Schema.Int` for Int and
 `Schema.Number` for Float.
 
-## TypeScript is the primary engine
+## TypeScript is the only engine
 
-The TypeScript engine provides embedding and browser execution. OCaml remains
-the reference during consolidation; its native, JavaScript, and WebAssembly
-implementations still exist. Shared conformance suites identify matched semantics
-and record explicit differences. Removing OCaml is separate migration work.
+The TypeScript/Effect engine provides embedding, browser execution, language
+services, and the host's JSON CLI. Forma previously also had an OCaml engine
+with native, JavaScript, and WebAssembly builds. It served as the conformance
+reference while TypeScript gained its capabilities and was then removed; its
+outputs remain as reviewed goldens. Maintaining one implementation keeps
+semantic changes in one place at the cost of a native binary and the native
+engine's faster cold start. [Retiring the OCaml engine](./engine-consolidation.md)
+records the measurements and follow-ups.
 
 ## Domain vocabulary belongs in preludes
 

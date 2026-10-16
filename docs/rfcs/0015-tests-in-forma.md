@@ -4,7 +4,7 @@
 | --- | --- |
 | Status | Proposed; not implemented |
 | Created | 2026-10-16 |
-| Scope | A `test` declaration, assertions, exclusion from interfaces and artifacts, a host test operation, `forma test`, Effect program tests, cross-engine test outcomes |
+| Scope | A `test` declaration, assertions, exclusion from interfaces and artifacts, a host test operation, `forma test`, Effect program tests, stored test outcomes |
 | Direction | Tests are module declarations that run in isolated, requirement-free evaluations and report structured results through the host |
 
 ## Summary
@@ -35,8 +35,7 @@ service is therefore rejected by the checker before it runs.
 The [Effect page](../effect.md) states that "Tests are TypeScript harnesses
 written against the generated module. Forma has no way to write tests, test
 layers, or property checks in Forma itself." Kernel programs have no test
-facility either. Every Forma behavior is pinned from TypeScript or OCaml test
-code, so a consumer writing a domain prelude has to leave the language to
+facility either. Every Forma behavior is pinned from TypeScript test code, so a consumer writing a domain prelude has to leave the language to
 check it.
 
 Loon shows the alternative. Its `test` form lives in the module, assertions
@@ -45,22 +44,22 @@ instead of using a mocking library. Its runner reports JSON for CI. Forma has
 stronger contracts to offer: closed requirement sets make "this test touches
 no real service" a type error rather than a convention.
 
-Tests also give the two engines a cheap shared surface. A conformance fixture
-that is a Forma test can be run by both engines, and their outcomes compared,
+Tests also give conformance a cheap surface. A conformance fixture that is a
+Forma test can be run and its outcomes compared with stored expectations,
 without writing a golden for every intermediate value.
 
 ## Current state
 
 - **No test forms or assertions.** The default builtins
-  (`packages/ts/src/builtins/index.ts`), the OCaml builtins, and the preludes
-  define no `test`, `assert`, or `expect`. The kernel has `fail`, which fails
+  (`packages/ts/src/builtins/index.ts`) and the preludes define no `test`, `assert`, or `expect`. The kernel has `fail`, which fails
   with `FailError` (`builtins/control.ts`), and `assert-valid`, which checks a
   value against a runtime schema (`builtins/schema.ts`).
 - **An unimplemented `test` syntax already exists.**
   `examples/staffing/tests/staffing-smoke.test.md` uses
   `(test name (:arrange ...) (:assert ...))`, and `test.md` uses `test-suite`.
-  Nothing runs them. OCaml's `elaborate.ml` silently ignores top-level `test`
-  and `test-suite`. The TypeScript elaborator reports `elaborate/unknown-form`,
+  Nothing runs them. The since-removed OCaml engine silently ignored
+  top-level `test` and `test-suite`. The TypeScript elaborator reports
+  `elaborate/unknown-form`,
   and the corpus tests filter that out (`test/elaborate-program.test.ts`,
   `test/ontology.test.ts`).
 - **Prelude forms cannot run tests.** A `form` body is evaluated at compile
@@ -75,8 +74,8 @@ without writing a golden for every intermediate value.
   programs are rejected with `module/effect-runtime`. There is no notion of a
   declaration excluded from interfaces and artifacts.
 - **Equality.** The kernel's `=` is structural over lists, vectors, maps, and
-  tagged values in both engines (`kEquals` in `evaluator/types.ts`,
-  `Value.equal` in OCaml's `value.ml`). Functions never compare equal. In
+  tagged values (`kEquals` in `evaluator/types.ts`). Functions never compare
+  equal. In
   Effect programs, the checker restricts `=` to primitives, enums, and brands
   (`mechanics/equality`), because generated TypeScript would compare records
   by reference.
@@ -205,7 +204,7 @@ that reaches one is rejected when the module is checked, with
 recorded host calls, which would allow such tests.
 
 Results are ordered by module and then source order. They contain no timing,
-so the same program gives the same result on every run and in either engine.
+so the same program gives the same result on every run.
 Hosts can measure duration themselves.
 
 `forma test <entry> [--filter text] [--json]` calls `runTests` and prints one
@@ -221,9 +220,9 @@ The staffing example's `(test name (:arrange ...) (:assert ...))` is a domain
 test vocabulary: queries, picks, and constraint checks over an ontology. This
 RFC does not standardize it. Once core `test` exists, the example should use a
 prelude form with a different name, for example `ontology-test`, that expands
-or elaborates into core `test` declarations. Until then, OCaml's silent
-skipping of `test` becomes an explicit `test/legacy-syntax` diagnostic in both
-engines, so neither engine ignores tests without reporting it.
+or elaborates into core `test` declarations. Until then, the TypeScript
+engine reports an explicit `test/legacy-syntax` diagnostic for that form, so
+tests are never ignored without a report.
 
 ## Alternatives considered
 
@@ -240,15 +239,14 @@ engines, so neither engine ignores tests without reporting it.
 - **Property checks.** Generators for Forma types would follow naturally from
   types as schemas, but they need their own design for shrinking and seeds.
 
-## Engine parity
+## Conformance
 
-Kernel tests are portable. Both engines implement `test`, the assertions, and
-`runTests`, and a new fixture, `conformance/tests/`, holds modules whose
-expected outcomes are lists of `{name, status, code?, span?}`. The parity
-runner compares the normalized outcomes, and `matrix.json` records a
-`test-outcomes` surface. Effect program tests depend on the TypeScript
-mechanics checker and generator and are TypeScript-only, as Effect
-generation is today.
+Kernel tests are portable. A new fixture, `conformance/tests/`, holds modules
+whose expected outcomes are lists of `{name, status, code?, span?}`, stored as
+reviewed goldens and compared with the normalized outcomes of `runTests`.
+Effect program tests depend on the mechanics checker and generator. (As
+proposed, both engines implemented kernel tests and the parity runner compared
+their outcomes; the OCaml engine has since been removed.)
 
 ## Implementation stages and validation
 
@@ -264,9 +262,8 @@ generation is today.
    depends on [RFC 0014](./0014-local-providers.md). A new
    `conformance/effect-typescript` case runs generated tests whose providers
    record calls. A negative case shows a test that still requires a service.
-4. **OCaml parity.** The OCaml engine implements kernel tests and passes
-   `conformance/tests/`. The parity surface leaves gap status.
-5. **Legacy syntax.** Both engines report `test/legacy-syntax` for the staffing
+4. **OCaml parity.** Dropped: the OCaml engine was removed.
+5. **Legacy syntax.** The engine reports `test/legacy-syntax` for the staffing
    form until the example is migrated.
 
 ## Decisions still required

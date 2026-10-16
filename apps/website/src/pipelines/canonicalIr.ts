@@ -5,7 +5,7 @@ type Declaration = Readonly<Record<string, unknown>> & { readonly kind: string }
 const schemaKinds = new Set(["Entity", "Query"]);
 
 /**
- * Declarations the OCaml engine emits for `entitySchemaSource`, taken from the
+ * Canonical IR declarations for `entitySchemaSource`, taken from the stored
  * canonical IR conformance fixture. The fixture also loads `data.lisp`, so its
  * `Record` declarations are dropped here. Keys are reordered so `kind` and
  * `name` lead; values are unchanged.

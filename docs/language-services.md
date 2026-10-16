@@ -39,11 +39,10 @@ extract depend on it.
   parse. The lexer recovers from unterminated strings and unexpected
   characters by producing error tokens instead of throwing, so a parse always
   yields a tree with `Error` nodes and located errors.
-- **TypeScript first.** These services are implemented in the TypeScript
-  engine. The OCaml host does not implement them yet; the gaps are recorded
-  in `conformance/engine-parity/matrix.json`. Identity, the outline codec, and
-  the edit script depend only on the reader grammar, which both engines
-  already share and compare in the parity runner.
+- **One engine.** These services are implemented in the TypeScript engine.
+  Identity, the outline codec, and the edit script depend only on the reader
+  grammar, whose parse output is pinned by the
+  [surface goldens](https://github.com/bjacobso/forma/blob/main/conformance/surfaces/README.md).
 
 ## 1. Identity model
 
@@ -144,7 +143,7 @@ contains the failure's source trace.
 
 **Limits.** `maxRecords` (default 5,000 expressions), `maxItems` per
 collection (default 20), `maxDepth` (default 4), and `maxStringLength`
-(default 500) bound the result. Engines keep only the raw last value and
+(default 500) bound the result. The engine keeps only the raw last value and
 count during the run and project once at the end, so loops cost a counter
 increment per observation. Truncated collections end with an opaque item
 tagged `truncated`. In a session, `retainValues: "all"` gives each recorded
@@ -341,8 +340,6 @@ core tree.
 
 ## Deferred
 
-- OCaml implementations of these host methods (tracked in the parity
-  matrix).
 - Evaluating top-level forms independently after a failure.
 - Incremental reparsing with green-node reuse.
 - Cross-file references in the language server beyond open documents and

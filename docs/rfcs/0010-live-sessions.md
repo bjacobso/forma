@@ -4,7 +4,7 @@
 | --- | --- |
 | Status | Proposed; not implemented |
 | Created | 2026-10-09 |
-| Scope | Session definitions, redefinition, keyed wrappers, revision records, host ABI, engine parity |
+| Scope | Session definitions, redefinition, keyed wrappers, revision records, host ABI |
 | Direction | A session is a revisioned module; a change is checked as a whole, dependents are re-instantiated, and hosts late-bind by name at the call boundary |
 
 ## Summary
@@ -61,16 +61,14 @@ agents.
   file creates new instances for it and its dependents
   (`packages/ts/src/modules/runtime.ts`). There is no per-definition change,
   record, or rollback.
-- **OCaml.** The `replSubmit` operation (`submit_repl` in
-  `packages/ocaml/lib/abi_session_ops.ml`) evaluates a submission, then
-  typechecks it, then replaces `session.env` and `session.type_env`. The
-  native `forma_cli.exe repl` uses it. `OcamlLanguageHost.evaluateInSession`
-  (`packages/host/src/ocaml-host.ts`) uses it only when the session has host
-  builtins configured; otherwise it calls `evaluateModule`, which does not
-  persist. A submission that calls a host builtin takes the host-effect path
-  in `abi_session_host_effect.ml`, which also does not persist. Ordinary
-  source `loadSource` validates and stores a module; only preludes update the
-  environment.
+- **OCaml (removed).** When this RFC was written, the OCaml engine's
+  `replSubmit` operation evaluated a submission, then typechecked it, then
+  replaced the session's value and type environments. The native CLI's
+  `repl` used it, and the OCaml language host used it only when the session
+  had host builtins configured; otherwise it evaluated without persisting.
+  Submissions that called a host builtin did not persist either. The OCaml
+  engine has since been removed (see
+  [Retiring the OCaml engine](../engine-consolidation.md)).
 - **Runtime model.** `Env` (`packages/ts/src/Env.ts`) is an immutable chain of
   frames. `define` creates a mutable slot only so that a function can refer
   to itself (`evalDef` in `packages/ts/src/evaluator/special-forms.ts`).
@@ -78,7 +76,7 @@ agents.
   bindings, or in-language `eval`, `read`, or `load`; the default builtins
   (`packages/ts/src/builtins/index.ts`) include none. A later definition can
   only shadow an earlier one, and closures that captured the earlier value
-  keep it. That is also what OCaml's `replSubmit` does today.
+  keep it. That is also what OCaml's `replSubmit` did.
 - **Workbench REPL.** `mergeReplSource` (`packages/workbench/src/repl.ts`)
   keys declarations by kind and name, lets later ones replace earlier ones,
   and replays the merged source in a fresh session for each entry.
@@ -256,26 +254,15 @@ commit.
   module initialization. Type soundness would still require rechecking
   dependents or freezing types. Values built from earlier cell contents, such
   as records of functions, would still be stale. Generated Effect TypeScript
-  and the OCaml engine would need a cell representation for every top-level
-  binding, or a development mode with different semantics. Rollback would
+  would need a cell representation for every top-level binding, or a development mode with different semantics. Rollback would
   require restoring every cell consistently. Rejected.
-- **Shadowing.** Extending the environment, as OCaml `replSubmit` does today,
+- **Shadowing.** Extending the environment, as OCaml `replSubmit` did,
   is simple but leaves dependents bound to old definitions without any
   report. Rejected as the session semantics.
 - **Files only.** Hosts can already write definitions to module files and
   reload them. That provides no per-declaration records, wrappers, late
   binding, or atomic rejection, and it requires hosts to invent a file layout
   for interactive input.
-
-## Engine parity
-
-The TypeScript engine implements this first. The OCaml engine replaces its
-shadowing `replSubmit` with the same candidate, check, instantiate, and
-publish procedure. The new procedure checks before it evaluates, which changes
-the current OCaml order. The `loadSource` entry in
-`conformance/engine-parity/matrix.json` stays an intentional difference; a new
-`live-session` entry is recorded as a gap until both engines pass the shared
-fixture.
 
 ## Implementation stages and validation
 
@@ -298,8 +285,10 @@ fixture.
    the new behavior on the next call. An evaluation paused at a host call
    completes with its original revision. A wrapper with the same key
    replaces the earlier one. A mistyped wrapper is rejected at its source.
-4. **OCaml parity.** The native host passes the same fixture through the
-   daemon ABI, and the matrix gap is removed.
+4. **OCaml parity.** Dropped: the OCaml engine was removed. Process
+   embeddings use the TypeScript host's JSON CLI, so the new operations are
+   exposed through its `request` and JSON-lines `daemon` commands like the
+   rest of the ABI.
 
 ## Decisions still required
 

@@ -1,0 +1,59 @@
+{
+  "id": "boolean",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "bool",
+        "value": true
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 2,
+                "sourceId": "surfaces/boolean",
+                "startOffset": 1
+              },
+              "value": "="
+            },
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 4,
+                "sourceId": "surfaces/boolean",
+                "startOffset": 3
+              },
+              "value": 1
+            },
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 6,
+                "sourceId": "surfaces/boolean",
+                "startOffset": 5
+              },
+              "value": 1
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 7,
+            "sourceId": "surfaces/boolean",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Bool"
+    }
+  },
+  "version": 1
+}

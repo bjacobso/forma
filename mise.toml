@@ -1,23 +1,4 @@
-# JavaScript tools are pinned directly. OCaml is managed by the pinned opam
-# binary through the local switch created by `mise run forma:ocaml:setup`.
+# JavaScript tools are pinned directly.
 [tools]
 node = "24.14.1"
 pnpm = "10.20.0"
-opam = "2.5.2"
-
-[tasks."forma:ocaml:setup"]
-description = "Create the repository-local OCaml 5.2 switch and install native, JS, and Wasm tools"
-run = """
-if [ ! -d "$HOME/.opam" ]; then
-  opam init --bare --disable-sandboxing --yes
-fi
-if [ ! -d _opam ]; then
-  opam switch create . 5.2.1 --yes
-fi
-opam install --yes dune.3.20.2 js_of_ocaml.6.2.0 js_of_ocaml-compiler.6.2.0 wasm_of_ocaml-compiler.6.2.0
-"""
-
-[tasks."forma:ocaml:test"]
-description = "Build every OCaml target and run the complete native conformance gate"
-depends = ["forma:ocaml:setup"]
-run = "opam exec -- pnpm test:ocaml"

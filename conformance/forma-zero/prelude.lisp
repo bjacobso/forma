@@ -1,10 +1,10 @@
 ; forma-zero prelude
 ; -----------------------------------------------------------------------------
-; The portable Forma kernel described in docs/language.md, written in the shared
-; Forma dialect so the same source runs on @formalang/ts (dynamic) and
-; @formalang/ocaml (HM-typechecked).
+; The portable Forma kernel described in docs/language.md. It was written in a
+; dialect shared with the removed OCaml engine, which typechecked it with
+; Hindley–Milner; the representation below still follows those constraints.
 ;
-; Representation — chosen to satisfy both engines:
+; Representation:
 ;   fact      = a 3-vector of strings          ["ben" "works-for" "onboarded"]
 ;   pattern   = a 3-vector of strings; a slot is a VARIABLE iff it appears in
 ;               the query's explicit variable list (patterns stay homogeneous,

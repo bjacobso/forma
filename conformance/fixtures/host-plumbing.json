@@ -1,5 +1,5 @@
 {
-  "reference": "packages/ocaml/scripts/smoke.mjs and packages/ocaml/scripts/incremental.mjs",
+  "reference": "Originally ported from packages/ocaml/scripts/smoke.mjs and incremental.mjs in the removed OCaml engine",
   "cases": [
     {
       "id": "prefix-policy",

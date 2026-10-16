@@ -1,0 +1,69 @@
+{
+  "id": "canonical-view",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 0,
+        "payload": {
+          "fields": [
+            {
+              "indexed": false,
+              "name": "employee/name",
+              "required": true,
+              "type": "String"
+            }
+          ],
+          "kind": "Entity",
+          "name": "Employee"
+        },
+        "sourceId": "surfaces/canonical-view",
+        "span": {
+          "endOffset": 32,
+          "sourceId": "surfaces/canonical-view",
+          "startOffset": 0
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "from": "Employee",
+          "kind": "Query",
+          "name": "staff",
+          "select": []
+        },
+        "sourceId": "surfaces/canonical-view",
+        "span": {
+          "endOffset": 61,
+          "sourceId": "surfaces/canonical-view",
+          "startOffset": 33
+        }
+      },
+      {
+        "formIndex": 2,
+        "payload": {
+          "columns": [
+            {
+              "label": "Name",
+              "name": "employee/name"
+            }
+          ],
+          "fragment": true,
+          "kind": "View",
+          "name": "staff-table",
+          "query": "staff",
+          "queryRef": {
+            "kind": "Query",
+            "name": "staff"
+          }
+        },
+        "sourceId": "surfaces/canonical-view",
+        "span": {
+          "endOffset": 146,
+          "sourceId": "surfaces/canonical-view",
+          "startOffset": 62
+        }
+      }
+    ]
+  },
+  "version": 1
+}

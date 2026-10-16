@@ -5,9 +5,9 @@
 APIs, package boundaries, syntax, and artifact formats are still evolving.
 The TypeScript host includes a source-built `forma` JSON CLI and daemon, with
 filesystem module commands described in [File modules](https://forma-lang.com/modules).
-The TypeScript engine also powers the browser tools; the OCaml engine builds
-to native code, JavaScript, and WebAssembly.
-Shared conformance fixtures define their portable semantic intersection.
+The TypeScript engine is the only implementation; it also powers the browser
+tools, language server, and workbench. The earlier OCaml engine was removed.
+Conformance fixtures and reviewed stored goldens pin implemented behavior.
 The TypeScript engine distinguishes Int and Float, including integral Float
 literals and results; Int arithmetic checks the JavaScript safe integer range.
 The structural workbench currently depends on unpublished Foldworks packages.
@@ -22,9 +22,9 @@ The structural workbench currently depends on unpublished Foldworks packages.
 ## For agents
 
 - [Writing a form](https://raw.githubusercontent.com/bjacobso/forma/main/docs/writing-a-form.md): Define domain vocabulary with preludes, descriptors, and elaboration hooks.
-- [Architecture](https://raw.githubusercontent.com/bjacobso/forma/main/docs/architecture.md): Engine boundaries, host ABI, artifacts, and current parity differences.
+- [Architecture](https://raw.githubusercontent.com/bjacobso/forma/main/docs/architecture.md): Engine boundary, host ABI and JSON CLI, artifacts, and conformance goldens.
 - [Forma for Effect](https://raw.githubusercontent.com/bjacobso/forma/main/docs/effect.md): Generate Effect TypeScript from checked Forma declarations and programs.
-- [Forma for Elm-style apps](https://raw.githubusercontent.com/bjacobso/forma/main/docs/elm.md): TypeScript-engine-only Foldkit prototype with exhaustive update, checked command recovery, and pure views; shared HttpApi client generation remains proposed.
+- [Forma for Elm-style apps](https://raw.githubusercontent.com/bjacobso/forma/main/docs/elm.md): Foldkit prototype with exhaustive update, checked command recovery, and pure views; shared HttpApi client generation remains proposed.
 - [Elm prototype reference](https://raw.githubusercontent.com/bjacobso/forma/main/docs/elm/reference.md): Isolated prelude generator, supported forms, mounting, and current limits.
 - [Effect reference](https://raw.githubusercontent.com/bjacobso/forma/main/docs/effect/reference.md): Supported schemas, services, errors, resources, and operations.
 - [Language services](https://raw.githubusercontent.com/bjacobso/forma/main/docs/language-services.md): Analysis, node identity, observations, and structural edit scripts.
@@ -32,6 +32,7 @@ The structural workbench currently depends on unpublished Foldworks packages.
 ## Optional
 
 - [Workbench](https://raw.githubusercontent.com/bjacobso/forma/main/packages/workbench/README.md): Structural editing, reviewable proposals, capability approvals, setup, and first-release limits.
-- [Conformance](https://raw.githubusercontent.com/bjacobso/forma/main/conformance/README.md): Fixtures and checks that pin implemented engine behavior.
+- [Conformance](https://raw.githubusercontent.com/bjacobso/forma/main/conformance/README.md): Fixtures and stored goldens that pin implemented engine behavior.
+- [Retiring the OCaml engine](https://raw.githubusercontent.com/bjacobso/forma/main/docs/engine-consolidation.md): Why TypeScript is the only engine, the 2026-10-06 engine benchmarks, and remaining performance follow-ups.
 - [Roadmap](https://raw.githubusercontent.com/bjacobso/forma/main/docs/roadmap.md): Current foundation and planned work; planned features are not compatibility promises.
 - [Record row rollout](https://raw.githubusercontent.com/bjacobso/forma/main/docs/rfcs/0005-row-operations.md): Implemented closed-record operations and links to proposed generic constraints, normalization, typed reflection, and bounded row mapping.

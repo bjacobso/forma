@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented in either engine |
+| Status | Proposed; not implemented |
 | Created | 2026-10-09 |
 | Depends on | [RFC 0006](./0006-qualified-rows.md); [RFC 0007](./0007-type-normalization.md) for concrete consumers |
 | Scope | Compile-time field/key indices and mapping named unary type constructors over records |
@@ -176,11 +176,10 @@ failures with witnesses. Mapping fixtures cover empty/nested records, unchanged
 labels, retained field polymorphism, unary aliases, unsupported constructors,
 alias cycles, open-tail collisions after substitution, and rejected inverse
 inference. Concrete mapped schemas need independent Effect artifact goldens
-and generated-output typechecking in both engines.
+and generated-output typechecking.
 
-Record TypeScript and OCaml implementation status per stage; engine parity is
-a test result, not implied by accepting this RFC. Run package checks, native
-tests, and engine parity for each shared language stage, with changesets for
-behavior changes. General row renaming, arbitrary key-set algebra, higher-kinded
+Record implementation status per stage; behavior is a test result, not implied
+by accepting this RFC. Run package checks and `pnpm surfaces` for each shared
+language stage, with changesets for behavior changes. General row renaming, arbitrary key-set algebra, higher-kinded
 constructor parameters, term-level record folds, type-level lambdas, and dependent
 runtime computation remain outside the rollout.

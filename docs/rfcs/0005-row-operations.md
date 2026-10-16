@@ -2,14 +2,15 @@
 
 | | |
 | --- | --- |
-| Status | Closed-shape operations implemented in both engines; open-row constraints proposed |
+| Status | Closed-shape operations implemented (in TypeScript and, until its removal, OCaml); open-row constraints proposed |
 | Created | 2026-10-09 |
 | Scope | Record type projection, removal, disjoint composition, and discriminator collisions |
 
 ## Problem
 
 Forma already infers row-polymorphic records. In TypeScript, `TRow` contains
-`RExtend`, `REmpty`, or `RVar`; OCaml uses `TRecord` and `TOpenRecord`.
+`RExtend`, `REmpty`, or `RVar`; the since-removed OCaml engine used `TRecord`
+and `TOpenRecord`.
 An annotation such as `{:name String & row}` describes a known field and an
 unknown remainder. This lets ordinary functions consume records of different
 shapes, but it does not provide record computation in the type language.
@@ -175,19 +176,18 @@ It remains proposed, not part of the implemented closed-shape operations.
 
 ### Why this slice rejects unknown shapes
 
-Neither engine currently records record-domain lacks constraints in schemes.
-TypeScript's existing pending constraints are for typeclasses; OCaml's scheme
-constraints likewise describe instance obligations. Seeing no shared field
-in two open prefixes does not prove disjointness: their tails can later acquire
-the same label. Merely concatenating the prefixes would accept an unsound
-signature. Introducing symbolic rows and retaining their obligations across
-both engines and module boundaries is a larger change than finite type
-normalization. Closed-shape operations therefore ship first, with explicit
+Neither engine recorded record-domain lacks constraints in schemes when this
+slice shipped. TypeScript's existing pending constraints are for typeclasses;
+OCaml's scheme constraints likewise described instance obligations. Seeing no
+shared field in two open prefixes does not prove disjointness: their tails can
+later acquire the same label. Merely concatenating the prefixes would accept an
+unsound signature. Introducing symbolic rows and retaining their obligations
+across module boundaries is a larger change than finite type normalization. Closed-shape operations therefore ship first, with explicit
 rejection rather than a misleading partial implementation of `Disjoint`.
 
 ## Diagnostics and tagged payloads
 
-Row-operation failures use `typecheck/row-operation` in both engines:
+Row-operation failures use `typecheck/row-operation`:
 
 | Error | Author span |
 | --- | --- |
@@ -220,8 +220,7 @@ The `query` result hook and the public `row-of` meta builtin remain unchanged.
 `select` is captured optional symbol syntax, not a literal keyword vector in
 a type signature. `row-of` resolves declaration fields, unwraps their type
 metadata, and selects all declared fields when selection is absent or empty.
-Its TypeScript implementation currently lives in `surface/form.ts`; OCaml
-implements it in `eval_syntax.ml`. Substituting `(Pick from select)` would lose those
+Its TypeScript implementation lives in `surface/form.ts`. Substituting `(Pick from select)` would lose those
 behaviors and would not cross the metadata/type boundary correctly.
 
 A future migration requires a generic, domain-neutral way to reify a
@@ -236,17 +235,20 @@ No prelude result types, emitted schemas, or artifacts change in this slice.
 ## Conformance and delivery
 
 `conformance/row-operations/` contains positive and negative author programs.
-Their entries in `conformance/engine-parity/cases.json` include expected
-normalized types or diagnostics with source ids and exact offsets. The
-TypeScript tests consume those same entries and also check diagnostic prose.
-The parity runner checks each engine against the goldens as well as against
-each other, so two engines agreeing on a failure cannot pass a positive case.
-The parity runner retains its existing policy of ignoring diagnostic prose
-when comparing engines.
+Their entries in `conformance/surfaces/cases.json` include expected
+normalized types or diagnostics with source ids and exact offsets, stored in
+`conformance/surfaces/goldens/`. The TypeScript tests consume those same
+entries and also check diagnostic prose. `pnpm surfaces` checks the TypeScript
+engine against the stored goldens, so a failure cannot pass a positive case;
+like the earlier parity runner, it ignores diagnostic prose.
 
-Full `pnpm check`, native tests, and `pnpm parity:engines` are the verification
-gates. Any inability to run them must be reported separately from implemented
-behavior. The changeset covers both engine packages.
+Full `pnpm check` and `pnpm surfaces` are the verification gates. Any
+inability to run them must be reported separately from implemented behavior.
+
+When this slice shipped, the goldens were captured from native OCaml, the
+gates also included native tests and `pnpm parity:engines`, and the changeset
+covered both engine packages. The OCaml engine has since been removed (see
+[Retiring the OCaml engine](../engine-consolidation.md)).
 
 ## Full rollout proposals
 
@@ -256,7 +258,7 @@ their new syntax is implemented merely by documenting it here.
 
 | Proposal | Capability | Dependency and completion gate |
 | --- | --- | --- |
-| [0006: Qualified rows](./0006-qualified-rows.md) | Open-row presence, absence, disjointness, symbolic operations, and generic record primitives | After 0005; obligations survive generic body checks and module imports in both engines |
+| [0006: Qualified rows](./0006-qualified-rows.md) | Open-row presence, absence, disjointness, symbolic operations, and generic record primitives | After 0005; obligations survive generic body checks and module imports |
 | [0007: Shared normalization](./0007-type-normalization.md) | Computed record coercion, type values, schemas, and opt-in tagged flattening | Closed consumers can follow 0005 independently; symbolic consumers need 0006; existing artifacts remain unchanged |
 | [0009: Field names and row map](./0009-field-names-and-row-map.md) | Key-set indices for selection, then field-name parameters and bounded unary mapping | After 0006; key indices land before checked form templates; mapping is a later independent stage |
 | [0008: Typed form results](./0008-typed-form-results.md) | Domain-neutral reflection and checked declarative result families | Reflection bridge follows 0007; generic templates need 0006 and 0009's key indices; old/new query types and artifacts agree |
@@ -268,8 +270,7 @@ templates. Row mapping is useful library work but is not a prerequisite for
 checking a generic template once.
 
 Each stage requires independent conformance goldens, author-span diagnostics,
-explicit implementation/parity status, and changesets for package behavior
-changes. A TS-only intermediate stage must be documented as a language difference.
+explicit implementation status, and changesets for package behavior changes.
 The rollout does not promise full Ur compatibility: unrestricted type-level
 functions, dependent runtime selection, and arbitrary row-equation inference
 remain outside these proposals.
@@ -287,7 +288,7 @@ remain outside these proposals.
   or global changes to the existing open-row unifier.
 - Changing the payload representation of `Tagged` aliases or computed types.
 
-These are deferred from this implementation, not engine parity gaps in the
-closed-shape rules. RFCs 0006–0009 propose bounded follow-ups; their explicit
+These are deferred from this implementation, not gaps in the closed-shape
+rules. RFCs 0006–0009 propose bounded follow-ups; their explicit
 exclusions, including general field renaming and type-level lambdas, remain
 outside the rollout.

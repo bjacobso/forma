@@ -73,7 +73,6 @@
     "removed": "(+ 1 2)",
     "expectedMissingCode": "elaborate/hole-type",
     "expectedMissingReference": "Employee",
-    "ocamlMissingCode": "elaborate/unknown-reference",
     "moduleBefore": "(export Person)\n(type Person {:name (Option String)})\n(type InternalNote {:body (Option String)})",
     "moduleAfter": "(export Person)\n(type Person {:name (Option String)})\n(type InternalNote {:text (Option String)})",
     "moduleDependent": "(import \"./people.forma\" :as people)\n(export Candidate)\n(type Candidate {:person (Option (Id people/Person))})",

@@ -13,28 +13,28 @@ source
   → JSON ABI / target backend
 ```
 
-## Engines
+## Engine
 
-`@formalang/ts` is the embeddable TypeScript engine used by the browser demo and
-the default host. `@formalang/ocaml` is the typed engine and compiler substrate,
-building to native code, JavaScript, and WebAssembly. Cross-engine fixtures
-define the portable semantic intersection.
+`@formalang/ts` is the TypeScript/Effect engine. It runs the browser demo, the
+language server, the workbench, and the default host. It is the only
+implementation: an OCaml engine with native, JavaScript, and WebAssembly builds
+was removed (see [Retiring the OCaml engine](./engine-consolidation.md)).
+Conformance fixtures and stored goldens pin its behavior.
 
-Neither engine owns consumer concepts such as entities, endpoints, workflows,
+The engine does not own consumer concepts such as entities, endpoints, workflows,
 or UI components. Those arrive as ordinary preludes plus descriptor and meta
 hook registrations.
 
 ## Host boundary
 
 `@formalang/host` presents one asynchronous ABI for parsing, inference, evaluation,
-sessions, editor analysis, retained values, and host calls. Implementations
-adapt the TypeScript engine, the native OCaml daemon, or the JavaScript OCaml
-artifact to that contract.
+sessions, editor analysis, retained values, and host calls. `TsLanguageHost`
+adapts the TypeScript engine to that contract.
 
-The TypeScript `forma` CLI and native OCaml daemon use newline-delimited JSON. Long-lived sessions retain
-loaded sources, generalized definitions, and suspended host calls. Native OCaml
-also retains artifact caches; TypeScript artifact caching remains planned.
-One-shot requests remain available for simple compiler invocations.
+The host's `forma` JSON CLI accepts one-shot `request`s, a newline-delimited JSON
+`daemon`, `version`, and `file <op> <entry>` for filesystem modules. Long-lived
+sessions retain loaded sources, generalized definitions, and suspended host
+calls. Artifact caching remains planned.
 
 `version().sourceLoadSemantics` reports `validate-and-store` for the TypeScript
 host: source loads validate surface grammar, descriptor application structure,
@@ -45,9 +45,7 @@ that scope so removed bindings do not survive. Prelude metachecks validate descr
 artifact validators, summary requirements, and named payload contracts against
 the complete bootstrapped prelude and evaluated environment. Descriptor typing
 hooks run during application inference; hosted helpers retain their meta
-evaluation contract. Kernel definitions continue through HM inference. The native OCaml host retains its legacy
-`apply-declarations` label. The JavaScript OCaml adapter does not support
-persistent loading.
+evaluation contract. Kernel definitions continue through HM inference.
 
 The TypeScript host's optional `replSubmit` operation checks each submission,
 evaluates it, and commits its value environment, inferred schemes and type
@@ -56,35 +54,33 @@ Ordinary `evaluateInSession`
 continues to evaluate snapshots; the workbench rebuilds its REPL context from
 current declarations so document edits cannot leave stale bindings.
 
-## Effect projection parity
+## Effect projection
 
-Both engines project operational effects into the shared declaration and body
+The engine projects operational effects into the declaration and body
 shapes exercised by `conformance/operational-effects`. The TypeScript mechanics
 runtime executes these declarations; the Effect TypeScript generator turns
 supported body nodes into `Effect` programs. Generation throws for unsupported
 nodes instead of producing placeholder code. The generated program is compiled
 and executed against the shared operational-effects fixture in the TypeScript
-suite. OCaml currently emits canonical IR; it does not emit Effect TypeScript.
+suite.
 
-The engines package declarations in different artifact envelopes. The
-TypeScript package uses `language-ts-artifact/v1` and SHA-256 over canonical
-payload JSON with sorted object keys; OCaml uses IR version `1` and MD5 over
-serialized payloads. Both include module identities, provenance and type
-summaries. Shared artifact fixtures check the canonical IR golden and the
-58-source, 548-declaration corpus counts.
+Artifacts use the `language-ts-artifact/v1` envelope and SHA-256 over canonical
+payload JSON with sorted object keys. They include module identities,
+provenance and type summaries. Artifact fixtures check the canonical IR golden
+and the 58-source, 548-declaration corpus counts; both expectations were
+captured from the retired OCaml engine, whose MD5 hashes and envelope metadata
+are not compared.
 
 The TypeScript host exposes `emit`, `emitMany`, `emitBackends` and
 `artifactSummary`. Registered validators check canonical domain payloads,
 descriptor payload contracts and HTTP declarations before packaging immutable
 validated declarations. `artifactSummary` returns validation failures or kind
-counts and manifest metadata. OCaml also reports artifact cache telemetry and
-can aggregate counts across failing sources. Module entries project authored
+counts and manifest metadata. Module entries project authored
 imports and exports; resolution and typechecking belong to the module stage.
 
-Consumers can compare the normalized declarations and diagnostics.
-The [engine parity runner](https://github.com/bjacobso/forma/blob/main/conformance/engine-parity/README.md) performs
-that comparison and reports differences by JSON path. Its matrix records
-intentional differences and missing surfaces.
+The [surface golden check](https://github.com/bjacobso/forma/blob/main/conformance/surfaces/README.md)
+compares normalized parse, expansion, typecheck, evaluation, and IR output with
+stored goldens and reports differences by JSON path.
 
 ## Tooling
 

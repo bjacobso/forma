@@ -1,5 +1,5 @@
 {
-  "reference": "packages/ocaml/lib/module_decl_artifact.ml; packages/ocaml/scripts/emit.mjs",
+  "reference": "Originally ported from packages/ocaml/lib/module_decl_artifact.ml; packages/ocaml/scripts/emit.mjs in the removed OCaml engine",
   "sources": [
     {
       "sourceId": "people.md",

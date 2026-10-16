@@ -142,9 +142,8 @@ dropped from a derived builder.
 
 The operational combinators still use the existing mechanics compiler.
 Middleware, query/header schemas, streaming endpoints, inline Forma handler
-bodies, and imported compile-time libraries remain outside this spike. Both
-engines accept `:emit` metadata; emission and builder derivation currently run
-through the TypeScript host.
+bodies, and imported compile-time libraries remain outside this spike. Emission and builder
+derivation run through the TypeScript host.
 
 The `http-api` conformance case golden-tests both generated modules, checks
 them with strict TypeScript and the suite's escape detector, validates the IR

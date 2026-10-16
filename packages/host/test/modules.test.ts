@@ -1,21 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { expectModuleGolden, updateModuleGoldens } from "./module-golden.js";
-import { TsLanguageHost, NodeOcamlLanguageHost } from "../src/index.js";
+import { expectModuleGolden } from "./module-golden.js";
+import { TsLanguageHost } from "../src/index.js";
 import type { LanguageHost } from "../src/types.js";
-const cliPath = resolve(
-  import.meta.dirname,
-  "../../ocaml/dist/native/forma_cli.exe",
-);
-const nativeAvailable = existsSync(cliPath);
-if ((process.env["FORMA_REQUIRE_NATIVE_MODULES"] || updateModuleGoldens) && !nativeAvailable)
-  throw new Error("Native module conformance requires a built CLI.");
-const hosts = [
-  ...(updateModuleGoldens ? [] : [new TsLanguageHost()]),
-  ...(nativeAvailable ? [new NodeOcamlLanguageHost({ cliPath })] : []),
-  ...(updateModuleGoldens ? [new TsLanguageHost()] : []),
-];
+const hosts = [new TsLanguageHost()];
 const fixture = resolve(import.meta.dirname, "../../../conformance/modules");
 const sources = [
   "ids.forma",
@@ -28,7 +17,7 @@ const sources = [
   sourceId: name,
   source: readFileSync(resolve(fixture, name), "utf8"),
 }));
-describe("module contracts across engines", () => {
+describe("module contracts", () => {
   test(
     "interfaces and linked artifacts agree, including reverse source loading",
     async () => {

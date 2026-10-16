@@ -1,0 +1,10 @@
+{
+  "id": "numeric-float-annotation",
+  "outputs": {
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Float"
+    }
+  },
+  "version": 1
+}

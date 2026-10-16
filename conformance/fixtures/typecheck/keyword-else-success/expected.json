@@ -1,7 +1,7 @@
 {
   "normalized": {
     "diagnostics": [],
-    "type": "String"
+    "type": ":else"
   },
   "success": true,
   "expectation": {

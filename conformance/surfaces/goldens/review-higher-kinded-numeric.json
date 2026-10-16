@@ -1,0 +1,10 @@
+{
+  "id": "review-higher-kinded-numeric",
+  "outputs": {
+    "typecheck": {
+      "diagnostics": [],
+      "type": "List<Float>"
+    }
+  },
+  "version": 1
+}

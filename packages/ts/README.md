@@ -105,9 +105,9 @@ Emission elaborates loaded sources, validates declarations and HTTP contracts,
 then packages an `ir.json` artifact with modules, provenance, declaration/type
 summaries, and a derived manifest. TypeScript's `language-ts-artifact/v1`
 envelope retains declaration wrappers and uses SHA-256 over sorted-key
-canonical payload JSON. OCaml retains its v1 envelope and MD5 hash; shared
-fixtures check the declaration and module projections instead of requiring
-identical envelopes.
+canonical payload JSON. The stored fixtures in `conformance/artifacts/` and
+`conformance/fixtures/canonical-ir/` check declaration and module projections
+rather than the envelope.
 
 ## Ontology DSL
 
@@ -273,5 +273,5 @@ still run. Malformed descriptors return located diagnostics.
 `checkForm(form, span)` is the extension point for artifact payload contracts,
 validators, and artifact summary requirements. This stage does not load,
 evaluate, or mutate a session. The session-load workspace owns integration into
-host prelude loading. Shared expectations and intentional OCaml differences are
-recorded in `conformance/thesis-gate/` and `conformance/descriptor-metacheck/`.
+host prelude loading. Its expectations are recorded in
+`conformance/thesis-gate/` and `conformance/descriptor-metacheck/`.

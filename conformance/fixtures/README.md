@@ -1,5 +1,9 @@
 # Engine fixtures
 
 Implementation-neutral reader, typechecker, and canonical-artifact fixtures.
-The OCaml gate consumes these directly; equivalent behavior is covered by the
-TypeScript suites under `packages/ts/test`.
+They were first consumed by the retired OCaml gate and are now checked by the
+TypeScript suites: `packages/ts/test/shared-corpus.test.ts` for `reader/` and
+`typecheck/` (see [`diagnostic-corpus.md`](diagnostic-corpus.md)),
+`packages/ts/test/artifacts.test.ts` for
+[`canonical-ir/`](canonical-ir/README.md), and
+`packages/host/test/json-abi.test.ts` for `host-plumbing.json`.

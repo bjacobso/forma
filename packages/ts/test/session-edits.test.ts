@@ -6,7 +6,7 @@ import { bootstrapOntologyPreludes } from "../src/Preludes.js";
 
 const scenarios = JSON.parse(readFileSync(new URL("../../../conformance/session-load/scenarios.json", import.meta.url), "utf8"));
 
-describe("fresh analysis equivalence (OCaml incremental and artifact-cache scenarios)", () => {
+describe("fresh analysis equivalence (incremental and artifact-cache scenarios)", () => {
   it("edits, removes, and replaces forms without stale source bindings", () => {
     const workspace = new AnalysisWorkspace();
     workspace.setDocument("incremental.forma", scenarios.incremental.before);

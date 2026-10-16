@@ -170,7 +170,7 @@ pageClass: forma-index forma-effect
 <article><h3>Layers that wire themselves</h3><p>A <code>layer</code> captures the services its methods call and becomes <code>Layer.succeed</code> or <code>Layer.effect</code>, with its <code>Layer&lt;Out, E, In&gt;</code> type computed and checked.</p></article>
 <article><h3>Resources and concurrency</h3><p><code>acquire-release</code>, <code>scoped</code>, <code>all</code> and <code>for-each</code> with concurrency, <code>race</code>, <code>fork</code>, <code>timeout</code>, and <code>retry</code> with schedules map to the Effect functions of the same name.</p></article>
 <article><h3>Data as schemas</h3><p>Brands, enums, tagged unions, optional fields, classes, and <code>decode</code> for untrusted JSON. The runtime schema and the static type come from one declaration.</p></article>
-<article><h3>One IR, two engines</h3><p>The OCaml engine projects every passing conformance program to the same IR as the TypeScript engine. The IR is an inspectable artifact, validated against payload contracts, rather than an internal detail.</p></article>
+<article><h3>An inspectable IR</h3><p>Every passing conformance program projects to a portable mechanics IR before generation. The IR is an inspectable artifact, validated against payload contracts, rather than an internal detail.</p></article>
 </div>
 </section>
 
@@ -214,7 +214,7 @@ pageClass: forma-index forma-effect
 <h3>Fundamental trade-offs</h3>
 <ul>
 <li><strong>The npm ecosystem inside your logic.</strong> Forma code cannot import TypeScript functions or types, call an npm package, or write a JavaScript callback. Anything outside the Forma vocabulary, such as HTTP clients, database drivers, crypto, dates, or <code>Effect.promise</code>, has to be a service implemented in TypeScript and provided as a layer.</li>
-<li><strong>A closed vocabulary.</strong> The combinators and value functions are built into the compiler, in both engines. Pure polymorphic helpers and local macros can compose the supported forms. New <code>Effect.*</code> combinators still require compiler support; imported compile-time libraries are a later stage. That contradicts Forma's own pitch that keywords are library code, and it is not resolved.</li>
+<li><strong>A closed vocabulary.</strong> The combinators and value functions are built into the compiler. Pure polymorphic helpers and local macros can compose the supported forms. New <code>Effect.*</code> combinators still require compiler support; imported compile-time libraries are a later stage. That contradicts Forma's own pitch that keywords are library code, and it is not resolved.</li>
 <li><strong>Two languages to learn.</strong> Your team reads Lisp, reads Effect, and reviews generated TypeScript. Debugging happens in the generated code.</li>
 <li><strong>Stricter than you may want.</strong> Whole-number literals are <code>Int</code>; <code>0.0</code> is <code>Float</code> and starts a Float accumulator. Int arithmetic checks the safe integer range. Record literals widen like TypeScript's, so a schema value needs <code>(Member {...})</code>. A function cannot call a service, and <code>let</code> cannot run an effect.</li>
 <li><strong>Generated code you don't style.</strong> Identifiers are camelCased (<code>get-user</code> becomes <code>getUser</code>), dashed fields stay quoted (<code>order["total-cents"]</code>), and the layout is the generator's.</li>

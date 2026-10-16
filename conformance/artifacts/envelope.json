@@ -1,5 +1,5 @@
 {
-  "reference": "packages/ocaml/scripts/emit-golden.mjs",
+  "reference": "Originally ported from packages/ocaml/scripts/emit-golden.mjs in the removed OCaml engine",
   "backend": "canonical-ir",
   "artifactName": "ir.json",
   "mediaType": "application/vnd.forma.ir+json",

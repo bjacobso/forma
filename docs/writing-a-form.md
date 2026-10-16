@@ -69,9 +69,9 @@ artifact's IR type.
 ## Projection and generated consumers
 
 Projection bodies are ordinary pure Forma expressions. They can call helpers,
-use local bindings, and branch. Both engines use the same declared contract;
+use local bindings, and branch. Elaboration checks the declared contract;
 a body that returns the wrong shape produces a diagnostic at elaboration.
-Native projection is an optimization of this behavior.
+Built-in (native) projection is an optimization of this behavior.
 
 Protocols and schemas derive from `type` declarations. Completion, option
 availability, declaration bindings, and form layout derive from the form

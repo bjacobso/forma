@@ -1,19 +1,11 @@
 {
   "normalized": {
     "diagnostics": [],
-    "type": "Maybe<Number>"
+    "type": "Maybe<Int>"
   },
   "success": true,
   "expectation": {
     "kind": "success",
     "allowDiagnostics": true
-  },
-  "typescript": {
-    "reason": "TypeScript distinguishes Int and Float; historical OCaml corpus expectations use Number for numeric types.",
-    "expectation": {
-      "kind": "success",
-      "allowDiagnostics": true
-    },
-    "numericType": "Maybe<Int>"
   }
 }

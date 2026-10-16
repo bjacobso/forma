@@ -4,6 +4,12 @@ Numeric vocabulary in this historical proposal is superseded by the
 [distinct Int and Float decision](../design-decisions.md#distinct-int-and-float-values).
 Current source rejects `Number` and `Num`.
 
+The OCaml engine this proposal refers to has since been removed, and TypeScript is
+the only engine ([Retiring the OCaml engine](../engine-consolidation.md)). Mentions
+of OCaml and of both engines describe the repository when the RFC was written;
+remaining plan items apply to the TypeScript engine and its stored conformance
+goldens.
+
 | | |
 | --- | --- |
 | Status | Implemented grammar; remaining design proposals are identified below |
@@ -472,7 +478,7 @@ need reproduction fixtures.
 | `unless` exists only in lowering; `quote` only in the reader | `type/lower-core.ts:183`; `reader/to-sexpr.ts:304` |
 | `(get m v)` is a literal label `v` to the typechecker and a variable lookup at runtime | `type/lower-control.ts:108` vs `evaluator/eval-core.ts` |
 | `{:a 1}` has label `":a"`, `{"a" 1}` has `"a"`; symbol keys differ by engine | `type/lower-core.ts:139-146`; `eval-core.ts:180-188` |
-| Keywords: a `Sym` typed `String` (value includes the colon) in TS; a `Keyword` node and `TKeyword` in OCaml | `eval-core.ts:112`; `ocaml/lib/reader.ml:161` |
+| Keywords: a `Sym` typed `String` (value includes the colon) in TS; a `Keyword` node and `TKeyword` in OCaml | `eval-core.ts:112`; the OCaml reader |
 | `{a b}` reads as a Set, which every later pass rejects | `reader/green-tree-builder.ts:301-341` |
 | TS silently ignores unknown slots and option-map keys; OCaml reports them | `descriptor/normalize.ts:132`, `:277-283` |
 | Unknown schema metadata keys (`:min`) are dropped silently | `mechanics/effect-schema.ts:128-131` |
@@ -487,7 +493,7 @@ The data syntax is unchanged except where noted.
 | Syntax | Meaning |
 | --- | --- |
 | `( ... )` `[ ... ]` `{ k v ... }` | list, vector, map |
-| `:name`, `:ns/name` | keyword: a distinct token in both engines, evaluating to itself |
+| `:name`, `:ns/name` | keyword: a distinct token, evaluating to itself |
 | `name`, `ns/name` | symbol; `/` is the only namespace separator |
 | `a.b.c` | one symbol token; resolved as member access during lowering ([§4.6](#_4-6-expressions-and-records)) |
 | `"..."`, `"""..."""` | string, raw string |
@@ -754,11 +760,12 @@ from the pattern, `:types` and `:ir`. Each prelude's forms form its module; the 
 optional functions (`:scope`, `:check`, `:type`) used only when a static value is not
 enough.
 
-**Engines.** Bodies are ordinary Forma. Both engines compile *projection bodies* (record
+**Engines.** Bodies are ordinary Forma. The engine compiles *projection bodies* (record
 and list construction from pattern variables, `map` over children, `or` defaults, field
-access, and calls to a fixed set of primitives) natively, and interpret anything else.
-Parity is enforced by the engine-parity suite. This replaces hand-written
-`define-elaboration` mirrors.
+access, and calls to a fixed set of primitives) directly, and interprets anything else.
+Fixtures compare the compiled and interpreted paths. This replaces hand-written
+`define-elaboration` mirrors. (As proposed, both engines compiled projection bodies and
+the engine-parity suite enforced agreement; the OCaml engine has since been removed.)
 
 **Macros** share the pattern language and return syntax instead of IR:
 
@@ -1217,16 +1224,16 @@ would be ambiguous between a nullary constructor and a type reference
 
 ### 8.2 Phase 0: semantic fixes (no syntax change)
 
-Each item lands with a fixture in `conformance/fixtures` or `conformance/engine-parity`.
+Each item lands with a fixture in `conformance/fixtures` or `conformance/surfaces`.
 
 | Item | Files |
 | --- | --- |
-| Keyword token and literal type in TS; parity with OCaml `TKeyword` | `ts/src/reader/lexer.ts`, `type/lower-core.ts:114`, `evaluator/eval-core.ts:112`, `type/infer-core.ts:479-484` |
+| Keyword token and literal type in TS, matching OCaml's `TKeyword` at the time | `ts/src/reader/lexer.ts`, `type/lower-core.ts:114`, `evaluator/eval-core.ts:112`, `type/infer-core.ts:479-484` |
 | Remove the Set heuristic | `ts/src/reader/green-tree-builder.ts:301-341`, `type/type-parser.ts:152` |
 | Implement `quote`; move `unless` to the kernel | `evaluator/eval-core.ts`, `vm/compile-core.ts:288`, `preludes/kernel.lisp` |
 | Runtime ADT constructors and constructor patterns | `evaluator/match.ts`, `vm/compile-core.ts:279-282` |
 | Align `(get m v)` and map-key labels across passes | `type/lower-control.ts:108`, `type/lower-core.ts:139-146`, `eval-core.ts:180-188` |
-| Report unknown slots and option keys in TS like OCaml | `descriptor/normalize.ts:132`, `:277-283` |
+| Report unknown slots and option keys in TS, as OCaml did | `descriptor/normalize.ts:132`, `:277-283` |
 | Fix `compiler.lisp` (vector descriptors, duplicate `meta-fn`) | `preludes/compiler.lisp:43-238` |
 | Reconcile static `:construct` blocks with hooks; remove reads of undeclared slots | `preludes/ontology.lisp`, `preludes/ontology-compiler.lisp` |
 | Effect diagnostics: unknown metadata keys, `Optional`/`Option` misuse, `define-class` message | `mechanics/effect-schema.ts:128`, `mechanics/artifact.ts:335`, `:1592-1606` |
@@ -1261,28 +1268,28 @@ TypeScript-only.
 Size: ~6 PRs. This phase is the highest-value, lowest-risk slice and can start
 immediately after Phase 0's keyword fix.
 
-### 8.4 Phase 2: core language (both engines)
+### 8.4 Phase 2: core language
 
 1. `type` replaces `define-type`, with `Tagged` and `Union`; canonical type names; open
    rows `{... & r}`; inferred kinds. Files: `type/lower-typedef.ts`, `type/type-parser.ts`,
-   `type/infer-core.ts:114-183`, OCaml counterparts in `packages/ocaml/lib`.
+   `type/infer-core.ts:114-183`, and, when this was planned, the OCaml counterparts.
 2. `define name [params]`; signatures anywhere in a module (`type/lower.ts:47-135`); one
    pattern language (`type/lower-control.ts:63-100`, `evaluator/match.ts`,
    `type/lower-destructure.ts`); member access lowering.
 3. `macro` with ellipsis patterns; `typeclass` with `(:` members
    (`type/lower-typedef.ts:597-721`).
-4. Migrate `conformance/fixtures`, `conformance/forma-zero`, `conformance/engine-parity`,
-   `preludes/kernel.lisp`, docs. Update `conformance/engine-parity/matrix.json`.
-5. Remove old forms in both engines.
+4. Migrate `conformance/fixtures`, `conformance/forma-zero`, `conformance/surfaces`,
+   `preludes/kernel.lisp`, docs.
+5. Remove old forms.
 
-Size: ~8 PRs, about half in OCaml.
+Size: ~8 PRs; as planned, about half were in the since-removed OCaml engine.
 
 ### 8.5 Phase 3: meta layer
 
 1. **`type` for IR.** Teach the descriptor loader to accept `(type X {...})` wherever it
    accepts `:protocol/object`, `:protocol/union` and `define-payload-contract`, generating
    the same internal protocol objects and contracts. Files:
-   `ts/src/descriptor/parse-descriptor.ts:404-490`, `ocaml/lib/artifact_payload_descriptor.ml`,
+   `ts/src/descriptor/parse-descriptor.ts:404-490` and
    `ts/src/artifact/artifact.ts:97-160` (replace the hard-coded table).
 2. **Convert carriers.** Rewrite the syntax-less `define-form`s in
    `ontology-ir.lisp`, `query-protocol.lisp`, `action-protocol.lisp` and
@@ -1290,10 +1297,11 @@ Size: ~8 PRs, about half in OCaml.
    per file.
 3. **`form` front-end.** Compile `(form ...)` into the existing `FormDescriptor`
    (`ts/src/descriptor/FormDescriptor.ts`) plus a construct hook and payload contract, so
-   the elaboration engine is unchanged at first. Same in OCaml (`ocaml/lib/descriptor.ml`).
-4. **Native projection bodies.** Classify form bodies; compile projection bodies natively
-   in both engines (subsuming `ts/src/descriptor/ElaborationDescriptor.ts` and the OCaml
-   elaboration executor); parity-test against the interpreted path.
+   the elaboration engine is unchanged at first. (The plan also covered the OCaml
+   descriptor loader, which has since been removed.)
+4. **Compiled projection bodies.** Classify form bodies; compile projection bodies
+   directly (subsuming `ts/src/descriptor/ElaborationDescriptor.ts`); test against the
+   interpreted path.
 5. **Convert forms** in `ontology.lisp` + `ontology-compiler.lisp`, `ui.lisp`,
    `viewspec.lisp`, one family per PR, deleting the matching `meta-fn`,
    `define-elaboration` and contract each time. Regenerate
@@ -1331,7 +1339,7 @@ These track each phase rather than waiting for the end:
 
 ```text
 Phase 0 ──┬── Phase 1 (Effect, TS only) ──────────────┐
-          └── Phase 2 (core, both engines) ── Phase 3 (meta) ── Phase 4 (domain) ── done
+          └── Phase 2 (core) ─────────────── Phase 3 (meta) ── Phase 4 (domain) ── done
 Phase 5 runs alongside each phase
 ```
 
@@ -1343,9 +1351,11 @@ and pattern work. Roughly 40–45 PRs in total.
 - Every new rule gets positive and negative fixtures (`expected-diagnostics.json`), with
   diagnostics pointing at author spans.
 - Reviewed artifact goldens document the resulting canonical IR.
-- Engine parity for every Phase 0, 2 and 3 change.
+- Stored surface goldens (`conformance/surfaces/`, `pnpm surfaces`) for every Phase 0, 2
+  and 3 change. When this was planned, the check was engine parity between TypeScript and
+  OCaml.
 - The Effect suite keeps typechecking and executing generated programs.
-- Canonical programs are checked, formatted, and tested in both engines.
+- Canonical programs are checked, formatted, and tested.
 
 ## 9. Risks
 
@@ -1355,7 +1365,7 @@ and pattern work. Roughly 40–45 PRs in total.
 | **Dot access is ambiguous** between field paths, service members and attribute refs. | Resolution by scope at lowering, with a diagnostic on shadowing (a local named like a service). Keywords are never split. |
 | **`Option` coercion in record literals** adds an implicit rule. | Limited to record literals checked against a known type; documented; covered by fixtures. Alternative in [§10](#_10-open-questions). |
 | **Keyword semantics change** breaks stored data that contains `":todo/title"` strings. | Wire projection of keywords is defined explicitly; the new artifact contracts define the canonical representation. |
-| **Native projection bodies** diverge between engines. | Projection subset is small and fixed; parity suite compares native and interpreted results for every form. |
+| **Compiled projection bodies** diverge from interpreted ones. | Projection subset is small and fixed; fixtures compare compiled and interpreted results for every form. |
 | **Span loss** during desugaring or migration. | Desugarings reuse child nodes; formatting preserves parsed syntax; span fixtures cover desugaring. |
 | **Scale of migration** (268 `(:fields` across 45 files, 348 `define-form`s). | Reviewed source rewrites, one family at a time, with canonical fixtures. |
 
@@ -1372,7 +1382,7 @@ and pattern work. Roughly 40–45 PRs in total.
 4. **`Option` in record literals.** Implicit lifting (proposed) versus requiring
    `(Some x)`.
 5. **Form bodies.** Whether to restrict form bodies to the projection subset (simpler
-   engines, less power) or allow general Forma with native compilation as an optimisation
+   engine, less power) or allow general Forma with compiled projections as an optimisation
    (proposed).
 6. **`CanonicalIR`.** Derive the IR union from a prelude's forms automatically, or keep
    one explicit `(type CanonicalIR (Union ...))`.

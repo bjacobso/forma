@@ -10,7 +10,7 @@
         }
       }
     ],
-    "type": "Number"
+    "type": "Int"
   },
   "success": true,
   "expectation": {
@@ -23,20 +23,5 @@
         "end": 88
       }
     }
-  },
-  "typescript": {
-    "reason": "TypeScript distinguishes Int and Float; historical OCaml corpus expectations use Number for numeric types.",
-    "expectation": {
-      "kind": "warning",
-      "diagnostic": {
-        "severity": "warning",
-        "message": "Unreachable match arm(s) after wildcard pattern",
-        "span": {
-          "start": 41,
-          "end": 88
-        }
-      }
-    },
-    "numericType": "Int"
   }
 }

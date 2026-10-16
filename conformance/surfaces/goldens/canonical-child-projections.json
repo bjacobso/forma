@@ -1,0 +1,21 @@
+{
+  "id": "canonical-child-projections",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 4,
+        "payload": {
+          "kind": "Tree",
+          "total": 5
+        },
+        "sourceId": "surfaces/canonical-child-projections",
+        "span": {
+          "endOffset": 320,
+          "sourceId": "surfaces/canonical-child-projections",
+          "startOffset": 296
+        }
+      }
+    ]
+  },
+  "version": 1
+}

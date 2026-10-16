@@ -1,0 +1,339 @@
+{
+  "id": "canonical-option-value-field",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "entries": [
+          {
+            "key": {
+              "kind": "keyword",
+              "value": ":name"
+            },
+            "value": {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "value": ":_tag"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "value": "Some"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "value": ":value"
+                  },
+                  "value": {
+                    "kind": "string",
+                    "value": "Ada"
+                  }
+                }
+              ],
+              "kind": "map"
+            }
+          }
+        ],
+        "kind": "map"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 5,
+                "sourceId": "surfaces/canonical-option-value-field",
+                "startOffset": 1
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 9,
+                "sourceId": "surfaces/canonical-option-value-field",
+                "startOffset": 6
+              },
+              "value": "Row"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 16,
+                      "sourceId": "surfaces/canonical-option-value-field",
+                      "startOffset": 11
+                    },
+                    "value": ":name"
+                  },
+                  "value": {
+                    "items": [
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 24,
+                          "sourceId": "surfaces/canonical-option-value-field",
+                          "startOffset": 18
+                        },
+                        "value": "Option"
+                      },
+                      {
+                        "kind": "symbol",
+                        "span": {
+                          "endOffset": 31,
+                          "sourceId": "surfaces/canonical-option-value-field",
+                          "startOffset": 25
+                        },
+                        "value": "String"
+                      }
+                    ],
+                    "kind": "list",
+                    "span": {
+                      "endOffset": 32,
+                      "sourceId": "surfaces/canonical-option-value-field",
+                      "startOffset": 17
+                    }
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 33,
+                "sourceId": "surfaces/canonical-option-value-field",
+                "startOffset": 10
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 34,
+            "sourceId": "surfaces/canonical-option-value-field",
+            "startOffset": 0
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 37,
+                "sourceId": "surfaces/canonical-option-value-field",
+                "startOffset": 36
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 42,
+                "sourceId": "surfaces/canonical-option-value-field",
+                "startOffset": 38
+              },
+              "value": "make"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 46,
+                    "sourceId": "surfaces/canonical-option-value-field",
+                    "startOffset": 44
+                  },
+                  "value": "->"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 54,
+                        "sourceId": "surfaces/canonical-option-value-field",
+                        "startOffset": 48
+                      },
+                      "value": "Option"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 61,
+                        "sourceId": "surfaces/canonical-option-value-field",
+                        "startOffset": 55
+                      },
+                      "value": "String"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 62,
+                    "sourceId": "surfaces/canonical-option-value-field",
+                    "startOffset": 47
+                  }
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 66,
+                    "sourceId": "surfaces/canonical-option-value-field",
+                    "startOffset": 63
+                  },
+                  "value": "Row"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 67,
+                "sourceId": "surfaces/canonical-option-value-field",
+                "startOffset": 43
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 68,
+            "sourceId": "surfaces/canonical-option-value-field",
+            "startOffset": 35
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 76,
+                "sourceId": "surfaces/canonical-option-value-field",
+                "startOffset": 70
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 81,
+                "sourceId": "surfaces/canonical-option-value-field",
+                "startOffset": 77
+              },
+              "value": "make"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 87,
+                    "sourceId": "surfaces/canonical-option-value-field",
+                    "startOffset": 83
+                  },
+                  "value": "name"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 88,
+                "sourceId": "surfaces/canonical-option-value-field",
+                "startOffset": 82
+              }
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 95,
+                      "sourceId": "surfaces/canonical-option-value-field",
+                      "startOffset": 90
+                    },
+                    "value": ":name"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 100,
+                      "sourceId": "surfaces/canonical-option-value-field",
+                      "startOffset": 96
+                    },
+                    "value": "name"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 101,
+                "sourceId": "surfaces/canonical-option-value-field",
+                "startOffset": 89
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 102,
+            "sourceId": "surfaces/canonical-option-value-field",
+            "startOffset": 69
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 108,
+                "sourceId": "surfaces/canonical-option-value-field",
+                "startOffset": 104
+              },
+              "value": "make"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 114,
+                    "sourceId": "surfaces/canonical-option-value-field",
+                    "startOffset": 110
+                  },
+                  "value": "Some"
+                },
+                {
+                  "kind": "string",
+                  "span": {
+                    "endOffset": 120,
+                    "sourceId": "surfaces/canonical-option-value-field",
+                    "startOffset": 115
+                  },
+                  "value": "Ada"
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 121,
+                "sourceId": "surfaces/canonical-option-value-field",
+                "startOffset": 109
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 122,
+            "sourceId": "surfaces/canonical-option-value-field",
+            "startOffset": 103
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "{:name Option<String>}"
+    }
+  },
+  "version": 1
+}

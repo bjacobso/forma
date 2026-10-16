@@ -61,9 +61,9 @@ export function About() {
       <section className="story-band about-story">
         <h2>Where it stands</h2>
         <p>
-          Two engines implement the language. The TypeScript engine is built for embedding and
-          runs this playground. The OCaml engine builds to native code, JavaScript, and
-          WebAssembly. Shared conformance fixtures define where they must agree.
+          One TypeScript engine implements the language. It is built for embedding, runs this
+          playground, and backs the editor tooling and the <code>forma</code> CLI. Conformance
+          fixtures with stored, reviewed outputs pin its behavior.
         </p>
         <p>
           The playground labels what it computes. Live pipelines run in this tab. Preview

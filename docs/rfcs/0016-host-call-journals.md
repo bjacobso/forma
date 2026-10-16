@@ -4,7 +4,7 @@
 | --- | --- |
 | Status | Proposed; not implemented |
 | Created | 2026-10-16 |
-| Scope | Recording host calls and their outcomes, deterministic replay, divergence diagnostics, journal format, lossless value projection, cross-engine replay |
+| Scope | Recording host calls and their outcomes, deterministic replay, divergence diagnostics, journal format, lossless value projection |
 | Direction | Every source of nondeterminism in a kernel evaluation is a host call, so recording host-call outcomes is enough to reproduce an evaluation exactly |
 
 ## Summary
@@ -51,8 +51,8 @@ Uses include:
 - **Tests.** [RFC 0015](./0015-tests-in-forma.md) excludes host builtins from
   tests. A recorded journal is a fixture that lets a test exercise code that
   calls them.
-- **Cross-engine parity.** A journal recorded on one engine can be replayed on
-  the other, which extends parity checks to effectful programs.
+- **Conformance.** A stored, reviewed journal is a golden for an effectful
+  program, which extends conformance checks beyond pure evaluation.
 
 ## Current state
 
@@ -63,40 +63,37 @@ Uses include:
   `failed`. `HostCallResumeResult` is `{ok: true, value}` or
   `{ok: false, diagnostics}`.
 - **Identifiers are not stable.** TypeScript allocates `ts-eval-N` and
-  `ts-call-N` from counters on the host instance. OCaml allocates
-  `ocaml-eval-N` and `ocaml-call-N` per session. Two runs of the same program
-  give different identifiers.
+  `ts-call-N` from counters on the host instance. Two runs of the same
+  program in one host give different identifiers.
 - **Failed resumes differ.** The TypeScript host turns `{ok: false}` into a
   `KernelTypeError` that keeps only the first diagnostic's message, so the
   host's code is lost (`ts-host.ts`, pinned by
-  `packages/host/test/conformance.test.ts`). The OCaml host keeps the code.
-  Neither kernel can catch the failure.
+  `packages/host/test/conformance.test.ts`). (The since-removed OCaml host
+  kept the code.) The kernel cannot catch the failure.
 - **Callbacks.** Functions passed to a host call can be retained and invoked
   with `callValue`. Each invocation is a new evaluation with its own
-  identifier, and it can pause on host calls. Both engines test nested host
-  calls from callbacks.
-- **Suspension.** OCaml suspends with a hand-written continuation-passing
-  stepper (`eval_effect.ml`, `abi_session_host_effect.ml`). TypeScript
-  suspends a running fiber with `Effect.callback`. Neither can serialize a
-  suspended evaluation, so replay has to re-run from the start.
+  identifier, and it can pause on host calls. Host conformance tests cover
+  nested host calls from callbacks.
+- **Suspension.** TypeScript suspends a running fiber with
+  `Effect.callback`. It cannot serialize a suspended evaluation, so replay has
+  to re-run from the start.
 - **Value projection is lossy.** `ValueProjection` has `nil`, `bool`, `int`,
   `float`, `string`, `keyword`, `symbol`, `list`, `vector`, `map`, `function`,
   and `opaque`. Resuming in TypeScript (`kValueFromProjection`) turns functions
   and opaques into their display strings, map keys into strings, and vectors
-  into lists. It also projects `1.0` as `int`. OCaml cannot decode `function`
-  or `opaque`, silently drops list items it cannot decode, and prints floats
-  with `string_of_float` (`1.`), which is not valid JSON.
-- **Remaining nondeterminism.** `gensym` uses a process-global counter in both
-  engines (`builtins/macro.ts`, `eval_syntax.ml`), so generated symbol names
+  into lists. It also projects `1.0` as `int`.
+- **Remaining nondeterminism.** `gensym` uses a process-global counter
+  (`builtins/macro.ts`), so generated symbol names
   depend on earlier work in the same process.
   `FORMA_DISABLE_NATIVE_ELABORATION` changes elaboration.
 - **No history.** The workbench keeps one `RunOutcome` and replaces it on each
   run. Its REPL "replay" re-runs pure declarations; it does not replay host
   calls. `docs/workbench.md` notes that observations are not a trace.
 - **Identity.** `sessionInfo` reports per-source hashes and a prelude
-  fingerprint. TypeScript uses 32-bit FNV-1a and OCaml uses MD5, so these are
-  not comparable across engines. Only SHA-256 over canonical JSON
-  (`artifact/canonical-json.ts`, `publicExportHash`) matches across engines.
+  fingerprint. TypeScript uses 32-bit FNV-1a, so these are not content
+  digests. Only SHA-256 over canonical JSON (`artifact/canonical-json.ts`,
+  `publicExportHash`) is. (The since-removed OCaml engine used MD5, so these
+  hashes were also not comparable across engines.)
 
 ## Proposal
 
@@ -105,7 +102,7 @@ Uses include:
 ```ts
 interface JournalHeader {
   readonly format: "forma-journal/v1";
-  readonly engine: string;                    // e.g. "typescript", "ocaml-native"
+  readonly engine: string;                    // e.g. "typescript"
   readonly program: {
     readonly sources: readonly { readonly id: string; readonly sha256: string }[];
     readonly preludes: readonly { readonly id: string; readonly sha256: string }[];
@@ -199,11 +196,11 @@ journal then contains the replayed entries followed by any live ones.
 Replay reproduces an evaluation exactly when the program, preludes, and
 engine are the same. To make that guarantee hold:
 
-- `gensym` counters become per-evaluation in both engines, so generated
+- `gensym` counters become per-evaluation, so generated
   symbols do not depend on earlier work in the process.
-- TypeScript keeps the host's diagnostics on a failed resume, matching OCaml,
-  so a recorded failure replays with the same code.
-- Both engines project and decode `JournalValue` losslessly. This fixes the
+- TypeScript keeps the host's diagnostics on a failed resume, so a recorded
+  failure replays with the same code.
+- The host projects and decodes `JournalValue` losslessly. This fixes the
   float, map-key, and vector conversions listed above.
 - Step limits apply as usual. A replay that exceeds a limit the recording did
   not reach is a real difference in behavior and is reported as one.
@@ -229,34 +226,33 @@ the service as the `effect` and the member as the `name`.
 ## Alternatives considered
 
 - **Snapshotting suspended evaluations.** Serializing a paused evaluation would
-  allow resuming without re-running. Neither engine can serialize closures or
-  fibers, and snapshots would be engine-specific. Re-running from the start
+  allow resuming without re-running. The engine cannot serialize closures or
+  fibers, and snapshots would be tied to one engine version. Re-running from the start
   with recorded outcomes is portable and cheap for the workloads in view.
 - **Recording in the host only.** A host can already log the calls it answers.
   It cannot replay them without the engine's help, because matching needs the
   evaluation tree and the engine has to report divergence at a source location.
 - **Matching by call identifier.** Identifiers are allocated from counters and
-  differ between runs and engines. Content and order are the only stable keys.
+  differ between runs. Content and order are the only stable keys.
 - **Trace every evaluation step.** A full trace would support time-travel
   debugging but is much larger, and nothing in it is needed for replay.
   Observations already cover per-expression values.
 
-## Engine parity
+## Conformance
 
-Both engines implement recording and replay. A new fixture,
-`conformance/host-call-journals/`, holds programs with recorded journals and
-expected results. The parity runner records on each engine and compares the
-journals. It then replays each engine's journal on the other engine and
-compares the results. `matrix.json` records a `host-call-journal` surface,
-which stays a gap until both directions pass.
+A new fixture, `conformance/host-call-journals/`, holds programs with stored,
+reviewed journals and expected results. Tests record each program and compare
+the journal with the stored one, then replay the stored journal and compare
+the result. (As proposed, both engines implemented recording and replay and
+the parity runner replayed journals across engines; that was dropped when the
+OCaml engine was removed.)
 
 ## Implementation stages and validation
 
-1. **Lossless values and failures.** `JournalValue` projection and decoding in
-   both engines, TypeScript resumes that keep host diagnostics, and
-   per-evaluation `gensym`. Host conformance tests round-trip `1.0`, keyword
-   map keys, and vectors through a host call. They also check that a failed
-   resume keeps its code in both engines.
+1. **Lossless values and failures.** `JournalValue` projection and decoding,
+   TypeScript resumes that keep host diagnostics, and per-evaluation `gensym`.
+   Host conformance tests round-trip `1.0`, keyword map keys, and vectors
+   through a host call. They also check that a failed resume keeps its code.
 2. **Recording (TypeScript).** Header, entries, the callback, and the terminal
    journal. Tests record a program with two sequential calls, a failed call,
    and a nested call from a callback, and compare the journals with goldens.
@@ -265,8 +261,7 @@ which stays a gap until both directions pass.
    zero surfaced host calls and the recorded result. They also check that
    changing an argument reports `journal/diverged` at the right `seq`, and
    that a truncated journal followed by `pause` continues live.
-4. **OCaml and cross-engine replay.** The OCaml host implements both modes,
-   and the parity runner replays journals across engines.
+4. **OCaml and cross-engine replay.** Dropped: the OCaml engine was removed.
 5. **Consumers.** The workbench keeps the journal of its last approved run and
    offers replay after an edit. `forma run` gains `--record <file>` and
    `--replay <file>`.

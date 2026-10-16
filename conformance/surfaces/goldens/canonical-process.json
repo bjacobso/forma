@@ -1,0 +1,61 @@
+{
+  "id": "canonical-process",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 0,
+        "payload": {
+          "fields": [
+            {
+              "indexed": false,
+              "name": "employee/name",
+              "required": true,
+              "type": "String"
+            }
+          ],
+          "kind": "Entity",
+          "name": "Employee"
+        },
+        "sourceId": "surfaces/canonical-process",
+        "span": {
+          "endOffset": 32,
+          "sourceId": "surfaces/canonical-process",
+          "startOffset": 0
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "edges": [
+            {
+              "from": "start",
+              "kind": "Edge",
+              "to": "welcome"
+            }
+          ],
+          "kind": "Process",
+          "name": "onboarding",
+          "nodes": [
+            {
+              "id": "welcome",
+              "inputs": [],
+              "kind": "Node"
+            }
+          ],
+          "trigger": {
+            "entity": "Employee",
+            "kind": "Trigger",
+            "triggerKind": "on-create"
+          }
+        },
+        "sourceId": "surfaces/canonical-process",
+        "span": {
+          "endOffset": 119,
+          "sourceId": "surfaces/canonical-process",
+          "startOffset": 33
+        }
+      }
+    ]
+  },
+  "version": 1
+}
