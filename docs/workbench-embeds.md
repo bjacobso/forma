@@ -64,8 +64,8 @@ The next demonstrations should make the language-extension promise concrete:
 
 - **Define a domain form and use it in the same project.** Completion, slots,
   diagnostics, and artifact changes should all follow edits to its descriptor.
-  Ontology elaboration currently needs the OCaml engine; browser ontology output
-  in the older playground remains a labeled fixture.
+  The browser playground does not run ontology elaboration yet; its ontology
+  output remains a labeled stored golden.
 - **Move between source, outline, and a domain view.** Preserve document identity,
   selection, and undo while changing the representation.
 - **Review semantic consequences.** Show a proposal's tree diff beside diagnostics,

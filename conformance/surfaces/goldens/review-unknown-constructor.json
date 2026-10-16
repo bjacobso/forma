@@ -1,0 +1,20 @@
+{
+  "id": "review-unknown-constructor",
+  "outputs": {
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/pattern-constructor",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 27,
+            "sourceId": "surfaces/review-unknown-constructor",
+            "startOffset": 0
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

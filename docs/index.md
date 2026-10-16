@@ -75,7 +75,7 @@ pageClass: forma-index
 <p class="fh-spread__kicker">Extension</p>
 <h2 id="library-heading" class="fh-spread__name"><span>(</span>form<span> …)</span></h2>
 </div>
-<span class="fh-status">OCaml engine · pinned output in the browser</span>
+<span class="fh-status">Stored output in the browser</span>
 </header>
 <div class="fh-spread__body">
 <div class="fh-spread__story">
@@ -228,29 +228,30 @@ pageClass: forma-index
 
 <section class="fh-section" aria-labelledby="embed-heading">
 <div class="fh-section__head">
-<p class="fh-label"><span>06</span> Engines</p>
+<p class="fh-label"><span>06</span> Engine</p>
 <h2 id="embed-heading">Built to embed.</h2>
-<p>Two engines implement one language behind one JSON host ABI, and shared fixtures keep them honest.</p>
+<p>One TypeScript engine runs behind a JSON host ABI in Node, the browser, and editor tooling, and stored fixtures pin its behavior.</p>
 </div>
 <div class="fh-notes-grid">
 <div class="fh-facts fh-facts--two">
 <article><h3>TypeScript engine</h3><p><code>@formalang/ts</code> on npm. Runs in Node and in the browser; the workbench above runs it in a Web Worker.</p></article>
-<article><h3>OCaml engine</h3><p>Builds to native code, JavaScript, and WebAssembly behind the same JSON host ABI.</p></article>
-<article><h3>Conformance</h3><p>Shared fixtures pin the behavior both engines must agree on, and a parity runner reports differences.</p></article>
+<article><h3>Host and CLI</h3><p><code>@formalang/host</code> wraps the engine in a JSON host ABI, with a source-built <code>forma</code> JSON CLI and daemon.</p></article>
+<article><h3>Conformance</h3><p>Fixtures and reviewed goldens pin parsing, typing, evaluation, and IR output, and CI checks the engine against them.</p></article>
 <article><h3>Editor tooling</h3><p>A language server plus CodeMirror and React components for diagnostics, hover, and structural editing.</p></article>
 </div>
 
-<pre class="fh-ascii fh-ascii--card" v-pre aria-label="Architecture: source goes to either the TypeScript engine, which runs in Node and the browser, or the OCaml engine, which builds to native, JavaScript, and WebAssembly. Both sit behind the JSON host ABI, which the language server and workbench use. Conformance fixtures and a parity runner check both engines.">            source.lisp
-        ┌────────┴────────┐
-  <b>@formalang/ts</b>       <b>OCaml engine</b>
-  node · browser    native · js · wasm
-        └────────┬────────┘
+<pre class="fh-ascii fh-ascii--card" v-pre aria-label="Architecture: source goes to the TypeScript engine, which runs in Node and the browser. It sits behind the JSON host ABI, which the CLI, language server, and workbench use. Conformance fixtures and stored goldens check the engine.">            source.lisp
+                 │
+           <b>@formalang/ts</b>
+          node · browser
+                 │
           <b>JSON host ABI</b>
-        ┌────────┴────────┐
-  language server     workbench
+        ┌────────┼────────┐
+       cli  language   workbench
+              server
 
-  conformance fixtures ──▶ parity
-  runner checks both engines agree</pre>
+  conformance fixtures ──▶ stored
+  goldens checked in CI</pre>
 
 </div>
 </section>
@@ -263,21 +264,21 @@ pageClass: forma-index
 <div class="fh-notes-grid">
 <dl class="fh-notes">
 <div><dt>It is pre-alpha research.</dt><dd>Packages are 0.x and change without notice. There are no stable APIs, wire formats, or host ABI yet.</dd></div>
-<div><dt>There is no CLI.</dt><dd>You call the engines from your own build script. A consumer-prelude SDK is next on the <a href="/roadmap">roadmap</a>.</dd></div>
-<div><dt>The engines differ today.</dt><dd>The TypeScript engine does not elaborate ontology forms yet; the playground shows the OCaml engine's pinned output for those examples.</dd></div>
+<div><dt>There is no published CLI.</dt><dd>You call the engine from your own build script. A consumer-prelude SDK is next on the <a href="/roadmap">roadmap</a>.</dd></div>
+<div><dt>Some browser output is stored.</dt><dd>The playground does not run ontology elaboration yet; those examples show a stored canonical IR golden, originally captured from the retired OCaml engine.</dd></div>
 <div><dt>One generated target.</dt><dd>Effect TypeScript and Effect Schema are generated today. Rust and OCaml generation are research directions, not built.</dd></div>
 </dl>
 
-<pre class="fh-ascii fh-ascii--card" v-pre aria-label="Working today: lossless reader and formatter, macros, Hindley–Milner and effect inference, canonical IR from the OCaml engine, Effect TypeScript and Schema generation, the browser playground and language server, and cross-engine conformance. Not yet: a forma CLI, a stable host ABI, a consumer-prelude SDK, and Rust or OCaml code generation.">working today
+<pre class="fh-ascii fh-ascii--card" v-pre aria-label="Working today: lossless reader and formatter, macros, Hindley–Milner and effect inference, canonical IR, Effect TypeScript and Schema generation, the browser playground and language server, and conformance goldens. Not yet: a published forma CLI, a stable host ABI, a consumer-prelude SDK, and Rust or OCaml code generation.">working today
 <span class="tone-ok">✓</span> reader · formatter · macros
 <span class="tone-ok">✓</span> HM inference · effect inference
-<span class="tone-ok">✓</span> canonical IR (OCaml engine)
+<span class="tone-ok">✓</span> canonical IR
 <span class="tone-ok">✓</span> Effect TypeScript + Schema
 <span class="tone-ok">✓</span> playground · language server
-<span class="tone-ok">✓</span> cross-engine conformance
+<span class="tone-ok">✓</span> conformance goldens
 
 not yet
-<span class="tone-muted">○</span> forma CLI
+<span class="tone-muted">○</span> published CLI
 <span class="tone-muted">○</span> stable host ABI
 <span class="tone-muted">○</span> consumer-prelude SDK
 <span class="tone-muted">○</span> Rust / OCaml codegen</pre>
@@ -307,7 +308,7 @@ not yet
 <div class="fh-section__head">
 <p class="fh-label"><span>08</span> Examples</p>
 <h2 id="examples-heading">See the compiler show its work.</h2>
-<p>Edit the source and step through each compiler pass in your browser. Preview examples label any output pinned from the OCaml engine.</p>
+<p>Edit the source and step through each compiler pass in your browser. Preview examples label any output that comes from a stored golden.</p>
 </div>
 <div class="fh-examples">
 <a class="fh-tone-teal" href="/playground/demo/entities" target="_self"><span>Domain languages · 01</span><strong>Keywords are library code</strong><small>A prelude defines <code>entity</code>; the source elaborates into typed IR.</small><b>Open example →</b></a>

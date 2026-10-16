@@ -1,7 +1,7 @@
 {
   "normalized": {
     "diagnostics": [],
-    "type": "String"
+    "type": ":employee/name"
   },
   "success": true,
   "expectation": {

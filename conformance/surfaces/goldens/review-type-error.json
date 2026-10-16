@@ -1,0 +1,20 @@
+{
+  "id": "review-type-error",
+  "outputs": {
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/type-mismatch",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 24,
+            "sourceId": "surfaces/review-type-error",
+            "startOffset": 20
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

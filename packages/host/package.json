@@ -1,7 +1,7 @@
 {
   "name": "@formalang/host",
   "version": "0.3.0",
-  "description": "Forma host: the shared ABI facade bridging the TypeScript (@formalang/ts) and OCaml (@formalang/ocaml) language engines.",
+  "description": "Forma host: the language-host ABI, JSON CLI, and session facade over the TypeScript engine (@formalang/ts).",
   "type": "module",
   "license": "MIT",
   "publishConfig": { "access": "public" },
@@ -21,14 +21,6 @@
     "./editor": {
       "types": "./dist/editor.d.mts",
       "import": "./dist/editor.mjs"
-    },
-    "./js-ocaml-host": {
-      "types": "./dist/js-ocaml-host.d.mts",
-      "import": "./dist/js-ocaml-host.mjs"
-    },
-    "./ocaml-host": {
-      "types": "./dist/ocaml-host.d.mts",
-      "import": "./dist/ocaml-host.mjs"
     },
     "./ts-host": {
       "types": "./dist/ts-host.d.mts",

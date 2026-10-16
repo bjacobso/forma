@@ -158,7 +158,7 @@ describe("validated artifact boundary", () => {
     expect(emitMany({ session, sourceIds })).toMatchObject({ emittedCount: 2, succeededCount: 2, declarationCount: 5 });
   });
 
-  test("module exports, imports, re-exports and hashes match the OCaml fixture", () => {
+  test("module exports, imports, re-exports and hashes match the stored fixture", () => {
     const golden = fixture("module-cases.json");
     const session = sessionWithPreludes();
     for (const source of golden.sources) session.rememberSource({ id: source.sourceId, text: source.source });
@@ -167,7 +167,7 @@ describe("validated artifact boundary", () => {
     if (result.ok) expect(result.artifacts[0]!.content.modules.map(({ sourceHash: _, ...m }) => m)).toEqual(golden.modules);
   });
 
-  test("corpus kind and module counts match the shared OCaml oracle", () => {
+  test("corpus kind and module counts match the stored corpus golden", () => {
     const walk = (directory: string): string[] => readdirSync(directory, { withFileTypes: true }).flatMap(entry => entry.isDirectory() ? entry.name === "shared" ? [] : walk(resolve(directory, entry.name)) : entry.name.endsWith(".md") ? [resolve(directory, entry.name)] : []);
     const groups = new Map<string, { sourceId: string; source: string }[]>();
     for (const file of walk(resolve(root, "examples")).sort()) {

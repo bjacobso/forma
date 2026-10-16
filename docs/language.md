@@ -24,8 +24,7 @@ Int uses JavaScript's safe range, −9007199254740991 through 9007199254740991.
 Out-of-range literals and arithmetic results fail instead of wrapping. Float
 uses IEEE 754, including NaN, infinities, and signed zero; division by zero follows
 IEEE rules. NaN does not equal itself. Rounding nonfinite or out-of-range values
-fails. Values print as `2` and `2.0`; `str` uses the OCaml spelling `2.` for an
-integral Float. Tagged host values retain their kinds; plain JSON erases them and
+fails. Values print as `2` and `2.0`; `str` spells an integral Float as `2.`. Tagged host values retain their kinds; plain JSON erases them and
 encodes nonfinite values as null. See the [numeric design decision](./design-decisions#distinct-int-and-float-values)
 for engine and generated TypeScript boundaries.
 
@@ -119,7 +118,7 @@ must be a literal vector of distinct keywords, and every listed field must
 exist. Empty vectors are allowed. `Merge` combines records with disjoint
 fields; overlapping names are errors even when their types agree. Aliases
 and nested operations are supported, and retained field types may be
-polymorphic. Both engines require known, closed outer record shapes: operations
+polymorphic. The checker requires known, closed outer record shapes: operations
 on whole-record variables or open rows report an error. These are type
 operations; they do not project or merge values or generate Effect schemas.
 Open-row disjointness constraints are not implemented.

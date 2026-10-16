@@ -5,7 +5,7 @@ import { TsLanguageHost } from "../src/ts-host.js";
 
 const scenarios = JSON.parse(readFileSync(new URL("../../../conformance/session-load/scenarios.json", import.meta.url), "utf8"));
 
-describe("session edits match fresh results (OCaml artifact-cache scenarios)", () => {
+describe("session edits match fresh results", () => {
   it("refreshes dependent values and types across private edits, public edits, removal and replacement", async () => {
     const host = new TsLanguageHost(), { sessionId } = await host.openSession();
     const sources = [...scenarios.moduleEdits.sources];

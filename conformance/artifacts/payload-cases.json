@@ -1,5 +1,5 @@
 {
-  "reference": "packages/ocaml/scripts/emit.mjs",
+  "reference": "Originally ported from packages/ocaml/scripts/emit.mjs in the removed OCaml engine",
   "cases": [
     {
       "sourceId": "emit/malformed-query-payload",

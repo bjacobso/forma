@@ -1,129 +1,77 @@
-# Engine consolidation and performance
+# Retiring the OCaml engine
 
-This is an engineering assessment of the current implementations, rather than
-an adopted change to Forma's two-engine architecture. It records patterns worth
-preserving if TypeScript becomes the authoritative engine and measurements that
-should inform that decision.
+Forma had two engines: TypeScript/Effect (`packages/ts`, hosted by
+`packages/host`) and OCaml (`packages/ocaml`, built natively and to JavaScript
+and WebAssembly). **The OCaml engine has been removed. TypeScript is the only
+implementation.** The TypeScript host's JSON CLI (the `forma` bin in
+`@formalang/host`) replaces the native `forma_cli` and its JSON ABI daemon.
 
-## Patterns to preserve from OCaml
+This page records the decision, the work that made it possible, what remains,
+and the engine study of 2026-10-06 that informed it.
 
-### Validated data at compiler boundaries
+## Outcome
 
-OCaml's `Artifact_validated_payload.t` and `Packageable_declaration.t` have
-opaque interfaces. Packaging takes a validated payload instead of arbitrary
-JSON. TypeScript's `PackageableDeclaration.payload` currently accepts
-`JsonValue`; runtime contract validation occurs later.
+The study below found that native OCaml was faster at typechecking and
+evaluation, but that most of the TypeScript typechecking gap came from
+avoidable copying rather than from TypeScript or Effect. Before removal:
 
-Introduce privately constructed `ValidatedDeclaration` and `CheckedProgram`
-types, with validation as the only supported way to create them. Packaging
-should accept validated declarations, and target generation should accept a
-checked program. Decode external data with schemas at host and artifact
-boundaries; use typed representations within the compiler. A brand alone does
-not validate data at runtime.
+- The checker's substitution and annotation-map optimizations landed in #50
+  (about 39× faster on the 500-definition check). See the
+  [checker benchmark](https://github.com/bjacobso/forma/blob/main/scripts/benchmarks/README.md).
+- Language services moved to one TypeScript analysis workspace (#52), and the
+  language server stopped loading the OCaml JavaScript artifact.
+- Native OCaml outputs were stored as reviewed goldens and checked against
+  TypeScript in ordinary JavaScript CI (#60).
+- OCaml-only capabilities were ported to TypeScript: host type policy, the JSON
+  CLI and diagnostics (#62), validated artifact payloads and session emission
+  (#63), atomic session load validation and the typed stateful REPL (#64),
+  descriptor typing hooks and validation (#65), and prelude metachecks and
+  session operations in the JSON ABI (#69).
+- The TypeScript engine distinguishes `Int` and `Float` (#70, #71) and rejects
+  the `Number` and `Num` aliases (#74).
 
-Keep these contracts extensible through descriptors and consumer-provided
-validators. The language core should continue to work without knowing domain
-nouns such as entities or workflows.
+Conformance now uses stored expectations. The
+[surface goldens](https://github.com/bjacobso/forma/blob/main/conformance/surfaces/README.md)
+were captured from native OCaml and are now maintained from TypeScript output.
+When they were regenerated, the only changes were 22 reviewed numeric vocabulary
+differences: OCaml displayed `Float` as `Number`, used 63-bit integers, and
+accepted `Number` and `Num` annotations. Other stored goldens (canonical IR,
+example corpus counts, module snapshots, thesis-gate, reader and typecheck corpora,
+artifacts, and session loads) were also captured from OCaml and are now
+checked and updated by TypeScript tests with reviewed diffs.
 
-### Small, explicit module interfaces
+## Remaining follow-ups
 
-OCaml `.mli` files expose operations, failures, and intentionally visible
-representations. TypeScript already has public facades such as `Reader.ts`,
-`Type.ts`, and `Evaluator.ts`. Strengthen those with explicit exported function
-signatures, private implementation details, and import rules that keep
-consumers on supported entry points.
+- **Analysis reuse.** Per-form memoization, stage 5 of
+  [RFC 0004](./rfcs/0004-one-analysis-architecture.md), is not implemented.
+  Warm operations still repeat parsing, expansion, compilation, and inference.
+- **VM bookkeeping.** The VM step counter still uses an Effect `Ref` update per
+  opcode (`packages/ts/src/vm/vm.ts`). The experiment below suggests a large
+  dispatch improvement from a local counter, provided step budgets and
+  interruption remain explicit.
+- **CLI startup.** `forma version` takes roughly 330–470 ms on the TypeScript
+  CLI, compared with about 4 ms for the removed native CLI. Bundling or
+  narrower imports have not been measured.
+- **Native distribution.** There is no native binary. Embedders need Node.js or
+  a JavaScript runtime.
 
-The existing directory structure is a reasonable starting point:
+The checker's remaining growth is roughly quadratic in environment application
+and generalization; see the checker benchmark for its profile.
 
-| Modules | Responsibility |
-| --- | --- |
-| `reader`, `syntax`, `surface` | Authored syntax, identity, expansion and lowering |
-| `type`, `elaboration` | Semantic checking and typed construction |
-| `evaluator`, `vm` | Execution |
-| `artifact`, `mechanics` | Validated output, mechanics checking and target generation |
-| `session`, `engine` | State ownership, orchestration and public operations |
+## Engine study, 2026-10-06
 
-Share foundational source and diagnostic types without depending on the engine
-orchestration module. Keep serialization and transport at adapters. Split files
-when their responsibilities or dependencies diverge. OCaml's fixed line-count
-limits and source-snippet gates are less useful than checking import direction,
-cycles, and externally observable behavior.
+This section is a historical record. It describes both engines as they were at
+revision `774cb1d`, before #50 and the later ports. Present-tense statements
+about implementation details refer to that revision.
 
-### A coherent analysis snapshot
-
-OCaml's `Typed_core.program` bundles a result type with annotations carrying
-node identity, source spans, expressions, types, and symbol information.
-TypeScript already has `CoreExpr`, `NodeTypeMap`, and symbol services. Assemble
-those into one immutable result for a particular source/dependency revision.
-Hover, diagnostics, generation, and the compiler explorer should consume that
-result instead of reconstructing semantic facts independently.
-
-Preserve distinct intermediate representations where stages need them. Record
-explicit mappings between authored syntax, expanded forms, typed nodes, and
-emitted payloads, including macro provenance.
-
-### Expected errors and internal failures
-
-OCaml's ABI catches unexpected exceptions as `internal/error`, while expected
-authoring failures carry source diagnostics. TypeScript's
-`diagnosticFromUnknown` currently recursively converts both Effect failures and
-defects through the same path.
-
-Use typed failures for expected compiler errors, collect independent
-diagnostics where appropriate, and classify defects as internal failures at the
-host boundary. Preserve interruption and cancellation separately. This agrees
-with [Effect's expected-error model](https://effect.website/docs/v4/error-management/expected-errors).
-
-Ordinary functions suit deterministic transformations. Effect services suit
-host capabilities, resource lifetimes, cancellation, and state ownership.
-Inference can keep locally mutable state behind a narrow operation; every
-internal update does not need to be an independently yielded Effect.
-
-Neither existing engine is uniformly pure or encapsulated. For example,
-TypeScript's `type/infer-state.ts` stores inference state in module globals,
-and OCaml's session signature exposes mutable tables. Preserve the useful
-contracts while improving ownership and reentrancy.
-
-### Behavioral fixtures and diagnostic provenance
-
-Port the OCaml thesis-gate fixtures into shared conformance tests. They check
-result types, descriptor annotations, and the actual authored text covered by
-diagnostic spans, including errors inside expanded forms and nested slots.
-Keep small reviewed goldens and complete consumer programs.
-
-Prioritize these invariants:
-
-- Diagnostics identify the authored expression that caused an error.
-- Descriptor hooks participate in inference and checking.
-- Invalid declarations cannot reach packaging or target generation.
-- Editing, deleting, or replacing a definition does not retain stale bindings.
-- An incremental result agrees with a fresh analysis of the same sources.
-- Changes in public exports invalidate dependent analyses correctly.
-
-Property tests are useful for substitution, unification, and source/edit round
-trips. Avoid tests that depend on particular helper names or source snippets.
-
-### Cache correctness and performance observability
-
-OCaml's session tracks source hashes, prelude fingerprints, bindings, exports,
-dependencies, and artifact caches. Its cache tests and benchmarks exercise
-invalidation and separate cold load, warm summaries, and edits.
-
-Port the invalidation scenarios first, then introduce caching with fresh-result
-equivalence tests. Track startup, cold analysis, warm analysis, edit latency,
-retained memory, and bundle size separately. Run timing budgets on controlled
-hardware; use deterministic work/reuse counters for ordinary CI.
-
-## Performance study
-
-On this checkout, **native OCaml is substantially faster at typechecking and
-generally faster at evaluation. OCaml compiled to JavaScript has a mixed
-advantage: it checks the large synthetic definition programs faster, but is
+At that revision, **native OCaml was substantially faster at typechecking and
+generally faster at evaluation. OCaml compiled to JavaScript had a mixed
+advantage: it checked the large synthetic definition programs faster, but was
 slower at the larger parsing and collection-evaluation workloads.**
 
-Focused TypeScript prototypes remove most of the large typechecking gap. The
-measurements support optimizing the TypeScript implementation before treating
-its current performance as an unavoidable cost of TypeScript or Effect.
+Focused TypeScript prototypes removed most of the large typechecking gap. The
+measurements supported optimizing the TypeScript implementation before treating
+its performance as an unavoidable cost of TypeScript or Effect.
 
 ### Environment and method
 
@@ -218,11 +166,10 @@ measurements. The TypeScript package uses its existing unbundled Node build;
 the OCaml JavaScript artifact is one compiled file. Module loading and package
 layout contribute to the difference.
 
-`JsOcamlLanguageHost` currently spawns Node for each request. Using it repeatedly
-incurs startup costs on every operation. The language server already loads the
-same artifact once in a persistent bridge, and these warm benchmarks load it
-once as well. A persistent worker or in-process adapter would remove repeated
-startup from the generic JavaScript host.
+`JsOcamlLanguageHost` spawned Node for each request. Using it repeatedly
+incurred startup costs on every operation. The language server then loaded the
+same artifact once in a persistent bridge, and these warm benchmarks loaded it
+once as well.
 
 The warm baseline calls do not reuse parsed syntax, compiled bytecode, inferred
 types, or source artifact caches. They measure repeated uncached source
@@ -238,31 +185,33 @@ A Node CPU profile of 120 checks of the 100-definition program attributes about
 update. This is one workload's profile, including initialization; it is not a
 general attribution of compiler time.
 
-`type/substitution.ts` currently copies all three substitution maps whenever
-it applies a substitution to a scheme, even when the scheme binds no variables
-that occur in those maps. `applyEnv` repeats this for every binding. As a
+`type/substitution.ts` copied all three substitution maps whenever
+it applied a substitution to a scheme, even when the scheme binds no variables
+that occur in those maps. `applyEnv` repeated this for every binding. As a
 program grows, repeated environment walks multiply the cost of copying growing
 substitution maps.
 
-`type/context.ts` also copies the accumulated `NodeTypeMap` on each annotation
-write. Its inference context is created per operation, making an owned mutable
+`type/context.ts` also copied the accumulated `NodeTypeMap` on each annotation
+write. Its inference context was created per operation, making an owned mutable
 builder a plausible alternative, with a stable read-only result published at
-the boundary.
+the boundary. Both changes landed in #50.
 
 Separately, the VM uses `yield* Ref.updateAndGet` for its step counter on every
-opcode. This is a concrete use of Effect in an execution hot loop. Keeping
+opcode, which is still the case. This is a concrete use of Effect in an execution hot loop. Keeping
 Effect around the operation while doing local bookkeeping synchronously can
 reduce dispatch cost. Interruptibility must remain an explicit part of that
 design.
 
 ### Isolated optimization experiments
 
-These experiments patch copies of emitted JavaScript under `.context/`.
-Production compiler source is unchanged. Each variant uses nine timed samples.
+These experiments patched copies of emitted JavaScript under `.context/`.
+Production compiler source was unchanged. Each variant uses nine timed samples.
 Outputs match the baseline on six benchmark workloads and 36 shared
 typechecking fixtures, including diagnostics and VM step counts. The
 500-definition follow-up checks the expected result type and empty diagnostics.
-This is evidence for follow-up changes, rather than full production validation.
+This was evidence for follow-up changes, rather than full production
+validation; #50 later implemented the first two prototypes with its own tests
+and benchmarks.
 
 The substitution prototype reuses a substitution map when none of a scheme's
 bound variables occurs in it. It copies and removes entries only when required.
@@ -300,42 +249,13 @@ The [experiment report](/benchmarks/2026-10-06-ts-experiments.json) contains
 samples and output-equivalence results. These are sequential experiments on
 one VM, not statistical confidence intervals or guarantees for other programs.
 
-### Recommended performance work
+### Reproducing the study
 
-1. **Avoid unnecessary substitution-map copies.** Preserve quantified-variable
-   exclusion and occurs-check behavior; verify with property tests and the
-   existing inference/conformance suites. This has the strongest measured
-   payoff and requires no language redesign.
-2. **Use an owned annotation builder.** Publish a stable result after inference,
-   and check snapshot ownership, concurrent operations, failure recovery, and
-   source provenance before changing mutation policy.
-3. **Reduce Effect bookkeeping per VM opcode.** Preserve exact step budgets,
-   nested callback counts, observation, cancellation, and scheduling fairness.
-   Batch interruption/yield checks explicitly; simply removing all per-step
-   yielding could make long-running evaluations less responsive.
-4. **Reuse frontend and analysis work.** Cache lossless syntax, expansion,
-   bytecode, and typed analysis by source/dependency/prelude revisions. Keep
-   host execution and effects out of caches whose semantics require freshness.
-   Port the OCaml invalidation fixtures before relying on these caches.
-5. **Measure startup independently.** Test a bundled TypeScript entry and
-   narrower or deferred imports. Keep browser and language-server workers alive.
-   Replace per-request process creation in the generic OCaml JavaScript adapter
-   if that adapter remains supported.
-6. **Profile again after each improvement.** Environment substitution,
-   generalization, builtin dispatch, diagnostic construction, and allocation
-   may become the next dominant costs. Benchmark representative consumer
-   sessions before making a final engine decision.
-
-The experiments support a TypeScript path with competitive performance, while
-native OCaml still has a real advantage in current uncached analysis and
-execution. Keeping the OCaml fixtures and temporary reference engine during
-the optimization and language-server migration would make consolidation easier
-to evaluate.
-
-The reproducible harness is `scripts/bench-engines.mjs`, with a small native
-timing executable in `packages/ocaml/bench/`. It compares persistent TypeScript,
-native OCaml, and OCaml JavaScript processes, then measures process startup
-separately. Successful outputs are checked before results enter the report.
+The harness was `scripts/bench-engines.mjs` and `scripts/bench-ts-experiments.mjs`,
+with a small native timing executable in `packages/ocaml/bench/`. They are
+preserved in commit `7f26d9f` and were removed with the engine. To reproduce,
+check out that commit, set up the OCaml 5.2 toolchain it pins in `mise.toml`,
+and run:
 
 ```sh
 pnpm install --frozen-lockfile
@@ -352,22 +272,38 @@ node scripts/bench-engines.mjs --case prelude-ontology.lisp/parse \
 node scripts/bench-ts-experiments.mjs
 ```
 
-The OCaml prerequisites are pinned in `mise.toml`. Native and JavaScript targets
-are sufficient for this study; WebAssembly is outside the comparison.
+That checkout includes #50 and later changes, so its results will differ from
+the `774cb1d` figures above.
 
-## Consolidation sequence
+## Patterns carried over from OCaml
 
-1. Make TypeScript authoritative for new semantic changes if consolidation is
-   selected. Retain OCaml as a temporary migration reference.
-2. Preserve diagnostic, descriptor, artifact, and invalidation fixtures.
-3. Introduce validated artifact types and a coherent analysis snapshot.
-4. Address measured TypeScript bottlenecks and compare again.
-5. Move the language server to the TypeScript host, preserving diagnostics,
-   hover, completion, cross-file behavior, and consumer preludes.
-6. Remove OCaml from required builds only after the supported consumer workflows
-   pass and their performance is acceptable.
+The study also listed OCaml design patterns worth keeping in TypeScript:
 
-Native deployment needs and measured latency should influence the final engine
-choice alongside maintenance cost. Browser compatibility alone does not select
-TypeScript: OCaml already builds to JavaScript through
-[js_of_ocaml](https://ocsigen.org/js_of_ocaml/).
+- **Validated data at compiler boundaries.** OCaml packaging accepted only an
+  opaque validated payload. TypeScript now validates artifact payloads before
+  packaging and session emission (#63). Decode external data with schemas at
+  host and artifact boundaries, and keep these contracts extensible through
+  descriptors rather than domain nouns in the core.
+- **Small, explicit module interfaces.** Keep consumers on public facades such
+  as `Reader.ts`, `Type.ts`, and `Evaluator.ts`. Check import direction, cycles,
+  and observable behavior rather than line counts or source snippets.
+- **A coherent analysis snapshot.** Language services share one TypeScript
+  analysis workspace (#52). Hover, diagnostics, generation, and the compiler
+  explorer should consume one immutable result per source and dependency
+  revision, with explicit mappings between authored syntax, expanded forms,
+  typed nodes, and emitted payloads.
+- **Expected errors and internal failures.** Expected authoring failures carry
+  source diagnostics; unexpected failures become `internal/error` at the host
+  boundary. Keep interruption and cancellation separate, following
+  [Effect's expected-error model](https://effect.website/docs/v4/error-management/expected-errors).
+  Deterministic transformations can be ordinary functions with locally owned
+  state; Effect services suit host capabilities, resources, and state ownership.
+- **Behavioral fixtures and diagnostic provenance.** The thesis-gate fixtures
+  are stored goldens checked by TypeScript tests. Diagnostics must identify the
+  authored expression, descriptor hooks must participate in checking, invalid
+  declarations must not reach packaging, and incremental results must agree
+  with a fresh analysis.
+- **Cache correctness and observability.** OCaml's session tracked source
+  hashes, prelude fingerprints, exports, and dependencies, with invalidation
+  tests. Port those scenarios before adding caches, and track startup, cold and
+  warm analysis, edit latency, memory, and bundle size separately.

@@ -1,8 +1,0 @@
-(executable
- (name effect_handler_target_probe)
- (modules effect_handler_target_probe)
- (modes exe js wasm)
- (js_of_ocaml
-  (flags --effects=cps))
- (wasm_of_ocaml
-  (flags --effects=cps)))

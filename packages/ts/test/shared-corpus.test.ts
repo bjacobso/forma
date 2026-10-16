@@ -3,7 +3,6 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse, typecheck } from "../src/Engine.js";
 
-/** OCaml remains the oracle; a divergence pins the TS result and its reason. */
 for (const suite of ["reader", "typecheck"] as const) {
   const root = resolve(import.meta.dirname, `../../../conformance/fixtures/${suite}`);
   describe(`shared ${suite} corpus`, () => {
@@ -12,8 +11,7 @@ for (const suite of ["reader", "typecheck"] as const) {
         const dir = resolve(root, name);
         const manifest = JSON.parse(readFileSync(resolve(dir, "fixture.json"), "utf8"));
         const stored = JSON.parse(readFileSync(resolve(dir, "expected.json"), "utf8"));
-        const expected = stored.typescript?.expectation ?? stored.expectation;
-        if (stored.typescript) expect(stored.typescript.reason.length).toBeGreaterThan(20);
+        const expected = stored.expectation;
         const source = manifest.source.inline ?? readFileSync(resolve(dir, manifest.source.file), "utf8");
         const sourceId = manifest.sourceId ?? `parity/${suite}-${name}`;
         const result = suite === "reader" ? parse({sourceId, source}) : typecheck({sourceId, source});
@@ -23,7 +21,7 @@ for (const suite of ["reader", "typecheck"] as const) {
           if (!expected.allowDiagnostics) expect(result.diagnostics).toEqual([]);
           if (suite === "typecheck") {
             expect("display" in result && result.display).toBeTruthy();
-            if (stored.typescript?.numericType) expect("display" in result && result.display).toBe(stored.typescript.numericType);
+            if (stored.normalized?.type) expect("display" in result && result.display).toBe(stored.normalized.type);
           }
         } else {
           expect(result.diagnostics).toHaveLength(1);

@@ -20,7 +20,9 @@ libraries, independently checked modules, packages, and application entry points
 Relative file imports, explicit exports, re-exports, isolated scopes, and linked
 Effect TypeScript are implemented in stage 1; see [working file modules](../modules.md).
 Relative compile-time library imports and host-selected project preludes are
-implemented in the TypeScript and Native OCaml engines. Package paths and project
+implemented in the TypeScript engine. They were also implemented in the Native
+OCaml engine, which has since been removed; TypeScript is the only engine (see
+[Retiring the OCaml engine](../engine-consolidation.md)). Package paths and project
 commands remain proposed.
 
 The examples use the current Effect-value authoring surface.
@@ -29,9 +31,9 @@ effects, and deferred functions as an alternative surface for the same module mo
 
 ## Foundations before stage 1
 
-The Native engine already analyzes `use`, `import`, `export`, and `export-from`
-directives in `packages/ocaml/lib/module_decl.ml`. It records dependency metadata,
-checks some export references, and tracks public interface changes for cache
+When this RFC was written, the Native OCaml engine already analyzed `use`,
+`import`, `export`, and `export-from` directives. It recorded dependency metadata,
+checked some export references, and tracked public interface changes for cache
 invalidation. Before stage 1, namespace imports rewrote references to local names and
 evaluation used shared session bindings. Stage 1 removes both behaviors.
 
@@ -40,8 +42,8 @@ and the Effect generator emitted individual files without linking them. Protocol
 describe generated imports; those are consumer metadata rather than language
 module boundaries.
 
-The new module graph, interface, checking, runtime, and linking APIs share
-binding and visibility rules across both engines. The older artifact module
+The new module graph, interface, checking, runtime, and linking APIs share one
+set of binding and visibility rules. The older artifact module
 metadata remains consumer metadata; it does not resolve executable module imports.
 
 ## Authoring syntax
@@ -155,7 +157,7 @@ Each module has its own lexical scope. Its visible bindings are the small core
 language, explicit imports, project prelude exports in stage 2, and its local
 definitions. Loading a source into a host session never makes its declarations
 implicitly visible to other modules. The stage 1 and stage 2 core
-boundaries below apply consistently to both engines.
+boundaries below apply to every consumer of the engine.
 
 A resolved binding carries an identity derived from the resolved package
 instance, module path, and declaration. It is not identified solely by its printed
@@ -238,8 +240,9 @@ defining module; typeclass instance imports and coherence remain deferred.
 
 These decisions define the agreed stage 2 direction. The file-based slice now
 implements imported forms and macros, project preludes, declaration descriptors,
-pure collections, public schemas, and portable data facets in both the TypeScript
-and Native OCaml engines. The shared Stripe → Salesforce fixtures pin this slice.
+pure collections, public schemas, and portable data facets in the TypeScript
+engine (and, until its removal, the Native OCaml engine). The Stripe → Salesforce
+fixtures pin this slice.
 Data-member provenance currently conservatively retains every contributing input
 declaration through arbitrary pure helpers; it does not identify the minimal
 input set or a distinct authored span for each computed field. Module interfaces
@@ -262,7 +265,7 @@ primitive/container and Effect type constructors, and the intrinsic declaration
 forms `type`, `class`, `error`, `service`, `layer`, and `do!`. It includes `define`,
 signatures, lexical binding and control primitives, `macro`, `form`, and the
 `Declares` and `Refers` contract machinery needed to author libraries. This is a
-fixed language boundary shared by both engines; it contains no bundled source
+fixed language boundary; it contains no bundled source
 prelude, domain forms, descriptor stack, or host-loaded bindings. Kernel sugar
 such as `when`, `cond`, and threading macros moves into ordinary exported
 libraries. The six stage-1 declaration and Effect forms stay intrinsic in this
@@ -338,7 +341,7 @@ Module cycles remain rejected. Macro-introduced private names remain hygienic;
 public declarations require a stable name supplied by the caller.
 
 Interfaces extend the existing binding entry with phase availability and optional
-compile-time facets. Both engines expose the same portable information:
+compile-time facets. Interfaces expose this portable information:
 
 | Facet | Contents |
 | --- | --- |
@@ -440,8 +443,9 @@ A broken imported reference must report its authored span. Conformance fixtures
 also cover classification mismatches, schema inspection, private helper isolation,
 re-export identity, macro hygiene, distinct project preludes, data/helper cache
 invalidation, derived provenance, and deferred `update!` without execution. The
-OCaml implementation follows with the same normalized interfaces, data, and
-diagnostic expectations; parity is established by running those fixtures.
+fixtures store normalized interfaces, data, and diagnostic expectations. (As
+accepted, an OCaml implementation followed and parity was established by running
+those fixtures; the OCaml engine has since been removed.)
 
 ## Compile-time modules
 
@@ -487,7 +491,7 @@ emitting them as runtime imports when they have no runtime role.
 
 ## Compiler and host model
 
-Both engines share three conceptual boundaries:
+The compiler and host share three conceptual boundaries:
 
 | Concept | Responsibility |
 | --- | --- |
@@ -552,8 +556,7 @@ only exported names.
 
 1. **Isolated modules and linking.** Specify the shared interface format, resolver
    contract, binding identities, named and namespace imports, exports, and cycle
-   diagnostics. Implement the same semantics in both engines and generate linked
-   Effect TypeScript.
+   diagnostics. Implement these semantics and generate linked Effect TypeScript.
 2. **Compile-time libraries.** Carry macro and form environments across imports,
    introduce hygienic expansion, preserve contracts and provenance, and make preludes
    ordinary dependency modules.
@@ -565,7 +568,7 @@ modules, nominal identity, polymorphic imports, re-export identity, constructor
 visibility, cycle diagnostics, and load-order independence. Compile-time fixtures
 cover private projection helpers, macro hygiene, transitive dependencies, and
 diagnostics at author spans. Integration checks compile and execute linked generated
-code and compare both engines' interfaces and artifacts.
+code and compare interfaces and artifacts against stored, reviewed expectations.
 
 Each stage must remove the corresponding dependence on ambient session bindings.
 The initial implementation should not retain a compatibility mode that exposes

@@ -1,35 +1,18 @@
-import { chmod, mkdtemp, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
 
 import { describe, expect, it } from "vitest";
 
-import { JsOcamlLanguageHost, NodeOcamlLanguageHost, TsLanguageHost } from "../src/index.js";
+import { TsLanguageHost } from "../src/index.js";
 import type { Diagnostic, LanguageHost } from "../src/index.js";
 
 describe("language-host shared ABI", () => {
   const tsHost = new TsLanguageHost();
 
   async function readyOneShotHosts(): Promise<LanguageHost[]> {
-    const hosts: LanguageHost[] = [tsHost];
-    const ocamlHost = new NodeOcamlLanguageHost();
-    if (await ocamlHost.available()) {
-      hosts.push(ocamlHost);
-    }
-    const jsOcamlHost = new JsOcamlLanguageHost();
-    if (await jsOcamlHost.available()) {
-      hosts.push(jsOcamlHost);
-    }
-    return hosts;
+    return [tsHost];
   }
 
   async function readySessionHosts(): Promise<LanguageHost[]> {
-    const hosts: LanguageHost[] = [tsHost];
-    const ocamlHost = new NodeOcamlLanguageHost();
-    if (await ocamlHost.available()) {
-      hosts.push(ocamlHost);
-    }
-    return hosts;
+    return [tsHost];
   }
 
   function expectDiagnosticPhaseAndSource(
@@ -60,225 +43,6 @@ describe("language-host shared ABI", () => {
     expect(serialized).not.toContain('"SExpr"');
     expect(serialized).not.toContain('"typeString"');
   }
-
-  it("reports unavailable OCaml native artifacts without starting a request", async () => {
-    const ocamlHost = new NodeOcamlLanguageHost({
-      cliPath: `/tmp/forma-missing-ocaml-${process.pid}/forma_cli.exe`,
-    });
-
-    await expect(ocamlHost.available()).resolves.toBe(false);
-  });
-
-  it("reports unavailable OCaml JS artifacts without starting a request", async () => {
-    const jsOcamlHost = new JsOcamlLanguageHost({
-      jsPath: `/tmp/forma-missing-ocaml-js-${process.pid}/jsoo_entry.cjs`,
-    });
-
-    await expect(jsOcamlHost.available()).resolves.toBe(false);
-  });
-
-  it("fails OCaml JS one-shot requests clearly when the JS artifact is missing", async () => {
-    const missingPath = `/tmp/forma-missing-ocaml-js-${process.pid}/jsoo_entry.cjs`;
-    const jsOcamlHost = new JsOcamlLanguageHost({ jsPath: missingPath });
-
-    await expect(jsOcamlHost.version()).rejects.toThrow(
-      `Missing OCaml JS language artifact at ${missingPath}`,
-    );
-  });
-
-  it("fails OCaml one-shot requests clearly when the native artifact is missing", async () => {
-    const missingPath = `/tmp/forma-missing-ocaml-${process.pid}/forma_cli.exe`;
-    const ocamlHost = new NodeOcamlLanguageHost({ cliPath: missingPath });
-
-    await expect(ocamlHost.version()).rejects.toThrow(
-      `Missing OCaml language CLI at ${missingPath}`,
-    );
-  });
-
-  it("fails OCaml daemon session startup clearly when the native artifact is missing", async () => {
-    const missingPath = `/tmp/forma-missing-ocaml-${process.pid}/forma_cli.exe`;
-    const ocamlHost = new NodeOcamlLanguageHost({ cliPath: missingPath });
-
-    await expect(ocamlHost.openSession()).rejects.toThrow(
-      `Missing OCaml language CLI at ${missingPath}`,
-    );
-  });
-
-  it("preserves OCaml daemon startup diagnostics when the daemon exits before responding", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "forma-ocaml-daemon-exit-"));
-    const cliPath = join(dir, "forma_cli.exe");
-    await writeFile(
-      cliPath,
-      '#!/usr/bin/env sh\nif [ "$1" = "daemon" ]; then\n  echo \'daemon exploded\' >&2\n  exit 42\nfi\nprintf \'{"ok":true,"value":{}}\\n\'\n',
-    );
-    await chmod(cliPath, 0o755);
-
-    const ocamlHost = new NodeOcamlLanguageHost({ cliPath });
-
-    await expect(ocamlHost.openSession()).rejects.toThrow(
-      "OCaml openSession failed: OCaml language daemon exited with code 42: daemon exploded",
-    );
-  });
-
-  it("restarts the OCaml daemon after a startup crash", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "forma-ocaml-daemon-restart-"));
-    const cliPath = join(dir, "forma_cli.exe");
-    const markerPath = join(dir, "already-failed");
-    await writeFile(
-      cliPath,
-      `#!/usr/bin/env sh
-if [ "$1" = "daemon" ]; then
-  if [ ! -f "${markerPath}" ]; then
-    touch "${markerPath}"
-    echo 'daemon exploded once' >&2
-    exit 42
-  fi
-  IFS= read -r _line
-  printf '{"ok":true,"value":{"sessionId":"recovered-session"}}\\n'
-  exit 0
-fi
-printf '{"ok":true,"value":{}}\\n'
-`,
-    );
-    await chmod(cliPath, 0o755);
-
-    const ocamlHost = new NodeOcamlLanguageHost({ cliPath });
-
-    await expect(ocamlHost.openSession()).rejects.toThrow("daemon exploded once");
-    await expect(ocamlHost.openSession()).resolves.toEqual({ sessionId: "recovered-session" });
-  });
-
-  it("restarts the OCaml daemon after a timed-out request", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "forma-ocaml-daemon-timeout-"));
-    const cliPath = join(dir, "forma_cli.exe");
-    const markerPath = join(dir, "already-timed-out");
-    await writeFile(
-      cliPath,
-      `#!/usr/bin/env sh
-if [ "$1" = "daemon" ]; then
-  if [ ! -f "${markerPath}" ]; then
-    touch "${markerPath}"
-    IFS= read -r _line
-    sleep 10
-    exit 0
-  fi
-  IFS= read -r _line
-  printf '{"ok":true,"value":{"sessionId":"recovered-after-timeout"}}\\n'
-  exit 0
-fi
-printf '{"ok":true,"value":{}}\\n'
-`,
-    );
-    await chmod(cliPath, 0o755);
-
-    const ocamlHost = new NodeOcamlLanguageHost({
-      cliPath,
-      daemonRequestTimeoutMs: 500,
-    });
-
-    await expect(ocamlHost.openSession()).rejects.toThrow(
-      "Timed out waiting for OCaml daemon response",
-    );
-    await expect(ocamlHost.openSession()).resolves.toEqual({
-      sessionId: "recovered-after-timeout",
-    });
-  });
-
-  it("destructively aborts an active OCaml daemon evaluation by evaluation id", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "forma-ocaml-active-abort-"));
-    const cliPath = join(dir, "forma_cli.exe");
-    await writeFile(
-      cliPath,
-      `#!/usr/bin/env sh
-if [ "$1" = "daemon" ]; then
-  while IFS= read -r line; do
-    case "$line" in
-      *'"op":"openSession"'*)
-        printf '{"ok":true,"value":{"sessionId":"abort-session"}}\\n'
-        ;;
-      *'"op":"evaluateModule"'*)
-        sleep 10
-        printf '{"ok":true,"value":{"value":{"kind":"int","value":3},"formCount":1}}\\n'
-        ;;
-      *)
-        printf '{"ok":true,"value":null}\\n'
-        ;;
-    esac
-  done
-  exit 0
-fi
-printf '{"ok":true,"value":{}}\\n'
-`,
-    );
-    await chmod(cliPath, 0o755);
-
-    const ocamlHost = new NodeOcamlLanguageHost({
-      cliPath,
-      daemonRequestTimeoutMs: 5_000,
-    });
-
-    const { sessionId } = await ocamlHost.openSession();
-    const evaluation = ocamlHost.evaluateInSession({
-      sessionId,
-      evaluationId: "active-eval",
-      source: "(+ 1 2)",
-    });
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    await expect(
-      ocamlHost.abortEvaluation({
-        sessionId,
-        evaluationId: "active-eval",
-        reason: "test active abort",
-      }),
-    ).resolves.toEqual({
-      evaluationId: "active-eval",
-      aborted: true,
-    });
-
-    await expect(evaluation).resolves.toMatchObject({
-      status: "failed",
-      diagnostics: [{ code: "daemon/exit" }],
-    });
-
-    await expect(
-      ocamlHost.evaluateInSession({
-        sessionId,
-        source: "(+ 2 3)",
-      }),
-    ).rejects.toThrow(`Unknown language session: ${sessionId}`);
-    await expect(ocamlHost.openSession()).resolves.toEqual({ sessionId: "abort-session" });
-  });
-
-  it("declares OCaml abortEvaluation as partial cancellation capability metadata", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "forma-ocaml-version-"));
-    const cliPath = join(dir, "forma_cli.exe");
-    await writeFile(
-      cliPath,
-      `#!/usr/bin/env sh
-if [ "$1" = "request" ]; then
-  printf '{"ok":true,"value":{"engine":"fake-ocaml","version":"test"}}\\n'
-  exit 0
-fi
-exit 1
-`,
-    );
-    await chmod(cliPath, 0o755);
-
-    const ocamlHost = new NodeOcamlLanguageHost({ cliPath });
-
-    await expect(ocamlHost.version()).resolves.toMatchObject({
-      capabilities: expect.arrayContaining(["abortEvaluation"]),
-      capabilityNotes: [
-        {
-          capability: "abortEvaluation",
-          status: "partial",
-          detail: expect.stringContaining("destructively kill active daemon requests"),
-        },
-      ],
-    });
-  });
 
   it("normalizes TS parse output to keyword AST nodes", async () => {
     const result = await tsHost.parse({
@@ -705,140 +469,6 @@ exit 1
     }
   });
 
-  it("pauses and resumes OCaml session evaluation for first-order declarative host builtins", async () => {
-    const ocamlHost = new NodeOcamlLanguageHost();
-    if (!(await ocamlHost.available())) return;
-
-    const { sessionId } = await ocamlHost.openSession({ defaultStepLimit: 500 });
-    try {
-      await ocamlHost.configureSession({
-        sessionId,
-        hostBuiltins: [
-          {
-            name: "host-add",
-            arity: 2,
-            handler: { kind: "host-effect", effect: "test/add" },
-          },
-          {
-            name: "host-label",
-            arity: 1,
-            handler: { kind: "host-effect", effect: "test/label" },
-          },
-        ],
-      });
-
-      const first = await ocamlHost.evaluateInSession({
-        sessionId,
-        source: "(host-label (host-add 2 3))",
-      });
-
-      expect(first).toEqual({
-        status: "host-call",
-        call: {
-          evaluationId: expect.any(String),
-          callId: expect.any(String),
-          effect: "test/add",
-          name: "host-add",
-          args: [
-            { kind: "int", value: 2 },
-            { kind: "int", value: 3 },
-          ],
-        },
-      });
-      if (first.status !== "host-call") throw new Error("expected first host call");
-
-      const second = await ocamlHost.resumeHostCall({
-        sessionId,
-        evaluationId: first.call.evaluationId,
-        callId: first.call.callId,
-        result: { ok: true, value: { kind: "int", value: 5 } },
-      });
-
-      expect(second).toEqual({
-        status: "host-call",
-        call: {
-          evaluationId: first.call.evaluationId,
-          callId: expect.any(String),
-          effect: "test/label",
-          name: "host-label",
-          args: [{ kind: "int", value: 5 }],
-        },
-      });
-      if (second.status !== "host-call") throw new Error("expected second host call");
-
-      const completed = await ocamlHost.resumeHostCall({
-        sessionId,
-        evaluationId: second.call.evaluationId,
-        callId: second.call.callId,
-        result: { ok: true, value: { kind: "string", value: "sum=5" } },
-      });
-
-      expect(completed).toMatchObject({
-        status: "completed",
-        result: {
-          value: { kind: "string", value: "sum=5" },
-          diagnostics: [],
-        },
-      });
-    } finally {
-      await ocamlHost.closeSession({ sessionId });
-    }
-  });
-
-  it("aborts and releases a retained OCaml host-call evaluation", async () => {
-    const ocamlHost = new NodeOcamlLanguageHost();
-    if (!(await ocamlHost.available())) return;
-
-    const { sessionId } = await ocamlHost.openSession({ defaultStepLimit: 500 });
-    try {
-      await ocamlHost.configureSession({
-        sessionId,
-        hostBuiltins: [
-          {
-            name: "host-block",
-            arity: 0,
-            handler: { kind: "host-effect", effect: "test/block" },
-          },
-        ],
-      });
-
-      const paused = await ocamlHost.evaluateInSession({
-        sessionId,
-        source: "(host-block)",
-      });
-      expect(paused).toMatchObject({
-        status: "host-call",
-        call: { effect: "test/block", name: "host-block" },
-      });
-      if (paused.status !== "host-call") throw new Error("expected host call");
-
-      await expect(
-        ocamlHost.abortEvaluation({
-          sessionId,
-          evaluationId: paused.call.evaluationId,
-          reason: "test abort",
-        }),
-      ).resolves.toEqual({
-        evaluationId: paused.call.evaluationId,
-        aborted: true,
-      });
-
-      await expect(
-        ocamlHost.resumeHostCall({
-          sessionId,
-          evaluationId: paused.call.evaluationId,
-          callId: paused.call.callId,
-          result: { ok: true, value: { kind: "nil" } },
-        }),
-      ).resolves.toMatchObject({
-        status: "failed",
-        diagnostics: [{ code: "evaluation/not-found" }],
-      });
-    } finally {
-      await ocamlHost.closeSession({ sessionId });
-    }
-  });
-
   it("fails a retained TS-backed evaluation when a host-call resume fails", async () => {
     const { sessionId } = await tsHost.openSession({ defaultStepLimit: 500 });
     try {
@@ -886,59 +516,6 @@ exit 1
       });
     } finally {
       await tsHost.closeSession({ sessionId });
-    }
-  });
-
-  it("fails a retained OCaml evaluation with host-provided diagnostics when a host-call resume fails", async () => {
-    const ocamlHost = new NodeOcamlLanguageHost();
-    if (!(await ocamlHost.available())) return;
-
-    const { sessionId } = await ocamlHost.openSession({ defaultStepLimit: 500 });
-    try {
-      await ocamlHost.configureSession({
-        sessionId,
-        hostBuiltins: [
-          {
-            name: "host-fail",
-            arity: 0,
-            handler: { kind: "host-effect", effect: "test/fail" },
-          },
-        ],
-      });
-
-      const paused = await ocamlHost.evaluateInSession({
-        sessionId,
-        source: "(host-fail)",
-      });
-      expect(paused).toMatchObject({
-        status: "host-call",
-        call: { effect: "test/fail", name: "host-fail" },
-      });
-      if (paused.status !== "host-call") throw new Error("expected host call");
-
-      const failed = await ocamlHost.resumeHostCall({
-        sessionId,
-        evaluationId: paused.call.evaluationId,
-        callId: paused.call.callId,
-        result: {
-          ok: false,
-          diagnostics: [
-            {
-              code: "test/failed",
-              severity: "error",
-              message: "host failure",
-              phase: "host-effect",
-            },
-          ],
-        },
-      });
-
-      expect(failed).toMatchObject({
-        status: "failed",
-        diagnostics: [{ code: "test/failed", message: "host failure" }],
-      });
-    } finally {
-      await ocamlHost.closeSession({ sessionId });
     }
   });
 
@@ -1067,166 +644,6 @@ exit 1
       });
     } finally {
       await tsHost.closeSession({ sessionId });
-    }
-  });
-
-  it("retains callable OCaml values passed to host calls and invokes pure callbacks through callValue", async () => {
-    const ocamlHost = new NodeOcamlLanguageHost();
-    if (!(await ocamlHost.available())) return;
-
-    const { sessionId } = await ocamlHost.openSession({ defaultStepLimit: 500 });
-    try {
-      await ocamlHost.configureSession({
-        sessionId,
-        hostBuiltins: [
-          {
-            name: "host-use-fn",
-            arity: 1,
-            handler: { kind: "host-effect", effect: "test/use-fn" },
-          },
-        ],
-      });
-
-      const paused = await ocamlHost.evaluateInSession({
-        sessionId,
-        source: "(host-use-fn (fn [x] (+ x 1)))",
-      });
-      expect(paused).toMatchObject({
-        status: "host-call",
-        call: {
-          effect: "test/use-fn",
-          args: [{ kind: "function", valueRef: expect.any(String) }],
-        },
-      });
-      if (paused.status !== "host-call") throw new Error("expected host call");
-      const fnArg = paused.call.args[0];
-      if (fnArg?.kind !== "function") throw new Error("expected function ref");
-
-      const called = await ocamlHost.callValue({
-        sessionId,
-        valueRef: fnArg.valueRef,
-        args: [{ kind: "int", value: 4 }],
-      });
-      expect(called).toMatchObject({
-        status: "completed",
-        result: {
-          value: { kind: "int", value: 5 },
-          diagnostics: [],
-        },
-      });
-      if (called.status !== "completed") throw new Error("expected callable result");
-
-      await expect(
-        ocamlHost.releaseValue({
-          sessionId,
-          valueRefs: [fnArg.valueRef],
-        }),
-      ).resolves.toEqual({ released: [fnArg.valueRef] });
-
-      await expect(
-        ocamlHost.callValue({
-          sessionId,
-          valueRef: fnArg.valueRef,
-          args: [{ kind: "int", value: 4 }],
-        }),
-      ).resolves.toMatchObject({
-        status: "failed",
-        diagnostics: [{ code: "value-ref/not-found" }],
-      });
-
-      const completed = await ocamlHost.resumeHostCall({
-        sessionId,
-        evaluationId: paused.call.evaluationId,
-        callId: paused.call.callId,
-        result: { ok: true, value: called.result.value },
-      });
-      expect(completed).toMatchObject({
-        status: "completed",
-        result: { value: { kind: "int", value: 5 }, diagnostics: [] },
-      });
-    } finally {
-      await ocamlHost.closeSession({ sessionId });
-    }
-  });
-
-  it("re-enters OCaml host calls from retained callback arguments", async () => {
-    const ocamlHost = new NodeOcamlLanguageHost();
-    if (!(await ocamlHost.available())) return;
-
-    const { sessionId } = await ocamlHost.openSession({ defaultStepLimit: 500 });
-    try {
-      await ocamlHost.configureSession({
-        sessionId,
-        hostBuiltins: [
-          {
-            name: "host-use-fn",
-            arity: 1,
-            handler: { kind: "host-effect", effect: "test/use-fn" },
-          },
-          {
-            name: "host-label",
-            arity: 1,
-            handler: { kind: "host-effect", effect: "test/label" },
-          },
-        ],
-      });
-
-      const outer = await ocamlHost.evaluateInSession({
-        sessionId,
-        source: "(host-use-fn (fn [x] (host-label (+ x 1))))",
-      });
-      expect(outer).toMatchObject({
-        status: "host-call",
-        call: {
-          effect: "test/use-fn",
-          args: [{ kind: "function", valueRef: expect.any(String) }],
-        },
-      });
-      if (outer.status !== "host-call") throw new Error("expected outer host call");
-      const fnArg = outer.call.args[0];
-      if (fnArg?.kind !== "function") throw new Error("expected function ref");
-
-      const nested = await ocamlHost.callValue({
-        sessionId,
-        valueRef: fnArg.valueRef,
-        args: [{ kind: "int", value: 4 }],
-      });
-      expect(nested).toMatchObject({
-        status: "host-call",
-        call: {
-          effect: "test/label",
-          name: "host-label",
-          args: [{ kind: "int", value: 5 }],
-        },
-      });
-      if (nested.status !== "host-call") throw new Error("expected nested host call");
-
-      const nestedCompleted = await ocamlHost.resumeHostCall({
-        sessionId,
-        evaluationId: nested.call.evaluationId,
-        callId: nested.call.callId,
-        result: { ok: true, value: { kind: "int", value: 9 } },
-      });
-      expect(nestedCompleted).toMatchObject({
-        status: "completed",
-        result: { value: { kind: "int", value: 9 }, diagnostics: [] },
-      });
-      if (nestedCompleted.status !== "completed") {
-        throw new Error("expected nested callback completion");
-      }
-
-      const outerCompleted = await ocamlHost.resumeHostCall({
-        sessionId,
-        evaluationId: outer.call.evaluationId,
-        callId: outer.call.callId,
-        result: { ok: true, value: nestedCompleted.result.value },
-      });
-      expect(outerCompleted).toMatchObject({
-        status: "completed",
-        result: { value: { kind: "int", value: 9 }, diagnostics: [] },
-      });
-    } finally {
-      await ocamlHost.closeSession({ sessionId });
     }
   });
 
@@ -1682,7 +1099,7 @@ exit 1
     }
   });
 
-  it("projects editor analysis or explicit unsupported diagnostics without exposing TS LSP objects", async () => {
+  it("projects editor analysis without exposing TS LSP objects", async () => {
     const result = await tsHost.analyzeEditor({
       sourceId: "editor",
       source: "(+ 1 2)",
@@ -1702,89 +1119,6 @@ exit 1
       span: { sourceId: "editor" },
     });
     expect(result.typedSpans[0]).not.toHaveProperty("typeString");
-
-    for (const host of [new NodeOcamlLanguageHost(), new JsOcamlLanguageHost()]) {
-      await expect(
-        host.analyzeEditor({
-          sourceId: `${host.name}-editor`,
-          source: "(+ 1 2)",
-        }),
-      ).resolves.toMatchObject({
-        sourceId: `${host.name}-editor`,
-        success: false,
-        typedSpans: [],
-        diagnostics: [
-          {
-            code: "editor/unsupported",
-            phase: "typecheck",
-            severity: "error",
-          },
-        ],
-        parse: {
-          greenTree: null,
-          redTree: null,
-        },
-      });
-    }
-  });
-
-  it("can run one-shot conformance for current TS, native OCaml, and JS OCaml operations", async () => {
-    const hosts = await readyOneShotHosts();
-
-    for (const host of hosts) {
-      const version = await host.version();
-      expect(version).toMatchObject({
-        hostAbiVersion: "0.1.0",
-        capabilities: expect.arrayContaining(["parse", "expand", "typecheck", "projectValue"]),
-        sourceLoadSemantics: host.name === "ts" ? "validate-and-store" : host.name === "ocaml-native" ? "apply-declarations" : "unsupported",
-      });
-      for (const note of version.capabilityNotes ?? []) {
-        if (host.name === "ocaml-js" && note.capability === "openSession") {
-          expect(note.status).toBe("unsupported");
-          continue;
-        }
-        expect(
-          version.capabilities,
-          `${host.name} note must reference an advertised capability`,
-        ).toContain(note.capability);
-      }
-
-      await expect(
-        host.parse({
-          sourceId: `${host.name}-parse`,
-          source: "(+ 1 2)",
-        }),
-      ).resolves.toMatchObject({
-        diagnostics: [],
-        ast: [{ kind: "list" }],
-      });
-      await expect(
-        host.typecheck({
-          sourceId: `${host.name}-typecheck`,
-          source: "(+ 1 2)",
-        }),
-      ).resolves.toMatchObject({
-        diagnostics: [],
-      });
-      await expect(
-        host.expand({
-          sourceId: `${host.name}-expand`,
-          source: "(+ 1 2)",
-        }),
-      ).resolves.toMatchObject({
-        diagnostics: [],
-        ast: [{ kind: "list" }],
-      });
-      await expect(
-        host.evaluate({
-          sourceId: `${host.name}-evaluate`,
-          source: "(+ 1 2)",
-        }),
-      ).resolves.toMatchObject({
-        diagnostics: [],
-        value: { kind: "int", value: 3 },
-      });
-    }
   });
 
   it("can run common ready-backend conformance for current operations", async () => {
@@ -1795,7 +1129,7 @@ exit 1
       expect(version).toMatchObject({
         hostAbiVersion: "0.1.0",
         capabilities: expect.arrayContaining(["parse", "expand", "typecheck", "projectValue"]),
-        sourceLoadSemantics: host.name === "ts" ? "validate-and-store" : "apply-declarations",
+        sourceLoadSemantics: "validate-and-store",
       });
       for (const note of version.capabilityNotes ?? []) {
         expect(
@@ -1803,17 +1137,7 @@ exit 1
           `${host.name} note must reference an advertised capability`,
         ).toContain(note.capability);
       }
-      if (host.name === "ocaml-native") {
-        expect(version.capabilityNotes).toEqual([
-          {
-            capability: "abortEvaluation",
-            status: "partial",
-            detail: expect.stringContaining("destructively kill active daemon requests"),
-          },
-        ]);
-      } else {
-        expect(version.capabilityNotes).toBeUndefined();
-      }
+      expect(version.capabilityNotes).toBeUndefined();
       await expect(
         host.parse({
           sourceId: `${host.name}-parse`,
@@ -2032,44 +1356,6 @@ exit 1
     }
   });
 
-  it("reports JS OCaml session-backed expand and typecheck as explicitly unsupported", async () => {
-    const jsOcamlHost = new JsOcamlLanguageHost();
-
-    await expect(
-      jsOcamlHost.expand({
-        sessionId: "js-unsupported-session",
-        sourceId: "js-loaded-source",
-      }),
-    ).resolves.toMatchObject({
-      sourceId: "js-loaded-source",
-      ast: [],
-      diagnostics: [
-        {
-          code: "session/unsupported",
-          phase: "expand",
-          severity: "error",
-          message: expect.stringContaining("persistent source sessions are not supported"),
-        },
-      ],
-    });
-
-    await expect(
-      jsOcamlHost.typecheck({
-        sessionId: "js-unsupported-session",
-        sourceId: "js-loaded-source",
-      }),
-    ).resolves.toMatchObject({
-      diagnostics: [
-        {
-          code: "session/unsupported",
-          phase: "typecheck",
-          severity: "error",
-          message: expect.stringContaining("persistent source sessions are not supported"),
-        },
-      ],
-    });
-  });
-
   it("reports session metadata and reset semantics through ready backends", async () => {
     const hosts = await readySessionHosts();
 
@@ -2173,41 +1459,6 @@ exit 1
         await host.closeSession({ sessionId });
       }
     }
-  });
-
-  it("reports JS OCaml session metadata and reset as explicitly unsupported", async () => {
-    const jsOcamlHost = new JsOcamlLanguageHost();
-
-    await expect(
-      jsOcamlHost.sessionInfo({ sessionId: "js-unsupported-session" }),
-    ).resolves.toMatchObject({
-      sessionId: "js-unsupported-session",
-      sourceCount: 0,
-      preludeCount: 0,
-      sources: [],
-      preludes: [],
-      diagnostics: [
-        {
-          code: "session/unsupported",
-          phase: "evaluate",
-          severity: "error",
-        },
-      ],
-    });
-
-    await expect(
-      jsOcamlHost.resetSession({ sessionId: "js-unsupported-session" }),
-    ).resolves.toMatchObject({
-      sessionId: "js-unsupported-session",
-      reset: false,
-      diagnostics: [
-        {
-          code: "session/unsupported",
-          phase: "evaluate",
-          severity: "error",
-        },
-      ],
-    });
   });
 
   it("configures TS-backed sessions with variables and type policy", async () => {

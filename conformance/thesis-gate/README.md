@@ -1,14 +1,15 @@
 # Descriptor typing thesis gate
 
 The 22 sources, the `prelude.lisp` fixture, and the nine files in `goldens/`
-are copied from `packages/ocaml/test/fixtures/thesis-gate/` and
-`packages/ocaml/preludes/thesis-gate.lisp`. The originals remain the reference.
-The domain fixtures also use the shared `preludes/ontology.lisp`.
+were copied from the retired OCaml engine's thesis-gate fixtures and prelude.
+The `goldens/` files are the original OCaml diagnostic output, kept for
+comparison. The domain fixtures also use the shared `preludes/ontology.lisp`.
 
 `typescript-expectations.json` stores result types, diagnostic codes, and the
-exact authored text covered by each diagnostic. The TypeScript suite runs every
-source through the analysis workspace, including descriptors and macros in
-preludes. Additional tests cover source-local hooks, session typing, lexical
+exact authored text covered by each diagnostic; it is the authoritative
+expectation, edited deliberately with a reviewed diff. The TypeScript suite in
+`packages/ts/test/descriptor-typing.test.ts` runs every source through the
+analysis workspace, including descriptors and macros in preludes. Additional tests cover source-local hooks, session typing, lexical
 scope, polymorphic inference, invalid hook results, and hover annotations.
 
 Intentional differences from the OCaml diagnostic goldens:
@@ -24,9 +25,8 @@ Intentional differences from the OCaml diagnostic goldens:
 
 `type/vector` uses the TypeScript engine's existing List representation for
 vector literals. This port does not change collection or numeric semantics.
-Unlike OCaml's record type builder, TypeScript rejects malformed field specs
+Unlike the OCaml record type builder, TypeScript rejects malformed field specs
 instead of silently dropping them.
 
-These fixtures demonstrate the descriptor slice; they do not establish parity
-for every engine operation. `conformance/engine-parity/matrix.json` records the
-remaining intentional differences.
+These fixtures demonstrate the descriptor slice; they do not cover every
+engine operation.

@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented in either engine |
+| Status | Proposed; not implemented |
 | Created | 2026-10-09 |
 | Depends on | [RFC 0005](./0005-row-operations.md) |
 | Scope | Row constraints, symbolic operations, generic bodies, and module contracts |
@@ -10,8 +10,8 @@
 ## Problem and outcome
 
 RFC 0005 computes `Pick`, `Omit`, and disjoint `Merge` for closed record
-shapes. It deliberately rejects open operands because neither engine retains
-record-domain obligations in generalized schemes. Comparing only the visible
+shapes. It deliberately rejects open operands because the checker does not
+retain record-domain obligations in generalized schemes. Comparing only the visible
 fields of two open records would miss collisions introduced through their tails.
 
 This proposal lets a library check a record program once under explicit
@@ -53,8 +53,8 @@ semantics remain those of RFC 0005.
 Predicates are compile-time facts with no runtime dictionaries or instance
 search. They are separate from Forma's typeclass constraints. Labels remain
 literal keywords. Whole-record variables are written using existing row syntax
-`{& row}`; field types retain ordinary type variables. Both engines must enforce
-these roles, even though OCaml currently represents open tails using type variables.
+`{& row}`; field types retain ordinary type variables. The checker must enforce
+these roles.
 
 Initially `Where` is permitted only at the outermost level of binding signatures
 and generalized module schemes. Predicates cannot be nested in function arguments
@@ -130,7 +130,7 @@ must be rejected. Predicates also referring to environment-bound variables stay
 pending at the enclosing scope rather than being dropped or freshened as local
 parameters. Unsolved monomorphic obligations are errors.
 
-Both engines must carry row predicates and symbolic operation operands through:
+The checker must carry row predicates and symbolic operation operands through:
 
 1. Free-variable collection and substitution, including variables occurring
    only in predicates or computations.
@@ -176,9 +176,10 @@ instantiations of one function, and rejected inverse inference. Include positive
 and negative imported/re-exported function cases. Pin exact author source IDs
 and spans, and assert evaluation of the new primitives against explicit records.
 
-Implement TypeScript, then OCaml; only claim parity after independent goldens
-and `pnpm parity:engines` pass. A TS-only intermediate landing must list the
-language difference explicitly. Package behavior changes require changesets.
+Implement in TypeScript and pin the results as independent, reviewed goldens
+checked by `pnpm surfaces`. Package behavior changes require changesets. (The
+planned OCaml implementation and parity gate were dropped: the OCaml engine was
+removed.)
 
 ## Delivery and exclusions
 

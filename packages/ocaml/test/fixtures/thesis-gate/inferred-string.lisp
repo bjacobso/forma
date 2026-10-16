@@ -1,1 +1,0 @@
-(inferred-type "ok")

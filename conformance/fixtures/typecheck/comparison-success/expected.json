@@ -1,7 +1,7 @@
 {
   "normalized": {
     "diagnostics": [],
-    "type": "Boolean"
+    "type": "Bool"
   },
   "success": true,
   "expectation": {

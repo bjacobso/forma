@@ -1,27 +1,29 @@
 # Session load and edit scenarios
 
-Engine-neutral sources and expected results ported from
-`packages/ocaml/scripts/artifact-cache.mjs` and `incremental.mjs`.
-The OCaml scripts remain the reference. TypeScript tests exercise these
-scenarios through the host and analysis workspace, comparing every edit with a
-fresh session or analysis. They assert results rather than cache counters:
-TypeScript has a module value cache and workspace query caches, but no equivalent
-of OCaml's artifact declaration cache or per-form inference cache yet.
+Engine-neutral sources and expected results, first ported from the retired
+OCaml engine's artifact-cache and incremental-edit gate scripts and now
+maintained as reviewed TypeScript expectations. `scenarios.json` is exercised
+by `packages/ts/test/session-edits.test.ts` and
+`packages/host/test/session-edits.test.ts` through the host and analysis
+workspace, comparing every edit with a fresh session or analysis. They assert
+results rather than cache counters: TypeScript has a module value cache and
+workspace query caches, but no artifact declaration cache or per-form inference
+cache yet.
 
 The scenarios cover private and public edits, removal of exports and schemas,
 replacement and deletion of declarations, and restoration after invalid edits.
 
-`loads.json` is compared by `pnpm parity:engines` (including TypeScript-only
-mode): successful structural loads,
+`loads.json` is checked by `pnpm surfaces`: successful structural loads,
 located surface errors, checked preludes, and unchanged values after a failed
-prelude replacement due to typing or a descriptor payload metacheck. Diagnostic
-codes for HM errors remain engine-specific.
+prelude replacement due to typing or a descriptor payload metacheck. It pins
+whether a load succeeded and whether its diagnostics are located, not HM
+diagnostic codes.
 The direct TypeScript elaborator reports missing schema references with
-`elaborate/hole-type`; OCaml's artifact path reports `elaborate/unknown-reference`.
-Both are stored in the scenario expectations.
+`elaborate/hole-type`; the OCaml artifact path reported
+`elaborate/unknown-reference`.
 
 The module schema scenarios use core `type` declarations for the same exported
 record shapes. TypeScript modules require descriptor libraries to be imported
-explicitly, whereas OCaml's original scenarios use session-global ontology
+explicitly, whereas the original OCaml scenarios used session-global ontology
 forms. The separate elaboration scenarios retain the original `entity`/`seed`
 syntax and exercise canonical artifacts directly.

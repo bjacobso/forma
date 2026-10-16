@@ -2,25 +2,17 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { readModuleGraph } from "../packages/ts/dist/Node.mjs";
-import {
-  NodeOcamlLanguageHost,
-  TsLanguageHost,
-} from "../packages/host/dist/index.mjs";
+import { TsLanguageHost } from "../packages/host/dist/index.mjs";
 
-const [entry, output, engine = "ts"] = process.argv.slice(2);
-if (!entry || !output || !["native", "ts"].includes(engine)) {
+const [entry, output] = process.argv.slice(2);
+if (!entry || !output) {
   console.error(
-    "Usage: node scripts/link-forma-modules.mjs <entry.forma> <output-directory> [ts|native]",
+    "Usage: node scripts/link-forma-modules.mjs <entry.forma> <output-directory>",
   );
   process.exit(64);
 }
 const graph = readModuleGraph(entry);
-const host =
-  engine === "native"
-    ? new NodeOcamlLanguageHost({
-        cliPath: resolve("packages/ocaml/dist/native/forma_cli.exe"),
-      })
-    : new TsLanguageHost();
+const host = new TsLanguageHost();
 const { sessionId } = await host.openSession();
 try {
   const loaded = await host.loadSourceBundle({

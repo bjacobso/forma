@@ -41,8 +41,8 @@ playgrounds, rule editors, and plugins.
   (`Engine.evaluateInSession` in `packages/ts/src/engine/operations.ts`,
   `packages/ts/src/modules/runtime.ts`) without type inference. A consumer
   that wants checking calls `typecheck` or `moduleGraph` separately. The
-  OCaml `replSubmit` operation evaluates a submission before it typechecks
-  it (`packages/ocaml/lib/abi_session_ops.ml`).
+  since-removed OCaml engine's `replSubmit` operation also evaluated a
+  submission before typechecking it.
 - **Step limits.** Each request accepts `stepLimit`; the TypeScript host
   defaults to 50,000 (`packages/host/src/ts-host.ts`). Exceeding it fails
   with `StepLimitExceeded` (`packages/ts/src/diagnostic/errors.ts`). There
@@ -66,8 +66,8 @@ playgrounds, rule editors, and plugins.
   find the attributes of the facts it can produce, and compares them with
   grant facts of the form `[author "can" attribute]`. Unknown attributes are
   reported as `*`. It covers produced data, not host calls. It is pinned by
-  `conformance/typed-authority/` and exists only in the TypeScript engine
-  (a gap in `conformance/engine-parity/matrix.json`).
+  `conformance/typed-authority/`. (It was never implemented in the OCaml
+  engine, which has since been removed.)
 - **Workbench approvals.** The workbench computes the capabilities each row
   can reach from the symbol index (`packages/workbench/src/requirements.ts`)
   and turns each `HostCall` into a permission checkpoint
@@ -76,8 +76,7 @@ playgrounds, rule editors, and plugins.
   locates a call only when the capability has exactly one reference.
 - **Cancellation.** The TypeScript host's `abortEvaluation` sets a flag that
   is checked when the evaluation next calls a host builtin, and fails a
-  pending call. It does not stop a computation that makes no host calls. The
-  OCaml host notes that abort does not interrupt running native evaluation.
+  pending call. It does not stop a computation that makes no host calls.
 - **Diagnostics.** `Diagnostic` has a code, severity, message, phase, span
   with optional line and column, and free-form `details`.
 
@@ -199,8 +198,8 @@ It does not provide isolation from hostile code:
 
 Hosts that run hostile code should run the engine in a separate process or
 worker with operating-system limits ([RFC 0013](./0013-runnable-host.md)
-proposes a process protocol; the native OCaml daemon already runs as a
-child process, without a sandbox). Host builtin implementations are the trust
+proposes a process protocol; the TypeScript host's JSON-lines `daemon` can
+already run as a child process, without a sandbox). Host builtin implementations are the trust
 boundary: each one must validate its arguments and enforce its own policy,
 such as confining paths to a directory.
 
@@ -233,9 +232,7 @@ such as confining paths to a directory.
    budget during type inference.
 4. **Diagnostics.** `renderDiagnostics` with golden output for each
    rejection and failure code.
-5. **OCaml parity.** The native host checks before it evaluates and passes
-   the fixture; `typed-authority` remains a recorded gap until the OCaml
-   engine implements it.
+5. **OCaml parity.** Dropped: the OCaml engine was removed.
 
 ## Decisions still required
 

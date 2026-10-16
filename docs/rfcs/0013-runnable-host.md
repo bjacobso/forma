@@ -22,9 +22,9 @@ cooperative cancellation, and a defined pattern for streaming.
 ## Motivation
 
 Today a Forma program can only be run by writing a script against the
-TypeScript packages, or by building the OCaml engine. There is no command to
-check or run a file, and no way to connect to a Forma session inside a
-running process.
+TypeScript packages or by sending ABI requests to the low-level JSON CLI in
+`@formalang/host`. There is no author-facing command to check or run a file,
+and no way to connect to a Forma session inside a running process.
 
 The agent evaluation described in [RFC 0010](./0010-live-sessions.md) needs
 both. Its host process owns I/O and calls Forma definitions; an author
@@ -35,38 +35,39 @@ need the same command and protocol.
 
 ## Current state
 
-- **No TypeScript command.** The README, the [agent entry page](../agents.md),
+- **No author-facing command.** The README, the [agent entry page](../agents.md),
   and the [Effect page](../effect.md) state that there is no published
   `forma` CLI. `packages/ts/src/cli/repl.ts` is a readline loop that threads
   an environment through lines with `evaluateCompileTimeExprs`, without
   types, modules, or host builtins; `@formalang/ts` declares no `bin`.
   `@formalang/language-server` has a `forma-language-server` binary that
   speaks LSP over stdio.
-- **OCaml command.** `forma_cli.exe` (`packages/ocaml/bin/forma_cli.ml`)
-  supports `request`, `daemon`, `file <typecheck|evaluate|interface|declarations>`,
-  `repl`, and `version`. The daemon reads one JSON request per line,
-  `{"op": ..., ...}`, and writes one response per line,
-  `{"ok": true, "value": ...}` or `{"ok": false, "diagnostics": [...]}`. It
-  answers in order, has no request ids, and sends no unsolicited messages.
-  `OcamlLanguageHost` (`packages/host/src/ocaml-host.ts`) spawns it, matches
-  responses in order, and applies a per-request timeout
-  (`FORMA_DAEMON_TIMEOUT_MS`, 30 seconds by default).
+- **JSON CLI.** `@formalang/host` declares a `forma` binary
+  (`packages/host/src/cli.ts`) that supports `request`, `daemon`,
+  `file <typecheck|evaluate|interface|declarations>`, and `version`. It
+  replaced the native OCaml `forma_cli.exe` when the OCaml engine was removed
+  ([Retiring the OCaml engine](../engine-consolidation.md)) and keeps its line
+  format. The daemon reads one JSON request per line, `{"op": ..., ...}`, and
+  writes one response per line, `{"ok": true, "value": ...}` or
+  `{"ok": false, "diagnostics": [...]}`. It answers in order, has no request
+  ids, and sends no unsolicited messages. No JavaScript client spawns it; the
+  removed `OcamlLanguageHost` spawned the native daemon and applied a
+  per-request timeout (`FORMA_DAEMON_TIMEOUT_MS`), which went with it.
 - **In-process ABI.** `LanguageHost` (`packages/host/src/types.ts`) is a
-  TypeScript interface. The TypeScript host has no wire form. The workbench
-  goes through `LanguageHost` so that a worker-backed or OCaml host can
-  replace the in-process one ([workbench](../workbench.md)); its REPL replays
+  TypeScript interface. Its only wire form is the JSON CLI above
+  (`packages/host/src/json-abi.ts`). The workbench goes through
+  `LanguageHost` so that a worker-backed or out-of-process host can replace
+  the in-process one ([workbench](../workbench.md)); its REPL replays
   definitions in a fresh browser session for every entry.
 - **Host calls.** An evaluation that calls a host builtin returns
   `{ status: "host-call", call }` and waits for `resumeHostCall`. Each
   evaluation has at most one pending call; several evaluations in one session
   can be pending at once. A resumed call supplies one value. Functions passed
   as host-call arguments are retained and can be invoked with `callValue`.
-  Nested host calls from such callbacks are tested for the OCaml host
-  (`packages/host/test/conformance.test.ts`); the TypeScript callback path is
-  tested without nesting.
+  Nested host calls from such callbacks are tested for the TypeScript host
+  (`packages/host/test/conformance.test.ts`).
 - **Cancellation.** The TypeScript host's `abortEvaluation` takes effect at
-  the evaluation's next host call. The OCaml host can kill the daemon process
-  but does not interrupt a running native evaluation.
+  the evaluation's next host call.
 - **Effect programs.** Kernel evaluation reports `module/effect-runtime`;
   Effect programs run through `linkEffectModules` output that the consumer
   compiles ([file modules](../modules.md)).
@@ -95,9 +96,9 @@ no terminal. Grants and limits follow [RFC 0012](./0012-checked-evaluation.md).
 Effect programs report `module/effect-runtime` until running linked Effect
 output is specified.
 
-`check` and `interface` correspond to the OCaml `file typecheck` and
-`file interface` operations, so both engines can be compared on the same
-files.
+`check` and `interface` correspond to the JSON CLI's `file typecheck` and
+`file interface` operations and report the same diagnostics and interfaces
+for the same files.
 
 ### The host protocol
 
@@ -121,15 +122,15 @@ Messages are JSON-RPC 2.0 objects, one per line. Method names are
 - `RemoteLanguageHost` in `@formalang/host` implements `LanguageHost` over
   the protocol. The existing host conformance suite runs against it.
 
-The OCaml daemon keeps its current format and gains the envelope: it accepts
-`jsonrpc`, `id`, `method`, and `params`, and echoes the id. Because request
-bodies are already the same ABI objects, this is a framing change. The
-TypeScript client for the native host then shares the protocol client.
+The existing JSON-lines daemon keeps its current format and gains the
+envelope: it accepts `jsonrpc`, `id`, `method`, and `params`, and echoes the
+id. Because request bodies are already the same ABI objects, this is a
+framing change.
 
 ### Transports and attach
 
-- **stdio** for a parent process that owns the server, as `OcamlLanguageHost`
-  does today.
+- **stdio** for a parent process that owns the server, as the removed
+  `OcamlLanguageHost` did with the native daemon.
 - **Unix domain sockets** for attach. `serveHost(host, { socket })` in
   `@formalang/host` serves an existing in-process host. The application
   decides which sessions to expose. The socket is created with mode `0600`.
@@ -150,8 +151,8 @@ The pause and resume model stays, because each pause is a permission point.
   evaluation can have several.
 - **Streaming.** Forma does not receive streams from host calls. A host either
   accumulates a stream and resumes with the final value, or calls a function
-  argument once per chunk through `callValue`. The TypeScript host must
-  support host calls made from such callbacks, matching the OCaml test.
+  argument once per chunk through `callValue`. The TypeScript host supports
+  host calls made from such callbacks.
 - **Cancellation.** `abortEvaluation` is checked at every evaluation step
   (RFC 0012). Aborting fails the pending call with `evaluation/aborted`. When
   a client implements a host builtin, the server sends
@@ -162,8 +163,9 @@ The pause and resume model stays, because each pause is a permission point.
 
 ## Alternatives considered
 
-- **Adopt the OCaml line format unchanged.** It has no ids, so one slow
-  request blocks every other request and the server cannot send events. The
+- **Adopt the existing JSON-lines format unchanged.** The format inherited
+  from the OCaml daemon has no ids, so one slow request blocks every other
+  request and the server cannot send events. The
   proposed envelope keeps its request bodies.
 - **LSP framing.** `vscode-languageserver` is already a dependency of the
   language server, and its messages are JSON-RPC 2.0. Its `Content-Length`
@@ -182,18 +184,19 @@ The pause and resume model stays, because each pause is a permission point.
 1. **Command.** `@formalang/cli` with `check`, `run` for kernel programs, and
    `interface`. Tests run the binary on fixtures: `check` on
    `conformance/modules/main.forma` exits 0; for failing fixtures, its
-   diagnostic codes and spans match `forma_cli.exe file typecheck`.
-2. **Protocol.** `forma daemon` over stdio and `RemoteLanguageHost`. The host
+   diagnostic codes and spans match the JSON CLI's `file typecheck`.
+2. **Protocol.** `forma daemon` over stdio, the envelope in the existing
+   JSON-lines daemon, and `RemoteLanguageHost`. The host
    conformance suite passes against the remote host; a test sends two
    requests and receives the second response before the first.
 3. **Attach.** `serveHost`, Unix sockets, and `forma attach`. A test embeds a
    host in a Node process, attaches a client, defines a function under RFC
    0010, and observes the embedding process's next `callBinding` use it.
-4. **Host calls.** `--host` modules and grants for `run`, cooperative abort,
-   and nested host calls from TypeScript callbacks. A test aborts a pure
-   infinite loop; a test mirrors the OCaml nested-callback test.
-5. **OCaml envelope.** The native daemon accepts the envelope and the
-   protocol client drives both engines; the parity runner uses it.
+4. **Host calls.** `--host` modules and grants for `run`, and cooperative
+   abort. A test aborts a pure infinite loop; the existing nested-callback
+   test passes against the remote host.
+5. **OCaml envelope.** Dropped: the OCaml engine was removed. The envelope
+   for the remaining JSON-lines daemon is part of stage 2.
 
 Running Effect programs from `forma run` depends on RFC 0003 and is not part of
 these stages.
@@ -201,6 +204,8 @@ these stages.
 ## Decisions still required
 
 - Whether the protocol is versioned separately from `hostAbiVersion`.
+- Whether the JSON CLI's commands move from `@formalang/host` into
+  `@formalang/cli`, since both would declare a `forma` binary.
 - Default limits and grant prompts for `forma run`.
 - The WebSocket transport and its authentication.
 - Whether `forma repl` and `forma attach` share one client with the

@@ -1,0 +1,33 @@
+{
+  "id": "canonical-present-null",
+  "outputs": {
+    "canonical-ir": [
+      {
+        "formIndex": 3,
+        "payload": {
+          "kind": "Null",
+          "value": null
+        },
+        "sourceId": "surfaces/canonical-present-null",
+        "span": {
+          "endOffset": 194,
+          "sourceId": "surfaces/canonical-present-null",
+          "startOffset": 185
+        }
+      },
+      {
+        "formIndex": 4,
+        "payload": {
+          "kind": "Null"
+        },
+        "sourceId": "surfaces/canonical-present-null",
+        "span": {
+          "endOffset": 203,
+          "sourceId": "surfaces/canonical-present-null",
+          "startOffset": 195
+        }
+      }
+    ]
+  },
+  "version": 1
+}

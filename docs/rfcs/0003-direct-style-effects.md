@@ -246,7 +246,7 @@ typed failures to Effect failures, and structured concurrency to the target's
 corresponding operations. Exported module interfaces retain effect rows so callers
 can be checked and compiled without inspecting implementation bodies.
 
-Both engines need a checked representation of effectful expressions and function
+The engine needs a checked representation of effectful expressions and function
 calls. Code generation and interpretation must follow that representation rather
 than guessing from syntax heads or requiring an outer signature to classify every
 function. Pure evaluation, asynchronous sequencing, interruption, and finalization
@@ -261,7 +261,7 @@ to follow from lowering calls into Effect TypeScript.
 
 1. Specify evaluation order, closed and open effect rows, service operation types,
    optional annotations, deferred functions, and the pure module boundary.
-2. Extend both engines' typed representations and inference, including latent
+2. Extend the engine's typed representations and inference, including latent
    effects on function values and effect-polymorphic higher-order functions.
 3. Implement direct-style lowering and execution for service calls and typed
    failures; preserve module identity, source spans, and diagnostics.

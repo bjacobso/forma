@@ -185,7 +185,7 @@ pageClass: forma-index forma-elm
 <li><strong>Real execution.</strong> The same command runs against success and failure service layers. Its messages feed update, producing the expected count, status, and error reason.</li>
 <li><strong>Located rejection.</strong> Exact fixtures pin missing update cases, unmapped errors, catch-all recovery, invalid success and event payloads, unknown commands, and impure update and view.</li>
 </ol>
-<p>These fixtures establish TypeScript-engine behavior. There is no OCaml engine parity claim, browser DOM harness for the full DSL, or generated HttpApi client.</p>
+<p>These fixtures establish the prototype's current behavior. There is no browser DOM harness for the full DSL or generated HttpApi client.</p>
 </section>
 
 <section id="what-you-give-up" class="fh-section" aria-labelledby="cost-heading">
@@ -203,7 +203,7 @@ pageClass: forma-index forma-elm
 <div class="fh-list fh-list--no"><h3>Missing today</h3><ul>
 <li><strong>Command arguments and lifecycle.</strong> Commands wrap zero-argument Effect values. Model-derived arguments, cancellation, subscriptions, and managed resources are not implemented.</li>
 <li><strong>Integration.</strong> One app and one message union per source. No module linking, CLI integration, editor routing, or browser worker support for these forms.</li>
-<li><strong>Production guarantees.</strong> No OCaml implementation, SSR, hydration, source maps, totality proof, or compatibility promise. Host service code remains trusted.</li>
+<li><strong>Production guarantees.</strong> No SSR, hydration, source maps, totality proof, or compatibility promise. Host service code remains trusted.</li>
 </ul></div>
 </div>
 </section>

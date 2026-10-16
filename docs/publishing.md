@@ -1,10 +1,9 @@
 # Publishing Forma
 
 The public npm packages are `@formalang/ts`, `@formalang/host`,
-`@formalang/editor`, and `@formalang/language-server`. The website and OCaml
-build workspace remain private. The language server runs on `@formalang/ts`;
-OCaml artifacts, including platform-specific native binaries, are not
-published.
+`@formalang/editor`, and `@formalang/language-server`. The website and
+workbench apps remain private. The language server runs on `@formalang/ts`.
+There are no native binaries.
 
 ## Normal releases
 
@@ -14,12 +13,11 @@ published.
    the packages, publishes through npm trusted publishing, and creates tags
    and GitHub releases.
 
-`pnpm release:check` builds and tests the JavaScript packages, builds the OCaml
-engine for the cross-engine parity run, and installs the packed tarballs in a
-temporary consumer project. The consumer check loads every library export and
-analyzes a document with the language server's workspace. OCaml, Dune, and
-js_of_ocaml must be installed on a release build machine; GitHub installs them
-automatically.
+`pnpm release:check` builds and tests the JavaScript packages, checks the
+surface goldens, and installs the packed tarballs in a temporary consumer
+project. The consumer check loads every library export and analyzes a document
+with the language server's workspace. A release build machine needs only
+Node.js and pnpm.
 
 For the Effect 4 migration, publish the `@formalang/ts` minor release and the
 related package updates from the changeset before changing consumers. Consumers

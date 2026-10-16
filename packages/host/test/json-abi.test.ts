@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync } from "node:fs";
+import { mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -12,19 +12,11 @@ const request = (abi: JsonAbi, input: unknown) => abi.handleJson(JSON.stringify(
 describe("JSON process ABI", () => {
   const fixtures = JSON.parse(readFileSync(resolve(import.meta.dirname,"../../../conformance/fixtures/host-plumbing.json"),"utf8"));
   for (const fixture of fixtures.cases) {
-    it(`shared native host fixture: ${fixture.id}`, async () => {
-      expect(await request(new JsonAbi(),fixture.request)).toMatchObject(fixture.typescript?.expected ?? fixture.expected);
+    it(`shared host fixture: ${fixture.id}`, async () => {
+      expect(await request(new JsonAbi(),fixture.request)).toMatchObject(fixture.expected);
     });
   }
-  const nativeCli = resolve(import.meta.dirname,"../../ocaml/dist/native/forma_cli.exe");
-  it.skipIf(!existsSync(nativeCli))("checks the stored host assertions against the OCaml oracle", () => {
-    for (const fixture of fixtures.cases) {
-      const response = spawnSync(nativeCli,["request",JSON.stringify(fixture.request)],{encoding:"utf8"});
-      expect(response.status,response.stderr).toBe(0);
-      expect(JSON.parse(response.stdout)).toMatchObject(fixture.expected);
-    }
-  });
-  it("ports the native per-form reuse fixture", async () => {
+  it("reports per-form digest reuse", async () => {
     const abi = new JsonAbi();
     const forms = async (source:string) => ((await request(abi,{op:"incrementalSummary",source})).value as {forms:{digest:string}[]}).forms;
     const before = await forms(fixtures.incremental.before), after = await forms(fixtures.incremental.after);

@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented in either engine |
+| Status | Proposed; not implemented |
 | Created | 2026-10-09 |
 | Depends on | [RFC 0005](./0005-row-operations.md); [RFC 0006](./0006-qualified-rows.md) for symbolic inputs |
 | Scope | Contextual coercion, type values, schema emission, and tagged payload classification |
@@ -16,10 +16,11 @@ can therefore check as a record without receiving the behavior of the equivalent
 literal annotation. Adding independent `Pick` implementations to each consumer
 would create conflicting semantics and diagnostics.
 
-This proposal gives each engine one semantic normalization service that these
-consumers share. The two engines need the same contract and fixtures, not shared
-source code. Existing literal and alias programs must keep their behavior and
-generated artifacts. This is proposed integration, not a claim that computed
+This proposal gives the engine one semantic normalization service that these
+consumers share, pinned by a contract and fixtures. (As written, it covered
+both engines with a shared contract; the OCaml engine has since been removed.)
+Existing literal and alias programs must keep their behavior and generated
+artifacts. This is proposed integration, not a claim that computed
 schemas or contextual coercion ship today.
 
 ## Normalization contract
@@ -157,7 +158,7 @@ Acceptance requires:
 - Literal/alias/computed record annotations producing the same checked values
   and Option coercions, including negative field errors with exact author spans.
 - Normalized `Type` holes, validators, and Effect/HTTP schema projections with
-  independent expected artifacts for both engines.
+  independent, reviewed expected artifacts.
 - Unknown tails and polymorphic target fields rejected at concrete emission
   boundaries, without `Unknown` fallbacks.
 - Tagged literal defaults unchanged, alias/computed defaults unchanged, opted-in
@@ -166,10 +167,10 @@ Acceptance requires:
 
 Land closed-shape normalization consumers first, then contextual coercion and
 schema/type-value support, then opt-in tagged flattening. Symbolic payload support
-waits for RFC 0006. Run the normal package checks, native tests and engine parity;
-also build/typecheck generated Effect output and compare existing artifact
-goldens. Language-service consumers are TypeScript-only under RFC 0004; shared
-language/schema behavior requires checked engine parity.
+waits for RFC 0006. Run the normal package checks and `pnpm surfaces`; also
+build/typecheck generated Effect output and compare existing artifact goldens.
+Shared language/schema behavior is pinned by stored goldens checked against the
+TypeScript engine.
 
 No ontology-specific field lookup, arbitrary runtime-to-type conversion, new
 subtyping rules, or automatic changes to tagged wire representations are included.

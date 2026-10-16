@@ -736,7 +736,7 @@ export function createMetaBuiltins(
     // =========================================================================
 
     "construct/object": (args) => Effect.succeed(constructObject(args)),
-    // Aliases kept for parity with the OCaml engine; both build the same keyword map.
+    // Both aliases build the same keyword map.
     "construct/query": (args) => Effect.succeed(constructObject(args)),
     "construct/declaration": (args) => Effect.succeed(constructObject(args)),
 
@@ -848,7 +848,7 @@ export function createMetaBuiltins(
         })(),
       ),
 
-    // The OCaml engine defers select-field validation to inference; mirror it.
+    // Select-field validation is deferred to inference.
     "meta/validate-query-select-fields": () => Effect.succeed([] as KValue),
 
     "meta/query-select-fields": (args) =>
@@ -873,7 +873,7 @@ export function createMetaBuiltins(
         })(),
       ),
 
-    // Expression records are carried through unchanged, as in the OCaml engine.
+    // Expression records are carried through unchanged.
     "view/compile-expr-record": (args) => Effect.succeed(args[0] ?? null),
 
     "meta/descriptor": (args) =>

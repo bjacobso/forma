@@ -65,9 +65,10 @@ Additional separate process reports preserve the initial
 7,893.367 ms, 367.969 ms, and 197.185 ms respectively (40.0× baseline/final).
 The paired results are the primary comparison; the separate runs show ordinary
 process, allocation, GC, and VM timing variation. Small workloads are especially
-sensitive to warmup and noise. The original 774cb1d prototype and OCaml timings
-are contextual measurements from another checkout and machine, not paired
-comparisons with this implementation.
+sensitive to warmup and noise. The original 774cb1d prototype and OCaml timings in
+[Retiring the OCaml engine](../../docs/engine-consolidation.md) are contextual
+measurements from another checkout and machine, not paired comparisons with this
+implementation.
 
 ## Ownership and remaining cost
 
@@ -127,13 +128,14 @@ Validation commands:
 pnpm check
 pnpm --filter @formalang/ts test
 pnpm --filter @formalang/ts typecheck
-pnpm build:ocaml
-pnpm parity:engines
-pnpm --filter @formalang/ocaml typecheck-corpus
-FORMA_REQUIRE_NATIVE_MODULES=1 pnpm --filter @formalang/host exec vitest run test/modules.test.ts
 ```
 
-The final TypeScript suite passed 423 tests, including 22 focused regression
+At the time, validation also ran the live OCaml engine comparison, the OCaml
+typecheck corpus, and the host module suite against the native CLI. Those
+commands were removed with the OCaml engine; `pnpm surfaces` now checks
+TypeScript against the stored goldens.
+
+The results below are from that run. The final TypeScript suite passed 423 tests, including 22 focused regression
 cases. The repository check passed branding, workspace typechecking, JavaScript
 tests, and documentation builds; its host suite ran all 80 tests with the native
 CLI available. Engine parity passed 136 comparisons with zero engine or golden

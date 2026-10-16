@@ -91,10 +91,9 @@ Type errors remain attached to author-written source:
 - **Inspectable compilation.** Intermediate forms are a supported product
   surface, not a hidden implementation detail. The browser demos expose each
   pass from source text to target output.
-- **Two engines.** The TypeScript implementation is designed for embedding and
-  browser tooling. The OCaml engine targets native code, JavaScript, and
-  WebAssembly, with shared conformance fixtures defining their semantic
-  intersection.
+- **One embeddable engine.** The TypeScript/Effect implementation runs in Node,
+  browsers, the language server, and the host's JSON CLI. Conformance fixtures
+  and stored goldens pin its behavior.
 
 Operational effects make authority visible in the type:
 
@@ -107,8 +106,7 @@ Operational effects make authority visible in the type:
   (do! [_ (Console.print message)] nil))
 ```
 
-Both engines infer the same contract (using their target-specific spelling for
-the string type):
+The checker infers this contract:
 
 ```text
 String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>
@@ -330,20 +328,13 @@ see the [Foldworks setup](packages/workbench/README.md#foldworks); its unpublish
 primitives currently require that development link.
 There is currently no published `forma` CLI. Pre-1.0 packages such as
 `@formalang/ts` are published to npm under the `@formalang` scope; otherwise
-work from this repository or build the OCaml engine locally.
-
-The OCaml engine additionally requires OCaml 5.2, Dune, `js_of_ocaml`, and
-`wasm_of_ocaml`:
-
-```sh
-mise install
-mise run forma:ocaml:test
-```
+work from this repository, where `@formalang/host` builds a `forma` JSON CLI
+(`node packages/host/dist/cli.mjs`).
 
 ## Documentation and examples
 
 - [Vision](docs/vision.md) explains the problem Forma is designed to solve.
-- [Architecture](docs/architecture.md) describes engines, the host boundary,
+- [Architecture](docs/architecture.md) describes the engine, the host boundary,
   and tooling.
 - [Language guide](docs/language.md) introduces execution, types, effects, and
   elaboration.
@@ -357,31 +348,27 @@ mise run forma:ocaml:test
 - [Roadmap](docs/roadmap.md) tracks the path from the research implementation
   toward a stable language platform.
 - [Examples](examples/README.md) contains reviewable domain programs embedded
-  in Markdown, while [conformance fixtures](conformance/) pin behavior shared
-  by both engines.
+  in Markdown, while [conformance fixtures](conformance/) pin implemented
+  behavior.
 
 ## Workspace
 
 | Project | Purpose |
 | --- | --- |
 | `@formalang/ts` | TypeScript reader, evaluator, VM, typechecker, and elaborator |
-| `@formalang/ocaml` | Native/JavaScript/WebAssembly compiler and interpreter engine |
-| `@formalang/host` | Shared host ABI across engine implementations |
+| `@formalang/host` | Host ABI, JSON CLI, and daemon over the TypeScript engine |
 | `@formalang/editor` | CodeMirror and React editing components |
 | `@formalang/language-server` | Language Server Protocol implementation |
 | `@formalang/website` | Browser-based compiler explorer and project site |
 | `@formalang/workbench` | Foldkit structural IDE over the real Forma services |
 | `@formalang/workbench-app` | Separate Vite demo of the structural workbench |
-| `conformance/` | Cross-engine semantic and effect fixtures |
+| `conformance/` | Semantic and effect fixtures with stored goldens |
 
 ## Runtime configuration
 
-- `FORMA_OCAML_CLI` overrides the native `forma_cli` artifact.
-- `FORMA_OCAML_JS` overrides the JavaScript OCaml artifact.
 - `FORMA_LANGUAGE_SERVER_PRELUDES` supplies comma-separated, consumer-owned prelude paths.
 - `FORMA_LANGUAGE_SERVER_ENABLE_FORMATTING` enables language-server formatting.
 - `FORMA_DISABLE_NATIVE_ELABORATION` selects the portable elaboration path.
-- `FORMA_DAEMON_TIMEOUT_MS` controls native daemon request timeouts.
 
 ## Project status
 

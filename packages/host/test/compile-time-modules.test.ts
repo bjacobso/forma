@@ -1,22 +1,11 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
-import { expectModuleGolden, updateModuleGoldens } from "./module-golden.js";
-import { TsLanguageHost, NodeOcamlLanguageHost } from "../src/index.js";
+import { expectModuleGolden } from "./module-golden.js";
+import { TsLanguageHost } from "../src/index.js";
 import type { LanguageHost, SourceDocument } from "../src/types.js";
 
-const cliPath = resolve(
-  import.meta.dirname,
-  "../../ocaml/dist/native/forma_cli.exe",
-);
-const native = existsSync(cliPath);
-if ((process.env["FORMA_REQUIRE_NATIVE_MODULES"] || updateModuleGoldens) && !native)
-  throw Error("Compile-time module parity requires the native CLI.");
-const hosts = [
-  ...(updateModuleGoldens ? [] : [new TsLanguageHost()]),
-  ...(native ? [new NodeOcamlLanguageHost({ cliPath })] : []),
-  ...(updateModuleGoldens ? [new TsLanguageHost()] : []),
-];
+const hosts = [new TsLanguageHost()];
 const directory = resolve(
   import.meta.dirname,
   "../../../conformance/compile-time-modules",
@@ -51,7 +40,7 @@ async function withSources(
 
 describe("compile-time module conformance", () => {
   test(
-    "declarations, data, schemas, and provenance match native goldens",
+    "declarations, data, schemas, and provenance match stored goldens",
     async () => {
       for (const host of hosts)
         await withSources(host, files, async (sessionId) => {

@@ -1,5 +1,5 @@
 {
-  "reference": "packages/ocaml/lib/http_ir_validation.ml",
+  "reference": "Originally ported from packages/ocaml/lib/http_ir_validation.ml in the removed OCaml engine",
   "cases": [
     {
       "name": "valid schema reference",

@@ -2,32 +2,36 @@
 
 | | |
 | --- | --- |
-| Status | Accepted; stages 1–4 implemented, stages 5–8 proposed |
+| Status | Accepted; stages 1–4 implemented, stages 5–8 proposed; decision 2 superseded (the OCaml engine was removed) |
 | Created | 2026-10-07 |
 | Scope | Engine roles, language services, the TypeScript compiler's internal structure |
-| Direction | Language services live in one TypeScript analysis workspace; OCaml is the native backend and conformance oracle |
+| Direction | Language services live in one TypeScript analysis workspace; TypeScript is the only engine |
 
 ## Summary
 
-Forma has two engines. Every editor-facing consumer (the website, the
-workbench, the CodeMirror editor, and the default host) already ran on the
-TypeScript engine; the language server was the only exception. It spawned the
-OCaml engine compiled to JavaScript in a child process, and the OCaml editor
-operations it called were weaker than the TypeScript services the rest of the
-tooling used.
+When this RFC was accepted, Forma had two engines. Every editor-facing
+consumer (the website, the workbench, the CodeMirror editor, and the default
+host) already ran on the TypeScript engine; the language server was the only
+exception. It spawned the OCaml engine compiled to JavaScript in a child
+process, and the OCaml editor operations it called were weaker than the
+TypeScript services the rest of the tooling used.
 
 This RFC makes the TypeScript engine the single home of language services and
 sets a target structure for it: a workspace of memoized queries over
 preludes and documents, with one syntax tree, one way to define forms, one
-runtime, one IR schema, and one diagnostic type. The OCaml engine keeps its
-role as the native, JavaScript, and WebAssembly compiler and as the second
-implementation that conformance fixtures hold both engines to.
+runtime, one IR schema, and one diagnostic type. As accepted, the OCaml
+engine kept its role as the native, JavaScript, and WebAssembly compiler and
+as the second implementation that conformance fixtures held both engines to.
+That role was later withdrawn: the OCaml engine was removed and TypeScript is
+the only implementation (see [Retiring the OCaml engine](../engine-consolidation.md)).
 
 ## Where the engines stood
 
+This section records the state of both engines when the RFC was accepted.
+
 ### OCaml
 
-The OCaml engine is not the cleaner reference implementation it is sometimes
+The OCaml engine was not the cleaner reference implementation it was sometimes
 assumed to be.
 
 - **Strengths worth copying.** Phases return `result` rather than raising
@@ -67,11 +71,17 @@ assumed to be.
 
 1. **The TypeScript engine owns language services.** The language server,
    editors, workbench, and website use one implementation. The OCaml editor
-   operations remain in the OCaml ABI but have no JavaScript consumer; the
-   parity matrix records this as `editor-services`.
-2. **OCaml is the native backend and the conformance oracle.** Parsing,
-   expansion, typing, evaluation, effect IR, and canonical IR stay compared
-   across engines. New language services are built only in TypeScript.
+   operations remained in the OCaml ABI with no JavaScript consumer until the
+   OCaml engine was removed.
+2. **OCaml is the native backend and the conformance oracle.** Superseded.
+   As accepted, parsing, expansion, typing, evaluation, effect IR, and
+   canonical IR stayed compared across engines, and new language services
+   were built only in TypeScript. The OCaml engine has since been removed
+   (see [Retiring the OCaml engine](../engine-consolidation.md)). Conformance
+   now uses stored, reviewed goldens checked by the TypeScript engine; the
+   surface cases and goldens live in `conformance/surfaces/` and run with
+   `pnpm surfaces`. Those goldens were originally captured from the OCaml
+   engine and are now maintained from TypeScript.
 3. **Borrow OCaml's discipline, not its shortcuts.** Phases return their
    diagnostics instead of throwing; spans live on nodes; IR is a closed,
    schema-defined union; stage boundaries are explicit modules.
@@ -155,5 +165,5 @@ queries   parse(id)            lossless tree and errors; never fails
   streams) are checked by the mechanics checker, not Hindley–Milner, so the
   language server reports false errors on them. Stage 7 should decide whether
   the two checkers converge or the workspace routes forms to the right one.
-- **OCaml editor operations.** Whether to delete them or keep them as a
-  native-only surface.
+- **OCaml editor operations.** Resolved: they were deleted with the OCaml
+  engine.

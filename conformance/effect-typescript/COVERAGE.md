@@ -124,9 +124,8 @@ the operational combinators above still use the mechanics compiler. See
 | Generated code typechecks without `any` | supported | Under `tsconfig.base.json`. |
 | HM checker (`Type.inferSourceStr`) and language server | missing | They do not understand the new forms. The mechanics checker is authoritative for Effect programs. |
 | Hosted runtime (`makeMechanicsRuntime`) | partial | Executes only the original body forms. |
-| OCaml engine | partial | It projects identical mechanics IR for every positive case: `pnpm parity:engines` reports zero `effect-ir` differences. It has no checker or Effect TypeScript generator of its own; the TypeScript checker accepts its IR. Gaps are listed in `../engine-parity/matrix.json`. |
 
-## Elm-style app prototype (TypeScript engine only)
+## Elm-style app prototype
 
 `generateElmProgram` bootstraps `preludes/elm.lisp` independently and lowers its
 expressions through the existing mechanics checker. `elm-counter` checks an exact
@@ -138,7 +137,7 @@ catch-all error mapping, impure view/update, message payloads, and unknown comma
 Views support div/span/button, class, and click-message expressions. One app and
 message union per source; commands wrap zero-argument Effect values. Subscriptions,
 command arguments, richer DOM, source maps, worker/editor integration, module
-linking, and shared HttpApi client generation are absent. This adds no OCaml parity.
+linking, and shared HttpApi client generation are absent.
 
 ## Baseline: `main` at `30d7db4`
 

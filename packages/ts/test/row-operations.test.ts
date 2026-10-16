@@ -10,7 +10,7 @@ interface RowFixture {
   expectedMessage?: string;
 }
 
-const parityRoot = new URL("../../../conformance/engine-parity/", import.meta.url);
+const parityRoot = new URL("../../../conformance/surfaces/", import.meta.url);
 const fixtures: RowFixture[] = JSON.parse(readFileSync(
   new URL("cases.json", parityRoot), "utf8",
 )).cases.filter((fixture: RowFixture) => fixture.id.startsWith("row-operations/"));
@@ -18,7 +18,7 @@ const fixtures: RowFixture[] = JSON.parse(readFileSync(
 describe("shared row operation conformance", () => {
   test.each(fixtures)("$id", fixture => {
     const source = readFileSync(new URL(fixture.sourceFile, parityRoot), "utf8");
-    const result = typecheck({ source, sourceId: `engine-parity/${fixture.id}` });
+    const result = typecheck({ source, sourceId: `surfaces/${fixture.id}` });
     const actual = {
       ...(result.display === undefined ? {} : { type: result.display }),
       diagnostics: result.diagnostics.map(diagnostic => ({

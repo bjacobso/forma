@@ -23,8 +23,7 @@ if (!result.ok) {
 ```
 
 `elaborateEffectProgram` runs the same pipeline without generating code. The
-pipeline reads the source, projects mechanics declarations (the portable IR
-that both engines produce), checks them, and generates TypeScript only when
+pipeline reads the source, projects mechanics declarations (the portable IR), checks them, and generates TypeScript only when
 the check finds no errors. Every diagnostic has a line and column in your
 source.
 

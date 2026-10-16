@@ -1,0 +1,20 @@
+{
+  "id": "unbound-symbol",
+  "outputs": {
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/unbound-symbol",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 10,
+            "sourceId": "surfaces/unbound-symbol",
+            "startOffset": 0
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

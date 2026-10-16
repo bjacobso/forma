@@ -80,7 +80,4 @@ export type {
 export { findEditorTypeAtOffset } from "./editor.js";
 export { createDefaultLanguageHost, type DefaultLanguageHost } from "./default-host.js";
 export { TsLanguageHost } from "./ts-host.js";
-export { NodeOcamlLanguageHost, type NodeOcamlLanguageHostOptions } from "./ocaml-host.js";
-export { JsOcamlLanguageHost, type JsOcamlLanguageHostOptions } from "./js-ocaml-host.js";
 
-export { parseOcamlJson } from "./ocaml-json.js";

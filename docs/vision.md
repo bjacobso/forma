@@ -29,7 +29,7 @@ and generated contracts matter more than numeric throughput.
 - Read, expand, infer, evaluate, elaborate, and emit remain explicit passes.
 - Source spans survive every pass that can produce a diagnostic.
 - Typed IR is the internal contract; JSON is a deliberate wire projection.
-- Native, JavaScript, and WebAssembly targets must agree on observable results.
+- Stored conformance goldens pin observable results; changing them is a reviewed decision.
 - Generated output is inspectable evidence, not the primary review medium.
 
 ## Audience

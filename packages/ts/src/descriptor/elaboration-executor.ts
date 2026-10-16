@@ -19,11 +19,10 @@ import { SimpleNormalizedSlots, type SlotValue } from "./NormalizedSlots.js";
 import { normalizeRuntimeExprObject, runtimeExpr } from "./runtime-expr.js";
 
 /**
- * Descriptor-authored construct hook interpreter. This is the TypeScript peer
- * of the OCaml native elaboration path: when a `__projection-plan` descriptor
- * is registered for a hook, this executor is preferred over the Lisp __form-hook
- * body. The Lisp body stays available during migration so parity tests can
- * prove equivalence before the body is removed from the shared prelude.
+ * Descriptor-authored construct hook interpreter. When a `__projection-plan`
+ * descriptor is registered for a hook, this executor is preferred over the Lisp
+ * __form-hook body. The Lisp body stays available so tests can prove
+ * equivalence before the body is removed from the shared prelude.
  */
 
 export function createElaborationDescriptorHook(

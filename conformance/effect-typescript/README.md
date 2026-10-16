@@ -55,10 +55,10 @@ For each positive case the runner checks that:
 | `config-and-logging` | `Config` reads with defaults, `ConfigError`, `log` |
 | `pure-domain-logic` | `Schema.Class`, typed constants, pure functions, value-level `match`, collection and string functions |
 | `stream-pipeline` | Stream construction, effectful mapping with concurrency, `take`, folds, `runForEach`, functions returning streams |
-| `operational-effects` | The fixture shared with the OCaml engine (`../operational-effects`) |
+| `operational-effects` | The shared operational-effects fixture (`../operational-effects`) |
 | `edge-cases` | Regressions from adversarial testing: escaping, binder capture, prototype keys, shadowing, literal widening, literal and error matches, `provide` inside layer methods |
 | `elm-pure` | No-command app, pure init/update, nested let/if transitions, static view, mounting types |
-| `elm-counter` | TypeScript-engine-only prelude, exhaustive update, pure Hiccup view, typed command recovery, headless Foldkit init/update/commands |
+| `elm-counter` | `preludes/elm.lisp`, exhaustive update, pure Hiccup view, typed command recovery, headless Foldkit init/update/commands |
 | `http-api` | Prelude-defined endpoints, groups, handler contracts, derived builders, path/payload decoding, typed HTTP statuses, request service layers |
 
 The `http-api.json` marker selects `generateHttpApiProgram` for the HTTP case.
@@ -71,7 +71,7 @@ The `elm.json` marker selects `generateElmProgram` for the isolated Elm-style
 prototype and its `elm-*` rejection cases. The same golden, strict escape checks,
 artifact validation, and harness execution apply; Foldkit is pinned to 0.168.0.
 Rejection verdicts are `not-generated`: this linker has no unchecked output path.
-No OCaml parity is claimed. See [the prototype reference](../../docs/elm/reference.md).
+See [the prototype reference](../../docs/elm/reference.md).
 
 ## Negative cases
 
@@ -125,8 +125,9 @@ are generated anyway:
 4. Read the new `expected.ts` or `expected-diagnostics.json` as carefully as
    you would read hand-written code. The golden is the specification.
 5. Run the suite without `FORMA_UPDATE_GOLDEN` and run `pnpm typecheck`.
-6. If both engines should project the program the same way, add it to
-   `../engine-parity/cases.json` with the `effect-ir` pass.
+6. To pin the projected mechanics IR as well, add the program to
+   `../surfaces/cases.json` with the `effect-ir` pass, run
+   `pnpm surfaces --update`, and review the new golden.
 7. Regenerate the docs snippets, because the `/effect` page reports source and
    output sizes for every case:
    `pnpm --filter @formalang/website snippets:home`.

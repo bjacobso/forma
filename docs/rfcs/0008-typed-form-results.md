@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented in either engine |
+| Status | Proposed; not implemented |
 | Created | 2026-10-09 |
 | Depends on | [RFC 0007](./0007-type-normalization.md) for the bridge; [RFC 0006](./0006-qualified-rows.md) and [RFC 0009](./0009-field-names-and-row-map.md) for generic template checking |
 | Scope | Metadata-to-type reflection, declarative form result types, and compatible prelude migration |
@@ -165,15 +165,15 @@ Acceptance requires shared fixtures for two unrelated reflected declaration
 kinds, invalid reflection producers, prelude-level rejected generic templates,
 per-use selection failures, declaration identity across supported imports, and
 source spans after adapter conversion. Run old and new ontology implementations
-against independent expected types and artifact goldens in both engines.
-TypeScript-only editor support may land separately, with slot completions based
+against independent expected types and artifact goldens.
+Editor support may land separately, with slot completions based
 on reflected fields and invalidation after declaration edits.
 
 | Stage | Dependency | Completion evidence |
 | --- | --- | --- |
-| Validated reflection and `row-of` compatibility bridge | RFC 0007 | Existing result/artifact goldens unchanged in both engines |
+| Validated reflection and `row-of` compatibility bridge | RFC 0007 | Existing result/artifact goldens unchanged |
 | Checked result templates and typed slot adapters | RFCs 0006 and 0009 | Valid generic templates accepted; unsound templates rejected before application |
-| Ontology migration and useful HTTP schema reuse | Previous stages | Old/new corpus equivalence, full checks and engine parity |
+| Ontology migration and useful HTTP schema reuse | Previous stages | Old/new corpus equivalence, full checks and stored surface goldens |
 
 No arbitrary dependent types, runtime schema introspection in signatures,
 unchecked meta-hook promotion, or removal of legacy hooks is included. Public

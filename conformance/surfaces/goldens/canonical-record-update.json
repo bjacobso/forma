@@ -1,0 +1,27 @@
+{
+  "id": "canonical-record-update",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "string",
+        "value": "Ada"
+      }
+    },
+    "typecheck": {
+      "diagnostics": [
+        {
+          "code": "typecheck/open-record",
+          "phase": "typecheck",
+          "severity": "error",
+          "span": {
+            "endOffset": 56,
+            "sourceId": "surfaces/canonical-record-update",
+            "startOffset": 29
+          }
+        }
+      ]
+    }
+  },
+  "version": 1
+}

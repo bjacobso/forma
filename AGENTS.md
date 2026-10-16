@@ -1,7 +1,7 @@
 # Working on Forma
 
 Forma is a pre-alpha typed Lisp. Preserve the distinction between implemented
-behavior, engine parity, and planned features when changing code or docs.
+behavior and planned features when changing code or docs.
 
 ## Setup and checks
 
@@ -20,32 +20,32 @@ Do not commit a lockfile containing local Foldworks paths. See
 `packages/workbench/README.md` for manual linking and current limits.
 
 `pnpm check` runs the branding check, TypeScript checks, JavaScript tests,
-parity-runner tests, and the VitePress docs build including the `llms.txt`
+the surface golden check, and the VitePress docs build including the `llms.txt`
 structure and link-target check. There is no repository-wide formatting command;
 match nearby formatting. Turbo builds dependent JavaScript packages as needed.
 
-For native engine changes, install the OCaml 5.2 toolchain with `mise install`
-and run `pnpm test:ocaml` and `pnpm parity:engines`. For site changes, also run
-`pnpm website:build` and `pnpm test:site` (install Playwright Chromium first with
+For site changes, also run `pnpm website:build` and `pnpm test:site` (install
+Playwright Chromium first with
 `pnpm --filter @formalang/website exec playwright install chromium`). CI covers
 visual tests, workbench browser tests, and the Wrangler deployment dry run.
 
 ## Layout and conventions
 
-- `packages/ts/` and `packages/ocaml/`: the two language engines.
+- `packages/ts/`: the language engine.
 - `packages/host/`, `packages/editor/`, `packages/language-server/`: host ABI and editor tooling.
 - `packages/workbench/` and `apps/workbench/`: structural IDE and standalone demo.
 - `apps/website/`: compiler playground, production Worker, and site tests.
 - `docs/`: VitePress source; `docs/agents.md` generates `/llms.txt` at build time.
 - `preludes/`, `examples/`, `conformance/`: library vocabulary and behavior fixtures.
-- `scripts/`: checks, package linking, parity tools, and website assembly.
+- `scripts/`: checks, package linking, surface goldens, and website assembly.
 
 Use the existing ESM, TypeScript, Vitest, and Node script conventions. Domain
 vocabulary belongs in preludes and descriptors, not hardcoded compiler concepts.
 Keep diagnostics tied to author source and pin semantic changes in meaningful
-fixtures. Both engines share conformance expectations but have documented
-differences; do not claim parity without checking it. Regenerate homepage samples
-with `pnpm --filter @formalang/website snippets:home` when their inputs change.
+fixtures. Stored goldens are reviewed expectations: when `pnpm surfaces --update`
+or a test's update flag rewrites them, review and explain the diff. Regenerate
+homepage samples with `pnpm --filter @formalang/website snippets:home` when their
+inputs change.
 
 ## Boundaries
 

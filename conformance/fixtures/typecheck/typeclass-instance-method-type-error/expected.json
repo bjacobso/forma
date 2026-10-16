@@ -16,20 +16,7 @@
       "code": "typecheck/type-mismatch",
       "span": {
         "start": 44,
-        "end": 89
-      }
-    }
-  },
-  "typescript": {
-    "reason": "TypeScript diagnostic locations follow canonical Int/Float annotations; the frozen native reference uses its original numeric type vocabulary.",
-    "expectation": {
-      "kind": "error",
-      "diagnostic": {
-        "code": "typecheck/type-mismatch",
-        "span": {
-          "start": 44,
-          "end": 91
-        }
+        "end": 91
       }
     }
   }

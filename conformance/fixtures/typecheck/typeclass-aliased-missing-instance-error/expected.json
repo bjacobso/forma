@@ -13,21 +13,8 @@
     "diagnostic": {
       "code": "typecheck/missing-instance",
       "span": {
-        "start": 107,
-        "end": 111
-      }
-    }
-  },
-  "typescript": {
-    "reason": "TypeScript diagnostic locations follow canonical Int/Float annotations; the frozen native reference uses its original numeric type vocabulary.",
-    "expectation": {
-      "kind": "error",
-      "diagnostic": {
-        "code": "typecheck/missing-instance",
-        "span": {
-          "start": 109,
-          "end": 113
-        }
+        "start": 109,
+        "end": 113
       }
     }
   }

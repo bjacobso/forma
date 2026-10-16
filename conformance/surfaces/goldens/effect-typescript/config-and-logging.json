@@ -1,0 +1,3298 @@
+{
+  "id": "effect-typescript/config-and-logging",
+  "outputs": {
+    "effect-ir": [
+      {
+        "formIndex": 7,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "bindings": [
+              {
+                "name": "current",
+                "span": {
+                  "endOffset": 1209,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 1191
+                },
+                "value": {
+                  "effect": {
+                    "errors": [
+                      "Misconfigured"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 1150,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 1116
+                    },
+                    "success": {
+                      "kind": "Primitive",
+                      "name": "String",
+                      "span": {
+                        "endOffset": 1130,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 1124
+                      }
+                    }
+                  },
+                  "kind": "Pure",
+                  "span": {
+                    "endOffset": 1209,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 1191
+                  },
+                  "value": {
+                    "kind": "Var",
+                    "name": "validated-settings",
+                    "span": {
+                      "endOffset": 1209,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 1191
+                    }
+                  }
+                }
+              }
+            ],
+            "body": {
+              "effect": {
+                "errors": [
+                  "Misconfigured"
+                ],
+                "kind": "Effect",
+                "requirements": [],
+                "span": {
+                  "endOffset": 1150,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 1116
+                },
+                "success": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 1130,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 1124
+                  }
+                }
+              },
+              "kind": "Succeed",
+              "span": {
+                "endOffset": 1367,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 1215
+              },
+              "value": {
+                "items": [
+                  {
+                    "kind": "Var",
+                    "name": "str",
+                    "span": {
+                      "endOffset": 1234,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 1231
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "if",
+                        "span": {
+                          "endOffset": 1246,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 1244
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "get",
+                            "span": {
+                              "endOffset": 1251,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 1248
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "current",
+                            "span": {
+                              "endOffset": 1259,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 1252
+                            }
+                          },
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":debug"
+                            },
+                            "span": {
+                              "endOffset": 1266,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 1260
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 1267,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 1247
+                        }
+                      },
+                      {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 1274,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 1268
+                        },
+                        "value": "http"
+                      },
+                      {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 1282,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 1275
+                        },
+                        "value": "https"
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1283,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 1243
+                    }
+                  },
+                  {
+                    "kind": "Literal",
+                    "span": {
+                      "endOffset": 1297,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 1292
+                    },
+                    "value": "://"
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "get",
+                        "span": {
+                          "endOffset": 1310,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 1307
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "current",
+                        "span": {
+                          "endOffset": 1318,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 1311
+                        }
+                      },
+                      {
+                        "kind": "Expr",
+                        "source": {
+                          "kind": "Symbol",
+                          "name": ":host"
+                        },
+                        "span": {
+                          "endOffset": 1324,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 1319
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1325,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 1306
+                    }
+                  },
+                  {
+                    "kind": "Literal",
+                    "span": {
+                      "endOffset": 1337,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 1334
+                    },
+                    "value": ":"
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "get",
+                        "span": {
+                          "endOffset": 1350,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 1347
+                        }
+                      },
+                      {
+                        "kind": "Var",
+                        "name": "current",
+                        "span": {
+                          "endOffset": 1358,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 1351
+                        }
+                      },
+                      {
+                        "kind": "Expr",
+                        "source": {
+                          "kind": "Symbol",
+                          "name": ":port"
+                        },
+                        "span": {
+                          "endOffset": 1364,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 1359
+                        }
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 1365,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 1346
+                    }
+                  }
+                ],
+                "kind": "List",
+                "span": {
+                  "endOffset": 1366,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 1230
+                }
+              }
+            },
+            "effect": {
+              "errors": [
+                "Misconfigured"
+              ],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 1150,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 1116
+              },
+              "success": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 1130,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 1124
+                }
+              }
+            },
+            "kind": "Do",
+            "span": {
+              "endOffset": 1368,
+              "sourceId": "surfaces/effect-typescript/config-and-logging",
+              "startOffset": 1173
+            }
+          },
+          "effect": {
+            "errors": [
+              "Misconfigured"
+            ],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 1150,
+              "sourceId": "surfaces/effect-typescript/config-and-logging",
+              "startOffset": 1116
+            },
+            "success": {
+              "kind": "Primitive",
+              "name": "String",
+              "span": {
+                "endOffset": 1130,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 1124
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "base-url",
+          "params": [],
+          "value": true
+        },
+        "sourceId": "surfaces/effect-typescript/config-and-logging",
+        "span": {
+          "endOffset": 1369,
+          "sourceId": "surfaces/effect-typescript/config-and-logging",
+          "startOffset": 1152
+        }
+      },
+      {
+        "formIndex": 3,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "bindings": [
+              {
+                "name": "host",
+                "span": {
+                  "endOffset": 376,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 354
+                },
+                "value": {
+                  "args": [
+                    {
+                      "kind": "TypeArg",
+                      "span": {
+                        "endOffset": 368,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 362
+                      },
+                      "type": {
+                        "kind": "Primitive",
+                        "name": "String",
+                        "span": {
+                          "endOffset": 368,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 362
+                        }
+                      }
+                    },
+                    {
+                      "kind": "Literal",
+                      "span": {
+                        "endOffset": 375,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 369
+                      },
+                      "value": "HOST"
+                    }
+                  ],
+                  "effect": {
+                    "errors": [
+                      "ConfigError"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 303,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 263
+                    },
+                    "success": {
+                      "kind": "Ref",
+                      "name": "ServerSettings",
+                      "span": {
+                        "endOffset": 285,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 271
+                      }
+                    }
+                  },
+                  "kind": "Combinator",
+                  "name": "config",
+                  "span": {
+                    "endOffset": 376,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 354
+                  }
+                }
+              },
+              {
+                "name": "port",
+                "span": {
+                  "endOffset": 427,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 394
+                },
+                "value": {
+                  "args": [
+                    {
+                      "kind": "TypeArg",
+                      "span": {
+                        "endOffset": 405,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 402
+                      },
+                      "type": {
+                        "kind": "Primitive",
+                        "name": "Int",
+                        "span": {
+                          "endOffset": 405,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 402
+                        }
+                      }
+                    },
+                    {
+                      "kind": "Literal",
+                      "span": {
+                        "endOffset": 412,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 406
+                      },
+                      "value": "PORT"
+                    }
+                  ],
+                  "effect": {
+                    "errors": [
+                      "ConfigError"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 303,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 263
+                    },
+                    "success": {
+                      "kind": "Ref",
+                      "name": "ServerSettings",
+                      "span": {
+                        "endOffset": 285,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 271
+                      }
+                    }
+                  },
+                  "kind": "Combinator",
+                  "name": "config",
+                  "options": [
+                    {
+                      "key": "default",
+                      "value": {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 426,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 422
+                        },
+                        "value": 8080
+                      }
+                    }
+                  ],
+                  "span": {
+                    "endOffset": 427,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 394
+                  }
+                }
+              },
+              {
+                "name": "debug",
+                "span": {
+                  "endOffset": 482,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 446
+                },
+                "value": {
+                  "args": [
+                    {
+                      "kind": "TypeArg",
+                      "span": {
+                        "endOffset": 458,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 454
+                      },
+                      "type": {
+                        "kind": "Primitive",
+                        "name": "Bool",
+                        "span": {
+                          "endOffset": 458,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 454
+                        }
+                      }
+                    },
+                    {
+                      "kind": "Literal",
+                      "span": {
+                        "endOffset": 466,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 459
+                      },
+                      "value": "DEBUG"
+                    }
+                  ],
+                  "effect": {
+                    "errors": [
+                      "ConfigError"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 303,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 263
+                    },
+                    "success": {
+                      "kind": "Ref",
+                      "name": "ServerSettings",
+                      "span": {
+                        "endOffset": 285,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 271
+                      }
+                    }
+                  },
+                  "kind": "Combinator",
+                  "name": "config",
+                  "options": [
+                    {
+                      "key": "default",
+                      "value": {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 481,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 476
+                        },
+                        "value": false
+                      }
+                    }
+                  ],
+                  "span": {
+                    "endOffset": 482,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 446
+                  }
+                }
+              },
+              {
+                "name": "ratio",
+                "span": {
+                  "endOffset": 543,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 501
+                },
+                "value": {
+                  "args": [
+                    {
+                      "kind": "TypeArg",
+                      "span": {
+                        "endOffset": 514,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 509
+                      },
+                      "type": {
+                        "kind": "Primitive",
+                        "name": "Float",
+                        "span": {
+                          "endOffset": 514,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 509
+                        }
+                      }
+                    },
+                    {
+                      "kind": "Literal",
+                      "span": {
+                        "endOffset": 529,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 515
+                      },
+                      "value": "SAMPLE_RATIO"
+                    }
+                  ],
+                  "effect": {
+                    "errors": [
+                      "ConfigError"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 303,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 263
+                    },
+                    "success": {
+                      "kind": "Ref",
+                      "name": "ServerSettings",
+                      "span": {
+                        "endOffset": 285,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 271
+                      }
+                    }
+                  },
+                  "kind": "Combinator",
+                  "name": "config",
+                  "options": [
+                    {
+                      "key": "default",
+                      "value": {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 542,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 539
+                        },
+                        "value": 0.5
+                      }
+                    }
+                  ],
+                  "span": {
+                    "endOffset": 543,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 501
+                  }
+                }
+              },
+              {
+                "name": "_",
+                "span": {
+                  "endOffset": 590,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 558
+                },
+                "value": {
+                  "args": [
+                    {
+                      "kind": "Literal",
+                      "span": {
+                        "endOffset": 584,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 563
+                      },
+                      "value": "loaded settings for"
+                    },
+                    {
+                      "kind": "Var",
+                      "name": "host",
+                      "span": {
+                        "endOffset": 589,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 585
+                      }
+                    }
+                  ],
+                  "effect": {
+                    "errors": [
+                      "ConfigError"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 303,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 263
+                    },
+                    "success": {
+                      "kind": "Ref",
+                      "name": "ServerSettings",
+                      "span": {
+                        "endOffset": 285,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 271
+                      }
+                    }
+                  },
+                  "kind": "Combinator",
+                  "name": "log",
+                  "span": {
+                    "endOffset": 590,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 558
+                  }
+                }
+              }
+            ],
+            "body": {
+              "effect": {
+                "errors": [
+                  "ConfigError"
+                ],
+                "kind": "Effect",
+                "requirements": [],
+                "span": {
+                  "endOffset": 303,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 263
+                },
+                "success": {
+                  "kind": "Ref",
+                  "name": "ServerSettings",
+                  "span": {
+                    "endOffset": 285,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 271
+                  }
+                }
+              },
+              "kind": "Succeed",
+              "span": {
+                "endOffset": 655,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 596
+              },
+              "value": {
+                "entries": [
+                  {
+                    "key": {
+                      "kind": "Expr",
+                      "source": {
+                        "kind": "Symbol",
+                        "name": ":host"
+                      },
+                      "span": {
+                        "endOffset": 611,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 606
+                      }
+                    },
+                    "value": {
+                      "kind": "Var",
+                      "name": "host",
+                      "span": {
+                        "endOffset": 616,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 612
+                      }
+                    }
+                  },
+                  {
+                    "key": {
+                      "kind": "Expr",
+                      "source": {
+                        "kind": "Symbol",
+                        "name": ":port"
+                      },
+                      "span": {
+                        "endOffset": 622,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 617
+                      }
+                    },
+                    "value": {
+                      "kind": "Var",
+                      "name": "port",
+                      "span": {
+                        "endOffset": 627,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 623
+                      }
+                    }
+                  },
+                  {
+                    "key": {
+                      "kind": "Expr",
+                      "source": {
+                        "kind": "Symbol",
+                        "name": ":debug"
+                      },
+                      "span": {
+                        "endOffset": 634,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 628
+                      }
+                    },
+                    "value": {
+                      "kind": "Var",
+                      "name": "debug",
+                      "span": {
+                        "endOffset": 640,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 635
+                      }
+                    }
+                  },
+                  {
+                    "key": {
+                      "kind": "Expr",
+                      "source": {
+                        "kind": "Symbol",
+                        "name": ":ratio"
+                      },
+                      "span": {
+                        "endOffset": 647,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 641
+                      }
+                    },
+                    "value": {
+                      "kind": "Var",
+                      "name": "ratio",
+                      "span": {
+                        "endOffset": 653,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 648
+                      }
+                    }
+                  }
+                ],
+                "kind": "Record",
+                "span": {
+                  "endOffset": 654,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 605
+                }
+              }
+            },
+            "effect": {
+              "errors": [
+                "ConfigError"
+              ],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 303,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 263
+              },
+              "success": {
+                "kind": "Ref",
+                "name": "ServerSettings",
+                "span": {
+                  "endOffset": 285,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 271
+                }
+              }
+            },
+            "kind": "Do",
+            "span": {
+              "endOffset": 656,
+              "sourceId": "surfaces/effect-typescript/config-and-logging",
+              "startOffset": 326
+            }
+          },
+          "effect": {
+            "errors": [
+              "ConfigError"
+            ],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 303,
+              "sourceId": "surfaces/effect-typescript/config-and-logging",
+              "startOffset": 263
+            },
+            "success": {
+              "kind": "Ref",
+              "name": "ServerSettings",
+              "span": {
+                "endOffset": 285,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 271
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "settings",
+          "params": [],
+          "value": true
+        },
+        "sourceId": "surfaces/effect-typescript/config-and-logging",
+        "span": {
+          "endOffset": 657,
+          "sourceId": "surfaces/effect-typescript/config-and-logging",
+          "startOffset": 305
+        }
+      },
+      {
+        "formIndex": 5,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "bindings": [
+              {
+                "name": "loaded",
+                "span": {
+                  "endOffset": 893,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 785
+                },
+                "value": {
+                  "binding": "_",
+                  "body": {
+                    "effect": {
+                      "errors": [
+                        "Misconfigured"
+                      ],
+                      "kind": "Effect",
+                      "requirements": [],
+                      "span": {
+                        "endOffset": 722,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 680
+                      },
+                      "success": {
+                        "kind": "Ref",
+                        "name": "ServerSettings",
+                        "span": {
+                          "endOffset": 702,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 688
+                        }
+                      }
+                    },
+                    "kind": "Pure",
+                    "span": {
+                      "endOffset": 808,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 800
+                    },
+                    "value": {
+                      "kind": "Var",
+                      "name": "settings",
+                      "span": {
+                        "endOffset": 808,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 800
+                      }
+                    }
+                  },
+                  "effect": {
+                    "errors": [
+                      "Misconfigured"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 722,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 680
+                    },
+                    "success": {
+                      "kind": "Ref",
+                      "name": "ServerSettings",
+                      "span": {
+                        "endOffset": 702,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 688
+                      }
+                    }
+                  },
+                  "errorType": "ConfigError",
+                  "handler": {
+                    "effect": {
+                      "errors": [
+                        "Misconfigured"
+                      ],
+                      "kind": "Effect",
+                      "requirements": [],
+                      "span": {
+                        "endOffset": 722,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 680
+                      },
+                      "success": {
+                        "kind": "Ref",
+                        "name": "ServerSettings",
+                        "span": {
+                          "endOffset": 702,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 688
+                        }
+                      }
+                    },
+                    "error": {
+                      "errorType": "Misconfigured",
+                      "kind": "Error",
+                      "payload": {
+                        "entries": [
+                          {
+                            "key": {
+                              "kind": "Expr",
+                              "source": {
+                                "kind": "Symbol",
+                                "name": ":reason"
+                              },
+                              "span": {
+                                "endOffset": 870,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 863
+                              }
+                            },
+                            "value": {
+                              "kind": "Literal",
+                              "span": {
+                                "endOffset": 889,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 871
+                              },
+                              "value": "HOST is required"
+                            }
+                          }
+                        ],
+                        "kind": "Record",
+                        "span": {
+                          "endOffset": 890,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 862
+                        }
+                      },
+                      "span": {
+                        "endOffset": 891,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 847
+                      }
+                    },
+                    "kind": "Fail",
+                    "span": {
+                      "endOffset": 892,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 841
+                    }
+                  },
+                  "kind": "Catch",
+                  "span": {
+                    "endOffset": 893,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 785
+                  }
+                }
+              }
+            ],
+            "body": {
+              "condition": {
+                "items": [
+                  {
+                    "kind": "Var",
+                    "name": "and",
+                    "span": {
+                      "endOffset": 913,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 910
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": ">",
+                        "span": {
+                          "endOffset": 916,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 915
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "get",
+                            "span": {
+                              "endOffset": 921,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 918
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "loaded",
+                            "span": {
+                              "endOffset": 928,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 922
+                            }
+                          },
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":port"
+                            },
+                            "span": {
+                              "endOffset": 934,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 929
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 935,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 917
+                        }
+                      },
+                      {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 937,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 936
+                        },
+                        "value": 0
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 938,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 914
+                    }
+                  },
+                  {
+                    "items": [
+                      {
+                        "kind": "Var",
+                        "name": "<",
+                        "span": {
+                          "endOffset": 941,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 940
+                        }
+                      },
+                      {
+                        "items": [
+                          {
+                            "kind": "Var",
+                            "name": "get",
+                            "span": {
+                              "endOffset": 946,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 943
+                            }
+                          },
+                          {
+                            "kind": "Var",
+                            "name": "loaded",
+                            "span": {
+                              "endOffset": 953,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 947
+                            }
+                          },
+                          {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":port"
+                            },
+                            "span": {
+                              "endOffset": 959,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 954
+                            }
+                          }
+                        ],
+                        "kind": "List",
+                        "span": {
+                          "endOffset": 960,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 942
+                        }
+                      },
+                      {
+                        "kind": "Literal",
+                        "span": {
+                          "endOffset": 966,
+                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                          "startOffset": 961
+                        },
+                        "value": 65536
+                      }
+                    ],
+                    "kind": "List",
+                    "span": {
+                      "endOffset": 967,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 939
+                    }
+                  }
+                ],
+                "kind": "List",
+                "span": {
+                  "endOffset": 968,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 909
+                }
+              },
+              "effect": {
+                "errors": [
+                  "Misconfigured"
+                ],
+                "kind": "Effect",
+                "requirements": [],
+                "span": {
+                  "endOffset": 722,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 680
+                },
+                "success": {
+                  "kind": "Ref",
+                  "name": "ServerSettings",
+                  "span": {
+                    "endOffset": 702,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 688
+                  }
+                }
+              },
+              "else": {
+                "effect": {
+                  "errors": [
+                    "Misconfigured"
+                  ],
+                  "kind": "Effect",
+                  "requirements": [],
+                  "span": {
+                    "endOffset": 722,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 680
+                  },
+                  "success": {
+                    "kind": "Ref",
+                    "name": "ServerSettings",
+                    "span": {
+                      "endOffset": 702,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 688
+                    }
+                  }
+                },
+                "error": {
+                  "errorType": "Misconfigured",
+                  "kind": "Error",
+                  "payload": {
+                    "entries": [
+                      {
+                        "key": {
+                          "kind": "Expr",
+                          "source": {
+                            "kind": "Symbol",
+                            "name": ":reason"
+                          },
+                          "span": {
+                            "endOffset": 1045,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 1038
+                          }
+                        },
+                        "value": {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "str",
+                              "span": {
+                                "endOffset": 1050,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1047
+                              }
+                            },
+                            {
+                              "kind": "Literal",
+                              "span": {
+                                "endOffset": 1058,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1051
+                              },
+                              "value": "port "
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "Var",
+                                  "name": "get",
+                                  "span": {
+                                    "endOffset": 1063,
+                                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                    "startOffset": 1060
+                                  }
+                                },
+                                {
+                                  "kind": "Var",
+                                  "name": "loaded",
+                                  "span": {
+                                    "endOffset": 1070,
+                                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                    "startOffset": 1064
+                                  }
+                                },
+                                {
+                                  "kind": "Expr",
+                                  "source": {
+                                    "kind": "Symbol",
+                                    "name": ":port"
+                                  },
+                                  "span": {
+                                    "endOffset": 1076,
+                                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                    "startOffset": 1071
+                                  }
+                                }
+                              ],
+                              "kind": "List",
+                              "span": {
+                                "endOffset": 1077,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1059
+                              }
+                            },
+                            {
+                              "kind": "Literal",
+                              "span": {
+                                "endOffset": 1096,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1078
+                              },
+                              "value": " is out of range"
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 1097,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 1046
+                          }
+                        }
+                      }
+                    ],
+                    "kind": "Record",
+                    "span": {
+                      "endOffset": 1098,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 1037
+                    }
+                  },
+                  "span": {
+                    "endOffset": 1099,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 1012
+                  }
+                },
+                "kind": "Fail",
+                "span": {
+                  "endOffset": 1100,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 998
+                }
+              },
+              "kind": "If",
+              "span": {
+                "endOffset": 1101,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 899
+              },
+              "then": {
+                "effect": {
+                  "errors": [
+                    "Misconfigured"
+                  ],
+                  "kind": "Effect",
+                  "requirements": [],
+                  "span": {
+                    "endOffset": 722,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 680
+                  },
+                  "success": {
+                    "kind": "Ref",
+                    "name": "ServerSettings",
+                    "span": {
+                      "endOffset": 702,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 688
+                    }
+                  }
+                },
+                "kind": "Succeed",
+                "span": {
+                  "endOffset": 991,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 975
+                },
+                "value": {
+                  "kind": "Var",
+                  "name": "loaded",
+                  "span": {
+                    "endOffset": 990,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 984
+                  }
+                }
+              }
+            },
+            "effect": {
+              "errors": [
+                "Misconfigured"
+              ],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 722,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 680
+              },
+              "success": {
+                "kind": "Ref",
+                "name": "ServerSettings",
+                "span": {
+                  "endOffset": 702,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 688
+                }
+              }
+            },
+            "kind": "Do",
+            "span": {
+              "endOffset": 1102,
+              "sourceId": "surfaces/effect-typescript/config-and-logging",
+              "startOffset": 755
+            }
+          },
+          "effect": {
+            "errors": [
+              "Misconfigured"
+            ],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 722,
+              "sourceId": "surfaces/effect-typescript/config-and-logging",
+              "startOffset": 680
+            },
+            "success": {
+              "kind": "Ref",
+              "name": "ServerSettings",
+              "span": {
+                "endOffset": 702,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 688
+              }
+            }
+          },
+          "kind": "EffectDef",
+          "name": "validated-settings",
+          "params": [],
+          "value": true
+        },
+        "sourceId": "surfaces/effect-typescript/config-and-logging",
+        "span": {
+          "endOffset": 1103,
+          "sourceId": "surfaces/effect-typescript/config-and-logging",
+          "startOffset": 724
+        }
+      },
+      {
+        "formIndex": 1,
+        "payload": {
+          "kind": "ErrorDef",
+          "name": "Misconfigured",
+          "schema": {
+            "fields": [
+              {
+                "name": "reason",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 248,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 242
+                  }
+                },
+                "span": {
+                  "endOffset": 248,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 242
+                }
+              }
+            ],
+            "kind": "Struct"
+          }
+        },
+        "sourceId": "surfaces/effect-typescript/config-and-logging",
+        "span": {
+          "endOffset": 250,
+          "sourceId": "surfaces/effect-typescript/config-and-logging",
+          "startOffset": 212
+        }
+      },
+      {
+        "formIndex": 0,
+        "payload": {
+          "kind": "SchemaDef",
+          "name": "ServerSettings",
+          "schema": {
+            "fields": [
+              {
+                "name": "host",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 174,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 168
+                  }
+                },
+                "span": {
+                  "endOffset": 174,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 168
+                }
+              },
+              {
+                "name": "port",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "Int",
+                  "span": {
+                    "endOffset": 184,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 181
+                  }
+                },
+                "span": {
+                  "endOffset": 184,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 181
+                }
+              },
+              {
+                "name": "debug",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "Bool",
+                  "span": {
+                    "endOffset": 196,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 192
+                  }
+                },
+                "span": {
+                  "endOffset": 196,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 192
+                }
+              },
+              {
+                "name": "ratio",
+                "schema": {
+                  "kind": "Primitive",
+                  "name": "Float",
+                  "span": {
+                    "endOffset": 209,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 204
+                  }
+                },
+                "span": {
+                  "endOffset": 209,
+                  "sourceId": "surfaces/effect-typescript/config-and-logging",
+                  "startOffset": 204
+                }
+              }
+            ],
+            "kind": "Struct",
+            "span": {
+              "endOffset": 210,
+              "sourceId": "surfaces/effect-typescript/config-and-logging",
+              "startOffset": 161
+            }
+          }
+        },
+        "sourceId": "surfaces/effect-typescript/config-and-logging",
+        "span": {
+          "endOffset": 211,
+          "sourceId": "surfaces/effect-typescript/config-and-logging",
+          "startOffset": 140
+        }
+      }
+    ],
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 145,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 141
+              },
+              "value": "type"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 160,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 146
+              },
+              "value": "ServerSettings"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 167,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 162
+                    },
+                    "value": ":host"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 174,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 168
+                    },
+                    "value": "String"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 180,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 175
+                    },
+                    "value": ":port"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 184,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 181
+                    },
+                    "value": "Int"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 191,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 185
+                    },
+                    "value": ":debug"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 196,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 192
+                    },
+                    "value": "Bool"
+                  }
+                },
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 203,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 197
+                    },
+                    "value": ":ratio"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 209,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 204
+                    },
+                    "value": "Float"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 210,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 161
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 211,
+            "sourceId": "surfaces/effect-typescript/config-and-logging",
+            "startOffset": 140
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 218,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 213
+              },
+              "value": "error"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 232,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 219
+              },
+              "value": "Misconfigured"
+            },
+            {
+              "entries": [
+                {
+                  "key": {
+                    "kind": "keyword",
+                    "span": {
+                      "endOffset": 241,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 234
+                    },
+                    "value": ":reason"
+                  },
+                  "value": {
+                    "kind": "symbol",
+                    "span": {
+                      "endOffset": 248,
+                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                      "startOffset": 242
+                    },
+                    "value": "String"
+                  }
+                }
+              ],
+              "kind": "map",
+              "span": {
+                "endOffset": 249,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 233
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 250,
+            "sourceId": "surfaces/effect-typescript/config-and-logging",
+            "startOffset": 212
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 253,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 252
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 262,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 254
+              },
+              "value": "settings"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 270,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 264
+                  },
+                  "value": "Effect"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 285,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 271
+                  },
+                  "value": "ServerSettings"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 298,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 287
+                      },
+                      "value": "ConfigError"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 299,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 286
+                  }
+                },
+                {
+                  "items": [],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 302,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 300
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 303,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 263
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 304,
+            "sourceId": "surfaces/effect-typescript/config-and-logging",
+            "startOffset": 251
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 312,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 306
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 323,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 315
+              },
+              "value": "settings"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 330,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 327
+                  },
+                  "value": "do!"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 347,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 343
+                      },
+                      "value": "host"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 361,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 355
+                          },
+                          "value": "config"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 368,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 362
+                          },
+                          "value": "String"
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 375,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 369
+                          },
+                          "value": "HOST"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 376,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 354
+                      }
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 387,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 383
+                      },
+                      "value": "port"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 401,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 395
+                          },
+                          "value": "config"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 405,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 402
+                          },
+                          "value": "Int"
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 412,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 406
+                          },
+                          "value": "PORT"
+                        },
+                        {
+                          "kind": "keyword",
+                          "span": {
+                            "endOffset": 421,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 413
+                          },
+                          "value": ":default"
+                        },
+                        {
+                          "kind": "int",
+                          "span": {
+                            "endOffset": 426,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 422
+                          },
+                          "value": 8080
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 427,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 394
+                      }
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 439,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 434
+                      },
+                      "value": "debug"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 453,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 447
+                          },
+                          "value": "config"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 458,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 454
+                          },
+                          "value": "Bool"
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 466,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 459
+                          },
+                          "value": "DEBUG"
+                        },
+                        {
+                          "kind": "keyword",
+                          "span": {
+                            "endOffset": 475,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 467
+                          },
+                          "value": ":default"
+                        },
+                        {
+                          "kind": "bool",
+                          "span": {
+                            "endOffset": 481,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 476
+                          },
+                          "value": false
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 482,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 446
+                      }
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 494,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 489
+                      },
+                      "value": "ratio"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 508,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 502
+                          },
+                          "value": "config"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 514,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 509
+                          },
+                          "value": "Float"
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 529,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 515
+                          },
+                          "value": "SAMPLE_RATIO"
+                        },
+                        {
+                          "kind": "keyword",
+                          "span": {
+                            "endOffset": 538,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 530
+                          },
+                          "value": ":default"
+                        },
+                        {
+                          "kind": "float",
+                          "span": {
+                            "endOffset": 542,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 539
+                          },
+                          "value": 0.5
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 543,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 501
+                      }
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 551,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 550
+                      },
+                      "value": "_"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 562,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 559
+                          },
+                          "value": "log"
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 584,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 563
+                          },
+                          "value": "loaded settings for"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 589,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 585
+                          },
+                          "value": "host"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 590,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 558
+                      }
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 591,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 335
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 604,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 597
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 611,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 606
+                            },
+                            "value": ":host"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 616,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 612
+                            },
+                            "value": "host"
+                          }
+                        },
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 622,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 617
+                            },
+                            "value": ":port"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 627,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 623
+                            },
+                            "value": "port"
+                          }
+                        },
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 634,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 628
+                            },
+                            "value": ":debug"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 640,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 635
+                            },
+                            "value": "debug"
+                          }
+                        },
+                        {
+                          "key": {
+                            "kind": "keyword",
+                            "span": {
+                              "endOffset": 647,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 641
+                            },
+                            "value": ":ratio"
+                          },
+                          "value": {
+                            "kind": "symbol",
+                            "span": {
+                              "endOffset": 653,
+                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                              "startOffset": 648
+                            },
+                            "value": "ratio"
+                          }
+                        }
+                      ],
+                      "kind": "map",
+                      "span": {
+                        "endOffset": 654,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 605
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 655,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 596
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 656,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 326
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 657,
+            "sourceId": "surfaces/effect-typescript/config-and-logging",
+            "startOffset": 305
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 660,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 659
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 679,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 661
+              },
+              "value": "validated-settings"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 687,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 681
+                  },
+                  "value": "Effect"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 702,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 688
+                  },
+                  "value": "ServerSettings"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 717,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 704
+                      },
+                      "value": "Misconfigured"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 718,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 703
+                  }
+                },
+                {
+                  "items": [],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 721,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 719
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 722,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 680
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 723,
+            "sourceId": "surfaces/effect-typescript/config-and-logging",
+            "startOffset": 658
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 731,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 725
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 752,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 734
+              },
+              "value": "validated-settings"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 759,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 756
+                  },
+                  "value": "do!"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 778,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 772
+                      },
+                      "value": "loaded"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 791,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 786
+                          },
+                          "value": "catch"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 808,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 800
+                          },
+                          "value": "settings"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 829,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 818
+                              },
+                              "value": "ConfigError"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 831,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 830
+                              },
+                              "value": "_"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 832,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 817
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 846,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 842
+                              },
+                              "value": "fail"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 861,
+                                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                    "startOffset": 848
+                                  },
+                                  "value": "Misconfigured"
+                                },
+                                {
+                                  "entries": [
+                                    {
+                                      "key": {
+                                        "kind": "keyword",
+                                        "span": {
+                                          "endOffset": 870,
+                                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                          "startOffset": 863
+                                        },
+                                        "value": ":reason"
+                                      },
+                                      "value": {
+                                        "kind": "string",
+                                        "span": {
+                                          "endOffset": 889,
+                                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                          "startOffset": 871
+                                        },
+                                        "value": "HOST is required"
+                                      }
+                                    }
+                                  ],
+                                  "kind": "map",
+                                  "span": {
+                                    "endOffset": 890,
+                                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                    "startOffset": 862
+                                  }
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 891,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 847
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 892,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 841
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 893,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 785
+                      }
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 894,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 764
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 902,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 900
+                      },
+                      "value": "if"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 913,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 910
+                          },
+                          "value": "and"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 916,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 915
+                              },
+                              "value": ">"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 921,
+                                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                    "startOffset": 918
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 928,
+                                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                    "startOffset": 922
+                                  },
+                                  "value": "loaded"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "span": {
+                                    "endOffset": 934,
+                                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                    "startOffset": 929
+                                  },
+                                  "value": ":port"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 935,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 917
+                              }
+                            },
+                            {
+                              "kind": "int",
+                              "span": {
+                                "endOffset": 937,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 936
+                              },
+                              "value": 0
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 938,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 914
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 941,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 940
+                              },
+                              "value": "<"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 946,
+                                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                    "startOffset": 943
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 953,
+                                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                    "startOffset": 947
+                                  },
+                                  "value": "loaded"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "span": {
+                                    "endOffset": 959,
+                                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                    "startOffset": 954
+                                  },
+                                  "value": ":port"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 960,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 942
+                              }
+                            },
+                            {
+                              "kind": "int",
+                              "span": {
+                                "endOffset": 966,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 961
+                              },
+                              "value": 65536
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 967,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 939
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 968,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 909
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 983,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 976
+                          },
+                          "value": "succeed"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 990,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 984
+                          },
+                          "value": "loaded"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 991,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 975
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1003,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 999
+                          },
+                          "value": "fail"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1026,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1013
+                              },
+                              "value": "Misconfigured"
+                            },
+                            {
+                              "entries": [
+                                {
+                                  "key": {
+                                    "kind": "keyword",
+                                    "span": {
+                                      "endOffset": 1045,
+                                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                      "startOffset": 1038
+                                    },
+                                    "value": ":reason"
+                                  },
+                                  "value": {
+                                    "items": [
+                                      {
+                                        "kind": "symbol",
+                                        "span": {
+                                          "endOffset": 1050,
+                                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                          "startOffset": 1047
+                                        },
+                                        "value": "str"
+                                      },
+                                      {
+                                        "kind": "string",
+                                        "span": {
+                                          "endOffset": 1058,
+                                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                          "startOffset": 1051
+                                        },
+                                        "value": "port "
+                                      },
+                                      {
+                                        "items": [
+                                          {
+                                            "kind": "symbol",
+                                            "span": {
+                                              "endOffset": 1063,
+                                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                              "startOffset": 1060
+                                            },
+                                            "value": "get"
+                                          },
+                                          {
+                                            "kind": "symbol",
+                                            "span": {
+                                              "endOffset": 1070,
+                                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                              "startOffset": 1064
+                                            },
+                                            "value": "loaded"
+                                          },
+                                          {
+                                            "kind": "keyword",
+                                            "span": {
+                                              "endOffset": 1076,
+                                              "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                              "startOffset": 1071
+                                            },
+                                            "value": ":port"
+                                          }
+                                        ],
+                                        "kind": "list",
+                                        "span": {
+                                          "endOffset": 1077,
+                                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                          "startOffset": 1059
+                                        }
+                                      },
+                                      {
+                                        "kind": "string",
+                                        "span": {
+                                          "endOffset": 1096,
+                                          "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                          "startOffset": 1078
+                                        },
+                                        "value": " is out of range"
+                                      }
+                                    ],
+                                    "kind": "list",
+                                    "span": {
+                                      "endOffset": 1097,
+                                      "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                      "startOffset": 1046
+                                    }
+                                  }
+                                }
+                              ],
+                              "kind": "map",
+                              "span": {
+                                "endOffset": 1098,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1037
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1099,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 1012
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1100,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 998
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1101,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 899
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1102,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 755
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1103,
+            "sourceId": "surfaces/effect-typescript/config-and-logging",
+            "startOffset": 724
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 1106,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 1105
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1115,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 1107
+              },
+              "value": "base-url"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1123,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 1117
+                  },
+                  "value": "Effect"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1130,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 1124
+                  },
+                  "value": "String"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1145,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 1132
+                      },
+                      "value": "Misconfigured"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 1146,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 1131
+                  }
+                },
+                {
+                  "items": [],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 1149,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 1147
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1150,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 1116
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1151,
+            "sourceId": "surfaces/effect-typescript/config-and-logging",
+            "startOffset": 1104
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1159,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 1153
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 1170,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 1162
+              },
+              "value": "base-url"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1177,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 1174
+                  },
+                  "value": "do!"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1190,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 1183
+                      },
+                      "value": "current"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1209,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 1191
+                      },
+                      "value": "validated-settings"
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 1210,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 1182
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 1223,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 1216
+                      },
+                      "value": "succeed"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 1234,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 1231
+                          },
+                          "value": "str"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1246,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1244
+                              },
+                              "value": "if"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1251,
+                                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                    "startOffset": 1248
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 1259,
+                                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                    "startOffset": 1252
+                                  },
+                                  "value": "current"
+                                },
+                                {
+                                  "kind": "keyword",
+                                  "span": {
+                                    "endOffset": 1266,
+                                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                    "startOffset": 1260
+                                  },
+                                  "value": ":debug"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 1267,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1247
+                              }
+                            },
+                            {
+                              "kind": "string",
+                              "span": {
+                                "endOffset": 1274,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1268
+                              },
+                              "value": "http"
+                            },
+                            {
+                              "kind": "string",
+                              "span": {
+                                "endOffset": 1282,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1275
+                              },
+                              "value": "https"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1283,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 1243
+                          }
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 1297,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 1292
+                          },
+                          "value": "://"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1310,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1307
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1318,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1311
+                              },
+                              "value": "current"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1324,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1319
+                              },
+                              "value": ":host"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1325,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 1306
+                          }
+                        },
+                        {
+                          "kind": "string",
+                          "span": {
+                            "endOffset": 1337,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 1334
+                          },
+                          "value": ":"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1350,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1347
+                              },
+                              "value": "get"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 1358,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1351
+                              },
+                              "value": "current"
+                            },
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 1364,
+                                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                                "startOffset": 1359
+                              },
+                              "value": ":port"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 1365,
+                            "sourceId": "surfaces/effect-typescript/config-and-logging",
+                            "startOffset": 1346
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 1366,
+                        "sourceId": "surfaces/effect-typescript/config-and-logging",
+                        "startOffset": 1230
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 1367,
+                    "sourceId": "surfaces/effect-typescript/config-and-logging",
+                    "startOffset": 1215
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 1368,
+                "sourceId": "surfaces/effect-typescript/config-and-logging",
+                "startOffset": 1173
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 1369,
+            "sourceId": "surfaces/effect-typescript/config-and-logging",
+            "startOffset": 1152
+          }
+        }
+      ],
+      "diagnostics": []
+    }
+  },
+  "version": 1
+}

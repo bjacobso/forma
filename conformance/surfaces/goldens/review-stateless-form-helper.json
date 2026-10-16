@@ -1,0 +1,10 @@
+{
+  "id": "review-stateless-form-helper",
+  "outputs": {
+    "typecheck": {
+      "diagnostics": [],
+      "type": "Declaration"
+    }
+  },
+  "version": 1
+}
