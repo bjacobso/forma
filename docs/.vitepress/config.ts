@@ -55,6 +55,7 @@ export default defineConfig({
         items: [
           { text: "Architecture", link: "/architecture" },
           { text: "Design decisions", link: "/design-decisions" },
+          { text: "Engine consolidation and performance", link: "/engine-consolidation" },
           { text: "Language services", link: "/language-services" },
           { text: "File modules", link: "/modules" },
           { text: "Workbench vision", link: "/workbench-vision" },

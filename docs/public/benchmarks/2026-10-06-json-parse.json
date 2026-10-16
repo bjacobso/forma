@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "status": "complete",
+  "measuredAt": "2026-10-06T19:45:19.651Z",
+  "revision": "774cb1de4c6b7be97319ebdb60588c2b0d07a844",
+  "environment": {
+    "node": "v24.14.1",
+    "platform": "linux",
+    "kernel": "6.18.49",
+    "cpu": "Intel(R) Xeon(R) Processor @ 2.90GHz",
+    "logicalCpus": 8,
+    "ocaml": "5.2.1",
+    "jsOfOcaml": "6.2.0+6.2.0"
+  },
+  "methodology": {
+    "warmup": "Adaptive batching targets approximately 100ms per sample; warmup is at least 5 calls or two batches.",
+    "samples": 9,
+    "typescriptTransport": "json-roundtrip",
+    "timing": "Persistent processes; timed batches exclude parent-worker IPC. TS includes JSON request decoding and response encoding. OCaml ABI includes request decoding and response JSON encoding. Response JSON decoding in Node is outside timing.",
+    "correctness": "Successful diagnostics, expected scalar values/types, AST structure without spans, and agreement between OCaml native/JS. Expand compares runtime forms (OCaml retains __macro declarations; TS drops them). Number maps to Int only for these integer-only fixtures; Str maps to String.",
+    "coldStart": "Process launch + TS Engine module import or OCaml version request; filesystem caches warm, one discarded launch. Not browser download latency."
+  },
+  "coldStart": {
+    "typescript": {
+      "samplesMs": [
+        315.232528,
+        302.50204099999996,
+        302.539168,
+        295.15829299999996,
+        296.75196700000015,
+        299.5290150000001,
+        305.23254899999984,
+        301.07617400000026,
+        303.04771299999993
+      ],
+      "medianMs": 302.50204099999996,
+      "p95Ms": 315.232528
+    },
+    "ocaml-native": {
+      "samplesMs": [
+        2.7573950000000877,
+        2.8062089999998534,
+        2.666572999999971,
+        2.545702999999776,
+        2.6615569999999025,
+        2.6168219999999565,
+        2.530459999999948,
+        2.4288489999999,
+        3.002447999999731
+      ],
+      "medianMs": 2.6615569999999025,
+      "p95Ms": 3.002447999999731
+    },
+    "ocaml-js": {
+      "samplesMs": [
+        64.44534599999997,
+        67.65825899999982,
+        67.28512300000011,
+        66.20150100000001,
+        63.84085499999992,
+        67.98859100000027,
+        67.5641099999998,
+        63.31443799999988,
+        69.92941100000007
+      ],
+      "medianMs": 67.28512300000011,
+      "p95Ms": 69.92941100000007
+    }
+  },
+  "workloads": [
+    {
+      "id": "prelude-ontology.lisp/parse",
+      "sourceBytes": 56702,
+      "sourceHash": "e640d319ec2de72466a575c3e8f6988bc8339fc67b5e649e3f74145f295b2536",
+      "pass": "parse",
+      "correctness": {
+        "kind": "ast",
+        "forms": 154,
+        "hash": "6b495b6a046f2b9748b079523bf6743b38f24d0f39254b0f4ebdd88dff573905"
+      },
+      "engines": {
+        "typescript": {
+          "batch": 6,
+          "warmup": 12,
+          "samplesMs": [
+            12.801521,
+            10.94309583333334,
+            11.765723333333332,
+            11.347636000000003,
+            12.308005666666665,
+            12.006747333333331,
+            10.261570166666653,
+            10.150491166666674,
+            11.793254166666657
+          ],
+          "medianMs": 11.765723333333332,
+          "p95Ms": 12.801521
+        },
+        "ocaml-native": {
+          "batch": 4,
+          "warmup": 8,
+          "samplesMs": [
+            26.518046856,
+            27.002751827,
+            27.170240879,
+            27.092993259,
+            26.165246964,
+            25.719463825,
+            26.004016399,
+            26.414275169,
+            26.690483093
+          ],
+          "medianMs": 26.518046856,
+          "p95Ms": 27.170240879
+        },
+        "ocaml-js": {
+          "batch": 1,
+          "warmup": 5,
+          "samplesMs": [
+            104.90868000000046,
+            105.24796100000003,
+            106.6894229999998,
+            108.01328000000012,
+            114.31261100000029,
+            105.88504899999953,
+            109.94817000000057,
+            113.94330900000023,
+            114.60285100000056
+          ],
+          "medianMs": 108.01328000000012,
+          "p95Ms": 114.60285100000056
+        }
+      }
+    }
+  ]
+}

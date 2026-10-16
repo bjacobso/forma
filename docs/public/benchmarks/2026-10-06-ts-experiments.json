@@ -1,0 +1,1412 @@
+{
+  "measuredAt": "2026-10-06T19:44:02.519Z",
+  "variants": {
+    "baseline": {
+      "timings": {
+        "definitions-100/typecheck": {
+          "medianMs": 92.343929,
+          "samplesMs": [
+            94.21883099999997,
+            91.88751300000001,
+            89.33977300000004,
+            108.05192699999998,
+            92.69860949999998,
+            92.343929,
+            89.01895449999984,
+            92.82532750000018,
+            88.61777399999983
+          ],
+          "batch": 2
+        },
+        "definitions-250/typecheck": {
+          "medianMs": 1029.7016359999998,
+          "samplesMs": [
+            1008.2218459999985,
+            1016.9840560000011,
+            1029.7016359999998,
+            1025.3516249999993,
+            1040.0724530000007,
+            1039.9337369999994,
+            1022.9917340000011,
+            1049.5669849999977,
+            1034.133651
+          ],
+          "batch": 1
+        },
+        "polymorphic-100/typecheck": {
+          "medianMs": 138.27916499999992,
+          "samplesMs": [
+            141.44948999999906,
+            151.60034799999994,
+            146.80201399999714,
+            142.96474800000215,
+            137.36933299999873,
+            136.72979100000157,
+            138.27916499999992,
+            137.63863000000129,
+            135.55155500000183
+          ],
+          "batch": 1
+        },
+        "map-reduce-1000/evaluate": {
+          "medianMs": 10.251041428571625,
+          "samplesMs": [
+            10.621305428571109,
+            11.012262428571246,
+            10.754356857142868,
+            10.092104714285856,
+            11.248251285714234,
+            10.109331142856847,
+            10.149861714285569,
+            10.16880399999978,
+            10.251041428571625
+          ],
+          "batch": 7
+        },
+        "arithmetic-1000/evaluate": {
+          "medianMs": 6.919140416666475,
+          "samplesMs": [
+            8.022991166666847,
+            7.204690999999912,
+            9.141844416666572,
+            6.919140416666475,
+            6.713052166666785,
+            6.791867583333442,
+            7.361765999999989,
+            6.829003916666504,
+            6.766740583333255
+          ],
+          "batch": 12
+        },
+        "arithmetic-1000/precompiled": {
+          "medianMs": 0.9786954637681408,
+          "samplesMs": [
+            1.1937745362319339,
+            1.4604893333333009,
+            0.9983735652173852,
+            0.9786954637681408,
+            0.9668466521739058,
+            0.9761575362318726,
+            0.9818163913043754,
+            0.9674893333333033,
+            0.9637407681159633
+          ],
+          "batch": 69
+        }
+      },
+      "correctness": {
+        "definitions-100/typecheck": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "definitions-250/typecheck": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "polymorphic-100/typecheck": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "map-reduce-1000/evaluate": {
+          "value": 332834500,
+          "steps": 11007,
+          "diagnostics": []
+        },
+        "arithmetic-1000/evaluate": {
+          "value": 3,
+          "steps": 4000,
+          "diagnostics": []
+        },
+        "arithmetic-1000/precompiled": {
+          "value": 3,
+          "steps": 4000,
+          "diagnostics": []
+        },
+        "fixture/arithmetic": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/boolean": {
+          "display": "Bool",
+          "diagnostics": []
+        },
+        "fixture/unbound-symbol": {
+          "diagnostics": [
+            {
+              "code": "typecheck/unbound-symbol",
+              "severity": "error",
+              "message": "Unbound variable: unknownVar (at offset 0)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "unbound-symbol",
+                "startOffset": 0,
+                "endOffset": 10
+              },
+              "details": {
+                "message": "Unbound variable: unknownVar",
+                "code": "typecheck/unbound-symbol"
+              }
+            }
+          ]
+        },
+        "fixture/operational-effects": {
+          "display": "String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>",
+          "diagnostics": []
+        },
+        "fixture/effect-typescript/operational-effects": {
+          "display": "String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>",
+          "diagnostics": []
+        },
+        "fixture/canonical-int-number": {
+          "display": "List<Number>",
+          "diagnostics": []
+        },
+        "fixture/canonical-literal-union": {
+          "display": "Union<:free, :pro>",
+          "diagnostics": []
+        },
+        "fixture/canonical-option-record": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/canonical-qualified-constructor": {
+          "display": "Number",
+          "diagnostics": []
+        },
+        "fixture/canonical-brand": {
+          "display": "Brand<UserId, String>",
+          "diagnostics": []
+        },
+        "fixture/canonical-open-row": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/canonical-dynamic-get": {
+          "display": "Option<Int>",
+          "diagnostics": []
+        },
+        "fixture/canonical-expected-constructor": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/canonical-variable-ascription": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/canonical-generic-record-alias": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/canonical-dictionary-lookup": {
+          "display": "List<Option<Int>>",
+          "diagnostics": []
+        },
+        "fixture/canonical-option-value-field": {
+          "display": "{:name Option<String>}",
+          "diagnostics": []
+        },
+        "fixture/canonical-map-operations": {
+          "display": "{:count Int :keys List<String> :present Bool :value Option<Int>}",
+          "diagnostics": []
+        },
+        "fixture/canonical-nominal-records": {
+          "display": "{:error Missing :name String}",
+          "diagnostics": []
+        },
+        "fixture/canonical-class-pattern": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/canonical-record-update": {
+          "diagnostics": [
+            {
+              "code": "typecheck/open-record",
+              "severity": "error",
+              "message": "Updating an unknown field requires a closed record or a typed Map (at offset 29)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "canonical-record-update",
+                "startOffset": 29,
+                "endOffset": 56
+              },
+              "details": {
+                "message": "Updating an unknown field requires a closed record or a typed Map",
+                "code": "typecheck/open-record"
+              }
+            }
+          ]
+        },
+        "fixture/canonical-mixed-dictionary-keys": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/review-keyword-match": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/review-number-equality": {
+          "display": "Bool",
+          "diagnostics": []
+        },
+        "fixture/review-numeric-parameters": {
+          "display": "Number",
+          "diagnostics": []
+        },
+        "fixture/review-double-option": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/review-dictionary-pattern": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/review-type-error": {
+          "diagnostics": [
+            {
+              "code": "typecheck/type-mismatch",
+              "severity": "error",
+              "message": "Type mismatch: String vs Int (at offset 20)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "review-type-error",
+                "startOffset": 20,
+                "endOffset": 24
+              },
+              "details": {
+                "message": "Type mismatch: String vs Int",
+                "expected": "String",
+                "got": "Int",
+                "code": "typecheck/type-mismatch"
+              }
+            }
+          ]
+        },
+        "fixture/review-unknown-constructor": {
+          "diagnostics": [
+            {
+              "code": "typecheck/pattern-constructor",
+              "severity": "error",
+              "message": "Unknown constructor: Unknown (at offset 0)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "review-unknown-constructor",
+                "startOffset": 0,
+                "endOffset": 27
+              },
+              "details": {
+                "message": "Unknown constructor: Unknown",
+                "code": "typecheck/pattern-constructor"
+              }
+            }
+          ]
+        },
+        "fixture/review-stateless-form-definition": {
+          "display": "FormDescriptor",
+          "diagnostics": []
+        },
+        "fixture/review-stateless-form-application": {
+          "display": "Declaration",
+          "diagnostics": []
+        },
+        "fixture/review-stateless-form-error": {
+          "diagnostics": [
+            {
+              "code": "elaborate/hole-type",
+              "severity": "error",
+              "message": "text does not match its declared hole type (at offset 110)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "review-stateless-form-error",
+                "startOffset": 110,
+                "endOffset": 112
+              },
+              "details": {
+                "code": "elaborate/hole-type"
+              }
+            }
+          ]
+        },
+        "fixture/review-string-record-pattern": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/review-string-map-pattern": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/review-stateless-form-helper": {
+          "display": "Declaration",
+          "diagnostics": []
+        },
+        "fixture/review-higher-kinded-numeric": {
+          "display": "List<Number>",
+          "diagnostics": []
+        }
+      }
+    },
+    "substitution": {
+      "timings": {
+        "definitions-100/typecheck": {
+          "medianMs": 20.51690560000002,
+          "samplesMs": [
+            22.553177600000005,
+            25.263291200000005,
+            24.248655800000005,
+            23.037586599999987,
+            19.18829179999998,
+            19.30945280000001,
+            19.083843400000024,
+            20.164532999999984,
+            20.51690560000002
+          ],
+          "batch": 5
+        },
+        "definitions-250/typecheck": {
+          "medianMs": 88.43359199999986,
+          "samplesMs": [
+            86.8793915,
+            88.43359199999986,
+            94.235905,
+            90.13010250000002,
+            87.71421700000019,
+            86.59468449999986,
+            88.08051449999994,
+            97.24619849999999,
+            96.34615949999989
+          ],
+          "batch": 2
+        },
+        "polymorphic-100/typecheck": {
+          "medianMs": 34.27670100000008,
+          "samplesMs": [
+            34.43848733333334,
+            34.27670100000008,
+            32.68805066666664,
+            33.60324800000004,
+            37.41909266666668,
+            35.051953666666726,
+            34.61836266666675,
+            33.980456999999966,
+            33.619645333333516
+          ],
+          "batch": 3
+        },
+        "map-reduce-1000/evaluate": {
+          "medianMs": 9.55554400000003,
+          "samplesMs": [
+            10.98885211111115,
+            9.55554400000003,
+            9.651515222222265,
+            9.499843666666695,
+            9.78438766666669,
+            9.552513555555581,
+            10.520819222222194,
+            9.190792666666717,
+            9.150331888888912
+          ],
+          "batch": 9
+        },
+        "arithmetic-1000/evaluate": {
+          "medianMs": 6.646117000000004,
+          "samplesMs": [
+            7.932322874999954,
+            6.859066875000053,
+            6.126916499999993,
+            6.292940750000071,
+            7.7498213750000104,
+            6.248279000000025,
+            11.43244125000001,
+            6.646117000000004,
+            6.632919125000058
+          ],
+          "batch": 8
+        },
+        "arithmetic-1000/precompiled": {
+          "medianMs": 0.9806234637681105,
+          "samplesMs": [
+            1.1818970869565195,
+            0.9844139275362424,
+            0.9700184782608683,
+            0.9806234637681105,
+            0.9782590289855169,
+            0.9746476376811557,
+            1.0452945507246456,
+            0.9817164202898483,
+            0.9582993188405848
+          ],
+          "batch": 69
+        }
+      },
+      "correctness": {
+        "definitions-100/typecheck": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "definitions-250/typecheck": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "polymorphic-100/typecheck": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "map-reduce-1000/evaluate": {
+          "value": 332834500,
+          "steps": 11007,
+          "diagnostics": []
+        },
+        "arithmetic-1000/evaluate": {
+          "value": 3,
+          "steps": 4000,
+          "diagnostics": []
+        },
+        "arithmetic-1000/precompiled": {
+          "value": 3,
+          "steps": 4000,
+          "diagnostics": []
+        },
+        "fixture/arithmetic": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/boolean": {
+          "display": "Bool",
+          "diagnostics": []
+        },
+        "fixture/unbound-symbol": {
+          "diagnostics": [
+            {
+              "code": "typecheck/unbound-symbol",
+              "severity": "error",
+              "message": "Unbound variable: unknownVar (at offset 0)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "unbound-symbol",
+                "startOffset": 0,
+                "endOffset": 10
+              },
+              "details": {
+                "message": "Unbound variable: unknownVar",
+                "code": "typecheck/unbound-symbol"
+              }
+            }
+          ]
+        },
+        "fixture/operational-effects": {
+          "display": "String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>",
+          "diagnostics": []
+        },
+        "fixture/effect-typescript/operational-effects": {
+          "display": "String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>",
+          "diagnostics": []
+        },
+        "fixture/canonical-int-number": {
+          "display": "List<Number>",
+          "diagnostics": []
+        },
+        "fixture/canonical-literal-union": {
+          "display": "Union<:free, :pro>",
+          "diagnostics": []
+        },
+        "fixture/canonical-option-record": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/canonical-qualified-constructor": {
+          "display": "Number",
+          "diagnostics": []
+        },
+        "fixture/canonical-brand": {
+          "display": "Brand<UserId, String>",
+          "diagnostics": []
+        },
+        "fixture/canonical-open-row": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/canonical-dynamic-get": {
+          "display": "Option<Int>",
+          "diagnostics": []
+        },
+        "fixture/canonical-expected-constructor": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/canonical-variable-ascription": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/canonical-generic-record-alias": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/canonical-dictionary-lookup": {
+          "display": "List<Option<Int>>",
+          "diagnostics": []
+        },
+        "fixture/canonical-option-value-field": {
+          "display": "{:name Option<String>}",
+          "diagnostics": []
+        },
+        "fixture/canonical-map-operations": {
+          "display": "{:count Int :keys List<String> :present Bool :value Option<Int>}",
+          "diagnostics": []
+        },
+        "fixture/canonical-nominal-records": {
+          "display": "{:error Missing :name String}",
+          "diagnostics": []
+        },
+        "fixture/canonical-class-pattern": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/canonical-record-update": {
+          "diagnostics": [
+            {
+              "code": "typecheck/open-record",
+              "severity": "error",
+              "message": "Updating an unknown field requires a closed record or a typed Map (at offset 29)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "canonical-record-update",
+                "startOffset": 29,
+                "endOffset": 56
+              },
+              "details": {
+                "message": "Updating an unknown field requires a closed record or a typed Map",
+                "code": "typecheck/open-record"
+              }
+            }
+          ]
+        },
+        "fixture/canonical-mixed-dictionary-keys": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/review-keyword-match": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/review-number-equality": {
+          "display": "Bool",
+          "diagnostics": []
+        },
+        "fixture/review-numeric-parameters": {
+          "display": "Number",
+          "diagnostics": []
+        },
+        "fixture/review-double-option": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/review-dictionary-pattern": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/review-type-error": {
+          "diagnostics": [
+            {
+              "code": "typecheck/type-mismatch",
+              "severity": "error",
+              "message": "Type mismatch: String vs Int (at offset 20)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "review-type-error",
+                "startOffset": 20,
+                "endOffset": 24
+              },
+              "details": {
+                "message": "Type mismatch: String vs Int",
+                "expected": "String",
+                "got": "Int",
+                "code": "typecheck/type-mismatch"
+              }
+            }
+          ]
+        },
+        "fixture/review-unknown-constructor": {
+          "diagnostics": [
+            {
+              "code": "typecheck/pattern-constructor",
+              "severity": "error",
+              "message": "Unknown constructor: Unknown (at offset 0)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "review-unknown-constructor",
+                "startOffset": 0,
+                "endOffset": 27
+              },
+              "details": {
+                "message": "Unknown constructor: Unknown",
+                "code": "typecheck/pattern-constructor"
+              }
+            }
+          ]
+        },
+        "fixture/review-stateless-form-definition": {
+          "display": "FormDescriptor",
+          "diagnostics": []
+        },
+        "fixture/review-stateless-form-application": {
+          "display": "Declaration",
+          "diagnostics": []
+        },
+        "fixture/review-stateless-form-error": {
+          "diagnostics": [
+            {
+              "code": "elaborate/hole-type",
+              "severity": "error",
+              "message": "text does not match its declared hole type (at offset 110)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "review-stateless-form-error",
+                "startOffset": 110,
+                "endOffset": 112
+              },
+              "details": {
+                "code": "elaborate/hole-type"
+              }
+            }
+          ]
+        },
+        "fixture/review-string-record-pattern": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/review-string-map-pattern": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/review-stateless-form-helper": {
+          "display": "Declaration",
+          "diagnostics": []
+        },
+        "fixture/review-higher-kinded-numeric": {
+          "display": "List<Number>",
+          "diagnostics": []
+        }
+      }
+    },
+    "substitution-node-map": {
+      "timings": {
+        "definitions-100/typecheck": {
+          "medianMs": 15.911784199999966,
+          "samplesMs": [
+            18.06282120000001,
+            16.490137000000004,
+            19.897557000000006,
+            17.821418199999993,
+            14.304479400000014,
+            14.323357600000008,
+            14.368751599999996,
+            15.523013399999991,
+            15.911784199999966
+          ],
+          "batch": 5
+        },
+        "definitions-250/typecheck": {
+          "medianMs": 56.71299250000004,
+          "samplesMs": [
+            55.73964049999995,
+            56.71299250000004,
+            53.79847700000005,
+            58.73850550000009,
+            58.954109499999845,
+            54.98413699999992,
+            55.51504950000003,
+            58.450433500000145,
+            58.499871500000154
+          ],
+          "batch": 2
+        },
+        "polymorphic-100/typecheck": {
+          "medianMs": 21.499274833333327,
+          "samplesMs": [
+            22.287837999999965,
+            20.1098668333334,
+            23.215097166666663,
+            21.43243633333327,
+            21.079026999999996,
+            21.55495899999998,
+            20.49705449999995,
+            22.611131166666684,
+            21.499274833333327
+          ],
+          "batch": 6
+        },
+        "map-reduce-1000/evaluate": {
+          "medianMs": 10.188330444444444,
+          "samplesMs": [
+            10.536403555555555,
+            10.513952111111141,
+            10.221959222222218,
+            10.817413555555504,
+            10.188330444444444,
+            10.163466888888959,
+            9.551464333333367,
+            9.4111605555556,
+            9.466587222222188
+          ],
+          "batch": 9
+        },
+        "arithmetic-1000/evaluate": {
+          "medianMs": 6.800742928571383,
+          "samplesMs": [
+            8.695367428571378,
+            6.59119892857143,
+            6.5230717857143,
+            7.008189714285761,
+            6.800742928571383,
+            6.343428428571444,
+            10.982364999999975,
+            6.4186419285714305,
+            6.913793571428544
+          ],
+          "batch": 14
+        },
+        "arithmetic-1000/precompiled": {
+          "medianMs": 0.9949558676470561,
+          "samplesMs": [
+            1.1845835147058845,
+            1.089288573529409,
+            1.0364863382352965,
+            0.9935755147058872,
+            0.9861456029411784,
+            0.9895004411764736,
+            1.0159048235294208,
+            0.9949558676470561,
+            0.9834403529411756
+          ],
+          "batch": 68
+        }
+      },
+      "correctness": {
+        "definitions-100/typecheck": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "definitions-250/typecheck": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "polymorphic-100/typecheck": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "map-reduce-1000/evaluate": {
+          "value": 332834500,
+          "steps": 11007,
+          "diagnostics": []
+        },
+        "arithmetic-1000/evaluate": {
+          "value": 3,
+          "steps": 4000,
+          "diagnostics": []
+        },
+        "arithmetic-1000/precompiled": {
+          "value": 3,
+          "steps": 4000,
+          "diagnostics": []
+        },
+        "fixture/arithmetic": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/boolean": {
+          "display": "Bool",
+          "diagnostics": []
+        },
+        "fixture/unbound-symbol": {
+          "diagnostics": [
+            {
+              "code": "typecheck/unbound-symbol",
+              "severity": "error",
+              "message": "Unbound variable: unknownVar (at offset 0)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "unbound-symbol",
+                "startOffset": 0,
+                "endOffset": 10
+              },
+              "details": {
+                "message": "Unbound variable: unknownVar",
+                "code": "typecheck/unbound-symbol"
+              }
+            }
+          ]
+        },
+        "fixture/operational-effects": {
+          "display": "String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>",
+          "diagnostics": []
+        },
+        "fixture/effect-typescript/operational-effects": {
+          "display": "String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>",
+          "diagnostics": []
+        },
+        "fixture/canonical-int-number": {
+          "display": "List<Number>",
+          "diagnostics": []
+        },
+        "fixture/canonical-literal-union": {
+          "display": "Union<:free, :pro>",
+          "diagnostics": []
+        },
+        "fixture/canonical-option-record": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/canonical-qualified-constructor": {
+          "display": "Number",
+          "diagnostics": []
+        },
+        "fixture/canonical-brand": {
+          "display": "Brand<UserId, String>",
+          "diagnostics": []
+        },
+        "fixture/canonical-open-row": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/canonical-dynamic-get": {
+          "display": "Option<Int>",
+          "diagnostics": []
+        },
+        "fixture/canonical-expected-constructor": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/canonical-variable-ascription": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/canonical-generic-record-alias": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/canonical-dictionary-lookup": {
+          "display": "List<Option<Int>>",
+          "diagnostics": []
+        },
+        "fixture/canonical-option-value-field": {
+          "display": "{:name Option<String>}",
+          "diagnostics": []
+        },
+        "fixture/canonical-map-operations": {
+          "display": "{:count Int :keys List<String> :present Bool :value Option<Int>}",
+          "diagnostics": []
+        },
+        "fixture/canonical-nominal-records": {
+          "display": "{:error Missing :name String}",
+          "diagnostics": []
+        },
+        "fixture/canonical-class-pattern": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/canonical-record-update": {
+          "diagnostics": [
+            {
+              "code": "typecheck/open-record",
+              "severity": "error",
+              "message": "Updating an unknown field requires a closed record or a typed Map (at offset 29)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "canonical-record-update",
+                "startOffset": 29,
+                "endOffset": 56
+              },
+              "details": {
+                "message": "Updating an unknown field requires a closed record or a typed Map",
+                "code": "typecheck/open-record"
+              }
+            }
+          ]
+        },
+        "fixture/canonical-mixed-dictionary-keys": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/review-keyword-match": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/review-number-equality": {
+          "display": "Bool",
+          "diagnostics": []
+        },
+        "fixture/review-numeric-parameters": {
+          "display": "Number",
+          "diagnostics": []
+        },
+        "fixture/review-double-option": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/review-dictionary-pattern": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/review-type-error": {
+          "diagnostics": [
+            {
+              "code": "typecheck/type-mismatch",
+              "severity": "error",
+              "message": "Type mismatch: String vs Int (at offset 20)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "review-type-error",
+                "startOffset": 20,
+                "endOffset": 24
+              },
+              "details": {
+                "message": "Type mismatch: String vs Int",
+                "expected": "String",
+                "got": "Int",
+                "code": "typecheck/type-mismatch"
+              }
+            }
+          ]
+        },
+        "fixture/review-unknown-constructor": {
+          "diagnostics": [
+            {
+              "code": "typecheck/pattern-constructor",
+              "severity": "error",
+              "message": "Unknown constructor: Unknown (at offset 0)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "review-unknown-constructor",
+                "startOffset": 0,
+                "endOffset": 27
+              },
+              "details": {
+                "message": "Unknown constructor: Unknown",
+                "code": "typecheck/pattern-constructor"
+              }
+            }
+          ]
+        },
+        "fixture/review-stateless-form-definition": {
+          "display": "FormDescriptor",
+          "diagnostics": []
+        },
+        "fixture/review-stateless-form-application": {
+          "display": "Declaration",
+          "diagnostics": []
+        },
+        "fixture/review-stateless-form-error": {
+          "diagnostics": [
+            {
+              "code": "elaborate/hole-type",
+              "severity": "error",
+              "message": "text does not match its declared hole type (at offset 110)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "review-stateless-form-error",
+                "startOffset": 110,
+                "endOffset": 112
+              },
+              "details": {
+                "code": "elaborate/hole-type"
+              }
+            }
+          ]
+        },
+        "fixture/review-string-record-pattern": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/review-string-map-pattern": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/review-stateless-form-helper": {
+          "display": "Declaration",
+          "diagnostics": []
+        },
+        "fixture/review-higher-kinded-numeric": {
+          "display": "List<Number>",
+          "diagnostics": []
+        }
+      }
+    },
+    "step-counter": {
+      "timings": {
+        "definitions-100/typecheck": {
+          "medianMs": 87.91693700000002,
+          "samplesMs": [
+            87.91693700000002,
+            89.3619195,
+            98.95966500000009,
+            101.61405650000006,
+            86.68154200000004,
+            85.50209749999999,
+            88.30249649999985,
+            84.26732749999996,
+            81.75832949999995
+          ],
+          "batch": 2
+        },
+        "definitions-250/typecheck": {
+          "medianMs": 1002.8809889999993,
+          "samplesMs": [
+            1039.7653929999997,
+            989.6197699999993,
+            1036.2485730000008,
+            1008.8063199999997,
+            1010.472921999999,
+            1002.8809889999993,
+            975.4043600000005,
+            1000.8854950000004,
+            994.7370609999998
+          ],
+          "batch": 1
+        },
+        "polymorphic-100/typecheck": {
+          "medianMs": 133.0769880000007,
+          "samplesMs": [
+            134.8190710000017,
+            133.0769880000007,
+            146.3022889999993,
+            132.77700299999924,
+            134.03068800000256,
+            130.8481869999996,
+            130.9054959999994,
+            133.335027000001,
+            130.24404300000242
+          ],
+          "batch": 1
+        },
+        "map-reduce-1000/evaluate": {
+          "medianMs": 6.563356538461308,
+          "samplesMs": [
+            7.051474615384695,
+            6.597623153846284,
+            7.483769769230723,
+            6.563356538461308,
+            6.556533692307801,
+            6.066276769230731,
+            6.326424692307717,
+            6.541354153845952,
+            6.873211846153795
+          ],
+          "batch": 13
+        },
+        "arithmetic-1000/evaluate": {
+          "medianMs": 5.229603312499876,
+          "samplesMs": [
+            6.1368564375000005,
+            5.185408625000036,
+            5.456329062500117,
+            5.1831868125000256,
+            5.177711999999929,
+            5.821431000000075,
+            5.199505062500066,
+            10.030969062500162,
+            5.229603312499876
+          ],
+          "batch": 16
+        },
+        "arithmetic-1000/precompiled": {
+          "medianMs": 0.060242619999989984,
+          "samplesMs": [
+            0.12531407000002218,
+            0.12050317000001087,
+            0.06023624000001291,
+            0.060242619999989984,
+            0.06029984000000695,
+            0.05975217000002885,
+            0.09982622999999875,
+            0.0588137099999949,
+            0.05995965999998589
+          ],
+          "batch": 100
+        }
+      },
+      "correctness": {
+        "definitions-100/typecheck": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "definitions-250/typecheck": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "polymorphic-100/typecheck": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "map-reduce-1000/evaluate": {
+          "value": 332834500,
+          "steps": 11007,
+          "diagnostics": []
+        },
+        "arithmetic-1000/evaluate": {
+          "value": 3,
+          "steps": 4000,
+          "diagnostics": []
+        },
+        "arithmetic-1000/precompiled": {
+          "value": 3,
+          "steps": 4000,
+          "diagnostics": []
+        },
+        "fixture/arithmetic": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/boolean": {
+          "display": "Bool",
+          "diagnostics": []
+        },
+        "fixture/unbound-symbol": {
+          "diagnostics": [
+            {
+              "code": "typecheck/unbound-symbol",
+              "severity": "error",
+              "message": "Unbound variable: unknownVar (at offset 0)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "unbound-symbol",
+                "startOffset": 0,
+                "endOffset": 10
+              },
+              "details": {
+                "message": "Unbound variable: unknownVar",
+                "code": "typecheck/unbound-symbol"
+              }
+            }
+          ]
+        },
+        "fixture/operational-effects": {
+          "display": "String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>",
+          "diagnostics": []
+        },
+        "fixture/effect-typescript/operational-effects": {
+          "display": "String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>",
+          "diagnostics": []
+        },
+        "fixture/canonical-int-number": {
+          "display": "List<Number>",
+          "diagnostics": []
+        },
+        "fixture/canonical-literal-union": {
+          "display": "Union<:free, :pro>",
+          "diagnostics": []
+        },
+        "fixture/canonical-option-record": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/canonical-qualified-constructor": {
+          "display": "Number",
+          "diagnostics": []
+        },
+        "fixture/canonical-brand": {
+          "display": "Brand<UserId, String>",
+          "diagnostics": []
+        },
+        "fixture/canonical-open-row": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/canonical-dynamic-get": {
+          "display": "Option<Int>",
+          "diagnostics": []
+        },
+        "fixture/canonical-expected-constructor": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/canonical-variable-ascription": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/canonical-generic-record-alias": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/canonical-dictionary-lookup": {
+          "display": "List<Option<Int>>",
+          "diagnostics": []
+        },
+        "fixture/canonical-option-value-field": {
+          "display": "{:name Option<String>}",
+          "diagnostics": []
+        },
+        "fixture/canonical-map-operations": {
+          "display": "{:count Int :keys List<String> :present Bool :value Option<Int>}",
+          "diagnostics": []
+        },
+        "fixture/canonical-nominal-records": {
+          "display": "{:error Missing :name String}",
+          "diagnostics": []
+        },
+        "fixture/canonical-class-pattern": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/canonical-record-update": {
+          "diagnostics": [
+            {
+              "code": "typecheck/open-record",
+              "severity": "error",
+              "message": "Updating an unknown field requires a closed record or a typed Map (at offset 29)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "canonical-record-update",
+                "startOffset": 29,
+                "endOffset": 56
+              },
+              "details": {
+                "message": "Updating an unknown field requires a closed record or a typed Map",
+                "code": "typecheck/open-record"
+              }
+            }
+          ]
+        },
+        "fixture/canonical-mixed-dictionary-keys": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/review-keyword-match": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/review-number-equality": {
+          "display": "Bool",
+          "diagnostics": []
+        },
+        "fixture/review-numeric-parameters": {
+          "display": "Number",
+          "diagnostics": []
+        },
+        "fixture/review-double-option": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/review-dictionary-pattern": {
+          "display": "Int",
+          "diagnostics": []
+        },
+        "fixture/review-type-error": {
+          "diagnostics": [
+            {
+              "code": "typecheck/type-mismatch",
+              "severity": "error",
+              "message": "Type mismatch: String vs Int (at offset 20)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "review-type-error",
+                "startOffset": 20,
+                "endOffset": 24
+              },
+              "details": {
+                "message": "Type mismatch: String vs Int",
+                "expected": "String",
+                "got": "Int",
+                "code": "typecheck/type-mismatch"
+              }
+            }
+          ]
+        },
+        "fixture/review-unknown-constructor": {
+          "diagnostics": [
+            {
+              "code": "typecheck/pattern-constructor",
+              "severity": "error",
+              "message": "Unknown constructor: Unknown (at offset 0)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "review-unknown-constructor",
+                "startOffset": 0,
+                "endOffset": 27
+              },
+              "details": {
+                "message": "Unknown constructor: Unknown",
+                "code": "typecheck/pattern-constructor"
+              }
+            }
+          ]
+        },
+        "fixture/review-stateless-form-definition": {
+          "display": "FormDescriptor",
+          "diagnostics": []
+        },
+        "fixture/review-stateless-form-application": {
+          "display": "Declaration",
+          "diagnostics": []
+        },
+        "fixture/review-stateless-form-error": {
+          "diagnostics": [
+            {
+              "code": "elaborate/hole-type",
+              "severity": "error",
+              "message": "text does not match its declared hole type (at offset 110)",
+              "phase": "typecheck",
+              "span": {
+                "sourceId": "review-stateless-form-error",
+                "startOffset": 110,
+                "endOffset": 112
+              },
+              "details": {
+                "code": "elaborate/hole-type"
+              }
+            }
+          ]
+        },
+        "fixture/review-string-record-pattern": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/review-string-map-pattern": {
+          "display": "String",
+          "diagnostics": []
+        },
+        "fixture/review-stateless-form-helper": {
+          "display": "Declaration",
+          "diagnostics": []
+        },
+        "fixture/review-higher-kinded-numeric": {
+          "display": "List<Number>",
+          "diagnostics": []
+        }
+      }
+    }
+  },
+  "scope": "Isolated emitted-JS build copies; production compiler source unchanged. Output equivalence checked on six benchmark workloads and 36 shared typecheck fixtures, including diagnostics and VM step counts.",
+  "large": {
+    "measuredAt": "2026-10-06T19:46:09.749Z",
+    "workload": "definitions-500/typecheck",
+    "variants": {
+      "substitution": {
+        "medianMs": 337.6911319999999,
+        "samplesMs": [
+          346.61775199999965,
+          337.6911319999999,
+          329.8742729999999,
+          366.5693220000003,
+          335.97605599999997,
+          342.8997969999996,
+          344.7916720000003,
+          335.8473189999995,
+          328.17408500000056
+        ]
+      },
+      "substitution-node-map": {
+        "medianMs": 188.7493489999997,
+        "samplesMs": [
+          191.75999599999977,
+          193.19277899999997,
+          202.1571699999995,
+          188.7493489999997,
+          183.5518919999995,
+          201.943123,
+          179.97682199999963,
+          181.26358299999993,
+          185.1656009999997
+        ]
+      }
+    }
+  }
+}
