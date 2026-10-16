@@ -2017,7 +2017,7 @@
           [
             "String"
             "Int"
-            "Number"
+            "Float"
             "Bool"
             "Unit"
             "Json"

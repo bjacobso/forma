@@ -12,8 +12,8 @@
 (type
   ActionFieldValidation
   {
-    :min (Option Number)
-    :max (Option Number)
+    :min (Option Float)
+    :max (Option Float)
     :pattern (Option String)
     :format (Option String)})
 (type

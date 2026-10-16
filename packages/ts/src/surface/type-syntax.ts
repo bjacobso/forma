@@ -2,9 +2,14 @@ import type { SExpr } from "../reader/types.js";
 import { head, name } from "./effect.js";
 import { splitTypeMetadata } from "./domain.js";
 
-const legacy = new Map(Object.entries({Str:"String",Nil:"Unit",Boolean:"Bool",Array:"List",Vector:"List",Optional:"Option",Uint8Array:"Bytes",string:"String",integer:"Int",number:"Number",boolean:"Bool"}));
+const legacy = new Map(Object.entries({Str:"String",Nil:"Unit",Boolean:"Bool",Array:"List",Vector:"List",Optional:"Option",Uint8Array:"Bytes",string:"String",integer:"Int",number:"Float",boolean:"Bool"}));
 export const schemaMetadata = new Set([":doc", ":pattern", ":title", ":identifier"]);
 const fieldMetadata = new Set([":indexed", ":doc", ":default"]);
+
+/** Retire numeric aliases in contexts whose other legacy names are still accepted. */
+export function retiredNumericTypeErrors(expression: SExpr): readonly string[] {
+  return typeSyntaxErrors(expression).filter(message => /^(Number|Num) is no longer supported\./.test(message));
+}
 
 /** Find the authored field (or unknown tail) that could overwrite a tag. */
 export function taggedPayloadProblem(expression: SExpr): { expression: SExpr; message: string } | undefined {
@@ -44,6 +49,7 @@ export function typeSyntaxErrors(expression: SExpr, allowedMetadata: ReadonlySet
     }
   } catch (error) { return [error instanceof Error ? error.message : String(error)]; }
   const n = name(type);
+  if (n === "Number" || n === "Num") errors.push(`${n} is no longer supported. Use Int or Float.`);
   if (n && legacy.has(n)) errors.push(`Use ${legacy.get(n)} instead of ${n}`);
   if (type._tag === "Map") {
     const seen = new Set<string>();
@@ -60,6 +66,7 @@ export function typeSyntaxErrors(expression: SExpr, allowedMetadata: ReadonlySet
     }
   } else if (type._tag === "List") {
     const h = head(type), args = type.items.slice(1);
+    if (h === "Number" || h === "Num") errors.push(`${h} is no longer supported. Use Int or Float.`);
     if (h && legacy.has(h)) errors.push(`Use ${legacy.get(h)} instead of ${h}`);
     if (!h || h.startsWith(":")) errors.push("Type application requires a type constructor");
     if (["List", "Option", "Id"].includes(h ?? "") && args.length !== 1) errors.push(`${h} expects one type argument`);
@@ -97,7 +104,7 @@ export function typeSyntaxErrors(expression: SExpr, allowedMetadata: ReadonlySet
 
 /** Resolve names in an authored type against its declaration environment. */
 export function unknownTypeReferences(expression: SExpr, isKnown: (name: string) => boolean): readonly string[] {
-  const primitives = new Set(["String", "Int", "Float", "Number", "Num", "Bool", "Unit", "Json", "Any", "Unknown", "Never", "Symbol", "Keyword", "Type", "Syntax", "RuntimeExpr", "Bytes", "DateTime", "Duration", "List", "Option", "Map", "Record", "Union", "Tagged", "Id", "Brand", "Result", "->", "Effect", "Stream", "Layer", "Fiber", "Ref", "RefCell", "Scope", "OntologyRuntime"]);
+  const primitives = new Set(["String", "Int", "Float", "Bool", "Unit", "Json", "Any", "Unknown", "Never", "Symbol", "Keyword", "Type", "Syntax", "RuntimeExpr", "Bytes", "DateTime", "Duration", "List", "Option", "Map", "Record", "Union", "Tagged", "Id", "Brand", "Result", "->", "Effect", "Stream", "Layer", "Fiber", "Ref", "RefCell", "Scope", "OntologyRuntime"]);
   const visit = (expr: SExpr): readonly string[] => {
     const type = splitTypeMetadata(expr).type;
     if (type._tag === "List" && ["Pick", "Omit", "Merge"].includes(head(type) ?? "")) {

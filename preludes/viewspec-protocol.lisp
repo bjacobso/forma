@@ -306,7 +306,7 @@
     :message ViewExpr
     :description (Option ViewExpr)
     :variant (Option (Union "default" "success" "error" "warning" "info"))
-    :duration (Option Number)
+    :duration (Option Float)
     :onSuccess (Option ViewActionOrList)
     :onError (Option ViewActionOrList)
     :onFinally (Option ViewActionOrList)})
@@ -396,7 +396,7 @@
     :action "openFilePicker"
     :accept (Option String)
     :multiple (Option Bool)
-    :maxSize (Option Number)
+    :maxSize (Option Float)
     :onSuccess (Option ViewActionOrList)
     :onError (Option ViewActionOrList)
     :onFinally (Option ViewActionOrList)})

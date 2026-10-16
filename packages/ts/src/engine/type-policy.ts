@@ -3,9 +3,9 @@ import { InferenceError } from "../diagnostic/errors.js";
 import type { SExpr } from "../Reader.js";
 import { parse, toSExprMany } from "../reader/index.js";
 
-/** Int and Float are distinct; legacy Number/Num follow the source Float alias. */
+/** Canonical numeric host types are Int and Float. */
 export const hostTypeNames = new Set([
-  "Number", "Num", "Int", "Float", "String", "Str", "Boolean", "Bool",
+  "Int", "Float", "String", "Str", "Boolean", "Bool",
   "Unit", "Nil", "Any", "Unknown", "Keyword", "Symbol", "Syntax",
   "Map", "List", "Vector", "Declaration",
 ]);
@@ -40,6 +40,7 @@ export function validateHostTypes(request: { readonly hostBuiltins?: unknown; re
     const child = (key: string) => scheme(expr[key], code, `${path}.${key}`, matches, new Set(seen));
     switch (expr.kind) {
       case "type":
+        if (expr.name === "Number" || expr.name === "Num") bad(`${expr.name} is no longer supported. Use Int or Float.`);
         if (typeof expr.name !== "string" || !hostTypeNames.has(expr.name))
           bad(`Unknown type name ${JSON.stringify(expr.name)}. Use a supported host type: ${[...hostTypeNames].join(", ")}.`);
         break;

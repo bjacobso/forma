@@ -4,7 +4,7 @@ import { datum } from "./datum.js";
 import { typeCheckDescriptorTree } from "../descriptor/descriptor-tree-check.js";
 import { coerceProgram } from "./coerce.js";
 import { reachableHelpers } from "./helpers.js";
-import { typeSyntaxErrors, unknownTypeReferences } from "./type-syntax.js";
+import { typeSyntaxErrors, retiredNumericTypeErrors, unknownTypeReferences } from "./type-syntax.js";
 import { KernelTypeError } from "../diagnostic/errors.js";
 import { KKeyword, KSymbol, mapKey, mapKeyValue, isKKeyword, isKSymbol } from "../evaluator/types.js";
 import { Effect, Layer } from "effect";
@@ -84,6 +84,8 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
     const n = fieldName(k);
     if (!n || !name(k)?.startsWith(":")) throw new Error("form :types keys must be keywords");
     if (holes.has(n)) throw new Error(`Duplicate hole type ${n}`);
+    const errors = retiredNumericTypeErrors(t);
+    if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:t.loc});
     holes.set(n, t);
   }
   const identifiers: IdentifierSpec[] = [];
@@ -208,7 +210,7 @@ function validLiteral(e: SExpr, type: SExpr): boolean {
   if (h === "Declares" || h === "Refers" || name(t) === "Symbol") return e._tag === "Sym" && !e.name.startsWith(":");
   if (name(t) === "String") return e._tag === "Str";
   if (name(t) === "Int") return e._tag === "Num" && e.numericKind !== "float" && Number.isSafeInteger(e.value);
-  if (["Float", "Number", "Num"].includes(name(t) ?? "")) return e._tag === "Num";
+  if (name(t) === "Float") return e._tag === "Num";
   if (name(t) === "Bool") return e._tag === "Bool";
   if (name(t) === "Keyword") return name(e)?.startsWith(":") === true;
   if (h === "Union" && t._tag === "List") return t.items.slice(1).some(member => validLiteral(e, member));

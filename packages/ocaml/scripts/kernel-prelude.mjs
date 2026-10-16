@@ -1,6 +1,7 @@
+import { readNativeReferenceFileSync as readFileSync } from "../../../conformance/ocaml-reference/read.mjs";
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
-import { readFileSync } from "node:fs";
+import { } from "node:fs";
 import { resolve } from "node:path";
 
 const packageDir = resolve(import.meta.dirname, "..");

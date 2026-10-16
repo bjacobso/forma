@@ -1,3 +1,3 @@
 (typeclass (Show a) (: show (-> a String)))
-(instance (Show Num)
+(instance (Show Float)
   (define show  [x] 42))

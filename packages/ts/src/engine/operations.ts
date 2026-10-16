@@ -780,8 +780,6 @@ function primitiveType(name: string): Type.Type {
   switch (name) {
     case "Int":
       return Type.tInt;
-    case "Number":
-    case "Num":
     case "Float":
       return Type.tFloat;
     case "String":

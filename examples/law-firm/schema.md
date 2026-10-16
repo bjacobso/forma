@@ -73,16 +73,16 @@
     :title String
     :practice-area String
     :status String
-    :opened-date (Option Number)
-    :next-deadline (Option Number)
-    :budget (Option Number)
+    :opened-date (Option Float)
+    :next-deadline (Option Float)
+    :budget (Option Float)
     :fee-type (Option String)
     :summary (Option String)})
 (entity IntakePacket
   {
     :intakepacket/status String
-    :intakepacket/submitted-at (Option Number)
-    :intakepacket/reviewed-at (Option Number)
+    :intakepacket/submitted-at (Option Float)
+    :intakepacket/reviewed-at (Option Float)
     :intakepacket/notes (Option String)})
 (entity ConflictCheck
   {
@@ -90,13 +90,13 @@
     :conflictcheck/search-terms (Option String)
     :conflictcheck/result (Option String)
     :conflictcheck/reviewed-by (Option String)
-    :conflictcheck/reviewed-at (Option Number)
+    :conflictcheck/reviewed-at (Option Float)
     :conflictcheck/notes (Option String)})
 (entity EngagementLetter
   {
     :engagementletter/status String
-    :engagementletter/sent-at (Option Number)
-    :engagementletter/signed-at (Option Number)
+    :engagementletter/sent-at (Option Float)
+    :engagementletter/signed-at (Option Float)
     :engagementletter/fee-type (Option String)
     :engagementletter/scope-summary (Option String)})
 (entity CaseTask
@@ -105,32 +105,32 @@
     :casetask/type String
     :casetask/priority String
     :casetask/status String
-    :casetask/due-date (Option Number)
-    :casetask/completed-at (Option Number)
+    :casetask/due-date (Option Float)
+    :casetask/completed-at (Option Float)
     :casetask/assignee-role String
     :casetask/notes (Option String)})
 (entity DocumentRequest
   {
     :documentrequest/title String
     :documentrequest/status String
-    :documentrequest/due-date (Option Number)
-    :documentrequest/received-at (Option Number)
+    :documentrequest/due-date (Option Float)
+    :documentrequest/received-at (Option Float)
     :documentrequest/requested-from (Option String)
     :documentrequest/notes (Option String)})
 (entity Invoice
   {
     :number String
     :status String
-    :amount Number
-    :issued-at (Option Number)
-    :due-date (Option Number)
+    :amount Float
+    :issued-at (Option Float)
+    :due-date (Option Float)
     :needs-review (Option Bool)})
 
 ;; ---------------------------------------------------------------------------
 ;; Relations
 ;; ---------------------------------------------------------------------------
 (relation represents Attorney Client
-  {:since (Option Number) :role (Option String)})
+  {:since (Option Float) :role (Option String)})
 (relation contact-at Contact Client {:primary (Option Bool)})
 (relation intake-for IntakePacket Client {})
 (relation conflict-for ConflictCheck Client {})

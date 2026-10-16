@@ -72,13 +72,13 @@ describe("unified core surface and runtime semantics", () => {
     expect(await evaluate('(macro (twice x) `(+ ~x ~x)) (define read [r] (twice r.count)) (unless false (read {:count 3}))')).toBe(6);
   });
   test("record constructor patterns destructure their payload", async () => {
-    expect(await evaluate('(type Shape (Tagged (Circle {:radius Number}) Point)) (match (Circle {:radius 3}) (Circle {:radius r}) r Point 0)')).toBe(3);
+    expect(await evaluate('(type Shape (Tagged (Circle {:radius Float}) Point)) (match (Circle {:radius 3}) (Circle {:radius r}) r Point 0)')).toBe(3);
   });
   test("quote returns data without evaluating its datum", async () => {
     expect(await evaluate("'unbound")).toMatchObject({ _tag: 'KSymbol', name: 'unbound' });
   });
   test("module signatures can appear after definitions", async () => {
-    expect(await Effect.runPromise(Type.inferSourceStr('(define plus [x] (+ x 1)) (: plus (-> Number Number)) (plus 2)'))).toBe('Float');
+    expect(await Effect.runPromise(Type.inferSourceStr('(define plus [x] (+ x 1)) (: plus (-> Float Float)) (plus 2)'))).toBe('Float');
   });
 });
 
@@ -126,9 +126,9 @@ describe('canonical semantics', () => {
     expect(await Effect.runPromise(Type.inferSourceStr(':x'))).toBe(':x');
   });
   test('tagged values have exactly their declared discriminator and fields', async () => {
-    const source='(type Shape (Tagged :tag kind (Circle {:radius Number}) Point)) [(Circle {:radius 3}) Point (match (Circle {:radius 4}) (Circle {:radius r}) r Point 0)]';
+    const source='(type Shape (Tagged :tag kind (Circle {:radius Float}) Point)) [(Circle {:radius 3}) Point (match (Circle {:radius 4}) (Circle {:radius r}) r Point 0)]';
     expect(await evaluate(source)).toEqual([new Map<string,string | number>([[":kind","Circle"],[":radius",3]]),new Map([[":kind","Point"]]),4]);
-    expect(await Effect.runPromise(Type.inferSourceStr('(type Shape (Tagged (Circle {:radius Number}) Point)) (match (Circle {:radius 4}) (Circle {:radius r}) r Point 0)'))).toBe('Float');
+    expect(await Effect.runPromise(Type.inferSourceStr('(type Shape (Tagged (Circle {:radius Float}) Point)) (match (Circle {:radius 4}) (Circle {:radius r}) r Point 0)'))).toBe('Float');
   });
   test('field access follows lexical scope', async () => {
     expect(await evaluate('(define record {:count 7}) (let [other record] other.count)')).toBe(7);
@@ -187,7 +187,7 @@ describe('typed form contracts and shared binding patterns', () => {
     expect(elaborateProgram('(tree (leaf "bad"))',{prelude}).ok).toBe(false);
   });
   test('constructors and nested record patterns work in functions and let', async () => {
-    const source='(type Shape (Tagged (Circle {:radius Number}) Point)) (define area [(Circle {:radius r})] (* r r)) (let [(Circle {:radius r}) (Circle {:radius 3})] (+ r (area (Circle {:radius 4}))))';
+    const source='(type Shape (Tagged (Circle {:radius Float}) Point)) (define area [(Circle {:radius r})] (* r r)) (let [(Circle {:radius r}) (Circle {:radius 3})] (+ r (area (Circle {:radius 4}))))';
     expect(await evaluate(source)).toBe(19);
     expect(await Effect.runPromise(Type.inferSourceStr(source))).toBe('Float');
   });
@@ -294,7 +294,7 @@ describe("standard constructors and contextual records", () => {
 
 describe('constructor scope',()=>{
   test('qualified constructors preserve their wire tag and payload shape',async()=>{
-    const source='(type Shape (Tagged :tag kind (Circle {:radius Number}) Point)) (match (Shape.Circle {:radius 2}) (Shape.Circle {:radius radius}) radius Shape.Point 0)';
+    const source='(type Shape (Tagged :tag kind (Circle {:radius Float}) Point)) (match (Shape.Circle {:radius 2}) (Shape.Circle {:radius radius}) radius Shape.Point 0)';
     expect(await evaluate(source)).toBe(2);
     expect(await Effect.runPromise(Type.inferSourceStr(source))).toBe('Float');
   });

@@ -1,2 +1,2 @@
-(instance (NonExistent Num)
+(instance (NonExistent Float)
   (define foo  [x] x))

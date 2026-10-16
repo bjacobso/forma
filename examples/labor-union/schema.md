@@ -73,7 +73,7 @@
     :work-location (Option (Id WorkLocation))})
 (entity Placement
   {
-    :start-date Number
+    :start-date Float
     :status String
     :source-system (Option String)
     :cba-id (Option String)
@@ -87,8 +87,8 @@
     :cba/local-label (Option String)
     :cba/sector (Option String)
     :cba/geographic-scope (Option String)
-    :cba/effective-start (Option Number)
-    :cba/effective-end (Option Number)
+    :cba/effective-start (Option Float)
+    :cba/effective-end (Option Float)
     :cba/status String
     :cba/card-template (Option (Id AuthorizationCardTemplate))})
 (entity AuthorizationCardTemplate
@@ -108,8 +108,8 @@
     :unionauthtask/priority (Option String)
     :unionauthtask/assignee-role (Option String)
     :unionauthtask/delivery-channel (Option String)
-    :unionauthtask/due-date (Option Number)
-    :unionauthtask/completed-at (Option Number)
+    :unionauthtask/due-date (Option Float)
+    :unionauthtask/completed-at (Option Float)
     :unionauthtask/template-version (Option String)
     :unionauthtask/runtime-task-id (Option String)
     :unionauthtask/document-instance-id (Option String)
@@ -120,7 +120,7 @@
   {
     :executeddocument/name String
     :executeddocument/status String
-    :executeddocument/signed-at (Option Number)
+    :executeddocument/signed-at (Option Float)
     :executeddocument/template-version (Option String)
     :executeddocument/pdf-reference (Option String)
     :executeddocument/structured-data-reference (Option String)
@@ -133,7 +133,7 @@
     :integrationevent/event-type String
     :integrationevent/status String
     :integrationevent/target-system (Option String)
-    :integrationevent/emitted-at (Option Number)
+    :integrationevent/emitted-at (Option Float)
     :integrationevent/payload-summary (Option String)
     :integrationevent/task (Option (Id UnionAuthorizationTask))
     :integrationevent/document (Option (Id ExecutedAuthorizationDocument))

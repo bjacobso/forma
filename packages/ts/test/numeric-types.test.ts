@@ -4,6 +4,8 @@ import { createRequire } from "node:module";
 import ts from "typescript";
 import { lower } from "../src/type/lower-core.js";
 import { normalizeCoreProgram } from "../src/surface/core.js";
+import { bootstrapFromSources } from "../src/descriptor/bootstrap.js";
+import { metaType } from "../src/descriptor/meta-types.js";
 import { Reader, Evaluator, Builtins, Type, Formatter, Syntax, Editor, Mechanics } from "../src/index.js";
 
 const builtins = Builtins.defaultBuiltins;
@@ -84,12 +86,29 @@ describe("Int and Float semantics", () => {
     expect(Evaluator.printKValue(Effect.runSync(Evaluator.evaluateExprs([legacy], {builtins, stepLimit: 100_000})).value)).toBe("1.5");
   });
 
-  it("accepts Number/Num as Float aliases and keeps Float annotations", async () => {
-    for (const alias of ["Number", "Num", "Float"]) {
-      expect(await Effect.runPromise(Type.inferSourceStr(`(: x ${alias}) (define x 2) x`))).toBe("Float");
-      expect(await Effect.runPromise(Type.inferSourceStr(`(: x ${alias}) (define x 2.0) x`))).toBe("Float");
+  it("accepts Float and rejects retired numeric aliases in nested source types", async () => {
+    expect(await Effect.runPromise(Type.inferSourceStr("(: x Float) (define x 2.0) x"))).toBe("Float");
+    for (const alias of ["Number", "Num"]) for (const source of [
+      `(: x ${alias}) (define x 2.0) x`,
+      `(: values (List ${alias})) (define values [2.0]) values`,
+      `(type Point {:x ${alias}})`,
+      `(type ${alias} Float)`,
+      `(typeclass (Label a) (: label (-> ${alias} String)))`,
+      `(typeclass (Label a) (: label (-> a String))) (instance (Label ${alias}) (define label [x] "float"))`,
+    ]) {
+      await expect(Effect.runPromise(Type.inferSourceStr(source))).rejects.toThrow(`${alias} is no longer supported. Use Int or Float.`);
+      expect(Mechanics.generateEffectProgram(source).diagnostics.length).toBeGreaterThan(0);
+      expect(() => run(source)).toThrow(/no longer supported/);
     }
     await expect(Effect.runPromise(Type.inferSourceStr("(: x Int) (define x 2.0) x"))).rejects.toThrow();
+  });
+
+  it("rejects retired numeric types in form descriptors and meta hooks", () => {
+    for (const alias of ["Number", "Num"]) {
+      expect(() => bootstrapFromSources("", `(type ValueIR {:kind "Value" :value Float}) (form (value input) :types {:input ${alias}} :ir ValueIR {:kind "Value" :value input})`)).toThrow(`${alias} is no longer supported`);
+      expect(() => metaType(alias)).toThrow(`${alias} is no longer supported`);
+      expect(() => metaType(new Map([["kind", "type"], ["name", alias]]))).toThrow(`${alias} is no longer supported`);
+    }
   });
 
   it("rejects Int overflow and invalid modulo in both execution paths", () => {

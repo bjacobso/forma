@@ -1,6 +1,7 @@
 import type { KValue } from "../evaluator/types.js";
 import { isKKeyword, isKSymbol } from "../evaluator/types.js";
 import { TApp, TCon, TRow, buildRow, REmpty, showType, type Type } from "../type/types.js";
+import { KernelTypeError } from "../diagnostic/errors.js";
 
 export function metaText(value: KValue | undefined): string | undefined {
   return typeof value === "string" ? value.replace(/^:/, "")
@@ -9,7 +10,10 @@ export function metaText(value: KValue | undefined): string | undefined {
 
 /** Decode the shared meta type vocabulary without silently accepting bad values. */
 export function metaType(value: KValue | undefined): Type | undefined {
-  const normalize = (name: string) => ({ Bool: "Bool", Boolean: "Bool", Str: "String", Num: "Number", Nil: "Unit", Any: "Unknown", _: "Unknown" }[name] ?? name);
+  const normalize = (name: string) => {
+    if (name === "Number" || name === "Num") throw new KernelTypeError({message: `${name} is no longer supported. Use Int or Float.`, expected: "Int or Float", got: name});
+    return { Bool: "Bool", Boolean: "Bool", Str: "String", Nil: "Unit", Any: "Unknown", _: "Unknown" }[name] ?? name;
+  };
   const text = metaText(value);
   if (text) return TCon(normalize(text));
   if (!(value instanceof Map)) return;

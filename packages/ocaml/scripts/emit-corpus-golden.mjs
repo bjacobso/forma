@@ -1,6 +1,7 @@
+import { readNativeReferenceFileSync as readFileSync } from "../../../conformance/ocaml-reference/read.mjs";
 import { emitExampleModules } from "./corpus-emission.mjs";
 import { createHash } from "node:crypto";
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { corpusGoldenPath } from "./gates.mjs";
 
 const printActual = process.argv.includes("--print");

@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { readNativeReferenceFileSync as readFileSync } from "../../../conformance/ocaml-reference/read.mjs";
+import { } from "node:fs";
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 import { createInterface } from "node:readline";

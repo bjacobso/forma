@@ -59,7 +59,7 @@ function expressionValue(expr: SExpr): KValue {
   return base;
 }
 
-const builtinTypeNames = new Set(["Int","Num","Number","Float","Bool","Boolean","Str","String","Nil","Unit","Keyword","Symbol","Syntax","Any","_","List","Vector","Map","Fn","Declaration","TypeValue","FormDescriptor","ProtocolDescriptor"]);
+const builtinTypeNames = new Set(["Int","Float","Bool","Boolean","Str","String","Nil","Unit","Keyword","Symbol","Syntax","Any","_","List","Vector","Map","Fn","Declaration","TypeValue","FormDescriptor","ProtocolDescriptor"]);
 function hookType(value: KValue): Type | undefined {
   const name = metaText(value);
   return name && !builtinTypeNames.has(name) ? undefined : metaType(value);

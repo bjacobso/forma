@@ -148,7 +148,7 @@
       "id": "numeric-types",
       "status": "intentional-difference",
       "fixture": "cases.json (numeric-*); packages/host/test/numeric-projections.test.ts",
-      "reason": "TypeScript preserves Int/Float kinds and uses safe integers with checked overflow. Frozen OCaml has 63-bit Ints, displays Float as Number and rejects explicit Float annotations. Number/Num are Float aliases consistently in TypeScript; the OCaml host policy aliases them to Int. Numeric names and projection kinds are not normalized by the comparator."
+      "reason": "TypeScript preserves Int/Float kinds, checks safe integer overflow, and rejects Number/Num immediately. Frozen OCaml has 63-bit Ints, displays Float as Number, accepts Number annotations and rejects Num and explicit Float annotations. Hash-pinned reference inputs retain the original native vocabulary. Numeric names and projection kinds are not normalized by the comparator."
     }
   ],
   "comparisonModel": {

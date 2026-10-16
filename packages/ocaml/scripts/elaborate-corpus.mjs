@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { readNativeReferenceFileSync as readFileSync } from "../../../conformance/ocaml-reference/read.mjs";
+import { } from "node:fs";
 import { resolve } from "node:path";
 import { OcamlDaemon } from "../../../scripts/parity/ocaml-daemon.mjs";
 import { packageDir, repoRoot, readExampleSources, readPreludes } from "./corpus.mjs";

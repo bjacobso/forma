@@ -86,7 +86,7 @@
                           "value": {
                             "kind": "symbol",
                             "span": {
-                              "endOffset": 53,
+                              "endOffset": 52,
                               "sourceId": "engine-parity/canonical-qualified-constructor",
                               "startOffset": 47
                             },
@@ -96,7 +96,7 @@
                       ],
                       "kind": "map",
                       "span": {
-                        "endOffset": 54,
+                        "endOffset": 53,
                         "sourceId": "engine-parity/canonical-qualified-constructor",
                         "startOffset": 38
                       }
@@ -104,7 +104,7 @@
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 55,
+                    "endOffset": 54,
                     "sourceId": "engine-parity/canonical-qualified-constructor",
                     "startOffset": 30
                   }
@@ -112,16 +112,16 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 61,
+                    "endOffset": 60,
                     "sourceId": "engine-parity/canonical-qualified-constructor",
-                    "startOffset": 56
+                    "startOffset": 55
                   },
                   "value": "Point"
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 62,
+                "endOffset": 61,
                 "sourceId": "engine-parity/canonical-qualified-constructor",
                 "startOffset": 12
               }
@@ -129,7 +129,7 @@
           ],
           "kind": "list",
           "span": {
-            "endOffset": 63,
+            "endOffset": 62,
             "sourceId": "engine-parity/canonical-qualified-constructor",
             "startOffset": 0
           }
@@ -139,9 +139,9 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 70,
+                "endOffset": 69,
                 "sourceId": "engine-parity/canonical-qualified-constructor",
-                "startOffset": 65
+                "startOffset": 64
               },
               "value": "match"
             },
@@ -150,9 +150,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 84,
+                    "endOffset": 83,
                     "sourceId": "engine-parity/canonical-qualified-constructor",
-                    "startOffset": 72
+                    "startOffset": 71
                   },
                   "value": "Shape.Circle"
                 },
@@ -162,18 +162,18 @@
                       "key": {
                         "kind": "keyword",
                         "span": {
-                          "endOffset": 93,
+                          "endOffset": 92,
                           "sourceId": "engine-parity/canonical-qualified-constructor",
-                          "startOffset": 86
+                          "startOffset": 85
                         },
                         "value": ":radius"
                       },
                       "value": {
                         "kind": "int",
                         "span": {
-                          "endOffset": 95,
+                          "endOffset": 94,
                           "sourceId": "engine-parity/canonical-qualified-constructor",
-                          "startOffset": 94
+                          "startOffset": 93
                         },
                         "value": 2
                       }
@@ -181,17 +181,17 @@
                   ],
                   "kind": "map",
                   "span": {
-                    "endOffset": 96,
+                    "endOffset": 95,
                     "sourceId": "engine-parity/canonical-qualified-constructor",
-                    "startOffset": 85
+                    "startOffset": 84
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 97,
+                "endOffset": 96,
                 "sourceId": "engine-parity/canonical-qualified-constructor",
-                "startOffset": 71
+                "startOffset": 70
               }
             },
             {
@@ -199,9 +199,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 111,
+                    "endOffset": 110,
                     "sourceId": "engine-parity/canonical-qualified-constructor",
-                    "startOffset": 99
+                    "startOffset": 98
                   },
                   "value": "Shape.Circle"
                 },
@@ -211,18 +211,18 @@
                       "key": {
                         "kind": "keyword",
                         "span": {
-                          "endOffset": 120,
+                          "endOffset": 119,
                           "sourceId": "engine-parity/canonical-qualified-constructor",
-                          "startOffset": 113
+                          "startOffset": 112
                         },
                         "value": ":radius"
                       },
                       "value": {
                         "kind": "symbol",
                         "span": {
-                          "endOffset": 127,
+                          "endOffset": 126,
                           "sourceId": "engine-parity/canonical-qualified-constructor",
-                          "startOffset": 121
+                          "startOffset": 120
                         },
                         "value": "radius"
                       }
@@ -230,52 +230,52 @@
                   ],
                   "kind": "map",
                   "span": {
-                    "endOffset": 128,
+                    "endOffset": 127,
                     "sourceId": "engine-parity/canonical-qualified-constructor",
-                    "startOffset": 112
+                    "startOffset": 111
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 129,
+                "endOffset": 128,
                 "sourceId": "engine-parity/canonical-qualified-constructor",
-                "startOffset": 98
+                "startOffset": 97
               }
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 136,
+                "endOffset": 135,
                 "sourceId": "engine-parity/canonical-qualified-constructor",
-                "startOffset": 130
+                "startOffset": 129
               },
               "value": "radius"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 148,
+                "endOffset": 147,
                 "sourceId": "engine-parity/canonical-qualified-constructor",
-                "startOffset": 137
+                "startOffset": 136
               },
               "value": "Shape.Point"
             },
             {
               "kind": "int",
               "span": {
-                "endOffset": 150,
+                "endOffset": 149,
                 "sourceId": "engine-parity/canonical-qualified-constructor",
-                "startOffset": 149
+                "startOffset": 148
               },
               "value": 0
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 151,
+            "endOffset": 150,
             "sourceId": "engine-parity/canonical-qualified-constructor",
-            "startOffset": 64
+            "startOffset": 63
           }
         }
       ],

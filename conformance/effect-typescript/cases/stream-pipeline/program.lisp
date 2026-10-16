@@ -2,11 +2,11 @@
 ;; with pure and effectful steps, and run by collecting, folding, or
 ;; consuming each element. Stream types carry the errors and requirements
 ;; of the effects folded into them.
-(type Reading {:sensor String :celsius Number})
+(type Reading {:sensor String :celsius Float})
 (error SensorOffline {:sensor String})
 (service Sensors (: read (-> String (Effect Reading [SensorOffline] []))))
 (service Sink (: write (-> String (Effect Unit))))
-(: celsius-values (-> (List Reading) (Stream Number [] [])))
+(: celsius-values (-> (List Reading) (Stream Float [] [])))
 (define
   celsius-values
   [readings]
@@ -15,7 +15,7 @@
   hot-readings
   (->
     (List String)
-    Number
+    Float
     (Effect (List Reading) [SensorOffline] [Sensors.read])))
 (define
   hot-readings
@@ -50,7 +50,7 @@
     (fn
       [reading]
       (Sink.write (str (get reading :sensor) "=" (get reading :celsius))))))
-(: average (-> (List Reading) (Effect Number)))
+(: average (-> (List Reading) (Effect Float)))
 (define
   average
   [readings]
@@ -59,6 +59,6 @@
       total
       (stream-run-fold
         (celsius-values readings)
-        (: 0 Number)
+        (: 0 Float)
         (fn [sum value] (+ sum value)))]
     (succeed (if (empty? readings) 0 (/ total (count readings))))))

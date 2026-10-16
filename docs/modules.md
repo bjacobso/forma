@@ -245,8 +245,8 @@ not methods of `LanguageHost`. TypeScript's standalone `elaborateProgram` and
 `elaborateSources` APIs in `@formalang/ts/descriptor` return declaration projections;
 use session `emit`/`emitMany` for validated, packaged artifacts.
 Host schemes reject unknown names and malformed structure, including nested
-schemes. `Int` and `Float` are distinct host types; `Number` and `Num` are legacy
-Float aliases. Tagged values preserve numeric kinds, with explicit Float payloads
+schemes. `Int` and `Float` are distinct host types; `Number` and `Num` are rejected
+in source annotations and host schemes. Tagged values preserve numeric kinds, with explicit Float payloads
 `"NaN"`, `"Infinity"`, `"-Infinity"`, and `"-0"` for values JSON numbers cannot
 round-trip. Plain JSON erases numeric kinds and maps nonfinite Floats to null. Invalid configuration names its JSON path and locates the affected
 symbol, or uses a zero-width source span when no symbol occurs.

@@ -21,7 +21,7 @@ Embedding builtins should return that wrapper for Float results and use
 `Evaluator.asNumber` to read either numeric kind. Int overflow is an error.
 The host ABI carries explicit `int`/`float` projections; plain JSON and generated
 Effect TypeScript use native numbers and therefore erase dynamic numeric identity.
-`Number` and `Num` remain legacy Float aliases. See [the numeric design decision](../../docs/design-decisions.md#distinct-int-and-float-values).
+`Number` and `Num` are rejected; choose `Int` or `Float`. See [the numeric design decision](../../docs/design-decisions.md#distinct-int-and-float-values).
 
 ## Bundled preludes
 

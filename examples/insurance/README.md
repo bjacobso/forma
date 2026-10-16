@@ -14,7 +14,7 @@ Insurance policy and claims example in canonical ontology syntax.
 (entity Claim
   {
     :status String
-    :amount (Option Number)
+    :amount (Option Float)
     :policy-holder (Option (Id PolicyHolder))})
 ```
 

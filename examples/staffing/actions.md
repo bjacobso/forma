@@ -34,7 +34,7 @@
   (->
     Employer
     {:firstName String :lastName String :email (Option String)}
-    Number
+    Float
     (Action Bool)))
 (define
   hire-employee
@@ -69,7 +69,7 @@
           employer.id
           {:start-date hire-date :status "active"})]
       true)))
-(: hire-existing-employee (-> Employer Employee Number (Action Bool)))
+(: hire-existing-employee (-> Employer Employee Float (Action Bool)))
 (define
   hire-existing-employee
   [employer employee timestamp]

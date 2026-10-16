@@ -17,14 +17,14 @@ Float supports NaN, infinities, and signed zero. Division follows IEEE 754,
 including division by zero; Int `mod` requires Int operands and rejects zero.
 Rounding produces Int and rejects nonfinite or out-of-range results.
 
-`Number` and `Num` are legacy aliases for Float, preserving existing source
-annotations. The frozen OCaml source checker also resolves them to its floating
-type but displays that type as `Number` and rejects explicit `Float` annotations.
-Its host policy instead aliases them to Int. TypeScript consistently uses Float
-for these aliases in source and host schemes; callers needing Int must name Int.
-Parity records these display and annotation differences explicitly, without
-normalizing numeric names. `Float` is a separate type. Numeric operations accept
-both types;
+`Int` and `Float` are the only numeric type names. `Number` and `Num` are
+rejected immediately with guidance to choose Int or Float; this greenfield
+language does not retain aliases or a warning period. The frozen OCaml checker
+still accepts Number, displays its floating type as Number, and rejects explicit
+Float annotations. Native conformance inputs retain that historical vocabulary
+through an exact, hash-pinned source edit manifest; the compiler is unchanged.
+Parity records these vocabulary differences explicitly and never normalizes
+numeric type names or value kinds. Numeric operations accept both types;
 `+`, `-`, `*`, `min`, `max`, and `abs` return Int when every operand is Int,
 otherwise Float. `/` always returns Float. `mod`, `floor`, `ceil`, and `round`
 return Int. Assignment permits Int where Float is expected, as OCaml does;

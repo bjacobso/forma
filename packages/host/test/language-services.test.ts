@@ -29,7 +29,7 @@ describe("structural editor services on the TypeScript host", () => {
       typeScheme: {
         kind: "function" as const,
         params: [{ kind: "type" as const, name: "String" }],
-        result: { kind: "type" as const, name: "Number" },
+        result: { kind: "type" as const, name: "Float" },
       },
       handler: { kind: "host-effect" as const, effect: "Directory.lookup" },
     };

@@ -168,12 +168,13 @@
     },
     {
       "id": "canonical-qualified-constructor",
-      "source": "(type Shape (Tagged :tag kind (Circle {:radius Number}) Point)) (match (Shape.Circle {:radius 2}) (Shape.Circle {:radius radius}) radius Shape.Point 0)",
+      "source": "(type Shape (Tagged :tag kind (Circle {:radius Float}) Point)) (match (Shape.Circle {:radius 2}) (Shape.Circle {:radius radius}) radius Shape.Point 0)",
       "passes": [
         "parse",
         "typecheck",
         "evaluate"
-      ]
+      ],
+      "sourceNative": "(type Shape (Tagged :tag kind (Circle {:radius Number}) Point)) (match (Shape.Circle {:radius 2}) (Shape.Circle {:radius radius}) radius Shape.Point 0)"
     },
     {
       "id": "canonical-brand",
@@ -1442,6 +1443,15 @@
       "source": "[(/ 0 0) (/ 1 0) (/ -1 0)]",
       "passes": [
         "parse",
+        "evaluate"
+      ]
+    },
+    {
+      "id": "numeric-num-alias",
+      "source": "(: x Num) (define x 2) x",
+      "passes": [
+        "parse",
+        "typecheck",
         "evaluate"
       ]
     }

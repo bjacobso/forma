@@ -2,13 +2,13 @@
 ; -----------------------------------------------------------------------------
 ; Hosted CanonicalRuntime protocol descriptors.
 ; -----------------------------------------------------------------------------
-(type Span {:sourceId String :startOffset Number :endOffset Number})
+(type Span {:sourceId String :startOffset Float :endOffset Float})
 (type
   CanonicalExpr
   (Union
     Unit
     Bool
-    Number
+    Float
     String
     (List CanonicalExpr)
     (Map String CanonicalExpr)))

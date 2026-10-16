@@ -247,9 +247,7 @@ function primitiveType(name: JsonValue | undefined): MType {
     case "Bytes":
     case "DateTime":
       return prim(name);
-    case "Float":
-    case "Number":
-    case "Num": return tFloat;
+    case "Float": return tFloat;
     default:
       return tUnknown;
   }

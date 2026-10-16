@@ -12,7 +12,7 @@ Revenue and operations example in canonical ontology syntax.
 ```lisp
 (entity Account {:name String :segment (Option String)})
 (entity Invoice
-  {:status String :amount (Option Number) :account (Option (Id Account))})
+  {:status String :amount (Option Float) :account (Option (Id Account))})
 ```
 
 ```lisp

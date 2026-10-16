@@ -38,7 +38,7 @@
       :industry (Option String)
       :email (Option String)
       :source (Option String)}
-    Number
+    Float
     (Action Bool)))
 (define
   create-client
@@ -124,7 +124,7 @@
         link2
         (link! conflict-for conflict-id client.id {})]
       true)))
-(: submit-intake-packet (-> Client Number (Action Bool)))
+(: submit-intake-packet (-> Client Float (Action Bool)))
 (define
   submit-intake-packet
   [client timestamp]
@@ -143,7 +143,7 @@
         link-id
         (link! intake-for packet-id client.id {})]
       true)))
-(: complete-firm-review (-> Client Number (Action Bool)))
+(: complete-firm-review (-> Client Float (Action Bool)))
 (define
   complete-firm-review
   [client timestamp]
@@ -183,7 +183,7 @@
         link-id
         (link! conflict-for check-id client.id {})]
       true)))
-(: approve-conflict-check (-> ConflictCheck Number (Action Bool)))
+(: approve-conflict-check (-> ConflictCheck Float (Action Bool)))
 (define
   approve-conflict-check
   [check timestamp]
@@ -211,7 +211,7 @@
 ;; ---------------------------------------------------------------------------
 ;; Engagement and Matter Opening
 ;; ---------------------------------------------------------------------------
-(: generate-engagement-letter (-> Matter Number (Action Bool)))
+(: generate-engagement-letter (-> Matter Float (Action Bool)))
 (define
   generate-engagement-letter
   [matter timestamp]
@@ -245,7 +245,7 @@
         link-id
         (link! engagement-letter-for letter-id matter.id {})]
       true)))
-(: complete-engagement-letter (-> EngagementLetter Number (Action Bool)))
+(: complete-engagement-letter (-> EngagementLetter Float (Action Bool)))
 (define
   complete-engagement-letter
   [letter timestamp]
@@ -266,11 +266,11 @@
     {
       :title String
       :practiceArea String
-      :nextDeadline (Option Number)
-      :budget (Option Number)
+      :nextDeadline (Option Float)
+      :budget (Option Float)
       :feeType (Option String)
       :summary (Option String)}
-    Number
+    Float
     (Action Bool)))
 (define
   open-matter
@@ -311,7 +311,7 @@
       :title String
       :type String
       :priority String
-      :dueDate (Option Number)
+      :dueDate (Option Float)
       :assigneeRole String
       :notes (Option String)}
     (Action Bool)))
@@ -336,7 +336,7 @@
         link-id
         (link! task-for-matter task-id matter.id {})]
       true)))
-(: complete-case-task (-> CaseTask Number (Action Bool)))
+(: complete-case-task (-> CaseTask Float (Action Bool)))
 (define
   complete-case-task
   [task timestamp]
@@ -353,7 +353,7 @@
     Matter
     {
       :title String
-      :dueDate (Option Number)
+      :dueDate (Option Float)
       :requestedFrom (Option String)
       :notes (Option String)}
     (Action Bool)))
@@ -376,7 +376,7 @@
         link-id
         (link! document-request-for request-id matter.id {})]
       true)))
-(: mark-documents-received (-> DocumentRequest Number (Action Bool)))
+(: mark-documents-received (-> DocumentRequest Float (Action Bool)))
 (define
   mark-documents-received
   [request timestamp]

@@ -320,9 +320,7 @@ export function createMetaBuiltins(
         return "Boolean";
       case "Str":
         return "String";
-      case "Number":
-      case "Num":
-        return "Float";
+
       case "Nil":
         return "Unit";
       default:

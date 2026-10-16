@@ -161,8 +161,6 @@ function propTypeFromSlot(slot: SlotSpec): DescriptorTreePropType {
     case "Symbol":
       return "string";
     case "Int": return "int";
-    case "Number":
-    case "Num":
     case "Float": return "float";
     case "Boolean":
     case "Bool":

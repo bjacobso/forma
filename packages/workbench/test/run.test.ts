@@ -20,7 +20,7 @@ it("gates every host call, propagates requirements, and cancels a stale permissi
       arity: 0,
       purity: "read",
       description: "Read a value",
-      typeScheme: { kind: "function", params: [], result: { kind: "type", name: "Number" } },
+      typeScheme: { kind: "function", params: [], result: { kind: "type", name: "Float" } },
       perform: () =>
         Effect.sync(() => {
           performed.push("read");
@@ -34,7 +34,7 @@ it("gates every host call, propagates requirements, and cancels a stale permissi
       description: "Write a value",
       typeScheme: {
         kind: "function",
-        params: [{ kind: "type", name: "Number" }],
+        params: [{ kind: "type", name: "Float" }],
         result: { kind: "type", name: "Unit" },
       },
       perform: () =>

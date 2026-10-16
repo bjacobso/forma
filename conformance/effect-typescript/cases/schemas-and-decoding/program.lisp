@@ -3,14 +3,14 @@
 ;; schema before it is used.
 (type ShapeId (Brand String))
 (type Color (Union :red :green :blue))
-(type Point (Tuple Number Number))
+(type Point (Tuple Float Float))
 (type
   Shape
   (Tagged
     :tag
     kind
-    (Circle {:radius Number})
-    (Rectangle {:width Number :height Number})
+    (Circle {:radius Float})
+    (Rectangle {:width Float :height Float})
     (Polygon {:points (List Point)})))
 (type Label (Union String Int))
 (type
@@ -23,7 +23,7 @@
     :tags (Map String String)
     :title (String :doc "Human readable title")})
 (error InvalidDrawing {:message String})
-(: make-circle (-> String Number Drawing))
+(: make-circle (-> String Float Drawing))
 (define
   make-circle
   [id radius]
@@ -33,7 +33,7 @@
     :color "red"
     :tags {}
     :title (str "circle " id)})
-(: area (-> Shape (Effect Number)))
+(: area (-> Shape (Effect Float)))
 (define
   area
   [shape]
