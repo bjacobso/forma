@@ -5,7 +5,8 @@ patterns=(
   "meta""crdt"
   "open[ -]?""ontology"
   "open[_-]""ontology"
-  "on""lang"
+  # Match the legacy name as a token, allowing citations to loonlang.com.
+  "(^|[^[:alnum:]_])on""lang([^[:alnum:]_]|$)"
   "oo[_-]""lang"
 )
 
