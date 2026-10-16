@@ -1,3 +1,4 @@
+import { numericDatum, isKFloat, isNumeric } from "./types.js";
 import { KKeyword, mapKey, quotedDatum } from "./types.js";
 import type { SExpr } from "../reader/index.js";
 import { KernelTypeError } from "../diagnostic/errors.js";
@@ -63,7 +64,7 @@ function compilePatternNode(
 ): MatchPattern {
   switch (expr._tag) {
     case "Num":
-      return { _tag: "Literal", value: expr.value };
+      return { _tag: "Literal", value: numericDatum(expr) };
 
     case "Str":
       return { _tag: "Literal", value: expr.value };
@@ -172,7 +173,7 @@ function matchPatternNode(
 ): boolean {
   switch (pattern._tag) {
     case "Literal":
-      return kEquals(pattern.value, value);
+      return (!isNumeric(pattern.value) || !isNumeric(value) || isKFloat(pattern.value) === isKFloat(value)) && kEquals(pattern.value, value);
 
     case "Wildcard":
       return true;

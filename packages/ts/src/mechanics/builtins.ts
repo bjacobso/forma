@@ -247,7 +247,8 @@ export const builtins: ReadonlyMap<string, readonly BuiltinOverload[]> = new Map
       { params: [tNumber], result: tNumber, emit: ([a]) => call("Math.abs", a) },
     ],
   ],
-  ["round", [{ params: [tNumber], result: tInt, emit: ([a]) => call("Math.round", a) }]],
+  ["round", [{ params: [tNumber], result: tInt, emit: ([a]) => `Math.floor(${arg(a)} + 0.5)` }]],
+  ["ceil", [{ params: [tNumber], result: tInt, emit: ([a]) => call("Math.ceil", a) }]],
   ["floor", [{ params: [tNumber], result: tInt, emit: ([a]) => call("Math.floor", a) }]],
   [
     "sum",
@@ -268,6 +269,7 @@ export const arithmeticOperators: ReadonlyMap<string, string> = new Map([
   ["+", "+"],
   ["-", "-"],
   ["*", "*"],
+  ["/", "/"],
   ["max", "max"],
   ["min", "min"],
 ]);

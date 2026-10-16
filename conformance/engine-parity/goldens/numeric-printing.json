@@ -1,0 +1,161 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "numeric-printing",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "kind": "string",
+        "value": "2|2.|6.|2."
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 4,
+                "sourceId": "engine-parity/numeric-printing",
+                "startOffset": 1
+              },
+              "value": "str"
+            },
+            {
+              "kind": "int",
+              "span": {
+                "endOffset": 6,
+                "sourceId": "engine-parity/numeric-printing",
+                "startOffset": 5
+              },
+              "value": 2
+            },
+            {
+              "kind": "string",
+              "span": {
+                "endOffset": 10,
+                "sourceId": "engine-parity/numeric-printing",
+                "startOffset": 7
+              },
+              "value": "|"
+            },
+            {
+              "kind": "float",
+              "span": {
+                "endOffset": 14,
+                "sourceId": "engine-parity/numeric-printing",
+                "startOffset": 11
+              },
+              "value": 2
+            },
+            {
+              "kind": "string",
+              "span": {
+                "endOffset": 18,
+                "sourceId": "engine-parity/numeric-printing",
+                "startOffset": 15
+              },
+              "value": "|"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 21,
+                    "sourceId": "engine-parity/numeric-printing",
+                    "startOffset": 20
+                  },
+                  "value": "*"
+                },
+                {
+                  "kind": "float",
+                  "span": {
+                    "endOffset": 25,
+                    "sourceId": "engine-parity/numeric-printing",
+                    "startOffset": 22
+                  },
+                  "value": 2
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 27,
+                    "sourceId": "engine-parity/numeric-printing",
+                    "startOffset": 26
+                  },
+                  "value": 3
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 28,
+                "sourceId": "engine-parity/numeric-printing",
+                "startOffset": 19
+              }
+            },
+            {
+              "kind": "string",
+              "span": {
+                "endOffset": 32,
+                "sourceId": "engine-parity/numeric-printing",
+                "startOffset": 29
+              },
+              "value": "|"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 35,
+                    "sourceId": "engine-parity/numeric-printing",
+                    "startOffset": 34
+                  },
+                  "value": "/"
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 37,
+                    "sourceId": "engine-parity/numeric-printing",
+                    "startOffset": 36
+                  },
+                  "value": 6
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 39,
+                    "sourceId": "engine-parity/numeric-printing",
+                    "startOffset": 38
+                  },
+                  "value": 3
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 40,
+                "sourceId": "engine-parity/numeric-printing",
+                "startOffset": 33
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 41,
+            "sourceId": "engine-parity/numeric-printing",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "String"
+    }
+  },
+  "version": 1
+}

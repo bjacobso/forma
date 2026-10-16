@@ -64,6 +64,8 @@ export const kBinary = KArrow(KStar, KArrow(KStar, KStar));
 
 const builtinKinds = new Map<string, Kind>([
   ["Number", KStar],
+  ["Int", KStar],
+  ["Float", KStar],
   ["String", KStar],
   ["Boolean", KStar],
   ["Unit", KStar],

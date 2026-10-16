@@ -30,7 +30,8 @@ const hostBuiltins = (input: readonly (typeof builtin.Type)[] | undefined) => in
 export const JsonValueProjection: Schema.Codec<ValueProjection> = Schema.suspend(() => Schema.Union([
   Schema.Struct({ kind: Schema.Literal("nil"), valueRef: optionalString }),
   Schema.Struct({ kind: Schema.Literal("bool"), valueRef: optionalString, value: Schema.Boolean }),
-  Schema.Struct({ kind: Schema.Literals(["int", "float"]), valueRef: optionalString, value: Schema.Number }),
+  Schema.Struct({ kind: Schema.Literal("int"), valueRef: optionalString, value: Schema.Int }),
+  Schema.Struct({ kind: Schema.Literal("float"), valueRef: optionalString, value: Schema.Union([Schema.Number, Schema.Literals(["NaN", "Infinity", "-Infinity", "-0"])]) }),
   Schema.Struct({ kind: Schema.Literals(["string", "symbol", "keyword"]), valueRef: optionalString, value: Schema.String }),
   Schema.Struct({ kind: Schema.Literals(["list", "vector"]), valueRef: optionalString, items: Schema.Array(value) }),
   Schema.Struct({ kind: Schema.Literal("map"), valueRef: optionalString, entries: Schema.Array(Schema.Struct({ key: value, value })) }),

@@ -60,3 +60,8 @@ test("diff reports exact JSON pointer paths and missing fields", () => {
     "/body/kind",
   ]);
 });
+
+test("numeric type names and value kinds are never collapsed", () => {
+  for (const type of ["Int", "Float", "Number"]) assert.equal(canonicalType(type, {}), type);
+  assert.equal(diffValues(normalizeValue({kind: "int", value: 2}), normalizeValue({kind: "float", value: 2}))[0].path, "/kind");
+});

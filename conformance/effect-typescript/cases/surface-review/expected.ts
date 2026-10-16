@@ -1,5 +1,10 @@
 import { Context, Effect, Layer, Option, Schema } from "effect";
 
+const __formaInt = (value: number): number => {
+  if (!Number.isSafeInteger(value)) throw new RangeError("Int outside the safe integer range");
+  return value === 0 ? 0 : value;
+};
+
 export const Shape = Schema.Union([
   Schema.Struct({ _tag: Schema.Literal("Circle"), value: Schema.Int }),
   Schema.Struct({ _tag: Schema.Literal("None") }),
@@ -100,7 +105,7 @@ export const CounterLive: Layer.Layer<Counter> = Layer.effect(
       next:
         Effect.gen(function* () {
           const base = () => 1;
-          return base() + cfg.inner.port;
+          return __formaInt(base() + cfg.inner.port);
         }),
     });
   }),

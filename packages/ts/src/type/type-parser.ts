@@ -1,3 +1,4 @@
+import { isFloatLiteral } from "../reader/types.js";
 import { mapKey } from "../evaluator/types.js";
 /**
  * Type expression parsing — standalone, no dependency on the lower dispatch.
@@ -191,7 +192,7 @@ function parseTypeExprInner(expr: SExpr): TypeExpr {
         message: "Set literal not allowed in type expression.",
       });
 
-    case "Num":
+    case "Num": return TESym(span, isFloatLiteral(expr) && Number.isInteger(expr.value) ? `${expr.value}.0` : String(expr.value));
     case "Str":
     case "Bool":
       return TESym(span,JSON.stringify(expr.value));

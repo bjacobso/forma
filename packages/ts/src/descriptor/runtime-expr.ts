@@ -1,3 +1,4 @@
+import { numericDatum, isKFloat } from "../evaluator/types.js";
 import type { KValue } from "../evaluator/types.js";
 
 /**
@@ -34,6 +35,7 @@ export function isSExprLike(value: unknown): value is SExprLike {
  * arrays, symbols become strings, and string literals become marker maps.
  */
 export function canonicalExprValue(value: unknown): KValue {
+  if (isKFloat(value)) return value;
   if (isSExprLike(value)) {
     switch (value._tag) {
       case "List":
@@ -57,6 +59,7 @@ export function canonicalExprValue(value: unknown): KValue {
           ["value", String(value.value ?? "")],
         ]) as KValue;
       case "Num":
+        return numericDatum(value as import("../reader/types.js").Num);
       case "Bool":
         return value.value as KValue;
       case "Error":

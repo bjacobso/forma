@@ -8,7 +8,8 @@ import {
   TApp,
   TFun,
   TVariadic,
-  tNum,
+  tInt,
+  tFloat,
   tStr,
   tBool,
   tList,
@@ -36,15 +37,15 @@ export const WELL_KNOWN_KEYWORDS = new Set([
 ]);
 
 function arithBinop(): Scheme {
-  return mono(fnType([tNum, tNum], tNum));
+  return mono(fnType([tFloat, tFloat], tFloat));
 }
 
 function variadicArith(): Scheme {
-  return mono(TFun(tNum, tNum, undefined, tNum));
+  return mono(TFun(tFloat, tFloat, undefined, tFloat));
 }
 
 function arithUnary(): Scheme {
-  return mono(fnType([tNum], tNum));
+  return mono(fnType([tFloat], tFloat));
 }
 
 export function builtinScheme(name: string): Scheme | undefined {
@@ -60,15 +61,16 @@ export function builtinScheme(name: string): Scheme | undefined {
     case "min":
     case "max":
       return variadicArith();
-    case "mod":
+    case "mod": return mono(fnType([tInt, tInt], tInt));
     case "pow":
       return arithBinop();
     case "abs":
     case "sqrt":
+      return arithUnary();
     case "floor":
     case "ceil":
     case "round":
-      return arithUnary();
+      return mono(fnType([tFloat], tInt));
     case "=":
     case "!=": {
       // forall a. a -> a -> Bool
@@ -80,7 +82,7 @@ export function builtinScheme(name: string): Scheme | undefined {
     case "<=":
     case ">":
     case ">=":
-      return mono(fnType([tNum, tNum], tBool));
+      return mono(fnType([tFloat, tFloat], tBool));
     case "format":
     case "str":
       return mono(TVariadic(tUnknown,tStr));
@@ -94,7 +96,7 @@ export function builtinScheme(name: string): Scheme | undefined {
     case "trim":
       return mono(fnType([tStr], tStr));
     case "length":
-      return mono(fnType([tStr], tNum));
+      return mono(fnType([tStr], tInt));
     case "starts-with?":
     case "starts-with":
     case "ends-with?":
@@ -103,9 +105,9 @@ export function builtinScheme(name: string): Scheme | undefined {
       return mono(fnType([tStr, tStr], tBool));
     case "substring":
     case "subs":
-      return mono(fnType([tStr, tNum, tNum], tStr));
+      return mono(fnType([tStr, tInt, tInt], tStr));
     case "index-of":
-      return mono(fnType([tStr, tStr], tNum));
+      return mono(fnType([tStr, tStr], tInt));
     case "replace":
       return mono(fnType([tStr, tStr, tStr], tStr));
     case "split":
@@ -141,7 +143,7 @@ export function builtinScheme(name: string): Scheme | undefined {
     }
     case "count": {
       const aId = "__count_a";
-      return mkScheme([aId], [], fnType([TApp(tList, [TVar(aId)])], tNum));
+      return mkScheme([aId], [], fnType([TApp(tList, [TVar(aId)])], tInt));
     }
     case "reverse": {
       const aId = "__rev_a";
@@ -149,7 +151,7 @@ export function builtinScheme(name: string): Scheme | undefined {
     }
     case "nth": {
       const aId = "__nth_a";
-      return mkScheme([aId], [], fnType([TApp(tList, [TVar(aId)]), tNum], TVar(aId)));
+      return mkScheme([aId], [], fnType([TApp(tList, [TVar(aId)]), tInt], TVar(aId)));
     }
     case "map": {
       // forall a b. (a -> b) -> List a -> List b

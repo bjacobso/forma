@@ -1,3 +1,4 @@
+import { isFloatLiteral } from "../reader/types.js";
 import { lowerOntologyOperations } from "../surface/ontology-effect.js";
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
 import type { Span } from "../diagnostic/diagnostic.js";
@@ -1438,7 +1439,7 @@ function valueExprToCoreJson(sourceId: string, expr: SExpr): JsonValue {
     case "Str":
       return { kind: "Literal", value: expr.value, span: spanJson(sourceId, expr) };
     case "Num":
-      return { kind: "Literal", value: expr.value, span: spanJson(sourceId, expr) };
+      return { kind: "Literal", value: expr.value, ...(isFloatLiteral(expr) && Number.isInteger(expr.value) ? { numericKind: "float" } : {}), span: spanJson(sourceId, expr) };
     case "Bool":
       return { kind: "Literal", value: expr.value, span: spanJson(sourceId, expr) };
     case "List":
@@ -2534,7 +2535,7 @@ function sexprToJson(expr: SExpr): JsonValue {
     case "Str":
       return { kind: "String", value: expr.value };
     case "Num":
-      return { kind: "Number", value: expr.value };
+      return { kind: "Number", value: expr.value, ...(isFloatLiteral(expr) && Number.isInteger(expr.value) ? { numericKind: "float" } : {}) };
     case "Bool":
       return { kind: "Bool", value: expr.value };
     case "List":

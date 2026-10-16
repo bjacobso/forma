@@ -6,6 +6,7 @@ interface RowFixture {
   id: string;
   sourceFile: string;
   expected: { typecheck: { type?: string; diagnostics: unknown[] } };
+  expectedTypescript?: { typecheck: { type?: string; diagnostics: unknown[] } };
   expectedMessage?: string;
 }
 
@@ -29,7 +30,7 @@ describe("shared row operation conformance", () => {
         } } : {}),
       })),
     };
-    expect(actual).toEqual(fixture.expected.typecheck);
+    expect(actual).toEqual(fixture.expectedTypescript?.typecheck ?? fixture.expected.typecheck);
     if (fixture.expectedMessage) expect(result.diagnostics[0]?.message).toContain(fixture.expectedMessage);
   });
 });

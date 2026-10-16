@@ -7,7 +7,7 @@
  * Option, Result, Ref, Fiber, and Layer shapes used by operation bodies.
  * Assignability follows TypeScript where TypeScript is sound (width subtyping
  * for structs, covariant success values, error and requirement set inclusion)
- * and is stricter where Forma knows more: `Int` is a subtype of `Number`
+ * and is stricter where Forma knows more: `Int` can be assigned to `Float`
  * rather than the same type, and brands are nominal.
  *
  * @module
@@ -17,7 +17,7 @@ import type { JsonValue } from "../artifact/artifact.js";
 export type PrimitiveName =
   | "String"
   | "Int"
-  | "Number"
+  | "Float"
   | "Bool"
   | "Unit"
   | "Json"
@@ -39,7 +39,7 @@ export type MType =
   | { readonly kind: "prim"; readonly name: PrimitiveName }
   | { readonly kind: "never" }
   | { readonly kind: "unknown" }
-  | { readonly kind: "literal"; readonly value: string | number | boolean }
+  | { readonly kind: "literal"; readonly numericKind?: "int" | "float"; readonly value: string | number | boolean }
   | { readonly kind: "named"; readonly name: string }
   | { readonly kind: "brand"; readonly name: string; readonly base: MType }
   | { readonly kind: "struct"; readonly fields: readonly MField[] }
@@ -79,7 +79,9 @@ export interface LayerType {
 export const prim = (name: PrimitiveName): MType => ({ kind: "prim", name });
 export const tString = prim("String");
 export const tInt = prim("Int");
-export const tNumber = prim("Number");
+export const tFloat = prim("Float");
+/** Internal compatibility name for the numeric operand type. */
+export const tNumber = tFloat;
 export const tBool = prim("Bool");
 export const tUnit = prim("Unit");
 export const tNever: MType = { kind: "never" };
@@ -247,7 +249,7 @@ function primitiveType(name: JsonValue | undefined): MType {
       return prim(name);
     case "Float":
     case "Number":
-      return tNumber;
+    case "Num": return tFloat;
     default:
       return tUnknown;
   }
@@ -296,7 +298,7 @@ export function widenLiteral(type: MType): MType {
   if (type.kind !== "literal") return type;
   if (typeof type.value === "string") return tString;
   if (typeof type.value === "boolean") return tBool;
-  return Number.isInteger(type.value) ? tInt : tNumber;
+  return type.numericKind === "float" || !Number.isInteger(type.value) ? tFloat : tInt;
 }
 
 /**
@@ -437,11 +439,11 @@ export function isAssignable(
 
   switch (t.kind) {
     case "prim":
-      if (s.kind === "prim") return s.name === t.name || (s.name === "Int" && t.name === "Number");
+      if (s.kind === "prim") return s.name === t.name || (s.name === "Int" && t.name === "Float");
       if (s.kind === "literal") {
         if (typeof s.value === "string") return t.name === "String";
         if (typeof s.value === "boolean") return t.name === "Bool";
-        return t.name === "Number" || (t.name === "Int" && Number.isInteger(s.value));
+        return t.name === "Float" || (t.name === "Int" && s.numericKind !== "float" && Number.isSafeInteger(s.value));
       }
       if (s.kind === "brand") return false;
       return false;

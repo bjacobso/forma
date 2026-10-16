@@ -1,3 +1,4 @@
+import { isFloatLiteral } from "../reader/types.js";
 /**
  * Type definition forms: __sum-type, __typeclass, instance, and mechanics services.
  */
@@ -522,7 +523,7 @@ function literalValueTypeName(expr: SExpr): string {
     case "Str":
       return "String";
     case "Num":
-      return "Number";
+      return isFloatLiteral(expr) ? "Float" : "Int";
     case "Bool":
       return "Boolean";
     case "Sym":

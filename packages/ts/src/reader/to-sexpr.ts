@@ -282,7 +282,7 @@ function toNumber(node: RedNode): T.Num {
     return T.Num(0, getNodeLoc(node));
   }
   const value = Number(token.text());
-  return T.Num(value, token.loc());
+  return T.Num(value, token.loc(), /[.eE]/.test(token.text()) ? "float" : "int");
 }
 
 /**

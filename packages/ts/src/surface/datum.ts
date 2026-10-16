@@ -1,3 +1,4 @@
+import { numericDatum } from "../evaluator/types.js";
 import type { SExpr } from "../reader/types.js";
 import { KKeyword, KSymbol, mapKey, type KValue } from "../evaluator/types.js";
 
@@ -11,7 +12,8 @@ export const syntaxForDatum = (value: KValue): SExpr | undefined =>
 export function datum(expr: SExpr): KValue {
   let value: KValue;
   switch (expr._tag) {
-    case "Str": case "Num": case "Bool": return expr.value;
+    case "Num": return numericDatum(expr);
+    case "Str": case "Bool": return expr.value;
     case "Sym": return expr.name === "nil" ? null : expr.name.startsWith(":") ? KKeyword(expr.name) : KSymbol(expr.name);
     case "List": case "Vector": value = expr.items.map(datum); break;
     case "Map": value = new Map(expr.pairs.map(([k, v]) => [mapKey(datum(k))!, datum(v)])); break;

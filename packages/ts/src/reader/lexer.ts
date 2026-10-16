@@ -282,6 +282,10 @@ const readNumber = (state: LexerState): Token => {
     });
   }
 
+  if (!/[.eE]/.test(numStr) && !Number.isSafeInteger(value)) {
+    throw new ParseError({ message: `Int literal outside the safe integer range: ${numStr}`, loc: makeLoc(state, startPos, startLine, startCol) });
+  }
+
   return {
     type: "number",
     value,

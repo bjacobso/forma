@@ -1,0 +1,280 @@
+{
+  "capturedFrom": "ocaml-native",
+  "id": "numeric-mixed-arithmetic",
+  "outputs": {
+    "evaluate": {
+      "diagnostics": [],
+      "value": {
+        "items": [
+          {
+            "kind": "float",
+            "value": 3
+          },
+          {
+            "kind": "float",
+            "value": 2
+          },
+          {
+            "kind": "float",
+            "value": 6
+          },
+          {
+            "kind": "float",
+            "value": 2
+          },
+          {
+            "kind": "float",
+            "value": 3
+          },
+          {
+            "kind": "float",
+            "value": 2
+          }
+        ],
+        "kind": "list"
+      }
+    },
+    "parse": {
+      "ast": [
+        {
+          "items": [
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 3,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 2
+                  },
+                  "value": "+"
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 5,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 4
+                  },
+                  "value": 1
+                },
+                {
+                  "kind": "float",
+                  "span": {
+                    "endOffset": 9,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 6
+                  },
+                  "value": 2
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 10,
+                "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                "startOffset": 1
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 13,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 12
+                  },
+                  "value": "-"
+                },
+                {
+                  "kind": "float",
+                  "span": {
+                    "endOffset": 17,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 14
+                  },
+                  "value": 5
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 19,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 18
+                  },
+                  "value": 2
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 21,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 20
+                  },
+                  "value": 1
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 22,
+                "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                "startOffset": 11
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 25,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 24
+                  },
+                  "value": "*"
+                },
+                {
+                  "kind": "float",
+                  "span": {
+                    "endOffset": 29,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 26
+                  },
+                  "value": 2
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 31,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 30
+                  },
+                  "value": 3
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 32,
+                "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                "startOffset": 23
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 37,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 34
+                  },
+                  "value": "min"
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 39,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 38
+                  },
+                  "value": 2
+                },
+                {
+                  "kind": "float",
+                  "span": {
+                    "endOffset": 43,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 40
+                  },
+                  "value": 3
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 44,
+                "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                "startOffset": 33
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 49,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 46
+                  },
+                  "value": "max"
+                },
+                {
+                  "kind": "float",
+                  "span": {
+                    "endOffset": 53,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 50
+                  },
+                  "value": 2
+                },
+                {
+                  "kind": "int",
+                  "span": {
+                    "endOffset": 55,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 54
+                  },
+                  "value": 3
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 56,
+                "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                "startOffset": 45
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 61,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 58
+                  },
+                  "value": "abs"
+                },
+                {
+                  "kind": "float",
+                  "span": {
+                    "endOffset": 66,
+                    "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                    "startOffset": 62
+                  },
+                  "value": -2
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 67,
+                "sourceId": "engine-parity/numeric-mixed-arithmetic",
+                "startOffset": 57
+              }
+            }
+          ],
+          "kind": "vector",
+          "span": {
+            "endOffset": 68,
+            "sourceId": "engine-parity/numeric-mixed-arithmetic",
+            "startOffset": 0
+          }
+        }
+      ],
+      "diagnostics": []
+    },
+    "typecheck": {
+      "diagnostics": [],
+      "type": "List<Number>"
+    }
+  },
+  "version": 1
+}

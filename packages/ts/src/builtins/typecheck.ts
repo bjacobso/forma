@@ -1,3 +1,4 @@
+import { isNumeric } from "../evaluator/types.js";
 import { Effect } from "effect";
 import type { BuiltinFn } from "../evaluator/types.js";
 import { isKBuiltin, isKFn, isKList, isKMap, isKKeyword, isKSymbol } from "../evaluator/types.js";
@@ -18,7 +19,7 @@ export const stringQ: BuiltinFn = (args) => {
 export const numberQ: BuiltinFn = (args) => {
   if (args.length !== 1)
     return Effect.fail(new ArityError({ name: "number?", expected: 1, got: args.length }));
-  return Effect.succeed(typeof args[0] === "number");
+  return Effect.succeed(isNumeric(args[0]));
 };
 
 export const booleanQ: BuiltinFn = (args) => {

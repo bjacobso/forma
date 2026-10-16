@@ -52,7 +52,11 @@ try {
     const { FormaWorkspace } = await import(${JSON.stringify(byDirectory['language-server'])});
     const workspace = new FormaWorkspace({ preludePaths: [] });
     workspace.analysis.setDocument('package-smoke', '(define (double n) (* n 2))\\n(double 4)');
-    assert.equal(workspace.analysis.analysis('package-smoke').resultType, 'Number');
+    assert.equal(workspace.analysis.analysis('package-smoke').resultType, 'Float');
+    for (const [source, expectedType] of [['1', 'Int'], ['1.0', 'Float']]) {
+      workspace.analysis.setDocument('numeric-smoke', source);
+      assert.equal(workspace.analysis.analysis('numeric-smoke').resultType, expectedType);
+    }
     console.log('Installed tarballs: all library exports and the language server workspace work');
   `;
   await writeFile(join(consumer, "smoke.mjs"), smoke);

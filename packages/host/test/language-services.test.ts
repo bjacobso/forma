@@ -51,13 +51,13 @@ describe("structural editor services on the TypeScript host", () => {
     expect(source.slice(typed.errors[0]!.span!.startOffset, typed.errors[0]!.span!.endOffset)).toBe(
       '(+ 1 "x")',
     );
-    expect(typeOf(typed, "(Directory.lookup who)")).toBe("Number");
-    expect(typeOf(typed, '(badge "ada")')).toBe("Number");
+    expect(typeOf(typed, "(Directory.lookup who)")).toBe("Float");
+    expect(typeOf(typed, '(badge "ada")')).toBe("Float");
 
     const { sessionId } = await host.openSession();
     await host.configureSession({ sessionId, hostBuiltins: [lookup] });
     const inSession = await host.analyzeEditor({ source, sessionId });
-    expect(typeOf(inSession, '(badge "ada")')).toBe("Number");
+    expect(typeOf(inSession, '(badge "ada")')).toBe("Float");
     await host.closeSession({ sessionId });
   });
 

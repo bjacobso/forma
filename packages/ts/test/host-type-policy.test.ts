@@ -25,7 +25,7 @@ describe("host type configuration", () => {
   it.each(["Int","Float","Number","Num"])("preserves the host numeric alias %s", name => {
     const result = check({hostBuiltins:[{name:"external",typeScheme:{kind:"type",name}}]});
     expect(result.diagnostics).toEqual([]);
-    expect(result.display).toBe("Number");
+    expect(result.display).toBe(name === "Int" ? "Int" : "Float");
   });
   it("keeps typed core annotations attached to author nodes", () => {
     const result = debugCore({sourceId:"author.forma",source:"(+ 1 2)"},"typecheckCoreTyped");

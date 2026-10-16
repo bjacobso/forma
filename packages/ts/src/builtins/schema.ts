@@ -1,3 +1,4 @@
+import { isNumeric } from "../evaluator/types.js";
 import { Effect } from "effect";
 import type { BuiltinFn, KValue } from "../evaluator/types.js";
 import { isKList, isKMap } from "../evaluator/types.js";
@@ -69,7 +70,7 @@ const validateValue = (
   if (tag === "string")
     return typeof value === "string" ? [] : [{ path, message: "expected string" }];
   if (tag === "number")
-    return typeof value === "number" ? [] : [{ path, message: "expected number" }];
+    return isNumeric(value) ? [] : [{ path, message: "expected number" }];
   if (tag === "boolean")
     return typeof value === "boolean" ? [] : [{ path, message: "expected boolean" }];
   if (tag === "nil") return value === null ? [] : [{ path, message: "expected nil" }];

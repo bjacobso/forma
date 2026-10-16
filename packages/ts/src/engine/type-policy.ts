@@ -3,6 +3,7 @@ import { InferenceError } from "../diagnostic/errors.js";
 import type { SExpr } from "../Reader.js";
 import { parse, toSExprMany } from "../reader/index.js";
 
+/** Int and Float are distinct; legacy Number/Num follow the source Float alias. */
 export const hostTypeNames = new Set([
   "Number", "Num", "Int", "Float", "String", "Str", "Boolean", "Bool",
   "Unit", "Nil", "Any", "Unknown", "Keyword", "Symbol", "Syntax",
