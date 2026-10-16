@@ -7,5 +7,13 @@
   "expectation": {
     "kind": "success",
     "allowDiagnostics": false
+  },
+  "typescript": {
+    "reason": "TypeScript distinguishes Int and Float; historical OCaml corpus expectations use Number for numeric types.",
+    "expectation": {
+      "kind": "success",
+      "allowDiagnostics": false
+    },
+    "numericType": "Float"
   }
 }

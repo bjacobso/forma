@@ -37,6 +37,7 @@
         },
         "message": "Duplicate match arm for constructor 'Option.Some'"
       }
-    }
+    },
+    "numericType": "Int"
   }
 }

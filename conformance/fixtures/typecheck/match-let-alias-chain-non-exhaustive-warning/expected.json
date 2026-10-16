@@ -23,5 +23,20 @@
         "end": 114
       }
     }
+  },
+  "typescript": {
+    "reason": "TypeScript distinguishes Int and Float; historical OCaml corpus expectations use Number for numeric types.",
+    "expectation": {
+      "kind": "warning",
+      "diagnostic": {
+        "severity": "warning",
+        "message": "Non-exhaustive match: missing constructor(s) None",
+        "span": {
+          "start": 85,
+          "end": 114
+        }
+      }
+    },
+    "numericType": "Int"
   }
 }

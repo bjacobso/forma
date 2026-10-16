@@ -8,6 +8,8 @@ filesystem module commands described in [File modules](https://forma-lang.com/mo
 The TypeScript engine also powers the browser tools; the OCaml engine builds
 to native code, JavaScript, and WebAssembly.
 Shared conformance fixtures define their portable semantic intersection.
+The TypeScript engine distinguishes Int and Float, including integral Float
+literals and results; Int arithmetic checks the JavaScript safe integer range.
 The structural workbench currently depends on unpublished Foldworks packages.
 
 ## Getting started
