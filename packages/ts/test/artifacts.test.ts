@@ -1,3 +1,4 @@
+import { extractMarkdownFences, isFormaFence } from "../src/source/markdown.js";
 import { describe, expect, test } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve, relative } from "node:path";
@@ -173,7 +174,7 @@ describe("validated artifact boundary", () => {
     for (const file of walk(resolve(root, "examples")).sort()) {
       const sourceId = relative(root, file) + "#lisp-blocks";
       if (sourceId.includes("compiler-debug/invalid-query")) continue;
-      const blocks = [...readFileSync(file, "utf8").matchAll(/```(?:lisp|clojure|clj)\n([\s\S]*?)```/g)].map(m => m[1]!).filter(b => !/^\s*\(ontology(?:\s|[\r\n)])/.test(b));
+      const blocks = extractMarkdownFences(readFileSync(file, "utf8"), file).filter(isFormaFence).map(m => m.text).filter(b => !/^\s*\(ontology(?:\s|[\r\n)])/.test(b));
       if (!blocks.length) continue;
       const group = sourceId.split("/")[1]!;
       groups.set(group, [...groups.get(group) ?? [], { sourceId, source: blocks.join("\n") }]);
