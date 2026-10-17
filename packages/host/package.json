@@ -33,6 +33,10 @@
     "./json-abi": {
       "types": "./dist/json-abi.d.mts",
       "import": "./dist/json-abi.mjs"
+    },
+    "./mcp-prototype": {
+      "types": "./dist/mcp-prototype.d.mts",
+      "import": "./dist/mcp-prototype.mjs"
     }
   },
   "files": [
@@ -43,16 +47,19 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "pack:check": "node ../../scripts/pnpm-pack-check.mjs"
+    "pack:check": "node ../../scripts/pnpm-pack-check.mjs",
+    "demo:mcp": "node examples/mcp-filesystem.mjs"
   },
   "dependencies": {
     "@formalang/ts": "workspace:*",
-    "effect": "4.0.3"
+    "effect": "4.0.3",
+    "@modelcontextprotocol/sdk": "1.32.1"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
     "typescript": "^6.0.3",
-    "vitest": "5.0.4"
+    "vitest": "5.0.4",
+    "@modelcontextprotocol/server-filesystem": "1.0.0"
   },
   "bin": {
     "forma": "./dist/cli.mjs"

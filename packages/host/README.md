@@ -59,3 +59,79 @@ schemas and dispatcher. See [File modules](https://forma-lang.com/modules) for
 filesystem commands, debug operations, diagnostic contracts, and load timings.
 From a source checkout, build both TypeScript packages and run
 `node packages/host/dist/cli.mjs`.
+
+## Experimental MCP binding
+
+`@formalang/host/mcp-prototype` exports `discoverMcpService`,
+`compileMcpService`, and `runMcpProgram`. From a source checkout:
+
+```sh
+pnpm --filter @formalang/ts --filter @formalang/host build
+pnpm --filter @formalang/host demo:mcp
+```
+
+The demo starts the official `@modelcontextprotocol/server-filesystem` over
+stdio, restricted to a temporary directory containing two demo files. It
+discovers `read_text_file`, generates a service prelude, checks and runs a
+zero-argument Forma operation that reads both files, and prints its result and
+call records as JSON. It also removes the requirement from the signature and
+verifies `mechanics/undeclared-requirement` with no calls. The directory and
+server are cleaned up on exit. No credentials are needed.
+
+```ts
+import { discoverMcpService, runMcpProgram } from "@formalang/host/mcp-prototype";
+
+// An already connected MCP SDK Client; the embedding host owns its lifetime.
+const binding = await discoverMcpService(client, {
+  service: "Filesystem",
+  tools: ["read_text_file"],
+});
+const result = await runMcpProgram(client, binding, {
+  source: `
+    (: main (Effect Filesystem_read_text_file_Output
+      [Filesystem_read_text_file_Failed] [Filesystem.read_text_file]))
+    (define main (Filesystem.read_text_file {:path "/allowed/example.txt"}))
+  `,
+  entry: "main",
+  grants: ["Filesystem.read_text_file"],
+  maxCalls: 1,
+});
+```
+
+Discovery follows pagination and requires an explicit tool selection. Each
+tool becomes a method taking one argument record, with generated input/output
+aliases and one coarse tagged failure (`Service_tool_Failed`). Output schemas
+describe MCP `structuredContent`; without an `outputSchema`, the result type is
+`Json` and the entire MCP result envelope is returned. This follows the
+[MCP tools contract](https://modelcontextprotocol.io/specification/2025-11-25/server/tools).
+Tool errors, transport exceptions, and JSON validation failures use the coarse
+tag and can be handled by Forma's typed `catch`.
+
+The compiler projects strings, booleans, integers, numbers, null, homogeneous
+arrays, records with required/optional fields, primitive enums/constants, and
+`anyOf`/type unions. Forma's own checker also validates the generated prelude;
+for example, collections of `Unit` are not supported. Names must be simple
+Forma identifiers. References, `oneOf`, intersections, conditional schemas,
+tuple schemas, and boolean schemas are rejected rather than silently widened.
+Bounds, patterns, formats, and other JSON Schema refinements are runtime checks,
+not static Forma refinements. The SDK's AJV validator checks the original
+schemas before sending arguments and accepting structured results.
+
+The whole source is elaborated before execution. The independent host `grants`
+must cover the entry's exact operation requirements. The adapter installs only
+those methods, even if discovery or grants include other tools. Agent source
+must not control the connected client, binding, or grants. The generated
+prelude is prepended internally; author diagnostic offsets and line numbers
+are adjusted back to the submitted source.
+
+This is a binding prototype over `makeMechanicsRuntime`, separate from the
+existing JSON host ABI. It accepts complete source and a zero-argument entry;
+it does not add accumulating session submissions, a VM bridge, `traverse`,
+full language evaluation, or an instruction budget. `maxCalls` limits external
+calls only. A preflight restricts execution to service/operation calls,
+sequencing, typed failures/catches, simple conditionals, and literal/local
+values. General value applications and other unsupported nodes are rejected
+before calls, even when the checker accepts them. Call
+records describe adapter calls and outcomes, not canonical runtime steps,
+crash-safe journals, or deterministic replay. This API is not an untrusted-code
+sandbox; those parts of the proposed agent execution loop remain future work.
