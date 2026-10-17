@@ -5,7 +5,7 @@ import { selectedRoots } from "@foldworks/outliner";
 import { refactoring, type Proposal } from "./edits.js";
 import { PrepareEdit } from "./edit-commands.js";
 import { CodeEditor } from "@foldworks/code-editor";
-import { editSource, setPane, sourceAnalysis, sourceOperation } from "./source-update.js";
+import { formatSourceText, editSource, setPane, sourceAnalysis, sourceOperation } from "./source-update.js";
 import { Command, Update } from "foldkit";
 import { modifyFields } from "foldkit/struct";
 import { Outliner, type Policy } from "@foldworks/outliner";
@@ -346,6 +346,7 @@ const updateModel = (model: Model, message: Message): UpdateReturn =>
           ? []
           : [ReleaseAnalysis({ sessionId: model.proposal.analysis.valueSession })],
     }),
+    FormatSource: () => formatSourceText(model),
     SetPane: ({ pane }) => setPane(model, pane),
     GotSourceMessage: ({ message }) => editSource(model, message),
     ReadSource: ({ expected, document, rows, errors }) => {

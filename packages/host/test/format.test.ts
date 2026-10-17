@@ -59,6 +59,7 @@ describe("forma fmt", () => {
 
 test("JSON and language-host formatting share the pure result and located diagnostics", async () => {
   const host = new TsLanguageHost(), abi = new JsonAbi(host);
+  expect((await host.version()).capabilities).toContain("format");
   const source = "(define  x 'x) ; tail\n";
   expect(await host.format({ source })).toMatchObject({ text: "(define x 'x) ; tail\n", changed: true, diagnostics: [] });
   expect(await abi.handleJson(JSON.stringify({ op: "format", source, language: "forma" }))).toMatchObject({ ok: true, value: { text: "(define x 'x) ; tail\n" }, diagnostics: [] });

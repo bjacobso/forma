@@ -19,7 +19,7 @@ export interface MarkdownFence {
 /** Scan fenced blocks without interpreting their contents. Offsets are UTF-16,
  * like the reader and LSP. Unsupported container/HTML fences remain visible to
  * callers for reporting, but must not be rewritten. */
-export function extractMarkdownFences(source: string, fileId = "<markdown>"): readonly MarkdownFence[] {
+export function extractMarkdownFences(source: string, fileId = "<markdown>", options: { readonly reportUnsupported?: boolean } = {}): readonly MarkdownFence[] {
   const lines = [...source.matchAll(/[^\n]*(?:\n|$)/g)].filter(m => m[0].length > 0);
   const blocks: MarkdownFence[] = [];
   let htmlEnd: RegExp | undefined;
@@ -27,8 +27,17 @@ export function extractMarkdownFences(source: string, fileId = "<markdown>"): re
   let listIndent = 0;
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i]![0], line = raw.replace(/\r?\n$/, ""), start = lines[i]!.index!;
-    if (htmlEnd) { if (htmlEnd.test(line)) htmlEnd = undefined; continue; }
-    if (htmlUntilBlank) { if (!line.trim()) htmlUntilBlank = false; else continue; }
+    let htmlContext = false;
+    const fenceLike = /^ {0,3}(?:`{3,}|~{3,})/.test(line);
+    if (htmlEnd) {
+      htmlContext = true;
+      if (htmlEnd.test(line)) htmlEnd = undefined;
+      if (!options.reportUnsupported || !fenceLike) continue;
+    }
+    if (htmlUntilBlank) {
+      if (!line.trim()) htmlUntilBlank = false;
+      else { htmlContext = true; if (!options.reportUnsupported || !fenceLike) continue; }
+    }
     if (/^ {0,3}<!--/.test(line) && !line.includes("-->")) { htmlEnd = /-->/; continue; }
     if (/^ {0,3}<\?/.test(line)) { if (!line.includes("?>")) htmlEnd = /\?>/; continue; }
     if (/^ {0,3}<!\[CDATA\[/.test(line)) { if (!line.includes("]]>")) htmlEnd = /\]\]>/; continue; }
@@ -61,7 +70,7 @@ export function extractMarkdownFences(source: string, fileId = "<markdown>"): re
     const body = source.slice(bodyStart, bodyEnd);
     const text = body.replace(new RegExp(`^ {0,${indent.length}}`, "gm"), "");
     blocks.push({ language: info.split(/\s+/)[0] ?? "", info, text, bodyStart, bodyEnd, start, end,
-      indent, closed: j < lines.length, unsupported: !!container || !!list || listIndent > 3,
+      indent, closed: j < lines.length, unsupported: htmlContext || !!container || !!list || listIndent > 3,
       ignored: i > 0 && lines[i - 1]![0].trim() === "<!-- forma-fmt-ignore -->",
       origin: { kind: "markdown-fence", fileId, blockIndex: blocks.length,
         blockStartOffset: bodyStart, blockStartLine: i + 2, blockStartColumn: indent.length + 1 } });

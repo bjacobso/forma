@@ -25,8 +25,9 @@ function fits(remaining: number, commands: readonly Command[]): boolean {
 }
 
 export function printDoc(doc: Doc, width = 80, indentSize = 2): string {
-  let result = "", column = 0, suffix = "";
+  let result = "", column = 0, suffix = "", generatedPadding = 0;
   const emit = (value: string) => {
+    if (value.length) generatedPadding = 0;
     result += value;
     column = value.includes("\n") ? value.length - value.lastIndexOf("\n") - 1 : column + value.length;
   };
@@ -42,7 +43,11 @@ export function printDoc(doc: Doc, width = 80, indentSize = 2): string {
       case "lineSuffix": suffix += printDoc(d.doc, Infinity, 0); break;
       case "line":
         if (flat && !d.hard && !suffix) emit(d.flat);
-        else { emit(suffix); suffix = ""; emit("\n" + " ".repeat(depth)); }
+        else {
+          if (generatedPadding) { result = result.slice(0, -generatedPadding); column -= generatedPadding; }
+          emit(suffix); suffix = "";
+          emit("\n" + " ".repeat(depth)); generatedPadding = depth;
+        }
         break;
     }
   }

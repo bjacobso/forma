@@ -1,3 +1,4 @@
+import { formatDocument, formattingKeymap } from "../codemirror/format.js";
 /**
  * LispEditor
  *
@@ -79,6 +80,8 @@ export interface LispEditorProps {
 }
 
 export interface LispEditorRef {
+  /** Format the selection, or the document when the selection is empty. */
+  format: () => boolean;
   /** Reveal a specific line (centers the line in view) */
   revealLine: (line: number) => void;
   /** Get the underlying CodeMirror EditorView instance */
@@ -158,6 +161,7 @@ export const LispEditor = forwardRef<LispEditorRef, LispEditorProps>(function Li
       }
     },
     getEditor: () => viewRef.current,
+    format: () => viewRef.current ? formatDocument(viewRef.current) : false,
   }));
 
   // Create and mount the editor
@@ -185,7 +189,7 @@ export const LispEditor = forwardRef<LispEditorRef, LispEditorProps>(function Li
       history(),
       bracketMatching(),
       closeBrackets(),
-      keymap.of([...defaultKeymap, ...historyKeymap]),
+      keymap.of([...formattingKeymap, ...defaultKeymap, ...historyKeymap]),
       // Line numbers
       ...(showLineNumbers ? [lineNumbers()] : []),
       // Placeholder

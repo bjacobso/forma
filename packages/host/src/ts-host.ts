@@ -238,6 +238,7 @@ export class TsLanguageHost implements LanguageHost {
       hostAbiVersion: "0.1.0",
       sourceLoadSemantics: "validate-and-store",
       capabilities: [
+        "format",
         "parse",
         "expand",
         "typecheck",

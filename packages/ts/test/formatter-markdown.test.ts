@@ -44,6 +44,12 @@ describe("Markdown formatting", () => {
     expect(result.diagnostics.map(d => d.code)).toEqual(["format/markdown-unsupported"]);
     expect(formatLisp('(a   "; forma-fmt: off")').text).toBe('(a "; forma-fmt: off")\n');
   });
+  test("fence-like text in HTML is preserved and reported", () => {
+    const source = "<pre>\n```lisp\n(a   b)\n```\n</pre>\n";
+    const result = formatMarkdown(source);
+    expect(result.text).toBe(source);
+    expect(result.diagnostics.map(d => d.code)).toEqual(["format/markdown-unsupported"]);
+  });
   test("ranges select only intersecting top-level forms in a fence", () => {
     const source = "prose\n```lisp\n(a   b)\n(c   d)\n```\n```lisp\n(e   f)\n```\n";
     const start = source.indexOf("b)");
@@ -86,4 +92,10 @@ describe("ignore regions and minimal edits", () => {
     expect(applied).toBe(result.text);
     expect(formattingEdits(result.text, result.text)).toEqual([]);
   });
+});
+
+
+test("a Markdown range ending before a fence body does not select its first form", () => {
+  const source = "prose\n```lisp\n(a   b)\n```\n";
+  expect(formatRange(source, { start: 0, end: source.indexOf("(a") }, { language: "markdown" }).text).toBe(source);
 });

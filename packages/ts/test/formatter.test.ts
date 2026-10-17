@@ -125,3 +125,9 @@ test("module layouts preserve authored namespace aliases and macro signatures", 
   expect(formatLisp('(whenish condition (first-step input) (second-step input))', { ...options, softWrap: 40 }).text)
     .toBe('(whenish condition\n  (first-step input)\n  (second-step input))\n');
 });
+
+
+test("blank lines never receive generated indentation", () => {
+  expect(formatLisp("(do (a)\n\n\n (b))").text).toBe("(do\n  (a)\n\n  (b))\n");
+  expect(formatLisp("(do\n ; own  \n (a)\n\n (b))").text).toContain("  ; own  \n");
+});

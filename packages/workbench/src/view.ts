@@ -112,7 +112,9 @@ export const view = defineView<Model, Message>((model, h): Html => {
     [
       h.Class("wb"),
       h.Key(model.id),
-      h.OnKeyDownPreventDefault((key) => key === "F12" ? Option.some(Message.DefinitionAtCaret()) : Option.none()),
+      h.OnKeyDownPreventDefault((key) => key === "F8" && model.pane === "source"
+        ? Option.some(Message.FormatSource())
+        : key === "F12" ? Option.some(Message.DefinitionAtCaret()) : Option.none()),
       h.DataAttribute("workbench", model.id),
       h.DataAttribute("source-dirty", String(model.sourceDirty)),
     ],
@@ -160,6 +162,7 @@ export const view = defineView<Model, Message>((model, h): Html => {
                 ],
                 [model.pane === "outline" ? "Source" : "Back to outline"],
               ),
+              h.button([h.Type("button"), h.Disabled(model.pane !== "source"), h.OnClick(Message.FormatSource()), h.Title("Format source (F8)")], ["Format"]),
               ...(["Outline", "Brackets"] as const).map((notation) =>
                 h.button(
                   [

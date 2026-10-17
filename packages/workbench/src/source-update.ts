@@ -1,3 +1,4 @@
+import { formatSource, formattingEdits } from "@formalang/host/format";
 import { CodeEditor } from "@foldworks/code-editor";
 import { Command } from "foldkit";
 import { completeAt, sourceDiagnostics, sourceTokens } from "./adapter.js";
@@ -89,4 +90,15 @@ export const setPane = (model: Model, pane: Model["pane"]): UpdateReturn => {
         );
   const painted = sourceAnalysis({ ...refreshed.model, pane });
   return { ...painted, commands: [...(refreshed.commands ?? []), ...(painted.commands ?? [])] };
+};
+
+/** Apply formatting as one ordinary source edit, including undo and reconciliation. */
+export const formatSourceText = (model: Model): UpdateReturn => {
+  if (model.pane !== "source" || model.document === null) return { model };
+  const source = model.source.document.text, result = formatSource({ source });
+  if (!result.changed) return { model };
+  return editSource(model, CodeEditor.execute(CodeEditor.Operation.ApplyEdits({
+    expected: CodeEditor.documentVersion(model.source.document),
+    edits: formattingEdits(source, result.text).map(e => ({ from: e.start, to: e.end, insert: e.text })),
+  })));
 };

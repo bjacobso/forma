@@ -23,7 +23,7 @@ function codeOffset(source: string, block: MarkdownFence, offset: number): numbe
 }
 
 export function formatMarkdown(source: string, options: FormatOptions = {}): FormatResult {
-  const blocks = extractMarkdownFences(source).filter(isFormaFence);
+  const blocks = extractMarkdownFences(source, "<markdown>", { reportUnsupported: true }).filter(isFormaFence);
   const combined = parse(blocks.filter(b => !b.unsupported).map(b => b.text).join("\n"));
   const declarations = combined.errors.length ? [] : toSExprMany(combined.redTree);
   const diagnostics: FormatDiagnostic[] = [];
@@ -31,7 +31,7 @@ export function formatMarkdown(source: string, options: FormatOptions = {}): For
   const { range, ...rest } = options;
   const lispOptions: FormatOptions = { ...rest, language: "lisp", declarations: [...(options.declarations ?? []), ...declarations] };
   for (const block of blocks) {
-    if (block.ignored || range && (block.bodyEnd <= range.start || block.bodyStart > range.end)) continue;
+    if (block.ignored || range && (block.bodyEnd <= range.start || block.bodyStart > range.end || block.bodyStart === range.end && range.start !== range.end)) continue;
     if (block.unsupported) {
       diagnostics.push({ code: "format/markdown-unsupported", message: "Skipped a fence in an unsupported Markdown container.", start: block.start, end: block.end });
       continue;

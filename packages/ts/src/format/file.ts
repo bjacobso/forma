@@ -11,7 +11,8 @@ import type { FormatOptions } from "./layout.js";
 import type { FormatDiagnostic } from "../Format.js";
 
 export function fileFormatOptions(path: string, text: string, openFiles: ReadonlyMap<string, string> = new Map()): { readonly options: FormatOptions; readonly diagnostics: readonly FormatDiagnostic[] } {
-  const source = /\.md$/i.test(path) ? extractMarkdownFences(text).filter(b => isFormaFence(b) && !b.unsupported).map(b => b.text).join("\n") : text;
+  const moduleText = (id: string, content: string) => /\.md$/i.test(id) ? extractMarkdownFences(content).filter(b => isFormaFence(b) && !b.unsupported).map(b => b.text).join("\n") : content;
+  const source = moduleText(path, text);
   const parsed = parse(source);
   if (parsed.errors.length) return { options: {}, diagnostics: [] };
   const expressions = toSExprMany(parsed.redTree);
@@ -21,7 +22,8 @@ export function fileFormatOptions(path: string, text: string, openFiles: Readonl
     const graph = resolveModuleGraph({ id: canonical(path), source }, (specifier, importer) => {
       const raw = resolve(dirname(importer), specifier), id = canonical(raw);
       const edited = openFiles.get(id) ?? openFiles.get(raw);
-      return edited === undefined ? fileModuleResolver(specifier, importer) : { id, source: edited };
+      const found = edited === undefined ? fileModuleResolver(specifier, importer) : { id, source: edited };
+      return found && { ...found, source: moduleText(found.id, found.source) };
     });
     return { options: moduleFormatOptions(graph), diagnostics: [] };
   } catch (error) {
