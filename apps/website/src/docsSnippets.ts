@@ -1,12 +1,23 @@
 import { Effect } from "effect";
 import { typecheck, type Diagnostic } from "@formalang/ts/engine";
 import {
+  generateEffectProgram,
   generateMechanicsEffectTypeScriptModule,
   mechanicsPackageableDeclarations,
+  type EffectProgramDiagnostic,
 } from "@formalang/ts/mechanics";
+import {
+  checkModuleGraph,
+  ModuleError,
+  resolveModuleGraph,
+  sourceModuleResolver,
+} from "@formalang/ts/modules";
 import { parseManyToSExpr } from "@formalang/ts/reader";
 import { schemaDeclarationsJson } from "./pipelines/canonicalIr";
 import {
+  composeAgentsSource,
+  composeSupportBrokenSource,
+  composeToolsSource,
   contractSource,
   defineEntityDescriptor,
   entitySchemaSource,
@@ -36,7 +47,49 @@ export function homeSnippets(): Record<string, string> {
       null,
       2,
     )}\n`,
+    "log-undeclared.check.json": `${JSON.stringify(
+      effectCheckDiagnostic(undeclaredCapabilitySource, "log.forma"),
+      null,
+      2,
+    )}\n`,
+    "compose-tools.lisp": composeToolsSource,
+    "compose-agents.lisp": composeAgentsSource,
+    "compose-support.lisp": composeSupportBrokenSource,
+    "compose-support.diagnostic.json": `${JSON.stringify(
+      moduleGraphDiagnostic(composeSupportBrokenSource),
+      null,
+      2,
+    )}\n`,
   };
+}
+
+/** The diagnostic the live Effect checker reports, as the homepage embed shows it. */
+export function effectCheckDiagnostic(source: string, sourceId: string): EffectProgramDiagnostic {
+  const [diagnostic] = generateEffectProgram(source, { sourceId }).diagnostics;
+  if (!diagnostic) throw new Error(`${sourceId} checked without diagnostics`);
+  return diagnostic;
+}
+
+/** Diagnostics from checking `support.forma` against the two composed preludes. */
+export function moduleGraphDiagnostics(support: string): readonly Diagnostic[] {
+  const sources = [
+    { id: "tools.forma", source: composeToolsSource },
+    { id: "agents.forma", source: composeAgentsSource },
+    { id: "support.forma", source: support },
+  ];
+  try {
+    const graph = resolveModuleGraph(sources[2]!, sourceModuleResolver(sources));
+    return checkModuleGraph(graph).diagnostics;
+  } catch (error) {
+    if (error instanceof ModuleError) return [error.diagnostic];
+    throw error;
+  }
+}
+
+function moduleGraphDiagnostic(support: string): Diagnostic {
+  const [diagnostic] = moduleGraphDiagnostics(support);
+  if (!diagnostic) throw new Error("support.forma checked without diagnostics");
+  return diagnostic;
 }
 
 /** 1-based inclusive line range covered by a diagnostic span. */

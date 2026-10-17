@@ -1,0 +1,15 @@
+{
+  "phase": "check",
+  "severity": "error",
+  "code": "mechanics/undeclared-requirement",
+  "message": "Operation log requires Console.print, but its signature declares no requirements.",
+  "span": {
+    "sourceId": "log.forma",
+    "startOffset": 217,
+    "endOffset": 240,
+    "startLine": 8,
+    "startColumn": 11,
+    "endLine": 8,
+    "endColumn": 34
+  }
+}

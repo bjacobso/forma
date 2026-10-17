@@ -1,0 +1,11 @@
+{
+  "code": "elaborate/unknown-reference",
+  "message": "Unknown reference delete-account",
+  "severity": "error",
+  "phase": "elaborate",
+  "span": {
+    "sourceId": "support.forma",
+    "startOffset": 154,
+    "endOffset": 168
+  }
+}
