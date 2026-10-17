@@ -49,25 +49,33 @@ agents.
 
 ## Current state
 
-- **TypeScript host.** `TsLanguageHost.evaluateInSession`
-  (`packages/host/src/ts-host.ts`) evaluates the submitted source as the entry
-  of a module graph through `Engine.evaluateInSession`
-  (`packages/ts/src/engine/operations.ts`). The result includes an
-  environment, which the host discards. Only `configureSession` variables and
-  prelude `loadSource` calls replace `session.language.env`. A `define`
-  submitted in one call is unbound in the next.
+- **TypeScript host.** Two session operations exist.
+  `TsLanguageHost.evaluateInSession` (`packages/host/src/ts-host.ts`)
+  evaluates the submitted source as the entry of a module graph and discards
+  the resulting environment, so a `define` submitted through it is unbound in
+  the next call. `TsLanguageHost.replSubmit`, ported from the OCaml engine in
+  #64, is the typed stateful REPL: it parses, typechecks the submission
+  against the session's type environment
+  (`Engine.checkReplSubmission` in `packages/ts/src/engine/session-validation.ts`),
+  evaluates it, and only then commits the new value environment, type
+  environment, and remembered source. A submission that fails to parse, check,
+  or evaluate leaves the session unchanged, including when it is suspended at
+  a host call. `packages/host/test/session-load.test.ts` pins this.
+- **Redefinition shadows.** `replSubmit` is a shadowing REPL. A redefinition
+  replaces the binding's type scheme and value for later submissions, even
+  when its type changes. Dependents defined earlier keep the old value, nothing
+  rechecks them, no change record is produced, and there is no removal or
+  rollback beyond `resetSession`. These are the semantics this RFC proposes to
+  replace; see the alternatives below.
 - **Files as a workaround.** A host can persist definitions by loading them
   as module sources and importing them from later evaluations. Updating a
   file creates new instances for it and its dependents
   (`packages/ts/src/modules/runtime.ts`). There is no per-definition change,
   record, or rollback.
-- **OCaml (removed).** When this RFC was written, the OCaml engine's
-  `replSubmit` operation evaluated a submission, then typechecked it, then
-  replaced the session's value and type environments. The native CLI's
-  `repl` used it, and the OCaml language host used it only when the session
-  had host builtins configured; otherwise it evaluated without persisting.
-  Submissions that called a host builtin did not persist either. The OCaml
-  engine has since been removed (see
+- **OCaml (removed).** The OCaml engine's `replSubmit` evaluated a
+  submission, typechecked it, and then replaced the session's environments.
+  The TypeScript port checks before it evaluates but keeps the same atomic
+  outcome. The engine was removed after the port (see
   [Retiring the OCaml engine](../engine-consolidation.md)).
 - **Runtime model.** `Env` (`packages/ts/src/Env.ts`) is an immutable chain of
   frames. `define` creates a mutable slot only so that a function can refer
@@ -76,7 +84,7 @@ agents.
   bindings, or in-language `eval`, `read`, or `load`; the default builtins
   (`packages/ts/src/builtins/index.ts`) include none. A later definition can
   only shadow an earlier one, and closures that captured the earlier value
-  keep it. That is also what OCaml's `replSubmit` did.
+  keep it. That is what `replSubmit` does.
 - **Workbench REPL.** `mergeReplSource` (`packages/workbench/src/repl.ts`)
   keys declarations by kind and name, lets later ones replace earlier ones,
   and replays the merged source in a fresh session for each entry.
@@ -256,9 +264,11 @@ commit.
   as records of functions, would still be stale. Generated Effect TypeScript
   would need a cell representation for every top-level binding, or a development mode with different semantics. Rollback would
   require restoring every cell consistently. Rejected.
-- **Shadowing.** Extending the environment, as OCaml `replSubmit` did,
-  is simple but leaves dependents bound to old definitions without any
-  report. Rejected as the session semantics.
+- **Shadowing.** Extending the environment, as `replSubmit` does today,
+  is simple and already gives atomic rejection, but it leaves dependents
+  bound to old definitions without any report. Rejected as the session
+  semantics. `replSubmit` stays as the lightweight operation until `submit`
+  covers its uses; the two must not be confused in host code.
 - **Files only.** Hosts can already write definitions to module files and
   reload them. That provides no per-declaration records, wrappers, late
   binding, or atomic rejection, and it requires hosts to invent a file layout
@@ -267,7 +277,10 @@ commit.
 ## Implementation stages and validation
 
 1. **Persistent session module (TypeScript).** Add `submit` to the host ABI
-   while keeping `evaluateInSession` unchanged. Fixture
+   while keeping `evaluateInSession` and `replSubmit` unchanged. `submit`
+   starts from `replSubmit`'s atomic parse, check, evaluate, commit sequence
+   and adds declaration keys, whole-graph rechecking, and dependent
+   re-instantiation. Fixture
    `conformance/live-sessions/` holds submission sequences with expected
    values, diagnostics, and changed keys. Required cases: a definition is
    visible to a later submission; a redefinition rebuilds a dependent record
