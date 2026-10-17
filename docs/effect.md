@@ -68,16 +68,12 @@ pageClass: forma-index forma-effect
 
 <section id="contracts" class="fh-spread fh-tone-blue" aria-labelledby="contract-heading">
 <header class="fh-spread__head">
-<span class="fh-spread__index" aria-hidden="true">01</span>
-<div>
-<p class="fh-spread__kicker">Contracts</p>
-<h2 id="contract-heading" class="fh-spread__name"><span>(</span>Effect A [E] [R]<span>)</span></h2>
-</div>
+<p class="fh-label"><span>01</span> Contracts</p>
 <span class="fh-status is-live">Checked · TypeScript engine</span>
+<h2 id="contract-heading">The signature is the review.</h2>
 </header>
 <div class="fh-spread__body">
 <div class="fh-spread__story">
-<p class="fh-spread__title">The signature is the review.</p>
 <div class="fh-story">
 <span class="fh-story__label">The quiet dependency</span>
 <p>A refactor adds one <code>yield* Payments</code> deep inside a helper. <code>R</code> widens by inference, the PR is green, and nobody reviewing the diff sees that checkout can now charge a card.</p>
@@ -101,16 +97,12 @@ pageClass: forma-index forma-effect
 
 <section id="diagnostics" class="fh-spread fh-tone-red" aria-labelledby="errors-heading">
 <header class="fh-spread__head">
-<span class="fh-spread__index" aria-hidden="true">02</span>
-<div>
-<p class="fh-spread__kicker">Diagnostics</p>
-<h2 id="errors-heading" class="fh-spread__name">PaymentDeclined?</h2>
-</div>
+<p class="fh-label"><span>02</span> Diagnostics</p>
 <span class="fh-status is-live">Live · Effect checker</span>
+<h2 id="errors-heading">Errors at the line you wrote, in the words you used.</h2>
 </header>
 <div class="fh-spread__body fh-spread__body--stack">
 <div class="fh-spread__story fh-spread__story--wide">
-<p class="fh-spread__title">Errors at the line you wrote, in the words you used.</p>
 <div class="fh-story">
 <span class="fh-story__label">The forty-line type error</span>
 <p><code>Type 'OrderNotFound | PaymentDeclined' is not assignable to type 'OrderNotFound'</code>, reported on the whole generated function, three assignability frames deep.</p>
@@ -125,15 +117,11 @@ pageClass: forma-index forma-effect
 
 <section id="strict" class="fh-spread fh-tone-amber" aria-labelledby="strict-heading">
 <header class="fh-spread__head">
-<span class="fh-spread__index" aria-hidden="true">03</span>
-<div>
-<p class="fh-spread__kicker">Stricter where it matters</p>
-<h2 id="strict-heading" class="fh-spread__name">tsc: 0 errors</h2>
-</div>
+<p class="fh-label"><span>03</span> Stricter where it matters</p>
 <span class="fh-status is-live">Checked · Effect checker</span>
+<h2 id="strict-heading">Some bugs TypeScript lets through.</h2>
 </header>
 <div class="fh-spread__story fh-spread__story--wide">
-<p class="fh-spread__title">Some bugs TypeScript lets through.</p>
 <div class="fh-story">
 <span class="fh-story__label">The truthy zero</span>
 <p>An order total of <code>0</code> skips the receipt because <code>if (total)</code> is false. <code>tsc</code> accepts it, and so does every reviewer who has read a thousand lines like it.</p>

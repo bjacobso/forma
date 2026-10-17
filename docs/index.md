@@ -2,7 +2,7 @@
 layout: home
 title: Forma
 titleTemplate: false
-description: Forma is a typed Lisp for building your own domain language. Define the keywords as library code; the compiler checks programs that use them and emits typed artifacts.
+description: Forma is a meta-language for agents. A prelude makes your domain's vocabulary a program; agent output either elaborates against it or comes back with located, coded diagnostics to repair.
 sidebar: false
 aside: false
 pageClass: forma-index
@@ -13,13 +13,13 @@ pageClass: forma-index
 <header class="fh-hero" aria-labelledby="hero-title">
 <div class="fh-blueprint" aria-hidden="true"></div>
 <div class="fh-hero__copy">
-<p class="fh-eyebrow"><span class="fh-dot"></span>A typed Lisp for domain languages · pre-alpha</p>
+<p class="fh-eyebrow"><span class="fh-dot"></span>A typed Lisp for agent vocabularies · pre-alpha</p>
 <div class="fh-wordmark" aria-hidden="true"><span>(</span>forma<span>)</span></div>
-<h1 id="hero-title">Build your own typed domain language.</h1>
-<p class="fh-lead">Forma is a small typed Lisp. You define domain keywords like <code>entity</code> or <code>service</code> as library code. The compiler checks programs that use them, reports errors at the line you wrote, and emits typed artifacts that other systems consume.</p>
-<p class="fh-detail">Your vocabulary. A checked core. <strong>One source</strong> instead of six files that drift.</p>
+<h1 id="hero-title">A meta-language for agents.</h1>
+<p class="fh-lead">Agents write the code now. Generating it is cheap; verifying it is the cost. Forma is a small typed Lisp for people building agent systems: you write your domain's vocabulary as a program, and agent output either elaborates against it or comes back with a coded diagnostic at the exact span to fix. A check replaces prompt-and-review.</p>
+<p class="fh-detail">Prompting asks the model to be careful. <strong>A prelude makes carelessness unrepresentable.</strong></p>
 <div class="fh-actions">
-<a class="fh-button fh-button--primary" href="#live">Edit it live <span aria-hidden="true">↓</span></a>
+<a class="fh-button fh-button--primary" href="#live">Watch a repair <span aria-hidden="true">↓</span></a>
 <a class="fh-button" href="#how-it-works">How it works</a>
 </div>
 </div>
@@ -48,14 +48,14 @@ pageClass: forma-index
 <WorkbenchEmbed example="contracts" file="log.forma" title="Live contract workbench: edit, infer, and generate Effect TypeScript" />
 
 </div>
-<p class="fh-caption">Edit real source. <strong>Watch typing</strong> removes a requirement, pauses on the compiler's red underline, and types the repair. Inferred contracts, diagnostics, typed IR, and Effect TypeScript all come from the source in this editor. Switch examples to explore inference and macro expansion.</p>
+<p class="fh-caption">The proof, running in this page. <strong>Watch typing</strong> replays the kind of edit an agent makes: it drops a requirement from a signature. The compiler underlines the exact call and reports a coded diagnostic, then the repair is typed back in. Inferred contracts, diagnostics, typed IR, and Effect TypeScript all come from the source in this editor. Switch examples to explore inference and macro expansion.</p>
 </section>
 
 <section class="fh-section" aria-labelledby="problem-heading">
 <div class="fh-section__head">
-<p class="fh-label"><span>00</span> The hidden model</p>
+<p class="fh-label"><span>00</span> The vocabulary</p>
 <h2 id="problem-heading">Your domain model lives in six places.</h2>
-<p>Entities in JSON Schema. Endpoints in OpenAPI. Types in TypeScript. Failures nobody declared. The glue in a code generator nobody wants to touch. Every copy drifts, and when something breaks, the error points at generated code instead of the decision someone made. <strong>Each of those becomes a form.</strong></p>
+<p>Correct agent output is output that conforms to a vocabulary: what exists in your domain, what can fail, what a step may touch. Today that vocabulary is split across JSON Schema, OpenAPI, TypeScript types, failures nobody declared, glue imports, and a code generator nobody wants to touch. Now an agent edits all six. Ask it to change one field and it touches six files, and drifts them faster than any person would. When something breaks, the error points at generated code instead of the decision. <strong>Each of those becomes a form.</strong></p>
 </div>
 <ol class="fh-xray" aria-label="Where a domain model usually hides, and the Forma form that replaces each part">
 <li class="fh-xray__root" aria-hidden="true">your-app/</li>
@@ -70,24 +70,21 @@ pageClass: forma-index
 
 <section id="how-it-works" class="fh-spread fh-tone-teal" aria-labelledby="library-heading">
 <header class="fh-spread__head">
-<span class="fh-spread__index" aria-hidden="true">01</span>
-<div>
-<p class="fh-spread__kicker">Extension</p>
-<h2 id="library-heading" class="fh-spread__name"><span>(</span>form<span> …)</span></h2>
-</div>
+<p class="fh-label"><span>01</span> Vocabulary</p>
 <span class="fh-status">Stored output in the browser</span>
+<h2 id="library-heading">The vocabulary is a program.</h2>
 </header>
 <div class="fh-spread__body">
 <div class="fh-spread__story">
-<p class="fh-spread__title">The keyword is library code.</p>
 <div class="fh-story">
 <span class="fh-story__label">The template nobody owns</span>
-<p>Adding one field to <code>Employee</code> means editing a JSON Schema, an OpenAPI spec, a TypeScript interface, and a Handlebars template whose author left two years ago.</p>
+<p>Adding one field to <code>Employee</code> means editing a JSON Schema, an OpenAPI spec, a TypeScript interface, and a Handlebars template whose author left two years ago. An agent will make all four edits, and nothing checks that they agree.</p>
 </div>
-<p class="fh-spread__does"><code>entity</code> is not built into the compiler. A prelude describes it with <code>form</code>: its slots, the name it binds, its result type, and the hook that constructs its output. Swap the prelude and you have a different language on the same checked core.</p>
+<p class="fh-spread__does">Keywords are library code. <code>entity</code> is not built into the compiler: a prelude describes it with <code>form</code>, giving its slots, the name it declares, its result type, optional checks, and the hook that constructs its output. Swap the prelude and you have a different language on the same checked core.</p>
+<p class="fh-spread__does">Authors, human or agent, write inside the vocabulary. A prelude is ordinary Forma source, so an agent can write a new vocabulary as well as use one.</p>
 <ol class="fh-steps">
 <li><strong>Define the form.</strong> A descriptor in a prelude teaches the compiler a new keyword.</li>
-<li><strong>Write in it.</strong> Authors use the keyword like any built-in.</li>
+<li><strong>Write in it.</strong> People and agents use the keyword like any built-in.</li>
 <li><strong>Get an artifact.</strong> Elaboration validates each use and constructs typed IR.</li>
 </ol>
 </div>
@@ -107,26 +104,23 @@ pageClass: forma-index
 
 <section id="contracts" class="fh-spread fh-tone-blue" aria-labelledby="contract-heading">
 <header class="fh-spread__head">
-<span class="fh-spread__index" aria-hidden="true">02</span>
-<div>
-<p class="fh-spread__kicker">Contracts</p>
-<h2 id="contract-heading" class="fh-spread__name">Effect&lt;A, E, R&gt;</h2>
-</div>
+<p class="fh-label"><span>02</span> Contracts</p>
 <span class="fh-status is-live">Live · TypeScript engine</span>
+<h2 id="contract-heading">The type is the budget.</h2>
 </header>
 <div class="fh-spread__body">
 <div class="fh-spread__story">
-<p class="fh-spread__title">The type says what the code can do.</p>
 <div class="fh-story">
-<span class="fh-story__label">The code review</span>
-<p>A one-line change makes a helper print to the console. The diff looks harmless. Nobody can see that the function now depends on a service that can fail.</p>
+<span class="fh-story__label">The unsupervised change</span>
+<p>An agent's one-line change makes a helper print to the console. The diff looks harmless. Nobody can see that the function now depends on a service that can fail.</p>
 </div>
-<p class="fh-spread__does">Operations infer <code>Effect&lt;A, E, R&gt;</code>. A reviewer reads one line instead of a call graph:</p>
+<p class="fh-spread__does">Operations infer <code>Effect&lt;A, E, R&gt;</code>. <code>E</code> and <code>R</code> are closed sets, so together they are a budget: what the code can break and what it can touch, declared in the signature and checked against the body.</p>
 <dl class="fh-effect">
 <div><dt>A</dt><dd>the value it returns</dd></div>
 <div><dt>E</dt><dd>every failure it can raise, as a closed set</dd></div>
 <div><dt>R</dt><dd>every capability it touches, as a closed set</dd></div>
 </dl>
+<p class="fh-spread__does">That budget is the permission slip for letting an agent run unsupervised. It can rewrite a body as often as it likes, but it can't add a failure or a capability without changing the signature, and that change is one line to read instead of a call graph.</p>
 <p class="fh-spread__does">The contract survives code generation: requirements are lowered to <code>Context</code> services in the generated Effect TypeScript. <a href="/effect">Building with Effect? Read what Forma adds, and what it costs →</a></p>
 </div>
 <div class="fh-window fh-window--tabs">
@@ -147,21 +141,24 @@ pageClass: forma-index
 
 <section id="diagnostics" class="fh-spread fh-tone-red" aria-labelledby="errors-heading">
 <header class="fh-spread__head">
-<span class="fh-spread__index" aria-hidden="true">03</span>
-<div>
-<p class="fh-spread__kicker">Diagnostics</p>
-<h2 id="errors-heading" class="fh-spread__name">log.forma:8</h2>
-</div>
+<p class="fh-label"><span>03</span> Repair loop</p>
 <span class="fh-status is-live">Live · Effect checker</span>
+<h2 id="errors-heading">Don't review agent work. Elaborate it.</h2>
 </header>
 <div class="fh-spread__body fh-spread__body--stack">
 <div class="fh-spread__story fh-spread__story--wide">
-<p class="fh-spread__title">Forget a capability, and it won't compile.</p>
 <div class="fh-story">
 <span class="fh-story__label">The generated stack trace</span>
-<p><code>tsc</code> fails on line 412 of <code>generated.ts</code>. The mistake was a missing entry in a YAML file three directories away, and the error never mentions it.</p>
+<p><code>tsc</code> fails on line 412 of <code>generated.ts</code>. The mistake was a missing entry in a YAML file three directories away, and the error never mentions it. A person has to interpret that. An agent guesses.</p>
 </div>
-<p class="fh-spread__does">Here the body calls <code>Console.print</code>, but the signature declares no requirements. The Effect checker rejects the operation and points at the call you wrote. Click the problem to jump to its source, then add <code>Console.print</code> to the signature, or press Reset, and generation resumes.</p>
+<p class="fh-spread__does">A program either elaborates or it doesn't. When it doesn't, the answer is data written for a machine reader first: a code, the exact span, and a plain message, a repair protocol an agent can act on mechanically. Here the body calls <code>Console.print</code>, but the signature declares no requirements, so the Effect checker rejects the operation at the call. Click the problem to jump to its source, then add <code>Console.print</code> to the signature, or press Reset, and generation resumes.</p>
+</div>
+<div>
+<p class="fh-file">log.forma:8 — what the agent reads</p>
+
+<<< @/snippets/home/log-undeclared.check.json
+
+<p class="fh-note">Codes are namespaced and pinned by conformance fixtures, but they are not a stable contract yet. A <a href="/rfcs/0017-diagnostic-catalog">diagnostic catalog</a> and structured, machine-appliable fixes are the next step; neither ships today.</p>
 </div>
 
 <WorkbenchEmbed example="contracts" file="log.forma" broken title="A live missing-capability error" />
@@ -172,9 +169,9 @@ pageClass: forma-index
 <section class="fh-blueprint-section" aria-labelledby="ambition-heading">
 <div class="fh-blueprint-section__inner">
 <div class="fh-section__head">
-<p class="fh-label"><span>04</span> The ambition</p>
-<h2 id="ambition-heading">One descriptor.<br>Every tool.</h2>
-<p>The same program can be source, an outline, or a domain view. A form's descriptor already teaches the compiler its checks and the structural workbench its slots. The ambition is to make a new domain language feel as well supported as a built-in one.</p>
+<p class="fh-label"><span>04</span> Every reader</p>
+<h2 id="ambition-heading">One descriptor.<br>Every agent.</h2>
+<p>A form's descriptor is written once and read by everything that touches the program. The compiler checks slots against it. The structural workbench draws completions, placeholders, and an outline from it. A reviewer sees proposals as tree diffs with analyzed consequences. A model gets the same slot affordances, answers in an edit-script JSON Schema, and its answer passes the same host validation as a person's edit.</p>
 <div class="fh-actions">
 <a class="fh-button fh-button--primary" href="/workbench/demo/" target="_self">Try the outline</a>
 <a class="fh-button" href="/workbench-vision">Read the workbench vision</a>
@@ -182,13 +179,14 @@ pageClass: forma-index
 </div>
 <div class="fh-blueprint-art">
 
-<pre class="fh-ascii" v-pre aria-label="A workflow prelude defines step and workflow forms. The compiler uses the descriptors to check slots, types, and effect sets. The workbench uses them for completions, slot placeholders, and an outline view. Proposals become tree diffs with analyzed consequences. The output is typed IR and Effect TypeScript.">preludes/workflow.lisp — one descriptor, many readers
+<pre class="fh-ascii" v-pre aria-label="A workflow prelude defines step and workflow forms. The compiler uses the descriptors to check slots, types, and effect sets. The workbench uses them for completions, slot placeholders, and an outline view. Proposals become tree diffs with analyzed consequences. A model receives the same slots and answers in an edit-script JSON Schema that the host validates. The output is typed IR and Effect TypeScript.">preludes/workflow.lisp — one descriptor, every reader
 ┌──────────────────────────────────────────────────────
 │ <b>(form step …)</b>   slots  :system · :reads · :writes
 │
 ├──▶ <b>compiler</b>     slot checks · HM types · effect sets
 ├──▶ <b>editor</b>       completions · slot placeholders · outline
 ├──▶ <b>reviewer</b>     proposals as tree diffs, with consequences
+├──▶ <b>LLM</b>          slots · edit-script JSON Schema · same checks
 └──▶ <b>artifacts</b>    typed IR · Effect TypeScript
 └──────────────────────────────────────────────────────
 
@@ -201,34 +199,73 @@ pageClass: forma-index
 <div>
 <p class="fh-label">Bonus round</p>
 <h3>The outline is the program.</h3>
-<p>The structural workbench edits an onboarding workflow as rows and as source at the same time, with live values and types, descriptor placeholders, and assistant proposals you review as tree diffs. It pauses for approval before simulated capabilities run.</p>
+<p>The structural workbench edits an onboarding workflow as rows and as source at the same time, with live values and types, descriptor placeholders, and assistant proposals you review as tree diffs. It pauses for approval before simulated capabilities run. The default proposer is local and deterministic; an optional model proposer, given your own provider, uses the same edit-script schema and validation.</p>
 </div>
 <a class="fh-button fh-button--primary" href="/workbench/demo/" target="_self">Open the workbench →</a>
 </div>
 </section>
 
+<section id="compose" class="fh-spread fh-tone-amber" aria-labelledby="compose-heading">
+<header class="fh-spread__head">
+<p class="fh-label"><span>05</span> Composition</p>
+<span class="fh-status">Engine output · checked in CI</span>
+<h2 id="compose-heading">Preludes compose.</h2>
+</header>
+<div class="fh-spread__story fh-spread__story--wide">
+<div class="fh-story">
+<span class="fh-story__label">The stack nobody checked</span>
+<p>One team's tool catalog, another team's agent permissions, and an agent wiring them together. A permission names a tool that was renamed last week, and you find out when the agent tries to call it.</p>
+</div>
+<p class="fh-spread__does">A prelude declares what it provides with <code>export</code> and what it requires with <code>import</code>. A <code>Declares</code> slot gives each name a declaration type; a <code>Refers</code> slot accepts only names of that type. Here <code>tools.forma</code> declares tool names and <code>agents.forma</code> refers to them. The module graph checks the stack, and every reference at its authored span, before anything runs.</p>
+</div>
+<div class="fh-pair fh-pair--spread">
+<div>
+<p class="fh-file">tools.forma</p>
+
+<<< @/snippets/home/compose-tools.lisp
+
+<p class="fh-file">agents.forma</p>
+
+<<< @/snippets/home/compose-agents.lisp
+
+</div>
+<div>
+<p class="fh-file">support.forma</p>
+
+<<< @/snippets/home/compose-support.lisp
+
+<p class="fh-file">the module graph</p>
+
+<<< @/snippets/home/compose-support.diagnostic.json
+
+</div>
+</div>
+<p class="fh-note">Delete the last line and the graph checks. Where this is heading: <a href="https://open-ontology.com" class="no-icon">open-ontology.com ↗</a>, a registry where preludes are published and their composition is verified before you depend on them. It is a direction, not a launched service.</p>
+</section>
+
 <section class="fh-section" aria-labelledby="compare-heading">
 <div class="fh-section__head">
-<p class="fh-label"><span>05</span> Alternatives</p>
+<p class="fh-label"><span>06</span> Alternatives</p>
 <h2 id="compare-heading">Where Forma fits.</h2>
-<p>Each common approach covers some of this well. Forma's bet is covering all of it in one small language.</p>
+<p>For agent work, the incumbent is the first row. Each other approach covers part of this well. Forma's bet is covering all of it in one small language.</p>
 </div>
 <div class="fh-table">
 
 | | New domain forms | Checking | Output | Trade-off |
 | --- | --- | --- | --- | --- |
+| **Prompting + code review** | None fixed; the prompt describes the domain | A reviewer's judgment call | Plausible code, unverified | Feedback is prose, and each review starts over |
 | **YAML/JSON + a generator** | No, the format is fixed | Schema validation | Whatever the templates emit | Errors surface in generated code |
 | **Config languages** (CUE, Pkl, Dhall, Nickel) | Functions and schemas, not new forms | Strong, for data | JSON, YAML, and other data | No effect or capability tracking |
 | **Racket `#lang`** | Yes, full language construction | Whatever you build; Typed Racket is separate | Programs on the Racket runtime | Hard to embed in a TypeScript or browser stack |
 | **TypeScript builder DSLs** | Functions and objects | TypeScript's types | Runtime objects in one host | The DSL is the host program, so it's hard to review, sandbox, or port |
-| **Forma** | `form` descriptors in preludes | Hindley–Milner inference, descriptor validation, effect sets | Typed IR (`application/vnd.forma.ir+json`), Effect TypeScript | Pre-alpha, with one generated target so far |
+| **Forma** | `form` descriptors in preludes | Hindley–Milner inference, descriptor validation, effect sets; coded diagnostics at the authored span | Typed IR (`application/vnd.forma.ir+json`), Effect TypeScript | Pre-alpha, with one generated target so far |
 
 </div>
 </section>
 
 <section class="fh-section" aria-labelledby="embed-heading">
 <div class="fh-section__head">
-<p class="fh-label"><span>06</span> Engine</p>
+<p class="fh-label"><span>07</span> Engine</p>
 <h2 id="embed-heading">Built to embed.</h2>
 <p>One TypeScript engine runs behind a JSON host ABI in Node, the browser, and editor tooling, and stored fixtures pin its behavior.</p>
 </div>
@@ -258,7 +295,7 @@ pageClass: forma-index
 
 <section class="fh-section" aria-labelledby="status-heading">
 <div class="fh-section__head">
-<p class="fh-label"><span>07</span> Before you bet on it</p>
+<p class="fh-label"><span>08</span> Before you bet on it</p>
 <h2 id="status-heading">What you should know first.</h2>
 </div>
 <div class="fh-notes-grid">
@@ -306,7 +343,7 @@ not yet
 
 <section class="fh-section" aria-labelledby="examples-heading">
 <div class="fh-section__head">
-<p class="fh-label"><span>08</span> Examples</p>
+<p class="fh-label"><span>09</span> Examples</p>
 <h2 id="examples-heading">See the compiler show its work.</h2>
 <p>Edit the source and step through each compiler pass in your browser. Preview examples label any output that comes from a stored golden.</p>
 </div>
@@ -320,10 +357,11 @@ not yet
 </section>
 
 <section class="fh-closing" aria-labelledby="closing-heading">
-<h2 id="closing-heading">Build a language on a checked core.</h2>
-<p>Start with the entity example, then read how preludes and descriptors work.</p>
+<h2 id="closing-heading">Give your agents a vocabulary.</h2>
+<p>Start with the entity example, then write a form of your own.</p>
 <div class="fh-actions">
 <a class="fh-button fh-button--primary" href="/playground/demo/entities" target="_self">Open the playground</a>
+<a class="fh-button" href="/writing-a-form">Write a form</a>
 <a class="fh-button" href="/language">Read the language guide</a>
 <a class="fh-button" href="https://github.com/bjacobso/forma-lang">GitHub</a>
 </div>
@@ -332,7 +370,7 @@ not yet
 <section class="fh-family" aria-labelledby="family-heading">
 <div class="fh-family__head">
 <div>
-<p class="fh-label"><span>09</span> Part of the WorldVM family</p>
+<p class="fh-label"><span>10</span> Part of the WorldVM family</p>
 <h2 id="family-heading">Small experiments. Bigger worlds.</h2>
 </div>
 <p>Forma is one thread in a family of open experiments in software that can describe, remember, coordinate, and explain itself. WorldVM is where they meet: a runtime for operational worlds of entities, rules, goals, and actions.</p>
@@ -342,7 +380,7 @@ not yet
 <li style="--project-color: #e2d6b4"><a class="no-icon" href="https://schematics.run"><span class="fh-family__swatch" aria-hidden="true"></span><strong>Schematics ↗</strong><em>Let your schemas tell you more.</em><span>Small Effect libraries that pull an app's hidden program out into data.</span></a></li>
 <li style="--project-color: #9dbbbb"><a class="no-icon" href="https://foldworks.dev"><span class="fh-family__swatch" aria-hidden="true"></span><strong>Foldworks ↗</strong><em>Give the machinery a face.</em><span>Components and application primitives for Foldkit.</span></a></li>
 <li style="--project-color: #e9a08b"><a class="no-icon" href="https://github.com/bjacobso/runfold"><span class="fh-family__swatch" aria-hidden="true"></span><strong>Runfold ↗</strong><em>Work that keeps unfolding.</em><span>Typed programs as data, for durable and inspectable work.</span></a></li>
-<li class="fh-family__here" style="--project-color: #c6bed9"><div><span class="fh-family__swatch" aria-hidden="true"></span><strong>Forma</strong><em>Little language. Big ideas.</em><span>You are here: a typed Lisp for building domain-specific languages.</span></div></li>
+<li class="fh-family__here" style="--project-color: #c6bed9"><div><span class="fh-family__swatch" aria-hidden="true"></span><strong>Forma</strong><em>Little language. Big ideas.</em><span>You are here: a meta-language for agents, built as a typed Lisp.</span></div></li>
 </ul>
 <a class="fh-family__cta no-icon" href="https://worldvm.com/">Meet the whole family at worldvm.com ↗</a>
 </section>

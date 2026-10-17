@@ -3,7 +3,14 @@ import { elmCommandSource, elmCommandBrokenSource } from "./elmPageSources";
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
-import { homeSnippetDir, homeSnippets, elmPageSnippets, elmSnippetDir } from "./docsSnippets";
+import {
+  homeSnippetDir,
+  homeSnippets,
+  elmPageSnippets,
+  elmSnippetDir,
+  moduleGraphDiagnostics,
+} from "./docsSnippets";
+import { composeSupportSource } from "./pipelines/sources";
 import { effectPageSnippets, effectSnippetDir, typecheck } from "./effectPageSnippets";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
@@ -31,7 +38,22 @@ describe("docs homepage snippets", () => {
     ).toBe(snippets[name]);
   });
 
+  test("the composed preludes check once the unknown reference is removed", () => {
+    expect(moduleGraphDiagnostics(composeSupportSource)).toEqual([]);
+  });
 
+  test("the homepage uses the diagnostic and composition snippets", () => {
+    const page = readFileSync(resolve(repoRoot, "docs/index.md"), "utf8");
+    for (const name of [
+      "log-undeclared.check.json",
+      "compose-tools.lisp",
+      "compose-agents.lisp",
+      "compose-support.lisp",
+      "compose-support.diagnostic.json",
+    ]) {
+      expect(page).toContain(`snippets/home/${name}`);
+    }
+  });
 });
 
 describe("docs /effect page snippets", () => {

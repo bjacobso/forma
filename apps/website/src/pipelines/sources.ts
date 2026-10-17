@@ -60,3 +60,42 @@ ${logOperationSource}`;
 /** The type the TypeScript engine infers for `contractSource`. */
 export const contractType =
   "String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>";
+
+/** A prelude that declares tool names, for the homepage's composition example. */
+export const composeToolsSource = `(export tool ToolDecl)
+
+(type ToolDecl Symbol)
+(type ToolIR {:kind "Tool" :name Symbol :doc String})
+
+(form (tool name doc)
+  "Declare a tool an agent may call."
+  :types {:name (Declares ToolDecl) :doc String}
+  :ir ToolIR
+  {:kind "Tool" :name name :doc doc})
+`;
+
+/** A second prelude whose form refers to names the first one declares. */
+export const composeAgentsSource = `(import "./tools.forma" [ToolDecl])
+(export allow)
+
+(type AllowDecl Symbol)
+(type AllowIR {:kind "Allow" :name Symbol :tool Symbol})
+
+(form (allow name tool)
+  "Let an agent call one declared tool."
+  :types {:name (Declares AllowDecl) :tool (Refers ToolDecl)}
+  :ir AllowIR
+  {:kind "Allow" :name name :tool tool})
+`;
+
+/** A program written in both vocabularies. */
+export const composeSupportSource = `(import "./tools.forma" [tool])
+(import "./agents.forma" [allow])
+
+(tool refund "Refund an order.")
+(allow support-refunds refund)
+`;
+
+/** The same program with a reference to a tool that no prelude declares. */
+export const composeSupportBrokenSource = `${composeSupportSource}(allow support-deletes delete-account)
+`;
