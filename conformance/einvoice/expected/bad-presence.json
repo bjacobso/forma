@@ -1,0 +1,132 @@
+{
+  "ok": false,
+  "records": [],
+  "diagnostics": [
+    {
+      "code": "einvoice/BR-01",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-presence.lisp",
+        "startOffset": 43,
+        "endOffset": 445,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 9,
+        "endColumn": 84
+      },
+      "text": "{:specification \"\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines []\n   :breakdowns [\"vat:standard\" \"vat:reduced\" \"vat:zero\"]\n   :line-total 17500 :without-vat 17500 :vat-total 2250 :with-vat 19750 :due 19750}"
+    },
+    {
+      "code": "einvoice/BR-02",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-presence.lisp",
+        "startOffset": 43,
+        "endOffset": 445,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 9,
+        "endColumn": 84
+      },
+      "text": "{:specification \"\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines []\n   :breakdowns [\"vat:standard\" \"vat:reduced\" \"vat:zero\"]\n   :line-total 17500 :without-vat 17500 :vat-total 2250 :with-vat 19750 :due 19750}"
+    },
+    {
+      "code": "einvoice/BR-16",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-presence.lisp",
+        "startOffset": 43,
+        "endOffset": 445,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 9,
+        "endColumn": 84
+      },
+      "text": "{:specification \"\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines []\n   :breakdowns [\"vat:standard\" \"vat:reduced\" \"vat:zero\"]\n   :line-total 17500 :without-vat 17500 :vat-total 2250 :with-vat 19750 :due 19750}"
+    },
+    {
+      "code": "einvoice/BR-CO-10",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-presence.lisp",
+        "startOffset": 43,
+        "endOffset": 445,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 9,
+        "endColumn": 84
+      },
+      "text": "{:specification \"\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines []\n   :breakdowns [\"vat:standard\" \"vat:reduced\" \"vat:zero\"]\n   :line-total 17500 :without-vat 17500 :vat-total 2250 :with-vat 19750 :due 19750}"
+    },
+    {
+      "code": "einvoice/BR-CO-13",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-presence.lisp",
+        "startOffset": 43,
+        "endOffset": 445,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 9,
+        "endColumn": 84
+      },
+      "text": "{:specification \"\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines []\n   :breakdowns [\"vat:standard\" \"vat:reduced\" \"vat:zero\"]\n   :line-total 17500 :without-vat 17500 :vat-total 2250 :with-vat 19750 :due 19750}"
+    },
+    {
+      "code": "einvoice/BR-S-01",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-presence.lisp",
+        "startOffset": 43,
+        "endOffset": 445,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 9,
+        "endColumn": 84
+      },
+      "text": "{:specification \"\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines []\n   :breakdowns [\"vat:standard\" \"vat:reduced\" \"vat:zero\"]\n   :line-total 17500 :without-vat 17500 :vat-total 2250 :with-vat 19750 :due 19750}"
+    },
+    {
+      "code": "einvoice/BR-S-08",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-presence.lisp",
+        "startOffset": 43,
+        "endOffset": 445,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 9,
+        "endColumn": 84
+      },
+      "text": "{:specification \"\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines []\n   :breakdowns [\"vat:standard\" \"vat:reduced\" \"vat:zero\"]\n   :line-total 17500 :without-vat 17500 :vat-total 2250 :with-vat 19750 :due 19750}"
+    },
+    {
+      "code": "einvoice/BR-S-08",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-presence.lisp",
+        "startOffset": 43,
+        "endOffset": 445,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 9,
+        "endColumn": 84
+      },
+      "text": "{:specification \"\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines []\n   :breakdowns [\"vat:standard\" \"vat:reduced\" \"vat:zero\"]\n   :line-total 17500 :without-vat 17500 :vat-total 2250 :with-vat 19750 :due 19750}"
+    },
+    {
+      "code": "einvoice/BR-Z-08",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-presence.lisp",
+        "startOffset": 43,
+        "endOffset": 445,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 9,
+        "endColumn": 84
+      },
+      "text": "{:specification \"\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines []\n   :breakdowns [\"vat:standard\" \"vat:reduced\" \"vat:zero\"]\n   :line-total 17500 :without-vat 17500 :vat-total 2250 :with-vat 19750 :due 19750}"
+    }
+  ]
+}

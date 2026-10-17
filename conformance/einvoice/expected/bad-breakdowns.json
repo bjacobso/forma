@@ -1,0 +1,62 @@
+{
+  "ok": false,
+  "records": [],
+  "diagnostics": [
+    {
+      "code": "einvoice/BR-S-09-exact",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-breakdowns.lisp",
+        "startOffset": 41,
+        "endOffset": 133,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 3,
+        "endColumn": 38
+      },
+      "text": "{:category \"S\" :rate-bps 2000 :taxable 10000 :tax 1999\n   :exemption-reason \"Not permitted\"}"
+    },
+    {
+      "code": "einvoice/BR-S-10",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-breakdowns.lisp",
+        "startOffset": 41,
+        "endOffset": 133,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 3,
+        "endColumn": 38
+      },
+      "text": "{:category \"S\" :rate-bps 2000 :taxable 10000 :tax 1999\n   :exemption-reason \"Not permitted\"}"
+    },
+    {
+      "code": "einvoice/BR-Z-09",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-breakdowns.lisp",
+        "startOffset": 176,
+        "endOffset": 256,
+        "startLine": 5,
+        "startColumn": 3,
+        "endLine": 6,
+        "endColumn": 33
+      },
+      "text": "{:category \"Z\" :rate-bps 0 :taxable 2500 :tax 1\n   :exemption-code \"VATEX-EU-O\"}"
+    },
+    {
+      "code": "einvoice/BR-Z-10",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-breakdowns.lisp",
+        "startOffset": 176,
+        "endOffset": 256,
+        "startLine": 5,
+        "startColumn": 3,
+        "endLine": 6,
+        "endColumn": 33
+      },
+      "text": "{:category \"Z\" :rate-bps 0 :taxable 2500 :tax 1\n   :exemption-code \"VATEX-EU-O\"}"
+    }
+  ]
+}

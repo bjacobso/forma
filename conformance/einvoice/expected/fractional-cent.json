@@ -1,0 +1,20 @@
+{
+  "ok": false,
+  "records": [],
+  "diagnostics": [
+    {
+      "code": "einvoice/BR-S-09-exact",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/fractional-cent.lisp",
+        "startOffset": 128,
+        "endOffset": 176,
+        "startLine": 3,
+        "startColumn": 3,
+        "endLine": 3,
+        "endColumn": 51
+      },
+      "text": "{:category \"S\" :rate-bps 2000 :taxable 3 :tax 1}"
+    }
+  ]
+}
