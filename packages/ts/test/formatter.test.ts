@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { performance } from "node:perf_hooks";
-import { formatLisp, formatRange } from "../src/Format.js";
+import { formatLisp, formatRange, type FormatOptions } from "../src/Format.js";
 import { tokenizeWithTrivia } from "../src/reader/lexer.js";
 import { parse } from "../src/reader/parser.js";
 import { toSExprMany } from "../src/reader/to-sexpr.js";
@@ -24,8 +24,8 @@ const structure = (source: string) => JSON.stringify(toSExprMany(parse(source).r
 const blanks = (source: string) => tokenizeWithTrivia(source).flatMap(({ leadingTrivia }, index) => leadingTrivia.flatMap((t, i) =>
   t.kind === "whitespace" && (t.text.match(/\n/g)?.length ?? 0) >= 2 ? [`${index}:${leadingTrivia.slice(0, i).filter(t => t.kind === "line-comment").length}`] : []));
 
-function invariants(source: string, id: string): string {
-  const result = formatLisp(source);
+function invariants(source: string, id: string, options: FormatOptions = {}): string {
+  const result = formatLisp(source, options);
   if (parse(source).errors.length) {
     expect(result.text, id).toBe(source); expect(result.diagnostics.length, id).toBeGreaterThan(0); return source;
   }
@@ -33,11 +33,19 @@ function invariants(source: string, id: string): string {
   expect(tokens(result.text), id).toEqual(tokens(source));
   expect(structure(result.text), id).toBe(structure(source));
   expect(comments(result.text), id).toEqual(comments(source));
-  expect(formatLisp(result.text).text, id + " idempotence").toBe(result.text);
+  expect(formatLisp(result.text, options).text, id + " idempotence").toBe(result.text);
   // Leading/trailing whitespace may be normalized; internal blank boundaries survive.
   const sourceTokens = tokens(source), outputBlanks = blanks(result.text);
   for (const blank of blanks(source).filter(b => !b.startsWith("0:") && !b.startsWith(`${sourceTokens.length}:`))) {
     expect(outputBlanks, id + " blank " + blank).toContain(blank);
+  }
+  const width = options.softWrap ?? 80;
+  for (const line of result.text.split("\n")) {
+    if (line.length <= width || line.includes(";")) continue;
+    const significant = tokenizeWithTrivia(line).filter(t => !["eof", "lparen", "rparen", "lbracket", "rbracket", "lbrace", "rbrace", "quote", "backtick", "tilde", "tilde-at"].includes(t.token.type));
+    // Multiline literals and a single unbreakable atom may exceed the budget.
+    if (result.text.includes('"""') || significant.length <= 1) continue;
+    expect(line.length, id + " width: " + line).toBeLessThanOrEqual(width);
   }
   return result.text;
 }
@@ -79,7 +87,32 @@ describe("lossless formatter", () => {
     const dir = resolve(root, "conformance/format", entry.name);
     test(`golden ${entry.name}`, () => {
       const input = readFileSync(resolve(dir, "input.lisp"), "utf8");
-      expect(invariants(input, entry.name)).toBe(readFileSync(resolve(dir, "output.lisp"), "utf8"));
+      const options = existsSync(resolve(dir, "options.json")) ? JSON.parse(readFileSync(resolve(dir, "options.json"), "utf8")) : {};
+      expect(invariants(input, entry.name, options)).toBe(readFileSync(resolve(dir, "output.lisp"), "utf8"));
     });
   }
+});
+
+test("module layouts include visible imported and re-exported descriptors", async () => {
+  const { readModuleGraph } = await import("../src/Node.js");
+  const { moduleFormatOptions } = await import("../src/Format.js");
+  const graph = readModuleGraph(resolve(root, "conformance/compile-time-modules/main.forma"));
+  const options = moduleFormatOptions(graph);
+  expect(options.descriptors?.map(d => d.name)).toContain("picklist-of");
+  const source = '(picklist-of LongDeclarationName billing/prices)';
+  expect(formatLisp(source, { ...options, softWrap: 38 }).text).toBe('(picklist-of LongDeclarationName\n  billing/prices)\n');
+});
+
+test("module layouts preserve authored namespace aliases and macro signatures", async () => {
+  const { resolveModuleGraph, sourceModuleResolver } = await import("../src/modules/graph.js");
+  const { moduleFormatOptions } = await import("../src/Format.js");
+  const graph = resolveModuleGraph({ id: "main.forma", source: '(import "./stripe.forma" :as vendor)\n(import "./macros.forma" [whenish])' }, sourceModuleResolver([
+    { id: "stripe.forma", source: readFileSync(resolve(root, "conformance/compile-time-modules/stripe.forma"), "utf8") },
+    { id: "macros.forma", source: '(export whenish)\n(macro (whenish test body ...) `(if ~test (do ~@body) nil))' },
+  ]));
+  const options = moduleFormatOptions(graph);
+  expect(options.descriptors?.map(d => d.name)).toContain("vendor/price");
+  expect(options.macroSignatures?.has("whenish")).toBe(true);
+  expect(formatLisp('(whenish condition (first-step input) (second-step input))', { ...options, softWrap: 40 }).text)
+    .toBe('(whenish condition\n  (first-step input)\n  (second-step input))\n');
 });

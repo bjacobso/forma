@@ -1,3 +1,4 @@
+import { headerLayouts } from "./patterns.js";
 import type { GreenElement, GreenNode, GreenToken } from "../reader/green-tree.js";
 import type { FormDescriptor } from "../descriptor/FormDescriptor.js";
 import type { SExpr } from "../reader/types.js";
@@ -5,6 +6,9 @@ import { concat, group, indent, line, softline, hardline, text, lineSuffix, type
 import { before, tokensOf, type TokenTrivia } from "./trivia.js";
 
 export interface FormatOptions {
+  /** Declarations from the same logical source (e.g. other Markdown fences). */
+  readonly declarations?: readonly SExpr[];
+  readonly macroSignatures?: ReadonlyMap<string, readonly SExpr[]>;
   readonly descriptors?: readonly FormDescriptor[];
   readonly softWrap?: number;
   readonly indentSize?: number;
@@ -13,8 +17,7 @@ export interface FormatOptions {
 export function layout(root: GreenNode, trivia: ReadonlyMap<GreenToken, TokenTrivia>, options: FormatOptions, expressions: readonly SExpr[] = []): Doc {
   const first = (node: GreenElement) => tokensOf(node)[0]!;
   const last = (node: GreenElement) => tokensOf(node).at(-1)!;
-  const patterns = new Map<string, readonly SExpr[]>((options.descriptors ?? []).flatMap(d => d.surface ? [[d.name, d.surface.pattern] as const] : []));
-  for (const e of expressions) if (e._tag === "List" && e.items[0]?._tag === "Sym" && e.items[0].name === "form" && e.items[1]?._tag === "List" && e.items[1].items[0]?._tag === "Sym") patterns.set(e.items[1].items[0].name, e.items[1].items.slice(1));
+  const headers = headerLayouts([...(options.declarations ?? []), ...expressions], options);
   const tokenDoc = (token: GreenToken): Doc => {
     const trailing = trivia.get(token)?.trailing;
     return trailing ? concat(text(token.text), lineSuffix(text(" " + trailing))) : text(token.text);
@@ -39,30 +42,25 @@ export function layout(root: GreenNode, trivia: ReadonlyMap<GreenToken, TokenTri
     const open = node.children[0]!, close = node.children.at(-1)!, items = node.children.slice(1, -1);
     if (!items.length) return group(concat(render(open), boundary(open, close, softline), render(close)));
     const head = first(items[0]!).text;
-    const pattern = node.kind === "List" ? patterns.get(head) : undefined;
-    let header = node.kind === "List" ? 1 : 0;
-    if (pattern) {
-      for (let i = 0; i < pattern.length; i++) {
-        if (pattern[i]?._tag === "Map" || pattern[i + 1]?._tag === "Sym" && (pattern[i + 1] as Extract<SExpr, { _tag: "Sym" }>).name === "...") break;
-        header++;
-      }
-    }
-    const parts: Doc[] = [render(open)];
+    const known = node.kind === "List" ? headers.get(head) : undefined;
+    let header = node.kind === "List" ? Math.min(items.length, known === undefined ? 2 : known + 1) : 0;
+    // Keywords begin body options even in calls without descriptors.
+    for (let i = 1; i < header; i++) if (first(items[i]!).tokenType === "keyword") { header = i; break; }
+    let headerDoc = render(open);
     const body: Doc[] = [];
     for (let i = 0; i < items.length; i++) {
-      const item = items[i]!;
-      const prev = i ? items[i - 1]! : open;
-      let sep: Doc = i === 0 ? (header ? text("") : softline) : line;
-      if (i > 0 && i < header) sep = text(" ");
+      const item = items[i]!, prev = i ? items[i - 1]! : open;
+      const inHeader = i < header;
+      const sep = i === 0 ? (header ? text("") : softline) : line;
       let value = render(item);
-      if ((node.kind === "Map" || pattern && first(item).tokenType === "keyword") && items[i + 1]) {
+      if ((node.kind === "Map" || !inHeader && first(item).tokenType === "keyword") && items[i + 1]) {
         const next = items[++i]!;
         value = group(concat(value, indent(concat(boundary(item, next, line), render(next)))));
       }
-      const rendered = concat(boundary(prev, item, sep), value);
-      if (i < header) parts.push(rendered); else body.push(rendered);
+      if (inHeader) headerDoc = group(concat(headerDoc, indent(concat(boundary(prev, item, sep), value))));
+      else body.push(boundary(prev, item, sep), value);
     }
-    parts.push(indent(concat(...body)), boundary(items.at(-1)!, close, text("")), render(close));
+    const parts: Doc[] = [headerDoc, indent(concat(...body)), boundary(items.at(-1)!, close, text("")), render(close)];
     return group(concat(...parts));
   };
   return render(root);

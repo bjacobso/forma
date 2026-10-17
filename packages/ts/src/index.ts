@@ -48,6 +48,7 @@ export * as Type from "./Type.js";
 export * as CoreExpr from "./CoreExpr.js";
 export * as Env from "./Env.js";
 export * as Diagnostic from "./Diagnostic.js";
+export * as Format from "./Format.js";
 export * as Formatter from "./Formatter.js";
 export * as Editor from "./Editor.js";
 export * as Analysis from "./Analysis.js";

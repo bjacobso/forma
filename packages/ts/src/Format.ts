@@ -38,3 +38,5 @@ export function formatRange(source: string, range: Span, options: FormatOptions 
   }
   return { text, changed: text !== source, diagnostics: [] };
 }
+
+export { moduleFormatOptions } from "./format/module.js";
