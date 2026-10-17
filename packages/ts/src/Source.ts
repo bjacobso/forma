@@ -11,3 +11,5 @@ export {
   type SourceInput,
   type SourceOrigin,
 } from "./source/source.js";
+
+export { extractMarkdownFences, isFormaFence, type MarkdownFence } from "./source/markdown.js";
