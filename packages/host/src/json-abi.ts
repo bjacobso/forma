@@ -57,6 +57,7 @@ const evaluation = { ...session, variables, stepLimit, observe, evaluationId: op
 const artifact = { ...session, sourceId: optionalString, sourceIds: Schema.optionalKey(Schema.Array(id)), backend: optionalString };
 /** Unsupported operations return abi/unsupported-op; known operations decode strictly. */
 export const JsonRequest = Schema.Union([
+  operation("format", { ...source, language: Schema.optionalKey(Schema.Literals(["lisp", "forma", "markdown"])) }),
   operation("version", {}), operation("openSession", { defaultStepLimit: stepLimit }),
   operation("configureSession", { ...session, ...configuration, variables, projects }),
   operation("loadSource", { ...session, ...document.fields, timings: Schema.optionalKey(Schema.Boolean) }),
@@ -113,7 +114,7 @@ export class JsonAbi {
     let request: JsonRequest;
     try { request = Schema.decodeUnknownSync(JsonRequest)(input, { onExcessProperty: "error" }); }
     catch (error) {
-      const supported = ["version", "openSession", "configureSession", "loadSource", "loadSourceBundle", "closeSession", "resetSession", "sessionInfo", "parse", "parseAst", "parseSummary", "incrementalSummary", "expand", "typecheck", "typecheckCore", "typecheckCoreTyped", "lowerCore", "evaluate", "evaluateInSession", "replSubmit", "emit", "emitMany", "emitBackends", "artifactSummary", "moduleGraph", "linkEffectModules", "callValue", "resumeHostCall", "abortEvaluation", "projectValue", "releaseValue"];
+      const supported = ["format", "version", "openSession", "configureSession", "loadSource", "loadSourceBundle", "closeSession", "resetSession", "sessionInfo", "parse", "parseAst", "parseSummary", "incrementalSummary", "expand", "typecheck", "typecheckCore", "typecheckCoreTyped", "lowerCore", "evaluate", "evaluateInSession", "replSubmit", "emit", "emitMany", "emitBackends", "artifactSummary", "moduleGraph", "linkEffectModules", "callValue", "resumeHostCall", "abortEvaluation", "projectValue", "releaseValue"];
       return errorResponse(supported.includes(op) ? "abi/invalid-request" : "abi/unsupported-op", String(error));
     }
     if ("sessionId" in request && request.sessionId) {
@@ -125,6 +126,12 @@ export class JsonAbi {
 
   private async dispatch(request: JsonRequest): Promise<JsonResponse> {
     switch (request.op) {
+      case "format": {
+        const result = await this.host.format(request);
+        return envelope(result, result.diagnostics.map(d => ({ code: d.code, message: d.message,
+          severity: d.code === "format/parse" ? "error" as const : "warning" as const,
+          span: { sourceId: request.sourceId ?? "<format>", startOffset: d.start, endOffset: d.end } })));
+      }
       case "version": return envelope(await this.host.version());
       case "openSession": { const result = await this.host.openSession(request); this.sessions.add(result.sessionId); return envelope(result); }
       case "configureSession": return envelope(await this.host.configureSession({...request, hostBuiltins:hostBuiltins(request.hostBuiltins)}));

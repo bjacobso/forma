@@ -36,6 +36,9 @@ These choices resolve D1–D9 from the implementation plan:
 | D8 | 80 columns, with overflow allowed for unbreakable atoms and comments. |
 | D9 | Preserve comment markers as written. |
 
+Bundled kernel macro signatures and compiler declarations supply default layout
+vocabulary. Domain forms come from explicit descriptors or the module graph.
+
 Descriptor surface patterns take precedence over macro signatures, then core
 forms, then generic layout. Generic calls keep the head and first argument on
 the header when they fit. Keyword/value pairs stay together when possible.
@@ -54,7 +57,8 @@ container/HTML contexts are skipped and reported rather than guessed at.
 `forma fmt --stdin --stdin-filepath x.md` share the pure API. Check mode reports
 changed paths with short diffs and exits 1; usage errors exit 64. Repository
 scripts enumerate tracked Lisp, Forma and Markdown files, excluding intentional
-reader-error fixtures. Formatting becomes a required check only after the corpus
+reader-error fixtures and formatter conformance fixtures (which deliberately use
+unformatted input or non-default widths). Formatting becomes a required check only after the corpus
 migration.
 
 The host JSON ABI exposes formatting. LSP formatting is enabled by default,

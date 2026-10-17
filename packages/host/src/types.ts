@@ -858,6 +858,7 @@ export interface ModuleGraphResult { readonly entry:string; readonly interfaces:
 export type ModuleLinkResult = LinkedEffectProgram;
 
 export interface LanguageHost {
+  format?(request: import("./format.js").FormatRequest): Promise<import("./format.js").FormatResult>;
   readonly name: string;
   emit?(request: EmitRequest): Promise<import("@formalang/ts/artifact").EmitResult>;
   emitMany?(request: EmitRequest): Promise<ReturnType<typeof import("@formalang/ts/artifact").emitMany>>;

@@ -1,3 +1,4 @@
+import { formatSource, type FormatRequest } from "./format.js";
 import * as Artifact from "@formalang/ts/artifact";
 import * as Modules from "@formalang/ts/modules";
 import { Effect, Ref } from "effect";
@@ -462,6 +463,8 @@ export class TsLanguageHost implements LanguageHost {
   async artifactSummary(request: import("./types.js").EmitRequest): Promise<ReturnType<typeof Artifact.artifactSummary>> {
     return Artifact.artifactSummary({ ...request, session: this.#requireSession(request.sessionId).language });
   }
+
+  async format(request: FormatRequest) { return formatSource(request); }
 
   async parse(request: ParseRequest): Promise<ParseResult> {
     return this.parseSync(request);

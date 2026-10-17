@@ -36,7 +36,9 @@
     "website:deploy": "alchemy deploy --stage prod",
     "website:dry-run": "pnpm --filter @formalang/website exec wrangler deploy --dry-run",
     "test:e2e:workbench": "pnpm --filter @formalang/workbench-app test:e2e",
-    "test:site": "pnpm --filter @formalang/website test:site"
+    "test:site": "pnpm --filter @formalang/website test:site",
+    "format": "turbo run build --filter=@formalang/host && node scripts/format.mjs",
+    "format:check": "turbo run build --filter=@formalang/host && node scripts/format.mjs --check"
   },
   "devDependencies": {
     "@changesets/cli": "3.0.2",

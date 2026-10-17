@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /** Node transports; compiler and session behavior stays in FormaHost. */
+import { formatCommand } from "./format-command.js";
 import { readFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { readModuleGraph } from "@formalang/ts/node";
@@ -27,13 +28,14 @@ async function file(operation: string, path: string): Promise<JsonResponse> {
 }
 
 try {
-  if (command === "request" && args.length <= 1) print(await abi.handleJson(args[0] ?? readFileSync(0, "utf8")));
+  if (command === "fmt") process.exitCode = formatCommand(args);
+  else if (command === "request" && args.length <= 1) print(await abi.handleJson(args[0] ?? readFileSync(0, "utf8")));
   else if (command === "daemon" && args.length === 0) {
     for await (const line of createInterface({input:process.stdin, crlfDelay:Infinity})) print(await abi.handleJson(line));
   } else if (command === "version" && args.length === 0) print(await abi.handleJson('{"op":"version"}'));
   else if (command === "file" && args.length === 2 && ["typecheck", "evaluate", "interface", "declarations"].includes(args[0]!)) print(await file(args[0]!, args[1]!));
   else {
-    process.stderr.write("Usage: forma request ['<json>'] | daemon | file <typecheck|evaluate|interface|declarations> <entry.forma> | version\n");
+    process.stderr.write("Usage: forma request ['<json>'] | daemon | file <typecheck|evaluate|interface|declarations> <entry.forma> | fmt [--check] [--strict] <paths…> | version\n");
     process.exitCode = 64;
   }
 } catch (error) {
