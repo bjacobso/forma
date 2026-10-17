@@ -135,6 +135,10 @@
     "./elm": {
       "types": "./dist/Elm.d.mts",
       "import": "./dist/Elm.mjs"
+    },
+    "./format": {
+      "types": "./dist/Format.d.mts",
+      "import": "./dist/Format.mjs"
     }
   },
   "files": [

@@ -1,3 +1,4 @@
+import { formatLisp } from "../src/Format.js";
 import { describe, expect, test } from "vitest";
 import fc from "fast-check";
 
@@ -154,8 +155,8 @@ describe("reconcileSyntax", () => {
   });
 
   test("reformatting keeps ids", () => {
-    const before = "(let [a 1\n      b 2]\n  (+ a b))";
-    const after = "(let [a 1 b 2] (+ a b))";
+    const before = "(let [a 1\n      b 2]\n  (+ a b))\n(define x 'x) ; keep\n\n(define s \"tab\\there\")";
+    const after = formatLisp(before).text;
     const { identity, next } = reconcile(before, after);
     expect(next.nodes.map((node) => node.id)).toEqual(identity.nodes.map((node) => node.id));
   });

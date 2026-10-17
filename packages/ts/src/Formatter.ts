@@ -8,7 +8,7 @@ import { printFloat } from "./evaluator/types.js";
  */
 
 import type { FormDescriptor } from "./descriptor/FormDescriptor.js";
-import { tokenizeWithTrivia } from "./reader/lexer.js";
+import { formatLisp } from "./Format.js";
 import { Effect } from "effect";
 import { parseManyToSExpr } from "./reader/index.js";
 import type { ParseError, SExpr } from "./reader/index.js";
@@ -225,35 +225,6 @@ export function formatSExprMany(exprs: readonly SExpr[], options?: LispFormatOpt
   return rendered.join("\n").trimEnd() + "\n";
 }
 
-/** Attach each comment to the next authored token, using matching AST spans.
- * Matching trees also handles reader shorthand expanded by pretty-printing. */
-function restoreComments(source: string, original: readonly SExpr[], rendered: string, formatted: readonly SExpr[], indentSize: number): string {
-  const comments = tokenizeWithTrivia(source).flatMap(token => token.leadingTrivia.filter(t => t.kind === "line-comment"));
-  if (!comments.length) return rendered;
-  const anchors: {source: number; target: number; indent: number}[] = [];
-  const pair = (a: SExpr, b: SExpr, indent: number): void => {
-    anchors.push({source:a.loc.start,target:b.loc.start,indent});
-    const children = (e: SExpr): readonly SExpr[] => e._tag === "Map" ? e.pairs.flatMap(([k,v])=>[k,v]) : e._tag === "List" || e._tag === "Vector" || e._tag === "Set" ? e.items : [];
-    const ac=children(a), bc=children(b);
-    if (ac.length) anchors.push({source:a.loc.end-1,target:b.loc.end-1,indent});
-    ac.forEach((child,i)=>{if(bc[i]) pair(child,bc[i]!,indent+indentSize);});
-  };
-  original.forEach((expr,i)=>{if(formatted[i]) pair(expr,formatted[i]!,0);});
-  anchors.sort((a,b)=>a.source-b.source);
-  const insertions = new Map<number,{indent:number;comments:string[]}>();
-  for (const comment of comments) {
-    const anchor=anchors.find(a=>a.source>=comment.loc.end) ?? {target:rendered.length,indent:0};
-    const entry=insertions.get(anchor.target) ?? {indent:anchor.indent,comments:[]};
-    entry.comments.push(comment.text); insertions.set(anchor.target,entry);
-  }
-  let result=rendered;
-  for (const [offset,entry] of [...insertions].sort(([a],[b])=>b-a)) {
-    const prefix=result.slice(0,offset), pad=" ".repeat(entry.indent);
-    result=prefix+(prefix.trimEnd().length ? "\n" : "")+entry.comments.map(c=>pad+c).join("\n")+"\n"+pad+result.slice(offset);
-  }
-  return result.replace(/[ \t]+\n/g,"\n").trimEnd()+"\n";
-}
-
 /**
  * Parse and pretty-print raw Lisp source.
  */
@@ -262,10 +233,7 @@ export function formatLispSource(
   options?: LispFormatOptions,
 ): Effect.Effect<string, ParseError> {
   return Effect.gen(function* () {
-    const exprs = yield* parseManyToSExpr(source);
-    const rendered = formatSExprMany(exprs, options);
-    if (!tokenizeWithTrivia(source).some(t=>t.leadingTrivia.some(trivia=>trivia.kind === "line-comment"))) return rendered;
-    const formatted = yield* parseManyToSExpr(rendered);
-    return restoreComments(source,exprs,rendered,formatted,options?.indentSize ?? DEFAULT_INDENT_SIZE);
+    yield* parseManyToSExpr(source);
+    return formatLisp(source, options).text;
   });
 }
