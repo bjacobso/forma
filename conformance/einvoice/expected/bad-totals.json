@@ -1,0 +1,76 @@
+{
+  "ok": false,
+  "records": [],
+  "diagnostics": [
+    {
+      "code": "einvoice/BR-CO-10",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-totals.lisp",
+        "startOffset": 41,
+        "endOffset": 566,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 9,
+        "endColumn": 84
+      },
+      "text": "{:specification \"urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"INV-001\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines [\"line:standard\" \"line:reduced\" \"line:zero\"]\n   :breakdowns [\"vat:standard\" \"vat:reduced\" \"vat:zero\"]\n   :line-total 17499 :without-vat 17501 :vat-total 2251 :with-vat 19751 :due 19750}"
+    },
+    {
+      "code": "einvoice/BR-CO-13",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-totals.lisp",
+        "startOffset": 41,
+        "endOffset": 566,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 9,
+        "endColumn": 84
+      },
+      "text": "{:specification \"urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"INV-001\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines [\"line:standard\" \"line:reduced\" \"line:zero\"]\n   :breakdowns [\"vat:standard\" \"vat:reduced\" \"vat:zero\"]\n   :line-total 17499 :without-vat 17501 :vat-total 2251 :with-vat 19751 :due 19750}"
+    },
+    {
+      "code": "einvoice/BR-CO-14",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-totals.lisp",
+        "startOffset": 41,
+        "endOffset": 566,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 9,
+        "endColumn": 84
+      },
+      "text": "{:specification \"urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"INV-001\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines [\"line:standard\" \"line:reduced\" \"line:zero\"]\n   :breakdowns [\"vat:standard\" \"vat:reduced\" \"vat:zero\"]\n   :line-total 17499 :without-vat 17501 :vat-total 2251 :with-vat 19751 :due 19750}"
+    },
+    {
+      "code": "einvoice/BR-CO-15",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-totals.lisp",
+        "startOffset": 41,
+        "endOffset": 566,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 9,
+        "endColumn": 84
+      },
+      "text": "{:specification \"urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"INV-001\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines [\"line:standard\" \"line:reduced\" \"line:zero\"]\n   :breakdowns [\"vat:standard\" \"vat:reduced\" \"vat:zero\"]\n   :line-total 17499 :without-vat 17501 :vat-total 2251 :with-vat 19751 :due 19750}"
+    },
+    {
+      "code": "einvoice/BR-CO-16",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-totals.lisp",
+        "startOffset": 41,
+        "endOffset": 566,
+        "startLine": 2,
+        "startColumn": 3,
+        "endLine": 9,
+        "endColumn": 84
+      },
+      "text": "{:specification \"urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"INV-001\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines [\"line:standard\" \"line:reduced\" \"line:zero\"]\n   :breakdowns [\"vat:standard\" \"vat:reduced\" \"vat:zero\"]\n   :line-total 17499 :without-vat 17501 :vat-total 2251 :with-vat 19751 :due 19750}"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "ok": false,
+  "records": [],
+  "diagnostics": [
+    {
+      "code": "einvoice/BR-S-08",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-taxable.lisp",
+        "startOffset": 244,
+        "endOffset": 781,
+        "startLine": 6,
+        "startColumn": 3,
+        "endLine": 13,
+        "endColumn": 84
+      },
+      "text": "{:specification \"urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"INV-001\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines [\"line:standard\" \"line:reduced\" \"line:zero\"]\n   :breakdowns [\"vat:wrong-s-base\" \"vat:reduced\" \"vat:wrong-z-base\"]\n   :line-total 17500 :without-vat 17500 :vat-total 2050 :with-vat 19550 :due 19550}"
+    },
+    {
+      "code": "einvoice/BR-Z-08",
+      "severity": "error",
+      "span": {
+        "sourceId": "einvoice/cases/bad-taxable.lisp",
+        "startOffset": 244,
+        "endOffset": 781,
+        "startLine": 6,
+        "startColumn": 3,
+        "endLine": 13,
+        "endColumn": 84
+      },
+      "text": "{:specification \"urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0\"\n   :process \"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0\"\n   :number \"INV-001\" :issue-date \"2026-10-17\" :type-code \"380\" :currency \"EUR\"\n   :buyer-reference \"BUYER-1\" :due-date \"2026-11-17\"\n   :seller \"party:seller\" :buyer \"party:buyer\"\n   :lines [\"line:standard\" \"line:reduced\" \"line:zero\"]\n   :breakdowns [\"vat:wrong-s-base\" \"vat:reduced\" \"vat:wrong-z-base\"]\n   :line-total 17500 :without-vat 17500 :vat-total 2050 :with-vat 19550 :due 19550}"
+    }
+  ]
+}

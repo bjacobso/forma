@@ -42,6 +42,10 @@ tagged payload collisions. Its explicit expectations live in
 The TypeScript tests and `pnpm surfaces` check these cases, including author
 offsets for negative cases.
 
+[`einvoice/`](einvoice/README.md) tests a local EN 16931 invoice fit spike with
+Int-cent seed records, S/Z VAT and total checks, and author-located diagnostic
+goldens. It is not a Peppol validator or the proposed benchmark harness.
+
 ## Dialect of the forma-zero fixtures
 
 The prelude and cases were written in the intersection of what the dynamic

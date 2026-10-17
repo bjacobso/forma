@@ -1,0 +1,173 @@
+{
+  "ok": true,
+  "records": [
+    {
+      "kind": "Record",
+      "name": "address:seller",
+      "id": "address:seller",
+      "entity": "PostalAddress",
+      "fields": {
+        "postal-address/street": "1 Market Street",
+        "postal-address/city": "Berlin",
+        "postal-address/postcode": "10115",
+        "postal-address/country": "DE"
+      }
+    },
+    {
+      "kind": "Record",
+      "name": "address:buyer",
+      "id": "address:buyer",
+      "entity": "PostalAddress",
+      "fields": {
+        "postal-address/street": "2 High Street",
+        "postal-address/city": "Paris",
+        "postal-address/postcode": "75001",
+        "postal-address/country": "FR"
+      }
+    },
+    {
+      "kind": "Record",
+      "name": "party:seller",
+      "id": "party:seller",
+      "entity": "InvoiceParty",
+      "fields": {
+        "invoice-party/name": "Example Seller",
+        "invoice-party/address": "address:seller",
+        "invoice-party/vat-id": "DE123456789",
+        "invoice-party/endpoint": "seller@example.test",
+        "invoice-party/endpoint-scheme": "EM"
+      }
+    },
+    {
+      "kind": "Record",
+      "name": "party:buyer",
+      "id": "party:buyer",
+      "entity": "InvoiceParty",
+      "fields": {
+        "invoice-party/name": "Example Buyer",
+        "invoice-party/address": "address:buyer",
+        "invoice-party/vat-id": "FR12345678901",
+        "invoice-party/endpoint": "buyer@example.test",
+        "invoice-party/endpoint-scheme": "EM"
+      }
+    },
+    {
+      "kind": "Record",
+      "name": "line:standard",
+      "id": "line:standard",
+      "entity": "InvoiceLine",
+      "fields": {
+        "invoice-line/number": "1",
+        "invoice-line/quantity": 2,
+        "invoice-line/unit": "C62",
+        "invoice-line/item-name": "Standard goods",
+        "invoice-line/price": 5000,
+        "invoice-line/net": 10000,
+        "invoice-line/category": "S",
+        "invoice-line/rate-bps": 2000
+      }
+    },
+    {
+      "kind": "Record",
+      "name": "line:reduced",
+      "id": "line:reduced",
+      "entity": "InvoiceLine",
+      "fields": {
+        "invoice-line/number": "2",
+        "invoice-line/quantity": 1,
+        "invoice-line/unit": "C62",
+        "invoice-line/item-name": "Reduced-rate goods",
+        "invoice-line/price": 5000,
+        "invoice-line/net": 5000,
+        "invoice-line/category": "S",
+        "invoice-line/rate-bps": 500
+      }
+    },
+    {
+      "kind": "Record",
+      "name": "line:zero",
+      "id": "line:zero",
+      "entity": "InvoiceLine",
+      "fields": {
+        "invoice-line/number": "3",
+        "invoice-line/quantity": 1,
+        "invoice-line/unit": "C62",
+        "invoice-line/item-name": "Zero-rated goods",
+        "invoice-line/price": 2500,
+        "invoice-line/net": 2500,
+        "invoice-line/category": "Z",
+        "invoice-line/rate-bps": 0
+      }
+    },
+    {
+      "kind": "Record",
+      "name": "vat:standard",
+      "id": "vat:standard",
+      "entity": "VatBreakdown",
+      "fields": {
+        "vat-breakdown/category": "S",
+        "vat-breakdown/rate-bps": 2000,
+        "vat-breakdown/taxable": 10000,
+        "vat-breakdown/tax": 2000
+      }
+    },
+    {
+      "kind": "Record",
+      "name": "vat:reduced",
+      "id": "vat:reduced",
+      "entity": "VatBreakdown",
+      "fields": {
+        "vat-breakdown/category": "S",
+        "vat-breakdown/rate-bps": 500,
+        "vat-breakdown/taxable": 5000,
+        "vat-breakdown/tax": 250
+      }
+    },
+    {
+      "kind": "Record",
+      "name": "vat:zero",
+      "id": "vat:zero",
+      "entity": "VatBreakdown",
+      "fields": {
+        "vat-breakdown/category": "Z",
+        "vat-breakdown/rate-bps": 0,
+        "vat-breakdown/taxable": 2500,
+        "vat-breakdown/tax": 0
+      }
+    },
+    {
+      "kind": "Record",
+      "name": "invoice:mixed",
+      "id": "invoice:mixed",
+      "entity": "Invoice",
+      "fields": {
+        "invoice/specification": "urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0",
+        "invoice/process": "urn:fdc:peppol.eu:2017:poacc:billing:01:1.0",
+        "invoice/number": "INV-001",
+        "invoice/issue-date": "2026-10-17",
+        "invoice/type-code": "380",
+        "invoice/currency": "EUR",
+        "invoice/buyer-reference": "BUYER-1",
+        "invoice/due-date": "2026-11-17",
+        "invoice/seller": "party:seller",
+        "invoice/buyer": "party:buyer",
+        "invoice/lines": [
+          "line:standard",
+          "line:reduced",
+          "line:zero"
+        ],
+        "invoice/breakdowns": [
+          "vat:standard",
+          "vat:reduced",
+          "vat:zero"
+        ],
+        "invoice/line-total": 17500,
+        "invoice/without-vat": 17500,
+        "invoice/vat-total": 2250,
+        "invoice/with-vat": 19750,
+        "invoice/due": 19750
+      }
+    }
+  ],
+  "diagnostics": []
+}
