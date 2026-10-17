@@ -68,13 +68,12 @@ pageClass: forma-index forma-elm
 
 <section id="messages" class="fh-spread fh-tone-blue" aria-labelledby="messages-heading">
 <header class="fh-spread__head">
-<span class="fh-spread__index" aria-hidden="true">01</span>
-<div><p class="fh-spread__kicker">Messages and update</p><h2 id="messages-heading" class="fh-spread__name"><span>(</span>with model command…<span>)</span></h2></div>
+<p class="fh-label"><span>01</span> Messages and update</p>
 <span class="fh-status is-live">Prototype · TypeScript engine</span>
+<h2 id="messages-heading">Adding a message creates an obligation.</h2>
 </header>
 <div class="fh-spread__body">
 <div class="fh-spread__story">
-<p class="fh-spread__title">Adding a message creates an obligation.</p>
 <p><code>msg</code> declares a closed tagged union. Each update case returns <code>(with next-model)</code>, optionally followed by command keywords. Adding a variant without an update case produces a located diagnostic. Wildcard update cases are rejected, so every message stays visible in review.</p>
 <p>Message payloads are checked wherever they are built: command success, error recovery, and view events. A string cannot become <code>GotCount.count</code>. Update is pure; naming a command schedules work without running it.</p>
 <p><code>with</code> keeps the model and its work together. A keyword such as <code>:load-count</code> identifies a declared command; unknown command names are rejected. Ordinary <code>if</code> and <code>let</code> can choose transitions.</p>
@@ -101,13 +100,12 @@ pageClass: forma-index forma-elm
 
 <section id="commands" class="fh-spread fh-tone-red" aria-labelledby="commands-heading">
 <header class="fh-spread__head">
-<span class="fh-spread__index" aria-hidden="true">02</span>
-<div><p class="fh-spread__kicker">Commands</p><h2 id="commands-heading" class="fh-spread__name">Every declared failure becomes a message.</h2></div>
+<p class="fh-label"><span>02</span> Commands</p>
 <span class="fh-status is-live">Prototype · TypeScript engine</span>
+<h2 id="commands-heading">Every declared failure becomes a message.</h2>
 </header>
 <div class="fh-spread__body">
 <div class="fh-spread__story">
-<p class="fh-spread__title">The Elm guarantee, checked.</p>
 <p>Elm's <code>Cmd</code> has no typed failure channel. Here a command wraps an ordinary Forma Effect value with declared success, errors, and service requirements. <code>:ok</code> maps the value to a message. <code>:error</code> names each error and maps its payload to a message. The resulting command has <code>E = never</code>.</p>
 <p>The checker requires a mapping for every error in the operation's declared set, even when a particular implementation never raises it. Catch-all handlers cannot erase that obligation. Services stay in <code>R</code>; TypeScript host code provides the resource layer to Foldkit.</p>
 <p>This covers <strong>typed failures</strong>. Defects, interruption, and exceptions in hand-written service implementations are still Effect runtime concerns. The prototype does not prove totality or eliminate runtime crashes.</p>
@@ -122,13 +120,12 @@ pageClass: forma-index forma-elm
 
 <section id="views" class="fh-spread fh-tone-teal" aria-labelledby="views-heading">
 <header class="fh-spread__head">
-<span class="fh-spread__index" aria-hidden="true">03</span>
-<div><p class="fh-spread__kicker">View</p><h2 id="views-heading" class="fh-spread__name">Describe the screen. Produce messages.</h2></div>
+<p class="fh-label"><span>03</span> View</p>
 <span class="fh-status is-live">Prototype · TypeScript engine</span>
+<h2 id="views-heading">Describe the screen. Produce messages.</h2>
 </header>
 <div class="fh-spread__body">
 <div class="fh-spread__story">
-<p class="fh-spread__title">No services in render.</p>
 <p>The Hiccup tree generates Foldkit <code>HtmlBuilder</code> calls. Text and class expressions are pure functions returning <code>String</code>. Click expressions are pure functions returning <code>Msg</code>. Calling a service or placing an Effect in either position fails the checker; view has no Effect environment.</p>
 <p>The deliberately small surface supports <code>:div</code>, <code>:span</code>, <code>:button</code>, <code>:class</code>, and <code>:on-click</code>. A click contains a message value, evaluated from the current model when rendering. Arbitrary JavaScript handlers, raw HTML, and I/O are outside this vocabulary.</p>
 </div>
@@ -142,13 +139,12 @@ pageClass: forma-index forma-elm
 
 <section id="end-to-end" class="fh-spread fh-tone-amber" aria-labelledby="end-to-end-heading">
 <header class="fh-spread__head">
-<span class="fh-spread__index" aria-hidden="true">04</span>
-<div><p class="fh-spread__kicker">End to end</p><h2 id="end-to-end-heading" class="fh-spread__name">One API contract, both sides.</h2></div>
+<p class="fh-label"><span>04</span> End to end</p>
 <span class="fh-status">Proposed</span>
+<h2 id="end-to-end-heading">One API contract, both sides.</h2>
 </header>
 <div class="fh-spread__body fh-spread__body--stack">
 <div class="fh-spread__story fh-spread__story--wide">
-<p class="fh-spread__title">The database-to-DOM headline is the direction.</p>
 <p>The <a href="/effect/http-api">HttpApi spike</a> already checks server handler contracts against endpoint declarations. This prototype checks frontend operations and messages separately. It does <strong>not</strong> derive client commands from those endpoints or share their declarations across generators.</p>
 <p>The proposed connection would derive client success and error messages from an <code>api</code>. Adding an endpoint error could then add a message variant and make frontend update non-exhaustive. Today you add the message and recovery explicitly; changing an API declaration alone does not change the app.</p>
 </div>

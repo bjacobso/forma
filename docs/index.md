@@ -70,16 +70,12 @@ pageClass: forma-index
 
 <section id="how-it-works" class="fh-spread fh-tone-teal" aria-labelledby="library-heading">
 <header class="fh-spread__head">
-<span class="fh-spread__index" aria-hidden="true">01</span>
-<div>
-<p class="fh-spread__kicker">Vocabulary</p>
-<h2 id="library-heading" class="fh-spread__name"><span>(</span>form<span> …)</span></h2>
-</div>
+<p class="fh-label"><span>01</span> Vocabulary</p>
 <span class="fh-status">Stored output in the browser</span>
+<h2 id="library-heading">The vocabulary is a program.</h2>
 </header>
 <div class="fh-spread__body">
 <div class="fh-spread__story">
-<p class="fh-spread__title">The vocabulary is a program.</p>
 <div class="fh-story">
 <span class="fh-story__label">The template nobody owns</span>
 <p>Adding one field to <code>Employee</code> means editing a JSON Schema, an OpenAPI spec, a TypeScript interface, and a Handlebars template whose author left two years ago. An agent will make all four edits, and nothing checks that they agree.</p>
@@ -108,16 +104,12 @@ pageClass: forma-index
 
 <section id="contracts" class="fh-spread fh-tone-blue" aria-labelledby="contract-heading">
 <header class="fh-spread__head">
-<span class="fh-spread__index" aria-hidden="true">02</span>
-<div>
-<p class="fh-spread__kicker">Contracts</p>
-<h2 id="contract-heading" class="fh-spread__name">Effect&lt;A, E, R&gt;</h2>
-</div>
+<p class="fh-label"><span>02</span> Contracts</p>
 <span class="fh-status is-live">Live · TypeScript engine</span>
+<h2 id="contract-heading">The type is the budget.</h2>
 </header>
 <div class="fh-spread__body">
 <div class="fh-spread__story">
-<p class="fh-spread__title">The type is the budget.</p>
 <div class="fh-story">
 <span class="fh-story__label">The unsupervised change</span>
 <p>An agent's one-line change makes a helper print to the console. The diff looks harmless. Nobody can see that the function now depends on a service that can fail.</p>
@@ -149,16 +141,12 @@ pageClass: forma-index
 
 <section id="diagnostics" class="fh-spread fh-tone-red" aria-labelledby="errors-heading">
 <header class="fh-spread__head">
-<span class="fh-spread__index" aria-hidden="true">03</span>
-<div>
-<p class="fh-spread__kicker">Repair loop</p>
-<h2 id="errors-heading" class="fh-spread__name">log.forma:8</h2>
-</div>
+<p class="fh-label"><span>03</span> Repair loop</p>
 <span class="fh-status is-live">Live · Effect checker</span>
+<h2 id="errors-heading">Don't review agent work. Elaborate it.</h2>
 </header>
 <div class="fh-spread__body fh-spread__body--stack">
 <div class="fh-spread__story fh-spread__story--wide">
-<p class="fh-spread__title">Don't review agent work. Elaborate it.</p>
 <div class="fh-story">
 <span class="fh-story__label">The generated stack trace</span>
 <p><code>tsc</code> fails on line 412 of <code>generated.ts</code>. The mistake was a missing entry in a YAML file three directories away, and the error never mentions it. A person has to interpret that. An agent guesses.</p>
@@ -219,15 +207,11 @@ pageClass: forma-index
 
 <section id="compose" class="fh-spread fh-tone-amber" aria-labelledby="compose-heading">
 <header class="fh-spread__head">
-<span class="fh-spread__index" aria-hidden="true">05</span>
-<div>
-<p class="fh-spread__kicker">Composition</p>
-<h2 id="compose-heading" class="fh-spread__name">(Refers ToolDecl)</h2>
-</div>
+<p class="fh-label"><span>05</span> Composition</p>
 <span class="fh-status">Engine output · checked in CI</span>
+<h2 id="compose-heading">Preludes compose.</h2>
 </header>
 <div class="fh-spread__story fh-spread__story--wide">
-<p class="fh-spread__title">Preludes compose.</p>
 <div class="fh-story">
 <span class="fh-story__label">The stack nobody checked</span>
 <p>One team's tool catalog, another team's agent permissions, and an agent wiring them together. A permission names a tool that was renamed last week, and you find out when the agent tries to call it.</p>
