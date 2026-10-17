@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Accepted design; implementation in progress |
+| Status | Implemented; pre-alpha |
 | Created | 2026-10-17 |
 | Scope | Lisp source, Markdown fences, CLI, language server, editor and playground |
 
@@ -65,6 +65,10 @@ The host JSON ABI exposes formatting. LSP formatting is enabled by default,
 returns minimal edits, supports ranges and formats Markdown fences. Editor and
 playground commands use the same formatter. No deployment is part of this work.
 
+The CodeMirror editors use Ctrl/Cmd+Shift+F. The structural workbench uses F8
+in its source pane because its native editor reserves Ctrl/Cmd+F variants for
+search. Both also expose Format buttons.
+
 ## Validation and rollout
 
 Implement in eight independently checked commits: this RFC, shared extractor,
@@ -76,3 +80,5 @@ variation and performance on the largest prelude.
 The final commit alone reformats the corpus, regenerates prelude sources,
 surfaces and homepage snippets, and records the reviewed golden differences.
 Documentation must distinguish shipped behavior from planned behavior throughout.
+
+The corpus migration and golden review are recorded in [Formatter migration](../formatter-migration.md).

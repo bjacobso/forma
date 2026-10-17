@@ -15,9 +15,9 @@
               {
                 "name": "outcome",
                 "span": {
-                  "endOffset": 1702,
+                  "endOffset": 1666,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1670
+                  "startOffset": 1634
                 },
                 "value": {
                   "args": [
@@ -27,18 +27,18 @@
                           "kind": "Var",
                           "name": "user",
                           "span": {
-                            "endOffset": 1696,
+                            "endOffset": 1660,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1692
+                            "startOffset": 1656
                           }
                         },
                         {
                           "kind": "Var",
                           "name": "key",
                           "span": {
-                            "endOffset": 1700,
+                            "endOffset": 1664,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1697
+                            "startOffset": 1661
                           }
                         }
                       ],
@@ -53,17 +53,17 @@
                           "Storage.read"
                         ],
                         "span": {
-                          "endOffset": 458,
+                          "endOffset": 452,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 407
+                          "startOffset": 401
                         },
                         "success": {
                           "kind": "Primitive",
                           "name": "String",
                           "span": {
-                            "endOffset": 421,
+                            "endOffset": 415,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 415
+                            "startOffset": 409
                           }
                         }
                       },
@@ -71,9 +71,9 @@
                       "method": "read",
                       "service": "Storage",
                       "span": {
-                        "endOffset": 1701,
+                        "endOffset": 1665,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1678
+                        "startOffset": 1642
                       }
                     }
                   ],
@@ -84,26 +84,26 @@
                       "Storage.read"
                     ],
                     "span": {
-                      "endOffset": 1610,
+                      "endOffset": 1580,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1577
+                      "startOffset": 1547
                     },
                     "success": {
                       "kind": "Primitive",
                       "name": "String",
                       "span": {
-                        "endOffset": 1591,
+                        "endOffset": 1561,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1585
+                        "startOffset": 1555
                       }
                     }
                   },
                   "kind": "Combinator",
                   "name": "result",
                   "span": {
-                    "endOffset": 1702,
+                    "endOffset": 1666,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1670
+                    "startOffset": 1634
                   }
                 }
               }
@@ -119,25 +119,25 @@
                         "Storage.read"
                       ],
                       "span": {
-                        "endOffset": 1610,
+                        "endOffset": 1580,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1577
+                        "startOffset": 1547
                       },
                       "success": {
                         "kind": "Primitive",
                         "name": "String",
                         "span": {
-                          "endOffset": 1591,
+                          "endOffset": 1561,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 1585
+                          "startOffset": 1555
                         }
                       }
                     },
                     "kind": "Succeed",
                     "span": {
-                      "endOffset": 1780,
+                      "endOffset": 1738,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1752
+                      "startOffset": 1710
                     },
                     "value": {
                       "items": [
@@ -145,17 +145,17 @@
                           "kind": "Var",
                           "name": "str",
                           "span": {
-                            "endOffset": 1765,
+                            "endOffset": 1723,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1762
+                            "startOffset": 1720
                           }
                         },
                         {
                           "kind": "Literal",
                           "span": {
-                            "endOffset": 1772,
+                            "endOffset": 1730,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1766
+                            "startOffset": 1724
                           },
                           "value": "ok: "
                         },
@@ -163,17 +163,17 @@
                           "kind": "Var",
                           "name": "value",
                           "span": {
-                            "endOffset": 1778,
+                            "endOffset": 1736,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1773
+                            "startOffset": 1731
                           }
                         }
                       ],
                       "kind": "List",
                       "span": {
-                        "endOffset": 1779,
+                        "endOffset": 1737,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1761
+                        "startOffset": 1719
                       }
                     }
                   },
@@ -183,32 +183,32 @@
                         "kind": "Var",
                         "name": "Ok",
                         "span": {
-                          "endOffset": 1738,
+                          "endOffset": 1696,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 1736
+                          "startOffset": 1694
                         }
                       },
                       {
                         "kind": "Var",
                         "name": "value",
                         "span": {
-                          "endOffset": 1744,
+                          "endOffset": 1702,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 1739
+                          "startOffset": 1697
                         }
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 1745,
+                      "endOffset": 1703,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1735
+                      "startOffset": 1693
                     }
                   },
                   "span": {
-                    "endOffset": 1745,
+                    "endOffset": 1703,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1735
+                    "startOffset": 1693
                   }
                 },
                 {
@@ -220,25 +220,25 @@
                         "Storage.read"
                       ],
                       "span": {
-                        "endOffset": 1610,
+                        "endOffset": 1580,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1577
+                        "startOffset": 1547
                       },
                       "success": {
                         "kind": "Primitive",
                         "name": "String",
                         "span": {
-                          "endOffset": 1591,
+                          "endOffset": 1561,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 1585
+                          "startOffset": 1555
                         }
                       }
                     },
                     "kind": "Succeed",
                     "span": {
-                      "endOffset": 1848,
+                      "endOffset": 1806,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1805
+                      "startOffset": 1763
                     },
                     "value": {
                       "items": [
@@ -246,17 +246,17 @@
                           "kind": "Var",
                           "name": "str",
                           "span": {
-                            "endOffset": 1818,
+                            "endOffset": 1776,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1815
+                            "startOffset": 1773
                           }
                         },
                         {
                           "kind": "Literal",
                           "span": {
-                            "endOffset": 1828,
+                            "endOffset": 1786,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1819
+                            "startOffset": 1777
                           },
                           "value": "error: "
                         },
@@ -266,18 +266,18 @@
                               "kind": "Var",
                               "name": "get",
                               "span": {
-                                "endOffset": 1833,
+                                "endOffset": 1791,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 1830
+                                "startOffset": 1788
                               }
                             },
                             {
                               "kind": "Var",
                               "name": "error",
                               "span": {
-                                "endOffset": 1839,
+                                "endOffset": 1797,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 1834
+                                "startOffset": 1792
                               }
                             },
                             {
@@ -287,25 +287,25 @@
                                 "name": ":_tag"
                               },
                               "span": {
-                                "endOffset": 1845,
+                                "endOffset": 1803,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 1840
+                                "startOffset": 1798
                               }
                             }
                           ],
                           "kind": "List",
                           "span": {
-                            "endOffset": 1846,
+                            "endOffset": 1804,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1829
+                            "startOffset": 1787
                           }
                         }
                       ],
                       "kind": "List",
                       "span": {
-                        "endOffset": 1847,
+                        "endOffset": 1805,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1814
+                        "startOffset": 1772
                       }
                     }
                   },
@@ -315,32 +315,32 @@
                         "kind": "Var",
                         "name": "Err",
                         "span": {
-                          "endOffset": 1791,
+                          "endOffset": 1749,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 1788
+                          "startOffset": 1746
                         }
                       },
                       {
                         "kind": "Var",
                         "name": "error",
                         "span": {
-                          "endOffset": 1797,
+                          "endOffset": 1755,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 1792
+                          "startOffset": 1750
                         }
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 1798,
+                      "endOffset": 1756,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1787
+                      "startOffset": 1745
                     }
                   },
                   "span": {
-                    "endOffset": 1798,
+                    "endOffset": 1756,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1787
+                    "startOffset": 1745
                   }
                 }
               ],
@@ -351,33 +351,33 @@
                   "Storage.read"
                 ],
                 "span": {
-                  "endOffset": 1610,
+                  "endOffset": 1580,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1577
+                  "startOffset": 1547
                 },
                 "success": {
                   "kind": "Primitive",
                   "name": "String",
                   "span": {
-                    "endOffset": 1591,
+                    "endOffset": 1561,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1585
+                    "startOffset": 1555
                   }
                 }
               },
               "kind": "Match",
               "span": {
-                "endOffset": 1849,
+                "endOffset": 1807,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1708
+                "startOffset": 1672
               },
               "value": {
                 "kind": "Var",
                 "name": "outcome",
                 "span": {
-                  "endOffset": 1728,
+                  "endOffset": 1686,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1721
+                  "startOffset": 1679
                 }
               }
             },
@@ -388,25 +388,25 @@
                 "Storage.read"
               ],
               "span": {
-                "endOffset": 1610,
+                "endOffset": 1580,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1577
+                "startOffset": 1547
               },
               "success": {
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1591,
+                  "endOffset": 1561,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1585
+                  "startOffset": 1555
                 }
               }
             },
             "kind": "Do",
             "span": {
-              "endOffset": 1850,
+              "endOffset": 1808,
               "sourceId": "surfaces/effect-typescript/typed-errors",
-              "startOffset": 1652
+              "startOffset": 1620
             }
           },
           "effect": {
@@ -416,17 +416,17 @@
               "Storage.read"
             ],
             "span": {
-              "endOffset": 1610,
+              "endOffset": 1580,
               "sourceId": "surfaces/effect-typescript/typed-errors",
-              "startOffset": 1577
+              "startOffset": 1547
             },
             "success": {
               "kind": "Primitive",
               "name": "String",
               "span": {
-                "endOffset": 1591,
+                "endOffset": 1561,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1585
+                "startOffset": 1555
               }
             }
           },
@@ -439,9 +439,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1569,
+                  "endOffset": 1539,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1563
+                  "startOffset": 1533
                 }
               }
             },
@@ -451,9 +451,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1576,
+                  "endOffset": 1546,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1570
+                  "startOffset": 1540
                 }
               }
             }
@@ -461,9 +461,9 @@
         },
         "sourceId": "surfaces/effect-typescript/typed-errors",
         "span": {
-          "endOffset": 1851,
+          "endOffset": 1809,
           "sourceId": "surfaces/effect-typescript/typed-errors",
-          "startOffset": 1613
+          "startOffset": 1583
         }
       },
       {
@@ -482,18 +482,18 @@
                   "kind": "Var",
                   "name": "user",
                   "span": {
-                    "endOffset": 918,
+                    "endOffset": 898,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 914
+                    "startOffset": 894
                   }
                 },
                 {
                   "kind": "Var",
                   "name": "key",
                   "span": {
-                    "endOffset": 922,
+                    "endOffset": 902,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 919
+                    "startOffset": 899
                   }
                 }
               ],
@@ -508,17 +508,17 @@
                   "Storage.read"
                 ],
                 "span": {
-                  "endOffset": 458,
+                  "endOffset": 452,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 407
+                  "startOffset": 401
                 },
                 "success": {
                   "kind": "Primitive",
                   "name": "String",
                   "span": {
-                    "endOffset": 421,
+                    "endOffset": 415,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 415
+                    "startOffset": 409
                   }
                 }
               },
@@ -526,9 +526,9 @@
               "method": "read",
               "service": "Storage",
               "span": {
-                "endOffset": 923,
+                "endOffset": 903,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 900
+                "startOffset": 880
               }
             },
             "effect": {
@@ -538,17 +538,17 @@
                 "Storage.read"
               ],
               "span": {
-                "endOffset": 847,
+                "endOffset": 833,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 814
+                "startOffset": 800
               },
               "success": {
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 828,
+                  "endOffset": 814,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 822
+                  "startOffset": 808
                 }
               }
             },
@@ -560,25 +560,25 @@
                   "Storage.read"
                 ],
                 "span": {
-                  "endOffset": 847,
+                  "endOffset": 833,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 814
+                  "startOffset": 800
                 },
                 "success": {
                   "kind": "Primitive",
                   "name": "String",
                   "span": {
-                    "endOffset": 828,
+                    "endOffset": 814,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 822
+                    "startOffset": 808
                   }
                 }
               },
               "kind": "Succeed",
               "span": {
-                "endOffset": 990,
+                "endOffset": 970,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 942
+                "startOffset": 922
               },
               "value": {
                 "items": [
@@ -586,17 +586,17 @@
                     "kind": "Var",
                     "name": "str",
                     "span": {
-                      "endOffset": 955,
+                      "endOffset": 935,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 952
+                      "startOffset": 932
                     }
                   },
                   {
                     "kind": "Literal",
                     "span": {
-                      "endOffset": 970,
+                      "endOffset": 950,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 956
+                      "startOffset": 936
                     },
                     "value": "failed with "
                   },
@@ -606,18 +606,18 @@
                         "kind": "Var",
                         "name": "get",
                         "span": {
-                          "endOffset": 975,
+                          "endOffset": 955,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 972
+                          "startOffset": 952
                         }
                       },
                       {
                         "kind": "Var",
                         "name": "error",
                         "span": {
-                          "endOffset": 981,
+                          "endOffset": 961,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 976
+                          "startOffset": 956
                         }
                       },
                       {
@@ -627,33 +627,33 @@
                           "name": ":_tag"
                         },
                         "span": {
-                          "endOffset": 987,
+                          "endOffset": 967,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 982
+                          "startOffset": 962
                         }
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 988,
+                      "endOffset": 968,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 971
+                      "startOffset": 951
                     }
                   }
                 ],
                 "kind": "List",
                 "span": {
-                  "endOffset": 989,
+                  "endOffset": 969,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 951
+                  "startOffset": 931
                 }
               }
             },
             "kind": "CatchAll",
             "span": {
-              "endOffset": 991,
+              "endOffset": 971,
               "sourceId": "surfaces/effect-typescript/typed-errors",
-              "startOffset": 889
+              "startOffset": 873
             }
           },
           "effect": {
@@ -663,17 +663,17 @@
               "Storage.read"
             ],
             "span": {
-              "endOffset": 847,
+              "endOffset": 833,
               "sourceId": "surfaces/effect-typescript/typed-errors",
-              "startOffset": 814
+              "startOffset": 800
             },
             "success": {
               "kind": "Primitive",
               "name": "String",
               "span": {
-                "endOffset": 828,
+                "endOffset": 814,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 822
+                "startOffset": 808
               }
             }
           },
@@ -686,9 +686,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 806,
+                  "endOffset": 792,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 800
+                  "startOffset": 786
                 }
               }
             },
@@ -698,9 +698,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 813,
+                  "endOffset": 799,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 807
+                  "startOffset": 793
                 }
               }
             }
@@ -708,9 +708,9 @@
         },
         "sourceId": "surfaces/effect-typescript/typed-errors",
         "span": {
-          "endOffset": 992,
+          "endOffset": 972,
           "sourceId": "surfaces/effect-typescript/typed-errors",
-          "startOffset": 850
+          "startOffset": 836
         }
       },
       {
@@ -729,18 +729,18 @@
                     "kind": "Var",
                     "name": "user",
                     "span": {
-                      "endOffset": 1534,
+                      "endOffset": 1504,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1530
+                      "startOffset": 1500
                     }
                   },
                   {
                     "kind": "Var",
                     "name": "key",
                     "span": {
-                      "endOffset": 1538,
+                      "endOffset": 1508,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1535
+                      "startOffset": 1505
                     }
                   }
                 ],
@@ -755,17 +755,17 @@
                     "Storage.read"
                   ],
                   "span": {
-                    "endOffset": 458,
+                    "endOffset": 452,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 407
+                    "startOffset": 401
                   },
                   "success": {
                     "kind": "Primitive",
                     "name": "String",
                     "span": {
-                      "endOffset": 421,
+                      "endOffset": 415,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 415
+                      "startOffset": 409
                     }
                   }
                 },
@@ -773,9 +773,9 @@
                 "method": "read",
                 "service": "Storage",
                 "span": {
-                  "endOffset": 1539,
+                  "endOffset": 1509,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1516
+                  "startOffset": 1486
                 }
               }
             ],
@@ -786,18 +786,18 @@
                 "Storage.read"
               ],
               "span": {
-                "endOffset": 1474,
+                "endOffset": 1444,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1432
+                "startOffset": 1402
               },
               "success": {
                 "item": {
                   "kind": "Primitive",
                   "name": "String",
                   "span": {
-                    "endOffset": 1454,
+                    "endOffset": 1424,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1448
+                    "startOffset": 1418
                   }
                 },
                 "kind": "Option"
@@ -806,9 +806,9 @@
             "kind": "Combinator",
             "name": "option",
             "span": {
-              "endOffset": 1540,
+              "endOffset": 1510,
               "sourceId": "surfaces/effect-typescript/typed-errors",
-              "startOffset": 1508
+              "startOffset": 1478
             }
           },
           "effect": {
@@ -818,18 +818,18 @@
               "Storage.read"
             ],
             "span": {
-              "endOffset": 1474,
+              "endOffset": 1444,
               "sourceId": "surfaces/effect-typescript/typed-errors",
-              "startOffset": 1432
+              "startOffset": 1402
             },
             "success": {
               "item": {
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1454,
+                  "endOffset": 1424,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1448
+                  "startOffset": 1418
                 }
               },
               "kind": "Option"
@@ -844,9 +844,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1424,
+                  "endOffset": 1394,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1418
+                  "startOffset": 1388
                 }
               }
             },
@@ -856,9 +856,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1431,
+                  "endOffset": 1401,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1425
+                  "startOffset": 1395
                 }
               }
             }
@@ -866,9 +866,9 @@
         },
         "sourceId": "surfaces/effect-typescript/typed-errors",
         "span": {
-          "endOffset": 1541,
+          "endOffset": 1511,
           "sourceId": "surfaces/effect-typescript/typed-errors",
-          "startOffset": 1477
+          "startOffset": 1447
         }
       },
       {
@@ -887,18 +887,18 @@
                     "kind": "Var",
                     "name": "user",
                     "span": {
-                      "endOffset": 1978,
+                      "endOffset": 1936,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1974
+                      "startOffset": 1932
                     }
                   },
                   {
                     "kind": "Var",
                     "name": "key",
                     "span": {
-                      "endOffset": 1982,
+                      "endOffset": 1940,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1979
+                      "startOffset": 1937
                     }
                   }
                 ],
@@ -913,17 +913,17 @@
                     "Storage.read"
                   ],
                   "span": {
-                    "endOffset": 458,
+                    "endOffset": 452,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 407
+                    "startOffset": 401
                   },
                   "success": {
                     "kind": "Primitive",
                     "name": "String",
                     "span": {
-                      "endOffset": 421,
+                      "endOffset": 415,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 415
+                      "startOffset": 409
                     }
                   }
                 },
@@ -931,9 +931,9 @@
                 "method": "read",
                 "service": "Storage",
                 "span": {
-                  "endOffset": 1983,
+                  "endOffset": 1941,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1960
+                  "startOffset": 1918
                 }
               }
             ],
@@ -944,26 +944,26 @@
                 "Storage.read"
               ],
               "span": {
-                "endOffset": 1918,
+                "endOffset": 1876,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1885
+                "startOffset": 1843
               },
               "success": {
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1899,
+                  "endOffset": 1857,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1893
+                  "startOffset": 1851
                 }
               }
             },
             "kind": "Combinator",
             "name": "or-die",
             "span": {
-              "endOffset": 1984,
+              "endOffset": 1942,
               "sourceId": "surfaces/effect-typescript/typed-errors",
-              "startOffset": 1952
+              "startOffset": 1910
             }
           },
           "effect": {
@@ -973,17 +973,17 @@
               "Storage.read"
             ],
             "span": {
-              "endOffset": 1918,
+              "endOffset": 1876,
               "sourceId": "surfaces/effect-typescript/typed-errors",
-              "startOffset": 1885
+              "startOffset": 1843
             },
             "success": {
               "kind": "Primitive",
               "name": "String",
               "span": {
-                "endOffset": 1899,
+                "endOffset": 1857,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1893
+                "startOffset": 1851
               }
             }
           },
@@ -996,9 +996,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1877,
+                  "endOffset": 1835,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1871
+                  "startOffset": 1829
                 }
               }
             },
@@ -1008,9 +1008,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1884,
+                  "endOffset": 1842,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1878
+                  "startOffset": 1836
                 }
               }
             }
@@ -1018,9 +1018,9 @@
         },
         "sourceId": "surfaces/effect-typescript/typed-errors",
         "span": {
-          "endOffset": 1985,
+          "endOffset": 1943,
           "sourceId": "surfaces/effect-typescript/typed-errors",
-          "startOffset": 1921
+          "startOffset": 1879
         }
       },
       {
@@ -1038,18 +1038,18 @@
                   "kind": "Var",
                   "name": "user",
                   "span": {
-                    "endOffset": 620,
+                    "endOffset": 606,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 616
+                    "startOffset": 602
                   }
                 },
                 {
                   "kind": "Var",
                   "name": "key",
                   "span": {
-                    "endOffset": 624,
+                    "endOffset": 610,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 621
+                    "startOffset": 607
                   }
                 }
               ],
@@ -1064,17 +1064,17 @@
                   "Storage.read"
                 ],
                 "span": {
-                  "endOffset": 458,
+                  "endOffset": 452,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 407
+                  "startOffset": 401
                 },
                 "success": {
                   "kind": "Primitive",
                   "name": "String",
                   "span": {
-                    "endOffset": 421,
+                    "endOffset": 415,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 415
+                    "startOffset": 409
                   }
                 }
               },
@@ -1082,9 +1082,9 @@
               "method": "read",
               "service": "Storage",
               "span": {
-                "endOffset": 625,
+                "endOffset": 611,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 602
+                "startOffset": 588
               }
             },
             "effect": {
@@ -1096,17 +1096,17 @@
                 "Storage.read"
               ],
               "span": {
-                "endOffset": 547,
+                "endOffset": 539,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 503
+                "startOffset": 495
               },
               "success": {
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 517,
+                  "endOffset": 509,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 511
+                  "startOffset": 503
                 }
               }
             },
@@ -1124,25 +1124,25 @@
                       "Storage.read"
                     ],
                     "span": {
-                      "endOffset": 547,
+                      "endOffset": 539,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 503
+                      "startOffset": 495
                     },
                     "success": {
                       "kind": "Primitive",
                       "name": "String",
                       "span": {
-                        "endOffset": 517,
+                        "endOffset": 509,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 511
+                        "startOffset": 503
                       }
                     }
                   },
                   "kind": "Succeed",
                   "span": {
-                    "endOffset": 693,
+                    "endOffset": 679,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 653
+                    "startOffset": 639
                   },
                   "value": {
                     "items": [
@@ -1150,17 +1150,17 @@
                         "kind": "Var",
                         "name": "str",
                         "span": {
-                          "endOffset": 666,
+                          "endOffset": 652,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 663
+                          "startOffset": 649
                         }
                       },
                       {
                         "kind": "Literal",
                         "span": {
-                          "endOffset": 672,
+                          "endOffset": 658,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 667
+                          "startOffset": 653
                         },
                         "value": "no "
                       },
@@ -1170,18 +1170,18 @@
                             "kind": "Var",
                             "name": "get",
                             "span": {
-                              "endOffset": 677,
+                              "endOffset": 663,
                               "sourceId": "surfaces/effect-typescript/typed-errors",
-                              "startOffset": 674
+                              "startOffset": 660
                             }
                           },
                           {
                             "kind": "Var",
                             "name": "missing",
                             "span": {
-                              "endOffset": 685,
+                              "endOffset": 671,
                               "sourceId": "surfaces/effect-typescript/typed-errors",
-                              "startOffset": 678
+                              "startOffset": 664
                             }
                           },
                           {
@@ -1191,32 +1191,32 @@
                               "name": ":key"
                             },
                             "span": {
-                              "endOffset": 690,
+                              "endOffset": 676,
                               "sourceId": "surfaces/effect-typescript/typed-errors",
-                              "startOffset": 686
+                              "startOffset": 672
                             }
                           }
                         ],
                         "kind": "List",
                         "span": {
-                          "endOffset": 691,
+                          "endOffset": 677,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 673
+                          "startOffset": 659
                         }
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 692,
+                      "endOffset": 678,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 662
+                      "startOffset": 648
                     }
                   }
                 },
                 "span": {
-                  "endOffset": 648,
+                  "endOffset": 634,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 630
+                  "startOffset": 616
                 }
               },
               {
@@ -1232,25 +1232,25 @@
                       "Storage.read"
                     ],
                     "span": {
-                      "endOffset": 547,
+                      "endOffset": 539,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 503
+                      "startOffset": 495
                     },
                     "success": {
                       "kind": "Primitive",
                       "name": "String",
                       "span": {
-                        "endOffset": 517,
+                        "endOffset": 509,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 511
+                        "startOffset": 503
                       }
                     }
                   },
                   "kind": "Succeed",
                   "span": {
-                    "endOffset": 776,
+                    "endOffset": 762,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 721
+                    "startOffset": 707
                   },
                   "value": {
                     "items": [
@@ -1258,9 +1258,9 @@
                         "kind": "Var",
                         "name": "str",
                         "span": {
-                          "endOffset": 734,
+                          "endOffset": 720,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 731
+                          "startOffset": 717
                         }
                       },
                       {
@@ -1269,18 +1269,18 @@
                             "kind": "Var",
                             "name": "get",
                             "span": {
-                              "endOffset": 739,
+                              "endOffset": 725,
                               "sourceId": "surfaces/effect-typescript/typed-errors",
-                              "startOffset": 736
+                              "startOffset": 722
                             }
                           },
                           {
                             "kind": "Var",
                             "name": "denied",
                             "span": {
-                              "endOffset": 746,
+                              "endOffset": 732,
                               "sourceId": "surfaces/effect-typescript/typed-errors",
-                              "startOffset": 740
+                              "startOffset": 726
                             }
                           },
                           {
@@ -1290,25 +1290,25 @@
                               "name": ":user"
                             },
                             "span": {
-                              "endOffset": 752,
+                              "endOffset": 738,
                               "sourceId": "surfaces/effect-typescript/typed-errors",
-                              "startOffset": 747
+                              "startOffset": 733
                             }
                           }
                         ],
                         "kind": "List",
                         "span": {
-                          "endOffset": 753,
+                          "endOffset": 739,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 735
+                          "startOffset": 721
                         }
                       },
                       {
                         "kind": "Literal",
                         "span": {
-                          "endOffset": 770,
+                          "endOffset": 756,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 754
+                          "startOffset": 740
                         },
                         "value": " may not read "
                       },
@@ -1316,32 +1316,32 @@
                         "kind": "Var",
                         "name": "key",
                         "span": {
-                          "endOffset": 774,
+                          "endOffset": 760,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 771
+                          "startOffset": 757
                         }
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 775,
+                      "endOffset": 761,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 730
+                      "startOffset": 716
                     }
                   }
                 },
                 "span": {
-                  "endOffset": 716,
+                  "endOffset": 702,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 698
+                  "startOffset": 684
                 }
               }
             ],
             "kind": "CatchTags",
             "span": {
-              "endOffset": 777,
+              "endOffset": 763,
               "sourceId": "surfaces/effect-typescript/typed-errors",
-              "startOffset": 591
+              "startOffset": 581
             }
           },
           "effect": {
@@ -1353,17 +1353,17 @@
               "Storage.read"
             ],
             "span": {
-              "endOffset": 547,
+              "endOffset": 539,
               "sourceId": "surfaces/effect-typescript/typed-errors",
-              "startOffset": 503
+              "startOffset": 495
             },
             "success": {
               "kind": "Primitive",
               "name": "String",
               "span": {
-                "endOffset": 517,
+                "endOffset": 509,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 511
+                "startOffset": 503
               }
             }
           },
@@ -1376,9 +1376,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 495,
+                  "endOffset": 487,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 489
+                  "startOffset": 481
                 }
               }
             },
@@ -1388,9 +1388,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 502,
+                  "endOffset": 494,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 496
+                  "startOffset": 488
                 }
               }
             }
@@ -1398,9 +1398,9 @@
         },
         "sourceId": "surfaces/effect-typescript/typed-errors",
         "span": {
-          "endOffset": 778,
+          "endOffset": 764,
           "sourceId": "surfaces/effect-typescript/typed-errors",
-          "startOffset": 550
+          "startOffset": 542
         }
       },
       {
@@ -1419,18 +1419,18 @@
                     "kind": "Var",
                     "name": "user",
                     "span": {
-                      "endOffset": 1381,
+                      "endOffset": 1351,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1377
+                      "startOffset": 1347
                     }
                   },
                   {
                     "kind": "Var",
                     "name": "key",
                     "span": {
-                      "endOffset": 1385,
+                      "endOffset": 1355,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1382
+                      "startOffset": 1352
                     }
                   }
                 ],
@@ -1445,17 +1445,17 @@
                     "Storage.read"
                   ],
                   "span": {
-                    "endOffset": 458,
+                    "endOffset": 452,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 407
+                    "startOffset": 401
                   },
                   "success": {
                     "kind": "Primitive",
                     "name": "String",
                     "span": {
-                      "endOffset": 421,
+                      "endOffset": 415,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 415
+                      "startOffset": 409
                     }
                   }
                 },
@@ -1463,17 +1463,17 @@
                 "method": "read",
                 "service": "Storage",
                 "span": {
-                  "endOffset": 1386,
+                  "endOffset": 1356,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1363
+                  "startOffset": 1333
                 }
               },
               {
                 "kind": "Literal",
                 "span": {
-                  "endOffset": 1396,
+                  "endOffset": 1366,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1387
+                  "startOffset": 1357
                 },
                 "value": "default"
               }
@@ -1485,26 +1485,26 @@
                 "Storage.read"
               ],
               "span": {
-                "endOffset": 1300,
+                "endOffset": 1272,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1267
+                "startOffset": 1239
               },
               "success": {
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1281,
+                  "endOffset": 1253,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1275
+                  "startOffset": 1247
                 }
               }
             },
             "kind": "Combinator",
             "name": "or-else-succeed",
             "span": {
-              "endOffset": 1397,
+              "endOffset": 1367,
               "sourceId": "surfaces/effect-typescript/typed-errors",
-              "startOffset": 1346
+              "startOffset": 1316
             }
           },
           "effect": {
@@ -1514,17 +1514,17 @@
               "Storage.read"
             ],
             "span": {
-              "endOffset": 1300,
+              "endOffset": 1272,
               "sourceId": "surfaces/effect-typescript/typed-errors",
-              "startOffset": 1267
+              "startOffset": 1239
             },
             "success": {
               "kind": "Primitive",
               "name": "String",
               "span": {
-                "endOffset": 1281,
+                "endOffset": 1253,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1275
+                "startOffset": 1247
               }
             }
           },
@@ -1537,9 +1537,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1259,
+                  "endOffset": 1231,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1253
+                  "startOffset": 1225
                 }
               }
             },
@@ -1549,9 +1549,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1266,
+                  "endOffset": 1238,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1260
+                  "startOffset": 1232
                 }
               }
             }
@@ -1559,9 +1559,9 @@
         },
         "sourceId": "surfaces/effect-typescript/typed-errors",
         "span": {
-          "endOffset": 1398,
+          "endOffset": 1368,
           "sourceId": "surfaces/effect-typescript/typed-errors",
-          "startOffset": 1303
+          "startOffset": 1275
         }
       },
       {
@@ -1580,18 +1580,18 @@
                     "kind": "Var",
                     "name": "user",
                     "span": {
-                      "endOffset": 1150,
+                      "endOffset": 1122,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1146
+                      "startOffset": 1118
                     }
                   },
                   {
                     "kind": "Var",
                     "name": "key",
                     "span": {
-                      "endOffset": 1154,
+                      "endOffset": 1126,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1151
+                      "startOffset": 1123
                     }
                   }
                 ],
@@ -1606,17 +1606,17 @@
                     "Storage.read"
                   ],
                   "span": {
-                    "endOffset": 458,
+                    "endOffset": 452,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 407
+                    "startOffset": 401
                   },
                   "success": {
                     "kind": "Primitive",
                     "name": "String",
                     "span": {
-                      "endOffset": 421,
+                      "endOffset": 415,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 415
+                      "startOffset": 409
                     }
                   }
                 },
@@ -1624,9 +1624,9 @@
                 "method": "read",
                 "service": "Storage",
                 "span": {
-                  "endOffset": 1155,
+                  "endOffset": 1127,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1132
+                  "startOffset": 1104
                 }
               },
               {
@@ -1635,9 +1635,9 @@
                     "kind": "Var",
                     "name": "fn",
                     "span": {
-                      "endOffset": 1163,
+                      "endOffset": 1135,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1161
+                      "startOffset": 1133
                     }
                   },
                   {
@@ -1646,17 +1646,17 @@
                         "kind": "Var",
                         "name": "error",
                         "span": {
-                          "endOffset": 1170,
+                          "endOffset": 1142,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 1165
+                          "startOffset": 1137
                         }
                       }
                     ],
                     "kind": "Vector",
                     "span": {
-                      "endOffset": 1171,
+                      "endOffset": 1143,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1164
+                      "startOffset": 1136
                     }
                   },
                   {
@@ -1665,9 +1665,9 @@
                         "kind": "Var",
                         "name": "StorageError",
                         "span": {
-                          "endOffset": 1185,
+                          "endOffset": 1157,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 1173
+                          "startOffset": 1145
                         }
                       },
                       {
@@ -1680,9 +1680,9 @@
                                 "name": ":detail"
                               },
                               "span": {
-                                "endOffset": 1194,
+                                "endOffset": 1166,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 1187
+                                "startOffset": 1159
                               }
                             },
                             "value": {
@@ -1691,17 +1691,17 @@
                                   "kind": "Var",
                                   "name": "str",
                                   "span": {
-                                    "endOffset": 1199,
+                                    "endOffset": 1171,
                                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                                    "startOffset": 1196
+                                    "startOffset": 1168
                                   }
                                 },
                                 {
                                   "kind": "Literal",
                                   "span": {
-                                    "endOffset": 1207,
+                                    "endOffset": 1179,
                                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                                    "startOffset": 1200
+                                    "startOffset": 1172
                                   },
                                   "value": "read "
                                 },
@@ -1709,51 +1709,51 @@
                                   "kind": "Var",
                                   "name": "key",
                                   "span": {
-                                    "endOffset": 1211,
+                                    "endOffset": 1183,
                                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                                    "startOffset": 1208
+                                    "startOffset": 1180
                                   }
                                 },
                                 {
                                   "kind": "Literal",
                                   "span": {
-                                    "endOffset": 1221,
+                                    "endOffset": 1193,
                                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                                    "startOffset": 1212
+                                    "startOffset": 1184
                                   },
                                   "value": " failed"
                                 }
                               ],
                               "kind": "List",
                               "span": {
-                                "endOffset": 1222,
+                                "endOffset": 1194,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 1195
+                                "startOffset": 1167
                               }
                             }
                           }
                         ],
                         "kind": "Record",
                         "span": {
-                          "endOffset": 1223,
+                          "endOffset": 1195,
                           "sourceId": "surfaces/effect-typescript/typed-errors",
-                          "startOffset": 1186
+                          "startOffset": 1158
                         }
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 1224,
+                      "endOffset": 1196,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 1172
+                      "startOffset": 1144
                     }
                   }
                 ],
                 "kind": "List",
                 "span": {
-                  "endOffset": 1225,
+                  "endOffset": 1197,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1160
+                  "startOffset": 1132
                 }
               }
             ],
@@ -1766,26 +1766,26 @@
                 "Storage.read"
               ],
               "span": {
-                "endOffset": 1076,
+                "endOffset": 1054,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1031
+                "startOffset": 1009
               },
               "success": {
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1045,
+                  "endOffset": 1023,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1039
+                  "startOffset": 1017
                 }
               }
             },
             "kind": "Combinator",
             "name": "map-error",
             "span": {
-              "endOffset": 1226,
+              "endOffset": 1198,
               "sourceId": "surfaces/effect-typescript/typed-errors",
-              "startOffset": 1117
+              "startOffset": 1093
             }
           },
           "effect": {
@@ -1797,17 +1797,17 @@
               "Storage.read"
             ],
             "span": {
-              "endOffset": 1076,
+              "endOffset": 1054,
               "sourceId": "surfaces/effect-typescript/typed-errors",
-              "startOffset": 1031
+              "startOffset": 1009
             },
             "success": {
               "kind": "Primitive",
               "name": "String",
               "span": {
-                "endOffset": 1045,
+                "endOffset": 1023,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1039
+                "startOffset": 1017
               }
             }
           },
@@ -1820,9 +1820,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1023,
+                  "endOffset": 1001,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1017
+                  "startOffset": 995
                 }
               }
             },
@@ -1832,9 +1832,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1030,
+                  "endOffset": 1008,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 1024
+                  "startOffset": 1002
                 }
               }
             }
@@ -1842,9 +1842,9 @@
         },
         "sourceId": "surfaces/effect-typescript/typed-errors",
         "span": {
-          "endOffset": 1227,
+          "endOffset": 1199,
           "sourceId": "surfaces/effect-typescript/typed-errors",
-          "startOffset": 1079
+          "startOffset": 1057
         }
       },
       {
@@ -2004,17 +2004,17 @@
                   "Storage.read"
                 ],
                 "span": {
-                  "endOffset": 458,
+                  "endOffset": 452,
                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                  "startOffset": 407
+                  "startOffset": 401
                 },
                 "success": {
                   "kind": "Primitive",
                   "name": "String",
                   "span": {
-                    "endOffset": 421,
+                    "endOffset": 415,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 415
+                    "startOffset": 409
                   }
                 }
               },
@@ -2026,9 +2026,9 @@
                     "kind": "Primitive",
                     "name": "String",
                     "span": {
-                      "endOffset": 399,
+                      "endOffset": 393,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 393
+                      "startOffset": 387
                     }
                   }
                 },
@@ -2038,9 +2038,9 @@
                     "kind": "Primitive",
                     "name": "String",
                     "span": {
-                      "endOffset": 406,
+                      "endOffset": 400,
                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                      "startOffset": 400
+                      "startOffset": 394
                     }
                   }
                 }
@@ -2051,7 +2051,7 @@
         },
         "sourceId": "surfaces/effect-typescript/typed-errors",
         "span": {
-          "endOffset": 461,
+          "endOffset": 455,
           "sourceId": "surfaces/effect-typescript/typed-errors",
           "startOffset": 352
         }
@@ -2305,9 +2305,9 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 370,
+                "endOffset": 368,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 363
+                "startOffset": 361
               },
               "value": "Storage"
             },
@@ -2316,18 +2316,18 @@
                 {
                   "kind": "keyword",
                   "span": {
-                    "endOffset": 375,
+                    "endOffset": 373,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 374
+                    "startOffset": 372
                   },
                   "value": ":"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 384,
+                    "endOffset": 378,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 380
+                    "startOffset": 374
                   },
                   "value": "read"
                 },
@@ -2336,27 +2336,27 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 392,
+                        "endOffset": 386,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 390
+                        "startOffset": 384
                       },
                       "value": "->"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 399,
+                        "endOffset": 393,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 393
+                        "startOffset": 387
                       },
                       "value": "String"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 406,
+                        "endOffset": 400,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 400
+                        "startOffset": 394
                       },
                       "value": "String"
                     },
@@ -2365,18 +2365,18 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 414,
+                            "endOffset": 408,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 408
+                            "startOffset": 402
                           },
                           "value": "Effect"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 421,
+                            "endOffset": 415,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 415
+                            "startOffset": 409
                           },
                           "value": "String"
                         },
@@ -2385,75 +2385,75 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 431,
+                                "endOffset": 425,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 423
+                                "startOffset": 417
                               },
                               "value": "NotFound"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 441,
+                                "endOffset": 435,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 432
+                                "startOffset": 426
                               },
                               "value": "Forbidden"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 453,
+                                "endOffset": 447,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 442
+                                "startOffset": 436
                               },
                               "value": "RateLimited"
                             }
                           ],
                           "kind": "vector",
                           "span": {
-                            "endOffset": 454,
+                            "endOffset": 448,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 422
+                            "startOffset": 416
                           }
                         },
                         {
                           "items": [],
                           "kind": "vector",
                           "span": {
-                            "endOffset": 457,
+                            "endOffset": 451,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 455
+                            "startOffset": 449
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 458,
+                        "endOffset": 452,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 407
+                        "startOffset": 401
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 459,
+                    "endOffset": 453,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 389
+                    "startOffset": 383
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 460,
+                "endOffset": 454,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 373
+                "startOffset": 371
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 461,
+            "endOffset": 455,
             "sourceId": "surfaces/effect-typescript/typed-errors",
             "startOffset": 352
           }
@@ -2463,18 +2463,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 464,
+                "endOffset": 458,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 463
+                "startOffset": 457
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 482,
+                "endOffset": 474,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 467
+                "startOffset": 459
               },
               "value": "read-or-explain"
             },
@@ -2483,27 +2483,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 488,
+                    "endOffset": 480,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 486
+                    "startOffset": 478
                   },
                   "value": "->"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 495,
+                    "endOffset": 487,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 489
+                    "startOffset": 481
                   },
                   "value": "String"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 502,
+                    "endOffset": 494,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 496
+                    "startOffset": 488
                   },
                   "value": "String"
                 },
@@ -2512,18 +2512,18 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 510,
+                        "endOffset": 502,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 504
+                        "startOffset": 496
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 517,
+                        "endOffset": 509,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 511
+                        "startOffset": 503
                       },
                       "value": "String"
                     },
@@ -2532,18 +2532,18 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 530,
+                            "endOffset": 522,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 519
+                            "startOffset": 511
                           },
                           "value": "RateLimited"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 531,
+                        "endOffset": 523,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 518
+                        "startOffset": 510
                       }
                     },
                     {
@@ -2551,42 +2551,42 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 545,
+                            "endOffset": 537,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 533
+                            "startOffset": 525
                           },
                           "value": "Storage.read"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 546,
+                        "endOffset": 538,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 532
+                        "startOffset": 524
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 547,
+                    "endOffset": 539,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 503
+                    "startOffset": 495
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 548,
+                "endOffset": 540,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 485
+                "startOffset": 477
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 549,
+            "endOffset": 541,
             "sourceId": "surfaces/effect-typescript/typed-errors",
-            "startOffset": 462
+            "startOffset": 456
           }
         },
         {
@@ -2594,18 +2594,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 557,
+                "endOffset": 549,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 551
+                "startOffset": 543
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 575,
+                "endOffset": 565,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 560
+                "startOffset": 550
               },
               "value": "read-or-explain"
             },
@@ -2614,27 +2614,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 583,
+                    "endOffset": 573,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 579
+                    "startOffset": 569
                   },
                   "value": "user"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 587,
+                    "endOffset": 577,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 584
+                    "startOffset": 574
                   },
                   "value": "key"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 588,
+                "endOffset": 578,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 578
+                "startOffset": 568
               }
             },
             {
@@ -2642,9 +2642,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 597,
+                    "endOffset": 587,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 592
+                    "startOffset": 582
                   },
                   "value": "catch"
                 },
@@ -2653,36 +2653,36 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 615,
+                        "endOffset": 601,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 603
+                        "startOffset": 589
                       },
                       "value": "Storage.read"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 620,
+                        "endOffset": 606,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 616
+                        "startOffset": 602
                       },
                       "value": "user"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 624,
+                        "endOffset": 610,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 621
+                        "startOffset": 607
                       },
                       "value": "key"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 625,
+                    "endOffset": 611,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 602
+                    "startOffset": 588
                   }
                 },
                 {
@@ -2690,27 +2690,27 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 639,
+                        "endOffset": 625,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 631
+                        "startOffset": 617
                       },
                       "value": "NotFound"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 647,
+                        "endOffset": 633,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 640
+                        "startOffset": 626
                       },
                       "value": "missing"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 648,
+                    "endOffset": 634,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 630
+                    "startOffset": 616
                   }
                 },
                 {
@@ -2718,9 +2718,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 661,
+                        "endOffset": 647,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 654
+                        "startOffset": 640
                       },
                       "value": "succeed"
                     },
@@ -2729,18 +2729,18 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 666,
+                            "endOffset": 652,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 663
+                            "startOffset": 649
                           },
                           "value": "str"
                         },
                         {
                           "kind": "string",
                           "span": {
-                            "endOffset": 672,
+                            "endOffset": 658,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 667
+                            "startOffset": 653
                           },
                           "value": "no "
                         },
@@ -2749,52 +2749,52 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 677,
+                                "endOffset": 663,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 674
+                                "startOffset": 660
                               },
                               "value": "get"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 685,
+                                "endOffset": 671,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 678
+                                "startOffset": 664
                               },
                               "value": "missing"
                             },
                             {
                               "kind": "keyword",
                               "span": {
-                                "endOffset": 690,
+                                "endOffset": 676,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 686
+                                "startOffset": 672
                               },
                               "value": ":key"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 691,
+                            "endOffset": 677,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 673
+                            "startOffset": 659
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 692,
+                        "endOffset": 678,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 662
+                        "startOffset": 648
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 693,
+                    "endOffset": 679,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 653
+                    "startOffset": 639
                   }
                 },
                 {
@@ -2802,27 +2802,27 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 708,
+                        "endOffset": 694,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 699
+                        "startOffset": 685
                       },
                       "value": "Forbidden"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 715,
+                        "endOffset": 701,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 709
+                        "startOffset": 695
                       },
                       "value": "denied"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 716,
+                    "endOffset": 702,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 698
+                    "startOffset": 684
                   }
                 },
                 {
@@ -2830,9 +2830,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 729,
+                        "endOffset": 715,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 722
+                        "startOffset": 708
                       },
                       "value": "succeed"
                     },
@@ -2841,9 +2841,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 734,
+                            "endOffset": 720,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 731
+                            "startOffset": 717
                           },
                           "value": "str"
                         },
@@ -2852,86 +2852,86 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 739,
+                                "endOffset": 725,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 736
+                                "startOffset": 722
                               },
                               "value": "get"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 746,
+                                "endOffset": 732,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 740
+                                "startOffset": 726
                               },
                               "value": "denied"
                             },
                             {
                               "kind": "keyword",
                               "span": {
-                                "endOffset": 752,
+                                "endOffset": 738,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 747
+                                "startOffset": 733
                               },
                               "value": ":user"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 753,
+                            "endOffset": 739,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 735
+                            "startOffset": 721
                           }
                         },
                         {
                           "kind": "string",
                           "span": {
-                            "endOffset": 770,
+                            "endOffset": 756,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 754
+                            "startOffset": 740
                           },
                           "value": " may not read "
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 774,
+                            "endOffset": 760,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 771
+                            "startOffset": 757
                           },
                           "value": "key"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 775,
+                        "endOffset": 761,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 730
+                        "startOffset": 716
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 776,
+                    "endOffset": 762,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 721
+                    "startOffset": 707
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 777,
+                "endOffset": 763,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 591
+                "startOffset": 581
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 778,
+            "endOffset": 764,
             "sourceId": "surfaces/effect-typescript/typed-errors",
-            "startOffset": 550
+            "startOffset": 542
           }
         },
         {
@@ -2939,18 +2939,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 781,
+                "endOffset": 767,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 780
+                "startOffset": 766
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 795,
+                "endOffset": 781,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 782
+                "startOffset": 768
               },
               "value": "read-anything"
             },
@@ -2959,27 +2959,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 799,
+                    "endOffset": 785,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 797
+                    "startOffset": 783
                   },
                   "value": "->"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 806,
+                    "endOffset": 792,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 800
+                    "startOffset": 786
                   },
                   "value": "String"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 813,
+                    "endOffset": 799,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 807
+                    "startOffset": 793
                   },
                   "value": "String"
                 },
@@ -2988,18 +2988,18 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 821,
+                        "endOffset": 807,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 815
+                        "startOffset": 801
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 828,
+                        "endOffset": 814,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 822
+                        "startOffset": 808
                       },
                       "value": "String"
                     },
@@ -3007,9 +3007,9 @@
                       "items": [],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 831,
+                        "endOffset": 817,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 829
+                        "startOffset": 815
                       }
                     },
                     {
@@ -3017,42 +3017,42 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 845,
+                            "endOffset": 831,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 833
+                            "startOffset": 819
                           },
                           "value": "Storage.read"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 846,
+                        "endOffset": 832,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 832
+                        "startOffset": 818
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 847,
+                    "endOffset": 833,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 814
+                    "startOffset": 800
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 848,
+                "endOffset": 834,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 796
+                "startOffset": 782
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 849,
+            "endOffset": 835,
             "sourceId": "surfaces/effect-typescript/typed-errors",
-            "startOffset": 779
+            "startOffset": 765
           }
         },
         {
@@ -3060,18 +3060,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 857,
+                "endOffset": 843,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 851
+                "startOffset": 837
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 873,
+                "endOffset": 857,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 860
+                "startOffset": 844
               },
               "value": "read-anything"
             },
@@ -3080,27 +3080,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 881,
+                    "endOffset": 865,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 877
+                    "startOffset": 861
                   },
                   "value": "user"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 885,
+                    "endOffset": 869,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 882
+                    "startOffset": 866
                   },
                   "value": "key"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 886,
+                "endOffset": 870,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 876
+                "startOffset": 860
               }
             },
             {
@@ -3108,9 +3108,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 895,
+                    "endOffset": 879,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 890
+                    "startOffset": 874
                   },
                   "value": "catch"
                 },
@@ -3119,36 +3119,64 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 913,
+                        "endOffset": 893,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 901
+                        "startOffset": 881
                       },
                       "value": "Storage.read"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 918,
+                        "endOffset": 898,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 914
+                        "startOffset": 894
                       },
                       "value": "user"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 922,
+                        "endOffset": 902,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 919
+                        "startOffset": 899
                       },
                       "value": "key"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 923,
+                    "endOffset": 903,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 900
+                    "startOffset": 880
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 910,
+                        "sourceId": "surfaces/effect-typescript/typed-errors",
+                        "startOffset": 909
+                      },
+                      "value": "_"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 916,
+                        "sourceId": "surfaces/effect-typescript/typed-errors",
+                        "startOffset": 911
+                      },
+                      "value": "error"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 917,
+                    "sourceId": "surfaces/effect-typescript/typed-errors",
+                    "startOffset": 908
                   }
                 },
                 {
@@ -3158,35 +3186,7 @@
                       "span": {
                         "endOffset": 930,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 929
-                      },
-                      "value": "_"
-                    },
-                    {
-                      "kind": "symbol",
-                      "span": {
-                        "endOffset": 936,
-                        "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 931
-                      },
-                      "value": "error"
-                    }
-                  ],
-                  "kind": "list",
-                  "span": {
-                    "endOffset": 937,
-                    "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 928
-                  }
-                },
-                {
-                  "items": [
-                    {
-                      "kind": "symbol",
-                      "span": {
-                        "endOffset": 950,
-                        "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 943
+                        "startOffset": 923
                       },
                       "value": "succeed"
                     },
@@ -3195,18 +3195,18 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 955,
+                            "endOffset": 935,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 952
+                            "startOffset": 932
                           },
                           "value": "str"
                         },
                         {
                           "kind": "string",
                           "span": {
-                            "endOffset": 970,
+                            "endOffset": 950,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 956
+                            "startOffset": 936
                           },
                           "value": "failed with "
                         },
@@ -3215,68 +3215,68 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 975,
+                                "endOffset": 955,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 972
+                                "startOffset": 952
                               },
                               "value": "get"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 981,
+                                "endOffset": 961,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 976
+                                "startOffset": 956
                               },
                               "value": "error"
                             },
                             {
                               "kind": "keyword",
                               "span": {
-                                "endOffset": 987,
+                                "endOffset": 967,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 982
+                                "startOffset": 962
                               },
                               "value": ":_tag"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 988,
+                            "endOffset": 968,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 971
+                            "startOffset": 951
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 989,
+                        "endOffset": 969,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 951
+                        "startOffset": 931
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 990,
+                    "endOffset": 970,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 942
+                    "startOffset": 922
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 991,
+                "endOffset": 971,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 889
+                "startOffset": 873
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 992,
+            "endOffset": 972,
             "sourceId": "surfaces/effect-typescript/typed-errors",
-            "startOffset": 850
+            "startOffset": 836
           }
         },
         {
@@ -3284,18 +3284,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 995,
+                "endOffset": 975,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 994
+                "startOffset": 974
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1010,
+                "endOffset": 988,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 998
+                "startOffset": 976
               },
               "value": "read-wrapped"
             },
@@ -3304,27 +3304,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1016,
+                    "endOffset": 994,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1014
+                    "startOffset": 992
                   },
                   "value": "->"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1023,
+                    "endOffset": 1001,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1017
+                    "startOffset": 995
                   },
                   "value": "String"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1030,
+                    "endOffset": 1008,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1024
+                    "startOffset": 1002
                   },
                   "value": "String"
                 },
@@ -3333,18 +3333,18 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1038,
+                        "endOffset": 1016,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1032
+                        "startOffset": 1010
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1045,
+                        "endOffset": 1023,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1039
+                        "startOffset": 1017
                       },
                       "value": "String"
                     },
@@ -3353,18 +3353,18 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1059,
+                            "endOffset": 1037,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1047
+                            "startOffset": 1025
                           },
                           "value": "StorageError"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1060,
+                        "endOffset": 1038,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1046
+                        "startOffset": 1024
                       }
                     },
                     {
@@ -3372,42 +3372,42 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1074,
+                            "endOffset": 1052,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1062
+                            "startOffset": 1040
                           },
                           "value": "Storage.read"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1075,
+                        "endOffset": 1053,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1061
+                        "startOffset": 1039
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1076,
+                    "endOffset": 1054,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1031
+                    "startOffset": 1009
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1077,
+                "endOffset": 1055,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1013
+                "startOffset": 991
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1078,
+            "endOffset": 1056,
             "sourceId": "surfaces/effect-typescript/typed-errors",
-            "startOffset": 993
+            "startOffset": 973
           }
         },
         {
@@ -3415,18 +3415,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1086,
+                "endOffset": 1064,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1080
+                "startOffset": 1058
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1101,
+                "endOffset": 1077,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1089
+                "startOffset": 1065
               },
               "value": "read-wrapped"
             },
@@ -3435,27 +3435,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1109,
+                    "endOffset": 1085,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1105
+                    "startOffset": 1081
                   },
                   "value": "user"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1113,
+                    "endOffset": 1089,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1110
+                    "startOffset": 1086
                   },
                   "value": "key"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 1114,
+                "endOffset": 1090,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1104
+                "startOffset": 1080
               }
             },
             {
@@ -3463,9 +3463,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1127,
+                    "endOffset": 1103,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1118
+                    "startOffset": 1094
                   },
                   "value": "map-error"
                 },
@@ -3474,36 +3474,36 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1145,
+                        "endOffset": 1117,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1133
+                        "startOffset": 1105
                       },
                       "value": "Storage.read"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1150,
+                        "endOffset": 1122,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1146
+                        "startOffset": 1118
                       },
                       "value": "user"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1154,
+                        "endOffset": 1126,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1151
+                        "startOffset": 1123
                       },
                       "value": "key"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1155,
+                    "endOffset": 1127,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1132
+                    "startOffset": 1104
                   }
                 },
                 {
@@ -3511,9 +3511,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1163,
+                        "endOffset": 1135,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1161
+                        "startOffset": 1133
                       },
                       "value": "fn"
                     },
@@ -3522,18 +3522,18 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1170,
+                            "endOffset": 1142,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1165
+                            "startOffset": 1137
                           },
                           "value": "error"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1171,
+                        "endOffset": 1143,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1164
+                        "startOffset": 1136
                       }
                     },
                     {
@@ -3541,9 +3541,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1185,
+                            "endOffset": 1157,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1173
+                            "startOffset": 1145
                           },
                           "value": "StorageError"
                         },
@@ -3553,9 +3553,9 @@
                               "key": {
                                 "kind": "keyword",
                                 "span": {
-                                  "endOffset": 1194,
+                                  "endOffset": 1166,
                                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                                  "startOffset": 1187
+                                  "startOffset": 1159
                                 },
                                 "value": ":detail"
                               },
@@ -3564,86 +3564,86 @@
                                   {
                                     "kind": "symbol",
                                     "span": {
-                                      "endOffset": 1199,
+                                      "endOffset": 1171,
                                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                                      "startOffset": 1196
+                                      "startOffset": 1168
                                     },
                                     "value": "str"
                                   },
                                   {
                                     "kind": "string",
                                     "span": {
-                                      "endOffset": 1207,
+                                      "endOffset": 1179,
                                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                                      "startOffset": 1200
+                                      "startOffset": 1172
                                     },
                                     "value": "read "
                                   },
                                   {
                                     "kind": "symbol",
                                     "span": {
-                                      "endOffset": 1211,
+                                      "endOffset": 1183,
                                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                                      "startOffset": 1208
+                                      "startOffset": 1180
                                     },
                                     "value": "key"
                                   },
                                   {
                                     "kind": "string",
                                     "span": {
-                                      "endOffset": 1221,
+                                      "endOffset": 1193,
                                       "sourceId": "surfaces/effect-typescript/typed-errors",
-                                      "startOffset": 1212
+                                      "startOffset": 1184
                                     },
                                     "value": " failed"
                                   }
                                 ],
                                 "kind": "list",
                                 "span": {
-                                  "endOffset": 1222,
+                                  "endOffset": 1194,
                                   "sourceId": "surfaces/effect-typescript/typed-errors",
-                                  "startOffset": 1195
+                                  "startOffset": 1167
                                 }
                               }
                             }
                           ],
                           "kind": "map",
                           "span": {
-                            "endOffset": 1223,
+                            "endOffset": 1195,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1186
+                            "startOffset": 1158
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1224,
+                        "endOffset": 1196,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1172
+                        "startOffset": 1144
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1225,
+                    "endOffset": 1197,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1160
+                    "startOffset": 1132
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1226,
+                "endOffset": 1198,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1117
+                "startOffset": 1093
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1227,
+            "endOffset": 1199,
             "sourceId": "surfaces/effect-typescript/typed-errors",
-            "startOffset": 1079
+            "startOffset": 1057
           }
         },
         {
@@ -3651,18 +3651,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 1230,
+                "endOffset": 1202,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1229
+                "startOffset": 1201
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1248,
+                "endOffset": 1220,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1231
+                "startOffset": 1203
               },
               "value": "read-with-default"
             },
@@ -3671,27 +3671,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1252,
+                    "endOffset": 1224,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1250
+                    "startOffset": 1222
                   },
                   "value": "->"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1259,
+                    "endOffset": 1231,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1253
+                    "startOffset": 1225
                   },
                   "value": "String"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1266,
+                    "endOffset": 1238,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1260
+                    "startOffset": 1232
                   },
                   "value": "String"
                 },
@@ -3700,18 +3700,18 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1274,
+                        "endOffset": 1246,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1268
+                        "startOffset": 1240
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1281,
+                        "endOffset": 1253,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1275
+                        "startOffset": 1247
                       },
                       "value": "String"
                     },
@@ -3719,9 +3719,9 @@
                       "items": [],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1284,
+                        "endOffset": 1256,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1282
+                        "startOffset": 1254
                       }
                     },
                     {
@@ -3729,42 +3729,42 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1298,
+                            "endOffset": 1270,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1286
+                            "startOffset": 1258
                           },
                           "value": "Storage.read"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1299,
+                        "endOffset": 1271,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1285
+                        "startOffset": 1257
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1300,
+                    "endOffset": 1272,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1267
+                    "startOffset": 1239
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1301,
+                "endOffset": 1273,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1249
+                "startOffset": 1221
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1302,
+            "endOffset": 1274,
             "sourceId": "surfaces/effect-typescript/typed-errors",
-            "startOffset": 1228
+            "startOffset": 1200
           }
         },
         {
@@ -3772,18 +3772,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1310,
+                "endOffset": 1282,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1304
+                "startOffset": 1276
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1330,
+                "endOffset": 1300,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1313
+                "startOffset": 1283
               },
               "value": "read-with-default"
             },
@@ -3792,27 +3792,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1338,
+                    "endOffset": 1308,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1334
+                    "startOffset": 1304
                   },
                   "value": "user"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1342,
+                    "endOffset": 1312,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1339
+                    "startOffset": 1309
                   },
                   "value": "key"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 1343,
+                "endOffset": 1313,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1333
+                "startOffset": 1303
               }
             },
             {
@@ -3820,9 +3820,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1362,
+                    "endOffset": 1332,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1347
+                    "startOffset": 1317
                   },
                   "value": "or-else-succeed"
                 },
@@ -3831,61 +3831,61 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1376,
+                        "endOffset": 1346,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1364
+                        "startOffset": 1334
                       },
                       "value": "Storage.read"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1381,
+                        "endOffset": 1351,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1377
+                        "startOffset": 1347
                       },
                       "value": "user"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1385,
+                        "endOffset": 1355,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1382
+                        "startOffset": 1352
                       },
                       "value": "key"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1386,
+                    "endOffset": 1356,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1363
+                    "startOffset": 1333
                   }
                 },
                 {
                   "kind": "string",
                   "span": {
-                    "endOffset": 1396,
+                    "endOffset": 1366,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1387
+                    "startOffset": 1357
                   },
                   "value": "default"
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1397,
+                "endOffset": 1367,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1346
+                "startOffset": 1316
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1398,
+            "endOffset": 1368,
             "sourceId": "surfaces/effect-typescript/typed-errors",
-            "startOffset": 1303
+            "startOffset": 1275
           }
         },
         {
@@ -3893,18 +3893,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 1401,
+                "endOffset": 1371,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1400
+                "startOffset": 1370
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1413,
+                "endOffset": 1383,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1402
+                "startOffset": 1372
               },
               "value": "read-option"
             },
@@ -3913,27 +3913,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1417,
+                    "endOffset": 1387,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1415
+                    "startOffset": 1385
                   },
                   "value": "->"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1424,
+                    "endOffset": 1394,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1418
+                    "startOffset": 1388
                   },
                   "value": "String"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1431,
+                    "endOffset": 1401,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1425
+                    "startOffset": 1395
                   },
                   "value": "String"
                 },
@@ -3942,9 +3942,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1439,
+                        "endOffset": 1409,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1433
+                        "startOffset": 1403
                       },
                       "value": "Effect"
                     },
@@ -3953,36 +3953,36 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1447,
+                            "endOffset": 1417,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1441
+                            "startOffset": 1411
                           },
                           "value": "Option"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1454,
+                            "endOffset": 1424,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1448
+                            "startOffset": 1418
                           },
                           "value": "String"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1455,
+                        "endOffset": 1425,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1440
+                        "startOffset": 1410
                       }
                     },
                     {
                       "items": [],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1458,
+                        "endOffset": 1428,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1456
+                        "startOffset": 1426
                       }
                     },
                     {
@@ -3990,42 +3990,42 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1472,
+                            "endOffset": 1442,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1460
+                            "startOffset": 1430
                           },
                           "value": "Storage.read"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1473,
+                        "endOffset": 1443,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1459
+                        "startOffset": 1429
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1474,
+                    "endOffset": 1444,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1432
+                    "startOffset": 1402
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1475,
+                "endOffset": 1445,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1414
+                "startOffset": 1384
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1476,
+            "endOffset": 1446,
             "sourceId": "surfaces/effect-typescript/typed-errors",
-            "startOffset": 1399
+            "startOffset": 1369
           }
         },
         {
@@ -4033,18 +4033,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1484,
+                "endOffset": 1454,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1478
+                "startOffset": 1448
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1496,
+                "endOffset": 1466,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1485
+                "startOffset": 1455
               },
               "value": "read-option"
             },
@@ -4053,27 +4053,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1502,
+                    "endOffset": 1472,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1498
+                    "startOffset": 1468
                   },
                   "value": "user"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1506,
+                    "endOffset": 1476,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1503
+                    "startOffset": 1473
                   },
                   "value": "key"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 1507,
+                "endOffset": 1477,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1497
+                "startOffset": 1467
               }
             },
             {
@@ -4081,9 +4081,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1515,
+                    "endOffset": 1485,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1509
+                    "startOffset": 1479
                   },
                   "value": "option"
                 },
@@ -4092,52 +4092,52 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1529,
+                        "endOffset": 1499,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1517
+                        "startOffset": 1487
                       },
                       "value": "Storage.read"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1534,
+                        "endOffset": 1504,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1530
+                        "startOffset": 1500
                       },
                       "value": "user"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1538,
+                        "endOffset": 1508,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1535
+                        "startOffset": 1505
                       },
                       "value": "key"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1539,
+                    "endOffset": 1509,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1516
+                    "startOffset": 1486
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1540,
+                "endOffset": 1510,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1508
+                "startOffset": 1478
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1541,
+            "endOffset": 1511,
             "sourceId": "surfaces/effect-typescript/typed-errors",
-            "startOffset": 1477
+            "startOffset": 1447
           }
         },
         {
@@ -4145,18 +4145,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 1544,
+                "endOffset": 1514,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1543
+                "startOffset": 1513
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1558,
+                "endOffset": 1528,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1545
+                "startOffset": 1515
               },
               "value": "describe-read"
             },
@@ -4165,27 +4165,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1562,
+                    "endOffset": 1532,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1560
+                    "startOffset": 1530
                   },
                   "value": "->"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1569,
+                    "endOffset": 1539,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1563
+                    "startOffset": 1533
                   },
                   "value": "String"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1576,
+                    "endOffset": 1546,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1570
+                    "startOffset": 1540
                   },
                   "value": "String"
                 },
@@ -4194,18 +4194,18 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1584,
+                        "endOffset": 1554,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1578
+                        "startOffset": 1548
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1591,
+                        "endOffset": 1561,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1585
+                        "startOffset": 1555
                       },
                       "value": "String"
                     },
@@ -4213,9 +4213,9 @@
                       "items": [],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1594,
+                        "endOffset": 1564,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1592
+                        "startOffset": 1562
                       }
                     },
                     {
@@ -4223,42 +4223,42 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1608,
+                            "endOffset": 1578,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1596
+                            "startOffset": 1566
                           },
                           "value": "Storage.read"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1609,
+                        "endOffset": 1579,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1595
+                        "startOffset": 1565
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1610,
+                    "endOffset": 1580,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1577
+                    "startOffset": 1547
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1611,
+                "endOffset": 1581,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1559
+                "startOffset": 1529
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1612,
+            "endOffset": 1582,
             "sourceId": "surfaces/effect-typescript/typed-errors",
-            "startOffset": 1542
+            "startOffset": 1512
           }
         },
         {
@@ -4266,18 +4266,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1620,
+                "endOffset": 1590,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1614
+                "startOffset": 1584
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1636,
+                "endOffset": 1604,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1623
+                "startOffset": 1591
               },
               "value": "describe-read"
             },
@@ -4286,27 +4286,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1644,
+                    "endOffset": 1612,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1640
+                    "startOffset": 1608
                   },
                   "value": "user"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1648,
+                    "endOffset": 1616,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1645
+                    "startOffset": 1613
                   },
                   "value": "key"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 1649,
+                "endOffset": 1617,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1639
+                "startOffset": 1607
               }
             },
             {
@@ -4314,9 +4314,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1656,
+                    "endOffset": 1624,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1653
+                    "startOffset": 1621
                   },
                   "value": "do!"
                 },
@@ -4325,9 +4325,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1669,
+                        "endOffset": 1633,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1662
+                        "startOffset": 1626
                       },
                       "value": "outcome"
                     },
@@ -4336,9 +4336,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1677,
+                            "endOffset": 1641,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1671
+                            "startOffset": 1635
                           },
                           "value": "result"
                         },
@@ -4347,52 +4347,52 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1691,
+                                "endOffset": 1655,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 1679
+                                "startOffset": 1643
                               },
                               "value": "Storage.read"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1696,
+                                "endOffset": 1660,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 1692
+                                "startOffset": 1656
                               },
                               "value": "user"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1700,
+                                "endOffset": 1664,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 1697
+                                "startOffset": 1661
                               },
                               "value": "key"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1701,
+                            "endOffset": 1665,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1678
+                            "startOffset": 1642
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1702,
+                        "endOffset": 1666,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1670
+                        "startOffset": 1634
                       }
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 1703,
+                    "endOffset": 1667,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1661
+                    "startOffset": 1625
                   }
                 },
                 {
@@ -4400,18 +4400,18 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1714,
+                        "endOffset": 1678,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1709
+                        "startOffset": 1673
                       },
                       "value": "match"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1728,
+                        "endOffset": 1686,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1721
+                        "startOffset": 1679
                       },
                       "value": "outcome"
                     },
@@ -4420,27 +4420,27 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1738,
+                            "endOffset": 1696,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1736
+                            "startOffset": 1694
                           },
                           "value": "Ok"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1744,
+                            "endOffset": 1702,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1739
+                            "startOffset": 1697
                           },
                           "value": "value"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1745,
+                        "endOffset": 1703,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1735
+                        "startOffset": 1693
                       }
                     },
                     {
@@ -4448,9 +4448,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1760,
+                            "endOffset": 1718,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1753
+                            "startOffset": 1711
                           },
                           "value": "succeed"
                         },
@@ -4459,44 +4459,44 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1765,
+                                "endOffset": 1723,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 1762
+                                "startOffset": 1720
                               },
                               "value": "str"
                             },
                             {
                               "kind": "string",
                               "span": {
-                                "endOffset": 1772,
+                                "endOffset": 1730,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 1766
+                                "startOffset": 1724
                               },
                               "value": "ok: "
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1778,
+                                "endOffset": 1736,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 1773
+                                "startOffset": 1731
                               },
                               "value": "value"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1779,
+                            "endOffset": 1737,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1761
+                            "startOffset": 1719
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1780,
+                        "endOffset": 1738,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1752
+                        "startOffset": 1710
                       }
                     },
                     {
@@ -4504,27 +4504,27 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1791,
+                            "endOffset": 1749,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1788
+                            "startOffset": 1746
                           },
                           "value": "Err"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1797,
+                            "endOffset": 1755,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1792
+                            "startOffset": 1750
                           },
                           "value": "error"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1798,
+                        "endOffset": 1756,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1787
+                        "startOffset": 1745
                       }
                     },
                     {
@@ -4532,9 +4532,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1813,
+                            "endOffset": 1771,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1806
+                            "startOffset": 1764
                           },
                           "value": "succeed"
                         },
@@ -4543,18 +4543,18 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1818,
+                                "endOffset": 1776,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 1815
+                                "startOffset": 1773
                               },
                               "value": "str"
                             },
                             {
                               "kind": "string",
                               "span": {
-                                "endOffset": 1828,
+                                "endOffset": 1786,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 1819
+                                "startOffset": 1777
                               },
                               "value": "error: "
                             },
@@ -4563,76 +4563,76 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1833,
+                                    "endOffset": 1791,
                                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                                    "startOffset": 1830
+                                    "startOffset": 1788
                                   },
                                   "value": "get"
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1839,
+                                    "endOffset": 1797,
                                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                                    "startOffset": 1834
+                                    "startOffset": 1792
                                   },
                                   "value": "error"
                                 },
                                 {
                                   "kind": "keyword",
                                   "span": {
-                                    "endOffset": 1845,
+                                    "endOffset": 1803,
                                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                                    "startOffset": 1840
+                                    "startOffset": 1798
                                   },
                                   "value": ":_tag"
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 1846,
+                                "endOffset": 1804,
                                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                                "startOffset": 1829
+                                "startOffset": 1787
                               }
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1847,
+                            "endOffset": 1805,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1814
+                            "startOffset": 1772
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1848,
+                        "endOffset": 1806,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1805
+                        "startOffset": 1763
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1849,
+                    "endOffset": 1807,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1708
+                    "startOffset": 1672
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1850,
+                "endOffset": 1808,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1652
+                "startOffset": 1620
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1851,
+            "endOffset": 1809,
             "sourceId": "surfaces/effect-typescript/typed-errors",
-            "startOffset": 1613
+            "startOffset": 1583
           }
         },
         {
@@ -4640,18 +4640,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 1854,
+                "endOffset": 1812,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1853
+                "startOffset": 1811
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1866,
+                "endOffset": 1824,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1855
+                "startOffset": 1813
               },
               "value": "read-or-die"
             },
@@ -4660,27 +4660,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1870,
+                    "endOffset": 1828,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1868
+                    "startOffset": 1826
                   },
                   "value": "->"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1877,
+                    "endOffset": 1835,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1871
+                    "startOffset": 1829
                   },
                   "value": "String"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1884,
+                    "endOffset": 1842,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1878
+                    "startOffset": 1836
                   },
                   "value": "String"
                 },
@@ -4689,18 +4689,18 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1892,
+                        "endOffset": 1850,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1886
+                        "startOffset": 1844
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1899,
+                        "endOffset": 1857,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1893
+                        "startOffset": 1851
                       },
                       "value": "String"
                     },
@@ -4708,9 +4708,9 @@
                       "items": [],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1902,
+                        "endOffset": 1860,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1900
+                        "startOffset": 1858
                       }
                     },
                     {
@@ -4718,42 +4718,42 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1916,
+                            "endOffset": 1874,
                             "sourceId": "surfaces/effect-typescript/typed-errors",
-                            "startOffset": 1904
+                            "startOffset": 1862
                           },
                           "value": "Storage.read"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1917,
+                        "endOffset": 1875,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1903
+                        "startOffset": 1861
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1918,
+                    "endOffset": 1876,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1885
+                    "startOffset": 1843
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1919,
+                "endOffset": 1877,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1867
+                "startOffset": 1825
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1920,
+            "endOffset": 1878,
             "sourceId": "surfaces/effect-typescript/typed-errors",
-            "startOffset": 1852
+            "startOffset": 1810
           }
         },
         {
@@ -4761,18 +4761,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1928,
+                "endOffset": 1886,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1922
+                "startOffset": 1880
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1940,
+                "endOffset": 1898,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1929
+                "startOffset": 1887
               },
               "value": "read-or-die"
             },
@@ -4781,27 +4781,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1946,
+                    "endOffset": 1904,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1942
+                    "startOffset": 1900
                   },
                   "value": "user"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1950,
+                    "endOffset": 1908,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1947
+                    "startOffset": 1905
                   },
                   "value": "key"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 1951,
+                "endOffset": 1909,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1941
+                "startOffset": 1899
               }
             },
             {
@@ -4809,9 +4809,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1959,
+                    "endOffset": 1917,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1953
+                    "startOffset": 1911
                   },
                   "value": "or-die"
                 },
@@ -4820,52 +4820,52 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1973,
+                        "endOffset": 1931,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1961
+                        "startOffset": 1919
                       },
                       "value": "Storage.read"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1978,
+                        "endOffset": 1936,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1974
+                        "startOffset": 1932
                       },
                       "value": "user"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1982,
+                        "endOffset": 1940,
                         "sourceId": "surfaces/effect-typescript/typed-errors",
-                        "startOffset": 1979
+                        "startOffset": 1937
                       },
                       "value": "key"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1983,
+                    "endOffset": 1941,
                     "sourceId": "surfaces/effect-typescript/typed-errors",
-                    "startOffset": 1960
+                    "startOffset": 1918
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1984,
+                "endOffset": 1942,
                 "sourceId": "surfaces/effect-typescript/typed-errors",
-                "startOffset": 1952
+                "startOffset": 1910
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1985,
+            "endOffset": 1943,
             "sourceId": "surfaces/effect-typescript/typed-errors",
-            "startOffset": 1921
+            "startOffset": 1879
           }
         }
       ],

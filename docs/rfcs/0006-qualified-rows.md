@@ -32,13 +32,10 @@ semantics remain those of RFC 0005.
 (define combine [left right] (merge-disjoint left right))
 
 (: name-only
-  (Where [(Has {& row} :name String)]
-    (-> {& row} (Pick {& row} [:name]))))
+  (Where [(Has {& row} :name String)] (-> {& row} (Pick {& row} [:name]))))
 (define name-only [record] (pick-record record [:name]))
 
-(: add-id
-  (Where [(Lacks {& row} :id)]
-    (-> {& row} (Merge {:id Int} {& row}))))
+(: add-id (Where [(Lacks {& row} :id)] (-> {& row} (Merge {:id Int} {& row}))))
 (define add-id [record] (merge-disjoint {:id 0} record))
 ```
 

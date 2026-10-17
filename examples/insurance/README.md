@@ -19,9 +19,11 @@ Insurance policy and claims example in canonical ontology syntax.
 ```
 
 ```lisp
-(seed PolicyHolder "policy-holder:acme"
+(seed PolicyHolder
+  "policy-holder:acme"
   {:name "Acme Manufacturing" :segment "commercial"})
-(seed Claim "claim:wind"
+(seed Claim
+  "claim:wind"
   {:status "open" :amount 42000 :policy-holder "policy-holder:acme"})
 ```
 

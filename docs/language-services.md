@@ -19,6 +19,7 @@ The services are:
    offsets.
 5. **An outline codec** between source and an outline of rows.
 6. **Slot affordances**: which slots a form accepts and which are empty.
+7. **Source formatting**: lossless Lisp and Markdown fence formatting.
 
 The symbol index comes before the edit script because scope-aware rename and
 extract depend on it.
@@ -369,3 +370,66 @@ VM global-cell changes, and macro-aware refactoring redesign are deferred.
 These fixes preserve the host ABI and existing cross-document resolution rules.
 The regressions and properties live in `language-service-regressions.test.ts`;
 `FORMA_PROPERTY_SCALE` raises the local property counts.
+
+## Source formatting
+
+The synchronous, pure `@formalang/ts/format` API exports `formatLisp(text,
+options?)`, `formatMarkdown(text, options?)`, and `formatRange(text, { start,
+end }, options?)`. Each returns `{ text, changed, diagnostics }`. Ranges select
+intersecting top-level forms; pass `{ language: "markdown" }` for Markdown
+ranges. Invalid Lisp is returned unchanged with `format/parse` diagnostics.
+The Effect-based `Formatter.formatLispSource` delegates to this source formatter;
+`formatSExpr` and `formatSExprMany` remain AST printers for generated expressions.
+
+Default style uses two spaces, 80 columns, LF and one final newline in Lisp.
+Raw reader shorthand, string escapes, number spellings and comment markers are
+preserved. Trailing comments stay trailing, own-line comments stay on their
+line, and runs of blank lines collapse to one between forms and body items.
+Unbreakable atoms and comments can exceed the width. Multiline string contents
+remain verbatim. Maps stay flat when they fit; broken maps place the opening
+brace on its own line and indent pairs two spaces.
+
+Descriptors determine positional headers and bodies, followed by macro
+signatures, a small table of core compiler forms, and a generic call layout.
+Keyword/value pairs stay together when possible. Standalone text uses its own
+declarations and bundled kernel/compiler layout vocabulary; callers can supply
+descriptors and macro signatures explicitly. CLI and LSP formatting also resolve
+imports through the module graph. Resolution failures report
+`format/module-resolution` and use local declarations. LSP formatting reads
+unsaved open dependencies before disk. This layout table for core forms is the
+exception documented in [RFC 0018](./rfcs/0018-formatter.md).
+
+Markdown prose, fence delimiters and other fence languages are left untouched.
+Only `lisp` and `forma` info strings are eligible, including backtick and tilde
+fences. Bodies that do not parse independently are skipped with
+`format/markdown-fragment`. Blockquotes, nested lists, inline list fences and
+fence-like text in HTML blocks are skipped with `format/markdown-unsupported`.
+Basic indented list fences are supported. `--strict` makes these reports failures;
+ordinary `--check` allows them. Lisp syntax errors always fail CLI checking.
+
+Place `<!-- forma-fmt-ignore -->` immediately before a fence to preserve it.
+Inside Lisp, `; forma-fmt: off` and `; forma-fmt: on` preserve a region and its
+adjacent trivia. An unmatched `off` preserves the rest of the source. Directives
+are recognized in comments only; the whole Lisp input must still parse.
+
+`forma fmt [--check] [--strict] <paths…>` formats files or directories.
+`forma fmt --stdin --stdin-filepath notes.md` writes formatted stdin to stdout;
+the filepath selects the language and anchors import resolution. Check mode
+reports changed paths with a short diff and exits 1. Usage errors exit 64.
+`pnpm format` and `pnpm format:check` cover tracked sources, excluding intentional
+reader-error programs and formatter conformance fixtures. `pnpm check` includes
+format checking.
+
+The host exposes the optional `LanguageHost.format` method, the `format`
+capability, `@formalang/host/format`, and JSON
+`{ "op": "format", "source": "…", "language": "markdown" }`.
+The LSP advertises document and range formatting by default and returns only
+changed whitespace gaps. Set `FORMA_LANGUAGE_SERVER_ENABLE_FORMATTING=0` to
+disable both. Markdown currently has fence formatting, not prose analysis.
+
+CodeMirror editors expose Format commands and Ctrl/Cmd+Shift+F; a selection
+formats its containing top-level forms, and an empty selection formats the
+whole document. The playground has a Format button. The structural workbench
+has Format and F8 in its source pane. Edits use the editors' normal undo history
+and preserve cursor anchors. See the [migration review](./formatter-migration.md)
+for corpus and golden changes.

@@ -7,8 +7,8 @@
         "got": "Number",
         "message": "Type mismatch: List vs Number",
         "span": {
-          "end": 9,
-          "start": 0
+          "end": 8,
+          "start": 7
         }
       }
     ]

@@ -4,8 +4,7 @@
 (: always-fail (-> String (Effect Unit [ConsoleUnavailable] [])))
 (define always-fail [message] (fail (ConsoleUnavailable {:message message})))
 (: recover (-> String (Effect Unit)))
-(define
-  recover
+(define recover
   [message]
   (catch (always-fail message) (ConsoleUnavailable error) (succeed nil)))
 (: log (-> String (Effect Unit [ConsoleUnavailable] [Console.print])))

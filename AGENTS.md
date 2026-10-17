@@ -20,9 +20,12 @@ Do not commit a lockfile containing local Foldworks paths. See
 `packages/workbench/README.md` for manual linking and current limits.
 
 `pnpm check` runs the branding check, TypeScript checks, JavaScript tests,
-the surface golden check, and the VitePress docs build including the `llms.txt`
-structure and link-target check. There is no repository-wide formatting command;
-match nearby formatting. Turbo builds dependent JavaScript packages as needed.
+the surface golden check, the VitePress docs build including the `llms.txt`
+structure and link-target check, and `format:check`. Use `pnpm format` to format
+tracked `.lisp`, `.forma`, and Markdown Lisp fences; `pnpm format:check` checks
+them without writing. Intentional reader errors and formatter fixtures are
+excluded by `scripts/format.mjs`. For TypeScript and other files, match nearby
+formatting. Turbo builds dependent JavaScript packages as needed.
 
 For site changes, also run `pnpm website:build` and `pnpm test:site` (install
 Playwright Chromium first with

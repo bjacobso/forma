@@ -19,8 +19,8 @@
       "severity": "warning",
       "message": "Non-exhaustive match: missing constructor(s) None",
       "span": {
-        "start": 66,
-        "end": 94
+        "start": 64,
+        "end": 88
       }
     }
   }

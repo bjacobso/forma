@@ -20,7 +20,8 @@ Performance review cycle example in canonical ontology syntax.
 
 ```lisp
 (seed ReviewCycle "cycle:2026-h1" {:name "2026 H1" :status "open"})
-(seed Review "review:alex"
+(seed Review
+  "review:alex"
   {:employee-name "Alex Kim" :rating 4.5 :cycle "cycle:2026-h1"})
 ```
 

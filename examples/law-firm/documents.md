@@ -14,19 +14,15 @@
 (document client-intake-form
   :description
     "Collect prospective client background, adverse parties, deadlines, and routing information"
-  (page
-    client-background
-    :assignee
-    client-contact
-    :description
-    "Client Background"
-    :completion
-    (completion submit-intake-packet :entity Client)
+  (page client-background
+    :assignee client-contact
+    :description "Client Background"
+    :completion (completion submit-intake-packet :entity Client)
     (content
       :intake.background_intro
-      "# Client Intake\n\nPlease provide the information the firm needs to evaluate representation, run conflicts, and prepare an engagement letter.\n\n---")
-    (text :intake.client_name
-      "Client Legal Name"
+        "# Client Intake\n\nPlease provide the information the firm needs to evaluate representation, run conflicts, and prepare an engagement letter.\n\n---")
+    (text
+      :intake.client_name "Client Legal Name"
       :required true
       :bind Client.name)
     (select
@@ -40,16 +36,16 @@
     (text :intake.industry "Industry or Context" :bind Client.industry)
     (text :intake.primary_contact_name "Primary Contact Name" :required true)
     (text :intake.primary_contact_title "Primary Contact Title")
-    (text :intake.primary_contact_email
-      "Primary Contact Email"
+    (text
+      :intake.primary_contact_email "Primary Contact Email"
       :required true
       :bind Client.email)
-    (text :intake.primary_contact_phone
-      "Primary Contact Phone"
+    (text
+      :intake.primary_contact_phone "Primary Contact Phone"
       :bind Client.phone)
     (content
       :intake.matter_intro
-      "---\n\n## Legal Need\n\nDescribe the legal work requested and any deadlines or counterparties the firm should know about.")
+        "---\n\n## Legal Need\n\nDescribe the legal work requested and any deadlines or counterparties the firm should know about.")
     (select
       :intake.practice_area "Likely Practice Area"
       :required true
@@ -65,19 +61,14 @@
       :required true)
     (date :intake.next_deadline "Next Known Deadline")
     (textarea :intake.documents_available "Documents Already Available"))
-  (page
-    firm-review
-    :assignee
-    firm-staff
-    :description
-    "Firm Review"
-    :depends-on
-    [client-background]
-    :completion
-    (completion complete-firm-review :entity Client)
+  (page firm-review
+    :assignee firm-staff
+    :description "Firm Review"
+    :depends-on [client-background]
+    :completion (completion complete-firm-review :entity Client)
     (content
       :intake.review_intro
-      "# Firm Review\n\nComplete internal routing before representation begins.\n\n---")
+        "# Firm Review\n\nComplete internal routing before representation begins.\n\n---")
     (select
       :intake.conflict_status "Conflict Check Status"
       :required true
@@ -117,17 +108,13 @@
 (document engagement-letter
   :description
     "Confirm scope, fees, responsibilities, and client acceptance for a matter"
-  (page
-    client-acceptance
-    :assignee
-    client-contact
-    :description
-    "Client Acceptance"
-    :completion
-    (completion complete-engagement-letter :entity EngagementLetter)
+  (page client-acceptance
+    :assignee client-contact
+    :description "Client Acceptance"
+    :completion (completion complete-engagement-letter :entity EngagementLetter)
     (content
       :engagement.intro
-      "# Engagement Letter\n\nReview the proposed scope, fee terms, and responsibilities. Signing confirms that the client authorizes the firm to begin work on the matter.\n\n---")
+        "# Engagement Letter\n\nReview the proposed scope, fee terms, and responsibilities. Signing confirms that the client authorizes the firm to begin work on the matter.\n\n---")
     (text :engagement.client_name "Client Name" :required true)
     (text :engagement.matter_title "Matter Title" :required true)
     (textarea
@@ -154,19 +141,14 @@
 ;; =============================================================================
 ;; Law Firm Documents - English Locale
 ;; =============================================================================
-(document-locale client-intake-form "en"
-  (role
-    client-contact
-    :label
-    "Client Contact"
-    :description
-    "The client representative completing intake")
-  (role
-    firm-staff
-    :label
-    "Firm Staff"
-    :description
-    "The intake coordinator or attorney reviewing the packet")
+(document-locale client-intake-form
+  "en"
+  (role client-contact
+    :label "Client Contact"
+    :description "The client representative completing intake")
+  (role firm-staff
+    :label "Firm Staff"
+    :description "The intake coordinator or attorney reviewing the packet")
   (section client-background :label "Client Background")
   (section firm-review :label "Firm Review")
   (field :intake.client_name :label "Client Legal Name")
@@ -179,8 +161,7 @@
   (field :intake.practice_area :label "Likely Practice Area")
   (field :intake.matter_summary :label "Matter Summary")
   (field
-    :intake.adverse_parties
-    :label
+    :intake.adverse_parties :label
     "Known Adverse Parties or Related Parties")
   (field :intake.next_deadline :label "Next Known Deadline")
   (field :intake.documents_available :label "Documents Already Available")
@@ -190,16 +171,13 @@
   (field :intake.initial_budget :label "Initial Budget")
   (field :intake.scope_notes :label "Scope Notes")
   (field
-    :intake.approved_for_engagement
-    :label
+    :intake.approved_for_engagement :label
     "Approved for Engagement Letter"))
-(document-locale engagement-letter "en"
-  (role
-    client-contact
-    :label
-    "Client Contact"
-    :description
-    "The person authorized to accept the engagement")
+(document-locale engagement-letter
+  "en"
+  (role client-contact
+    :label "Client Contact"
+    :description "The person authorized to accept the engagement")
   (section client-acceptance :label "Client Acceptance")
   (field :engagement.client_name :label "Client Name")
   (field :engagement.matter_title :label "Matter Title")

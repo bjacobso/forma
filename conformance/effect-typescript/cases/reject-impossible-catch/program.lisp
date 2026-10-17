@@ -2,10 +2,7 @@
 (error Timeout {:after Int})
 (error NotFound {:id String})
 
-(service Store
-  (: get (-> String (Effect String [NotFound] []))))
+(service Store (: get (-> String (Effect String [NotFound] []))))
 
 (: fetch (-> String (Effect String [NotFound] [Store.get])))
-(define fetch [id]
-  (catch (Store.get id)
-    (Timeout error) (succeed "slow")))
+(define fetch [id] (catch (Store.get id) (Timeout error) (succeed "slow")))

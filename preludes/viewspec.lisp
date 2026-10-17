@@ -5,8 +5,7 @@
 ; Domain-neutral primitives live in ui.lisp. This file contains only forms and
 ; aliases whose meaning depends on ontology/runtime concepts.
 ; -----------------------------------------------------------------------------
-(define
-  entity-browser.metadata
+(define entity-browser.metadata
   (quote
     {
       :descriptor-name "entity-browser"
@@ -18,8 +17,7 @@
               :compile {:expr-props ["visible" "bind"]}
               :children "none"
               :events {:on-row-click "onRowClick"}}}}))
-(form
-  (entity-browser {:keys [title visible bind]})
+(form (entity-browser {:keys [title visible bind]})
   :types
     {
       :title (Option (Expr a))
@@ -27,8 +25,7 @@
       :bind (Option (Expr a))}
   :ir ComponentIR
   (component "entity-browser" {"title" title "visible" visible "bind" bind} []))
-(define
-  action-button.metadata
+(define action-button.metadata
   (quote
     {
       :descriptor-name "action-button"
@@ -57,8 +54,7 @@
       :parameters (Option Json)
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "action-button"
+  (component "action-button"
     {
       "label" label
       "variant" variant
@@ -67,8 +63,7 @@
       "parameters" parameters
       "visible" visible}
     []))
-(define
-  create-entity-button.metadata
+(define create-entity-button.metadata
   (quote
     {
       :descriptor-name "create-entity-button"
@@ -80,8 +75,7 @@
               :compile {:expr-props ["visible"]}
               :children "none"
               :events {:on-click "onClick" :on-success "onSuccess"}}}}))
-(form
-  (create-entity-button {:keys [label entity-type variant visible]})
+(form (create-entity-button {:keys [label entity-type variant visible]})
   :types
     {
       :label (Option (Expr a))
@@ -90,16 +84,14 @@
         (Option (Union "default" "destructive" "outline" "secondary" "ghost"))
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "create-entity-button"
+  (component "create-entity-button"
     {
       "label" label
       "entity-type" entity-type
       "variant" variant
       "visible" visible}
     []))
-(define
-  entity-picker.metadata
+(define entity-picker.metadata
   (quote
     {
       :descriptor-name "entity-picker"
@@ -123,8 +115,7 @@
       :entity-type (Option String)
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "entity-picker"
+  (component "entity-picker"
     {
       "name" name
       "label" label
@@ -133,8 +124,7 @@
       "entity-type" entity-type
       "visible" visible}
     []))
-(define
-  query-console.metadata
+(define query-console.metadata
   (quote
     {
       :descriptor-name "query-console"
@@ -145,13 +135,11 @@
               :allows-bind false
               :compile {:expr-props ["visible"]}
               :children "none"}}}))
-(form
-  (query-console {:keys [title visible]})
+(form (query-console {:keys [title visible]})
   :types {:title (Option (Expr a)) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "query-console" {"title" title "visible" visible} []))
-(define
-  view-ref.metadata
+(define view-ref.metadata
   (quote
     {
       :descriptor-name "view-ref"
@@ -167,65 +155,58 @@
                   :slot-types {:input {:kind "record" :value "unknown"}}}
               :children "none"
               :positional-prop "name"}}}))
-(form
-  (view-ref name {:keys [input visible]})
+(form (view-ref name {:keys [input visible]})
   :types {:name String :input (Option Json) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "view-ref" {"name" name "input" input "visible" visible} []))
-(define
-  action-form
+(define action-form
   (quote
-    {:extensions {:view/layout-alias {:form "action-form" :to "action-button"}}}))
-(define
-  entity-table
+    {
+      :extensions
+        {:view/layout-alias {:form "action-form" :to "action-button"}}}))
+(define entity-table
   (quote
     {
       :extensions
         {
           :view/layout-alias
             {:form "entity-table" :component-name "runtime/entity-table"}}}))
-(define
-  entity-detail
+(define entity-detail
   (quote
     {
       :extensions
         {
           :view/layout-alias
             {:form "entity-detail" :component-name "runtime/entity-detail"}}}))
-(define
-  entity-form
+(define entity-form
   (quote
     {
       :extensions
         {
           :view/layout-alias
             {:form "entity-form" :component-name "runtime/entity-form"}}}))
-(define
-  task-queue
+(define task-queue
   (quote
     {
       :extensions
         {
           :view/layout-alias
             {:form "task-queue" :component-name "runtime/task-queue"}}}))
-(define
-  task-detail
+(define task-detail
   (quote
     {
       :extensions
         {
           :view/layout-alias
             {:form "task-detail" :component-name "runtime/task-detail"}}}))
-(define
-  task-summary
+(define task-summary
   (quote
     {
       :extensions
         {
           :view/layout-alias
             {:form "task-summary" :component-name "runtime/task-summary"}}}))
-(define
-  task-status-editor
+(define task-status-editor
   (quote
     {
       :extensions
@@ -234,8 +215,7 @@
             {
               :form "task-status-editor"
               :component-name "runtime/task-status-editor"}}}))
-(define
-  task-document-links
+(define task-document-links
   (quote
     {
       :extensions
@@ -244,24 +224,23 @@
             {
               :form "task-document-links"
               :component-name "runtime/task-document-links"}}}))
-(define
-  task-metadata
+(define task-metadata
   (quote
     {
       :extensions
         {
           :view/layout-alias
             {:form "task-metadata" :component-name "runtime/task-metadata"}}}))
-(define
-  violation-list
+(define violation-list
   (quote
     {
       :extensions
         {
           :view/layout-alias
-            {:form "violation-list" :component-name "runtime/violation-list"}}}))
-(define
-  violation-detail
+            {
+              :form "violation-list"
+              :component-name "runtime/violation-list"}}}))
+(define violation-detail
   (quote
     {
       :extensions
@@ -270,8 +249,7 @@
             {
               :form "violation-detail"
               :component-name "runtime/violation-detail"}}}))
-(define
-  violation-summary
+(define violation-summary
   (quote
     {
       :extensions
@@ -280,8 +258,7 @@
             {
               :form "violation-summary"
               :component-name "runtime/violation-summary"}}}))
-(define
-  violation-status-editor
+(define violation-status-editor
   (quote
     {
       :extensions
@@ -290,8 +267,7 @@
             {
               :form "violation-status-editor"
               :component-name "runtime/violation-status-editor"}}}))
-(define
-  violation-related-records
+(define violation-related-records
   (quote
     {
       :extensions
@@ -300,8 +276,7 @@
             {
               :form "violation-related-records"
               :component-name "runtime/violation-related-records"}}}))
-(define
-  violation-timeline
+(define violation-timeline
   (quote
     {
       :extensions

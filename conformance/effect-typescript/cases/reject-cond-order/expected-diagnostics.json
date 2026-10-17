@@ -6,9 +6,9 @@
       "severity": "error",
       "code": "mechanics/cond-else",
       "message": "An always-true cond clause (:else or true) must be the last clause.",
-      "line": 6,
+      "line": 8,
       "column": 5,
-      "endLine": 6,
+      "endLine": 8,
       "endColumn": 10
     }
   ]

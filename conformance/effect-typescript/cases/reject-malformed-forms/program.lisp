@@ -2,6 +2,4 @@
 (error Missing {:id String})
 
 (: check (-> String (Effect String [Missing] [])))
-(define check [id]
-  (if (= id "")
-    (fail (Missing {:id id}))))
+(define check [id] (if (= id "") (fail (Missing {:id id}))))

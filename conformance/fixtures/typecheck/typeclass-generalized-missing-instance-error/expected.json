@@ -13,8 +13,8 @@
     "diagnostic": {
       "code": "typecheck/missing-instance",
       "span": {
-        "start": 124,
-        "end": 130
+        "start": 120,
+        "end": 126
       }
     }
   }

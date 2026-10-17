@@ -10,6 +10,11 @@ tools, language server, and workbench. The earlier OCaml engine was removed.
 Conformance fixtures and reviewed stored goldens pin implemented behavior.
 The TypeScript engine distinguishes Int and Float, including integral Float
 literals and results; Int arithmetic checks the JavaScript safe integer range.
+Source formatting is implemented for `.lisp`, `.forma`, and Markdown `lisp`/`forma`
+fences through `@formalang/ts/format`, `forma fmt`, the host JSON `format` operation,
+and editor commands. LSP document and range formatting are enabled by default.
+Formatting preserves authored token spellings and comments. Invalid Lisp stays
+unchanged; fragment fences and unsupported containers are skipped and reported.
 The structural workbench currently depends on unpublished Foldworks packages.
 
 ## Getting started
@@ -27,7 +32,7 @@ The structural workbench currently depends on unpublished Foldworks packages.
 - [Forma for Elm-style apps](https://raw.githubusercontent.com/bjacobso/forma/main/docs/elm.md): Foldkit prototype with exhaustive update, checked command recovery, and pure views; shared HttpApi client generation remains proposed.
 - [Elm prototype reference](https://raw.githubusercontent.com/bjacobso/forma/main/docs/elm/reference.md): Isolated prelude generator, supported forms, mounting, and current limits.
 - [Effect reference](https://raw.githubusercontent.com/bjacobso/forma/main/docs/effect/reference.md): Supported schemas, services, errors, resources, and operations.
-- [Language services](https://raw.githubusercontent.com/bjacobso/forma/main/docs/language-services.md): Analysis, node identity, observations, and structural edit scripts.
+- [Language services](https://raw.githubusercontent.com/bjacobso/forma/main/docs/language-services.md): Analysis, lossless source formatting, node identity, observations, and structural edit scripts.
 
 ## Optional
 

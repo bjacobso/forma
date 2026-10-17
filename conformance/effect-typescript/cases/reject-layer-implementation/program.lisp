@@ -6,7 +6,8 @@
   (: read (-> String (Effect (Option String) [Unavailable] [])))
   (: write (-> String String (Effect Unit [Unavailable] []))))
 
-(layer CacheBroken :provides Cache
-  (define read [key] (if (= key "")
-        (fail (Corrupt {:key key}))
-        (succeed None))))
+(layer CacheBroken
+  :provides Cache
+  (define read
+    [key]
+    (if (= key "") (fail (Corrupt {:key key})) (succeed None))))

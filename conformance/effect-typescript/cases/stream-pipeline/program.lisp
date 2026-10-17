@@ -7,58 +7,45 @@
 (service Sensors (: read (-> String (Effect Reading [SensorOffline] []))))
 (service Sink (: write (-> String (Effect Unit))))
 (: celsius-values (-> (List Reading) (Stream Float [] [])))
-(define
-  celsius-values
+(define celsius-values
   [readings]
   (stream-map (stream-of readings) (fn [reading] (get reading :celsius))))
-(:
-  hot-readings
-  (->
-    (List String)
+(: hot-readings
+  (-> (List String)
     Float
     (Effect (List Reading) [SensorOffline] [Sensors.read])))
-(define
-  hot-readings
+(define hot-readings
   [sensors threshold]
   (stream-run-collect
     (stream-filter
-      (stream-map-effect
-        (stream-of sensors)
+      (stream-map-effect (stream-of sensors)
         (fn [sensor] (Sensors.read sensor))
         2)
       (fn [reading] (> (get reading :celsius) threshold)))))
 (: sum-of-squares (-> Int (Effect Int)))
-(define
-  sum-of-squares
+(define sum-of-squares
   [n]
-  (stream-run-fold
-    (stream-map (stream-range 1 n) (fn [i] (* i i)))
+  (stream-run-fold (stream-map (stream-range 1 n) (fn [i] (* i i)))
     0
     (fn [total square] (+ total square))))
-(:
-  export-first
+(: export-first
   (-> (List String) Int (Effect Unit [SensorOffline] [Sensors Sink])))
-(define
-  export-first
+(define export-first
   [sensors limit]
   (stream-run-for-each
     (stream-take
-      (stream-map-effect
-        (stream-of sensors)
+      (stream-map-effect (stream-of sensors)
         (fn [sensor] (Sensors.read sensor)))
       limit)
-    (fn
-      [reading]
+    (fn [reading]
       (Sink.write (str (get reading :sensor) "=" (get reading :celsius))))))
 (: average (-> (List Reading) (Effect Float)))
-(define
-  average
+(define average
   [readings]
   (do!
     [
       total
-      (stream-run-fold
-        (celsius-values readings)
+      (stream-run-fold (celsius-values readings)
         (: 0 Float)
         (fn [sum value] (+ sum value)))]
     (succeed (if (empty? readings) 0 (/ total (count readings))))))

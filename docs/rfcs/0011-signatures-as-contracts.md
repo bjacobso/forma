@@ -86,10 +86,12 @@ declaration metadata elsewhere:
 
 ```lisp
 (: word-count
-   (-> {:path (String :doc "File path")
-        :limit (Option Int :doc "Stop counting here")}
-       Int)
-   :doc "Count the words in a text file.")
+  (->
+    {
+      :path (String :doc "File path")
+      :limit (Option Int :doc "Stop counting here")}
+    Int)
+  :doc "Count the words in a text file.")
 (define word-count [{:path path :limit limit}] ...)
 ```
 

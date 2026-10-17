@@ -1,8 +1,7 @@
 # Seed Data
 
 ```lisp
-(export
-  brand-of
+(export brand-of
   location-for
   position-covered-by
   cba-uses-template
@@ -17,39 +16,45 @@
 ;; =============================================================================
 ;; Labor Relations Ontology - Seed Data
 ;; =============================================================================
-(seed Employer "employer:northstar"
+(seed Employer
+  "employer:northstar"
   {
     :name "Northstar Hospitality Group"
     :status "active"
     :repository-profile "Associate Digital File"
     :default-delivery-channel "Candidate Messaging"})
-(seed SectorBrand "brand:stadium-dining"
+(seed SectorBrand
+  "brand:stadium-dining"
   {
     :sectorbrand/name "stadium-dining"
     :sectorbrand/display-name "Stadium Dining"
     :sectorbrand/branding-mode "sector-brand"
     :sectorbrand/status "active"})
-(seed SectorBrand "brand:campus-kitchens"
+(seed SectorBrand
+  "brand:campus-kitchens"
   {
     :sectorbrand/name "campus-kitchens"
     :sectorbrand/display-name "Campus Kitchens"
     :sectorbrand/branding-mode "sector-brand"
     :sectorbrand/status "active"})
-(seed WorkLocation "location:riverfront-arena"
+(seed WorkLocation
+  "location:riverfront-arena"
   {
     :worklocation/name "Riverfront Arena"
     :worklocation/sector "sports-and-entertainment"
     :worklocation/city "Cleveland"
     :worklocation/state "OH"
     :worklocation/status "active"})
-(seed WorkLocation "location:west-campus"
+(seed WorkLocation
+  "location:west-campus"
   {
     :worklocation/name "West Campus Dining"
     :worklocation/sector "education"
     :worklocation/city "Madison"
     :worklocation/state "WI"
     :worklocation/status "active"})
-(seed AuthorizationCardTemplate "template:food-service-204-v3"
+(seed AuthorizationCardTemplate
+  "template:food-service-204-v3"
   {
     :authcardtemplate/template-id "AUTH-FS-204"
     :authcardtemplate/name "Food Service Workers Authorization Card"
@@ -60,7 +65,8 @@
     :authcardtemplate/form-mode "simplified"
     :authcardtemplate/disclosure-summary
       "Employee authorizes union representation and payroll dues deduction for the covered bargaining unit."})
-(seed AuthorizationCardTemplate "template:hospitality-311-v1"
+(seed AuthorizationCardTemplate
+  "template:hospitality-311-v1"
   {
     :authcardtemplate/template-id "AUTH-HSP-311"
     :authcardtemplate/name "Hospitality Local Authorization Card"
@@ -71,7 +77,8 @@
     :authcardtemplate/form-mode "verbatim"
     :authcardtemplate/disclosure-summary
       "Legal review requires verbatim card content before publication."})
-(seed CollectiveBargainingAgreement "cba:food-service-204"
+(seed CollectiveBargainingAgreement
+  "cba:food-service-204"
   {
     :cba/identifier "CBA-FS-204-2026"
     :cba/union-name "Food Service Workers Alliance"
@@ -82,7 +89,8 @@
     :cba/effective-end 1861833600000
     :cba/status "active"
     :cba/card-template "template:food-service-204-v3"})
-(seed CollectiveBargainingAgreement "cba:hospitality-311"
+(seed CollectiveBargainingAgreement
+  "cba:hospitality-311"
   {
     :cba/identifier "CBA-HSP-311-2026"
     :cba/union-name "Hospitality Staff Guild"
@@ -93,7 +101,8 @@
     :cba/effective-end 1861833600000
     :cba/status "pending-review"
     :cba/card-template "template:hospitality-311-v1"})
-(seed Position "position:arena-cashier"
+(seed Position
+  "position:arena-cashier"
   {
     :title "Concessions Cashier"
     :job-code "FS-1007"
@@ -101,7 +110,8 @@
     :cba-id "CBA-FS-204-2026"
     :sector-brand "brand:stadium-dining"
     :work-location "location:riverfront-arena"})
-(seed Position "position:campus-cook"
+(seed Position
+  "position:campus-cook"
   {
     :title "Campus Line Cook"
     :job-code "CK-2204"
@@ -109,7 +119,8 @@
     :cba-id "CBA-HSP-311-2026"
     :sector-brand "brand:campus-kitchens"
     :work-location "location:west-campus"})
-(seed Employee "employee:maya-chen"
+(seed Employee
+  "employee:maya-chen"
   {
     :first-name "Maya"
     :last-name "Chen"
@@ -121,7 +132,8 @@
     :rehire-indicator false
     :address "142 Market Street, Cleveland, OH"
     :union-card-signed false})
-(seed Employee "employee:darius-lee"
+(seed Employee
+  "employee:darius-lee"
   {
     :first-name "Darius"
     :last-name "Lee"
@@ -134,7 +146,8 @@
     :cba-id "CBA-HSP-311-2026"
     :address "88 Lake Avenue, Madison, WI"
     :union-card-signed false})
-(seed Employee "employee:rosa-diaz"
+(seed Employee
+  "employee:rosa-diaz"
   {
     :first-name "Rosa"
     :last-name "Diaz"
@@ -147,7 +160,8 @@
     :cba-id "CBA-FS-204-2026"
     :address "301 Ontario Avenue, Cleveland, OH"
     :union-card-signed true})
-(seed Placement "placement:maya-arena"
+(seed Placement
+  "placement:maya-arena"
   {
     :start-date 1770163200000
     :status "covered-pending-card"
@@ -156,7 +170,8 @@
     :employee "employee:maya-chen"
     :position "position:arena-cashier"
     :employer "employer:northstar"})
-(seed Placement "placement:darius-campus"
+(seed Placement
+  "placement:darius-campus"
   {
     :start-date 1770768000000
     :status "rehire-review"
@@ -165,7 +180,8 @@
     :employee "employee:darius-lee"
     :position "position:campus-cook"
     :employer "employer:northstar"})
-(seed Placement "placement:rosa-arena"
+(seed Placement
+  "placement:rosa-arena"
   {
     :start-date 1757894400000
     :status "active"
@@ -174,7 +190,8 @@
     :employee "employee:rosa-diaz"
     :position "position:arena-cashier"
     :employer "employer:northstar"})
-(seed UnionAuthorizationTask "union-task:maya-card"
+(seed UnionAuthorizationTask
+  "union-task:maya-card"
   {
     :unionauthtask/title "Complete Food Service Workers authorization card"
     :unionauthtask/status "pending"
@@ -186,7 +203,8 @@
     :unionauthtask/employee "employee:maya-chen"
     :unionauthtask/placement "placement:maya-arena"
     :unionauthtask/cba "cba:food-service-204"})
-(seed UnionAuthorizationTask "union-task:darius-review"
+(seed UnionAuthorizationTask
+  "union-task:darius-review"
   {
     :unionauthtask/title "Review rehire union authorization policy"
     :unionauthtask/status "needs-review"
@@ -198,7 +216,8 @@
     :unionauthtask/employee "employee:darius-lee"
     :unionauthtask/placement "placement:darius-campus"
     :unionauthtask/cba "cba:hospitality-311"})
-(seed UnionAuthorizationTask "union-task:rosa-card"
+(seed UnionAuthorizationTask
+  "union-task:rosa-card"
   {
     :unionauthtask/title "Completed Food Service Workers authorization card"
     :unionauthtask/status "completed"
@@ -212,7 +231,8 @@
     :unionauthtask/employee "employee:rosa-diaz"
     :unionauthtask/placement "placement:rosa-arena"
     :unionauthtask/cba "cba:food-service-204"})
-(seed ExecutedAuthorizationDocument "executed:rosa-card"
+(seed ExecutedAuthorizationDocument
+  "executed:rosa-card"
   {
     :executeddocument/name "Rosa Diaz - Union Authorization Card"
     :executeddocument/status "available"
@@ -225,7 +245,8 @@
     :executeddocument/task "union-task:rosa-card"
     :executeddocument/employee "employee:rosa-diaz"
     :executeddocument/cba "cba:food-service-204"})
-(seed IntegrationEvent "event:rosa-card-complete"
+(seed IntegrationEvent
+  "event:rosa-card-complete"
   {
     :integrationevent/event-type "task_updated"
     :integrationevent/status "delivered"
@@ -242,7 +263,10 @@
 (link location-for "location:west-campus" "brand:campus-kitchens" {})
 (link position-covered-by "position:arena-cashier" "cba:food-service-204" {})
 (link position-covered-by "position:campus-cook" "cba:hospitality-311" {})
-(link cba-uses-template "cba:food-service-204" "template:food-service-204-v3" {})
+(link cba-uses-template
+  "cba:food-service-204"
+  "template:food-service-204-v3"
+  {})
 (link cba-uses-template "cba:hospitality-311" "template:hospitality-311-v1" {})
 (link placed-in "employee:maya-chen" "placement:maya-arena" {})
 (link placed-in "employee:darius-lee" "placement:darius-campus" {})
@@ -254,7 +278,10 @@
 (link placement-employer "placement:darius-campus" "employer:northstar" {})
 (link placement-employer "placement:rosa-arena" "employer:northstar" {})
 (link task-for-placement "union-task:maya-card" "placement:maya-arena" {})
-(link task-for-placement "union-task:darius-review" "placement:darius-campus" {})
+(link task-for-placement
+  "union-task:darius-review"
+  "placement:darius-campus"
+  {})
 (link task-for-placement "union-task:rosa-card" "placement:rosa-arena" {})
 (link task-fulfills-cba "union-task:maya-card" "cba:food-service-204" {})
 (link task-fulfills-cba "union-task:darius-review" "cba:hospitality-311" {})

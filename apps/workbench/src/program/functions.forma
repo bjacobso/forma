@@ -3,8 +3,7 @@
 (define numbers [1 2 3 4 5])
 (map square numbers)
 
-(define greet [person]
-  (str "Hello, " (get person :name) "!"))
+(define greet [person] (str "Hello, " (get person :name) "!"))
 (greet {:name "Ada"})
 
 (define identity [value] value)

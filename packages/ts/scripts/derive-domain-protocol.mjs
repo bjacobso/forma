@@ -1,6 +1,7 @@
 // Read the canonical type/form declarations without bootstrapping the generated prelude.
-// The scanner retains source slices; generation never formats or edits ontology.lisp.
+// The scanner retains source slices; only generated output is formatted.
 import {readFileSync, writeFileSync} from 'node:fs';
+import {formatLisp} from '../dist/Format.mjs';
 import {resolve} from 'node:path';
 const root=resolve(import.meta.dirname,'../../../');
 const source=readFileSync(resolve(root,'preludes/ontology.lisp'),'utf8');
@@ -68,7 +69,9 @@ const result=[
   `(define canonical-ir-declaration-catalog (quote {:extensions {:protocol/catalog {:name "CanonicalIRDeclarations" :entries [${catalog.join('\n ')}]}}}))`,
   ''
 ].join('\n\n').trimEnd()+'\n';
+const formatted=formatLisp(result);
+if(formatted.diagnostics.length)throw new Error(JSON.stringify(formatted.diagnostics));
 const output=resolve(root,'preludes/ontology-ir.lisp');
 if(process.argv.includes('--check')){
-  if(readFileSync(output,'utf8')!==result){console.error('ontology-ir.lisp must be regenerated');process.exitCode=1;}
-}else writeFileSync(output,result);
+  if(readFileSync(output,'utf8')!==formatted.text){console.error('ontology-ir.lisp must be regenerated');process.exitCode=1;}
+}else writeFileSync(output,formatted.text);

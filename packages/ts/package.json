@@ -150,7 +150,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "pack:check": "node ../../scripts/pnpm-pack-check.mjs",
-    "preludes:generate": "node scripts/generate-preludes.mjs"
+    "preludes:generate": "pnpm build && node scripts/generate-preludes.mjs"
   },
   "dependencies": {
     "effect": "4.0.3"

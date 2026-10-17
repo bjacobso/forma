@@ -1,3 +1,4 @@
+import { formatLisp } from "@formalang/ts/format";
 /**
  * Forma programs shown on the docs `/effect` page. The page imports these
  * sources and their real compiler output from `docs/snippets/effect`; see
@@ -5,7 +6,7 @@
  */
 
 /** The page's main example: an order payment operation. */
-export const ordersSource = `(type OrderId (Brand String))
+export const ordersSource = formatLisp(`(type OrderId (Brand String))
 
 (type Status (Union :pending :paid :shipped))
 
@@ -32,16 +33,16 @@ export const ordersSource = `(type OrderId (Brand String))
         (do! [_ (retry (Payments.charge (get order :total-cents)) :times 2)
               paid (succeed (assoc order :status "paid"))
               _ (Orders.save paid)]
-          (succeed paid)))))`;
+          (succeed paid)))))`).text.trimEnd();
 
 /** The same operation with PaymentDeclined left out of the signature. */
-export const ordersUndeclaredSource = ordersSource.replace(
+export const ordersUndeclaredSource = formatLisp(ordersSource.replace(
   "(Effect Order [OrderNotFound PaymentDeclined] [Orders Payments.charge])",
   "(Effect Order [OrderNotFound] [Orders Payments.charge])",
-);
+)).text.trimEnd();
 
 /** Mistakes TypeScript accepts once the code is generated. */
-export const strictSource = `(type Money {:amount Int
+export const strictSource = formatLisp(`(type Money {:amount Int
  :currency String})
 
 (: same-price? (-> Money Money Bool))
@@ -54,4 +55,4 @@ export const strictSource = `(type Money {:amount Int
 (define half  [n] (/ n 2))
 
 (: describe (-> Int String))
-(define describe  [count] (if count "some" "none"))`;
+(define describe  [count] (if count "some" "none"))`).text.trimEnd();

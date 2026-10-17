@@ -3,7 +3,6 @@
 ; Namespaced imports keep similarly named helpers separate.
 (import "./lib/discount.forma" :as discount)
 
-(define price-quote [amount]
-  (with-tax (discount/apply-discount amount)))
+(define price-quote [amount] (with-tax (discount/apply-discount amount)))
 
 (map price-quote [100 250 1000])

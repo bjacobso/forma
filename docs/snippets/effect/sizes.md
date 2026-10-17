@@ -1,19 +1,19 @@
 | Conformance case | Forma lines | Generated TypeScript lines | Ratio |
 | --- | ---: | ---: | ---: |
-| `concurrent-workflow` | 95 | 120 | 1.26× |
-| `config-and-logging` | 46 | 38 | 0.83× |
-| `crud-users` | 139 | 158 | 1.14× |
-| `edge-cases` | 106 | 152 | 1.43× |
-| `elm-counter` | 25 | 88 | 3.52× |
-| `elm-pure` | 7 | 33 | 4.71× |
-| `http-api` | 19 | 37 | 1.95× |
-| `multi-service-checkout` | 125 | 160 | 1.28× |
-| `ontology-actions` | 25 | 52 | 2.08× |
-| `operational-effects` | 11 | 24 | 2.18× |
-| `pure-domain-logic` | 133 | 84 | 0.63× |
-| `resource-scope` | 69 | 94 | 1.36× |
-| `schemas-and-decoding` | 80 | 78 | 0.97× |
-| `stream-pipeline` | 60 | 70 | 1.17× |
-| `surface-review` | 45 | 95 | 2.11× |
-| `typed-errors` | 59 | 76 | 1.29× |
-| **All cases** | **1044** | **1359** | **1.30×** |
+| `concurrent-workflow` | 77 | 120 | 1.56× |
+| `config-and-logging` | 39 | 38 | 0.97× |
+| `crud-users` | 113 | 158 | 1.40× |
+| `edge-cases` | 89 | 152 | 1.71× |
+| `elm-counter` | 36 | 88 | 2.44× |
+| `elm-pure` | 9 | 33 | 3.67× |
+| `http-api` | 22 | 37 | 1.68× |
+| `multi-service-checkout` | 98 | 160 | 1.63× |
+| `ontology-actions` | 22 | 52 | 2.36× |
+| `operational-effects` | 10 | 24 | 2.40× |
+| `pure-domain-logic` | 110 | 84 | 0.76× |
+| `resource-scope` | 61 | 94 | 1.54× |
+| `schemas-and-decoding` | 69 | 78 | 1.13× |
+| `stream-pipeline` | 47 | 70 | 1.49× |
+| `surface-review` | 38 | 95 | 2.50× |
+| `typed-errors` | 45 | 76 | 1.69× |
+| **All cases** | **885** | **1359** | **1.54×** |

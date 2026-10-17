@@ -1,3 +1,1 @@
-(repeated-bool
-  (:item "first")
-  (:item "second"))
+(repeated-bool (:item "first") (:item "second"))

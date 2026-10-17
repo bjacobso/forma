@@ -70,17 +70,13 @@ as signatures do in the [language reference](../language.md).
 
 (type OrderId (Brand String))
 
-(type Order
-  {:id OrderId
-   :total-cents Int
-   :status (Union :pending :paid)})
+(type Order {:id OrderId :total-cents Int :status (Union :pending :paid)})
 
 (: valid-total? (-> Int Bool))
 (define valid-total? [total] (>= total 0))
 
 (: make-order (-> OrderId Int Order))
-(define make-order [id total]
-  {:id id :total-cents total :status :pending})
+(define make-order [id total] {:id id :total-cents total :status :pending})
 ```
 
 `valid-total?` belongs to this module and cannot be imported. The module interface
@@ -103,15 +99,13 @@ Named imports introduce only the requested exports:
 
 (export Payments pay)
 
-(service Payments
-  (: charge (-> OrderId Int (Effect Unit))))
+(service Payments (: charge (-> OrderId Int (Effect Unit))))
 
 (: pay (-> Order (Effect Order [] [Payments.charge])))
-(define pay [order]
+(define pay
+  [order]
   (do! [_ (Payments.charge order.id order.total-cents)]
-    {:id order.id
-     :total-cents order.total-cents
-     :status :paid}))
+    {:id order.id :total-cents order.total-cents :status :paid}))
 ```
 
 Namespace imports introduce one module alias:
@@ -121,8 +115,7 @@ Namespace imports introduce one module alias:
 (import "./orders.forma" :as orders)
 (import "./checkout.forma" :as checkout)
 
-(define example
-  (orders/make-order (orders/OrderId "order:1") 1200))
+(define example (orders/make-order (orders/OrderId "order:1") 1200))
 
 (define main (checkout/pay example))
 (export main)
@@ -456,8 +449,7 @@ a form while keeping its projection helpers private:
 ;; src/greetings.forma
 (export greeting)
 
-(type GreetingIR
-  {:kind "Greeting" :name Symbol :message String})
+(type GreetingIR {:kind "Greeting" :name Symbol :message String})
 
 (define greeting-message [message] (str "Hello, " message))
 

@@ -1,8 +1,7 @@
 (import "./ids.forma" [Customer])
 (export Console log)
-(service Console
-  (: print (-> String (Effect Unit))))
+(service Console (: print (-> String (Effect Unit))))
 (: log (-> Customer (Effect String [] [Console.print])))
-(define log [customer]
-  (do! [_ (Console.print customer.name)]
-    (succeed customer.name)))
+(define log
+  [customer]
+  (do! [_ (Console.print customer.name)] (succeed customer.name)))

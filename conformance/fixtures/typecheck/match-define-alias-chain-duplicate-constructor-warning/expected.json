@@ -20,7 +20,7 @@
       "severity": "warning",
       "span": {
         "start": 88,
-        "end": 139
+        "end": 133
       },
       "message": "Duplicate match arm for constructor 'Option.Some'"
     }

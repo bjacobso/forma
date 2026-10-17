@@ -5,8 +5,7 @@ compatibility covered after product examples migrate to human-first `README.md`
 roots.
 
 ```lisp
-(ontology
-  (:id "legacy-ontology-md-fixture")
+(ontology (:id "legacy-ontology-md-fixture")
   (:version "0.1.0")
   (:preludes core))
 

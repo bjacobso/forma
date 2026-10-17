@@ -1,17 +1,31 @@
 ; Typed workflow forms. Patterns describe authoring; IR types describe artifacts.
 
 (type StepIR
-  {:kind "Step" :name Symbol :system String
-   :reads (List Keyword) :writes (List Keyword) :doc (Option String)})
+  {
+    :kind "Step"
+    :name Symbol
+    :system String
+    :reads (List Keyword)
+    :writes (List Keyword)
+    :doc (Option String)})
 
 (form (step name {:keys [system reads writes doc]})
   "A unit of work performed by an external system."
-  :types {:name (Declares Step) :system String
-          :reads (Option (List Keyword)) :writes (Option (List Keyword))
-          :doc (Option String)}
+  :types
+    {
+      :name (Declares Step)
+      :system String
+      :reads (Option (List Keyword))
+      :writes (Option (List Keyword))
+      :doc (Option String)}
   :ir StepIR
-  {:kind "Step" :name name :system system
-   :reads (or reads []) :writes (or writes []) :doc doc})
+  {
+    :kind "Step"
+    :name name
+    :system system
+    :reads (or reads [])
+    :writes (or writes [])
+    :doc doc})
 
 (type StepRefIR {:kind "step" :step Symbol})
 (type ParallelIR {:kind "parallel" :items (List flow)})

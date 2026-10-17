@@ -1,8 +1,7 @@
 # Actions
 
 ```lisp
-(export
-  create-client
+(export create-client
   create-intake-packet
   submit-intake-packet
   complete-firm-review
@@ -28,10 +27,8 @@
 ;; ---------------------------------------------------------------------------
 ;; Client Intake
 ;; ---------------------------------------------------------------------------
-(:
-  create-client
-  (->
-    Attorney
+(: create-client
+  (-> Attorney
     {
       :name String
       :type String
@@ -40,16 +37,13 @@
       :source (Option String)}
     Float
     (Action Bool)))
-(define
-  create-client
+(define create-client
   [attorney input timestamp]
-  (do!
-    []
+  (do! []
     (do!
       [
         client-id
-        (create!
-          Client
+        (create! Client
           {
             :name (get input :name)
             :type (get input :type)
@@ -59,14 +53,12 @@
             :risk-level "medium"
             :source (get input :source)})
         intake-id
-        (create!
-          IntakePacket
+        (create! IntakePacket
           {
             :intakepacket/status "draft"
             :intakepacket/notes "Created during client intake"})
         conflict-id
-        (create!
-          ConflictCheck
+        (create! ConflictCheck
           {
             :conflictcheck/status "pending"
             :conflictcheck/search-terms (get input :name)
@@ -76,39 +68,33 @@
         link2
         (link! conflict-for conflict-id client-id {})
         link3
-        (link!
-          represents
+        (link! represents
           attorney.id
           client-id
           {:since timestamp :role "prospective-lead"})]
       true)))
 (: create-intake-packet (-> Client (Action Bool)))
-(define
-  create-intake-packet
+(define create-intake-packet
   [client]
-  (do!
-    []
+  (do! []
     (do!
       [
         instance-id
         (instantiate! client-intake-form Client client.id)
         intake-id
-        (create!
-          IntakePacket
+        (create! IntakePacket
           {
             :intakepacket/status "draft"
             :intakepacket/notes "Client intake packet opened"})
         conflict-id
-        (create!
-          ConflictCheck
+        (create! ConflictCheck
           {
             :conflictcheck/status "pending"
             :conflictcheck/search-terms (get client :name)
             :conflictcheck/result "not-run"
             :conflictcheck/notes "Initial conflicts search queued"})
         task-id
-        (task!
-          Client
+        (task! Client
           {
             :title "Complete Client Intake Packet"
             :type "data-entry"
@@ -125,16 +111,13 @@
         (link! conflict-for conflict-id client.id {})]
       true)))
 (: submit-intake-packet (-> Client Float (Action Bool)))
-(define
-  submit-intake-packet
+(define submit-intake-packet
   [client timestamp]
-  (do!
-    []
+  (do! []
     (do!
       [
         packet-id
-        (create!
-          IntakePacket
+        (create! IntakePacket
           {
             :intakepacket/status "submitted"
             :intakepacket/submitted-at timestamp
@@ -144,37 +127,32 @@
         (link! intake-for packet-id client.id {})]
       true)))
 (: complete-firm-review (-> Client Float (Action Bool)))
-(define
-  complete-firm-review
+(define complete-firm-review
   [client timestamp]
-  (do!
-    []
+  (do! []
     (do!
       [
         check-id
-        (create!
-          ConflictCheck
+        (create! ConflictCheck
           {
             :conflictcheck/status "cleared"
             :conflictcheck/search-terms (get client :name)
             :conflictcheck/result "clear"
             :conflictcheck/reviewed-by "Nora Kim"
             :conflictcheck/reviewed-at timestamp
-            :conflictcheck/notes "Firm review cleared the client for engagement"})
+            :conflictcheck/notes
+              "Firm review cleared the client for engagement"})
         link-id
         (link! conflict-for check-id client.id {})]
       true)))
 (: run-conflict-check (-> Client (Action Bool)))
-(define
-  run-conflict-check
+(define run-conflict-check
   [client]
-  (do!
-    []
+  (do! []
     (do!
       [
         check-id
-        (create!
-          ConflictCheck
+        (create! ConflictCheck
           {
             :conflictcheck/status "pending"
             :conflictcheck/search-terms (get client :name)
@@ -184,8 +162,7 @@
         (link! conflict-for check-id client.id {})]
       true)))
 (: approve-conflict-check (-> ConflictCheck Float (Action Bool)))
-(define
-  approve-conflict-check
+(define approve-conflict-check
   [check timestamp]
   (do!
     [
@@ -197,8 +174,7 @@
       (update! ConflictCheck check.id {:conflictcheck/reviewed-at timestamp})]
     true))
 (: escalate-conflict-check (-> ConflictCheck (Action Bool)))
-(define
-  escalate-conflict-check
+(define escalate-conflict-check
   [check]
   (do!
     [
@@ -212,16 +188,13 @@
 ;; Engagement and Matter Opening
 ;; ---------------------------------------------------------------------------
 (: generate-engagement-letter (-> Matter Float (Action Bool)))
-(define
-  generate-engagement-letter
+(define generate-engagement-letter
   [matter timestamp]
-  (do!
-    []
+  (do! []
     (do!
       [
         letter-id
-        (create!
-          EngagementLetter
+        (create! EngagementLetter
           {
             :engagementletter/status "sent"
             :engagementletter/sent-at timestamp
@@ -230,8 +203,7 @@
         instance-id
         (instantiate! engagement-letter EngagementLetter letter-id)
         task-id
-        (task!
-          EngagementLetter
+        (task! EngagementLetter
           {
             :title "Review and Sign Engagement Letter"
             :type "approval"
@@ -246,23 +218,19 @@
         (link! engagement-letter-for letter-id matter.id {})]
       true)))
 (: complete-engagement-letter (-> EngagementLetter Float (Action Bool)))
-(define
-  complete-engagement-letter
+(define complete-engagement-letter
   [letter timestamp]
   (do!
     [
       _
       (update! EngagementLetter letter.id {:engagementletter/status "signed"})
       _
-      (update!
-        EngagementLetter
+      (update! EngagementLetter
         letter.id
         {:engagementletter/signed-at timestamp})]
     true))
-(:
-  open-matter
-  (->
-    Client
+(: open-matter
+  (-> Client
     {
       :title String
       :practiceArea String
@@ -272,16 +240,13 @@
       :summary (Option String)}
     Float
     (Action Bool)))
-(define
-  open-matter
+(define open-matter
   [client input timestamp]
-  (do!
-    [_ (update! Client client.id {:status "active"})]
+  (do! [_ (update! Client client.id {:status "active"})]
     (do!
       [
         matter-id
-        (create!
-          Matter
+        (create! Matter
           {
             :title (get input :title)
             :practice-area (get input :practiceArea)
@@ -295,18 +260,15 @@
         (link! matter-for matter-id client.id {})]
       true)))
 (: activate-matter (-> Matter (Action Bool)))
-(define
-  activate-matter
+(define activate-matter
   [matter]
   (do! [_ (update! Matter matter.id {:status "active"})] true))
 
 ;; ---------------------------------------------------------------------------
 ;; Matter Operations
 ;; ---------------------------------------------------------------------------
-(:
-  add-case-task
-  (->
-    Matter
+(: add-case-task
+  (-> Matter
     {
       :title String
       :type String
@@ -315,16 +277,13 @@
       :assigneeRole String
       :notes (Option String)}
     (Action Bool)))
-(define
-  add-case-task
+(define add-case-task
   [matter input]
-  (do!
-    []
+  (do! []
     (do!
       [
         task-id
-        (create!
-          CaseTask
+        (create! CaseTask
           {
             :casetask/title (get input :title)
             :casetask/type (get input :type)
@@ -337,8 +296,7 @@
         (link! task-for-matter task-id matter.id {})]
       true)))
 (: complete-case-task (-> CaseTask Float (Action Bool)))
-(define
-  complete-case-task
+(define complete-case-task
   [task timestamp]
   (do!
     [
@@ -347,26 +305,21 @@
       _
       (update! CaseTask task.id {:casetask/completed-at timestamp})]
     true))
-(:
-  request-documents
-  (->
-    Matter
+(: request-documents
+  (-> Matter
     {
       :title String
       :dueDate (Option Float)
       :requestedFrom (Option String)
       :notes (Option String)}
     (Action Bool)))
-(define
-  request-documents
+(define request-documents
   [matter input]
-  (do!
-    []
+  (do! []
     (do!
       [
         request-id
-        (create!
-          DocumentRequest
+        (create! DocumentRequest
           {
             :documentrequest/title (get input :title)
             :documentrequest/status "requested"
@@ -377,16 +330,14 @@
         (link! document-request-for request-id matter.id {})]
       true)))
 (: mark-documents-received (-> DocumentRequest Float (Action Bool)))
-(define
-  mark-documents-received
+(define mark-documents-received
   [request timestamp]
   (do!
     [
       _
       (update! DocumentRequest request.id {:documentrequest/status "received"})
       _
-      (update!
-        DocumentRequest
+      (update! DocumentRequest
         request.id
         {:documentrequest/received-at timestamp})]
     true))
@@ -395,8 +346,7 @@
 ;; Billing and Notifications
 ;; ---------------------------------------------------------------------------
 (: approve-invoice (-> Invoice (Action Bool)))
-(define
-  approve-invoice
+(define approve-invoice
   [invoice]
   (do!
     [
@@ -406,15 +356,14 @@
       (update! Invoice invoice.id {:status "approved"})]
     true))
 (: flag-client-risk (-> Client {:riskLevel String} (Action Bool)))
-(define
-  flag-client-risk
+(define flag-client-risk
   [client input]
-  (do! [_ (update! Client client.id {:risk-level (get input :riskLevel)})] true))
+  (do! [_ (update! Client client.id {:risk-level (get input :riskLevel)})]
+    true))
 (: send-notification (-> Client (Action Bool)))
 (define send-notification [client] (do! [_ (emit! "send-notification")] true))
 (: escalate-to-attorney (-> Matter (Action Bool)))
-(define
-  escalate-to-attorney
+(define escalate-to-attorney
   [matter]
   (do! [_ (emit! "escalate-to-attorney")] true))
 ```

@@ -31,8 +31,9 @@ The proposal in one screen:
 
 ```lisp
 (type OrderId (Brand String))
-(type Status  (Union :pending :paid :shipped))
-(type Order   {:id OrderId :status Status :total-cents Int :coupon (Option String)})
+(type Status (Union :pending :paid :shipped))
+(type Order
+  {:id OrderId :status Status :total-cents Int :coupon (Option String)})
 
 (error OrderNotFound {:id OrderId})
 
@@ -40,19 +41,25 @@ The proposal in one screen:
   (: find (-> OrderId (Effect Order [OrderNotFound])))
   (: save (-> Order (Effect Unit))))
 
-(: pay (-> OrderId (Effect Order [OrderNotFound PaymentDeclined] [Orders Payments.charge])))
-(define pay [id]
+(: pay
+  (-> OrderId
+    (Effect Order [OrderNotFound PaymentDeclined] [Orders Payments.charge])))
+(define pay
+  [id]
   (do! [order (Orders.find id)]
     (match order.status
       :pending (do! [_ (Payments.charge order.total-cents)] order)
-      _        order)))
+      _
+      order)))
 
-(entity Employee {:name String :department (Id Department) :active (Option Bool)})
+(entity Employee
+  {:name String :department (Id Department) :active (Option Bool)})
 
 (form (entity name fields {:keys [doc]})
   "A named record of attributes."
-  :types {:name (Declares SchemaDecl) :fields (Record Type) :doc (Option String)}
-  :ir    EntityIR
+  :types
+    {:name (Declares SchemaDecl) :fields (Record Type) :doc (Option String)}
+  :ir EntityIR
   {:kind "Entity" :name name :doc doc :fields (entity-fields name fields)})
 ```
 
@@ -128,8 +135,7 @@ differently depending on which pipeline will read it.
 
 ```lisp
 (define-schema User
-  (Struct
-    (field id UserId)
+  (Struct (field id UserId)
     (field name String)
     (field email String)
     (field role Role)
@@ -152,8 +158,7 @@ same head, distinguished from the Effect one by counting items
 ```lisp
 (define-schema DebugBlobUploadResponse
   (:kind struct)
-  (:fields
-    (field hash DebugBlobHash)
+  (:fields (field hash DebugBlobHash)
     (field size Int)
     (field filename (Optional String)))
   (:identifier "DebugBlobUploadResponse"))
@@ -166,10 +171,8 @@ lowercase type names and `(:required true)` clauses:
 (define-form ontology-ir-workspace
   (:phase meta)
   (:extensions
-    (:protocol/object
-      (:name WorkspaceIR)
-      (:fields
-        (:kind (:kind literal) (:values [Workspace]) (:required true))
+    (:protocol/object (:name WorkspaceIR)
+      (:fields (:kind (:kind literal) (:values [Workspace]) (:required true))
         (:name (:type string) (:required true))
         (:title (:type string))
         (:views (:kind array) (:item string))))))
@@ -191,9 +194,9 @@ payloads, consumed only by OCaml; TypeScript keeps a separate hard-coded table
 again (`pure-domain-logic/program.lisp:7-11`):
 
 ```lisp
-(define-type (Maybe a) (Some a) (None))          ; core
+(define-type (Maybe a) (Some a) (None)) ; core
 
-(define-schema Discount                           ; Effect
+(define-schema Discount ; Effect
   (TaggedUnion type
     [percent (Struct (field rate Int))]
     [fixed (Struct (field cents Int))]
@@ -236,10 +239,10 @@ written two ways:
 
 ```lisp
 (define-service UserRepo
-  (:methods
-    (find [id UserId] (Effect (Option User) [] []))))   ; crud-users:29
+  (:methods (find [id UserId] (Effect (Option User) [] [])))) ; crud-users:29
 
-(: get-user (-> UserId (Effect User [UserNotFound] [UserRepo.find])))  ; crud-users:65
+(: get-user
+  (-> UserId (Effect User [UserNotFound] [UserRepo.find]))) ; crud-users:65
 ```
 
 And `field` names six different things (Effect member, entity child form, document
@@ -251,9 +254,9 @@ with type and path swapped.
 ### 3.3 Three option syntaxes and wrapper stutter
 
 ```lisp
-(:field [employee/name String {:required true}])        ; map
-(slot field value (:many true) (:required true))         ; clause
-(all {:a e1 :b e2} :concurrency :unbounded)             ; trailing pairs
+(:field [employee/name String {:required true}]) ; map
+(slot field value (:many true) (:required true)) ; clause
+(all {:a e1 :b e2} :concurrency :unbounded) ; trailing pairs
 ```
 
 Repeated children need a keyword wrapper around a list with the same head
@@ -276,8 +279,7 @@ stutter the same way: `(bind bind-declaration-name ...)`, `(validate validate-on
 (define-form columns
   (:phase meta)
   (:extensions
-    (:view/component
-      (:allows-bind false)
+    (:view/component (:allows-bind false)
       (:compile (:expr-props [visible]))
       (:children any)
       (:compile (:required-children true))))
@@ -309,8 +311,7 @@ define-payload-contract  define-protocol  meta-fn  instance
 
 ```lisp
 (define-service UserRepo
-  (:methods
-    (find [id UserId] (Effect (Option User) [] []))
+  (:methods (find [id UserId] (Effect (Option User) [] []))
     (find-by-email [email String] (Effect (Option User) [] []))
     (save [user User] (Effect Unit [] []))
     (remove [id UserId] (Effect Bool [] []))
@@ -328,10 +329,16 @@ already says whether the result is an `Effect`.
 (`pure-domain-logic/program.lisp:77-81`):
 
 ```lisp
-(do! [nonempty (succeed (filter (fn [item] (> (get item :quantity) 0)) items))
-      _ (when (empty? nonempty) (fail (EmptyCart {:customer (get customer :id)})))
-      gross (succeed (subtotal nonempty))
-      net (succeed (apply-discount (discount-for customer) gross))]
+(do!
+  [
+    nonempty
+    (succeed (filter (fn [item] (> (get item :quantity) 0)) items))
+    _
+    (when (empty? nonempty) (fail (EmptyCart {:customer (get customer :id)})))
+    gross
+    (succeed (subtotal nonempty))
+    net
+    (succeed (apply-discount (discount-for customer) gross))]
   ...)
 ```
 
@@ -340,16 +347,23 @@ already says whether the result is an `Effect`.
 is longer than its output):
 
 ```lisp
-:score (* 10 (get (get parts :activity) :events))
+:score
+(* 10 (get (get parts :activity) :events))
 ```
 
 **Enums and tags change spelling between declaration, value and pattern**
 (`pure-domain-logic/program.lisp:5, 30-32, 55-58`):
 
 ```lisp
-(define-schema Tier (Enum free pro enterprise))      ; symbols
-{"free" {:type "none"} "pro" {:type "percent" :rate 10}}  ; strings
-(match tier "free" "Free" "pro" "Pro" _ "Enterprise")     ; strings (bare symbols also work)
+(define-schema Tier (Enum free pro enterprise)) ; symbols
+{"free" {:type "none"} "pro" {:type "percent" :rate 10}} ; strings
+(match tier
+  "free"
+  "Free"
+  "pro"
+  "Pro"
+  _
+  "Enterprise") ; strings (bare symbols also work)
 ```
 
 **Optional vs Option.** `(Optional String)` in a signature generates `string | void`;
@@ -379,13 +393,12 @@ Defining the `entity` form today takes five artefacts. The descriptor
 (define-form define-entity
   (:phase domain)
   (:doc "Canonical entity/schema declaration.")
-  (:identifiers
-    (identifier name Symbol (:declaration true)))
-  (:slots
-    (slot doc value)
+  (:identifiers (identifier name Symbol (:declaration true)))
+  (:slots (slot doc value)
     (slot role value)
     (slot id-pattern value)
-    (slot field value
+    (slot field
+      value
       (:many true)
       (:required true)
       (:child-form field)
@@ -393,15 +406,11 @@ Defining the `entity` form today takes five artefacts. The descriptor
       (:child-slot type expr (:positional true))
       (:child-slot required value)
       (:child-slot indexed value)))
-  (:bindings
-    (bind bind-declaration-name (:identifier name) (:type SchemaDecl)))
+  (:bindings (bind bind-declaration-name (:identifier name) (:type SchemaDecl)))
   (:bindings-fn entity/bindings)
-  (:extensions
-    (:artifact
-      (:payload (:contract EntityPayload))))
+  (:extensions (:artifact (:payload (:contract EntityPayload))))
   (:construct-fn entity/construct)
-  (:construct
-    [kind "Entity"]
+  (:construct [kind "Entity"]
     [name (or declaration-name "anonymous-entity")]
     [fields (entity-fields field)]
     [loc loc])
@@ -580,10 +589,11 @@ Rules:
 
 ```lisp
 (type OrderId (Brand String))
-(type Role    (Union :admin :member))
-(type Point   (List Number))
-(type User    {:id UserId :name String :role Role :nickname (Option String)})
-(type Shape   (Tagged :tag kind (Circle {:radius Number}) (Square {:side Number})))
+(type Role (Union :admin :member))
+(type Point (List Number))
+(type User {:id UserId :name String :role Role :nickname (Option String)})
+(type Shape
+  (Tagged :tag kind (Circle {:radius Number}) (Square {:side Number})))
 (type (Maybe a) (Tagged (Some a) None))
 
 (class Customer {:id String :name String :tier Tier})
@@ -599,13 +609,12 @@ per head; consumers validate the options they register.
 
 ```lisp
 (: area (-> Shape Number))
-(define area [shape]
-  (match shape
-    (Circle {:radius r}) (* 3.14159 r r)
-    (Square {:side s})   (* s s)))
+(define area
+  [shape]
+  (match shape (Circle {:radius r}) (* 3.14159 r r) (Square {:side s}) (* s s)))
 
-(define tau 6.28318)                       ; value
-(define inc (fn [x] (+ x 1)))              ; explicit fn still fine
+(define tau 6.28318) ; value
+(define inc (fn [x] (+ x 1))) ; explicit fn still fine
 (let [x 1 {:keys [a b]} rec [h & t] xs] ...)
 ```
 
@@ -653,33 +662,43 @@ One pattern language for `match`, `catch`, `let` and `fn`:
 ### 4.8 Effects, services and layers
 
 ```lisp
-(service Clock
-  (: now (Effect Int)))                              ; zero-argument member is an effect value
+(service Clock (: now (Effect Int))) ; zero-argument member is an effect value
 
 (service Orders
   (: find (-> OrderId (Effect Order [OrderNotFound])))
   (: save (-> Order (Effect Unit))))
 
 (: ship (-> OrderId (Effect Order [OrderNotFound] [Orders Clock.now])))
-(define ship [id]
-  (do! [order (Orders.find id)
-        now   Clock.now
-        :let  [shipped (assoc order :status :shipped :shipped-at now)]
-        _     (Orders.save shipped)]
+(define ship
+  [id]
+  (do!
+    [
+      order
+      (Orders.find id)
+      now
+      Clock.now
+      :let [shipped (assoc order :status :shipped :shipped-at now)]
+      _
+      (Orders.save shipped)]
     shipped))
 
 (layer OrdersMemory
   :provides Orders
-  :setup    [store (ref-make (: {} (Map OrderId Order)))]
-  (define find [id]
+  :setup [store (ref-make (: {} (Map OrderId Order)))]
+  (define find
+    [id]
     (do! [orders (ref-get store)]
       (match (get orders id)
-        (Some order) order
-        None         (fail (OrderNotFound {:id id})))))
-  (define save [order]
+        (Some order)
+        order
+        None
+        (fail (OrderNotFound {:id id})))))
+  (define save
+    [order]
     (ref-update store (fn [orders] (assoc orders order.id order)))))
 
-(layer AppLive (layer-provide ShippingLive (layer-merge OrdersMemory ClockLive)))
+(layer AppLive
+  (layer-provide ShippingLive (layer-merge OrdersMemory ClockLive)))
 ```
 
 - **Trailing `Effect` slots are optional.** `(Effect A)` = no errors, no requirements.
@@ -702,14 +721,11 @@ One pattern language for `match`, `catch`, `let` and `fn`:
 ### 4.9 Typeclasses
 
 ```lisp
-(typeclass (Functor f)
-  (: fmap (-> (-> a b) (f a) (f b))))
+(typeclass (Functor f) (: fmap (-> (-> a b) (f a) (f b))))
 
-(typeclass (Ord a) :extends [(Eq a)]
-  (: compare (-> a a Int)))
+(typeclass (Ord a) :extends [(Eq a)] (: compare (-> a a Int)))
 
-(instance (Functor List)
-  (define fmap [f xs] (map f xs)))
+(instance (Functor List) (define fmap [f xs] (map f xs)))
 ```
 
 Members use the same `(:` signatures as services. (The parallel is deliberate:
@@ -770,74 +786,93 @@ the engine-parity suite enforced agreement; the OCaml engine has since been remo
 **Macros** share the pattern language and return syntax instead of IR:
 
 ```lisp
-(macro (when test body ...)
-  `(if ~test (do ~@body) nil))
+(macro (when test body ...) `(if ~test (do ~@body) nil))
 
-(macro (unless test body ...)
-  `(if ~test nil (do ~@body)))
+(macro (unless test body ...) `(if ~test nil (do ~@body)))
 ```
 
 Examples:
 
 ```lisp
 (type EntityIR
-  {:kind   "Entity"
-   :name   Symbol
-   :doc    (Option String)
-   :fields (List {:name Keyword :type Type :indexed Bool})})
+  {
+    :kind "Entity"
+    :name Symbol
+    :doc (Option String)
+    :fields (List {:name Keyword :type Type :indexed Bool})})
 
 (form (entity name fields {:keys [doc role id-pattern]})
   "A named record of attributes."
-  :types {:name       (Declares SchemaDecl)
-          :fields     (Record Type)
-          :doc        (Option String)
-          :role       (Option String)
-          :id-pattern (Option String)}
-  :ir    EntityIR
-  {:kind   "Entity"
-   :name   name
-   :doc    doc
-   :fields (map (fn [[key type]]
-                  {:name    (keyword name key)
-                   :type    type
-                   :indexed (meta type :indexed false)})
-                fields)})
+  :types
+    {
+      :name (Declares SchemaDecl)
+      :fields (Record Type)
+      :doc (Option String)
+      :role (Option String)
+      :id-pattern (Option String)}
+  :ir EntityIR
+  {
+    :kind "Entity"
+    :name name
+    :doc doc
+    :fields
+      (map
+        (fn [[key type]]
+          {
+            :name (keyword name key)
+            :type type
+            :indexed (meta type :indexed false)})
+        fields)})
 
 (type QueryIR
-  {:kind "Query" :name Symbol :from Symbol :where (Option RuntimeExpr) :select (List Keyword)})
+  {
+    :kind "Query"
+    :name Symbol
+    :from Symbol
+    :where (Option RuntimeExpr)
+    :select (List Keyword)})
 
 (form (query name {:keys [from where select]})
   "A named read over one entity."
-  :types {:name   (Declares QueryDef)
-          :from   (Refers SchemaDecl)
-          :where  (Option (Expr Bool))
-          :select (Option (List Symbol))}
+  :types
+    {
+      :name (Declares QueryDef)
+      :from (Refers SchemaDecl)
+      :where (Option (Expr Bool))
+      :select (Option (List Symbol))}
   :scope {:where (fn [{:keys [from]}] (entity-fields from))}
-  :type  (fn [{:keys [from select]}] (List (row-of from select)))
-  :ir    QueryIR
-  {:kind "Query" :name name :from from :where where
-   :select (map (fn [field] (keyword from field)) (or select []))})
+  :type (fn [{:keys [from select]}] (List (row-of from select)))
+  :ir QueryIR
+  {
+    :kind "Query"
+    :name name
+    :from from
+    :where where
+    :select (map (fn [field] (keyword from field)) (or select []))})
 
 (form (columns {:keys [gap visible]} child ...)
   "Lays children out horizontally."
-  :types {:gap (Option Number) :visible (Option (Expr Bool)) :child (List component)}
-  :ir    ComponentIR
+  :types
+    {:gap (Option Number) :visible (Option (Expr Bool)) :child (List component)}
+  :ir ComponentIR
   (component "columns" {:gap gap :visible visible} child))
 
-(component-alias entity-table runtime/entity-table)   ; was a 6-line define-form each
+(component-alias entity-table
+  runtime/entity-table) ; was a 6-line define-form each
 ```
 
 Protocol carriers become types:
 
 ```lisp
 (type WorkspaceIR
-  {:kind    "Workspace"
-   :name    String
-   :title   (Option String)
-   :persona (Option String)
-   :subject (Option String)
-   :home    (Option String)
-   :views   (Option (List String))})
+  {
+    :kind "Workspace"
+    :name String
+    :title (Option String)
+    :persona (Option String)
+    :subject (Option String)
+    :home (Option String)
+    :views (Option (List String))})
 ```
 
 ### 4.11 Domain preludes
@@ -847,12 +882,15 @@ The author surface becomes:
 
 ```lisp
 (attribute _schema/type String :doc "Entity type discriminant.")
-(attribute _schema/created-at (Option Int) :doc "Creation time in epoch milliseconds.")
+(attribute _schema/created-at
+  (Option Int)
+  :doc "Creation time in epoch milliseconds.")
 
-(entity Employee                                   ; attribute ids derive as :employee/name ...
-  {:name       (String :indexed true)
-   :department (Id Department)
-   :active     (Option Bool)}
+(entity Employee ; attribute ids derive as :employee/name ...
+  {
+    :name (String :indexed true)
+    :department (Id Department)
+    :active (Option Bool)}
   :doc "A person employed by the company.")
 
 (relation works-at Employee Employer {:since Int})
@@ -860,19 +898,22 @@ The author surface becomes:
 (link works-at "employee:ada" "employer:acme" {:since 2020})
 
 (query employee-directory
-  :from   Employee
-  :where  active
+  :from Employee
+  :where active
   :select [name department])
 
 (: hire (-> Candidate (Action (Id Employee))))
-(define hire [candidate]
-  (create! Employee {:name candidate.name :active true}))
+(define hire [candidate] (create! Employee {:name candidate.name :active true}))
 
 (process employee-onboarding
   :description "Onboarding compliance."
-  :trigger     (on-create Employee)
-  (node generate-tasks :action generate-onboarding-tasks :input {:entity-id context.entity-id})
-  (node i9-section-1   :action collect-form :input {:section-ids "employee-information" :assignee-type "entity"})
+  :trigger (on-create Employee)
+  (node generate-tasks
+    :action generate-onboarding-tasks
+    :input {:entity-id context.entity-id})
+  (node i9-section-1
+    :action collect-form
+    :input {:section-ids "employee-information" :assignee-type "entity"})
   (edge generate-tasks i9-section-1))
 
 (document i-9-employment-eligibility
@@ -880,8 +921,11 @@ The author surface becomes:
   (page employee-information
     :assignee employee
     (content :i9.section1_intro "# Section 1 ...")
-    (text :i9.last_name  "Last Name"     :required true :bind Employee.last-name)
-    (date :i9.birth_date "Date of Birth" :required true :bind Employee.date-of-birth)))
+    (text :i9.last_name "Last Name" :required true :bind Employee.last-name)
+    (date
+      :i9.birth_date "Date of Birth"
+      :required true
+      :bind Employee.date-of-birth)))
 
 (workspace staffing :home dashboard :views [dashboard employees placements])
 ```
@@ -904,74 +948,83 @@ Before: `conformance/effect-typescript/cases/crud-users/program.lisp` (115 lines
 
 ```lisp
 (type UserId (Brand String))
-(type Role   (Union :admin :member))
+(type Role (Union :admin :member))
 
 (type User
-  {:id       UserId
-   :name     String
-   :email    String
-   :role     Role
-   :nickname (Option String)})
+  {:id UserId :name String :email String :role Role :nickname (Option String)})
 
 (type NewUser {:name String :email String :role Role})
 
-(error UserNotFound   {:id UserId})
+(error UserNotFound {:id UserId})
 (error DuplicateEmail {:email String})
-(error InvalidUser    {:reason String})
+(error InvalidUser {:reason String})
 
 (service UserRepo
-  (: find          (-> UserId (Effect (Option User))))
+  (: find (-> UserId (Effect (Option User))))
   (: find-by-email (-> String (Effect (Option User))))
-  (: save          (-> User (Effect Unit)))
-  (: remove        (-> UserId (Effect Bool)))
-  (: all           (Effect (List User))))
+  (: save (-> User (Effect Unit)))
+  (: remove (-> UserId (Effect Bool)))
+  (: all (Effect (List User))))
 
-(service Ids
-  (: next (Effect UserId)))
+(service Ids (: next (Effect UserId)))
 
 (: display-name (-> User String))
-(define display-name [user]
+(define display-name
+  [user]
   (str (get-or-else user.nickname user.name) " <" user.email ">"))
 
 (: validate (-> NewUser (Effect NewUser [InvalidUser])))
-(define validate [input]
+(define validate
+  [input]
   (cond
-    (= (trim input.name) "")          (fail (InvalidUser {:reason "name is required"}))
-    (not (includes? input.email "@")) (fail (InvalidUser {:reason "email is invalid"}))
-    :else                             input))
+    (= (trim input.name) "")
+    (fail (InvalidUser {:reason "name is required"}))
+    (not (includes? input.email "@"))
+    (fail (InvalidUser {:reason "email is invalid"}))
+    :else input))
 
-(: create-user (-> NewUser (Effect User [InvalidUser DuplicateEmail] [UserRepo Ids])))
-(define create-user [input]
-  (do! [valid    (validate input)
-        existing (UserRepo.find-by-email valid.email)]
+(: create-user
+  (-> NewUser (Effect User [InvalidUser DuplicateEmail] [UserRepo Ids])))
+(define create-user
+  [input]
+  (do! [valid (validate input) existing (UserRepo.find-by-email valid.email)]
     (match existing
-      (Some _) (fail (DuplicateEmail {:email valid.email}))
-      None     (do! [id   Ids.next
-                     :let [user {:id id :name valid.name :email valid.email :role valid.role}]
-                     _    (UserRepo.save user)]
-                 user))))
+      (Some _)
+      (fail (DuplicateEmail {:email valid.email}))
+      None
+      (do!
+        [
+          id
+          Ids.next
+          :let
+            [user {:id id :name valid.name :email valid.email :role valid.role}]
+          _
+          (UserRepo.save user)]
+        user))))
 
 (: get-user (-> UserId (Effect User [UserNotFound] [UserRepo.find])))
-(define get-user [id]
+(define get-user
+  [id]
   (do! [found (UserRepo.find id)]
-    (match found
-      (Some user) user
-      None        (fail (UserNotFound {:id id})))))
+    (match found (Some user) user None (fail (UserNotFound {:id id})))))
 
-(: rename-user (-> UserId String (Effect User [UserNotFound InvalidUser] [UserRepo.find UserRepo.save])))
-(define rename-user [id name]
+(: rename-user
+  (-> UserId
+    String
+    (Effect User [UserNotFound InvalidUser] [UserRepo.find UserRepo.save])))
+(define rename-user
+  [id name]
   (do! [user (get-user id)]
     (if (= (trim name) "")
       (fail (InvalidUser {:reason "name is required"}))
-      (do! [:let [renamed (assoc user :name name)]
-            _    (UserRepo.save renamed)]
+      (do! [:let [renamed (assoc user :name name)] _ (UserRepo.save renamed)]
         renamed))))
 
 (: delete-user (-> UserId (Effect Unit [UserNotFound] [UserRepo.remove])))
-(define delete-user [id]
+(define delete-user
+  [id]
   (do! [removed (UserRepo.remove id)]
-    (unless removed
-      (fail (UserNotFound {:id id})))))
+    (unless removed (fail (UserNotFound {:id id})))))
 
 (: admin-names (Effect (List String) [] [UserRepo.all]))
 (define admin-names
@@ -979,26 +1032,26 @@ Before: `conformance/effect-typescript/cases/crud-users/program.lisp` (115 lines
     (map display-name (filter (fn [user] (= user.role :admin)) users))))
 
 (: find-or-default (-> UserId String (Effect String [] [UserRepo.find])))
-(define find-or-default [id fallback]
-  (catch (do! [user (get-user id)] user.name)
-    (UserNotFound _) fallback))
+(define find-or-default
+  [id fallback]
+  (catch (do! [user (get-user id)] user.name) (UserNotFound _) fallback))
 
 (layer UserRepoMemory
   :provides UserRepo
-  :setup    [store (ref-make (: {} (Map UserId User)))]
-  (define find [id]
-    (do! [users (ref-get store)] (get users id)))
-  (define find-by-email [email]
+  :setup [store (ref-make (: {} (Map UserId User)))]
+  (define find [id] (do! [users (ref-get store)] (get users id)))
+  (define find-by-email
+    [email]
     (do! [users (ref-get store)]
       (find (fn [user] (= user.email email)) (vals users))))
-  (define save [user]
+  (define save
+    [user]
     (ref-update store (fn [users] (assoc users user.id user))))
-  (define remove [id]
-    (do! [users (ref-get store)
-          _     (ref-set store (dissoc users id))]
+  (define remove
+    [id]
+    (do! [users (ref-get store) _ (ref-set store (dissoc users id))]
       (has-key? users id)))
-  (define all
-    (do! [users (ref-get store)] (vals users))))
+  (define all (do! [users (ref-get store)] (vals users))))
 ```
 
 What changed: 11 `(field ...)` forms, two `Struct`s and three `(:fields ...)` blocks
@@ -1021,17 +1074,21 @@ Before (`pure-domain-logic/program.lisp:5-58`):
 
 (: tier-discounts (Map Discount))
 (define tier-discounts
-  {"free" {:type "none"}
-   "pro" {:type "percent" :rate 10}
-   "enterprise" {:type "fixed" :cents 500}})
+  {
+    "free" {:type "none"}
+    "pro" {:type "percent" :rate 10}
+    "enterprise" {:type "fixed" :cents 500}})
 
 (: apply-discount (-> Discount Int Int))
 (define apply-discount
   (fn [discount cents]
     (match discount
-      (percent p) (- cents (quot (* cents (get p :rate)) 100))
-      (fixed f) (max 0 (- cents (get f :cents)))
-      none cents)))
+      (percent p)
+      (- cents (quot (* cents (get p :rate)) 100))
+      (fixed f)
+      (max 0 (- cents (get f :cents)))
+      none
+      cents)))
 ```
 
 After:
@@ -1039,23 +1096,22 @@ After:
 ```lisp
 (type Tier (Union :free :pro :enterprise))
 (type Discount
-  (Tagged :tag type
-    (Percent {:rate Int})
-    (Fixed   {:cents Int})
-    NoDiscount))
+  (Tagged :tag type (Percent {:rate Int}) (Fixed {:cents Int}) NoDiscount))
 
 (: tier-discounts (Map Tier Discount))
 (define tier-discounts
-  {:free       NoDiscount
-   :pro        (Percent {:rate 10})
-   :enterprise (Fixed {:cents 500})})
+  {:free NoDiscount :pro (Percent {:rate 10}) :enterprise (Fixed {:cents 500})})
 
 (: apply-discount (-> Discount Int Int))
-(define apply-discount [discount cents]
+(define apply-discount
+  [discount cents]
   (match discount
-    (Percent {:rate r})  (- cents (quot (* cents r) 100))
-    (Fixed {:cents c})   (max 0 (- cents c))
-    NoDiscount           cents))
+    (Percent {:rate r})
+    (- cents (quot (* cents r) 100))
+    (Fixed {:cents c})
+    (max 0 (- cents c))
+    NoDiscount
+    cents))
 ```
 
 ### 5.3 `todo-app`
@@ -1064,52 +1120,52 @@ Before: `examples/todo-app/README.md` (entity, three queries, three actions, one
 see [§3.7](#_3-7-stringly-typed-references-in-domain-dsls)). After:
 
 ```lisp
-(entity Todo
-  {:title     String
-   :completed (Bool :default false)})
+(entity Todo {:title String :completed (Bool :default false)})
 
-(query list-todos
-  :from   Todo
-  :select [title completed])
+(query list-todos :from Todo :select [title completed])
 
-(query list-incomplete-todos
-  :from   Todo
-  :where  (not completed)
-  :select [title])
+(query list-incomplete-todos :from Todo :where (not completed) :select [title])
 
 (: add-todo (-> String (Action (Id Todo))))
-(define add-todo [title]
-  (create! Todo {:title title :completed false}))
+(define add-todo [title] (create! Todo {:title title :completed false}))
 
 (: mark-done (-> (Id Todo) (Action Bool)))
-(define mark-done [todo]
-  (do! [_ (update! todo {:completed true})] true))
+(define mark-done [todo] (do! [_ (update! todo {:completed true})] true))
 
 (: delete-todo (-> (Id Todo) (Action Bool)))
-(define delete-todo [todo]
-  (do! [_ (retract! todo)] true))
+(define delete-todo [todo] (do! [_ (retract! todo)] true))
 
 (view todo-list-manager
-  :title       "Todo List Manager"
-  :description "Add todos, inspect all tasks, and run completion or delete actions."
-  :subject     session
-  :state       {:new-title (String :default "") :selected (Option (Id Todo))}
-  :queries     {:todos list-todos}
-  (rows
-    (heading "Todo List Manager")
+  :title "Todo List Manager"
+  :description
+    "Add todos, inspect all tasks, and run completion or delete actions."
+  :subject session
+  :state {:new-title (String :default "") :selected (Option (Id Todo))}
+  :queries {:todos list-todos}
+  (rows (heading "Todo List Manager")
     (columns
       (input new-title :label "Task" :placeholder "What needs to be done?")
-      (action-button add-todo {:title new-title} :label "Add Todo" :variant :default))
+      (action-button add-todo
+        {:title new-title}
+        :label "Add Todo"
+        :variant :default))
     (table todos
-      :columns [(column title "Task")
-                (column completed "Done" :kind :boolean)
-                (column id "ID" :kind :mono)]
+      :columns
+        [
+          (column title "Task")
+          (column completed "Done" :kind :boolean)
+          (column id "ID" :kind :mono)]
       :empty-state "No todos yet.")
-    (columns
-      (entity-picker selected :label "Todo" :placeholder "Select todo")
+    (columns (entity-picker selected :label "Todo" :placeholder "Select todo")
       (when-some [todo selected]
-        (action-button mark-done {:todo todo} :label "Mark Complete" :variant :secondary)
-        (action-button delete-todo {:todo todo} :label "Delete" :variant :destructive)))))
+        (action-button mark-done
+          {:todo todo}
+          :label "Mark Complete"
+          :variant :secondary)
+        (action-button delete-todo
+          {:todo todo}
+          :label "Delete"
+          :variant :destructive)))))
 ```
 
 Every reference (`Todo`, `title`, `add-todo`, `list-todos`, `new-title`, `selected`) is a

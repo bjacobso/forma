@@ -1,10 +1,10 @@
 ;; Distinct Forma names that become the same TypeScript name, and names
 ;; the generated module needs for Effect and JavaScript, are rejected.
 (: foo-bar (-> Int Int))
-(define foo-bar  [n] n)
+(define foo-bar [n] n)
 
 (: fooBar (-> Int Int))
-(define fooBar  [n] n)
+(define fooBar [n] n)
 
 (type Effect {:id String})
 

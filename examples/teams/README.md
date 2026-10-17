@@ -17,9 +17,11 @@ Small team topology example in canonical ontology syntax.
 ```lisp
 (seed Team "team:platform" {:name "Platform" :focus "Developer infrastructure"})
 (seed Team "team:growth" {:name "Growth" :focus "Lifecycle experiments"})
-(seed Member "member:alex"
+(seed Member
+  "member:alex"
   {:name "Alex Kim" :role "Staff Engineer" :team "team:platform"})
-(seed Member "member:jordan"
+(seed Member
+  "member:jordan"
   {:name "Jordan Lee" :role "Product Manager" :team "team:growth"})
 ```
 

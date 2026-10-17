@@ -17,7 +17,8 @@ Narrative event log example in canonical ontology syntax.
 
 ```lisp
 (seed Chronicle "chronicle:founding" {:title "Founding Era" :theme "origins"})
-(seed Entry "entry:arrival"
+(seed Entry
+  "entry:arrival"
   {
     :title "Arrival of the Archive Fleet"
     :era "year-zero"

@@ -1,1 +1,3 @@
-42 "hello" true
+42
+"hello"
+true

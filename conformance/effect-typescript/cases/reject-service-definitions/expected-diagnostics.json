@@ -6,9 +6,9 @@
       "severity": "error",
       "code": "mechanics/duplicate-name",
       "message": "Mailer is already defined as a service.",
-      "line": 9,
+      "line": 7,
       "column": 1,
-      "endLine": 9,
+      "endLine": 7,
       "endColumn": 29
     },
     {
@@ -16,30 +16,30 @@
       "severity": "error",
       "code": "mechanics/unknown-error",
       "message": "Unknown error type Bounced in an Effect type. Declare it with error.",
-      "line": 4,
-      "column": 22,
-      "endLine": 4,
-      "endColumn": 64
+      "line": 3,
+      "column": 36,
+      "endLine": 3,
+      "endColumn": 78
     },
     {
       "phase": "check",
       "severity": "error",
       "code": "mechanics/service-method-requirement",
       "message": "Service method Mailer.send cannot require Templates.render. Service methods are requirement-free in Effect; give the implementing layer the dependency instead.",
-      "line": 4,
-      "column": 22,
-      "endLine": 4,
-      "endColumn": 64
+      "line": 3,
+      "column": 36,
+      "endLine": 3,
+      "endColumn": 78
     },
     {
       "phase": "check",
       "severity": "error",
       "code": "mechanics/arity",
       "message": "Mailer.send expects 1 argument(s), received 2.",
-      "line": 13,
-      "column": 3,
-      "endLine": 13,
-      "endColumn": 27
+      "line": 10,
+      "column": 21,
+      "endLine": 10,
+      "endColumn": 45
     }
   ]
 }

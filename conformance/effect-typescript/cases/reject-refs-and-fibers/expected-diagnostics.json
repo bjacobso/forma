@@ -6,40 +6,40 @@
       "severity": "error",
       "code": "mechanics/type-mismatch",
       "message": "Expected Int, but this is \"one\".",
-      "line": 5,
-      "column": 28,
-      "endLine": 5,
-      "endColumn": 33
+      "line": 10,
+      "column": 24,
+      "endLine": 10,
+      "endColumn": 29
     },
     {
       "phase": "check",
       "severity": "error",
       "code": "mechanics/type-mismatch",
       "message": "Expected Int, but this is String.",
-      "line": 6,
-      "column": 39,
-      "endLine": 6,
-      "endColumn": 50
+      "line": 12,
+      "column": 35,
+      "endLine": 12,
+      "endColumn": 46
     },
     {
       "phase": "check",
       "severity": "error",
       "code": "mechanics/type-mismatch",
       "message": "join expects a Fiber from fork, but this is Int.",
-      "line": 12,
-      "column": 22,
-      "endLine": 12,
-      "endColumn": 23
+      "line": 18,
+      "column": 41,
+      "endLine": 18,
+      "endColumn": 42
     },
     {
       "phase": "check",
       "severity": "error",
       "code": "mechanics/type-mismatch",
       "message": "for-each expects an Array, but this is String.",
-      "line": 17,
-      "column": 13,
-      "endLine": 17,
-      "endColumn": 17
+      "line": 21,
+      "column": 38,
+      "endLine": 21,
+      "endColumn": 42
     }
   ]
 }

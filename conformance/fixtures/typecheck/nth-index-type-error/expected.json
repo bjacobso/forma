@@ -7,8 +7,8 @@
         "got": "String",
         "message": "Type mismatch: Number vs String",
         "span": {
-          "end": 15,
-          "start": 0
+          "end": 14,
+          "start": 11
         }
       }
     ]

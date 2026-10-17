@@ -44,13 +44,18 @@ and playground examples, when built with `pnpm website:build`.
 Functions, collections, and control flow use compact Lisp syntax:
 
 ```lisp
-(define grade (fn [score]
-  (cond
-    (>= score 90) "A"
-    (>= score 80) "B"
-    (>= score 70) "C"
-    (>= score 60) "D"
-    :else "F")))
+(define grade
+  (fn [score]
+    (cond
+      (>= score 90)
+      "A"
+      (>= score 80)
+      "B"
+      (>= score 70)
+      "C"
+      (>= score 60)
+      "D"
+      :else "F")))
 (map grade [95 82 75 63 45])
 ```
 
@@ -58,16 +63,13 @@ Algebraic data types participate in inference and pattern matching:
 
 ```lisp
 (type (Maybe a) (Tagged (Some a) None))
-(match (Some 1)
-  (Some x) x
-  None 0)
+(match (Some 1) (Some x) x None 0)
 ```
 
 Macros are Forma code that produces Forma code:
 
 ```lisp
-(macro (when test body ...)
-  `(if ~test (do ~@body) nil))
+(macro (when test body ...) `(if ~test (do ~@body) nil))
 ```
 
 Type errors remain attached to author-written source:
@@ -99,11 +101,9 @@ Operational effects make authority visible in the type:
 
 ```lisp
 (error ConsoleUnavailable {:message String})
-(service Console
-  (: print (-> String (Effect Unit [ConsoleUnavailable]))))
+(service Console (: print (-> String (Effect Unit [ConsoleUnavailable]))))
 (: log (-> String (Effect Unit [ConsoleUnavailable] [Console.print])))
-(define log [message]
-  (do! [_ (Console.print message)] nil))
+(define log [message] (do! [_ (Console.print message)] nil))
 ```
 
 The checker infers this contract:
@@ -143,11 +143,12 @@ query over one of them:
 
 ```lisp
 (entity Department {:name String})
-(entity Employee {:name String
-                  :department (Option (Id Department))
-                  :active (Option Bool)})
-(query employee-directory :from Employee
-  :where active :select [name department])
+(entity Employee
+  {:name String :department (Option (Id Department)) :active (Option Bool)})
+(query employee-directory
+  :from Employee
+  :where active
+  :select [name department])
 ```
 
 `entity` is not a compiler special case. The ontology prelude describes
@@ -216,21 +217,30 @@ service declaration.
 ```lisp
 (type CartId (Brand String))
 (type CustomerId (Brand String))
-(type CheckoutRequest {:cart-id CartId
-                       :customer-id CustomerId
-                       :coupon (Option String)
-                       :lines (List CheckoutLine)})
+(type CheckoutRequest
+  {
+    :cart-id CartId
+    :customer-id CustomerId
+    :coupon (Option String)
+    :lines (List CheckoutLine)})
 (error CheckoutRejected {:reason String})
 (service CartRepo
   (: load (-> CheckoutRequest (Effect Cart [CheckoutRejected]))))
 (: checkout
   (-> CheckoutRequest
-      (Effect CheckoutResult [CheckoutRejected]
-        [CartRepo.load Pricing.price Orders.create])))
-(define checkout [request]
-  (do! [cart (CartRepo.load request)
-        priced (Pricing.price cart request)
-        order (Orders.create priced)]
+    (Effect CheckoutResult
+      [CheckoutRejected]
+      [CartRepo.load Pricing.price Orders.create])))
+(define checkout
+  [request]
+  (do!
+    [
+      cart
+      (CartRepo.load request)
+      priced
+      (Pricing.price cart request)
+      order
+      (Orders.create priced)]
     order))
 ```
 
@@ -364,10 +374,24 @@ work from this repository, where `@formalang/host` builds a `forma` JSON CLI
 | `@formalang/workbench-app` | Separate Vite demo of the structural workbench |
 | `conformance/` | Semantic and effect fixtures with stored goldens |
 
+## Formatting
+
+Run `pnpm format` for tracked Lisp, Forma, and Markdown files, or
+`pnpm format:check` to check them without writing. The CLI also supports
+`forma fmt [--check] [--strict] <paths…>` and
+`forma fmt --stdin --stdin-filepath notes.md`.
+
+Formatting preserves token spellings, comments and up to one blank line.
+Only `lisp` and `forma` Markdown fences are formatted. Fragments are skipped
+and reported; `--strict` treats reports as failures. See
+[Source formatting](docs/language-services.md#source-formatting) for the API,
+ignore directives, descriptor context and editor commands.
+
 ## Runtime configuration
 
 - `FORMA_LANGUAGE_SERVER_PRELUDES` supplies comma-separated, consumer-owned prelude paths.
-- `FORMA_LANGUAGE_SERVER_ENABLE_FORMATTING` enables language-server formatting.
+- Language-server document and range formatting are enabled by default;
+  `FORMA_LANGUAGE_SERVER_ENABLE_FORMATTING=0` disables both.
 - `FORMA_DISABLE_NATIVE_ELABORATION` selects the portable elaboration path.
 
 ## Project status

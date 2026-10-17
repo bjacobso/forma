@@ -1,3 +1,1 @@
-(repeated-bool
-  (:item true)
-  (:item "not-bool"))
+(repeated-bool (:item true) (:item "not-bool"))

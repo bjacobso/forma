@@ -1,3 +1,2 @@
-(typeclass (Show a) (: show (-> a String))
-  (: show-list (-> (List a) String)))
+(typeclass (Show a) (: show (-> a String)) (: show-list (-> (List a) String)))
 (show 42)

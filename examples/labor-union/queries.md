@@ -1,8 +1,7 @@
 # Queries
 
 ```lisp
-(export
-  covered-placements
+(export covered-placements
   pending-authorization-tasks
   completed-authorization-documents
   active-cba-templates
@@ -19,8 +18,7 @@
 (query covered-placements
   :from Placement
   :where
-    (match
-      cba-id
+    (match cba-id
       (Some __cba_id)
       (and (!= status "cancelled") (!= __cba_id ""))
       None
@@ -96,8 +94,7 @@
 (query routing-exceptions
   :from ExecutedAuthorizationDocument
   :where
-    (match
-      executeddocument/routing-status
+    (match executeddocument/routing-status
       (Some __executeddocument_routing_status)
       (!= __executeddocument_routing_status "routed")
       None

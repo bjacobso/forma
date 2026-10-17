@@ -1,3 +1,2 @@
 (type (Option a) (Tagged (Some a) None))
-(match (Some 42)
-  (Some x) x)
+(match (Some 42) (Some x) x)

@@ -1,8 +1,7 @@
 # Views
 
 ```lisp
-(export
-  backoffice-dashboard
+(export backoffice-dashboard
   client-onboarding-view
   matter-management-view
   document-requests-view
@@ -21,10 +20,8 @@
   :description
     "Firm-wide intake, conflict, document, task, and billing posture."
   :layout
-    (rows
-      (heading "Backoffice Dashboard")
-      (card
-        {:title "Daily operating posture" :visible (state show-guide)}
+    (rows (heading "Backoffice Dashboard")
+      (card {:title "Daily operating posture" :visible (state show-guide)}
         (rows
           (markdown
             "This dashboard pulls together the queues that make a law firm backoffice drift: prospective clients waiting on intake, conflicts needing review, document requests past due, urgent matter tasks, and invoices that need attorney approval.")))
@@ -32,7 +29,9 @@
         (metric
           {:label "Onboarding Clients" :value (length (query onboarding))})
         (metric
-          {:label "Attorney Conflict Reviews" :value (length (query conflicts))})
+          {
+            :label "Attorney Conflict Reviews"
+            :value (length (query conflicts))})
         (metric {:label "Urgent Tasks" :value (length (query urgent))})
         (metric {:label "Billing Reviews" :value (length (query invoices))}))
       (card
@@ -56,8 +55,7 @@
           :variant "outline"
           :options ["All" "Urgent" "Stable"]})
       (condition
-        (case
-          {:when (> (length (query conflicts)) 0)}
+        (case {:when (> (length (query conflicts)) 0)}
           (alert
             {
               :variant "warning"
@@ -75,10 +73,8 @@
             :action
               (badge {:content (length (query urgent)) :variant "destructive"})}
           (condition
-            (case
-              {:when (> (length (query urgent)) 0)}
-              (item-group
-                {:bind (query urgent)}
+            (case {:when (> (length (query urgent)) 0)}
+              (item-group {:bind (query urgent)}
                 (item
                   {
                     :variant "muted"
@@ -93,9 +89,9 @@
                 {
                   :icon "check-circle"
                   :title "No urgent tasks"
-                  :description "The firm is clear of urgent backoffice work."}))))
-        (card
-          {:title "Invoices Needing Review"}
+                  :description
+                    "The firm is clear of urgent backoffice work."}))))
+        (card {:title "Invoices Needing Review"}
           (table
             {
               :bind (query invoices)
@@ -124,8 +120,7 @@
   :description
     "Prospective client intake from submitted packet through conflicts and engagement letter."
   :layout
-    (rows
-      (heading "Client Onboarding")
+    (rows (heading "Client Onboarding")
       (columns
         (create-entity-button
           {
@@ -133,17 +128,15 @@
             :label "Create Client"
             :variant "default"
             :on-success
-              (execute-action
-                "create-intake-packet"
+              (execute-action "create-intake-packet"
                 (get $result :entityId)
                 (:on-success
                   [
                     (run-queries [clients intake conflicts letters])
-                    (show-toast
-                      "Client created"
-                      (:description "Intake packet and conflict check opened."))]))}))
-      (card
-        {:title "Onboarding pipeline" :visible (state show-guide)}
+                    (show-toast "Client created"
+                      (:description
+                        "Intake packet and conflict check opened."))]))}))
+      (card {:title "Onboarding pipeline" :visible (state show-guide)}
         (rows
           (markdown
             "The onboarding workflow is deliberately staged: collect intake, clear conflicts, send the engagement letter, then open the matter. The same client can have multiple future matters, but no matter should open before the firm has cleared conflicts and captured a signed engagement letter.")))
@@ -153,8 +146,7 @@
         (metric {:label "Pending Conflicts" :value (length (query conflicts))})
         (metric {:label "Unsigned Letters" :value (length (query letters))}))
       (tabs
-        (tab-panel
-          {:title "Clients"}
+        (tab-panel {:title "Clients"}
           (table
             {
               :bind (query clients)
@@ -166,8 +158,7 @@
                   {:key "?client_risk_level" :label "Risk"}
                   {:key "?client_email" :label "Email"}]
               :empty-state "No clients are currently onboarding."}))
-        (tab-panel
-          {:title "Intake Review"}
+        (tab-panel {:title "Intake Review"}
           (table
             {
               :bind (query intake)
@@ -177,12 +168,10 @@
                   {:key "?intakepacket_submitted_at" :label "Submitted"}
                   {:key "?intakepacket_notes" :label "Notes"}]
               :empty-state "No submitted intake packets need review."}))
-        (tab-panel
-          {:title "Conflicts"}
+        (tab-panel {:title "Conflicts"}
           (rows
             (condition
-              (case
-                {:when (> (length (query conflict-review)) 0)}
+              (case {:when (> (length (query conflict-review)) 0)}
                 (alert
                   {
                     :variant "warning"
@@ -190,7 +179,9 @@
                       "Some conflict checks require attorney review before proceeding."}))
               (else
                 (alert
-                  {:variant "info" :message "No conflict checks are escalated."})))
+                  {
+                    :variant "info"
+                    :message "No conflict checks are escalated."})))
             (table
               {
                 :bind (query conflicts)
@@ -201,8 +192,7 @@
                     {:key "?conflictcheck_result" :label "Result"}
                     {:key "?conflictcheck_notes" :label "Notes"}]
                 :empty-state "No conflict checks are pending."})))
-        (tab-panel
-          {:title "Engagement Letters"}
+        (tab-panel {:title "Engagement Letters"}
           (table
             {
               :bind (query letters)
@@ -226,16 +216,13 @@
   :title "Matter Management"
   :description "Active matters and open case tasks across the firm."
   :layout
-    (rows
-      (heading "Matter Management")
-      (card
-        {:title "Matter work" :visible (state show-guide)}
+    (rows (heading "Matter Management")
+      (card {:title "Matter work" :visible (state show-guide)}
         (rows
           (markdown
             "Once onboarding is complete, the backoffice view shifts to active matters: deadlines, budgets, open case tasks, and administrative work that has to stay synchronized with attorney review.")))
       (tabs
-        (tab-panel
-          {:title "Active Matters"}
+        (tab-panel {:title "Active Matters"}
           (table
             {
               :bind (query active)
@@ -250,8 +237,7 @@
                     :kind "date"}
                   {:key "?matter_budget" :label "Budget"}]
               :empty-state "No active matters found."}))
-        (tab-panel
-          {:title "Opening"}
+        (tab-panel {:title "Opening"}
           (table
             {
               :bind (query opening)
@@ -262,8 +248,7 @@
                   {:key "?matter_fee_type" :label "Fee Type"}
                   {:key "?matter_opened_date" :label "Opened"}]
               :empty-state "No matters are in opening status."}))
-        (tab-panel
-          {:title "Tasks"}
+        (tab-panel {:title "Tasks"}
           (table
             {
               :bind (query tasks)
@@ -287,17 +272,17 @@
   :title "Document Requests"
   :description "Client-facing document requests and overdue follow-up."
   :layout
-    (rows
-      (heading "Document Requests")
+    (rows (heading "Document Requests")
       (condition
-        (case
-          {:when (> (length (query overdue)) 0)}
+        (case {:when (> (length (query overdue)) 0)}
           (alert
             {
               :variant "warning"
-              :message "Some document requests are overdue and need follow-up."}))
+              :message
+                "Some document requests are overdue and need follow-up."}))
         (else
-          (alert {:variant "info" :message "No document requests are overdue."})))
+          (alert
+            {:variant "info" :message "No document requests are overdue."})))
       (table
         {
           :bind (query open)
@@ -317,8 +302,7 @@
   :title "Billing Review"
   :description "Invoices requiring attorney or partner approval before sending."
   :layout
-    (rows
-      (heading "Billing Review")
+    (rows (heading "Billing Review")
       (table
         {
           :bind (query invoices)
@@ -337,8 +321,7 @@
   :description
     "Runtime task detail rendered directly inside the backoffice workspace."
   :layout
-    (rows
-      (heading "Task Detail")
+    (rows (heading "Task Detail")
       (use task-overview)
       (grid {:columns 2} (use task-status-panel) (use task-documents-panel))
       (use task-metadata-panel))
@@ -356,10 +339,8 @@
   :description
     "Attorney-level scan of client risk, active matters, and intake load."
   :layout
-    (rows
-      (heading "Managing Partner Summary")
-      (card
-        {:title "Portfolio context" :visible (state show-guide)}
+    (rows (heading "Managing Partner Summary")
+      (card {:title "Portfolio context" :visible (state show-guide)}
         (rows
           (markdown
             "This summary is tuned for attorneys managing the book of business. It highlights risk concentration, active matter load, and prospective clients that are still moving through intake.")))
@@ -370,16 +351,14 @@
         (metric
           {:label "Onboarding Clients" :value (length (query onboarding))}))
       (columns
-        (card
-          {:title "Active Matters by Budget"}
+        (card {:title "Active Matters by Budget"}
           (chart
             {
               :variant "bar"
               :bind (query matters)
               :categoryKey "?matter_title"
               :series [{:dataKey "?matter_budget" :label "Budget"}]}))
-        (card
-          {:title "High-Risk Clients"}
+        (card {:title "High-Risk Clients"}
           (table
             {
               :bind (query high-risk)
@@ -402,16 +381,13 @@
   :title "Client Portfolio"
   :description "Tabbed portfolio view for client records and active matters."
   :layout
-    (rows
-      (heading "Client Portfolio")
-      (card
-        {:title "Portfolio guide" :visible (state show-guide)}
+    (rows (heading "Client Portfolio")
+      (card {:title "Portfolio guide" :visible (state show-guide)}
         (rows
           (markdown
             "This view keeps client records and matter work together so attorneys can move between relationship context and active legal work without losing the operational thread.")))
       (tabs
-        (tab-panel
-          {:title "Clients"}
+        (tab-panel {:title "Clients"}
           (table
             {
               :bind (query clients)
@@ -423,8 +399,7 @@
                   {:key "?client_risk_level" :label "Risk"}
                   {:key "?client_email" :label "Email"}]
               :empty-state "No active clients."}))
-        (tab-panel
-          {:title "Matters"}
+        (tab-panel {:title "Matters"}
           (table
             {
               :bind (query matters)
@@ -445,8 +420,7 @@
   :title "High-Risk Clients"
   :description "Clients that need closer attorney oversight."
   :layout
-    (rows
-      (heading "High-Risk Clients")
+    (rows (heading "High-Risk Clients")
       (table
         {
           :bind (query clients)

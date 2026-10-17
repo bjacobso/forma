@@ -107,11 +107,11 @@
               "formIndex": 1,
               "span": {
                 "startOffset": 36,
-                "endOffset": 126,
+                "endOffset": 120,
                 "startLine": 3,
                 "startColumn": 1,
-                "endLine": 5,
-                "endColumn": 19
+                "endLine": 4,
+                "endColumn": 68
               }
             },
             {
@@ -119,11 +119,11 @@
               "sourceId": "emit/canonical-schema",
               "formIndex": 2,
               "span": {
-                "startOffset": 128,
-                "endOffset": 215,
-                "startLine": 7,
+                "startOffset": 122,
+                "endOffset": 209,
+                "startLine": 6,
                 "startColumn": 1,
-                "endLine": 10,
+                "endLine": 9,
                 "endColumn": 29
               }
             },
@@ -146,11 +146,11 @@
               "formIndex": 1,
               "span": {
                 "startOffset": 60,
-                "endOffset": 162,
+                "endOffset": 164,
                 "startLine": 3,
                 "startColumn": 1,
-                "endLine": 4,
-                "endColumn": 51
+                "endLine": 5,
+                "endColumn": 73
               }
             }
           ],

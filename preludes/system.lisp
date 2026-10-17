@@ -9,17 +9,23 @@
 ; =============================================================================
 ; SECTION 1 — SYSTEM ATTRIBUTES
 ; =============================================================================
-(attribute _schema/type String
+(attribute _schema/type
+  String
   :doc "Entity type discriminant for platform-owned entities.")
-(attribute _schema/created-at (Option Float)
+(attribute _schema/created-at
+  (Option Float)
   :doc "Creation timestamp in epoch milliseconds.")
-(attribute _schema/updated-at (Option Float)
+(attribute _schema/updated-at
+  (Option Float)
   :doc "Last update timestamp in epoch milliseconds.")
-(attribute _schema/created-by (Option String)
+(attribute _schema/created-by
+  (Option String)
   :doc "Actor or principal responsible for creation.")
-(attribute _schema/version (Option Float)
+(attribute _schema/version
+  (Option Float)
   :doc "Version marker for versioned system definitions.")
-(attribute _schema/enabled (Option Bool)
+(attribute _schema/enabled
+  (Option Bool)
   :doc "Soft-delete / enablement flag for platform-owned entities.")
 (attribute _meta/role
   (Union "schema-definition" "system-metadata" "runtime-record")
@@ -108,7 +114,8 @@
   :doc "Versioned saved Datalog query definition."
   :role "system-metadata"
   :id-pattern "_schema/query/{name}/v{version}")
-(entity View {:view/name (String :indexed true) :view/definition Json}
+(entity View
+  {:view/name (String :indexed true) :view/definition Json}
   :doc "Persisted declarative UI view definition."
   :role "system-metadata"
   :id-pattern "_schema/view/{name}")
@@ -146,10 +153,7 @@
   :role "system-metadata"
   :id-pattern "document-definition:{ulid}")
 (entity Process
-  {
-    :name (String :indexed true)
-    :version (Float :indexed true)
-    :definition Json}
+  {:name (String :indexed true) :version (Float :indexed true) :definition Json}
   :doc "Versioned workflow/process definition."
   :role "system-metadata"
   :id-pattern "_process/{name}/v{version}")
@@ -168,7 +172,8 @@
   :doc "Reusable ontology-authored task definition."
   :role "system-metadata"
   :id-pattern "_task-definition/{name}/v{version}")
-(entity PdfMapping {:name (String :indexed true) :definition Json}
+(entity PdfMapping
+  {:name (String :indexed true) :definition Json}
   :doc "Named PDF field-mapping definition."
   :role "system-metadata"
   :id-pattern "pdf-mapping:{name}")

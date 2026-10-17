@@ -15,9 +15,15 @@ const rowTexts = async (
   return { analysis, view, row };
 };
 
+// Keep an explicit body row for header token/range projection tests. The demo
+// itself uses the canonical formatter layout, which can fit this let on one line.
+const expandedOnboarding = onboarding.replace(
+  "(let [tax (* amount tax-rate)] ", "(let [tax (* amount tax-rate)]\n    ",
+);
+
 describe("the analysis adapter", () => {
   it("colors a row's symbols by what they resolve to", async () => {
-    const { row } = await rowTexts(onboarding);
+    const { row } = await rowTexts(expandedOnboarding);
     const letRow = row("let [tax (* amount tax-rate)]");
     const kinds = letRow.tokens
       .filter((token) => token.kind !== "paren")
@@ -47,7 +53,7 @@ describe("the analysis adapter", () => {
   });
 
   it("covers a row whose own text does not show the span", async () => {
-    const source = onboarding.replace("(* amount tax-rate)", '(* amount "rate")');
+    const source = expandedOnboarding.replace("(* amount tax-rate)", '(* amount "rate")');
     const { analysis, row } = await rowTexts(source);
     expect(summary(analysis).errors).toBe(1);
     const call = row('let [tax (* amount "rate")]');

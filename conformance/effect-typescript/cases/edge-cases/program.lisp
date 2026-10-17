@@ -8,8 +8,7 @@
 (type Member {:name String :role Role})
 (error NotFound {:key String})
 (error Forbidden {:user String})
-(service
-  Store
+(service Store
   (: read (-> String (Effect String [NotFound Forbidden] [])))
   (: save (-> Member (Effect Unit))))
 (service Clock (: now (Effect Int)))
@@ -35,58 +34,45 @@
 (: yes-no (-> Bool String))
 (define yes-no [flag] (match flag true "yes" false "no"))
 (: invite (-> String (Effect Member [] [Store.save])))
-(define
-  invite
+(define invite
   [name]
   (do!
     [:let [member (Member {:name name :role "member"})] _ (Store.save member)]
     (succeed member)))
 (: explain (-> String (Effect String [] [Store.read])))
-(define
-  explain
+(define explain
   [key]
-  (catch
-    (Store.read key)
+  (catch (Store.read key)
     (_ error)
     (succeed
-      (match
-        error
+      (match error
         (NotFound missing)
         (str "missing " (get missing :key))
         (Forbidden denied)
         (str "denied " (get denied :user))))))
 (: exclaim (-> String (Effect String [NotFound Forbidden] [Store.read])))
-(define
-  exclaim
+(define exclaim
   [key]
   (do! [value (Store.read key) :let [value (str value "!")]] (succeed value)))
 (: stamp (-> String (Effect String [] [Clock])))
 (define stamp [name] (do! [time Clock.now] (succeed (str name "@" time))))
 (layer ClockFixed :provides Clock (define now [] (succeed 7)))
-(layer
-  GreeterLive
-  :provides
-  Greeter
+(layer GreeterLive
+  :provides Greeter
   (define greet [name] (provide (stamp name) ClockFixed)))
 
 ;; Second adversarial pass: literals in positions TypeScript does not type
 ;; from context, constants that reach other constants through functions,
 ;; and builtins used as values.
-(type
-  Shape
-  (Tagged :tag kind (Circle {:radius Float}) (Square {:side Float})))
+(type Shape (Tagged :tag kind (Circle {:radius Float}) (Square {:side Float})))
 (: default-role (Effect Role))
 (define default-role (succeed "admin"))
 (: circles (-> (List Float) (Effect (List Shape))))
-(define
-  circles
+(define circles
   [radii]
-  (for-each
-    radii
-    (fn
-      [r]
-      (if
-        (> r 1)
+  (for-each radii
+    (fn [r]
+      (if (> r 1)
         (succeed {:kind "Circle" :radius r})
         (succeed {:kind "Square" :side r})))))
 (: pair (Effect (Tuple Shape Role)))
@@ -94,16 +80,13 @@
 (: roles (-> (List Role)))
 (define roles [] (let [rs (: ["admin" "member"] (List Role))] rs))
 (: by-name (-> (Map String Member) (Map String Member)))
-(define
-  by-name
+(define by-name
   [members]
   (let [next (assoc members "b" {:name "b" :role "member"})] next))
 (: largest (-> (List Float) (Effect Shape)))
-(define
-  largest
+(define largest
   [sizes]
-  (stream-run-fold
-    (stream-of sizes)
+  (stream-run-fold (stream-of sizes)
     (Shape {:kind "Square" :side 0})
     (fn [acc size] {:kind "Circle" :radius size})))
 (: lower-all (-> (List String) (List String)))

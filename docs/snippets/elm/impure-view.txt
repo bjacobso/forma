@@ -1,5 +1,5 @@
-counter.lisp:25:12 error mechanics/pure-service
+counter.lisp:35:12 error mechanics/pure-service
   View expression cannot call CounterStore.get: functions and constants have no services in scope.
 
-counter.lisp:25:12 error mechanics/type-mismatch
+counter.lisp:35:12 error mechanics/type-mismatch
   Expected String, but this is (Effect Int [CounterUnavailable] [CounterStore.get]).

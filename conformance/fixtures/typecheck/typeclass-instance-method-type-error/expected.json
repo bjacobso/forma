@@ -16,7 +16,7 @@
       "code": "typecheck/type-mismatch",
       "span": {
         "start": 44,
-        "end": 91
+        "end": 88
       }
     }
   }

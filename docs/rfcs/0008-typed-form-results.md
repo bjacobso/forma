@@ -12,7 +12,8 @@
 Ontology `query` currently computes its result with an imperative result hook:
 
 ```lisp
-:type (fn [{:keys [from select]}] (List (row-of from select)))
+:type
+(fn [{:keys [from select]}] (List (row-of from select)))
 ```
 
 `from` names a declaration; it is not a record type. `select` captures optional
@@ -34,7 +35,8 @@ form option `:reflect` maps a declaration-name hole to a field-source hole:
 
 ```lisp
 ; Proposed addition to the existing entity form, not executable today.
-:reflect {:name {:fields :fields}}
+:reflect
+{:name {:fields :fields}}
 ```
 
 Here `:name` must be a `Declares` hole and `:fields` must have the checked
@@ -67,7 +69,8 @@ checked template, not evaluated as a Lisp expression:
 
 ```lisp
 ; Proposed replacement for query's result hook.
-:result (List (Pick (FieldsOf from) (SelectionKeys from select)))
+:result
+(List (Pick (FieldsOf from) (SelectionKeys from select)))
 ```
 
 The template language contains ordinary type constructors, record operations,

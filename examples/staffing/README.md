@@ -11,8 +11,7 @@ preludes:
 Canonical staffing example as a multi-file markdown ontology.
 
 ```lisp
-(export-from
-  "./schema.md"
+(export-from "./schema.md"
   [
     Address
     Employer
@@ -29,11 +28,9 @@ Canonical staffing example as a multi-file markdown ontology.
     governed-by
     assigned-task
     has-document])
-(export-from
-  "./data.md"
+(export-from "./data.md"
   [works-at placed-at serves-client governed-by assigned-task has-document])
-(export-from
-  "./queries.md"
+(export-from "./queries.md"
   [
     onboarding-employees
     active-employees
@@ -52,8 +49,7 @@ Canonical staffing example as a multi-file markdown ontology.
     open-runtime-tasks
     active-violations
     resolved-violations])
-(export-from
-  "./views.md"
+(export-from "./views.md"
   [
     onboarding-workers-view
     employer-review-queue-view
@@ -73,12 +69,14 @@ Canonical staffing example as a multi-file markdown ontology.
     violation-detail-native
     active-client-portfolio-view
     profitable-active-placements])
-(export-from
-  "./workspaces.md"
-  [onboarding-operations account-portfolio employee-profile staffing-api-access])
+(export-from "./workspaces.md"
+  [
+    onboarding-operations
+    account-portfolio
+    employee-profile
+    staffing-api-access])
 (import "./tasks.md" :as tasks)
-(export-from
-  "./actions.md"
+(export-from "./actions.md"
   [
     hire-employee
     hire-existing-employee
@@ -98,8 +96,7 @@ Canonical staffing example as a multi-file markdown ontology.
     complete-state-tax-task
     complete-idv-task
     mark-compliant])
-(export-from
-  "./constraints.md"
+(export-from "./constraints.md"
   [
     employee-email-required
     placement-missing-employer
@@ -113,8 +110,7 @@ Canonical staffing example as a multi-file markdown ontology.
     onboarding-overdue-standard
     expired-documents])
 (export-from "./processes.md" [employee-onboarding])
-(export-from
-  "./documents.md"
+(export-from "./documents.md"
   [
     i-9-employment-eligibility
     w-4-federal-tax-withholding

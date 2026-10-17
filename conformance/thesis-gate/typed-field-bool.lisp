@@ -1,2 +1,1 @@
-(typed-field
-  (:field [employee/active true]))
+(typed-field (:field [employee/active true]))

@@ -6,9 +6,9 @@
       "severity": "error",
       "code": "mechanics/type-mismatch",
       "message": "Expected Int, but this is \"free\".",
-      "line": 13,
+      "line": 12,
       "column": 16,
-      "endLine": 13,
+      "endLine": 12,
       "endColumn": 22
     },
     {
@@ -16,10 +16,10 @@
       "severity": "error",
       "code": "mechanics/type-mismatch",
       "message": "Expected Int, but this is String.",
-      "line": 18,
-      "column": 14,
-      "endLine": 18,
-      "endColumn": 31
+      "line": 17,
+      "column": 46,
+      "endLine": 17,
+      "endColumn": 63
     }
   ]
 }

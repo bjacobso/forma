@@ -9,8 +9,7 @@ preludes:
 # Labor Relations
 
 ```lisp
-(export-from
-  "./schema.md"
+(export-from "./schema.md"
   [
     Employer
     SectorBrand
@@ -34,8 +33,7 @@ preludes:
     task-fulfills-cba
     task-produces-document
     event-for-document])
-(export-from
-  "./data.md"
+(export-from "./data.md"
   [
     brand-of
     location-for
@@ -48,8 +46,7 @@ preludes:
     task-fulfills-cba
     task-produces-document
     event-for-document])
-(export-from
-  "./queries.md"
+(export-from "./queries.md"
   [
     covered-placements
     pending-authorization-tasks
@@ -61,8 +58,7 @@ preludes:
     integration-events
     routing-exceptions
     employees-in-preboarding])
-(export-from
-  "./views.md"
+(export-from "./views.md"
   [
     lr-dashboard
     covered-placement-queue
@@ -72,12 +68,10 @@ preludes:
     document-routing-monitor
     integration-events-view
     employee-card-dashboard])
-(export-from
-  "./workspaces.md"
+(export-from "./workspaces.md"
   [labor-relations-operations employee-card-experience integration-monitor])
 (import "./tasks.md" :as tasks)
-(export-from
-  "./actions.md"
+(export-from "./actions.md"
   [
     create-covered-placement
     sync-employee-cba-attribute
@@ -87,8 +81,7 @@ preludes:
     emit-card-completed-webhook
     mark-document-routed
     flag-rehire-review])
-(export-from
-  "./constraints.md"
+(export-from "./constraints.md"
   [
     covered-placement-needs-card-task
     pending-card-needs-active-template

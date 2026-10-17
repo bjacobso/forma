@@ -1,8 +1,7 @@
 # Schema
 
 ```lisp
-(export
-  Employer
+(export Employer
   SectorBrand
   WorkLocation
   Employee
@@ -144,13 +143,17 @@
 (relation placement-position Placement Position {})
 (relation placement-employer Placement Employer {})
 (relation position-covered-by Position CollectiveBargainingAgreement {})
-(relation cba-uses-template CollectiveBargainingAgreement
+(relation cba-uses-template
+  CollectiveBargainingAgreement
   AuthorizationCardTemplate
   {})
 (relation task-for-placement UnionAuthorizationTask Placement {})
-(relation task-fulfills-cba UnionAuthorizationTask CollectiveBargainingAgreement
+(relation task-fulfills-cba
+  UnionAuthorizationTask
+  CollectiveBargainingAgreement
   {})
-(relation task-produces-document UnionAuthorizationTask
+(relation task-produces-document
+  UnionAuthorizationTask
   ExecutedAuthorizationDocument
   {})
 (relation event-for-document IntegrationEvent ExecutedAuthorizationDocument {})
