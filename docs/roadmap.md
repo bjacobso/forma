@@ -28,7 +28,10 @@ production-readiness claim.
 4. Reduce TypeScript CLI and engine startup cost, and define the distribution
    model for the eventual public packages.
 5. Add a supported consumer-prelude SDK and document how to build a complete
-   typed domain language.
+   typed domain language. [RFC 0018](./rfcs/0018-form-examples.md) proposes
+   checked examples on `form` declarations as the first step: a vocabulary is
+   proven when it loads, and its examples serve completion, tests, and a
+   form catalog.
 
 ## Record row rollout
 

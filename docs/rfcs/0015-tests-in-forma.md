@@ -214,6 +214,14 @@ fails, and 0 otherwise. Kernel tests run in the engine. In the first stage,
 Effect program tests run through the generated module and the adapter, not
 through `forma test`.
 
+### Form examples
+
+[RFC 0018](./0018-form-examples.md) proposes checked examples on `form`
+declarations. Once `runTests` exists, each example is reported as one
+`TestResult` named `<form>/<example>`, after the module's `test`
+declarations, so `forma test` on a prelude also runs its vocabulary's
+examples. Until then, examples are checked only when the prelude loads.
+
 ### Domain test vocabularies
 
 The staffing example's `(test name (:arrange ...) (:assert ...))` is a domain
