@@ -8,7 +8,12 @@ function fits(remaining: number, commands: readonly Command[]): boolean {
   while (stack.length && remaining >= 0) {
     const { doc, depth, flat } = stack.pop()!;
     switch (doc.kind) {
-      case "text": if (/[\r\n]/.test(doc.value)) return false; remaining -= doc.value.length; break;
+      case "text": {
+        const newline = doc.value.search(/[\r\n]/);
+        if (newline >= 0) return !flat && newline <= remaining;
+        remaining -= doc.value.length;
+        break;
+      }
       case "breakParent": if (flat) return false; break;
       case "line": if (!flat) return true; if (doc.hard) return false; remaining -= doc.flat.length; break;
       case "concat": for (let i = doc.parts.length - 1; i >= 0; i--) stack.push({ doc: doc.parts[i]!, depth, flat }); break;

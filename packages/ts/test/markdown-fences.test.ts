@@ -33,3 +33,14 @@ describe("Markdown fence extraction", () => {
     }
   });
 });
+
+test("closing indentation is relative to the Markdown container, not the opener", () => {
+  const [block] = extractMarkdownFences("  ```lisp\n(x)\n    ```\n```\n");
+  expect(block!.text).toBe("(x)\n  ```\n");
+});
+
+test("HTML processing instructions and custom block tags are not code fences", () => {
+  for (const [open, close] of [["<?process", "?>"], ["<![CDATA[", "]]>"], ["<custom>", "</custom>"]]) {
+    expect(extractMarkdownFences(`${open}\n\u0060\u0060\u0060lisp\nx\n\u0060\u0060\u0060\n${close}\n`)).toEqual([]);
+  }
+});

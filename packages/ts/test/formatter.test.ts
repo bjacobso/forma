@@ -1,9 +1,10 @@
+import { ignoredRanges } from "../src/format/ignore.js";
 import { describe, expect, test } from "vitest";
 import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { performance } from "node:perf_hooks";
-import { formatLisp, formatRange, type FormatOptions } from "../src/Format.js";
+import { formatLisp, formatRange, formatMarkdown, type FormatOptions } from "../src/Format.js";
 import { tokenizeWithTrivia } from "../src/reader/lexer.js";
 import { parse } from "../src/reader/parser.js";
 import { toSExprMany } from "../src/reader/to-sexpr.js";
@@ -40,11 +41,16 @@ function invariants(source: string, id: string, options: FormatOptions = {}): st
     expect(outputBlanks, id + " blank " + blank).toContain(blank);
   }
   const width = options.softWrap ?? 80;
+  const outputTokens = tokenizeWithTrivia(result.text);
+  const outputComments = outputTokens.flatMap(t => t.leadingTrivia.filter(t => t.kind === "line-comment"));
+  const ignored = ignoredRanges(parse(result.text).greenTree, result.text);
+  let lineStart = 0;
   for (const line of result.text.split("\n")) {
-    if (line.length <= width || line.includes(";")) continue;
-    const significant = tokenizeWithTrivia(line).filter(t => !["eof", "lparen", "rparen", "lbracket", "rbracket", "lbrace", "rbrace", "quote", "backtick", "tilde", "tilde-at"].includes(t.token.type));
-    // Multiline literals and a single unbreakable atom may exceed the budget.
-    if (result.text.includes('"""') || significant.length <= 1) continue;
+    const start = lineStart, end = start + line.length;
+    lineStart = end + 1;
+    if (line.length <= width || outputComments.some(c => c.loc.start >= start && c.loc.start <= end) || ignored.some(r => start < r.end && end > r.start)) continue;
+    const significant = outputTokens.filter(t => t.token.loc.start <= end && t.token.loc.end > start && !["eof", "lparen", "rparen", "lbracket", "rbracket", "lbrace", "rbrace", "quote", "backtick", "tilde", "tilde-at"].includes(t.token.type));
+    if (significant.length <= 1) continue;
     expect(line.length, id + " width: " + line).toBeLessThanOrEqual(width);
   }
   return result.text;
@@ -86,9 +92,12 @@ describe("lossless formatter", () => {
   for (const entry of readdirSync(resolve(root, "conformance/format"), { withFileTypes: true }).filter(e => e.isDirectory())) {
     const dir = resolve(root, "conformance/format", entry.name);
     test(`golden ${entry.name}`, () => {
-      const input = readFileSync(resolve(dir, "input.lisp"), "utf8");
+      const ext = existsSync(resolve(dir, "input.md")) ? "md" : "lisp";
+      const input = readFileSync(resolve(dir, `input.${ext}`), "utf8");
       const options = existsSync(resolve(dir, "options.json")) ? JSON.parse(readFileSync(resolve(dir, "options.json"), "utf8")) : {};
-      expect(invariants(input, entry.name, options)).toBe(readFileSync(resolve(dir, "output.lisp"), "utf8"));
+      const output = ext === "md" ? formatMarkdown(input, options).text : invariants(input, entry.name, options);
+      expect(output).toBe(readFileSync(resolve(dir, `output.${ext}`), "utf8"));
+      if (ext === "md") expect(formatMarkdown(output, options).text).toBe(output);
     });
   }
 });
