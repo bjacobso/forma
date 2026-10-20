@@ -6,10 +6,10 @@
       "severity": "error",
       "code": "mechanics/condition",
       "message": "Conditions must be Bool, but this is Int.",
-      "line": 4,
-      "column": 7,
-      "endLine": 4,
-      "endColumn": 12
+      "line": 3,
+      "column": 27,
+      "endLine": 3,
+      "endColumn": 32
     }
   ]
 }

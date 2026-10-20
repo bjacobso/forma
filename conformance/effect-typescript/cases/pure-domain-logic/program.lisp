@@ -2,38 +2,32 @@
 ;; value-level match over options, results, enums, and tagged unions, and
 ;; the collection and string functions that compile to plain TypeScript.
 (type Tier (Union :free :pro :enterprise))
-(type
-  Discount
+(type Discount
   (Tagged :tag type (Percent {:rate Int}) (Fixed {:cents Int}) (None {})))
 (class Customer {:id String :name String :tier Tier :email (Option String)})
 (class LineItem {:sku String :quantity Int :unit-cents Int})
 (error EmptyCart {:customer String})
 (: tier-discounts (Map String Discount))
-(define
-  tier-discounts
+(define tier-discounts
   {
     "free" {:type "None"}
     "pro" {:type "Percent" :rate 10}
     "enterprise" {:type "Fixed" :cents 500}})
 (: subtotal (-> (List LineItem) Int))
-(define
-  subtotal
+(define subtotal
   [items]
   (reduce
     (fn [total item] (+ total (* (get item :quantity) (get item :unit-cents))))
     0
     items))
 (: discount-for (-> Customer Discount))
-(define
-  discount-for
+(define discount-for
   [customer]
   (get-or-else (get tier-discounts (get customer :tier)) {:type "None"}))
 (: apply-discount (-> Discount Int Int))
-(define
-  apply-discount
+(define apply-discount
   [discount cents]
-  (match
-    discount
+  (match discount
     (Percent p)
     (- cents (quot (* cents (get p :rate)) 100))
     (Fixed f)
@@ -43,11 +37,9 @@
 (: tier-label (-> Tier String))
 (define tier-label [tier] (match tier "free" "Free" "pro" "Pro" _ "Enterprise"))
 (: contact (-> Customer String))
-(define
-  contact
+(define contact
   [customer]
-  (match
-    (get customer :email)
+  (match (get customer :email)
     (Some address)
     (str (get customer :name) " <" address ">")
     None
@@ -55,41 +47,33 @@
 (: shout (-> String String))
 (define shout [text] (str (upcase (trim text)) "!"))
 (: skus (-> (List LineItem) String))
-(define
-  skus
+(define skus
   [items]
   (join
-    (map
-      (fn [item] (get item :sku))
+    (map (fn [item] (get item :sku))
       (filter (fn [item] (> (get item :quantity) 0)) items))
     ","))
 (: summarize (-> Customer (List LineItem) (Effect String [EmptyCart] [])))
-(define
-  summarize
+(define summarize
   [customer items]
   (do!
     [
-      :let
-      [nonempty (filter (fn [item] (> (get item :quantity) 0)) items)]
+      :let [nonempty (filter (fn [item] (> (get item :quantity) 0)) items)]
       _
       (when (empty? nonempty) (fail (EmptyCart {:customer (get customer :id)})))
+      :let [gross (subtotal nonempty)]
+      :let [net (apply-discount (discount-for customer) gross)]
       :let
-      [gross (subtotal nonempty)]
-      :let
-      [net (apply-discount (discount-for customer) gross)]
-      :let
-      [
-        biggest
-        (find
-          (fn
-            [item]
-            (every?
-              (fn [other] (>= (get item :unit-cents) (get other :unit-cents)))
-              nonempty))
-          nonempty)]]
+        [
+          biggest
+          (find
+            (fn [item]
+              (every?
+                (fn [other] (>= (get item :unit-cents) (get other :unit-cents)))
+                nonempty))
+            nonempty)]]
     (succeed
-      (str
-        (contact customer)
+      (str (contact customer)
         " ["
         (tier-label (get customer :tier))
         "] "
@@ -103,29 +87,22 @@
         " cents"
         (match biggest (Some item) (str ", top " (get item :sku)) None "")))))
 (: outcome-label (-> Customer (List LineItem) (Effect String)))
-(define
-  outcome-label
+(define outcome-label
   [customer items]
-  (do!
-    [outcome (result (summarize customer items))]
+  (do! [outcome (result (summarize customer items))]
     (succeed
-      (match
-        outcome
+      (match outcome
         (Ok text)
         text
         (Err error)
         (str "empty cart for " (get error :customer))))))
 (: upgrade (-> Customer Customer))
-(define
-  upgrade
+(define upgrade
   [customer]
-  (assoc
-    customer
-    :tier
-    (cond (= (get customer :tier) "free") "pro" :else "enterprise")))
+  (assoc customer
+    :tier (cond (= (get customer :tier) "free") "pro" :else "enterprise")))
 (: loud-names (-> (List Customer) (List String)))
-(define
-  loud-names
+(define loud-names
   [customers]
   (let
     [

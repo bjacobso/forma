@@ -183,10 +183,7 @@ interface UnwrapBindingRequest {
 returns a replacement:
 
 ```lisp
-(fn [call-model]
-  (fn [request]
-    (do (log-request request)
-        (call-model request))))
+(fn [call-model] (fn [request] (do (log-request request) (call-model request))))
 ```
 
 The effective binding applies wrappers in installation order, so the newest

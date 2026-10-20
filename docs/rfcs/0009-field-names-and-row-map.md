@@ -77,9 +77,7 @@ without guessing its spelling or modifying the existing dynamic `get` operation:
 
 ```lisp
 ; Proposed: the field name is checked through its witness.
-(: field
-  (Where [(Has {& row} label a)]
-    (-> {& row} (FieldWitness label) a)))
+(: field (Where [(Has {& row} label a)] (-> {& row} (FieldWitness label) a)))
 (define field [record label] (get-field record label))
 ```
 

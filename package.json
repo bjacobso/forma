@@ -27,7 +27,7 @@
     "surfaces:test": "node --test scripts/surfaces/*.test.mjs && pnpm surfaces",
     "test:visual": "pnpm --filter @formalang/website test:visual",
     "typecheck": "tsc --noEmit -p tsconfig.alchemy.json && tsc --noEmit -p conformance/effect-typescript/tsconfig.json && turbo run typecheck --filter=@formalang/ts --filter=@formalang/host --filter=@formalang/editor --filter=@formalang/language-server --filter=@formalang/workbench --filter=@formalang/workbench-app --filter=@formalang/website",
-    "check": "pnpm check:branding && pnpm check:changesets && pnpm typecheck && pnpm test:js && pnpm docs:build",
+    "check": "pnpm check:branding && pnpm check:changesets && pnpm typecheck && pnpm test:js && pnpm docs:build && pnpm format:check",
     "check:branding": "bash scripts/check-branding.sh",
     "check:changesets": "changeset status",
     "check:llms": "node scripts/llms.mjs",
@@ -36,7 +36,9 @@
     "website:deploy": "alchemy deploy --stage prod",
     "website:dry-run": "pnpm --filter @formalang/website exec wrangler deploy --dry-run",
     "test:e2e:workbench": "pnpm --filter @formalang/workbench-app test:e2e",
-    "test:site": "pnpm --filter @formalang/website test:site"
+    "test:site": "pnpm --filter @formalang/website test:site",
+    "format": "turbo run build --filter=@formalang/host && node scripts/format.mjs",
+    "format:check": "turbo run build --filter=@formalang/host && node scripts/format.mjs --check"
   },
   "devDependencies": {
     "@changesets/cli": "3.0.2",

@@ -1,8 +1,7 @@
 # Schema
 
 ```lisp
-(export
-  Address
+(export Address
   Employer
   Client
   Employee
@@ -107,21 +106,26 @@
     :attachment-hash (Option String)
     :attachment-filename (Option String)
     :employee (Option (Id Employee))})
-(relation works-at Employee Employer
-  {
-    :start-date (Option Float)
-    :end-date (Option Float)
-    :status (Option String)})
-(relation placed-at Employee Client
+(relation works-at
+  Employee
+  Employer
+  {:start-date (Option Float) :end-date (Option Float) :status (Option String)})
+(relation placed-at
+  Employee
+  Client
   {
     :start-date (Option Float)
     :end-date (Option Float)
     :employer (Option String)
     :jobtype (Option String)
     :status (Option String)})
-(relation serves-client Employer Client
+(relation serves-client
+  Employer
+  Client
   {:since (Option Float) :contract-type (Option String)})
-(relation governed-by Employer Policy
+(relation governed-by
+  Employer
+  Policy
   {:since (Option Float) :overridden (Option Bool)})
 (relation assigned-task Employee OnboardingTask {:assigned-at (Option Float)})
 (relation has-document Employee Document {:uploaded-at (Option Float)})

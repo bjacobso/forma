@@ -3,8 +3,7 @@
 (type ServerSettings {:host String :port Int :debug Bool :ratio Float})
 (error Misconfigured {:reason String})
 (: settings (Effect ServerSettings [ConfigError] []))
-(define
-  settings
+(define settings
   (do!
     [
       host
@@ -19,29 +18,23 @@
       (log "loaded settings for" host)]
     (succeed {:host host :port port :debug debug :ratio ratio})))
 (: validated-settings (Effect ServerSettings [Misconfigured] []))
-(define
-  validated-settings
+(define validated-settings
   (do!
     [
       loaded
-      (catch
-        settings
+      (catch settings
         (ConfigError _)
         (fail (Misconfigured {:reason "HOST is required"})))]
-    (if
-      (and (> (get loaded :port) 0) (< (get loaded :port) 65536))
+    (if (and (> (get loaded :port) 0) (< (get loaded :port) 65536))
       (succeed loaded)
       (fail
         (Misconfigured
           {:reason (str "port " (get loaded :port) " is out of range")})))))
 (: base-url (Effect String [Misconfigured] []))
-(define
-  base-url
-  (do!
-    [current validated-settings]
+(define base-url
+  (do! [current validated-settings]
     (succeed
-      (str
-        (if (get current :debug) "http" "https")
+      (str (if (get current :debug) "http" "https")
         "://"
         (get current :host)
         ":"

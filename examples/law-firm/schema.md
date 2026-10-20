@@ -1,8 +1,7 @@
 # Schema
 
 ```lisp
-(export
-  Attorney
+(export Attorney
   Paralegal
   Client
   Contact
@@ -129,7 +128,9 @@
 ;; ---------------------------------------------------------------------------
 ;; Relations
 ;; ---------------------------------------------------------------------------
-(relation represents Attorney Client
+(relation represents
+  Attorney
+  Client
   {:since (Option Float) :role (Option String)})
 (relation contact-at Contact Client {:primary (Option Bool)})
 (relation intake-for IntakePacket Client {})

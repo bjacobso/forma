@@ -16,9 +16,9 @@
       "severity": "error",
       "code": "mechanics/record-key",
       "message": "__proto__ cannot be a map key: JavaScript treats it as the prototype.",
-      "line": 9,
+      "line": 8,
       "column": 18,
-      "endLine": 9,
+      "endLine": 8,
       "endColumn": 29
     },
     {
@@ -26,9 +26,9 @@
       "severity": "error",
       "code": "mechanics/unit-collection",
       "message": "(Map Unit) cannot tell a stored nil from a missing value; use Bool or an Option.",
-      "line": 12,
+      "line": 11,
       "column": 1,
-      "endLine": 12,
+      "endLine": 11,
       "endColumn": 24
     },
     {
@@ -36,9 +36,9 @@
       "severity": "error",
       "code": "mechanics/error-tag",
       "message": "Errors get their _tag from their name; a field cannot be called _tag.",
-      "line": 14,
+      "line": 13,
       "column": 22,
-      "endLine": 14,
+      "endLine": 13,
       "endColumn": 28
     }
   ]

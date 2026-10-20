@@ -1,8 +1,7 @@
 ; UI forms: typed projections and constant renderer configuration.
 (type ComponentIR {:component String :props Json :children (List Json)})
 (type component ComponentIR)
-(define
-  component
+(define component
   [name props children]
   {:component name :props props :children children})
 
@@ -14,8 +13,7 @@
 ; viewspec.lisp and are loaded after this file so they inherit the same hosted
 ; DSL symbol table.
 ; -----------------------------------------------------------------------------
-(define
-  text.metadata
+(define text.metadata
   (quote
     {
       :descriptor-name "text"
@@ -36,8 +34,7 @@
       :bind (Option (Expr a))}
   :ir ComponentIR
   (component "text" {"content" content "visible" visible "bind" bind} []))
-(define
-  rows.metadata
+(define rows.metadata
   (quote
     {
       :descriptor-name "rows"
@@ -54,8 +51,7 @@
     {:gap (Option Float) :visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "rows" {"gap" gap "visible" visible} child))
-(define
-  columns.metadata
+(define columns.metadata
   (quote
     {
       :descriptor-name "columns"
@@ -72,8 +68,7 @@
     {:gap (Option Float) :visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "columns" {"gap" gap "visible" visible} child))
-(define
-  card.metadata
+(define card.metadata
   (quote
     {
       :descriptor-name "card"
@@ -103,8 +98,7 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "card"
+  (component "card"
     {
       "title" title
       "description" description
@@ -113,8 +107,7 @@
       "footer" footer
       "visible" visible}
     child))
-(define
-  item-group.metadata
+(define item-group.metadata
   (quote
     {
       :descriptor-name "item-group"
@@ -134,8 +127,7 @@
       :child (List component)}
   :ir ComponentIR
   (component "item-group" {"visible" visible "bind" bind} child))
-(define
-  item.metadata
+(define item.metadata
   (quote
     {
       :descriptor-name "item"
@@ -168,8 +160,7 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "item"
+  (component "item"
     {
       "variant" variant
       "size" size
@@ -181,8 +172,7 @@
       "badge-variant" badge-variant
       "visible" visible}
     child))
-(define
-  button.metadata
+(define button.metadata
   (quote
     {
       :descriptor-name "button"
@@ -209,8 +199,7 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "button"
+  (component "button"
     {
       "label" label
       "variant" variant
@@ -219,8 +208,7 @@
       "button-type" button-type
       "visible" visible}
     child))
-(define
-  progress.metadata
+(define progress.metadata
   (quote
     {
       :descriptor-name "progress"
@@ -241,12 +229,10 @@
       :visible (Option (Expr Bool))
       :bind (Option (Expr a))}
   :ir ComponentIR
-  (component
-    "progress"
+  (component "progress"
     {"value" value "label" label "hint" hint "visible" visible "bind" bind}
     []))
-(define
-  workflow-strip.metadata
+(define workflow-strip.metadata
   (quote
     {
       :descriptor-name "workflow-strip"
@@ -266,19 +252,20 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "workflow-strip"
+  (component "workflow-strip"
     {"title" title "description" description "visible" visible}
     child))
-(define
-  workflow-step.metadata
+(define workflow-step.metadata
   (quote
     {
       :descriptor-name "workflow-step"
       :extensions
         {
           :view/component
-            {:allows-bind false :children "none" :parents ["workflow-strip"]}}}))
+            {
+              :allows-bind false
+              :children "none"
+              :parents ["workflow-strip"]}}}))
 (form
   (workflow-step {:keys [label description status icon visible]})
   :types
@@ -289,8 +276,7 @@
       :icon (Option String)
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "workflow-step"
+  (component "workflow-step"
     {
       "label" label
       "description" description
@@ -298,8 +284,7 @@
       "icon" icon
       "visible" visible}
     []))
-(define
-  empty-state.metadata
+(define empty-state.metadata
   (quote
     {
       :descriptor-name "empty-state"
@@ -320,12 +305,10 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "empty-state"
+  (component "empty-state"
     {"icon" icon "title" title "description" description "visible" visible}
     child))
-(define
-  badge.metadata
+(define badge.metadata
   (quote
     {
       :descriptor-name "badge"
@@ -347,8 +330,7 @@
       :dot-color (Option String)
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "badge"
+  (component "badge"
     {
       "content" content
       "variant" variant
@@ -356,8 +338,7 @@
       "dot-color" dot-color
       "visible" visible}
     []))
-(define
-  avatar.metadata
+(define avatar.metadata
   (quote
     {
       :descriptor-name "avatar"
@@ -378,12 +359,10 @@
       :size (Option (Union "default" "sm" "lg"))
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "avatar"
+  (component "avatar"
     {"src" src "alt" alt "fallback" fallback "size" size "visible" visible}
     []))
-(define
-  kbd.metadata
+(define kbd.metadata
   (quote
     {
       :descriptor-name "kbd"
@@ -400,8 +379,7 @@
   :types {:content (Option (Expr a)) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "kbd" {"content" content "visible" visible} []))
-(define
-  spinner.metadata
+(define spinner.metadata
   (quote
     {
       :descriptor-name "spinner"
@@ -421,8 +399,7 @@
       :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "spinner" {"label" label "size" size "visible" visible} []))
-(define
-  separator.metadata
+(define separator.metadata
   (quote
     {
       :descriptor-name "separator"
@@ -441,8 +418,7 @@
       :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "separator" {"orientation" orientation "visible" visible} []))
-(define
-  tabs.metadata
+(define tabs.metadata
   (quote
     {
       :descriptor-name "tabs"
@@ -458,8 +434,7 @@
   :types {:visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "tabs" {"visible" visible} child))
-(define
-  tab-panel.metadata
+(define tab-panel.metadata
   (quote
     {
       :descriptor-name "tab-panel"
@@ -492,8 +467,7 @@
       :child (List component)}
   :ir ComponentIR
   (component "tab-panel" {"label" label "visible" visible} child))
-(define
-  accordion.metadata
+(define accordion.metadata
   (quote
     {
       :descriptor-name "accordion"
@@ -513,8 +487,7 @@
       :child (List component)}
   :ir ComponentIR
   (component "accordion" {"mode" mode "visible" visible} child))
-(define
-  accordion-item.metadata
+(define accordion-item.metadata
   (quote
     {
       :descriptor-name "accordion-item"
@@ -535,12 +508,10 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "accordion-item"
+  (component "accordion-item"
     {"title" title "default-open" default-open "visible" visible}
     child))
-(define
-  grid.metadata
+(define grid.metadata
   (quote
     {
       :descriptor-name "grid"
@@ -560,8 +531,7 @@
       :child (List component)}
   :ir ComponentIR
   (component "grid" {"columns" columns "visible" visible} child))
-(define
-  aspect-ratio.metadata
+(define aspect-ratio.metadata
   (quote
     {
       :descriptor-name "aspect-ratio"
@@ -581,8 +551,7 @@
       :child (List component)}
   :ir ComponentIR
   (component "aspect-ratio" {"ratio" ratio "visible" visible} child))
-(define
-  spacer.metadata
+(define spacer.metadata
   (quote
     {
       :descriptor-name "spacer"
@@ -598,8 +567,7 @@
   :types {:height (Option Float) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "spacer" {"height" height "visible" visible} []))
-(define
-  split-pane.metadata
+(define split-pane.metadata
   (quote
     {
       :descriptor-name "split-pane"
@@ -624,12 +592,10 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "split-pane"
+  (component "split-pane"
     {"direction" direction "sizes" sizes "visible" visible}
     child))
-(define
-  for-each.metadata
+(define for-each.metadata
   (quote
     {
       :descriptor-name "for-each"
@@ -653,12 +619,10 @@
       :bind (Option (Expr a))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "for-each"
+  (component "for-each"
     {"empty-text" empty-text "visible" visible "bind" bind}
     child))
-(define
-  condition.metadata
+(define condition.metadata
   (quote
     {
       :descriptor-name "condition"
@@ -674,8 +638,7 @@
   :types {:visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "condition" {"visible" visible} child))
-(define
-  case.metadata
+(define case.metadata
   (quote
     {
       :descriptor-name "case"
@@ -696,8 +659,7 @@
   :types {:when (Expr a) :visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "case" {"when" when "visible" visible} child))
-(define
-  else.metadata
+(define else.metadata
   (quote
     {
       :descriptor-name "else"
@@ -714,8 +676,7 @@
   :types {:visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "else" {"visible" visible} child))
-(define
-  slot.metadata
+(define slot.metadata
   (quote
     {
       :descriptor-name "slot"
@@ -737,8 +698,7 @@
       :child (List component)}
   :ir ComponentIR
   (component "slot" {"name" name "visible" visible "bind" bind} child))
-(define
-  use.metadata
+(define use.metadata
   (quote
     {
       :descriptor-name "use"
@@ -760,8 +720,7 @@
       :child (List component)}
   :ir ComponentIR
   (component "use" {"name" name "overrides" overrides "visible" visible} child))
-(define
-  tooltip.metadata
+(define tooltip.metadata
   (quote
     {
       :descriptor-name "tooltip"
@@ -782,8 +741,7 @@
       :child (List component)}
   :ir ComponentIR
   (component "tooltip" {"content" content "side" side "visible" visible} child))
-(define
-  popover.metadata
+(define popover.metadata
   (quote
     {
       :descriptor-name "popover"
@@ -810,8 +768,7 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "popover"
+  (component "popover"
     {
       "trigger" trigger
       "title" title
@@ -820,8 +777,7 @@
       "align" align
       "visible" visible}
     child))
-(define
-  hover-card.metadata
+(define hover-card.metadata
   (quote
     {
       :descriptor-name "hover-card"
@@ -846,12 +802,10 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "hover-card"
+  (component "hover-card"
     {"trigger" trigger "side" side "align" align "visible" visible}
     child))
-(define
-  dialog.metadata
+(define dialog.metadata
   (quote
     {
       :descriptor-name "dialog"
@@ -873,16 +827,14 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "dialog"
+  (component "dialog"
     {
       "dialog-id" dialog-id
       "title" title
       "description" description
       "visible" visible}
     child))
-(define
-  table.metadata
+(define table.metadata
   (quote
     {
       :descriptor-name "table"
@@ -922,8 +874,7 @@
       :visible (Option (Expr Bool))
       :bind (Option (Expr a))}
   :ir ComponentIR
-  (component
-    "table"
+  (component "table"
     {
       "columns" columns
       "filters" filters
@@ -933,8 +884,7 @@
       "visible" visible
       "bind" bind}
     []))
-(define
-  tree.metadata
+(define tree.metadata
   (quote
     {
       :descriptor-name "tree"
@@ -965,8 +915,7 @@
       :bind (Option (Expr a))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "tree"
+  (component "tree"
     {
       "id-key" id-key
       "parent-id-key" parent-id-key
@@ -975,8 +924,7 @@
       "visible" visible
       "bind" bind}
     child))
-(define
-  metric.metadata
+(define metric.metadata
   (quote
     {
       :descriptor-name "metric"
@@ -1001,8 +949,7 @@
       :visible (Option (Expr Bool))
       :bind (Option (Expr a))}
   :ir ComponentIR
-  (component
-    "metric"
+  (component "metric"
     {
       "label" label
       "value" value
@@ -1010,8 +957,7 @@
       "visible" visible
       "bind" bind}
     []))
-(define
-  chart.metadata
+(define chart.metadata
   (quote
     {
       :descriptor-name "chart"
@@ -1024,7 +970,9 @@
                 {
                   :expr-props ["visible" "bind"]
                   :slot-types
-                    {:series {:kind "array" :item ["string" "ViewChartSeries"]}}}
+                    {
+                      :series
+                        {:kind "array" :item ["string" "ViewChartSeries"]}}}
               :children "none"}}}))
 (form
   (chart {:keys [title chart-type category-key series visible bind]})
@@ -1038,8 +986,7 @@
       :visible (Option (Expr Bool))
       :bind (Option (Expr a))}
   :ir ComponentIR
-  (component
-    "chart"
+  (component "chart"
     {
       "title" title
       "chart-type" chart-type
@@ -1048,8 +995,7 @@
       "visible" visible
       "bind" bind}
     []))
-(define
-  markdown.metadata
+(define markdown.metadata
   (quote
     {
       :descriptor-name "markdown"
@@ -1070,8 +1016,7 @@
       :bind (Option (Expr a))}
   :ir ComponentIR
   (component "markdown" {"content" content "visible" visible "bind" bind} []))
-(define
-  stat-group.metadata
+(define stat-group.metadata
   (quote
     {
       :descriptor-name "stat-group"
@@ -1088,8 +1033,7 @@
     {:gap (Option Float) :visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "stat-group" {"gap" gap "visible" visible} child))
-(define
-  heading.metadata
+(define heading.metadata
   (quote
     {
       :descriptor-name "heading"
@@ -1110,8 +1054,7 @@
       :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "heading" {"text" text "level" level "visible" visible} []))
-(define
-  divider.metadata
+(define divider.metadata
   (quote
     {
       :descriptor-name "divider"
@@ -1127,8 +1070,7 @@
   :types {:visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "divider" {"visible" visible} []))
-(define
-  alert.metadata
+(define alert.metadata
   (quote
     {
       :descriptor-name "alert"
@@ -1149,9 +1091,10 @@
       :variant (Option (Union "default" "warning" "error" "info"))
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component "alert" {"message" message "variant" variant "visible" visible} []))
-(define
-  form.metadata
+  (component "alert"
+    {"message" message "variant" variant "visible" visible}
+    []))
+(define form.metadata
   (quote
     {
       :descriptor-name "form"
@@ -1172,12 +1115,10 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "form"
+  (component "form"
     {"title" title "description" description "visible" visible}
     child))
-(define
-  button-group.metadata
+(define button-group.metadata
   (quote
     {
       :descriptor-name "button-group"
@@ -1196,9 +1137,10 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component "button-group" {"orientation" orientation "visible" visible} child))
-(define
-  breadcrumb.metadata
+  (component "button-group"
+    {"orientation" orientation "visible" visible}
+    child))
+(define breadcrumb.metadata
   (quote
     {
       :descriptor-name "breadcrumb"
@@ -1214,8 +1156,7 @@
   :types {:visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "breadcrumb" {"visible" visible} child))
-(define
-  breadcrumb-item.metadata
+(define breadcrumb-item.metadata
   (quote
     {
       :descriptor-name "breadcrumb-item"
@@ -1237,12 +1178,10 @@
       :current (Option Json)
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "breadcrumb-item"
+  (component "breadcrumb-item"
     {"label" label "href" href "current" current "visible" visible}
     []))
-(define
-  input.metadata
+(define input.metadata
   (quote
     {
       :descriptor-name "input"
@@ -1281,8 +1220,7 @@
       :suffix (Option String)
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "input"
+  (component "input"
     {
       "name" name
       "default-value" default-value
@@ -1294,8 +1232,7 @@
       "suffix" suffix
       "visible" visible}
     []))
-(define
-  textarea.metadata
+(define textarea.metadata
   (quote
     {
       :descriptor-name "textarea"
@@ -1318,8 +1255,7 @@
       :placeholder (Option String)
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "textarea"
+  (component "textarea"
     {
       "name" name
       "default-value" default-value
@@ -1328,8 +1264,7 @@
       "placeholder" placeholder
       "visible" visible}
     []))
-(define
-  checkbox.metadata
+(define checkbox.metadata
   (quote
     {
       :descriptor-name "checkbox"
@@ -1351,8 +1286,7 @@
       :description (Option (Expr a))
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "checkbox"
+  (component "checkbox"
     {
       "name" name
       "default-value" default-value
@@ -1360,8 +1294,7 @@
       "description" description
       "visible" visible}
     []))
-(define
-  switch.metadata
+(define switch.metadata
   (quote
     {
       :descriptor-name "switch"
@@ -1383,8 +1316,7 @@
       :description (Option (Expr a))
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "switch"
+  (component "switch"
     {
       "name" name
       "default-value" default-value
@@ -1392,8 +1324,7 @@
       "description" description
       "visible" visible}
     []))
-(define
-  select.metadata
+(define select.metadata
   (quote
     {
       :descriptor-name "select"
@@ -1409,7 +1340,9 @@
                   :slot-types
                     {
                       :options
-                        {:kind "array" :item ["string" "ViewSelectOptionValue"]}}}
+                        {
+                          :kind "array"
+                          :item ["string" "ViewSelectOptionValue"]}}}
               :children ["only" ["select-option"]]
               :events {:on-change "onChange"}}}}))
 (form
@@ -1428,8 +1361,7 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "select"
+  (component "select"
     {
       "name" name
       "default-value" default-value
@@ -1439,8 +1371,7 @@
       "options" options
       "visible" visible}
     child))
-(define
-  select-option.metadata
+(define select-option.metadata
   (quote
     {
       :descriptor-name "select-option"
@@ -1464,9 +1395,10 @@
   (select-option {:keys [value label visible]})
   :types {:value String :label (Option (Expr a)) :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component "select-option" {"value" value "label" label "visible" visible} []))
-(define
-  radio-group.metadata
+  (component "select-option"
+    {"value" value "label" label "visible" visible}
+    []))
+(define radio-group.metadata
   (quote
     {
       :descriptor-name "radio-group"
@@ -1482,7 +1414,9 @@
                   :slot-types
                     {
                       :options
-                        {:kind "array" :item ["string" "ViewSelectOptionValue"]}}}
+                        {
+                          :kind "array"
+                          :item ["string" "ViewSelectOptionValue"]}}}
               :children ["only" ["radio-option"]]
               :events {:on-change "onChange"}}}}))
 (form
@@ -1500,8 +1434,7 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "radio-group"
+  (component "radio-group"
     {
       "name" name
       "default-value" default-value
@@ -1510,8 +1443,7 @@
       "options" options
       "visible" visible}
     child))
-(define
-  radio-option.metadata
+(define radio-option.metadata
   (quote
     {
       :descriptor-name "radio-option"
@@ -1536,8 +1468,7 @@
   :types {:value String :label (Option (Expr a)) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "radio-option" {"value" value "label" label "visible" visible} []))
-(define
-  slider.metadata
+(define slider.metadata
   (quote
     {
       :descriptor-name "slider"
@@ -1565,8 +1496,7 @@
       :step (Option Float)
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "slider"
+  (component "slider"
     {
       "name" name
       "default-value" default-value
@@ -1577,8 +1507,7 @@
       "step" step
       "visible" visible}
     []))
-(define
-  toggle-group.metadata
+(define toggle-group.metadata
   (quote
     {
       :descriptor-name "toggle-group"
@@ -1593,7 +1522,9 @@
                   :slot-types
                     {
                       :options
-                        {:kind "array" :item ["string" "ViewSelectOptionValue"]}}}
+                        {
+                          :kind "array"
+                          :item ["string" "ViewSelectOptionValue"]}}}
               :children "none"
               :events {:on-change "onChange"}}}}))
 (form
@@ -1607,8 +1538,7 @@
       :options (Option Json)
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "toggle-group"
+  (component "toggle-group"
     {
       "name" name
       "default-value" default-value
@@ -1617,8 +1547,7 @@
       "options" options
       "visible" visible}
     []))
-(define
-  skeleton.metadata
+(define skeleton.metadata
   (quote
     {
       :descriptor-name "skeleton"
@@ -1634,8 +1563,7 @@
   :types {:lines (Option Float) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "skeleton" {"lines" lines "visible" visible} []))
-(define
-  raw-html.metadata
+(define raw-html.metadata
   (quote
     {
       :descriptor-name "raw-html"
@@ -1652,8 +1580,7 @@
   :types {:content (Expr a) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "raw-html" {"content" content "visible" visible} []))
-(define
-  raw-css.metadata
+(define raw-css.metadata
   (quote
     {
       :descriptor-name "raw-css"
@@ -1670,8 +1597,7 @@
   :types {:content (Expr a) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "raw-css" {"content" content "visible" visible} []))
-(define
-  raw-js.metadata
+(define raw-js.metadata
   (quote
     {
       :descriptor-name "raw-js"
@@ -1688,8 +1614,7 @@
   :types {:code (Expr a) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "raw-js" {"code" code "visible" visible} []))
-(define
-  custom.metadata
+(define custom.metadata
   (quote
     {
       :descriptor-name "custom"
@@ -1714,14 +1639,11 @@
       :visible (Option (Expr Bool))
       :child (List component)}
   :ir ComponentIR
-  (component
-    "custom"
+  (component "custom"
     {"component-name" component-name "props" props "visible" visible}
     child))
-(define
-  component-ref
+(define component-ref
   (quote
     {:extensions {:view/layout-alias {:form "component-ref" :to "view-ref"}}}))
-(define
-  cond
+(define cond
   (quote {:extensions {:view/layout-alias {:form "cond" :to "condition"}}}))

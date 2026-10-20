@@ -17,7 +17,8 @@ Tabletop campaign example in canonical ontology syntax.
 
 ```lisp
 (seed Campaign "campaign:shattered-sea" {:name "Shattered Sea" :tier "mid"})
-(seed Character "character:orin"
+(seed Character
+  "character:orin"
   {:name "Orin Vale" :class "bard" :campaign "campaign:shattered-sea"})
 ```
 

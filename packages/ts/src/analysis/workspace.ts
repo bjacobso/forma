@@ -24,7 +24,7 @@ import {
   type SymbolIndex,
   type SymbolReference,
 } from "../editor/symbols.js";
-import { formatLispSource } from "../Formatter.js";
+import { formatLisp, formatRange, type FormatOptions, type FormatResult } from "../Format.js";
 import { analyzeLsp, type LspResult } from "../lsp/hm-lsp.js";
 import { parse, toSExprMany } from "../reader/index.js";
 import { head } from "../surface/effect.js";
@@ -357,14 +357,18 @@ export class AnalysisWorkspace {
     );
   }
 
-  /** The formatted text of a source, or `undefined` when it does not parse. */
+  /** The formatted text, or undefined when the source is missing or invalid. */
   format(sourceId: string): string | undefined {
+    const result = this.formatResult(sourceId);
+    return result && !result.diagnostics.length ? result.text : undefined;
+  }
+
+  /** Structured formatting with the workspace's configured prelude descriptors. */
+  formatResult(sourceId: string, options: FormatOptions = {}, range?: { readonly start: number; readonly end: number }): FormatResult | undefined {
     const text = this.text(sourceId);
     if (text === undefined) return undefined;
-    const result = Effect.runSync(
-      Effect.result(formatLispSource(text, { descriptors: this.#descriptors() })),
-    );
-    return result._tag === "Success" ? result.success : undefined;
+    const settings = { ...options, descriptors: [...this.#descriptors(), ...(options.descriptors ?? [])] };
+    return range ? formatRange(text, range, settings) : formatLisp(text, settings);
   }
 
   // ---------------------------------------------------------------------------

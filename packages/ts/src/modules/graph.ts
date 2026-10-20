@@ -84,6 +84,8 @@ export interface ResolvedModule {
   readonly bindings: ReadonlyMap<string, ModuleBinding>;
   readonly imports: ReadonlyMap<string, ModuleBinding>;
   readonly namespaceImports: readonly ModuleBinding[];
+  /** Authored namespace aliases and their resolved module IDs. */
+  readonly namespaceAliases?: ReadonlyMap<string, string>;
   readonly interface: ModuleInterface;
   readonly compileTime?: ModuleCompileTime;
 }
@@ -964,6 +966,7 @@ export function resolveModuleGraph(
         dependencies,
         bindings,
         imports,
+        namespaceAliases: new Map([...namespaces].map(([alias, module]) => [alias, module.id])),
         namespaceImports: [...namespaces.values()].flatMap(
           (m) => m.interface.exports,
         ),
@@ -1073,6 +1076,7 @@ export function resolveModuleGraph(
       dependencies,
       bindings,
       imports,
+      namespaceAliases: new Map([...namespaces].map(([alias, module]) => [alias, module.id])),
       namespaceImports: [...namespaces.values()].flatMap((m) =>
         m.interface.exports.filter((b) => !laterKinds.has(b.kind)),
       ),

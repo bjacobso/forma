@@ -868,3 +868,5 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--forma-blue); ou
   .workbench-toolbar, .workbench-example-bar { padding: 10px 12px; }
   .workbench-title > span:last-child { display: none; }
 }
+
+.source-actions { display: flex; justify-content: flex-end; padding: 0.4rem 0.6rem; }

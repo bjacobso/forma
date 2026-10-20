@@ -1,3 +1,4 @@
+import { extractMarkdownFences, isFormaFence } from "../src/source/markdown.js";
 import { describe, expect, test } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import { relative, resolve } from "node:path";
@@ -242,8 +243,8 @@ describe("elaborateProgram", () => {
     for (const path of markdown(examples)) {
       const sourceId = relative(examples, path);
       if (excluded.has(sourceId)) continue;
-      const blocks = [...readFileSync(path, "utf8").matchAll(/```(?:lisp|clojure|clj)\n([\s\S]*?)```/g)]
-        .map((match) => match[1]!)
+      const blocks = extractMarkdownFences(readFileSync(path, "utf8"), path).filter(isFormaFence)
+        .map((block) => block.text)
         .filter((block) => !/^\s*\(ontology[\s)]/.test(block));
       if (blocks.length === 0) continue;
       const group=sourceId.split("/")[0]!;

@@ -1,4 +1,3 @@
 (typeclass (Functor (f : (-> * *))) (: fmap (-> (-> a b) (f a) (f b))))
-(instance (Functor List)
-  (define fmap map))
+(instance (Functor List) (define fmap map))
 (fmap (fn [x] (+ x 1)) [1 2 3])

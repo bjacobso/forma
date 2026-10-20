@@ -11,12 +11,14 @@ Bookstore catalog example in canonical ontology syntax.
 
 ```lisp
 (entity Author {:name String})
-(entity Book {:title String :genre (Option String) :author (Option (Id Author))})
+(entity Book
+  {:title String :genre (Option String) :author (Option (Id Author))})
 ```
 
 ```lisp
 (seed Author "author:le-guin" {:name "Ursula K. Le Guin"})
-(seed Book "book:earthsea"
+(seed Book
+  "book:earthsea"
   {:title "A Wizard of Earthsea" :genre "fantasy" :author "author:le-guin"})
 ```
 

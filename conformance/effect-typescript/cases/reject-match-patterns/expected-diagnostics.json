@@ -6,9 +6,9 @@
       "severity": "error",
       "code": "mechanics/match-pattern",
       "message": "triangle is not a case of Shape; expected one of Circle, Square.",
-      "line": 8,
+      "line": 10,
       "column": 5,
-      "endLine": 8,
+      "endLine": 10,
       "endColumn": 17
     },
     {
@@ -16,9 +16,9 @@
       "severity": "error",
       "code": "mechanics/unreachable-pattern",
       "message": "This pattern is unreachable after _.",
-      "line": 10,
+      "line": 14,
       "column": 5,
-      "endLine": 10,
+      "endLine": 14,
       "endColumn": 15
     },
     {
@@ -26,19 +26,19 @@
       "severity": "error",
       "code": "mechanics/match-pattern",
       "message": "none carries no value to bind.",
-      "line": 16,
-      "column": 5,
-      "endLine": 16,
-      "endColumn": 19
+      "line": 20,
+      "column": 36,
+      "endLine": 20,
+      "endColumn": 50
     },
     {
       "phase": "check",
       "severity": "error",
       "code": "mechanics/match-type",
       "message": "match works on Option, Result, enums, tagged unions, tagged errors, strings, numbers, and booleans, but this is Point.",
-      "line": 23,
+      "line": 27,
       "column": 10,
-      "endLine": 23,
+      "endLine": 27,
       "endColumn": 15
     },
     {
@@ -46,10 +46,10 @@
       "severity": "error",
       "code": "mechanics/non-exhaustive-match",
       "message": "match on Int needs a final _ arm.",
-      "line": 29,
-      "column": 3,
-      "endLine": 31,
-      "endColumn": 23
+      "line": 30,
+      "column": 20,
+      "endLine": 30,
+      "endColumn": 66
     }
   ]
 }

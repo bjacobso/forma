@@ -1,1 +1,2 @@
-[1 {:name "Ada"}] (if true 1 2)
+[1 {:name "Ada"}]
+(if true 1 2)

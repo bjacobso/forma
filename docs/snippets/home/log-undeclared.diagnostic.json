@@ -1,12 +1,12 @@
 {
   "code": "typecheck/type-mismatch",
   "severity": "error",
-  "message": "Type application arity mismatch (at offset 209)",
+  "message": "Type application arity mismatch (at offset 205)",
   "phase": "typecheck",
   "span": {
     "sourceId": "log.lisp",
-    "startOffset": 209,
-    "endOffset": 260
+    "startOffset": 205,
+    "endOffset": 252
   },
   "details": {
     "code": "typecheck/type-mismatch",

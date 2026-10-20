@@ -9,9 +9,14 @@
 
 (type ElmMessagesIR {:kind "ElmMessages" :variants (List RuntimeExpr)})
 (type ElmCommandIR
-  {:kind "ElmCommand" :name Symbol :operation Symbol
-   :ok RuntimeExpr :error (Option RuntimeExpr)})
-(type ElmUpdateIR {:kind "ElmUpdate" :bindings RuntimeExpr :cases (List RuntimeExpr)})
+  {
+    :kind "ElmCommand"
+    :name Symbol
+    :operation Symbol
+    :ok RuntimeExpr
+    :error (Option RuntimeExpr)})
+(type ElmUpdateIR
+  {:kind "ElmUpdate" :bindings RuntimeExpr :cases (List RuntimeExpr)})
 (type ElmViewIR {:kind "ElmView" :bindings RuntimeExpr :tree RuntimeExpr})
 (type ElmAppIR {:kind "ElmApp" :name Symbol :model Symbol :init RuntimeExpr})
 
@@ -21,13 +26,19 @@
   {:kind "ElmMessages" :variants variant})
 
 (form (command name operation {:keys [ok error]})
-  :types {:name (Declares ElmCommand) :operation Symbol
-          :ok Syntax :error (Option Syntax)}
+  :types
+    {
+      :name (Declares ElmCommand)
+      :operation Symbol
+      :ok Syntax
+      :error (Option Syntax)}
   :ir ElmCommandIR
-  :emit (fn [ir]
-    `(Command.define ~(get ir :name)
-       {:messages [Msg]
-        :execute ~(ts/operation (str "elm-command-" (get ir :name)))}))
+  :emit
+    (fn [ir]
+      `(Command.define ~(get ir :name)
+        {
+          :messages [Msg]
+          :execute ~(ts/operation (str "elm-command-" (get ir :name)))}))
   {:kind "ElmCommand" :name name :operation operation :ok ok :error error})
 
 (form (update bindings case ...)
@@ -43,7 +54,11 @@
 (form (app name {:keys [model init]})
   :types {:name (Declares ElmApp) :model Symbol :init Syntax}
   :ir ElmAppIR
-  :emit (fn [ir]
-    `{:Model ~(ts/declaration (get ir :model))
-      :init init :update update :view view})
+  :emit
+    (fn [ir]
+      `{
+        :Model ~(ts/declaration (get ir :model))
+        :init init
+        :update update
+        :view view})
   {:kind "ElmApp" :name name :model model :init init})

@@ -80,11 +80,13 @@ A comprehensive view for managing the todo list with add, complete, and delete c
   :description
     "Add todos, inspect all tasks, and run completion or delete actions."
   :layout
-    (rows
-      (heading "Todo List Manager")
+    (rows (heading "Todo List Manager")
       (columns
         (input
-          {:name "newTitle" :label "Task" :placeholder "What needs to be done?"})
+          {
+            :name "newTitle"
+            :label "Task"
+            :placeholder "What needs to be done?"})
         (action-button
           {
             :action-ref "add-todo"

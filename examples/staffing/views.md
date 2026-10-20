@@ -1,8 +1,7 @@
 # Views
 
 ```lisp
-(export
-  onboarding-workers-view
+(export onboarding-workers-view
   employer-review-queue-view
   generated-documents-view
   pending-documents-view
@@ -86,8 +85,7 @@
   :title "Employees REST Resource"
   :description "Versioned REST access for Employee records."
   :layout
-    (rows
-      (heading "Employees REST Resource")
+    (rows (heading "Employees REST Resource")
       (table
         {
           :bind (query employees)
@@ -128,8 +126,7 @@
   :title "Clients REST Resource"
   :description "Versioned REST access for Client records."
   :layout
-    (rows
-      (heading "Clients REST Resource")
+    (rows (heading "Clients REST Resource")
       (table
         {
           :bind (query clients)
@@ -170,8 +167,7 @@
   :description
     "Operational story of the current hiring pipeline and its live work queue."
   :layout
-    (rows
-      (heading "Onboarding Operations")
+    (rows (heading "Onboarding Operations")
       (columns
         (create-entity-button
           {
@@ -179,24 +175,21 @@
             :label "Create Employee"
             :variant "default"
             :on-success
-              (execute-action
-                "hire-existing-employee"
+              (execute-action "hire-existing-employee"
                 "employer:acme"
                 (:parameters {:employee (get $result :entityId)})
                 (:on-success
                   [
                     (run-queries
                       [onboarding employer-review runtime-tasks violations])
-                    (show-toast
-                      "Employee created"
+                    (show-toast "Employee created"
                       (:description "Ready to hire from the dashboard."))]))})
         (action-button
           {
             :action-ref "hire-existing-employee"
             :label "Hire Existing Employee"
             :variant "outline"}))
-      (card
-        {:title "Hire Existing Employee"}
+      (card {:title "Hire Existing Employee"}
         (rows
           (markdown
             "Pick an existing employee directly from the dashboard and open the hire flow with the employee pre-selected.")
@@ -228,8 +221,7 @@
         (metric {:label "Runtime Tasks" :value (length (query runtime-tasks))})
         (metric {:label "Violations" :value (length (query violations))}))
       (condition
-        (case
-          {:when (> (length (query violations)) 0)}
+        (case {:when (> (length (query violations)) 0)}
           (card
             {
               :title "Active Violations"
@@ -237,9 +229,10 @@
                 "Constraint output that is currently blocking onboarding."
               :action
                 (badge
-                  {:content (length (query violations)) :variant "destructive"})}
-            (item-group
-              {:bind (query violations)}
+                  {
+                    :content (length (query violations))
+                    :variant "destructive"})}
+            (item-group {:bind (query violations)}
               (item
                 {
                   :variant "muted"
@@ -255,13 +248,10 @@
               :title "No Active Violations"
               :description
                 "No onboarding cases are currently blocked by intrinsic compliance rules."})))
-      (card
-        {:title "Current Queue"}
+      (card {:title "Current Queue"}
         (condition
-          (case
-            {:when (> (length (query onboarding)) 0)}
-            (item-group
-              {:bind (query onboarding)}
+          (case {:when (> (length (query onboarding)) 0)}
+            (item-group {:bind (query onboarding)}
               (item
                 {
                   :variant "outline"
@@ -290,8 +280,7 @@
   :title "Onboarding Tracker"
   :description "Employees currently in the onboarding process."
   :layout
-    (rows
-      (heading "Onboarding Tracker")
+    (rows (heading "Onboarding Tracker")
       (table
         {
           :bind (query onboarding)
@@ -304,8 +293,7 @@
           :default-sort {:key "?employee_hire_date" :direction "asc"}
           :on-row-click (set-state :selected (get $row :?it))
           :empty-state "No employees are currently onboarding."})
-      (card
-        {:visible (not (nil? (state selected)))}
+      (card {:visible (not (nil? (state selected)))}
         (action-button
           {
             :action-ref "complete-onboarding"
@@ -321,11 +309,9 @@
   :description
     "Pending employer-assigned runtime tasks that keep new hires moving."
   :layout
-    (rows
-      (heading "Employer Inbox")
+    (rows (heading "Employer Inbox")
       (condition
-        (case
-          {:when (> (length (query employer-pending)) 0)}
+        (case {:when (> (length (query employer-pending)) 0)}
           (alert
             {
               :variant "warning"
@@ -353,10 +339,8 @@
   :title "Tasks & Compliance"
   :description "Workflow automation output and violations in one place."
   :layout
-    (rows
-      (heading "Tasks & Compliance")
-      (card
-        {:title "What this view shows" :visible (state show-guide)}
+    (rows (heading "Tasks & Compliance")
+      (card {:title "What this view shows" :visible (state show-guide)}
         (rows
           (markdown
             "Runtime tasks come from workflow automation. Violations come from the constraint engine. Keeping them together makes it clear which process work is reactive and which work is blocking compliance.")))
@@ -364,8 +348,7 @@
         (metric {:label "Runtime Tasks" :value (length (query runtime-tasks))})
         (metric {:label "Violations" :value (length (query violations))}))
       (tabs
-        (tab-panel
-          {:title "Runtime Tasks"}
+        (tab-panel {:title "Runtime Tasks"}
           (table
             {
               :bind (query runtime-tasks)
@@ -376,13 +359,10 @@
                   {:key "?task_status" :label "Status"}
                   {:key "?task_due_date" :label "Due Date"}]
               :empty-state "No runtime tasks are currently waiting."}))
-        (tab-panel
-          {:title "Violations"}
+        (tab-panel {:title "Violations"}
           (condition
-            (case
-              {:when (> (length (query violations)) 0)}
-              (item-group
-                {:bind (query violations)}
+            (case {:when (> (length (query violations)) 0)}
+              (item-group {:bind (query violations)}
                 (item
                   {
                     :variant "muted"
@@ -397,7 +377,8 @@
                 {
                   :icon "check-circle"
                   :title "No active violations"
-                  :description "The constraint engine is clear right now."}))))))
+                  :description
+                    "The constraint engine is clear right now."}))))))
   :state {:show-guide {:initial true :kind "boolean"}}
   :queries
     {
@@ -556,8 +537,7 @@
   :title "Employee Profile"
   :description "Employee-facing onboarding tasks and completed work."
   :layout
-    (rows
-      (heading "Employee Profile")
+    (rows (heading "Employee Profile")
       (custom
         {
           :component-name "runtime/employee-task-list"
@@ -587,8 +567,7 @@
   :title "Violation History"
   :description "Reusable violation timeline fragment."
   :layout
-    (card
-      (heading "History")
+    (card (heading "History")
       (violation-timeline {:violation-id (input violationId)}))
   :fragment true
   :input {:violationId String})
@@ -672,11 +651,12 @@
               "Automation resolved the violation and preserved the event timeline."
             :status "complete"}))
       (use violation-summary-panel)
-      (split-pane
-        {:sizes [58 42]}
+      (split-pane {:sizes [58 42]}
         (rows (use violation-status-panel) (use violation-related-panel))
         (view-ref
-          {:name "violation-history" :input {:violationId (input violationId)}})))
+          {
+            :name "violation-history"
+            :input {:violationId (input violationId)}})))
   :input {:violationId String}
   :defs
     {
@@ -692,20 +672,16 @@
   :description
     "Account-management view of active clients and current staffing load."
   :layout
-    (rows
-      (heading "Client Portfolio")
-      (card
-        {:title "Portfolio narrative" :visible (state show-guide)}
+    (rows (heading "Client Portfolio")
+      (card {:title "Portfolio narrative" :visible (state show-guide)}
         (rows
           (markdown
             "This workspace is for account owners. It balances client coverage, placement economics, and current onboarding load without dropping back to the generic admin UI.")))
-      (stat-group
-        (metric {:label "Clients" :value (length (query clients))})
+      (stat-group (metric {:label "Clients" :value (length (query clients))})
         (metric {:label "Placements" :value (length (query placements))})
         (metric {:label "Onboarding" :value (length (query onboarding))}))
       (columns
-        (card
-          {:title "Active Clients"}
+        (card {:title "Active Clients"}
           (table
             {
               :bind (query clients)
@@ -716,8 +692,7 @@
                   {:key "?client_email" :label "Email"}
                   {:key "?client_status" :label "Status"}]
               :empty-state "No active clients found."}))
-        (card
-          {:title "Placement Rates"}
+        (card {:title "Placement Rates"}
           (chart
             {
               :variant "bar"
@@ -738,10 +713,8 @@
   :title "Placements & Margin"
   :description "Quick scan of active placements where spread is positive."
   :layout
-    (rows
-      (heading "Placements & Margin")
-      (card
-        {:title "Margin focus" :visible (state show-guide)}
+    (rows (heading "Placements & Margin")
+      (card {:title "Margin focus" :visible (state show-guide)}
         (rows
           (markdown
             "This view highlights placements with positive spread so account managers can quickly see where economics are healthy and where a deeper review might be needed.")))
@@ -749,8 +722,7 @@
         (metric
           {:label "Profitable Placements" :value (length (query placements))}))
       (columns
-        (card
-          {:title "Profitable Placements"}
+        (card {:title "Profitable Placements"}
           (table
             {
               :bind (query placements)
@@ -760,8 +732,7 @@
                   {:key "?placement_pay_rate" :label "Pay Rate"}
                   {:key "?placement_bill_rate" :label "Bill Rate"}]
               :empty-state "No profitable active placements right now."}))
-        (card
-          {:title "Rate Comparison"}
+        (card {:title "Rate Comparison"}
           (chart
             {
               :variant "bar"

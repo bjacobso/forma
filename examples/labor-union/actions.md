@@ -1,8 +1,7 @@
 # Actions
 
 ```lisp
-(export
-  create-covered-placement
+(export create-covered-placement
   sync-employee-cba-attribute
   start-union-authorization-card
   collect-form
@@ -14,10 +13,8 @@
 ;; =============================================================================
 ;; Labor Relations Ontology - Actions
 ;; =============================================================================
-(:
-  create-covered-placement
-  (->
-    Employer
+(: create-covered-placement
+  (-> Employer
     {
       :firstName String
       :lastName String
@@ -30,16 +27,13 @@
       :cbaId (Option String)
       :positionId (Option (Id Position))}
     (Action Bool)))
-(define
-  create-covered-placement
+(define create-covered-placement
   [employer input]
-  (do!
-    []
+  (do! []
     (do!
       [
         employee-id
-        (create!
-          Employee
+        (create! Employee
           {
             :first-name (get input :firstName)
             :last-name (get input :lastName)
@@ -52,8 +46,7 @@
             :address (get input :address)
             :union-card-signed false})
         placement-id
-        (create!
-          Placement
+        (create! Placement
           {
             :start-date (get input :startDate)
             :status "covered-pending-card"
@@ -66,32 +59,26 @@
         (link! placed-in employee-id placement-id {})]
       true)))
 (: sync-employee-cba-attribute (-> Employee {:cbaId String} (Action Bool)))
-(define
-  sync-employee-cba-attribute
+(define sync-employee-cba-attribute
   [employee input]
   (do! [_ (update! Employee employee.id {:cba-id (get input :cbaId)})] true))
-(:
-  start-union-authorization-card
-  (->
-    Employee
+(: start-union-authorization-card
+  (-> Employee
     {
       :dueDate (Option Float)
       :templateVersion (Option String)
       :placementId (Option (Id Placement))
       :cbaId (Option (Id CollectiveBargainingAgreement))}
     (Action Bool)))
-(define
-  start-union-authorization-card
+(define start-union-authorization-card
   [employee input]
-  (do!
-    []
+  (do! []
     (do!
       [
         instance-id
         (instantiate! union-authorization-card Employee employee.id)
         task-id
-        (task!
-          Employee
+        (task! Employee
           {
             :title "Complete Union Authorization Card"
             :type "data-entry"
@@ -103,8 +90,7 @@
             :section-refs ["employee-authorization"]
             :assignee-role "employee"})
         auth-task-id
-        (create!
-          UnionAuthorizationTask
+        (create! UnionAuthorizationTask
           {
             :unionauthtask/title "Complete Union Authorization Card"
             :unionauthtask/status "pending"
@@ -122,16 +108,13 @@
 (: collect-form (-> Employee (Action Bool)))
 (define collect-form [employee] (do! [_ (emit! "collect-form")] true))
 (: submit-union-authorization-card (-> Employee Float (Action Bool)))
-(define
-  submit-union-authorization-card
+(define submit-union-authorization-card
   [employee timestamp]
-  (do!
-    [_ (update! Employee employee.id {:union-card-signed true})]
+  (do! [_ (update! Employee employee.id {:union-card-signed true})]
     (do!
       [
         document-id
-        (create!
-          ExecutedAuthorizationDocument
+        (create! ExecutedAuthorizationDocument
           {
             :executeddocument/name "Completed Union Authorization Card"
             :executeddocument/status "available"
@@ -144,19 +127,15 @@
             :executeddocument/routing-status "ready"
             :executeddocument/employee employee.id})]
       true)))
-(:
-  emit-card-completed-webhook
+(: emit-card-completed-webhook
   (-> ExecutedAuthorizationDocument Float (Action Bool)))
-(define
-  emit-card-completed-webhook
+(define emit-card-completed-webhook
   [document timestamp]
-  (do!
-    []
+  (do! []
     (do!
       [
         event-id
-        (create!
-          IntegrationEvent
+        (create! IntegrationEvent
           {
             :integrationevent/event-type "task_updated"
             :integrationevent/status "pending"
@@ -167,25 +146,20 @@
             :integrationevent/document document.id})]
       true)))
 (: mark-document-routed (-> ExecutedAuthorizationDocument (Action Bool)))
-(define
-  mark-document-routed
+(define mark-document-routed
   [document]
   (do!
     [
       _
-      (update!
-        ExecutedAuthorizationDocument
+      (update! ExecutedAuthorizationDocument
         document.id
         {:executeddocument/routing-status "routed"})]
     true))
 (: flag-rehire-review (-> Employee (Action Bool)))
-(define
-  flag-rehire-review
+(define flag-rehire-review
   [employee]
-  (do!
-    [_ (emit! "flag-rehire-review")]
-    (match
-      (get employee :rehire-indicator)
+  (do! [_ (emit! "flag-rehire-review")]
+    (match (get employee :rehire-indicator)
       (Some __value0)
       (= __value0 true)
       None

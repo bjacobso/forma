@@ -6,9 +6,9 @@
       "severity": "error",
       "code": "elm/error-pattern",
       "message": "Map each declared error with (ErrorName binding).",
-      "line": 13,
+      "line": 17,
       "column": 11,
-      "endLine": 13,
+      "endLine": 17,
       "endColumn": 12
     },
     {
@@ -16,9 +16,9 @@
       "severity": "error",
       "code": "elm/unmapped-error",
       "message": "Command load-count must map CounterUnavailable to a message.",
-      "line": 13,
+      "line": 17,
       "column": 10,
-      "endLine": 13,
+      "endLine": 17,
       "endColumn": 45
     }
   ]

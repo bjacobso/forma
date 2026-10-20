@@ -15,8 +15,7 @@ A module can declare tests next to the code they test:
 (: increment (-> Int Int))
 (define increment [value] (+ value 1))
 
-(test "increment adds one"
-  (expect-equal (increment 41) 42))
+(test "increment adds one" (expect-equal (increment 41) 42))
 ```
 
 `test` declarations can see the module's private definitions. They are not
@@ -139,14 +138,21 @@ error ends the test as a failure, and the requirement set must be empty:
 
 ```lisp
 (test "save-user writes the name once"
-  (do! [writes (ref-make [])
-        saved (provide (save-user "Bob")
-                (implement Store
-                  (define get [key] (succeed "Bob"))
-                  (define set [key value]
-                    (ref-update writes (fn [xs] (conj xs value))))))
-        seen (ref-get writes)
-        _ (expect-equal saved "Bob")]
+  (do!
+    [
+      writes
+      (ref-make [])
+      saved
+      (provide (save-user "Bob")
+        (implement Store
+          (define get [key] (succeed "Bob"))
+          (define set
+            [key value]
+            (ref-update writes (fn [xs] (conj xs value))))))
+      seen
+      (ref-get writes)
+      _
+      (expect-equal saved "Bob")]
     (expect-equal seen ["Bob"])))
 ```
 

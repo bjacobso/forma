@@ -1,12 +1,12 @@
+import { formatLisp } from "@formalang/ts/format";
 // Sources shared by the playground pipelines and the generated docs homepage
 // snippets. `sources.test.ts` keeps the copies of repository files in sync.
 
 /** Verbatim copy of `conformance/fixtures/canonical-ir/schema.lisp`. */
 export const entitySchemaSource = `(entity Department {:name String})
 
-(entity Employee {:name String
-    :department (Option (Id Department))
-    :active Bool})
+(entity Employee
+  {:name String :department (Option (Id Department)) :active Bool})
 
 (query employee-directory
   :from Employee
@@ -15,8 +15,7 @@ export const entitySchemaSource = `(entity Department {:name String})
 `;
 
 /** Verbatim excerpt of `preludes/ontology.lisp`. */
-export const defineEntityDescriptor = `(form
-  (entity name fields {:keys [doc role id-pattern tier]})
+export const defineEntityDescriptor = `(form (entity name fields {:keys [doc role id-pattern tier]})
   "A named record of attributes."
   :types
     {
@@ -45,17 +44,17 @@ const logOperationSource = `(define log [message]
   (do! [_ (Console.print message)]
     (succeed nil)))`;
 
-export const contractSource = `${consoleServiceSource}
+export const contractSource = formatLisp(`${consoleServiceSource}
 (: log (-> String (Effect Unit [ConsoleUnavailable] [Console.print])))
-${logOperationSource}`;
+${logOperationSource}`).text.trimEnd();
 
-export const undeclaredCapabilitySource = `${consoleServiceSource}
+export const undeclaredCapabilitySource = formatLisp(`${consoleServiceSource}
 (: log (-> String (Effect Unit [ConsoleUnavailable] [])))
-${logOperationSource}`;
+${logOperationSource}`).text.trimEnd();
 
-export const undeclaredFailureSource = `${consoleServiceSource}
+export const undeclaredFailureSource = formatLisp(`${consoleServiceSource}
 (: log (-> String (Effect Unit [] [Console.print])))
-${logOperationSource}`;
+${logOperationSource}`).text.trimEnd();
 
 /** The type the TypeScript engine infers for `contractSource`. */
 export const contractType =

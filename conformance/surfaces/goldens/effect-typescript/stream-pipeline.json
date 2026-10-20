@@ -13,9 +13,9 @@
               {
                 "name": "total",
                 "span": {
-                  "endOffset": 1800,
+                  "endOffset": 1748,
                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                  "startOffset": 1690
+                  "startOffset": 1646
                 },
                 "value": {
                   "effect": {
@@ -23,25 +23,25 @@
                     "kind": "Effect",
                     "requirements": [],
                     "span": {
-                      "endOffset": 1625,
+                      "endOffset": 1583,
                       "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                      "startOffset": 1611
+                      "startOffset": 1569
                     },
                     "success": {
                       "kind": "Primitive",
                       "name": "Float",
                       "span": {
-                        "endOffset": 1624,
+                        "endOffset": 1582,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1619
+                        "startOffset": 1577
                       }
                     }
                   },
                   "kind": "Pure",
                   "span": {
-                    "endOffset": 1800,
+                    "endOffset": 1748,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1690
+                    "startOffset": 1646
                   },
                   "value": {
                     "items": [
@@ -49,9 +49,9 @@
                         "kind": "Var",
                         "name": "stream-run-fold",
                         "span": {
-                          "endOffset": 1706,
+                          "endOffset": 1662,
                           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                          "startOffset": 1691
+                          "startOffset": 1647
                         }
                       },
                       {
@@ -60,26 +60,26 @@
                             "kind": "Var",
                             "name": "celsius-values",
                             "span": {
-                              "endOffset": 1730,
+                              "endOffset": 1678,
                               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                              "startOffset": 1716
+                              "startOffset": 1664
                             }
                           },
                           {
                             "kind": "Var",
                             "name": "readings",
                             "span": {
-                              "endOffset": 1739,
+                              "endOffset": 1687,
                               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                              "startOffset": 1731
+                              "startOffset": 1679
                             }
                           }
                         ],
                         "kind": "List",
                         "span": {
-                          "endOffset": 1740,
+                          "endOffset": 1688,
                           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                          "startOffset": 1715
+                          "startOffset": 1663
                         }
                       },
                       {
@@ -91,17 +91,17 @@
                               "name": ":"
                             },
                             "span": {
-                              "endOffset": 1760,
+                              "endOffset": 1708,
                               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                              "startOffset": 1749
+                              "startOffset": 1697
                             }
                           },
                           {
                             "kind": "Literal",
                             "span": {
-                              "endOffset": 1753,
+                              "endOffset": 1701,
                               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                              "startOffset": 1752
+                              "startOffset": 1700
                             },
                             "value": 0
                           },
@@ -109,17 +109,17 @@
                             "kind": "Var",
                             "name": "Float",
                             "span": {
-                              "endOffset": 1759,
+                              "endOffset": 1707,
                               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                              "startOffset": 1754
+                              "startOffset": 1702
                             }
                           }
                         ],
                         "kind": "List",
                         "span": {
-                          "endOffset": 1760,
+                          "endOffset": 1708,
                           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                          "startOffset": 1749
+                          "startOffset": 1697
                         }
                       },
                       {
@@ -128,9 +128,9 @@
                             "kind": "Var",
                             "name": "fn",
                             "span": {
-                              "endOffset": 1772,
+                              "endOffset": 1720,
                               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                              "startOffset": 1770
+                              "startOffset": 1718
                             }
                           },
                           {
@@ -139,26 +139,26 @@
                                 "kind": "Var",
                                 "name": "sum",
                                 "span": {
-                                  "endOffset": 1777,
+                                  "endOffset": 1725,
                                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                  "startOffset": 1774
+                                  "startOffset": 1722
                                 }
                               },
                               {
                                 "kind": "Var",
                                 "name": "value",
                                 "span": {
-                                  "endOffset": 1783,
+                                  "endOffset": 1731,
                                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                  "startOffset": 1778
+                                  "startOffset": 1726
                                 }
                               }
                             ],
                             "kind": "Vector",
                             "span": {
-                              "endOffset": 1784,
+                              "endOffset": 1732,
                               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                              "startOffset": 1773
+                              "startOffset": 1721
                             }
                           },
                           {
@@ -167,51 +167,51 @@
                                 "kind": "Var",
                                 "name": "+",
                                 "span": {
-                                  "endOffset": 1787,
+                                  "endOffset": 1735,
                                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                  "startOffset": 1786
+                                  "startOffset": 1734
                                 }
                               },
                               {
                                 "kind": "Var",
                                 "name": "sum",
                                 "span": {
-                                  "endOffset": 1791,
+                                  "endOffset": 1739,
                                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                  "startOffset": 1788
+                                  "startOffset": 1736
                                 }
                               },
                               {
                                 "kind": "Var",
                                 "name": "value",
                                 "span": {
-                                  "endOffset": 1797,
+                                  "endOffset": 1745,
                                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                  "startOffset": 1792
+                                  "startOffset": 1740
                                 }
                               }
                             ],
                             "kind": "List",
                             "span": {
-                              "endOffset": 1798,
+                              "endOffset": 1746,
                               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                              "startOffset": 1785
+                              "startOffset": 1733
                             }
                           }
                         ],
                         "kind": "List",
                         "span": {
-                          "endOffset": 1799,
+                          "endOffset": 1747,
                           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                          "startOffset": 1769
+                          "startOffset": 1717
                         }
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 1800,
+                      "endOffset": 1748,
                       "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                      "startOffset": 1690
+                      "startOffset": 1646
                     }
                   }
                 }
@@ -223,25 +223,25 @@
                 "kind": "Effect",
                 "requirements": [],
                 "span": {
-                  "endOffset": 1625,
+                  "endOffset": 1583,
                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                  "startOffset": 1611
+                  "startOffset": 1569
                 },
                 "success": {
                   "kind": "Primitive",
                   "name": "Float",
                   "span": {
-                    "endOffset": 1624,
+                    "endOffset": 1582,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1619
+                    "startOffset": 1577
                   }
                 }
               },
               "kind": "Succeed",
               "span": {
-                "endOffset": 1867,
+                "endOffset": 1815,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1806
+                "startOffset": 1754
               },
               "value": {
                 "items": [
@@ -249,9 +249,9 @@
                     "kind": "Var",
                     "name": "if",
                     "span": {
-                      "endOffset": 1818,
+                      "endOffset": 1766,
                       "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                      "startOffset": 1816
+                      "startOffset": 1764
                     }
                   },
                   {
@@ -260,34 +260,34 @@
                         "kind": "Var",
                         "name": "empty?",
                         "span": {
-                          "endOffset": 1826,
+                          "endOffset": 1774,
                           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                          "startOffset": 1820
+                          "startOffset": 1768
                         }
                       },
                       {
                         "kind": "Var",
                         "name": "readings",
                         "span": {
-                          "endOffset": 1835,
+                          "endOffset": 1783,
                           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                          "startOffset": 1827
+                          "startOffset": 1775
                         }
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 1836,
+                      "endOffset": 1784,
                       "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                      "startOffset": 1819
+                      "startOffset": 1767
                     }
                   },
                   {
                     "kind": "Literal",
                     "span": {
-                      "endOffset": 1838,
+                      "endOffset": 1786,
                       "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                      "startOffset": 1837
+                      "startOffset": 1785
                     },
                     "value": 0
                   },
@@ -297,18 +297,18 @@
                         "kind": "Var",
                         "name": "/",
                         "span": {
-                          "endOffset": 1841,
+                          "endOffset": 1789,
                           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                          "startOffset": 1840
+                          "startOffset": 1788
                         }
                       },
                       {
                         "kind": "Var",
                         "name": "total",
                         "span": {
-                          "endOffset": 1847,
+                          "endOffset": 1795,
                           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                          "startOffset": 1842
+                          "startOffset": 1790
                         }
                       },
                       {
@@ -317,42 +317,42 @@
                             "kind": "Var",
                             "name": "count",
                             "span": {
-                              "endOffset": 1854,
+                              "endOffset": 1802,
                               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                              "startOffset": 1849
+                              "startOffset": 1797
                             }
                           },
                           {
                             "kind": "Var",
                             "name": "readings",
                             "span": {
-                              "endOffset": 1863,
+                              "endOffset": 1811,
                               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                              "startOffset": 1855
+                              "startOffset": 1803
                             }
                           }
                         ],
                         "kind": "List",
                         "span": {
-                          "endOffset": 1864,
+                          "endOffset": 1812,
                           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                          "startOffset": 1848
+                          "startOffset": 1796
                         }
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 1865,
+                      "endOffset": 1813,
                       "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                      "startOffset": 1839
+                      "startOffset": 1787
                     }
                   }
                 ],
                 "kind": "List",
                 "span": {
-                  "endOffset": 1866,
+                  "endOffset": 1814,
                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                  "startOffset": 1815
+                  "startOffset": 1763
                 }
               }
             },
@@ -361,25 +361,25 @@
               "kind": "Effect",
               "requirements": [],
               "span": {
-                "endOffset": 1625,
+                "endOffset": 1583,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1611
+                "startOffset": 1569
               },
               "success": {
                 "kind": "Primitive",
                 "name": "Float",
                 "span": {
-                  "endOffset": 1624,
+                  "endOffset": 1582,
                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                  "startOffset": 1619
+                  "startOffset": 1577
                 }
               }
             },
             "kind": "Do",
             "span": {
-              "endOffset": 1868,
+              "endOffset": 1816,
               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-              "startOffset": 1661
+              "startOffset": 1617
             }
           },
           "effect": {
@@ -387,17 +387,17 @@
             "kind": "Effect",
             "requirements": [],
             "span": {
-              "endOffset": 1625,
+              "endOffset": 1583,
               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-              "startOffset": 1611
+              "startOffset": 1569
             },
             "success": {
               "kind": "Primitive",
               "name": "Float",
               "span": {
-                "endOffset": 1624,
+                "endOffset": 1582,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1619
+                "startOffset": 1577
               }
             }
           },
@@ -411,9 +411,9 @@
                   "kind": "Ref",
                   "name": "Reading",
                   "span": {
-                    "endOffset": 1609,
+                    "endOffset": 1567,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1602
+                    "startOffset": 1560
                   }
                 },
                 "kind": "Array"
@@ -423,9 +423,9 @@
         },
         "sourceId": "surfaces/effect-typescript/stream-pipeline",
         "span": {
-          "endOffset": 1869,
+          "endOffset": 1817,
           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-          "startOffset": 1628
+          "startOffset": 1586
         }
       },
       {
@@ -448,25 +448,25 @@
                 "Sink"
               ],
               "span": {
-                "endOffset": 1285,
+                "endOffset": 1259,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1241
+                "startOffset": 1215
               },
               "success": {
                 "kind": "Primitive",
                 "name": "Unit",
                 "span": {
-                  "endOffset": 1253,
+                  "endOffset": 1227,
                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                  "startOffset": 1249
+                  "startOffset": 1223
                 }
               }
             },
             "kind": "Pure",
             "span": {
-              "endOffset": 1579,
+              "endOffset": 1537,
               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-              "startOffset": 1331
+              "startOffset": 1303
             },
             "value": {
               "items": [
@@ -474,9 +474,9 @@
                   "kind": "Var",
                   "name": "stream-run-for-each",
                   "span": {
-                    "endOffset": 1351,
+                    "endOffset": 1323,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1332
+                    "startOffset": 1304
                   }
                 },
                 {
@@ -485,9 +485,9 @@
                       "kind": "Var",
                       "name": "stream-take",
                       "span": {
-                        "endOffset": 1368,
+                        "endOffset": 1340,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1357
+                        "startOffset": 1329
                       }
                     },
                     {
@@ -496,9 +496,9 @@
                           "kind": "Var",
                           "name": "stream-map-effect",
                           "span": {
-                            "endOffset": 1393,
+                            "endOffset": 1365,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1376
+                            "startOffset": 1348
                           }
                         },
                         {
@@ -507,26 +507,26 @@
                               "kind": "Var",
                               "name": "stream-of",
                               "span": {
-                                "endOffset": 1412,
+                                "endOffset": 1376,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1403
+                                "startOffset": 1367
                               }
                             },
                             {
                               "kind": "Var",
                               "name": "sensors",
                               "span": {
-                                "endOffset": 1420,
+                                "endOffset": 1384,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1413
+                                "startOffset": 1377
                               }
                             }
                           ],
                           "kind": "List",
                           "span": {
-                            "endOffset": 1421,
+                            "endOffset": 1385,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1402
+                            "startOffset": 1366
                           }
                         },
                         {
@@ -535,9 +535,9 @@
                               "kind": "Var",
                               "name": "fn",
                               "span": {
-                                "endOffset": 1433,
+                                "endOffset": 1397,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1431
+                                "startOffset": 1395
                               }
                             },
                             {
@@ -546,17 +546,17 @@
                                   "kind": "Var",
                                   "name": "sensor",
                                   "span": {
-                                    "endOffset": 1441,
+                                    "endOffset": 1405,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1435
+                                    "startOffset": 1399
                                   }
                                 }
                               ],
                               "kind": "Vector",
                               "span": {
-                                "endOffset": 1442,
+                                "endOffset": 1406,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1434
+                                "startOffset": 1398
                               }
                             },
                             {
@@ -565,59 +565,59 @@
                                   "kind": "Var",
                                   "name": "Sensors.read",
                                   "span": {
-                                    "endOffset": 1456,
+                                    "endOffset": 1420,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1444
+                                    "startOffset": 1408
                                   }
                                 },
                                 {
                                   "kind": "Var",
                                   "name": "sensor",
                                   "span": {
-                                    "endOffset": 1463,
+                                    "endOffset": 1427,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1457
+                                    "startOffset": 1421
                                   }
                                 }
                               ],
                               "kind": "List",
                               "span": {
-                                "endOffset": 1464,
+                                "endOffset": 1428,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1443
+                                "startOffset": 1407
                               }
                             }
                           ],
                           "kind": "List",
                           "span": {
-                            "endOffset": 1465,
+                            "endOffset": 1429,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1430
+                            "startOffset": 1394
                           }
                         }
                       ],
                       "kind": "List",
                       "span": {
-                        "endOffset": 1466,
+                        "endOffset": 1430,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1375
+                        "startOffset": 1347
                       }
                     },
                     {
                       "kind": "Var",
                       "name": "limit",
                       "span": {
-                        "endOffset": 1478,
+                        "endOffset": 1442,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1473
+                        "startOffset": 1437
                       }
                     }
                   ],
                   "kind": "List",
                   "span": {
-                    "endOffset": 1479,
+                    "endOffset": 1443,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1356
+                    "startOffset": 1328
                   }
                 },
                 {
@@ -626,9 +626,9 @@
                       "kind": "Var",
                       "name": "fn",
                       "span": {
-                        "endOffset": 1487,
+                        "endOffset": 1451,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1485
+                        "startOffset": 1449
                       }
                     },
                     {
@@ -637,17 +637,17 @@
                           "kind": "Var",
                           "name": "reading",
                           "span": {
-                            "endOffset": 1502,
+                            "endOffset": 1460,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1495
+                            "startOffset": 1453
                           }
                         }
                       ],
                       "kind": "Vector",
                       "span": {
-                        "endOffset": 1503,
+                        "endOffset": 1461,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1494
+                        "startOffset": 1452
                       }
                     },
                     {
@@ -656,9 +656,9 @@
                           "kind": "Var",
                           "name": "Sink.write",
                           "span": {
-                            "endOffset": 1521,
+                            "endOffset": 1479,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1511
+                            "startOffset": 1469
                           }
                         },
                         {
@@ -667,9 +667,9 @@
                               "kind": "Var",
                               "name": "str",
                               "span": {
-                                "endOffset": 1526,
+                                "endOffset": 1484,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1523
+                                "startOffset": 1481
                               }
                             },
                             {
@@ -678,18 +678,18 @@
                                   "kind": "Var",
                                   "name": "get",
                                   "span": {
-                                    "endOffset": 1531,
+                                    "endOffset": 1489,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1528
+                                    "startOffset": 1486
                                   }
                                 },
                                 {
                                   "kind": "Var",
                                   "name": "reading",
                                   "span": {
-                                    "endOffset": 1539,
+                                    "endOffset": 1497,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1532
+                                    "startOffset": 1490
                                   }
                                 },
                                 {
@@ -699,25 +699,25 @@
                                     "name": ":sensor"
                                   },
                                   "span": {
-                                    "endOffset": 1547,
+                                    "endOffset": 1505,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1540
+                                    "startOffset": 1498
                                   }
                                 }
                               ],
                               "kind": "List",
                               "span": {
-                                "endOffset": 1548,
+                                "endOffset": 1506,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1527
+                                "startOffset": 1485
                               }
                             },
                             {
                               "kind": "Literal",
                               "span": {
-                                "endOffset": 1552,
+                                "endOffset": 1510,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1549
+                                "startOffset": 1507
                               },
                               "value": "="
                             },
@@ -727,18 +727,18 @@
                                   "kind": "Var",
                                   "name": "get",
                                   "span": {
-                                    "endOffset": 1557,
+                                    "endOffset": 1515,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1554
+                                    "startOffset": 1512
                                   }
                                 },
                                 {
                                   "kind": "Var",
                                   "name": "reading",
                                   "span": {
-                                    "endOffset": 1565,
+                                    "endOffset": 1523,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1558
+                                    "startOffset": 1516
                                   }
                                 },
                                 {
@@ -748,49 +748,49 @@
                                     "name": ":celsius"
                                   },
                                   "span": {
-                                    "endOffset": 1574,
+                                    "endOffset": 1532,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1566
+                                    "startOffset": 1524
                                   }
                                 }
                               ],
                               "kind": "List",
                               "span": {
-                                "endOffset": 1575,
+                                "endOffset": 1533,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1553
+                                "startOffset": 1511
                               }
                             }
                           ],
                           "kind": "List",
                           "span": {
-                            "endOffset": 1576,
+                            "endOffset": 1534,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1522
+                            "startOffset": 1480
                           }
                         }
                       ],
                       "kind": "List",
                       "span": {
-                        "endOffset": 1577,
+                        "endOffset": 1535,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1510
+                        "startOffset": 1468
                       }
                     }
                   ],
                   "kind": "List",
                   "span": {
-                    "endOffset": 1578,
+                    "endOffset": 1536,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1484
+                    "startOffset": 1448
                   }
                 }
               ],
               "kind": "List",
               "span": {
-                "endOffset": 1579,
+                "endOffset": 1537,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1331
+                "startOffset": 1303
               }
             }
           },
@@ -804,17 +804,17 @@
               "Sink"
             ],
             "span": {
-              "endOffset": 1285,
+              "endOffset": 1259,
               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-              "startOffset": 1241
+              "startOffset": 1215
             },
             "success": {
               "kind": "Primitive",
               "name": "Unit",
               "span": {
-                "endOffset": 1253,
+                "endOffset": 1227,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1249
+                "startOffset": 1223
               }
             }
           },
@@ -828,9 +828,9 @@
                   "kind": "Primitive",
                   "name": "String",
                   "span": {
-                    "endOffset": 1235,
+                    "endOffset": 1209,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1229
+                    "startOffset": 1203
                   }
                 },
                 "kind": "Array"
@@ -842,9 +842,9 @@
                 "kind": "Primitive",
                 "name": "Int",
                 "span": {
-                  "endOffset": 1240,
+                  "endOffset": 1214,
                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                  "startOffset": 1237
+                  "startOffset": 1211
                 }
               }
             }
@@ -852,9 +852,9 @@
         },
         "sourceId": "surfaces/effect-typescript/stream-pipeline",
         "span": {
-          "endOffset": 1580,
+          "endOffset": 1538,
           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-          "startOffset": 1288
+          "startOffset": 1262
         }
       },
       {
@@ -875,18 +875,18 @@
                 "Sensors.read"
               ],
               "span": {
-                "endOffset": 748,
+                "endOffset": 740,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 694
+                "startOffset": 686
               },
               "success": {
                 "item": {
                   "kind": "Ref",
                   "name": "Reading",
                   "span": {
-                    "endOffset": 715,
+                    "endOffset": 707,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 708
+                    "startOffset": 700
                   }
                 },
                 "kind": "Array"
@@ -894,9 +894,9 @@
             },
             "kind": "Pure",
             "span": {
-              "endOffset": 1004,
+              "endOffset": 986,
               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-              "startOffset": 798
+              "startOffset": 788
             },
             "value": {
               "items": [
@@ -904,9 +904,9 @@
                   "kind": "Var",
                   "name": "stream-run-collect",
                   "span": {
-                    "endOffset": 817,
+                    "endOffset": 807,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 799
+                    "startOffset": 789
                   }
                 },
                 {
@@ -915,9 +915,9 @@
                       "kind": "Var",
                       "name": "stream-filter",
                       "span": {
-                        "endOffset": 836,
+                        "endOffset": 826,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 823
+                        "startOffset": 813
                       }
                     },
                     {
@@ -926,9 +926,9 @@
                           "kind": "Var",
                           "name": "stream-map-effect",
                           "span": {
-                            "endOffset": 861,
+                            "endOffset": 851,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 844
+                            "startOffset": 834
                           }
                         },
                         {
@@ -937,26 +937,26 @@
                               "kind": "Var",
                               "name": "stream-of",
                               "span": {
-                                "endOffset": 880,
+                                "endOffset": 862,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 871
+                                "startOffset": 853
                               }
                             },
                             {
                               "kind": "Var",
                               "name": "sensors",
                               "span": {
-                                "endOffset": 888,
+                                "endOffset": 870,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 881
+                                "startOffset": 863
                               }
                             }
                           ],
                           "kind": "List",
                           "span": {
-                            "endOffset": 889,
+                            "endOffset": 871,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 870
+                            "startOffset": 852
                           }
                         },
                         {
@@ -965,9 +965,9 @@
                               "kind": "Var",
                               "name": "fn",
                               "span": {
-                                "endOffset": 901,
+                                "endOffset": 883,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 899
+                                "startOffset": 881
                               }
                             },
                             {
@@ -976,17 +976,17 @@
                                   "kind": "Var",
                                   "name": "sensor",
                                   "span": {
-                                    "endOffset": 909,
+                                    "endOffset": 891,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 903
+                                    "startOffset": 885
                                   }
                                 }
                               ],
                               "kind": "Vector",
                               "span": {
-                                "endOffset": 910,
+                                "endOffset": 892,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 902
+                                "startOffset": 884
                               }
                             },
                             {
@@ -995,51 +995,51 @@
                                   "kind": "Var",
                                   "name": "Sensors.read",
                                   "span": {
-                                    "endOffset": 924,
+                                    "endOffset": 906,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 912
+                                    "startOffset": 894
                                   }
                                 },
                                 {
                                   "kind": "Var",
                                   "name": "sensor",
                                   "span": {
-                                    "endOffset": 931,
+                                    "endOffset": 913,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 925
+                                    "startOffset": 907
                                   }
                                 }
                               ],
                               "kind": "List",
                               "span": {
-                                "endOffset": 932,
+                                "endOffset": 914,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 911
+                                "startOffset": 893
                               }
                             }
                           ],
                           "kind": "List",
                           "span": {
-                            "endOffset": 933,
+                            "endOffset": 915,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 898
+                            "startOffset": 880
                           }
                         },
                         {
                           "kind": "Literal",
                           "span": {
-                            "endOffset": 943,
+                            "endOffset": 925,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 942
+                            "startOffset": 924
                           },
                           "value": 2
                         }
                       ],
                       "kind": "List",
                       "span": {
-                        "endOffset": 944,
+                        "endOffset": 926,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 843
+                        "startOffset": 833
                       }
                     },
                     {
@@ -1048,9 +1048,9 @@
                           "kind": "Var",
                           "name": "fn",
                           "span": {
-                            "endOffset": 954,
+                            "endOffset": 936,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 952
+                            "startOffset": 934
                           }
                         },
                         {
@@ -1059,17 +1059,17 @@
                               "kind": "Var",
                               "name": "reading",
                               "span": {
-                                "endOffset": 963,
+                                "endOffset": 945,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 956
+                                "startOffset": 938
                               }
                             }
                           ],
                           "kind": "Vector",
                           "span": {
-                            "endOffset": 964,
+                            "endOffset": 946,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 955
+                            "startOffset": 937
                           }
                         },
                         {
@@ -1078,9 +1078,9 @@
                               "kind": "Var",
                               "name": ">",
                               "span": {
-                                "endOffset": 967,
+                                "endOffset": 949,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 966
+                                "startOffset": 948
                               }
                             },
                             {
@@ -1089,18 +1089,18 @@
                                   "kind": "Var",
                                   "name": "get",
                                   "span": {
-                                    "endOffset": 972,
+                                    "endOffset": 954,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 969
+                                    "startOffset": 951
                                   }
                                 },
                                 {
                                   "kind": "Var",
                                   "name": "reading",
                                   "span": {
-                                    "endOffset": 980,
+                                    "endOffset": 962,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 973
+                                    "startOffset": 955
                                   }
                                 },
                                 {
@@ -1110,58 +1110,58 @@
                                     "name": ":celsius"
                                   },
                                   "span": {
-                                    "endOffset": 989,
+                                    "endOffset": 971,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 981
+                                    "startOffset": 963
                                   }
                                 }
                               ],
                               "kind": "List",
                               "span": {
-                                "endOffset": 990,
+                                "endOffset": 972,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 968
+                                "startOffset": 950
                               }
                             },
                             {
                               "kind": "Var",
                               "name": "threshold",
                               "span": {
-                                "endOffset": 1000,
+                                "endOffset": 982,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 991
+                                "startOffset": 973
                               }
                             }
                           ],
                           "kind": "List",
                           "span": {
-                            "endOffset": 1001,
+                            "endOffset": 983,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 965
+                            "startOffset": 947
                           }
                         }
                       ],
                       "kind": "List",
                       "span": {
-                        "endOffset": 1002,
+                        "endOffset": 984,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 951
+                        "startOffset": 933
                       }
                     }
                   ],
                   "kind": "List",
                   "span": {
-                    "endOffset": 1003,
+                    "endOffset": 985,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 822
+                    "startOffset": 812
                   }
                 }
               ],
               "kind": "List",
               "span": {
-                "endOffset": 1004,
+                "endOffset": 986,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 798
+                "startOffset": 788
               }
             }
           },
@@ -1174,18 +1174,18 @@
               "Sensors.read"
             ],
             "span": {
-              "endOffset": 748,
+              "endOffset": 740,
               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-              "startOffset": 694
+              "startOffset": 686
             },
             "success": {
               "item": {
                 "kind": "Ref",
                 "name": "Reading",
                 "span": {
-                  "endOffset": 715,
+                  "endOffset": 707,
                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                  "startOffset": 708
+                  "startOffset": 700
                 }
               },
               "kind": "Array"
@@ -1201,9 +1201,9 @@
                   "kind": "Primitive",
                   "name": "String",
                   "span": {
-                    "endOffset": 678,
+                    "endOffset": 670,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 672
+                    "startOffset": 664
                   }
                 },
                 "kind": "Array"
@@ -1215,9 +1215,9 @@
                 "kind": "Primitive",
                 "name": "Float",
                 "span": {
-                  "endOffset": 689,
+                  "endOffset": 681,
                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                  "startOffset": 684
+                  "startOffset": 676
                 }
               }
             }
@@ -1225,9 +1225,9 @@
         },
         "sourceId": "surfaces/effect-typescript/stream-pipeline",
         "span": {
-          "endOffset": 1005,
+          "endOffset": 987,
           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-          "startOffset": 751
+          "startOffset": 743
         }
       },
       {
@@ -1242,25 +1242,25 @@
               "kind": "Effect",
               "requirements": [],
               "span": {
-                "endOffset": 1044,
+                "endOffset": 1026,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1032
+                "startOffset": 1014
               },
               "success": {
                 "kind": "Primitive",
                 "name": "Int",
                 "span": {
-                  "endOffset": 1043,
+                  "endOffset": 1025,
                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                  "startOffset": 1040
+                  "startOffset": 1022
                 }
               }
             },
             "kind": "Pure",
             "span": {
-              "endOffset": 1197,
+              "endOffset": 1173,
               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-              "startOffset": 1080
+              "startOffset": 1060
             },
             "value": {
               "items": [
@@ -1268,9 +1268,9 @@
                   "kind": "Var",
                   "name": "stream-run-fold",
                   "span": {
-                    "endOffset": 1096,
+                    "endOffset": 1076,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1081
+                    "startOffset": 1061
                   }
                 },
                 {
@@ -1279,9 +1279,9 @@
                       "kind": "Var",
                       "name": "stream-map",
                       "span": {
-                        "endOffset": 1112,
+                        "endOffset": 1088,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1102
+                        "startOffset": 1078
                       }
                     },
                     {
@@ -1290,17 +1290,17 @@
                           "kind": "Var",
                           "name": "stream-range",
                           "span": {
-                            "endOffset": 1126,
+                            "endOffset": 1102,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1114
+                            "startOffset": 1090
                           }
                         },
                         {
                           "kind": "Literal",
                           "span": {
-                            "endOffset": 1128,
+                            "endOffset": 1104,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1127
+                            "startOffset": 1103
                           },
                           "value": 1
                         },
@@ -1308,17 +1308,17 @@
                           "kind": "Var",
                           "name": "n",
                           "span": {
-                            "endOffset": 1130,
+                            "endOffset": 1106,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1129
+                            "startOffset": 1105
                           }
                         }
                       ],
                       "kind": "List",
                       "span": {
-                        "endOffset": 1131,
+                        "endOffset": 1107,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1113
+                        "startOffset": 1089
                       }
                     },
                     {
@@ -1327,9 +1327,9 @@
                           "kind": "Var",
                           "name": "fn",
                           "span": {
-                            "endOffset": 1135,
+                            "endOffset": 1111,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1133
+                            "startOffset": 1109
                           }
                         },
                         {
@@ -1338,17 +1338,17 @@
                               "kind": "Var",
                               "name": "i",
                               "span": {
-                                "endOffset": 1138,
+                                "endOffset": 1114,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1137
+                                "startOffset": 1113
                               }
                             }
                           ],
                           "kind": "Vector",
                           "span": {
-                            "endOffset": 1139,
+                            "endOffset": 1115,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1136
+                            "startOffset": 1112
                           }
                         },
                         {
@@ -1357,59 +1357,59 @@
                               "kind": "Var",
                               "name": "*",
                               "span": {
-                                "endOffset": 1142,
+                                "endOffset": 1118,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1141
+                                "startOffset": 1117
                               }
                             },
                             {
                               "kind": "Var",
                               "name": "i",
                               "span": {
-                                "endOffset": 1144,
+                                "endOffset": 1120,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1143
+                                "startOffset": 1119
                               }
                             },
                             {
                               "kind": "Var",
                               "name": "i",
                               "span": {
-                                "endOffset": 1146,
+                                "endOffset": 1122,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1145
+                                "startOffset": 1121
                               }
                             }
                           ],
                           "kind": "List",
                           "span": {
-                            "endOffset": 1147,
+                            "endOffset": 1123,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1140
+                            "startOffset": 1116
                           }
                         }
                       ],
                       "kind": "List",
                       "span": {
-                        "endOffset": 1148,
+                        "endOffset": 1124,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1132
+                        "startOffset": 1108
                       }
                     }
                   ],
                   "kind": "List",
                   "span": {
-                    "endOffset": 1149,
+                    "endOffset": 1125,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1101
+                    "startOffset": 1077
                   }
                 },
                 {
                   "kind": "Literal",
                   "span": {
-                    "endOffset": 1155,
+                    "endOffset": 1131,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1154
+                    "startOffset": 1130
                   },
                   "value": 0
                 },
@@ -1419,9 +1419,9 @@
                       "kind": "Var",
                       "name": "fn",
                       "span": {
-                        "endOffset": 1163,
+                        "endOffset": 1139,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1161
+                        "startOffset": 1137
                       }
                     },
                     {
@@ -1430,26 +1430,26 @@
                           "kind": "Var",
                           "name": "total",
                           "span": {
-                            "endOffset": 1170,
+                            "endOffset": 1146,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1165
+                            "startOffset": 1141
                           }
                         },
                         {
                           "kind": "Var",
                           "name": "square",
                           "span": {
-                            "endOffset": 1177,
+                            "endOffset": 1153,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1171
+                            "startOffset": 1147
                           }
                         }
                       ],
                       "kind": "Vector",
                       "span": {
-                        "endOffset": 1178,
+                        "endOffset": 1154,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1164
+                        "startOffset": 1140
                       }
                     },
                     {
@@ -1458,51 +1458,51 @@
                           "kind": "Var",
                           "name": "+",
                           "span": {
-                            "endOffset": 1181,
+                            "endOffset": 1157,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1180
+                            "startOffset": 1156
                           }
                         },
                         {
                           "kind": "Var",
                           "name": "total",
                           "span": {
-                            "endOffset": 1187,
+                            "endOffset": 1163,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1182
+                            "startOffset": 1158
                           }
                         },
                         {
                           "kind": "Var",
                           "name": "square",
                           "span": {
-                            "endOffset": 1194,
+                            "endOffset": 1170,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1188
+                            "startOffset": 1164
                           }
                         }
                       ],
                       "kind": "List",
                       "span": {
-                        "endOffset": 1195,
+                        "endOffset": 1171,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1179
+                        "startOffset": 1155
                       }
                     }
                   ],
                   "kind": "List",
                   "span": {
-                    "endOffset": 1196,
+                    "endOffset": 1172,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1160
+                    "startOffset": 1136
                   }
                 }
               ],
               "kind": "List",
               "span": {
-                "endOffset": 1197,
+                "endOffset": 1173,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1080
+                "startOffset": 1060
               }
             }
           },
@@ -1511,17 +1511,17 @@
             "kind": "Effect",
             "requirements": [],
             "span": {
-              "endOffset": 1044,
+              "endOffset": 1026,
               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-              "startOffset": 1032
+              "startOffset": 1014
             },
             "success": {
               "kind": "Primitive",
               "name": "Int",
               "span": {
-                "endOffset": 1043,
+                "endOffset": 1025,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1040
+                "startOffset": 1022
               }
             }
           },
@@ -1534,9 +1534,9 @@
                 "kind": "Primitive",
                 "name": "Int",
                 "span": {
-                  "endOffset": 1031,
+                  "endOffset": 1013,
                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                  "startOffset": 1028
+                  "startOffset": 1010
                 }
               }
             }
@@ -1544,9 +1544,9 @@
         },
         "sourceId": "surfaces/effect-typescript/stream-pipeline",
         "span": {
-          "endOffset": 1198,
+          "endOffset": 1174,
           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-          "startOffset": 1047
+          "startOffset": 1029
         }
       },
       {
@@ -1593,9 +1593,9 @@
                 "kind": "Var",
                 "name": "stream-map",
                 "span": {
-                  "endOffset": 576,
+                  "endOffset": 574,
                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                  "startOffset": 566
+                  "startOffset": 564
                 }
               },
               {
@@ -1604,26 +1604,26 @@
                     "kind": "Var",
                     "name": "stream-of",
                     "span": {
-                      "endOffset": 587,
+                      "endOffset": 585,
                       "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                      "startOffset": 578
+                      "startOffset": 576
                     }
                   },
                   {
                     "kind": "Var",
                     "name": "readings",
                     "span": {
-                      "endOffset": 596,
+                      "endOffset": 594,
                       "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                      "startOffset": 588
+                      "startOffset": 586
                     }
                   }
                 ],
                 "kind": "List",
                 "span": {
-                  "endOffset": 597,
+                  "endOffset": 595,
                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                  "startOffset": 577
+                  "startOffset": 575
                 }
               },
               {
@@ -1632,9 +1632,9 @@
                     "kind": "Var",
                     "name": "fn",
                     "span": {
-                      "endOffset": 601,
+                      "endOffset": 599,
                       "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                      "startOffset": 599
+                      "startOffset": 597
                     }
                   },
                   {
@@ -1643,17 +1643,17 @@
                         "kind": "Var",
                         "name": "reading",
                         "span": {
-                          "endOffset": 610,
+                          "endOffset": 608,
                           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                          "startOffset": 603
+                          "startOffset": 601
                         }
                       }
                     ],
                     "kind": "Vector",
                     "span": {
-                      "endOffset": 611,
+                      "endOffset": 609,
                       "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                      "startOffset": 602
+                      "startOffset": 600
                     }
                   },
                   {
@@ -1662,18 +1662,18 @@
                         "kind": "Var",
                         "name": "get",
                         "span": {
-                          "endOffset": 616,
+                          "endOffset": 614,
                           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                          "startOffset": 613
+                          "startOffset": 611
                         }
                       },
                       {
                         "kind": "Var",
                         "name": "reading",
                         "span": {
-                          "endOffset": 624,
+                          "endOffset": 622,
                           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                          "startOffset": 617
+                          "startOffset": 615
                         }
                       },
                       {
@@ -1683,33 +1683,33 @@
                           "name": ":celsius"
                         },
                         "span": {
-                          "endOffset": 633,
+                          "endOffset": 631,
                           "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                          "startOffset": 625
+                          "startOffset": 623
                         }
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 634,
+                      "endOffset": 632,
                       "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                      "startOffset": 612
+                      "startOffset": 610
                     }
                   }
                 ],
                 "kind": "List",
                 "span": {
-                  "endOffset": 635,
+                  "endOffset": 633,
                   "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                  "startOffset": 598
+                  "startOffset": 596
                 }
               }
             ],
             "kind": "List",
             "span": {
-              "endOffset": 636,
+              "endOffset": 634,
               "sourceId": "surfaces/effect-typescript/stream-pipeline",
-              "startOffset": 565
+              "startOffset": 563
             }
           },
           "kind": "FunctionDef",
@@ -1753,7 +1753,7 @@
         },
         "sourceId": "surfaces/effect-typescript/stream-pipeline",
         "span": {
-          "endOffset": 637,
+          "endOffset": 635,
           "sourceId": "surfaces/effect-typescript/stream-pipeline",
           "startOffset": 525
         }
@@ -2449,9 +2449,9 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 549,
+                "endOffset": 547,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 535
+                "startOffset": 533
               },
               "value": "celsius-values"
             },
@@ -2460,18 +2460,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 561,
+                    "endOffset": 559,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 553
+                    "startOffset": 551
                   },
                   "value": "readings"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 562,
+                "endOffset": 560,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 552
+                "startOffset": 550
               }
             },
             {
@@ -2479,9 +2479,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 576,
+                    "endOffset": 574,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 566
+                    "startOffset": 564
                   },
                   "value": "stream-map"
                 },
@@ -2490,27 +2490,27 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 587,
+                        "endOffset": 585,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 578
+                        "startOffset": 576
                       },
                       "value": "stream-of"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 596,
+                        "endOffset": 594,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 588
+                        "startOffset": 586
                       },
                       "value": "readings"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 597,
+                    "endOffset": 595,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 577
+                    "startOffset": 575
                   }
                 },
                 {
@@ -2518,9 +2518,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 601,
+                        "endOffset": 599,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 599
+                        "startOffset": 597
                       },
                       "value": "fn"
                     },
@@ -2529,18 +2529,18 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 610,
+                            "endOffset": 608,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 603
+                            "startOffset": 601
                           },
                           "value": "reading"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 611,
+                        "endOffset": 609,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 602
+                        "startOffset": 600
                       }
                     },
                     {
@@ -2548,58 +2548,58 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 616,
+                            "endOffset": 614,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 613
+                            "startOffset": 611
                           },
                           "value": "get"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 624,
+                            "endOffset": 622,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 617
+                            "startOffset": 615
                           },
                           "value": "reading"
                         },
                         {
                           "kind": "keyword",
                           "span": {
-                            "endOffset": 633,
+                            "endOffset": 631,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 625
+                            "startOffset": 623
                           },
                           "value": ":celsius"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 634,
+                        "endOffset": 632,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 612
+                        "startOffset": 610
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 635,
+                    "endOffset": 633,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 598
+                    "startOffset": 596
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 636,
+                "endOffset": 634,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 565
+                "startOffset": 563
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 637,
+            "endOffset": 635,
             "sourceId": "surfaces/effect-typescript/stream-pipeline",
             "startOffset": 525
           }
@@ -2609,18 +2609,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 640,
+                "endOffset": 638,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 639
+                "startOffset": 637
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 655,
+                "endOffset": 651,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 643
+                "startOffset": 639
               },
               "value": "hot-readings"
             },
@@ -2629,9 +2629,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 661,
+                    "endOffset": 657,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 659
+                    "startOffset": 655
                   },
                   "value": "->"
                 },
@@ -2640,35 +2640,35 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 671,
+                        "endOffset": 663,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 667
+                        "startOffset": 659
                       },
                       "value": "List"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 678,
+                        "endOffset": 670,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 672
+                        "startOffset": 664
                       },
                       "value": "String"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 679,
+                    "endOffset": 671,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 666
+                    "startOffset": 658
                   }
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 689,
+                    "endOffset": 681,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 684
+                    "startOffset": 676
                   },
                   "value": "Float"
                 },
@@ -2677,9 +2677,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 701,
+                        "endOffset": 693,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 695
+                        "startOffset": 687
                       },
                       "value": "Effect"
                     },
@@ -2688,27 +2688,27 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 707,
+                            "endOffset": 699,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 703
+                            "startOffset": 695
                           },
                           "value": "List"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 715,
+                            "endOffset": 707,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 708
+                            "startOffset": 700
                           },
                           "value": "Reading"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 716,
+                        "endOffset": 708,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 702
+                        "startOffset": 694
                       }
                     },
                     {
@@ -2716,18 +2716,18 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 731,
+                            "endOffset": 723,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 718
+                            "startOffset": 710
                           },
                           "value": "SensorOffline"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 732,
+                        "endOffset": 724,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 717
+                        "startOffset": 709
                       }
                     },
                     {
@@ -2735,42 +2735,42 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 746,
+                            "endOffset": 738,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 734
+                            "startOffset": 726
                           },
                           "value": "Sensors.read"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 747,
+                        "endOffset": 739,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 733
+                        "startOffset": 725
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 748,
+                    "endOffset": 740,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 694
+                    "startOffset": 686
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 749,
+                "endOffset": 741,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 658
+                "startOffset": 654
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 750,
+            "endOffset": 742,
             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-            "startOffset": 638
+            "startOffset": 636
           }
         },
         {
@@ -2778,18 +2778,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 758,
+                "endOffset": 750,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 752
+                "startOffset": 744
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 773,
+                "endOffset": 763,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 761
+                "startOffset": 751
               },
               "value": "hot-readings"
             },
@@ -2798,27 +2798,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 784,
+                    "endOffset": 774,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 777
+                    "startOffset": 767
                   },
                   "value": "sensors"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 794,
+                    "endOffset": 784,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 785
+                    "startOffset": 775
                   },
                   "value": "threshold"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 795,
+                "endOffset": 785,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 776
+                "startOffset": 766
               }
             },
             {
@@ -2826,9 +2826,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 817,
+                    "endOffset": 807,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 799
+                    "startOffset": 789
                   },
                   "value": "stream-run-collect"
                 },
@@ -2837,9 +2837,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 836,
+                        "endOffset": 826,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 823
+                        "startOffset": 813
                       },
                       "value": "stream-filter"
                     },
@@ -2848,9 +2848,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 861,
+                            "endOffset": 851,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 844
+                            "startOffset": 834
                           },
                           "value": "stream-map-effect"
                         },
@@ -2859,27 +2859,27 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 880,
+                                "endOffset": 862,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 871
+                                "startOffset": 853
                               },
                               "value": "stream-of"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 888,
+                                "endOffset": 870,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 881
+                                "startOffset": 863
                               },
                               "value": "sensors"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 889,
+                            "endOffset": 871,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 870
+                            "startOffset": 852
                           }
                         },
                         {
@@ -2887,9 +2887,9 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 901,
+                                "endOffset": 883,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 899
+                                "startOffset": 881
                               },
                               "value": "fn"
                             },
@@ -2898,18 +2898,18 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 909,
+                                    "endOffset": 891,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 903
+                                    "startOffset": 885
                                   },
                                   "value": "sensor"
                                 }
                               ],
                               "kind": "vector",
                               "span": {
-                                "endOffset": 910,
+                                "endOffset": 892,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 902
+                                "startOffset": 884
                               }
                             },
                             {
@@ -2917,52 +2917,52 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 924,
+                                    "endOffset": 906,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 912
+                                    "startOffset": 894
                                   },
                                   "value": "Sensors.read"
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 931,
+                                    "endOffset": 913,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 925
+                                    "startOffset": 907
                                   },
                                   "value": "sensor"
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 932,
+                                "endOffset": 914,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 911
+                                "startOffset": 893
                               }
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 933,
+                            "endOffset": 915,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 898
+                            "startOffset": 880
                           }
                         },
                         {
                           "kind": "int",
                           "span": {
-                            "endOffset": 943,
+                            "endOffset": 925,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 942
+                            "startOffset": 924
                           },
                           "value": 2
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 944,
+                        "endOffset": 926,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 843
+                        "startOffset": 833
                       }
                     },
                     {
@@ -2970,9 +2970,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 954,
+                            "endOffset": 936,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 952
+                            "startOffset": 934
                           },
                           "value": "fn"
                         },
@@ -2981,18 +2981,18 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 963,
+                                "endOffset": 945,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 956
+                                "startOffset": 938
                               },
                               "value": "reading"
                             }
                           ],
                           "kind": "vector",
                           "span": {
-                            "endOffset": 964,
+                            "endOffset": 946,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 955
+                            "startOffset": 937
                           }
                         },
                         {
@@ -3000,9 +3000,9 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 967,
+                                "endOffset": 949,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 966
+                                "startOffset": 948
                               },
                               "value": ">"
                             },
@@ -3011,85 +3011,85 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 972,
+                                    "endOffset": 954,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 969
+                                    "startOffset": 951
                                   },
                                   "value": "get"
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 980,
+                                    "endOffset": 962,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 973
+                                    "startOffset": 955
                                   },
                                   "value": "reading"
                                 },
                                 {
                                   "kind": "keyword",
                                   "span": {
-                                    "endOffset": 989,
+                                    "endOffset": 971,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 981
+                                    "startOffset": 963
                                   },
                                   "value": ":celsius"
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 990,
+                                "endOffset": 972,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 968
+                                "startOffset": 950
                               }
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1000,
+                                "endOffset": 982,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 991
+                                "startOffset": 973
                               },
                               "value": "threshold"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1001,
+                            "endOffset": 983,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 965
+                            "startOffset": 947
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1002,
+                        "endOffset": 984,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 951
+                        "startOffset": 933
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1003,
+                    "endOffset": 985,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 822
+                    "startOffset": 812
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1004,
+                "endOffset": 986,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 798
+                "startOffset": 788
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1005,
+            "endOffset": 987,
             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-            "startOffset": 751
+            "startOffset": 743
           }
         },
         {
@@ -3097,18 +3097,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 1008,
+                "endOffset": 990,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1007
+                "startOffset": 989
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1023,
+                "endOffset": 1005,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1009
+                "startOffset": 991
               },
               "value": "sum-of-squares"
             },
@@ -3117,18 +3117,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1027,
+                    "endOffset": 1009,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1025
+                    "startOffset": 1007
                   },
                   "value": "->"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1031,
+                    "endOffset": 1013,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1028
+                    "startOffset": 1010
                   },
                   "value": "Int"
                 },
@@ -3137,43 +3137,43 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1039,
+                        "endOffset": 1021,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1033
+                        "startOffset": 1015
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1043,
+                        "endOffset": 1025,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1040
+                        "startOffset": 1022
                       },
                       "value": "Int"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1044,
+                    "endOffset": 1026,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1032
+                    "startOffset": 1014
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1045,
+                "endOffset": 1027,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1024
+                "startOffset": 1006
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1046,
+            "endOffset": 1028,
             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-            "startOffset": 1006
+            "startOffset": 988
           }
         },
         {
@@ -3181,20 +3181,39 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1054,
+                "endOffset": 1036,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1048
+                "startOffset": 1030
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1071,
+                "endOffset": 1051,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1057
+                "startOffset": 1037
               },
               "value": "sum-of-squares"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 1056,
+                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                    "startOffset": 1055
+                  },
+                  "value": "n"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 1057,
+                "sourceId": "surfaces/effect-typescript/stream-pipeline",
+                "startOffset": 1054
+              }
             },
             {
               "items": [
@@ -3203,26 +3222,7 @@
                   "span": {
                     "endOffset": 1076,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1075
-                  },
-                  "value": "n"
-                }
-              ],
-              "kind": "vector",
-              "span": {
-                "endOffset": 1077,
-                "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1074
-              }
-            },
-            {
-              "items": [
-                {
-                  "kind": "symbol",
-                  "span": {
-                    "endOffset": 1096,
-                    "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1081
+                    "startOffset": 1061
                   },
                   "value": "stream-run-fold"
                 },
@@ -3231,9 +3231,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1112,
+                        "endOffset": 1088,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1102
+                        "startOffset": 1078
                       },
                       "value": "stream-map"
                     },
@@ -3242,36 +3242,36 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1126,
+                            "endOffset": 1102,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1114
+                            "startOffset": 1090
                           },
                           "value": "stream-range"
                         },
                         {
                           "kind": "int",
                           "span": {
-                            "endOffset": 1128,
+                            "endOffset": 1104,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1127
+                            "startOffset": 1103
                           },
                           "value": 1
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1130,
+                            "endOffset": 1106,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1129
+                            "startOffset": 1105
                           },
                           "value": "n"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1131,
+                        "endOffset": 1107,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1113
+                        "startOffset": 1089
                       }
                     },
                     {
@@ -3279,9 +3279,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1135,
+                            "endOffset": 1111,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1133
+                            "startOffset": 1109
                           },
                           "value": "fn"
                         },
@@ -3290,18 +3290,18 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1138,
+                                "endOffset": 1114,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1137
+                                "startOffset": 1113
                               },
                               "value": "i"
                             }
                           ],
                           "kind": "vector",
                           "span": {
-                            "endOffset": 1139,
+                            "endOffset": 1115,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1136
+                            "startOffset": 1112
                           }
                         },
                         {
@@ -3309,60 +3309,60 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1142,
+                                "endOffset": 1118,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1141
+                                "startOffset": 1117
                               },
                               "value": "*"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1144,
+                                "endOffset": 1120,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1143
+                                "startOffset": 1119
                               },
                               "value": "i"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1146,
+                                "endOffset": 1122,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1145
+                                "startOffset": 1121
                               },
                               "value": "i"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1147,
+                            "endOffset": 1123,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1140
+                            "startOffset": 1116
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1148,
+                        "endOffset": 1124,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1132
+                        "startOffset": 1108
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1149,
+                    "endOffset": 1125,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1101
+                    "startOffset": 1077
                   }
                 },
                 {
                   "kind": "int",
                   "span": {
-                    "endOffset": 1155,
+                    "endOffset": 1131,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1154
+                    "startOffset": 1130
                   },
                   "value": 0
                 },
@@ -3371,9 +3371,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1163,
+                        "endOffset": 1139,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1161
+                        "startOffset": 1137
                       },
                       "value": "fn"
                     },
@@ -3382,27 +3382,27 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1170,
+                            "endOffset": 1146,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1165
+                            "startOffset": 1141
                           },
                           "value": "total"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1177,
+                            "endOffset": 1153,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1171
+                            "startOffset": 1147
                           },
                           "value": "square"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1178,
+                        "endOffset": 1154,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1164
+                        "startOffset": 1140
                       }
                     },
                     {
@@ -3410,60 +3410,60 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1181,
+                            "endOffset": 1157,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1180
+                            "startOffset": 1156
                           },
                           "value": "+"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1187,
+                            "endOffset": 1163,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1182
+                            "startOffset": 1158
                           },
                           "value": "total"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1194,
+                            "endOffset": 1170,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1188
+                            "startOffset": 1164
                           },
                           "value": "square"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1195,
+                        "endOffset": 1171,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1179
+                        "startOffset": 1155
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1196,
+                    "endOffset": 1172,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1160
+                    "startOffset": 1136
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1197,
+                "endOffset": 1173,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1080
+                "startOffset": 1060
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1198,
+            "endOffset": 1174,
             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-            "startOffset": 1047
+            "startOffset": 1029
           }
         },
         {
@@ -3471,18 +3471,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 1201,
+                "endOffset": 1177,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1200
+                "startOffset": 1176
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1216,
+                "endOffset": 1190,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1204
+                "startOffset": 1178
               },
               "value": "export-first"
             },
@@ -3491,9 +3491,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1222,
+                    "endOffset": 1196,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1220
+                    "startOffset": 1194
                   },
                   "value": "->"
                 },
@@ -3502,35 +3502,35 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1228,
+                        "endOffset": 1202,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1224
+                        "startOffset": 1198
                       },
                       "value": "List"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1235,
+                        "endOffset": 1209,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1229
+                        "startOffset": 1203
                       },
                       "value": "String"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1236,
+                    "endOffset": 1210,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1223
+                    "startOffset": 1197
                   }
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1240,
+                    "endOffset": 1214,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1237
+                    "startOffset": 1211
                   },
                   "value": "Int"
                 },
@@ -3539,18 +3539,18 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1248,
+                        "endOffset": 1222,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1242
+                        "startOffset": 1216
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1253,
+                        "endOffset": 1227,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1249
+                        "startOffset": 1223
                       },
                       "value": "Unit"
                     },
@@ -3559,18 +3559,18 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1268,
+                            "endOffset": 1242,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1255
+                            "startOffset": 1229
                           },
                           "value": "SensorOffline"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1269,
+                        "endOffset": 1243,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1254
+                        "startOffset": 1228
                       }
                     },
                     {
@@ -3578,51 +3578,51 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1278,
+                            "endOffset": 1252,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1271
+                            "startOffset": 1245
                           },
                           "value": "Sensors"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1283,
+                            "endOffset": 1257,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1279
+                            "startOffset": 1253
                           },
                           "value": "Sink"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1284,
+                        "endOffset": 1258,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1270
+                        "startOffset": 1244
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1285,
+                    "endOffset": 1259,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1241
+                    "startOffset": 1215
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1286,
+                "endOffset": 1260,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1219
+                "startOffset": 1193
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1287,
+            "endOffset": 1261,
             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-            "startOffset": 1199
+            "startOffset": 1175
           }
         },
         {
@@ -3630,18 +3630,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1295,
+                "endOffset": 1269,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1289
+                "startOffset": 1263
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1310,
+                "endOffset": 1282,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1298
+                "startOffset": 1270
               },
               "value": "export-first"
             },
@@ -3650,27 +3650,27 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1321,
+                    "endOffset": 1293,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1314
+                    "startOffset": 1286
                   },
                   "value": "sensors"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1327,
+                    "endOffset": 1299,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1322
+                    "startOffset": 1294
                   },
                   "value": "limit"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 1328,
+                "endOffset": 1300,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1313
+                "startOffset": 1285
               }
             },
             {
@@ -3678,9 +3678,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1351,
+                    "endOffset": 1323,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1332
+                    "startOffset": 1304
                   },
                   "value": "stream-run-for-each"
                 },
@@ -3689,9 +3689,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1368,
+                        "endOffset": 1340,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1357
+                        "startOffset": 1329
                       },
                       "value": "stream-take"
                     },
@@ -3700,9 +3700,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1393,
+                            "endOffset": 1365,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1376
+                            "startOffset": 1348
                           },
                           "value": "stream-map-effect"
                         },
@@ -3711,27 +3711,27 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1412,
+                                "endOffset": 1376,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1403
+                                "startOffset": 1367
                               },
                               "value": "stream-of"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1420,
+                                "endOffset": 1384,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1413
+                                "startOffset": 1377
                               },
                               "value": "sensors"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1421,
+                            "endOffset": 1385,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1402
+                            "startOffset": 1366
                           }
                         },
                         {
@@ -3739,9 +3739,9 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1433,
+                                "endOffset": 1397,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1431
+                                "startOffset": 1395
                               },
                               "value": "fn"
                             },
@@ -3750,18 +3750,18 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1441,
+                                    "endOffset": 1405,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1435
+                                    "startOffset": 1399
                                   },
                                   "value": "sensor"
                                 }
                               ],
                               "kind": "vector",
                               "span": {
-                                "endOffset": 1442,
+                                "endOffset": 1406,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1434
+                                "startOffset": 1398
                               }
                             },
                             {
@@ -3769,60 +3769,60 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1456,
+                                    "endOffset": 1420,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1444
+                                    "startOffset": 1408
                                   },
                                   "value": "Sensors.read"
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1463,
+                                    "endOffset": 1427,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1457
+                                    "startOffset": 1421
                                   },
                                   "value": "sensor"
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 1464,
+                                "endOffset": 1428,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1443
+                                "startOffset": 1407
                               }
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1465,
+                            "endOffset": 1429,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1430
+                            "startOffset": 1394
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1466,
+                        "endOffset": 1430,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1375
+                        "startOffset": 1347
                       }
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1478,
+                        "endOffset": 1442,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1473
+                        "startOffset": 1437
                       },
                       "value": "limit"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1479,
+                    "endOffset": 1443,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1356
+                    "startOffset": 1328
                   }
                 },
                 {
@@ -3830,9 +3830,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1487,
+                        "endOffset": 1451,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1485
+                        "startOffset": 1449
                       },
                       "value": "fn"
                     },
@@ -3841,18 +3841,18 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1502,
+                            "endOffset": 1460,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1495
+                            "startOffset": 1453
                           },
                           "value": "reading"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 1503,
+                        "endOffset": 1461,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1494
+                        "startOffset": 1452
                       }
                     },
                     {
@@ -3860,9 +3860,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1521,
+                            "endOffset": 1479,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1511
+                            "startOffset": 1469
                           },
                           "value": "Sink.write"
                         },
@@ -3871,9 +3871,9 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1526,
+                                "endOffset": 1484,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1523
+                                "startOffset": 1481
                               },
                               "value": "str"
                             },
@@ -3882,44 +3882,44 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1531,
+                                    "endOffset": 1489,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1528
+                                    "startOffset": 1486
                                   },
                                   "value": "get"
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1539,
+                                    "endOffset": 1497,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1532
+                                    "startOffset": 1490
                                   },
                                   "value": "reading"
                                 },
                                 {
                                   "kind": "keyword",
                                   "span": {
-                                    "endOffset": 1547,
+                                    "endOffset": 1505,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1540
+                                    "startOffset": 1498
                                   },
                                   "value": ":sensor"
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 1548,
+                                "endOffset": 1506,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1527
+                                "startOffset": 1485
                               }
                             },
                             {
                               "kind": "string",
                               "span": {
-                                "endOffset": 1552,
+                                "endOffset": 1510,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1549
+                                "startOffset": 1507
                               },
                               "value": "="
                             },
@@ -3928,76 +3928,76 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1557,
+                                    "endOffset": 1515,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1554
+                                    "startOffset": 1512
                                   },
                                   "value": "get"
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1565,
+                                    "endOffset": 1523,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1558
+                                    "startOffset": 1516
                                   },
                                   "value": "reading"
                                 },
                                 {
                                   "kind": "keyword",
                                   "span": {
-                                    "endOffset": 1574,
+                                    "endOffset": 1532,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1566
+                                    "startOffset": 1524
                                   },
                                   "value": ":celsius"
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 1575,
+                                "endOffset": 1533,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1553
+                                "startOffset": 1511
                               }
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1576,
+                            "endOffset": 1534,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1522
+                            "startOffset": 1480
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1577,
+                        "endOffset": 1535,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1510
+                        "startOffset": 1468
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1578,
+                    "endOffset": 1536,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1484
+                    "startOffset": 1448
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1579,
+                "endOffset": 1537,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1331
+                "startOffset": 1303
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1580,
+            "endOffset": 1538,
             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-            "startOffset": 1288
+            "startOffset": 1262
           }
         },
         {
@@ -4005,18 +4005,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 1583,
+                "endOffset": 1541,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1582
+                "startOffset": 1540
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1591,
+                "endOffset": 1549,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1584
+                "startOffset": 1542
               },
               "value": "average"
             },
@@ -4025,9 +4025,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1595,
+                    "endOffset": 1553,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1593
+                    "startOffset": 1551
                   },
                   "value": "->"
                 },
@@ -4036,27 +4036,27 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1601,
+                        "endOffset": 1559,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1597
+                        "startOffset": 1555
                       },
                       "value": "List"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1609,
+                        "endOffset": 1567,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1602
+                        "startOffset": 1560
                       },
                       "value": "Reading"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1610,
+                    "endOffset": 1568,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1596
+                    "startOffset": 1554
                   }
                 },
                 {
@@ -4064,43 +4064,43 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1618,
+                        "endOffset": 1576,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1612
+                        "startOffset": 1570
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1624,
+                        "endOffset": 1582,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1619
+                        "startOffset": 1577
                       },
                       "value": "Float"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1625,
+                    "endOffset": 1583,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1611
+                    "startOffset": 1569
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1626,
+                "endOffset": 1584,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1592
+                "startOffset": 1550
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1627,
+            "endOffset": 1585,
             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-            "startOffset": 1581
+            "startOffset": 1539
           }
         },
         {
@@ -4108,18 +4108,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1635,
+                "endOffset": 1593,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1629
+                "startOffset": 1587
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1645,
+                "endOffset": 1601,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1638
+                "startOffset": 1594
               },
               "value": "average"
             },
@@ -4128,18 +4128,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1657,
+                    "endOffset": 1613,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1649
+                    "startOffset": 1605
                   },
                   "value": "readings"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 1658,
+                "endOffset": 1614,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1648
+                "startOffset": 1604
               }
             },
             {
@@ -4147,9 +4147,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1665,
+                    "endOffset": 1621,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1662
+                    "startOffset": 1618
                   },
                   "value": "do!"
                 },
@@ -4158,9 +4158,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1683,
+                        "endOffset": 1639,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1678
+                        "startOffset": 1634
                       },
                       "value": "total"
                     },
@@ -4169,9 +4169,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1706,
+                            "endOffset": 1662,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1691
+                            "startOffset": 1647
                           },
                           "value": "stream-run-fold"
                         },
@@ -4180,27 +4180,27 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1730,
+                                "endOffset": 1678,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1716
+                                "startOffset": 1664
                               },
                               "value": "celsius-values"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1739,
+                                "endOffset": 1687,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1731
+                                "startOffset": 1679
                               },
                               "value": "readings"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1740,
+                            "endOffset": 1688,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1715
+                            "startOffset": 1663
                           }
                         },
                         {
@@ -4208,36 +4208,36 @@
                             {
                               "kind": "keyword",
                               "span": {
-                                "endOffset": 1751,
+                                "endOffset": 1699,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1750
+                                "startOffset": 1698
                               },
                               "value": ":"
                             },
                             {
                               "kind": "int",
                               "span": {
-                                "endOffset": 1753,
+                                "endOffset": 1701,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1752
+                                "startOffset": 1700
                               },
                               "value": 0
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1759,
+                                "endOffset": 1707,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1754
+                                "startOffset": 1702
                               },
                               "value": "Float"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1760,
+                            "endOffset": 1708,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1749
+                            "startOffset": 1697
                           }
                         },
                         {
@@ -4245,9 +4245,9 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1772,
+                                "endOffset": 1720,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1770
+                                "startOffset": 1718
                               },
                               "value": "fn"
                             },
@@ -4256,27 +4256,27 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1777,
+                                    "endOffset": 1725,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1774
+                                    "startOffset": 1722
                                   },
                                   "value": "sum"
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1783,
+                                    "endOffset": 1731,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1778
+                                    "startOffset": 1726
                                   },
                                   "value": "value"
                                 }
                               ],
                               "kind": "vector",
                               "span": {
-                                "endOffset": 1784,
+                                "endOffset": 1732,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1773
+                                "startOffset": 1721
                               }
                             },
                             {
@@ -4284,60 +4284,60 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1787,
+                                    "endOffset": 1735,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1786
+                                    "startOffset": 1734
                                   },
                                   "value": "+"
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1791,
+                                    "endOffset": 1739,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1788
+                                    "startOffset": 1736
                                   },
                                   "value": "sum"
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1797,
+                                    "endOffset": 1745,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1792
+                                    "startOffset": 1740
                                   },
                                   "value": "value"
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 1798,
+                                "endOffset": 1746,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1785
+                                "startOffset": 1733
                               }
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1799,
+                            "endOffset": 1747,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1769
+                            "startOffset": 1717
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1800,
+                        "endOffset": 1748,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1690
+                        "startOffset": 1646
                       }
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 1801,
+                    "endOffset": 1749,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1670
+                    "startOffset": 1626
                   }
                 },
                 {
@@ -4345,9 +4345,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1814,
+                        "endOffset": 1762,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1807
+                        "startOffset": 1755
                       },
                       "value": "succeed"
                     },
@@ -4356,9 +4356,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1818,
+                            "endOffset": 1766,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1816
+                            "startOffset": 1764
                           },
                           "value": "if"
                         },
@@ -4367,35 +4367,35 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1826,
+                                "endOffset": 1774,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1820
+                                "startOffset": 1768
                               },
                               "value": "empty?"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1835,
+                                "endOffset": 1783,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1827
+                                "startOffset": 1775
                               },
                               "value": "readings"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1836,
+                            "endOffset": 1784,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1819
+                            "startOffset": 1767
                           }
                         },
                         {
                           "kind": "int",
                           "span": {
-                            "endOffset": 1838,
+                            "endOffset": 1786,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1837
+                            "startOffset": 1785
                           },
                           "value": 0
                         },
@@ -4404,18 +4404,18 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1841,
+                                "endOffset": 1789,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1840
+                                "startOffset": 1788
                               },
                               "value": "/"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1847,
+                                "endOffset": 1795,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1842
+                                "startOffset": 1790
                               },
                               "value": "total"
                             },
@@ -4424,67 +4424,67 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1854,
+                                    "endOffset": 1802,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1849
+                                    "startOffset": 1797
                                   },
                                   "value": "count"
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1863,
+                                    "endOffset": 1811,
                                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                    "startOffset": 1855
+                                    "startOffset": 1803
                                   },
                                   "value": "readings"
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 1864,
+                                "endOffset": 1812,
                                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                                "startOffset": 1848
+                                "startOffset": 1796
                               }
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1865,
+                            "endOffset": 1813,
                             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                            "startOffset": 1839
+                            "startOffset": 1787
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1866,
+                        "endOffset": 1814,
                         "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                        "startOffset": 1815
+                        "startOffset": 1763
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1867,
+                    "endOffset": 1815,
                     "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                    "startOffset": 1806
+                    "startOffset": 1754
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1868,
+                "endOffset": 1816,
                 "sourceId": "surfaces/effect-typescript/stream-pipeline",
-                "startOffset": 1661
+                "startOffset": 1617
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1869,
+            "endOffset": 1817,
             "sourceId": "surfaces/effect-typescript/stream-pipeline",
-            "startOffset": 1628
+            "startOffset": 1586
           }
         }
       ],

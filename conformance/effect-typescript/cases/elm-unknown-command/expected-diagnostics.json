@@ -6,10 +6,10 @@
       "severity": "error",
       "code": "elm/unknown-command",
       "message": "with accepts declared command names as keywords.",
-      "line": 18,
-      "column": 45,
-      "endLine": 18,
-      "endColumn": 50
+      "line": 25,
+      "column": 40,
+      "endLine": 25,
+      "endColumn": 45
     }
   ]
 }

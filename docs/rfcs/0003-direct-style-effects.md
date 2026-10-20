@@ -32,15 +32,13 @@ today. All new syntax and semantics below are proposed behavior.
 
 (export Payments pay)
 
-(service Payments
-  (: charge (-> OrderId Int Unit)))
+(service Payments (: charge (-> OrderId Int Unit)))
 
-(define pay [order]
+(define pay
+  [order]
   (do
     (Payments.charge order.id order.total-cents)
-    {:id order.id
-     :total-cents order.total-cents
-     :status :paid}))
+    {:id order.id :total-cents order.total-cents :status :paid}))
 ```
 
 The service declaration makes `Payments.charge` a capability operation. Its call
@@ -61,13 +59,9 @@ If charging can fail, the declaration and public contract can express that too:
 ```lisp
 (error PaymentDeclined {:id OrderId})
 
-(service Payments
-  (: charge (-> OrderId Int Unit :throws [PaymentDeclined])))
+(service Payments (: charge (-> OrderId Int Unit :throws [PaymentDeclined])))
 
-(: pay
-  (-> Order Order
-      :requires [Payments.charge]
-      :throws [PaymentDeclined]))
+(: pay (-> Order Order :requires [Payments.charge] :throws [PaymentDeclined]))
 ```
 
 The return type is the normal successful value. Requirements and failures describe
@@ -79,8 +73,7 @@ have no bodies from which to infer their contracts.
 Within an executing function, a call performs its operations and produces a result:
 
 ```lisp
-(let [paid (pay order)]
-  paid)
+(let [paid (pay order)] paid)
 ```
 
 `paid` is the successful order. The charge has already happened before the body of
@@ -90,8 +83,7 @@ the requirement to its caller.
 A zero-argument function defers that call:
 
 ```lisp
-(let [payment-job (fn [] (pay order))]
-  (payment-job))
+(let [payment-job (fn [] (pay order))] (payment-job))
 ```
 
 Creating `payment-job` does not charge anything. Invoking it performs the call.
@@ -104,8 +96,7 @@ the function are captured, while expressions inside its body run on invocation.
 Inside an executing Forma program, call the function normally:
 
 ```lisp
-(let [job (fn [] (pay order))]
-  (job))
+(let [job (fn [] (pay order))] (job))
 ```
 
 `(job)` returns the successful paid order, or propagates the call's typed failure.
@@ -201,8 +192,7 @@ removes the handled cases from the outgoing failure row. Handler code may introd
 new requirements or failures of its own.
 
 ```lisp
-(catch (pay order)
-  (PaymentDeclined error) {:status :declined :id error.id})
+(catch (pay order) (PaymentDeclined error) {:status :declined :id error.id})
 ```
 
 `catch` is a control construct: it establishes the handler before evaluating its
@@ -224,8 +214,7 @@ application exposes a zero-argument entry function:
 ```lisp
 (export main)
 
-(define main []
-  (pay example))
+(define main [] (pay example))
 ```
 
 The runner invokes `main` with the configured providers. Missing requirements are

@@ -1,5 +1,4 @@
 (typeclass (Eq a) (: eq (-> a a Bool)))
-(instance (Eq Float)
-  (define eq  [a b] (= a b)))
-(define invoke  [f x y] (f x y))
+(instance (Eq Float) (define eq [a b] (= a b)))
+(define invoke [f x y] (f x y))
 (invoke eq (fn [n] n) (fn [n] n))

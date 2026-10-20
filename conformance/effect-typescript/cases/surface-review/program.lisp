@@ -14,31 +14,24 @@
 (: radius (-> Shape Int))
 (define radius [shape] (match shape (Shape.Circle value) value Shape.None 0))
 (service Counter (: next (Effect Int)))
-(layer
-  CounterLive
-  :provides
-  Counter
-  :setup
-  [cfg {:inner {:port 8}}]
+(layer CounterLive
+  :provides Counter
+  :setup [cfg {:inner {:port 8}}]
   (define base [] 1)
   (define next (+ (base) cfg.inner.port)))
 (error FirstError {})
 (error SecondError {})
 (: recover (-> Bool (Effect String)))
-(define
-  recover
+(define recover
   [first]
-  (catch
-    (if first (fail (FirstError {})) (fail (SecondError {})))
+  (catch (if first (fail (FirstError {})) (fail (SecondError {})))
     (FirstError e)
     "first"
     err
     "fallback"))
 (: handler-error (Effect String [SecondError]))
-(define
-  handler-error
-  (catch
-    (if true (fail (FirstError {})) (fail (SecondError {})))
+(define handler-error
+  (catch (if true (fail (FirstError {})) (fail (SecondError {})))
     (FirstError e)
     (fail (SecondError {}))
     err

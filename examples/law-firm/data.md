@@ -1,8 +1,7 @@
 # Seed Data
 
 ```lisp
-(export
-  represents
+(export represents
   contact-at
   intake-for
   conflict-for
@@ -25,7 +24,8 @@
 ;; ---------------------------------------------------------------------------
 ;; Firm Staff
 ;; ---------------------------------------------------------------------------
-(seed Attorney "atty:amelia"
+(seed Attorney
+  "atty:amelia"
   {
     :first-name "Amelia"
     :last-name "Hale"
@@ -34,7 +34,8 @@
     :bar-number "IL-448291"
     :practice-area "corporate"
     :status "active"})
-(seed Attorney "atty:marco"
+(seed Attorney
+  "atty:marco"
   {
     :first-name "Marco"
     :last-name "Rivera"
@@ -43,14 +44,16 @@
     :bar-number "IL-451037"
     :practice-area "litigation"
     :status "active"})
-(seed Paralegal "para:nora"
+(seed Paralegal
+  "para:nora"
   {
     :first-name "Nora"
     :last-name "Kim"
     :email "nkim@halerivera.law"
     :team "intake"
     :status "active"})
-(seed Paralegal "para:eli"
+(seed Paralegal
+  "para:eli"
   {
     :first-name "Eli"
     :last-name "Brooks"
@@ -61,7 +64,8 @@
 ;; ---------------------------------------------------------------------------
 ;; Clients
 ;; ---------------------------------------------------------------------------
-(seed Client "client:northstar"
+(seed Client
+  "client:northstar"
   {
     :name "Northstar Robotics"
     :type "business"
@@ -71,7 +75,8 @@
     :status "onboarding"
     :risk-level "medium"
     :source "founder-referral"})
-(seed Client "client:brightpath"
+(seed Client
+  "client:brightpath"
   {
     :name "BrightPath Education"
     :type "nonprofit"
@@ -81,7 +86,8 @@
     :status "active"
     :risk-level "low"
     :source "existing-client"})
-(seed Client "client:lakeside"
+(seed Client
+  "client:lakeside"
   {
     :name "Lakeside Foods"
     :type "business"
@@ -91,7 +97,8 @@
     :status "active"
     :risk-level "high"
     :source "urgent-litigation"})
-(seed Client "client:carter"
+(seed Client
+  "client:carter"
   {
     :name "Dana Carter"
     :type "individual"
@@ -105,28 +112,32 @@
 ;; ---------------------------------------------------------------------------
 ;; Contacts
 ;; ---------------------------------------------------------------------------
-(seed Contact "contact:maya"
+(seed Contact
+  "contact:maya"
   {
     :name "Maya Singh"
     :title "Founder"
     :email "maya@northstarrobotics.com"
     :phone "+1-312-555-1101"
     :role "decision-maker"})
-(seed Contact "contact:owen"
+(seed Contact
+  "contact:owen"
   {
     :name "Owen Brooks"
     :title "Operations Director"
     :email "owen@brightpath.org"
     :phone "+1-312-555-1201"
     :role "operations"})
-(seed Contact "contact:sofia"
+(seed Contact
+  "contact:sofia"
   {
     :name "Sofia Morales"
     :title "General Counsel"
     :email "sofia@lakesidefoods.com"
     :phone "+1-312-555-1301"
     :role "legal"})
-(seed Contact "contact:dana"
+(seed Contact
+  "contact:dana"
   {
     :name "Dana Carter"
     :title "Client"
@@ -137,27 +148,32 @@
 ;; ---------------------------------------------------------------------------
 ;; Intake and Conflicts
 ;; ---------------------------------------------------------------------------
-(seed IntakePacket "intake:northstar"
+(seed IntakePacket
+  "intake:northstar"
   {
     :intakepacket/status "submitted"
     :intakepacket/submitted-at 1711929600000
     :intakepacket/notes
       "Founder requests formation cleanup, commercial contract templates, and first financing readiness."})
-(seed IntakePacket "intake:carter"
+(seed IntakePacket
+  "intake:carter"
   {
     :intakepacket/status "reviewed"
     :intakepacket/submitted-at 1709251200000
     :intakepacket/reviewed-at 1709337600000
     :intakepacket/notes
       "Estate plan intake complete. Waiting on financial account list."})
-(seed ConflictCheck "conflict:northstar"
+(seed ConflictCheck
+  "conflict:northstar"
   {
     :conflictcheck/status "pending"
     :conflictcheck/search-terms
       "Northstar Robotics; Maya Singh; Apex Components"
     :conflictcheck/result "not-run"
-    :conflictcheck/notes "Counterparty list supplied by founder. Search queued."})
-(seed ConflictCheck "conflict:lakeside"
+    :conflictcheck/notes
+      "Counterparty list supplied by founder. Search queued."})
+(seed ConflictCheck
+  "conflict:lakeside"
   {
     :conflictcheck/status "needs-review"
     :conflictcheck/search-terms
@@ -167,14 +183,16 @@
     :conflictcheck/reviewed-at 1710115200000
     :conflictcheck/notes
       "Beacon Packaging appeared in a prior declined consultation. Attorney review required."})
-(seed ConflictCheck "conflict:brightpath"
+(seed ConflictCheck
+  "conflict:brightpath"
   {
     :conflictcheck/status "cleared"
     :conflictcheck/search-terms "BrightPath Education; Owen Brooks"
     :conflictcheck/result "clear"
     :conflictcheck/reviewed-by "Nora Kim"
     :conflictcheck/reviewed-at 1706745600000})
-(seed ConflictCheck "conflict:carter"
+(seed ConflictCheck
+  "conflict:carter"
   {
     :conflictcheck/status "cleared"
     :conflictcheck/search-terms "Dana Carter; Riley Carter"
@@ -185,7 +203,8 @@
 ;; ---------------------------------------------------------------------------
 ;; Matters
 ;; ---------------------------------------------------------------------------
-(seed Matter "matter:northstar-general"
+(seed Matter
+  "matter:northstar-general"
   {
     :title "Northstar General Counsel Setup"
     :practice-area "corporate"
@@ -196,7 +215,8 @@
     :fee-type "retainer"
     :summary
       "Set up outside general counsel workflow, contract templates, and financing readiness checklist."})
-(seed Matter "matter:brightpath-handbook"
+(seed Matter
+  "matter:brightpath-handbook"
   {
     :title "BrightPath Handbook Refresh"
     :practice-area "employment"
@@ -207,7 +227,8 @@
     :fee-type "flat-fee"
     :summary
       "Update employee handbook, leave policies, and contractor classification guidance."})
-(seed Matter "matter:lakeside-litigation"
+(seed Matter
+  "matter:lakeside-litigation"
   {
     :title "Lakeside Supplier Dispute"
     :practice-area "litigation"
@@ -218,7 +239,8 @@
     :fee-type "hourly"
     :summary
       "Respond to supplier demand letter and preserve documents for threatened commercial litigation."})
-(seed Matter "matter:carter-estate"
+(seed Matter
+  "matter:carter-estate"
   {
     :title "Dana Carter Estate Plan"
     :practice-area "estate-planning"
@@ -233,21 +255,24 @@
 ;; ---------------------------------------------------------------------------
 ;; Engagement Letters
 ;; ---------------------------------------------------------------------------
-(seed EngagementLetter "letter:northstar"
+(seed EngagementLetter
+  "letter:northstar"
   {
     :engagementletter/status "sent"
     :engagementletter/sent-at 1712016000000
     :engagementletter/fee-type "retainer"
     :engagementletter/scope-summary
       "Outside general counsel setup and corporate housekeeping."})
-(seed EngagementLetter "letter:brightpath"
+(seed EngagementLetter
+  "letter:brightpath"
   {
     :engagementletter/status "signed"
     :engagementletter/sent-at 1706745600000
     :engagementletter/signed-at 1706832000000
     :engagementletter/fee-type "flat-fee"
     :engagementletter/scope-summary "Employment handbook refresh."})
-(seed EngagementLetter "letter:lakeside"
+(seed EngagementLetter
+  "letter:lakeside"
   {
     :engagementletter/status "signed"
     :engagementletter/sent-at 1710115200000
@@ -255,7 +280,8 @@
     :engagementletter/fee-type "hourly"
     :engagementletter/scope-summary
       "Commercial dispute response and document preservation."})
-(seed EngagementLetter "letter:carter"
+(seed EngagementLetter
+  "letter:carter"
   {
     :engagementletter/status "signed"
     :engagementletter/sent-at 1709510400000
@@ -266,7 +292,8 @@
 ;; ---------------------------------------------------------------------------
 ;; Case Tasks
 ;; ---------------------------------------------------------------------------
-(seed CaseTask "task:northstar-conflicts"
+(seed CaseTask
+  "task:northstar-conflicts"
   {
     :casetask/title "Finish Northstar conflict search"
     :casetask/type "conflicts"
@@ -276,7 +303,8 @@
     :casetask/assignee-role "intake-coordinator"
     :casetask/notes
       "Search founder, company, investor, and first three counterparties."})
-(seed CaseTask "task:northstar-letter"
+(seed CaseTask
+  "task:northstar-letter"
   {
     :casetask/title "Follow up on Northstar engagement letter"
     :casetask/type "engagement-letter"
@@ -284,8 +312,10 @@
     :casetask/status "in-progress"
     :casetask/due-date 1712361600000
     :casetask/assignee-role "intake-coordinator"
-    :casetask/notes "Founder asked for one scope clarification before signing."})
-(seed CaseTask "task:brightpath-policy"
+    :casetask/notes
+      "Founder asked for one scope clarification before signing."})
+(seed CaseTask
+  "task:brightpath-policy"
   {
     :casetask/title "Attorney review of handbook redline"
     :casetask/type "legal-review"
@@ -294,7 +324,8 @@
     :casetask/due-date 1712620800000
     :casetask/assignee-role "attorney"
     :casetask/notes "Review leave policy changes before client call."})
-(seed CaseTask "task:lakeside-preservation"
+(seed CaseTask
+  "task:lakeside-preservation"
   {
     :casetask/title "Issue litigation hold instructions"
     :casetask/type "deadline"
@@ -304,7 +335,8 @@
     :casetask/assignee-role "attorney"
     :casetask/notes
       "Demand letter alleges spoliation risk. Send hold instructions today."})
-(seed CaseTask "task:lakeside-demand"
+(seed CaseTask
+  "task:lakeside-demand"
   {
     :casetask/title "Draft demand-letter response"
     :casetask/type "drafting"
@@ -313,7 +345,8 @@
     :casetask/due-date 1710806400000
     :casetask/assignee-role "attorney"
     :casetask/notes "Response deadline is one week from receipt."})
-(seed CaseTask "task:carter-draft"
+(seed CaseTask
+  "task:carter-draft"
   {
     :casetask/title "Prepare Carter estate plan drafts"
     :casetask/type "drafting"
@@ -327,14 +360,16 @@
 ;; ---------------------------------------------------------------------------
 ;; Document Requests
 ;; ---------------------------------------------------------------------------
-(seed DocumentRequest "docreq:northstar-cap-table"
+(seed DocumentRequest
+  "docreq:northstar-cap-table"
   {
     :documentrequest/title "Current cap table and option plan"
     :documentrequest/status "requested"
     :documentrequest/due-date 1712361600000
     :documentrequest/requested-from "Maya Singh"
     :documentrequest/notes "Needed before financing-readiness review."})
-(seed DocumentRequest "docreq:brightpath-handbook"
+(seed DocumentRequest
+  "docreq:brightpath-handbook"
   {
     :documentrequest/title "Current employee handbook"
     :documentrequest/status "received"
@@ -342,14 +377,16 @@
     :documentrequest/received-at 1707264000000
     :documentrequest/requested-from "Owen Brooks"
     :documentrequest/notes "Uploaded PDF and editable source."})
-(seed DocumentRequest "docreq:lakeside-contracts"
+(seed DocumentRequest
+  "docreq:lakeside-contracts"
   {
     :documentrequest/title "Supplier agreement and correspondence"
     :documentrequest/status "overdue"
     :documentrequest/due-date 1710288000000
     :documentrequest/requested-from "Sofia Morales"
     :documentrequest/notes "Needed for demand-letter response and hold scope."})
-(seed DocumentRequest "docreq:carter-accounts"
+(seed DocumentRequest
+  "docreq:carter-accounts"
   {
     :documentrequest/title "Financial account list"
     :documentrequest/status "overdue"
@@ -360,7 +397,8 @@
 ;; ---------------------------------------------------------------------------
 ;; Invoices
 ;; ---------------------------------------------------------------------------
-(seed Invoice "invoice:brightpath-001"
+(seed Invoice
+  "invoice:brightpath-001"
   {
     :number "BP-2024-001"
     :status "draft"
@@ -368,7 +406,8 @@
     :issued-at 1712016000000
     :due-date 1714608000000
     :needs-review true})
-(seed Invoice "invoice:lakeside-001"
+(seed Invoice
+  "invoice:lakeside-001"
   {
     :number "LF-2024-001"
     :status "draft"
@@ -376,7 +415,8 @@
     :issued-at 1712016000000
     :due-date 1714608000000
     :needs-review true})
-(seed Invoice "invoice:carter-001"
+(seed Invoice
+  "invoice:carter-001"
   {
     :number "DC-2024-001"
     :status "sent"
@@ -389,13 +429,21 @@
 ;; Link Instances
 ;; ---------------------------------------------------------------------------
 ;; Attorney-client representation
-(link represents "atty:amelia" "client:northstar"
+(link represents
+  "atty:amelia"
+  "client:northstar"
   {:since 1711929600000 :role "prospective-lead"})
-(link represents "atty:amelia" "client:brightpath"
+(link represents
+  "atty:amelia"
+  "client:brightpath"
   {:since 1706745600000 :role "lead"})
-(link represents "atty:marco" "client:lakeside"
+(link represents
+  "atty:marco"
+  "client:lakeside"
   {:since 1710115200000 :role "lead"})
-(link represents "atty:amelia" "client:carter"
+(link represents
+  "atty:amelia"
+  "client:carter"
   {:since 1709510400000 :role "lead"})
 
 ;; Contacts at clients
@@ -438,19 +486,24 @@
 (link task-for-matter "task:northstar-conflicts" "matter:northstar-general" {})
 (link task-for-matter "task:northstar-letter" "matter:northstar-general" {})
 (link task-for-matter "task:brightpath-policy" "matter:brightpath-handbook" {})
-(link task-for-matter "task:lakeside-preservation" "matter:lakeside-litigation"
+(link task-for-matter
+  "task:lakeside-preservation"
+  "matter:lakeside-litigation"
   {})
 (link task-for-matter "task:lakeside-demand" "matter:lakeside-litigation" {})
 (link task-for-matter "task:carter-draft" "matter:carter-estate" {})
 
 ;; Document requests
-(link document-request-for "docreq:northstar-cap-table"
+(link document-request-for
+  "docreq:northstar-cap-table"
   "matter:northstar-general"
   {})
-(link document-request-for "docreq:brightpath-handbook"
+(link document-request-for
+  "docreq:brightpath-handbook"
   "matter:brightpath-handbook"
   {})
-(link document-request-for "docreq:lakeside-contracts"
+(link document-request-for
+  "docreq:lakeside-contracts"
   "matter:lakeside-litigation"
   {})
 (link document-request-for "docreq:carter-accounts" "matter:carter-estate" {})

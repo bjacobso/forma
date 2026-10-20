@@ -50,3 +50,5 @@ export function readModuleGraph(entryPath: string): ModuleGraph {
     fileModuleResolver,
   );
 }
+
+export { fileFormatOptions } from "./format/file.js";

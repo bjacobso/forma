@@ -1,2 +1,2 @@
-counter.lisp:12:28 error mechanics/type-mismatch
+counter.lisp:16:28 error mechanics/type-mismatch
   Expected Int, but this is "wrong".

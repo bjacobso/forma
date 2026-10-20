@@ -41,11 +41,16 @@ receives a record of the holes and returns a list of diagnostic records.
 (form (greeting name message {:keys [doc]})
   :types {:name (Declares Greeting) :message String :doc (Option String)}
   :ir GreetingIR
-  :check (fn [{:keys [message]}]
-    (if (= message "")
-      [{:severity :error :code "greeting/empty"
-        :message "Provide a greeting message." :slot :message}]
-      []))
+  :check
+    (fn [{:keys [message]}]
+      (if (= message "")
+        [
+          {
+            :severity :error
+            :code "greeting/empty"
+            :message "Provide a greeting message."
+            :slot :message}]
+        []))
   {:kind "Greeting" :name name :message message :doc doc})
 ```
 
@@ -57,8 +62,10 @@ An expression hole can introduce local bindings with `:scope`. Each entry maps
 a hole name to a function returning a record of names and quoted types:
 
 ```lisp
-:types {:where (Expr Bool)}
-:scope {:where (fn [holes] {:active (quote Bool)})}
+:types
+{:where (Expr Bool)}
+:scope
+{:where (fn [holes] {:active (quote Bool)})}
 ```
 
 Those bindings apply while checking `where`. The ontology query form uses this

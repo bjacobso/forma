@@ -6,20 +6,20 @@
       "severity": "error",
       "code": "mechanics/pure-service",
       "message": "Update cannot call CounterStore.get: functions and constants have no services in scope.",
-      "line": 16,
-      "column": 39,
-      "endLine": 16,
-      "endColumn": 57
+      "line": 21,
+      "column": 29,
+      "endLine": 21,
+      "endColumn": 47
     },
     {
       "phase": "typecheck",
       "severity": "error",
       "code": "mechanics/type-mismatch",
       "message": "Expected Int, but this is (Effect Int [CounterUnavailable] [CounterStore.get]).",
-      "line": 16,
-      "column": 39,
-      "endLine": 16,
-      "endColumn": 57
+      "line": 21,
+      "column": 29,
+      "endLine": 21,
+      "endColumn": 47
     }
   ]
 }

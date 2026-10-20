@@ -1,8 +1,7 @@
 # Queries
 
 ```lisp
-(export
-  onboarding-employees
+(export onboarding-employees
   active-employees
   active-placements
   profitable-placements
@@ -42,11 +41,9 @@
 (query profitable-placements
   :from Placement
   :where
-    (match
-      pay-rate
+    (match pay-rate
       (Some __pay_rate)
-      (match
-        bill-rate
+      (match bill-rate
         (Some __bill_rate)
         (and (= status "active") (> __bill_rate __pay_rate))
         None
@@ -69,11 +66,9 @@
 (query employer-review-tasks
   :from Task
   :where
-    (match
-      entity-type
+    (match entity-type
       (Some __entity_type)
-      (match
-        assigned-role
+      (match assigned-role
         (Some __assigned_role)
         (and
           (= __assigned_role "employer")
@@ -95,11 +90,9 @@
 (query employer-pending-tasks
   :from Task
   :where
-    (match
-      entity-type
+    (match entity-type
       (Some __entity_type)
-      (match
-        assigned-role
+      (match assigned-role
         (Some __assigned_role)
         (and
           (= __assigned_role "employer")
@@ -121,8 +114,7 @@
 (query open-runtime-tasks
   :from Task
   :where
-    (match
-      entity-type
+    (match entity-type
       (Some __entity_type)
       (and (= status "pending") (= __entity_type "Employee"))
       None

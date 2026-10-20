@@ -1,1 +1,3 @@
-'alpha `(list ~x ~@xs) {:name "Ada"}
+'alpha
+`(list ~x ~@xs)
+{:name "Ada"}

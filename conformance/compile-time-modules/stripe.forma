@@ -9,8 +9,13 @@
   "Declare an inspectable Stripe price."
   :types {:name (Declares PriceDecl) :label String :amount Int}
   :ir PriceIR
-  :check (fn [holes]
-    (if (< (get holes :amount) 0)
-      [{:severity "error" :slot "amount" :message "Price amount must be nonnegative"}]
-      []))
+  :check
+    (fn [holes]
+      (if (< (get holes :amount) 0)
+        [
+          {
+            :severity "error"
+            :slot "amount"
+            :message "Price amount must be nonnegative"}]
+        []))
   {:kind "Price" :name name :label (display-label label) :amount amount})

@@ -17,7 +17,8 @@ Secure deal room example in canonical ontology syntax.
 
 ```lisp
 (seed Room "room:series-b" {:name "Series B" :stage "due-diligence"})
-(seed Document "document:financials"
+(seed Document
+  "document:financials"
   {
     :title "FY25 Financials"
     :classification "confidential"

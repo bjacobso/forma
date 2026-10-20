@@ -51,17 +51,19 @@ Basic identifying information and filing status. The filing status affects the s
 This step applies if the employee holds more than one job at a time, or is married filing jointly and their spouse also works. Completing this step ensures more accurate withholding across multiple income sources.
 
 ```lisp
-  ;; Step 2: Multiple Jobs or Spouse Works
-  (form-page
-    (section-id "multiple-jobs")
-    (assignee employee)
-    (page-description "Multiple Jobs or Spouse Works")
+;; Step 2: Multiple Jobs or Spouse Works
+(form-page (section-id "multiple-jobs")
+  (assignee employee)
+  (page-description "Multiple Jobs or Spouse Works")
 
-    (form-field :content :w4.step2_intro
-      (content "## Step 2: Multiple Jobs or Spouse Works\n\nComplete this step if you:\n- Hold more than one job at a time, **OR**\n- Are married filing jointly and your spouse also works"))
+  (form-field
+    :content :w4.step2_intro
+    (content
+      "## Step 2: Multiple Jobs or Spouse Works\n\nComplete this step if you:\n- Hold more than one job at a time, **OR**\n- Are married filing jointly and your spouse also works"))
 
-    (form-field :boolean :w4.multiple_jobs_checkbox
-      (label "Multiple jobs checkbox")))
+  (form-field
+    :boolean :w4.multiple_jobs_checkbox
+    (label "Multiple jobs checkbox")))
 ```
 
 ## Step 3: Claim Dependents
@@ -69,21 +71,23 @@ This step applies if the employee holds more than one job at a time, or is marri
 Employees with qualifying dependents can reduce their withholding. The child tax credit is $2,000 per qualifying child under age 17, and $500 per other dependent. This step is only available if total income is $200,000 or less ($400,000 for married filing jointly).
 
 ```lisp
-  ;; Step 3: Claim Dependents
-  (form-page
-    (section-id "claim-dependents")
-    (assignee employee)
-    (page-description "Claim Dependents")
+;; Step 3: Claim Dependents
+(form-page (section-id "claim-dependents")
+  (assignee employee)
+  (page-description "Claim Dependents")
 
-    (form-field :content :w4.step3_intro
-      (content "## Step 3: Claim Dependents\n\nIf your total income will be $200,000 or less ($400,000 or less if married filing jointly), you may claim dependents."))
+  (form-field
+    :content :w4.step3_intro
+    (content
+      "## Step 3: Claim Dependents\n\nIf your total income will be $200,000 or less ($400,000 or less if married filing jointly), you may claim dependents."))
 
-    (form-field :text :w4.qualifying_children
-      (label "Number of qualifying children under age 17"))
-    (form-field :text :w4.other_dependents
-      (label "Number of other dependents"))
-    (form-field :text :w4.total_dependents_credit
-      (label "Total amount for dependents")))
+  (form-field
+    :text :w4.qualifying_children
+    (label "Number of qualifying children under age 17"))
+  (form-field :text :w4.other_dependents (label "Number of other dependents"))
+  (form-field
+    :text :w4.total_dependents_credit
+    (label "Total amount for dependents")))
 ```
 
 ## Step 4: Other Adjustments (Optional)
@@ -91,21 +95,21 @@ Employees with qualifying dependents can reduce their withholding. The child tax
 Fine-tune withholding for non-job income (interest, dividends, retirement distributions), additional deductions beyond the standard deduction, or extra withholding per pay period.
 
 ```lisp
-  ;; Step 4: Other Adjustments
-  (form-page
-    (section-id "other-adjustments")
-    (assignee employee)
-    (page-description "Other Adjustments")
+;; Step 4: Other Adjustments
+(form-page (section-id "other-adjustments")
+  (assignee employee)
+  (page-description "Other Adjustments")
 
-    (form-field :content :w4.step4_intro
-      (content "## Step 4: Other Adjustments (Optional)\n\nUse this section for more accurate withholding or if you prefer to have more or less tax withheld."))
+  (form-field
+    :content :w4.step4_intro
+    (content
+      "## Step 4: Other Adjustments (Optional)\n\nUse this section for more accurate withholding or if you prefer to have more or less tax withheld."))
 
-    (form-field :text :w4.other_income
-      (label "Other income"))
-    (form-field :text :w4.deductions
-      (label "Deductions"))
-    (form-field :text :w4.extra_withholding
-      (label "Extra withholding per pay period")))
+  (form-field :text :w4.other_income (label "Other income"))
+  (form-field :text :w4.deductions (label "Deductions"))
+  (form-field
+    :text :w4.extra_withholding
+    (label "Extra withholding per pay period")))
 ```
 
 ## Step 5: Sign Here
@@ -130,7 +134,8 @@ The employee's signature under penalty of perjury certifies that the information
 ## Locale: English
 
 ```lisp
-(define-document-locale "W-4 Federal Tax Withholding" en
+(define-document-locale "W-4 Federal Tax Withholding"
+  en
   (role "employee" (label "Employee"))
   (section "personal-information" (label "Personal Information"))
   (section "multiple-jobs" (label "Multiple Jobs or Spouse Works"))
@@ -143,12 +148,12 @@ The employee's signature under penalty of perjury certifies that the information
   (field ":w4.address" (label "Home Address (number, street, apt. no.)"))
   (field ":w4.filing_status"
     (label "Filing Status")
-    (options
-      (option "single" "Single or Married filing separately")
+    (options (option "single" "Single or Married filing separately")
       (option "married" "Married filing jointly or Qualifying surviving spouse")
       (option "head_of_household" "Head of household")))
   (field ":w4.multiple_jobs_checkbox"
-    (label "Check here if: You hold more than one job, OR you are married filing jointly and your spouse also works")
+    (label
+      "Check here if: You hold more than one job, OR you are married filing jointly and your spouse also works")
     (description "Only check this box if there are only two jobs total."))
   (field ":w4.qualifying_children"
     (label "Number of qualifying children under age 17")
@@ -170,7 +175,10 @@ The employee's signature under penalty of perjury certifies that the information
     (description "Any additional tax you want withheld each pay period"))
   (field ":w4.signature"
     (label "Employee Signature")
-    (description "Under penalties of perjury, I declare that this certificate is complete and correct")))
+    (description
+      "Under penalties of perjury, I declare that this certificate is complete and correct")))
 
-(define-document-localized "W-4 Federal Tax Withholding" (locales en) (default-locale en))
+(define-document-localized "W-4 Federal Tax Withholding"
+  (locales en)
+  (default-locale en))
 ```

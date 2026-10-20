@@ -24,6 +24,7 @@ export const Message = defineMessageUnion({
   FailedEdit: { token: S.Number, reason: S.String },
   AcceptProposal: {},
   DiscardProposal: {},
+  FormatSource: {},
   SetPane: { pane: S.Literals(["outline", "source"]) },
   GotSourceMessage: { message: CodeEditor.Message },
   ReadSource: {

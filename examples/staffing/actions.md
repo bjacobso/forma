@@ -1,8 +1,7 @@
 # Actions
 
 ```lisp
-(export
-  hire-employee
+(export hire-employee
   hire-existing-employee
   generate-onboarding-tasks
   start-i9
@@ -29,25 +28,19 @@
 ;; language. These examples also exercise HM checking over actual (do ...)
 ;; blocks, not just single expressions.
 ;;
-(:
-  hire-employee
-  (->
-    Employer
+(: hire-employee
+  (-> Employer
     {:firstName String :lastName String :email (Option String)}
     Float
     (Action Bool)))
-(define
-  hire-employee
+(define hire-employee
   [employer input timestamp]
-  (do!
-    []
+  (do! []
     (do!
       [
-        :let
-        [hire-date timestamp]
+        :let [hire-date timestamp]
         emp-id
-        (create!
-          Employee
+        (create! Employee
           {
             :first-name (get input :firstName)
             :last-name (get input :lastName)
@@ -55,43 +48,35 @@
             :status "onboarding"
             :hire-date hire-date})
         plc-id
-        (create!
-          Placement
+        (create! Placement
           {
             :employee emp-id
             :employer employer.id
             :status "active"
             :start-date hire-date})
         link-id
-        (link!
-          works-at
+        (link! works-at
           emp-id
           employer.id
           {:start-date hire-date :status "active"})]
       true)))
 (: hire-existing-employee (-> Employer Employee Float (Action Bool)))
-(define
-  hire-existing-employee
+(define hire-existing-employee
   [employer employee timestamp]
-  (do!
-    []
+  (do! []
     (do!
       [
-        :let
-        [hire-date timestamp]
-        :let
-        [employee-id employee.id]
+        :let [hire-date timestamp]
+        :let [employee-id employee.id]
         plc-id
-        (create!
-          Placement
+        (create! Placement
           {
             :employee employee-id
             :employer employer.id
             :status "active"
             :start-date hire-date})
         link-id
-        (link!
-          works-at
+        (link! works-at
           employee-id
           employer.id
           {:start-date hire-date :status "active"})]
@@ -103,8 +88,7 @@
           (update! Employee employee.id {:hire-date hire-date})]
         true))))
 (: generate-onboarding-tasks (-> Employee Employer (Action Bool)))
-(define
-  generate-onboarding-tasks
+(define generate-onboarding-tasks
   [employee employer]
   (do!
     [
@@ -116,18 +100,15 @@
       (= (get employee :status) "onboarding")
       (= (get employer :status) "active"))))
 (: start-i9 (-> Employee (Action Bool)))
-(define
-  start-i9
+(define start-i9
   [employee]
-  (do!
-    []
+  (do! []
     (do!
       [
         instance-id
         (instantiate! i-9-employment-eligibility Employee employee.id)
         task-id
-        (task!
-          Employee
+        (task! Employee
           {
             :title "I-9 Section 1 — Employee Information"
             :type "data-entry"
@@ -140,39 +121,32 @@
             :assignee-role "employee"})]
       true)))
 (: create-bgc-task (-> Employee (Action Bool)))
-(define
-  create-bgc-task
+(define create-bgc-task
   [employee]
   (do! [_ (emit! "create-bgc-task")] (= (get employee :status) "onboarding")))
 (: complete-onboarding (-> Employee (Action Bool)))
-(define
-  complete-onboarding
+(define complete-onboarding
   [employee]
   (do! [_ (update! Employee employee.id {:status "active"})] true))
 (: collect-form (-> Employee (Action Bool)))
 (define collect-form [employee] (do! [_ (emit! "collect-form")] true))
 (: evaluate-condition (-> Employee (Action Bool)))
-(define
-  evaluate-condition
+(define evaluate-condition
   [employee]
   (do! [_ (emit! "evaluate-condition")] (= (get employee :status) "active")))
 (: send-notification (-> Employee (Action Bool)))
 (define send-notification [employee] (do! [_ (emit! "send-notification")] true))
 (: generate-i9-pdf (-> Employee (Action Bool)))
 (define generate-i9-pdf [employee] (do! [_ (emit! "generate-i9-pdf")] true))
-(:
-  start-i9-section-2
+(: start-i9-section-2
   (-> Employee {:__documentInstanceId String} (Action Bool)))
-(define
-  start-i9-section-2
+(define start-i9-section-2
   [employee input]
-  (do!
-    []
+  (do! []
     (do!
       [
         task-id
-        (task!
-          Employee
+        (task! Employee
           {
             :title "I-9 Section 2 — Employer Review"
             :type "data-entry"
@@ -189,25 +163,21 @@
 (: complete-bgc-task (-> Employee (Action Bool)))
 (define complete-bgc-task [employee] (do! [_ (emit! "complete-bgc-task")] true))
 (: complete-direct-deposit-task (-> Employee (Action Bool)))
-(define
-  complete-direct-deposit-task
+(define complete-direct-deposit-task
   [employee]
   (do! [_ (emit! "complete-direct-deposit-task")] true))
 (: complete-handbook-task (-> Employee (Action Bool)))
-(define
-  complete-handbook-task
+(define complete-handbook-task
   [employee]
   (do! [_ (emit! "complete-handbook-task")] true))
 (: complete-state-tax-task (-> Employee (Action Bool)))
-(define
-  complete-state-tax-task
+(define complete-state-tax-task
   [employee]
   (do! [_ (emit! "complete-state-tax-task")] true))
 (: complete-idv-task (-> Employee (Action Bool)))
 (define complete-idv-task [employee] (do! [_ (emit! "complete-idv-task")] true))
 (: mark-compliant (-> Employee (Action Bool)))
-(define
-  mark-compliant
+(define mark-compliant
   [employee]
   (do! [_ (update! Employee employee.id {:status "active"})] true))
 ```

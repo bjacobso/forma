@@ -1,3 +1,4 @@
+import { TextDocument } from "vscode-languageserver-textdocument";
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,9 +17,11 @@ class Client {
   #nextId = 1;
 
   constructor() {
+    const env: NodeJS.ProcessEnv = { ...process.env, FORMA_LANGUAGE_SERVER_PRELUDES: "none" };
+    delete env["FORMA_LANGUAGE_SERVER_ENABLE_FORMATTING"];
     this.#process = spawn(process.execPath, ["--import", "tsx", "src/server.ts", "--stdio"], {
       cwd: packageRoot,
-      env: { ...process.env, FORMA_LANGUAGE_SERVER_PRELUDES: "none" },
+      env,
     });
     this.#process.stdout.on("data", (chunk: Buffer) => this.#receive(chunk));
   }
@@ -87,6 +90,8 @@ describe("forma-language-server over stdio", () => {
     });
     expect(initialized["result"]).toMatchObject({
       capabilities: {
+        documentFormattingProvider: true,
+        documentRangeFormattingProvider: true,
         hoverProvider: true,
         definitionProvider: true,
         referencesProvider: true,
@@ -149,4 +154,14 @@ describe("forma-language-server over stdio", () => {
     };
     expect(published.diagnostics).toEqual([]);
   }, 30_000);
+  test("formats Markdown ranges over stdio without analyzing prose as Lisp", async () => {
+    const uri = "file:///workspace/format.md", source = "Prose  \n```lisp\n(a   b)\n(c   d)\n```\n";
+    client.notify("textDocument/didOpen", { textDocument: { uri, languageId: "markdown", version: 1, text: source } });
+    expect(await client.notification("textDocument/publishDiagnostics")).toMatchObject({ uri, diagnostics: [] });
+    const doc = TextDocument.create(uri, "markdown", 1, source), start = doc.positionAt(source.indexOf("b)"));
+    const response = await client.request("textDocument/rangeFormatting", { textDocument: { uri }, range: { start, end: { ...start, character: start.character + 1 } }, options: { tabSize: 8, insertSpaces: false } });
+    expect(response["error"]).toBeUndefined();
+    expect(TextDocument.applyEdits(doc, response["result"] as Parameters<typeof TextDocument.applyEdits>[1])).toBe(source.replace("(a   b)", "(a b)"));
+  }, 30_000);
+
 });

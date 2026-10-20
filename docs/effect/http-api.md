@@ -16,15 +16,17 @@ which has an older `api` form for portable HTTP descriptions.
 (error UserNotFound {:id UserId} :status 404)
 (service UserRepo (: find (-> UserId (Effect User [UserNotFound]))))
 
-(: lookup (-> {:params {:id UserId}}
-              (Effect User [UserNotFound] [UserRepo.find])))
-(define lookup [request]
-  (do! [user (UserRepo.find request.params.id)] user))
+(: lookup
+  (-> {:params {:id UserId}} (Effect User [UserNotFound] [UserRepo.find])))
+(define lookup [request] (do! [user (UserRepo.find request.params.id)] user))
 
 (api Shop
   (group users
-    (endpoint get-user :get "/users/:id"
-      :params {:id UserId} :success User :errors [UserNotFound])))
+    (endpoint get-user
+      :get "/users/:id"
+      :params {:id UserId}
+      :success User
+      :errors [UserNotFound])))
 (handle Shop users (handler get-user lookup))
 ```
 

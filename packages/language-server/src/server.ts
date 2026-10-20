@@ -5,6 +5,7 @@ import {
   TextDocuments,
   TextDocumentSyncKind,
   type InitializeParams,
+  type DocumentRangeFormattingParams,
   type InitializeResult,
 } from "vscode-languageserver/node.js";
 import { TextDocument } from "vscode-languageserver-textdocument";
@@ -19,14 +20,14 @@ import { getReferences } from "./handlers/references.js";
 import { prepareRename, rename } from "./handlers/rename.js";
 import { getSemanticTokens, semanticTokensLegend } from "./handlers/semantic-tokens.js";
 import { getDocumentSymbols } from "./handlers/symbols.js";
-import { FormaWorkspace } from "./workspace.js";
+import { FormaWorkspace, isMarkdownDocument } from "./workspace.js";
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
 
 let workspace: FormaWorkspace | undefined;
 const formattingEnabled = ["1", "true"].includes(
-  process.env["FORMA_LANGUAGE_SERVER_ENABLE_FORMATTING"] ?? "",
+  process.env["FORMA_LANGUAGE_SERVER_ENABLE_FORMATTING"] ?? "1",
 );
 
 connection.onInitialize((params: InitializeParams): InitializeResult => {
@@ -35,6 +36,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
     params.rootUri ??
     (params.rootPath ? `file://${params.rootPath}` : undefined);
   workspace = new FormaWorkspace({
+    onFormattingDiagnostic: (uri, diagnostic) => connection.console.warn(`${uri}: ${diagnostic.code}: ${diagnostic.message}`),
     workspaceRoot: root?.startsWith("file:") ? fileURLToPath(root) : process.cwd(),
   });
 
@@ -52,6 +54,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
       documentSymbolProvider: true,
       semanticTokensProvider: { legend: semanticTokensLegend, full: true },
       documentFormattingProvider: formattingEnabled,
+      documentRangeFormattingProvider: formattingEnabled,
     },
   };
 });
@@ -74,10 +77,11 @@ documents.onDidClose(async (event) => {
 function handle<P extends { textDocument: { uri: string } }, R>(
   fallback: R,
   run: (workspace: FormaWorkspace, document: TextDocument, params: P) => R,
+  markdown = false,
 ): (params: P) => Promise<R> {
   return async (params) => {
     const document = documents.get(params.textDocument.uri);
-    if (!workspace || !document) return fallback;
+    if (!workspace || !document || isMarkdownDocument(document) && !markdown) return fallback;
     await workspace.update(document);
     return run(workspace, document, params);
   };
@@ -94,12 +98,17 @@ connection.languages.semanticTokens.on(
   handle({ data: [] }, (workspace, document) => getSemanticTokens(workspace, document)),
 );
 connection.onDocumentFormatting(
-  handle([], (workspace, document) => (formattingEnabled ? formatDocument(workspace, document) : [])),
+  handle([], (workspace, document) => (formattingEnabled ? formatDocument(workspace, document) : []), true),
+);
+
+connection.onDocumentRangeFormatting(
+  handle([], (workspace, document, params: DocumentRangeFormattingParams) => formattingEnabled ? formatDocument(workspace, document, params.range) : [], true),
 );
 
 function publish(changed: readonly TextDocument[]): void {
   for (const document of changed) {
     if (!workspace || !documents.get(document.uri)) continue;
+    if (isMarkdownDocument(document)) { connection.sendDiagnostics({ uri: document.uri, diagnostics: [] }); continue; }
     try {
       connection.sendDiagnostics(getDiagnostics(workspace, document));
     } catch (error) {

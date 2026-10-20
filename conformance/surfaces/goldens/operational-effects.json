@@ -16,17 +16,17 @@
               "kind": "Effect",
               "requirements": [],
               "span": {
-                "endOffset": 190,
+                "endOffset": 188,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 153
+                "startOffset": 151
               },
               "success": {
                 "kind": "Primitive",
                 "name": "Unit",
                 "span": {
-                  "endOffset": 165,
+                  "endOffset": 163,
                   "sourceId": "surfaces/operational-effects",
-                  "startOffset": 161
+                  "startOffset": 159
                 }
               }
             },
@@ -43,40 +43,40 @@
                         "name": ":message"
                       },
                       "span": {
-                        "endOffset": 260,
+                        "endOffset": 256,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 252
+                        "startOffset": 248
                       }
                     },
                     "value": {
                       "kind": "Var",
                       "name": "message",
                       "span": {
-                        "endOffset": 268,
+                        "endOffset": 264,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 261
+                        "startOffset": 257
                       }
                     }
                   }
                 ],
                 "kind": "Record",
                 "span": {
-                  "endOffset": 269,
+                  "endOffset": 265,
                   "sourceId": "surfaces/operational-effects",
-                  "startOffset": 251
+                  "startOffset": 247
                 }
               },
               "span": {
-                "endOffset": 270,
+                "endOffset": 266,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 231
+                "startOffset": 227
               }
             },
             "kind": "Fail",
             "span": {
-              "endOffset": 271,
+              "endOffset": 267,
               "sourceId": "surfaces/operational-effects",
-              "startOffset": 225
+              "startOffset": 221
             }
           },
           "effect": {
@@ -86,17 +86,17 @@
             "kind": "Effect",
             "requirements": [],
             "span": {
-              "endOffset": 190,
+              "endOffset": 188,
               "sourceId": "surfaces/operational-effects",
-              "startOffset": 153
+              "startOffset": 151
             },
             "success": {
               "kind": "Primitive",
               "name": "Unit",
               "span": {
-                "endOffset": 165,
+                "endOffset": 163,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 161
+                "startOffset": 159
               }
             }
           },
@@ -109,9 +109,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 152,
+                  "endOffset": 150,
                   "sourceId": "surfaces/operational-effects",
-                  "startOffset": 146
+                  "startOffset": 144
                 }
               }
             }
@@ -119,9 +119,9 @@
         },
         "sourceId": "surfaces/operational-effects",
         "span": {
-          "endOffset": 272,
+          "endOffset": 268,
           "sourceId": "surfaces/operational-effects",
-          "startOffset": 193
+          "startOffset": 191
         }
       },
       {
@@ -137,9 +137,9 @@
               {
                 "name": "_",
                 "span": {
-                  "endOffset": 557,
+                  "endOffset": 541,
                   "sourceId": "surfaces/operational-effects",
-                  "startOffset": 534
+                  "startOffset": 518
                 },
                 "value": {
                   "args": [
@@ -147,9 +147,9 @@
                       "kind": "Var",
                       "name": "message",
                       "span": {
-                        "endOffset": 556,
+                        "endOffset": 540,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 549
+                        "startOffset": 533
                       }
                     }
                   ],
@@ -162,17 +162,17 @@
                       "Console.print"
                     ],
                     "span": {
-                      "endOffset": 122,
+                      "endOffset": 120,
                       "sourceId": "surfaces/operational-effects",
-                      "startOffset": 85
+                      "startOffset": 83
                     },
                     "success": {
                       "kind": "Primitive",
                       "name": "Unit",
                       "span": {
-                        "endOffset": 97,
+                        "endOffset": 95,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 93
+                        "startOffset": 91
                       }
                     }
                   },
@@ -180,9 +180,9 @@
                   "method": "print",
                   "service": "Console",
                   "span": {
-                    "endOffset": 557,
+                    "endOffset": 541,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 534
+                    "startOffset": 518
                   }
                 }
               }
@@ -197,33 +197,33 @@
                   "Console.print"
                 ],
                 "span": {
-                  "endOffset": 499,
+                  "endOffset": 485,
                   "sourceId": "surfaces/operational-effects",
-                  "startOffset": 449
+                  "startOffset": 435
                 },
                 "success": {
                   "kind": "Primitive",
                   "name": "Unit",
                   "span": {
-                    "endOffset": 461,
+                    "endOffset": 447,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 457
+                    "startOffset": 443
                   }
                 }
               },
               "kind": "Succeed",
               "span": {
-                "endOffset": 576,
+                "endOffset": 556,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 563
+                "startOffset": 543
               },
               "value": {
                 "kind": "Var",
                 "name": "nil",
                 "span": {
-                  "endOffset": 575,
+                  "endOffset": 555,
                   "sourceId": "surfaces/operational-effects",
-                  "startOffset": 572
+                  "startOffset": 552
                 }
               }
             },
@@ -236,25 +236,25 @@
                 "Console.print"
               ],
               "span": {
-                "endOffset": 499,
+                "endOffset": 485,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 449
+                "startOffset": 435
               },
               "success": {
                 "kind": "Primitive",
                 "name": "Unit",
                 "span": {
-                  "endOffset": 461,
+                  "endOffset": 447,
                   "sourceId": "surfaces/operational-effects",
-                  "startOffset": 457
+                  "startOffset": 443
                 }
               }
             },
             "kind": "Do",
             "span": {
-              "endOffset": 577,
+              "endOffset": 557,
               "sourceId": "surfaces/operational-effects",
-              "startOffset": 526
+              "startOffset": 510
             }
           },
           "effect": {
@@ -266,17 +266,17 @@
               "Console.print"
             ],
             "span": {
-              "endOffset": 499,
+              "endOffset": 485,
               "sourceId": "surfaces/operational-effects",
-              "startOffset": 449
+              "startOffset": 435
             },
             "success": {
               "kind": "Primitive",
               "name": "Unit",
               "span": {
-                "endOffset": 461,
+                "endOffset": 447,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 457
+                "startOffset": 443
               }
             }
           },
@@ -289,9 +289,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 448,
+                  "endOffset": 434,
                   "sourceId": "surfaces/operational-effects",
-                  "startOffset": 442
+                  "startOffset": 428
                 }
               }
             }
@@ -299,9 +299,9 @@
         },
         "sourceId": "surfaces/operational-effects",
         "span": {
-          "endOffset": 578,
+          "endOffset": 558,
           "sourceId": "surfaces/operational-effects",
-          "startOffset": 502
+          "startOffset": 488
         }
       },
       {
@@ -318,9 +318,9 @@
                   "kind": "Var",
                   "name": "message",
                   "span": {
-                    "endOffset": 377,
+                    "endOffset": 371,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 370
+                    "startOffset": 364
                   }
                 }
               ],
@@ -331,26 +331,26 @@
                 "kind": "Effect",
                 "requirements": [],
                 "span": {
-                  "endOffset": 190,
+                  "endOffset": 188,
                   "sourceId": "surfaces/operational-effects",
-                  "startOffset": 153
+                  "startOffset": 151
                 },
                 "success": {
                   "kind": "Primitive",
                   "name": "Unit",
                   "span": {
-                    "endOffset": 165,
+                    "endOffset": 163,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 161
+                    "startOffset": 159
                   }
                 }
               },
               "kind": "OperationCall",
               "operation": "always-fail",
               "span": {
-                "endOffset": 378,
+                "endOffset": 372,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 357
+                "startOffset": 351
               }
             },
             "effect": {
@@ -358,17 +358,17 @@
               "kind": "Effect",
               "requirements": [],
               "span": {
-                "endOffset": 315,
+                "endOffset": 311,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 296
+                "startOffset": 292
               },
               "success": {
                 "kind": "Primitive",
                 "name": "Unit",
                 "span": {
-                  "endOffset": 308,
+                  "endOffset": 304,
                   "sourceId": "surfaces/operational-effects",
-                  "startOffset": 304
+                  "startOffset": 300
                 }
               }
             },
@@ -379,41 +379,41 @@
                 "kind": "Effect",
                 "requirements": [],
                 "span": {
-                  "endOffset": 315,
+                  "endOffset": 311,
                   "sourceId": "surfaces/operational-effects",
-                  "startOffset": 296
+                  "startOffset": 292
                 },
                 "success": {
                   "kind": "Primitive",
                   "name": "Unit",
                   "span": {
-                    "endOffset": 308,
+                    "endOffset": 304,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 304
+                    "startOffset": 300
                   }
                 }
               },
               "kind": "Succeed",
               "span": {
-                "endOffset": 427,
+                "endOffset": 413,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 414
+                "startOffset": 400
               },
               "value": {
                 "kind": "Var",
                 "name": "nil",
                 "span": {
-                  "endOffset": 426,
+                  "endOffset": 412,
                   "sourceId": "surfaces/operational-effects",
-                  "startOffset": 423
+                  "startOffset": 409
                 }
               }
             },
             "kind": "Catch",
             "span": {
-              "endOffset": 428,
+              "endOffset": 414,
               "sourceId": "surfaces/operational-effects",
-              "startOffset": 346
+              "startOffset": 344
             }
           },
           "effect": {
@@ -421,17 +421,17 @@
             "kind": "Effect",
             "requirements": [],
             "span": {
-              "endOffset": 315,
+              "endOffset": 311,
               "sourceId": "surfaces/operational-effects",
-              "startOffset": 296
+              "startOffset": 292
             },
             "success": {
               "kind": "Primitive",
               "name": "Unit",
               "span": {
-                "endOffset": 308,
+                "endOffset": 304,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 304
+                "startOffset": 300
               }
             }
           },
@@ -444,9 +444,9 @@
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 295,
+                  "endOffset": 291,
                   "sourceId": "surfaces/operational-effects",
-                  "startOffset": 289
+                  "startOffset": 285
                 }
               }
             }
@@ -454,9 +454,9 @@
         },
         "sourceId": "surfaces/operational-effects",
         "span": {
-          "endOffset": 429,
+          "endOffset": 415,
           "sourceId": "surfaces/operational-effects",
-          "startOffset": 318
+          "startOffset": 314
         }
       },
       {
@@ -509,17 +509,17 @@
                   "Console.print"
                 ],
                 "span": {
-                  "endOffset": 122,
+                  "endOffset": 120,
                   "sourceId": "surfaces/operational-effects",
-                  "startOffset": 85
+                  "startOffset": 83
                 },
                 "success": {
                   "kind": "Primitive",
                   "name": "Unit",
                   "span": {
-                    "endOffset": 97,
+                    "endOffset": 95,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 93
+                    "startOffset": 91
                   }
                 }
               },
@@ -531,9 +531,9 @@
                     "kind": "Primitive",
                     "name": "String",
                     "span": {
-                      "endOffset": 84,
+                      "endOffset": 82,
                       "sourceId": "surfaces/operational-effects",
-                      "startOffset": 78
+                      "startOffset": 76
                     }
                   }
                 }
@@ -544,7 +544,7 @@
         },
         "sourceId": "surfaces/operational-effects",
         "span": {
-          "endOffset": 125,
+          "endOffset": 123,
           "sourceId": "surfaces/operational-effects",
           "startOffset": 46
         }
@@ -635,18 +635,18 @@
                 {
                   "kind": "keyword",
                   "span": {
-                    "endOffset": 67,
+                    "endOffset": 65,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 66
+                    "startOffset": 64
                   },
                   "value": ":"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 73,
+                    "endOffset": 71,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 68
+                    "startOffset": 66
                   },
                   "value": "print"
                 },
@@ -655,18 +655,18 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 77,
+                        "endOffset": 75,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 75
+                        "startOffset": 73
                       },
                       "value": "->"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 84,
+                        "endOffset": 82,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 78
+                        "startOffset": 76
                       },
                       "value": "String"
                     },
@@ -675,18 +675,18 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 92,
+                            "endOffset": 90,
                             "sourceId": "surfaces/operational-effects",
-                            "startOffset": 86
+                            "startOffset": 84
                           },
                           "value": "Effect"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 97,
+                            "endOffset": 95,
                             "sourceId": "surfaces/operational-effects",
-                            "startOffset": 93
+                            "startOffset": 91
                           },
                           "value": "Unit"
                         },
@@ -695,57 +695,57 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 117,
+                                "endOffset": 115,
                                 "sourceId": "surfaces/operational-effects",
-                                "startOffset": 99
+                                "startOffset": 97
                               },
                               "value": "ConsoleUnavailable"
                             }
                           ],
                           "kind": "vector",
                           "span": {
-                            "endOffset": 118,
+                            "endOffset": 116,
                             "sourceId": "surfaces/operational-effects",
-                            "startOffset": 98
+                            "startOffset": 96
                           }
                         },
                         {
                           "items": [],
                           "kind": "vector",
                           "span": {
-                            "endOffset": 121,
+                            "endOffset": 119,
                             "sourceId": "surfaces/operational-effects",
-                            "startOffset": 119
+                            "startOffset": 117
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 122,
+                        "endOffset": 120,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 85
+                        "startOffset": 83
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 123,
+                    "endOffset": 121,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 74
+                    "startOffset": 72
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 124,
+                "endOffset": 122,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 65
+                "startOffset": 63
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 125,
+            "endOffset": 123,
             "sourceId": "surfaces/operational-effects",
             "startOffset": 46
           }
@@ -755,18 +755,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 129,
+                "endOffset": 127,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 128
+                "startOffset": 126
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 141,
+                "endOffset": 139,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 130
+                "startOffset": 128
               },
               "value": "always-fail"
             },
@@ -775,18 +775,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 145,
+                    "endOffset": 143,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 143
+                    "startOffset": 141
                   },
                   "value": "->"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 152,
+                    "endOffset": 150,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 146
+                    "startOffset": 144
                   },
                   "value": "String"
                 },
@@ -795,18 +795,18 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 160,
+                        "endOffset": 158,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 154
+                        "startOffset": 152
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 165,
+                        "endOffset": 163,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 161
+                        "startOffset": 159
                       },
                       "value": "Unit"
                     },
@@ -815,51 +815,51 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 185,
+                            "endOffset": 183,
                             "sourceId": "surfaces/operational-effects",
-                            "startOffset": 167
+                            "startOffset": 165
                           },
                           "value": "ConsoleUnavailable"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 186,
+                        "endOffset": 184,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 166
+                        "startOffset": 164
                       }
                     },
                     {
                       "items": [],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 189,
+                        "endOffset": 187,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 187
+                        "startOffset": 185
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 190,
+                    "endOffset": 188,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 153
+                    "startOffset": 151
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 191,
+                "endOffset": 189,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 142
+                "startOffset": 140
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 192,
+            "endOffset": 190,
             "sourceId": "surfaces/operational-effects",
-            "startOffset": 127
+            "startOffset": 125
           }
         },
         {
@@ -867,18 +867,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 200,
+                "endOffset": 198,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 194
+                "startOffset": 192
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 212,
+                "endOffset": 210,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 201
+                "startOffset": 199
               },
               "value": "always-fail"
             },
@@ -887,18 +887,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 221,
+                    "endOffset": 219,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 214
+                    "startOffset": 212
                   },
                   "value": "message"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 222,
+                "endOffset": 220,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 213
+                "startOffset": 211
               }
             },
             {
@@ -906,9 +906,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 230,
+                    "endOffset": 226,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 226
+                    "startOffset": 222
                   },
                   "value": "fail"
                 },
@@ -917,9 +917,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 250,
+                        "endOffset": 246,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 232
+                        "startOffset": 228
                       },
                       "value": "ConsoleUnavailable"
                     },
@@ -929,18 +929,18 @@
                           "key": {
                             "kind": "keyword",
                             "span": {
-                              "endOffset": 260,
+                              "endOffset": 256,
                               "sourceId": "surfaces/operational-effects",
-                              "startOffset": 252
+                              "startOffset": 248
                             },
                             "value": ":message"
                           },
                           "value": {
                             "kind": "symbol",
                             "span": {
-                              "endOffset": 268,
+                              "endOffset": 264,
                               "sourceId": "surfaces/operational-effects",
-                              "startOffset": 261
+                              "startOffset": 257
                             },
                             "value": "message"
                           }
@@ -948,33 +948,33 @@
                       ],
                       "kind": "map",
                       "span": {
-                        "endOffset": 269,
+                        "endOffset": 265,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 251
+                        "startOffset": 247
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 270,
+                    "endOffset": 266,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 231
+                    "startOffset": 227
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 271,
+                "endOffset": 267,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 225
+                "startOffset": 221
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 272,
+            "endOffset": 268,
             "sourceId": "surfaces/operational-effects",
-            "startOffset": 193
+            "startOffset": 191
           }
         },
         {
@@ -982,18 +982,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 276,
+                "endOffset": 272,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 275
+                "startOffset": 271
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 284,
+                "endOffset": 280,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 277
+                "startOffset": 273
               },
               "value": "recover"
             },
@@ -1002,18 +1002,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 288,
+                    "endOffset": 284,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 286
+                    "startOffset": 282
                   },
                   "value": "->"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 295,
+                    "endOffset": 291,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 289
+                    "startOffset": 285
                   },
                   "value": "String"
                 },
@@ -1022,18 +1022,18 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 303,
+                        "endOffset": 299,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 297
+                        "startOffset": 293
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 308,
+                        "endOffset": 304,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 304
+                        "startOffset": 300
                       },
                       "value": "Unit"
                     },
@@ -1041,42 +1041,42 @@
                       "items": [],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 311,
+                        "endOffset": 307,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 309
+                        "startOffset": 305
                       }
                     },
                     {
                       "items": [],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 314,
+                        "endOffset": 310,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 312
+                        "startOffset": 308
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 315,
+                    "endOffset": 311,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 296
+                    "startOffset": 292
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 316,
+                "endOffset": 312,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 285
+                "startOffset": 281
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 317,
+            "endOffset": 313,
             "sourceId": "surfaces/operational-effects",
-            "startOffset": 274
+            "startOffset": 270
           }
         },
         {
@@ -1084,18 +1084,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 325,
+                "endOffset": 321,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 319
+                "startOffset": 315
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 333,
+                "endOffset": 329,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 326
+                "startOffset": 322
               },
               "value": "recover"
             },
@@ -1104,18 +1104,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 342,
+                    "endOffset": 340,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 335
+                    "startOffset": 333
                   },
                   "value": "message"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 343,
+                "endOffset": 341,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 334
+                "startOffset": 332
               }
             },
             {
@@ -1123,9 +1123,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 352,
+                    "endOffset": 350,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 347
+                    "startOffset": 345
                   },
                   "value": "catch"
                 },
@@ -1134,27 +1134,27 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 369,
+                        "endOffset": 363,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 358
+                        "startOffset": 352
                       },
                       "value": "always-fail"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 377,
+                        "endOffset": 371,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 370
+                        "startOffset": 364
                       },
                       "value": "message"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 378,
+                    "endOffset": 372,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 357
+                    "startOffset": 351
                   }
                 },
                 {
@@ -1162,27 +1162,27 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 402,
+                        "endOffset": 392,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 384
+                        "startOffset": 374
                       },
                       "value": "ConsoleUnavailable"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 408,
+                        "endOffset": 398,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 403
+                        "startOffset": 393
                       },
                       "value": "error"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 409,
+                    "endOffset": 399,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 383
+                    "startOffset": 373
                   }
                 },
                 {
@@ -1190,42 +1190,42 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 422,
+                        "endOffset": 408,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 415
+                        "startOffset": 401
                       },
                       "value": "succeed"
                     },
                     {
                       "kind": "nil",
                       "span": {
-                        "endOffset": 426,
+                        "endOffset": 412,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 423
+                        "startOffset": 409
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 427,
+                    "endOffset": 413,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 414
+                    "startOffset": 400
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 428,
+                "endOffset": 414,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 346
+                "startOffset": 344
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 429,
+            "endOffset": 415,
             "sourceId": "surfaces/operational-effects",
-            "startOffset": 318
+            "startOffset": 314
           }
         },
         {
@@ -1233,18 +1233,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 433,
+                "endOffset": 419,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 432
+                "startOffset": 418
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 437,
+                "endOffset": 423,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 434
+                "startOffset": 420
               },
               "value": "log"
             },
@@ -1253,18 +1253,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 441,
+                    "endOffset": 427,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 439
+                    "startOffset": 425
                   },
                   "value": "->"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 448,
+                    "endOffset": 434,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 442
+                    "startOffset": 428
                   },
                   "value": "String"
                 },
@@ -1273,18 +1273,18 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 456,
+                        "endOffset": 442,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 450
+                        "startOffset": 436
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 461,
+                        "endOffset": 447,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 457
+                        "startOffset": 443
                       },
                       "value": "Unit"
                     },
@@ -1293,18 +1293,18 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 481,
+                            "endOffset": 467,
                             "sourceId": "surfaces/operational-effects",
-                            "startOffset": 463
+                            "startOffset": 449
                           },
                           "value": "ConsoleUnavailable"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 482,
+                        "endOffset": 468,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 462
+                        "startOffset": 448
                       }
                     },
                     {
@@ -1312,42 +1312,42 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 497,
+                            "endOffset": 483,
                             "sourceId": "surfaces/operational-effects",
-                            "startOffset": 484
+                            "startOffset": 470
                           },
                           "value": "Console.print"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 498,
+                        "endOffset": 484,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 483
+                        "startOffset": 469
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 499,
+                    "endOffset": 485,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 449
+                    "startOffset": 435
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 500,
+                "endOffset": 486,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 438
+                "startOffset": 424
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 501,
+            "endOffset": 487,
             "sourceId": "surfaces/operational-effects",
-            "startOffset": 431
+            "startOffset": 417
           }
         },
         {
@@ -1355,18 +1355,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 509,
+                "endOffset": 495,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 503
+                "startOffset": 489
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 513,
+                "endOffset": 499,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 510
+                "startOffset": 496
               },
               "value": "log"
             },
@@ -1375,18 +1375,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 522,
+                    "endOffset": 508,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 515
+                    "startOffset": 501
                   },
                   "value": "message"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 523,
+                "endOffset": 509,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 514
+                "startOffset": 500
               }
             },
             {
@@ -1394,9 +1394,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 530,
+                    "endOffset": 514,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 527
+                    "startOffset": 511
                   },
                   "value": "do!"
                 },
@@ -1405,9 +1405,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 533,
+                        "endOffset": 517,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 532
+                        "startOffset": 516
                       },
                       "value": "_"
                     },
@@ -1416,35 +1416,35 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 548,
+                            "endOffset": 532,
                             "sourceId": "surfaces/operational-effects",
-                            "startOffset": 535
+                            "startOffset": 519
                           },
                           "value": "Console.print"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 556,
+                            "endOffset": 540,
                             "sourceId": "surfaces/operational-effects",
-                            "startOffset": 549
+                            "startOffset": 533
                           },
                           "value": "message"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 557,
+                        "endOffset": 541,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 534
+                        "startOffset": 518
                       }
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 558,
+                    "endOffset": 542,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 531
+                    "startOffset": 515
                   }
                 },
                 {
@@ -1452,42 +1452,42 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 571,
+                        "endOffset": 551,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 564
+                        "startOffset": 544
                       },
                       "value": "succeed"
                     },
                     {
                       "kind": "nil",
                       "span": {
-                        "endOffset": 575,
+                        "endOffset": 555,
                         "sourceId": "surfaces/operational-effects",
-                        "startOffset": 572
+                        "startOffset": 552
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 576,
+                    "endOffset": 556,
                     "sourceId": "surfaces/operational-effects",
-                    "startOffset": 563
+                    "startOffset": 543
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 577,
+                "endOffset": 557,
                 "sourceId": "surfaces/operational-effects",
-                "startOffset": 526
+                "startOffset": 510
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 578,
+            "endOffset": 558,
             "sourceId": "surfaces/operational-effects",
-            "startOffset": 502
+            "startOffset": 488
           }
         }
       ],

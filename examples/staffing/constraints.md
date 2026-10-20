@@ -1,8 +1,7 @@
 # Constraints
 
 ```lisp
-(export
-  employee-email-required
+(export employee-email-required
   placement-missing-employer
   placement-missing-client
   onboarding-employee-no-placement
@@ -28,8 +27,7 @@
   :severity :error
   :query
     ((find ?emp ?firstName ?lastName)
-      (where
-        [?emp :_schema/type "Employee"]
+      (where [?emp :_schema/type "Employee"]
         [?emp :employee/first-name ?firstName]
         [?emp :employee/last-name ?lastName]
         [not [?emp :employee/email ?email]]))
@@ -42,8 +40,7 @@
   :severity :warning
   :query
     ((find ?placement ?status)
-      (where
-        [?placement :_schema/type "Placement"]
+      (where [?placement :_schema/type "Placement"]
         [?placement :placement/status ?status]
         [not [?placement :placement/employer ?employer]]))
   :message (format "Placement ({}) has no employer assigned" ?status))
@@ -54,8 +51,7 @@
   :severity :warning
   :query
     ((find ?placement)
-      (where
-        [?placement :_schema/type "Placement"]
+      (where [?placement :_schema/type "Placement"]
         [?placement :placement/status "active"]
         [not [?placement :placement/client ?client]]))
   :message "Active placement has no client assigned")
@@ -66,15 +62,13 @@
   :severity :info
   :query
     ((find ?emp ?firstName ?lastName)
-      (where
-        [?emp :_schema/type "Employee"]
+      (where [?emp :_schema/type "Employee"]
         [?emp :employee/status "onboarding"]
         [?emp :employee/first-name ?firstName]
         [?emp :employee/last-name ?lastName]
         [not [?placement :placement/employee ?emp]]))
   :message
-    (format
-      "Onboarding employee {} {} has no placement record"
+    (format "Onboarding employee {} {} has no placement record"
       ?firstName
       ?lastName))
 (constraint onboarding-no-tasks
@@ -84,15 +78,13 @@
   :severity :warning
   :query
     ((find ?emp ?firstName ?lastName)
-      (where
-        [?emp :_schema/type "Employee"]
+      (where [?emp :_schema/type "Employee"]
         [?emp :employee/status "onboarding"]
         [?emp :employee/first-name ?firstName]
         [?emp :employee/last-name ?lastName]
         [not [?task :task/entity-id ?emp]]))
   :message
-    (format
-      "Onboarding employee {} {} has no compliance tasks assigned"
+    (format "Onboarding employee {} {} has no compliance tasks assigned"
       ?firstName
       ?lastName))
 (constraint onboarding-missing-i9
@@ -102,8 +94,7 @@
   :severity :error
   :query
     ((find ?emp ?firstName ?lastName ?employer)
-      (where
-        [?emp :_schema/type "Employee"]
+      (where [?emp :_schema/type "Employee"]
         [?emp :employee/status "onboarding"]
         [?emp :employee/first-name ?firstName]
         [?emp :employee/last-name ?lastName]
@@ -112,15 +103,14 @@
         [
           not
           [?i9task :task/entity-id ?emp]
-          [?i9task :task/completion-document-ref "i-9-employment-eligibility"]]))
+          [
+            ?i9task
+            :task/completion-document-ref "i-9-employment-eligibility"]]))
   :message (format "{} {} needs I-9 verification" ?firstName ?lastName)
-  (resolution
-    "Start I-9 Verification"
+  (resolution "Start I-9 Verification"
     start-i9
-    :auto
-    true
-    :input
-    {:employer (path bindings "?employer")}))
+    :auto true
+    :input {:employer (path bindings "?employer")}))
 (constraint employee-missing-bgc
   :entity Employee
   :description "Onboarding employees should have a background check task"
@@ -128,8 +118,7 @@
   :severity :warning
   :query
     ((find ?emp ?firstName ?lastName)
-      (where
-        [?emp :_schema/type "Employee"]
+      (where [?emp :_schema/type "Employee"]
         [?emp :employee/status "onboarding"]
         [?emp :employee/first-name ?firstName]
         [?emp :employee/last-name ?lastName]
@@ -140,13 +129,10 @@
           [?bgcTask :task/completion-document-ref "background-check-consent"]]))
   :message
     (format "{} {} is missing a background check task" ?firstName ?lastName)
-  (resolution
-    "Create Background Check Task"
+  (resolution "Create Background Check Task"
     create-bgc-task
-    :auto
-    true
-    :input
-    {:employeeId (path violation "entityId")}))
+    :auto true
+    :input {:employeeId (path violation "entityId")}))
 (constraint all-tasks-complete
   :entity Employee
   :description
@@ -155,8 +141,7 @@
   :severity :info
   :query
     ((find ?emp ?firstName ?lastName)
-      (where
-        [?emp :_schema/type "Employee"]
+      (where [?emp :_schema/type "Employee"]
         [?emp :employee/status "onboarding"]
         [?emp :employee/first-name ?firstName]
         [?emp :employee/last-name ?lastName]
@@ -183,8 +168,7 @@
   :severity :error
   :query
     ((find ?task ?title ?dueDate)
-      (where
-        [?task :_schema/type "OnboardingTask"]
+      (where [?task :_schema/type "OnboardingTask"]
         [?task :onboardingtask/due-date ?dueDate]
         [< ?dueDate "$now"]
         [?task :onboardingtask/status ?status]
@@ -204,8 +188,7 @@
   :severity :warning
   :query
     ((find ?task ?title ?dueDate)
-      (where
-        [?task :_schema/type "OnboardingTask"]
+      (where [?task :_schema/type "OnboardingTask"]
         [?task :onboardingtask/due-date ?dueDate]
         [< ?dueDate "$now"]
         [?task :onboardingtask/status ?status]
@@ -222,8 +205,7 @@
   :severity :error
   :query
     ((find ?doc ?docName ?docType)
-      (where
-        [?doc :_schema/type "Document"]
+      (where [?doc :_schema/type "Document"]
         [?doc :document/name ?docName]
         [?doc :document/type ?docType]
         [?doc :document/status "expired"]))

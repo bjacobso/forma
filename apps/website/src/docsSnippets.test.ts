@@ -83,7 +83,7 @@ describe("docs /elm page snippets", () => {
     expect(generateEffectProgram(elmCommandSource).diagnostics).toEqual([]);
     const result = generateEffectProgram(elmCommandBrokenSource);
     expect(result.diagnostics).toHaveLength(1);
-    expect(result.diagnostics[0]).toMatchObject({ code: "mechanics/undeclared-error", span: { startLine: 10 } });
+    expect(result.diagnostics[0]).toMatchObject({ code: "mechanics/undeclared-error", span: { startLine: 9 } });
   });
   const snippets = elmPageSnippets();
   const dir = resolve(repoRoot, elmSnippetDir);

@@ -17,7 +17,8 @@ Movies catalog example in canonical ontology syntax.
 
 ```lisp
 (seed Studio "studio:a24" {:name "A24"})
-(seed Movie "movie:past-lives"
+(seed Movie
+  "movie:past-lives"
   {:title "Past Lives" :release-year 2023 :studio "studio:a24"})
 ```
 

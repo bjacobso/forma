@@ -13,13 +13,11 @@
 (macro (not x) (quasiquote (if (unquote x) false true)))
 
 ;; when — conditional with implicit do
-(macro
-  (when test body ...)
+(macro (when test body ...)
   (quasiquote (if (unquote test) (do (unquote-splicing body)) nil)))
 
 ;; unless — inverse conditional with implicit do
-(macro
-  (unless test body ...)
+(macro (unless test body ...)
   (quasiquote (if (unquote test) nil (do (unquote-splicing body)))))
 
 ;; cond — multi-branch conditional
@@ -29,10 +27,8 @@
 ;;   (< x 0)  "negative"
 ;;   :else    "zero")
 ;;
-(macro
-  (cond clauses ...)
-  (if
-    (empty? clauses)
+(macro (cond clauses ...)
+  (if (empty? clauses)
     nil
     (let
       [
@@ -42,15 +38,12 @@
         (nth clauses 1)
         rest-clauses
         (rest (rest clauses))]
-      (if
-        (= (sexpr-sym-name test) ":else")
+      (if (= (sexpr-sym-name test) ":else")
         expr
-        (if
-          (empty? rest-clauses)
+        (if (empty? rest-clauses)
           (quasiquote (if (unquote test) (unquote expr) nil))
           (quasiquote
-            (if
-              (unquote test)
+            (if (unquote test)
               (unquote expr)
               (cond (unquote-splicing rest-clauses)))))))))
 
@@ -58,48 +51,40 @@
 ;;
 ;; (and x y z) expands to nested let/if that stops on first falsy value
 ;;
-(macro
-  (and args ...)
-  (if
-    (empty? args)
+(macro (and args ...)
+  (if (empty? args)
     true
-    (if
-      (= (count args) 1)
+    (if (= (count args) 1)
       (first args)
-      (let
-        [g (gensym "and")]
+      (let [g (gensym "and")]
         (quasiquote
-          (let
-            [(unquote g) (unquote (first args))]
-            (if (unquote g) (and (unquote-splicing (rest args))) (unquote g))))))))
+          (let [(unquote g) (unquote (first args))]
+            (if (unquote g)
+              (and (unquote-splicing (rest args)))
+              (unquote g))))))))
 
 ;; or — short-circuit logical OR
 ;;
 ;; (or x y z) expands to nested let/if that stops on first truthy value
 ;;
-(macro
-  (or args ...)
-  (if
-    (empty? args)
+(macro (or args ...)
+  (if (empty? args)
     nil
-    (if
-      (= (count args) 1)
+    (if (= (count args) 1)
       (first args)
-      (let
-        [g (gensym "or")]
+      (let [g (gensym "or")]
         (quasiquote
-          (let
-            [(unquote g) (unquote (first args))]
-            (if (unquote g) (unquote g) (or (unquote-splicing (rest args))))))))))
+          (let [(unquote g) (unquote (first args))]
+            (if (unquote g)
+              (unquote g)
+              (or (unquote-splicing (rest args))))))))))
 
 ;; -> — thread-first
 ;;
 ;; (-> x (f a) (g b)) expands to (g (f x a) b)
 ;;
-(macro
-  (-> x forms ...)
-  (if
-    (empty? forms)
+(macro (-> x forms ...)
+  (if (empty? forms)
     x
     (let
       [
@@ -108,15 +93,13 @@
         rest-forms
         (rest forms)
         threaded
-        (if
-          (sexpr-list? form)
+        (if (sexpr-list? form)
           (let
             [items (sexpr-items form) head (first items) rest-args (rest items)]
             (quasiquote
               ((unquote head) (unquote x) (unquote-splicing rest-args))))
           (quasiquote ((unquote form) (unquote x))))]
-      (if
-        (empty? rest-forms)
+      (if (empty? rest-forms)
         threaded
         (quasiquote (-> (unquote threaded) (unquote-splicing rest-forms)))))))
 
@@ -124,10 +107,8 @@
 ;;
 ;; (->> x (f a) (g b)) expands to (g b (f a x))
 ;;
-(macro
-  (->> x forms ...)
-  (if
-    (empty? forms)
+(macro (->> x forms ...)
+  (if (empty? forms)
     x
     (let
       [
@@ -136,13 +117,10 @@
         rest-forms
         (rest forms)
         threaded
-        (if
-          (sexpr-list? form)
-          (let
-            [items (sexpr-items form)]
+        (if (sexpr-list? form)
+          (let [items (sexpr-items form)]
             (quasiquote ((unquote-splicing items) (unquote x))))
           (quasiquote ((unquote form) (unquote x))))]
-      (if
-        (empty? rest-forms)
+      (if (empty? rest-forms)
         threaded
         (quasiquote (->> (unquote threaded) (unquote-splicing rest-forms)))))))

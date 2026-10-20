@@ -13,9 +13,9 @@
               {
                 "name": "current",
                 "span": {
-                  "endOffset": 1209,
+                  "endOffset": 1185,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 1191
+                  "startOffset": 1167
                 },
                 "value": {
                   "effect": {
@@ -25,33 +25,33 @@
                     "kind": "Effect",
                     "requirements": [],
                     "span": {
-                      "endOffset": 1150,
+                      "endOffset": 1132,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 1116
+                      "startOffset": 1098
                     },
                     "success": {
                       "kind": "Primitive",
                       "name": "String",
                       "span": {
-                        "endOffset": 1130,
+                        "endOffset": 1112,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 1124
+                        "startOffset": 1106
                       }
                     }
                   },
                   "kind": "Pure",
                   "span": {
-                    "endOffset": 1209,
+                    "endOffset": 1185,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 1191
+                    "startOffset": 1167
                   },
                   "value": {
                     "kind": "Var",
                     "name": "validated-settings",
                     "span": {
-                      "endOffset": 1209,
+                      "endOffset": 1185,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 1191
+                      "startOffset": 1167
                     }
                   }
                 }
@@ -65,25 +65,25 @@
                 "kind": "Effect",
                 "requirements": [],
                 "span": {
-                  "endOffset": 1150,
+                  "endOffset": 1132,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 1116
+                  "startOffset": 1098
                 },
                 "success": {
                   "kind": "Primitive",
                   "name": "String",
                   "span": {
-                    "endOffset": 1130,
+                    "endOffset": 1112,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 1124
+                    "startOffset": 1106
                   }
                 }
               },
               "kind": "Succeed",
               "span": {
-                "endOffset": 1367,
+                "endOffset": 1335,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 1215
+                "startOffset": 1191
               },
               "value": {
                 "items": [
@@ -91,9 +91,9 @@
                     "kind": "Var",
                     "name": "str",
                     "span": {
-                      "endOffset": 1234,
+                      "endOffset": 1210,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 1231
+                      "startOffset": 1207
                     }
                   },
                   {
@@ -102,9 +102,9 @@
                         "kind": "Var",
                         "name": "if",
                         "span": {
-                          "endOffset": 1246,
+                          "endOffset": 1214,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 1244
+                          "startOffset": 1212
                         }
                       },
                       {
@@ -113,18 +113,18 @@
                             "kind": "Var",
                             "name": "get",
                             "span": {
-                              "endOffset": 1251,
+                              "endOffset": 1219,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 1248
+                              "startOffset": 1216
                             }
                           },
                           {
                             "kind": "Var",
                             "name": "current",
                             "span": {
-                              "endOffset": 1259,
+                              "endOffset": 1227,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 1252
+                              "startOffset": 1220
                             }
                           },
                           {
@@ -134,51 +134,51 @@
                               "name": ":debug"
                             },
                             "span": {
-                              "endOffset": 1266,
+                              "endOffset": 1234,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 1260
+                              "startOffset": 1228
                             }
                           }
                         ],
                         "kind": "List",
                         "span": {
-                          "endOffset": 1267,
+                          "endOffset": 1235,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 1247
+                          "startOffset": 1215
                         }
                       },
                       {
                         "kind": "Literal",
                         "span": {
-                          "endOffset": 1274,
+                          "endOffset": 1242,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 1268
+                          "startOffset": 1236
                         },
                         "value": "http"
                       },
                       {
                         "kind": "Literal",
                         "span": {
-                          "endOffset": 1282,
+                          "endOffset": 1250,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 1275
+                          "startOffset": 1243
                         },
                         "value": "https"
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 1283,
+                      "endOffset": 1251,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 1243
+                      "startOffset": 1211
                     }
                   },
                   {
                     "kind": "Literal",
                     "span": {
-                      "endOffset": 1297,
+                      "endOffset": 1265,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 1292
+                      "startOffset": 1260
                     },
                     "value": "://"
                   },
@@ -188,18 +188,18 @@
                         "kind": "Var",
                         "name": "get",
                         "span": {
-                          "endOffset": 1310,
+                          "endOffset": 1278,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 1307
+                          "startOffset": 1275
                         }
                       },
                       {
                         "kind": "Var",
                         "name": "current",
                         "span": {
-                          "endOffset": 1318,
+                          "endOffset": 1286,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 1311
+                          "startOffset": 1279
                         }
                       },
                       {
@@ -209,25 +209,25 @@
                           "name": ":host"
                         },
                         "span": {
-                          "endOffset": 1324,
+                          "endOffset": 1292,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 1319
+                          "startOffset": 1287
                         }
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 1325,
+                      "endOffset": 1293,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 1306
+                      "startOffset": 1274
                     }
                   },
                   {
                     "kind": "Literal",
                     "span": {
-                      "endOffset": 1337,
+                      "endOffset": 1305,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 1334
+                      "startOffset": 1302
                     },
                     "value": ":"
                   },
@@ -237,18 +237,18 @@
                         "kind": "Var",
                         "name": "get",
                         "span": {
-                          "endOffset": 1350,
+                          "endOffset": 1318,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 1347
+                          "startOffset": 1315
                         }
                       },
                       {
                         "kind": "Var",
                         "name": "current",
                         "span": {
-                          "endOffset": 1358,
+                          "endOffset": 1326,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 1351
+                          "startOffset": 1319
                         }
                       },
                       {
@@ -258,25 +258,25 @@
                           "name": ":port"
                         },
                         "span": {
-                          "endOffset": 1364,
+                          "endOffset": 1332,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 1359
+                          "startOffset": 1327
                         }
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 1365,
+                      "endOffset": 1333,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 1346
+                      "startOffset": 1314
                     }
                   }
                 ],
                 "kind": "List",
                 "span": {
-                  "endOffset": 1366,
+                  "endOffset": 1334,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 1230
+                  "startOffset": 1206
                 }
               }
             },
@@ -287,25 +287,25 @@
               "kind": "Effect",
               "requirements": [],
               "span": {
-                "endOffset": 1150,
+                "endOffset": 1132,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 1116
+                "startOffset": 1098
               },
               "success": {
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 1130,
+                  "endOffset": 1112,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 1124
+                  "startOffset": 1106
                 }
               }
             },
             "kind": "Do",
             "span": {
-              "endOffset": 1368,
+              "endOffset": 1336,
               "sourceId": "surfaces/effect-typescript/config-and-logging",
-              "startOffset": 1173
+              "startOffset": 1153
             }
           },
           "effect": {
@@ -315,17 +315,17 @@
             "kind": "Effect",
             "requirements": [],
             "span": {
-              "endOffset": 1150,
+              "endOffset": 1132,
               "sourceId": "surfaces/effect-typescript/config-and-logging",
-              "startOffset": 1116
+              "startOffset": 1098
             },
             "success": {
               "kind": "Primitive",
               "name": "String",
               "span": {
-                "endOffset": 1130,
+                "endOffset": 1112,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 1124
+                "startOffset": 1106
               }
             }
           },
@@ -336,9 +336,9 @@
         },
         "sourceId": "surfaces/effect-typescript/config-and-logging",
         "span": {
-          "endOffset": 1369,
+          "endOffset": 1337,
           "sourceId": "surfaces/effect-typescript/config-and-logging",
-          "startOffset": 1152
+          "startOffset": 1134
         }
       },
       {
@@ -352,35 +352,35 @@
               {
                 "name": "host",
                 "span": {
-                  "endOffset": 376,
+                  "endOffset": 374,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 354
+                  "startOffset": 352
                 },
                 "value": {
                   "args": [
                     {
                       "kind": "TypeArg",
                       "span": {
-                        "endOffset": 368,
+                        "endOffset": 366,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 362
+                        "startOffset": 360
                       },
                       "type": {
                         "kind": "Primitive",
                         "name": "String",
                         "span": {
-                          "endOffset": 368,
+                          "endOffset": 366,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 362
+                          "startOffset": 360
                         }
                       }
                     },
                     {
                       "kind": "Literal",
                       "span": {
-                        "endOffset": 375,
+                        "endOffset": 373,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 369
+                        "startOffset": 367
                       },
                       "value": "HOST"
                     }
@@ -409,44 +409,44 @@
                   "kind": "Combinator",
                   "name": "config",
                   "span": {
-                    "endOffset": 376,
+                    "endOffset": 374,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 354
+                    "startOffset": 352
                   }
                 }
               },
               {
                 "name": "port",
                 "span": {
-                  "endOffset": 427,
+                  "endOffset": 425,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 394
+                  "startOffset": 392
                 },
                 "value": {
                   "args": [
                     {
                       "kind": "TypeArg",
                       "span": {
-                        "endOffset": 405,
+                        "endOffset": 403,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 402
+                        "startOffset": 400
                       },
                       "type": {
                         "kind": "Primitive",
                         "name": "Int",
                         "span": {
-                          "endOffset": 405,
+                          "endOffset": 403,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 402
+                          "startOffset": 400
                         }
                       }
                     },
                     {
                       "kind": "Literal",
                       "span": {
-                        "endOffset": 412,
+                        "endOffset": 410,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 406
+                        "startOffset": 404
                       },
                       "value": "PORT"
                     }
@@ -480,53 +480,53 @@
                       "value": {
                         "kind": "Literal",
                         "span": {
-                          "endOffset": 426,
+                          "endOffset": 424,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 422
+                          "startOffset": 420
                         },
                         "value": 8080
                       }
                     }
                   ],
                   "span": {
-                    "endOffset": 427,
+                    "endOffset": 425,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 394
+                    "startOffset": 392
                   }
                 }
               },
               {
                 "name": "debug",
                 "span": {
-                  "endOffset": 482,
+                  "endOffset": 480,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 446
+                  "startOffset": 444
                 },
                 "value": {
                   "args": [
                     {
                       "kind": "TypeArg",
                       "span": {
-                        "endOffset": 458,
+                        "endOffset": 456,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 454
+                        "startOffset": 452
                       },
                       "type": {
                         "kind": "Primitive",
                         "name": "Bool",
                         "span": {
-                          "endOffset": 458,
+                          "endOffset": 456,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 454
+                          "startOffset": 452
                         }
                       }
                     },
                     {
                       "kind": "Literal",
                       "span": {
-                        "endOffset": 466,
+                        "endOffset": 464,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 459
+                        "startOffset": 457
                       },
                       "value": "DEBUG"
                     }
@@ -560,53 +560,53 @@
                       "value": {
                         "kind": "Literal",
                         "span": {
-                          "endOffset": 481,
+                          "endOffset": 479,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 476
+                          "startOffset": 474
                         },
                         "value": false
                       }
                     }
                   ],
                   "span": {
-                    "endOffset": 482,
+                    "endOffset": 480,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 446
+                    "startOffset": 444
                   }
                 }
               },
               {
                 "name": "ratio",
                 "span": {
-                  "endOffset": 543,
+                  "endOffset": 541,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 501
+                  "startOffset": 499
                 },
                 "value": {
                   "args": [
                     {
                       "kind": "TypeArg",
                       "span": {
-                        "endOffset": 514,
+                        "endOffset": 512,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 509
+                        "startOffset": 507
                       },
                       "type": {
                         "kind": "Primitive",
                         "name": "Float",
                         "span": {
-                          "endOffset": 514,
+                          "endOffset": 512,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 509
+                          "startOffset": 507
                         }
                       }
                     },
                     {
                       "kind": "Literal",
                       "span": {
-                        "endOffset": 529,
+                        "endOffset": 527,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 515
+                        "startOffset": 513
                       },
                       "value": "SAMPLE_RATIO"
                     }
@@ -640,36 +640,36 @@
                       "value": {
                         "kind": "Literal",
                         "span": {
-                          "endOffset": 542,
+                          "endOffset": 540,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 539
+                          "startOffset": 537
                         },
                         "value": 0.5
                       }
                     }
                   ],
                   "span": {
-                    "endOffset": 543,
+                    "endOffset": 541,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 501
+                    "startOffset": 499
                   }
                 }
               },
               {
                 "name": "_",
                 "span": {
-                  "endOffset": 590,
+                  "endOffset": 588,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 558
+                  "startOffset": 556
                 },
                 "value": {
                   "args": [
                     {
                       "kind": "Literal",
                       "span": {
-                        "endOffset": 584,
+                        "endOffset": 582,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 563
+                        "startOffset": 561
                       },
                       "value": "loaded settings for"
                     },
@@ -677,9 +677,9 @@
                       "kind": "Var",
                       "name": "host",
                       "span": {
-                        "endOffset": 589,
+                        "endOffset": 587,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 585
+                        "startOffset": 583
                       }
                     }
                   ],
@@ -707,9 +707,9 @@
                   "kind": "Combinator",
                   "name": "log",
                   "span": {
-                    "endOffset": 590,
+                    "endOffset": 588,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 558
+                    "startOffset": 556
                   }
                 }
               }
@@ -738,9 +738,9 @@
               },
               "kind": "Succeed",
               "span": {
-                "endOffset": 655,
+                "endOffset": 653,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 596
+                "startOffset": 594
               },
               "value": {
                 "entries": [
@@ -752,18 +752,18 @@
                         "name": ":host"
                       },
                       "span": {
-                        "endOffset": 611,
+                        "endOffset": 609,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 606
+                        "startOffset": 604
                       }
                     },
                     "value": {
                       "kind": "Var",
                       "name": "host",
                       "span": {
-                        "endOffset": 616,
+                        "endOffset": 614,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 612
+                        "startOffset": 610
                       }
                     }
                   },
@@ -775,18 +775,18 @@
                         "name": ":port"
                       },
                       "span": {
-                        "endOffset": 622,
+                        "endOffset": 620,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 617
+                        "startOffset": 615
                       }
                     },
                     "value": {
                       "kind": "Var",
                       "name": "port",
                       "span": {
-                        "endOffset": 627,
+                        "endOffset": 625,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 623
+                        "startOffset": 621
                       }
                     }
                   },
@@ -798,18 +798,18 @@
                         "name": ":debug"
                       },
                       "span": {
-                        "endOffset": 634,
+                        "endOffset": 632,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 628
+                        "startOffset": 626
                       }
                     },
                     "value": {
                       "kind": "Var",
                       "name": "debug",
                       "span": {
-                        "endOffset": 640,
+                        "endOffset": 638,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 635
+                        "startOffset": 633
                       }
                     }
                   },
@@ -821,27 +821,27 @@
                         "name": ":ratio"
                       },
                       "span": {
-                        "endOffset": 647,
+                        "endOffset": 645,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 641
+                        "startOffset": 639
                       }
                     },
                     "value": {
                       "kind": "Var",
                       "name": "ratio",
                       "span": {
-                        "endOffset": 653,
+                        "endOffset": 651,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 648
+                        "startOffset": 646
                       }
                     }
                   }
                 ],
                 "kind": "Record",
                 "span": {
-                  "endOffset": 654,
+                  "endOffset": 652,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 605
+                  "startOffset": 603
                 }
               }
             },
@@ -868,9 +868,9 @@
             },
             "kind": "Do",
             "span": {
-              "endOffset": 656,
+              "endOffset": 654,
               "sourceId": "surfaces/effect-typescript/config-and-logging",
-              "startOffset": 326
+              "startOffset": 324
             }
           },
           "effect": {
@@ -901,7 +901,7 @@
         },
         "sourceId": "surfaces/effect-typescript/config-and-logging",
         "span": {
-          "endOffset": 657,
+          "endOffset": 655,
           "sourceId": "surfaces/effect-typescript/config-and-logging",
           "startOffset": 305
         }
@@ -917,9 +917,9 @@
               {
                 "name": "loaded",
                 "span": {
-                  "endOffset": 893,
+                  "endOffset": 881,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 785
+                  "startOffset": 781
                 },
                 "value": {
                   "binding": "_",
@@ -931,33 +931,33 @@
                       "kind": "Effect",
                       "requirements": [],
                       "span": {
-                        "endOffset": 722,
+                        "endOffset": 720,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 680
+                        "startOffset": 678
                       },
                       "success": {
                         "kind": "Ref",
                         "name": "ServerSettings",
                         "span": {
-                          "endOffset": 702,
+                          "endOffset": 700,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 688
+                          "startOffset": 686
                         }
                       }
                     },
                     "kind": "Pure",
                     "span": {
-                      "endOffset": 808,
+                      "endOffset": 796,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 800
+                      "startOffset": 788
                     },
                     "value": {
                       "kind": "Var",
                       "name": "settings",
                       "span": {
-                        "endOffset": 808,
+                        "endOffset": 796,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 800
+                        "startOffset": 788
                       }
                     }
                   },
@@ -968,17 +968,17 @@
                     "kind": "Effect",
                     "requirements": [],
                     "span": {
-                      "endOffset": 722,
+                      "endOffset": 720,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 680
+                      "startOffset": 678
                     },
                     "success": {
                       "kind": "Ref",
                       "name": "ServerSettings",
                       "span": {
-                        "endOffset": 702,
+                        "endOffset": 700,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 688
+                        "startOffset": 686
                       }
                     }
                   },
@@ -991,17 +991,17 @@
                       "kind": "Effect",
                       "requirements": [],
                       "span": {
-                        "endOffset": 722,
+                        "endOffset": 720,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 680
+                        "startOffset": 678
                       },
                       "success": {
                         "kind": "Ref",
                         "name": "ServerSettings",
                         "span": {
-                          "endOffset": 702,
+                          "endOffset": 700,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 688
+                          "startOffset": 686
                         }
                       }
                     },
@@ -1018,17 +1018,17 @@
                                 "name": ":reason"
                               },
                               "span": {
-                                "endOffset": 870,
+                                "endOffset": 858,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 863
+                                "startOffset": 851
                               }
                             },
                             "value": {
                               "kind": "Literal",
                               "span": {
-                                "endOffset": 889,
+                                "endOffset": 877,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 871
+                                "startOffset": 859
                               },
                               "value": "HOST is required"
                             }
@@ -1036,29 +1036,29 @@
                         ],
                         "kind": "Record",
                         "span": {
-                          "endOffset": 890,
+                          "endOffset": 878,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 862
+                          "startOffset": 850
                         }
                       },
                       "span": {
-                        "endOffset": 891,
+                        "endOffset": 879,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 847
+                        "startOffset": 835
                       }
                     },
                     "kind": "Fail",
                     "span": {
-                      "endOffset": 892,
+                      "endOffset": 880,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 841
+                      "startOffset": 829
                     }
                   },
                   "kind": "Catch",
                   "span": {
-                    "endOffset": 893,
+                    "endOffset": 881,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 785
+                    "startOffset": 781
                   }
                 }
               }
@@ -1070,9 +1070,9 @@
                     "kind": "Var",
                     "name": "and",
                     "span": {
-                      "endOffset": 913,
+                      "endOffset": 895,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 910
+                      "startOffset": 892
                     }
                   },
                   {
@@ -1081,9 +1081,9 @@
                         "kind": "Var",
                         "name": ">",
                         "span": {
-                          "endOffset": 916,
+                          "endOffset": 898,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 915
+                          "startOffset": 897
                         }
                       },
                       {
@@ -1092,18 +1092,18 @@
                             "kind": "Var",
                             "name": "get",
                             "span": {
-                              "endOffset": 921,
+                              "endOffset": 903,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 918
+                              "startOffset": 900
                             }
                           },
                           {
                             "kind": "Var",
                             "name": "loaded",
                             "span": {
-                              "endOffset": 928,
+                              "endOffset": 910,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 922
+                              "startOffset": 904
                             }
                           },
                           {
@@ -1113,34 +1113,34 @@
                               "name": ":port"
                             },
                             "span": {
-                              "endOffset": 934,
+                              "endOffset": 916,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 929
+                              "startOffset": 911
                             }
                           }
                         ],
                         "kind": "List",
                         "span": {
-                          "endOffset": 935,
+                          "endOffset": 917,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 917
+                          "startOffset": 899
                         }
                       },
                       {
                         "kind": "Literal",
                         "span": {
-                          "endOffset": 937,
+                          "endOffset": 919,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 936
+                          "startOffset": 918
                         },
                         "value": 0
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 938,
+                      "endOffset": 920,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 914
+                      "startOffset": 896
                     }
                   },
                   {
@@ -1149,9 +1149,9 @@
                         "kind": "Var",
                         "name": "<",
                         "span": {
-                          "endOffset": 941,
+                          "endOffset": 923,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 940
+                          "startOffset": 922
                         }
                       },
                       {
@@ -1160,18 +1160,18 @@
                             "kind": "Var",
                             "name": "get",
                             "span": {
-                              "endOffset": 946,
+                              "endOffset": 928,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 943
+                              "startOffset": 925
                             }
                           },
                           {
                             "kind": "Var",
                             "name": "loaded",
                             "span": {
-                              "endOffset": 953,
+                              "endOffset": 935,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 947
+                              "startOffset": 929
                             }
                           },
                           {
@@ -1181,42 +1181,42 @@
                               "name": ":port"
                             },
                             "span": {
-                              "endOffset": 959,
+                              "endOffset": 941,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 954
+                              "startOffset": 936
                             }
                           }
                         ],
                         "kind": "List",
                         "span": {
-                          "endOffset": 960,
+                          "endOffset": 942,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 942
+                          "startOffset": 924
                         }
                       },
                       {
                         "kind": "Literal",
                         "span": {
-                          "endOffset": 966,
+                          "endOffset": 948,
                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                          "startOffset": 961
+                          "startOffset": 943
                         },
                         "value": 65536
                       }
                     ],
                     "kind": "List",
                     "span": {
-                      "endOffset": 967,
+                      "endOffset": 949,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 939
+                      "startOffset": 921
                     }
                   }
                 ],
                 "kind": "List",
                 "span": {
-                  "endOffset": 968,
+                  "endOffset": 950,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 909
+                  "startOffset": 891
                 }
               },
               "effect": {
@@ -1226,17 +1226,17 @@
                 "kind": "Effect",
                 "requirements": [],
                 "span": {
-                  "endOffset": 722,
+                  "endOffset": 720,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 680
+                  "startOffset": 678
                 },
                 "success": {
                   "kind": "Ref",
                   "name": "ServerSettings",
                   "span": {
-                    "endOffset": 702,
+                    "endOffset": 700,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 688
+                    "startOffset": 686
                   }
                 }
               },
@@ -1248,17 +1248,17 @@
                   "kind": "Effect",
                   "requirements": [],
                   "span": {
-                    "endOffset": 722,
+                    "endOffset": 720,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 680
+                    "startOffset": 678
                   },
                   "success": {
                     "kind": "Ref",
                     "name": "ServerSettings",
                     "span": {
-                      "endOffset": 702,
+                      "endOffset": 700,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 688
+                      "startOffset": 686
                     }
                   }
                 },
@@ -1275,9 +1275,9 @@
                             "name": ":reason"
                           },
                           "span": {
-                            "endOffset": 1045,
+                            "endOffset": 1027,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 1038
+                            "startOffset": 1020
                           }
                         },
                         "value": {
@@ -1286,17 +1286,17 @@
                               "kind": "Var",
                               "name": "str",
                               "span": {
-                                "endOffset": 1050,
+                                "endOffset": 1032,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1047
+                                "startOffset": 1029
                               }
                             },
                             {
                               "kind": "Literal",
                               "span": {
-                                "endOffset": 1058,
+                                "endOffset": 1040,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1051
+                                "startOffset": 1033
                               },
                               "value": "port "
                             },
@@ -1306,18 +1306,18 @@
                                   "kind": "Var",
                                   "name": "get",
                                   "span": {
-                                    "endOffset": 1063,
+                                    "endOffset": 1045,
                                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                    "startOffset": 1060
+                                    "startOffset": 1042
                                   }
                                 },
                                 {
                                   "kind": "Var",
                                   "name": "loaded",
                                   "span": {
-                                    "endOffset": 1070,
+                                    "endOffset": 1052,
                                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                    "startOffset": 1064
+                                    "startOffset": 1046
                                   }
                                 },
                                 {
@@ -1327,63 +1327,63 @@
                                     "name": ":port"
                                   },
                                   "span": {
-                                    "endOffset": 1076,
+                                    "endOffset": 1058,
                                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                    "startOffset": 1071
+                                    "startOffset": 1053
                                   }
                                 }
                               ],
                               "kind": "List",
                               "span": {
-                                "endOffset": 1077,
+                                "endOffset": 1059,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1059
+                                "startOffset": 1041
                               }
                             },
                             {
                               "kind": "Literal",
                               "span": {
-                                "endOffset": 1096,
+                                "endOffset": 1078,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1078
+                                "startOffset": 1060
                               },
                               "value": " is out of range"
                             }
                           ],
                           "kind": "List",
                           "span": {
-                            "endOffset": 1097,
+                            "endOffset": 1079,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 1046
+                            "startOffset": 1028
                           }
                         }
                       }
                     ],
                     "kind": "Record",
                     "span": {
-                      "endOffset": 1098,
+                      "endOffset": 1080,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 1037
+                      "startOffset": 1019
                     }
                   },
                   "span": {
-                    "endOffset": 1099,
+                    "endOffset": 1081,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 1012
+                    "startOffset": 994
                   }
                 },
                 "kind": "Fail",
                 "span": {
-                  "endOffset": 1100,
+                  "endOffset": 1082,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 998
+                  "startOffset": 980
                 }
               },
               "kind": "If",
               "span": {
-                "endOffset": 1101,
+                "endOffset": 1083,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 899
+                "startOffset": 887
               },
               "then": {
                 "effect": {
@@ -1393,33 +1393,33 @@
                   "kind": "Effect",
                   "requirements": [],
                   "span": {
-                    "endOffset": 722,
+                    "endOffset": 720,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 680
+                    "startOffset": 678
                   },
                   "success": {
                     "kind": "Ref",
                     "name": "ServerSettings",
                     "span": {
-                      "endOffset": 702,
+                      "endOffset": 700,
                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                      "startOffset": 688
+                      "startOffset": 686
                     }
                   }
                 },
                 "kind": "Succeed",
                 "span": {
-                  "endOffset": 991,
+                  "endOffset": 973,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 975
+                  "startOffset": 957
                 },
                 "value": {
                   "kind": "Var",
                   "name": "loaded",
                   "span": {
-                    "endOffset": 990,
+                    "endOffset": 972,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 984
+                    "startOffset": 966
                   }
                 }
               }
@@ -1431,25 +1431,25 @@
               "kind": "Effect",
               "requirements": [],
               "span": {
-                "endOffset": 722,
+                "endOffset": 720,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 680
+                "startOffset": 678
               },
               "success": {
                 "kind": "Ref",
                 "name": "ServerSettings",
                 "span": {
-                  "endOffset": 702,
+                  "endOffset": 700,
                   "sourceId": "surfaces/effect-typescript/config-and-logging",
-                  "startOffset": 688
+                  "startOffset": 686
                 }
               }
             },
             "kind": "Do",
             "span": {
-              "endOffset": 1102,
+              "endOffset": 1084,
               "sourceId": "surfaces/effect-typescript/config-and-logging",
-              "startOffset": 755
+              "startOffset": 751
             }
           },
           "effect": {
@@ -1459,17 +1459,17 @@
             "kind": "Effect",
             "requirements": [],
             "span": {
-              "endOffset": 722,
+              "endOffset": 720,
               "sourceId": "surfaces/effect-typescript/config-and-logging",
-              "startOffset": 680
+              "startOffset": 678
             },
             "success": {
               "kind": "Ref",
               "name": "ServerSettings",
               "span": {
-                "endOffset": 702,
+                "endOffset": 700,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 688
+                "startOffset": 686
               }
             }
           },
@@ -1480,9 +1480,9 @@
         },
         "sourceId": "surfaces/effect-typescript/config-and-logging",
         "span": {
-          "endOffset": 1103,
+          "endOffset": 1085,
           "sourceId": "surfaces/effect-typescript/config-and-logging",
-          "startOffset": 724
+          "startOffset": 722
         }
       },
       {
@@ -1888,9 +1888,9 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 323,
+                "endOffset": 321,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 315
+                "startOffset": 313
               },
               "value": "settings"
             },
@@ -1899,9 +1899,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 330,
+                    "endOffset": 328,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 327
+                    "startOffset": 325
                   },
                   "value": "do!"
                 },
@@ -1910,9 +1910,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 347,
+                        "endOffset": 345,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 343
+                        "startOffset": 341
                       },
                       "value": "host"
                     },
@@ -1921,44 +1921,44 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 361,
+                            "endOffset": 359,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 355
+                            "startOffset": 353
                           },
                           "value": "config"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 368,
+                            "endOffset": 366,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 362
+                            "startOffset": 360
                           },
                           "value": "String"
                         },
                         {
                           "kind": "string",
                           "span": {
-                            "endOffset": 375,
+                            "endOffset": 373,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 369
+                            "startOffset": 367
                           },
                           "value": "HOST"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 376,
+                        "endOffset": 374,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 354
+                        "startOffset": 352
                       }
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 387,
+                        "endOffset": 385,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 383
+                        "startOffset": 381
                       },
                       "value": "port"
                     },
@@ -1967,62 +1967,62 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 401,
+                            "endOffset": 399,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 395
+                            "startOffset": 393
                           },
                           "value": "config"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 405,
+                            "endOffset": 403,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 402
+                            "startOffset": 400
                           },
                           "value": "Int"
                         },
                         {
                           "kind": "string",
                           "span": {
-                            "endOffset": 412,
+                            "endOffset": 410,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 406
+                            "startOffset": 404
                           },
                           "value": "PORT"
                         },
                         {
                           "kind": "keyword",
                           "span": {
-                            "endOffset": 421,
+                            "endOffset": 419,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 413
+                            "startOffset": 411
                           },
                           "value": ":default"
                         },
                         {
                           "kind": "int",
                           "span": {
-                            "endOffset": 426,
+                            "endOffset": 424,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 422
+                            "startOffset": 420
                           },
                           "value": 8080
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 427,
+                        "endOffset": 425,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 394
+                        "startOffset": 392
                       }
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 439,
+                        "endOffset": 437,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 434
+                        "startOffset": 432
                       },
                       "value": "debug"
                     },
@@ -2031,62 +2031,62 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 453,
+                            "endOffset": 451,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 447
+                            "startOffset": 445
                           },
                           "value": "config"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 458,
+                            "endOffset": 456,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 454
+                            "startOffset": 452
                           },
                           "value": "Bool"
                         },
                         {
                           "kind": "string",
                           "span": {
-                            "endOffset": 466,
+                            "endOffset": 464,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 459
+                            "startOffset": 457
                           },
                           "value": "DEBUG"
                         },
                         {
                           "kind": "keyword",
                           "span": {
-                            "endOffset": 475,
+                            "endOffset": 473,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 467
+                            "startOffset": 465
                           },
                           "value": ":default"
                         },
                         {
                           "kind": "bool",
                           "span": {
-                            "endOffset": 481,
+                            "endOffset": 479,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 476
+                            "startOffset": 474
                           },
                           "value": false
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 482,
+                        "endOffset": 480,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 446
+                        "startOffset": 444
                       }
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 494,
+                        "endOffset": 492,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 489
+                        "startOffset": 487
                       },
                       "value": "ratio"
                     },
@@ -2095,62 +2095,62 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 508,
+                            "endOffset": 506,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 502
+                            "startOffset": 500
                           },
                           "value": "config"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 514,
+                            "endOffset": 512,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 509
+                            "startOffset": 507
                           },
                           "value": "Float"
                         },
                         {
                           "kind": "string",
                           "span": {
-                            "endOffset": 529,
+                            "endOffset": 527,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 515
+                            "startOffset": 513
                           },
                           "value": "SAMPLE_RATIO"
                         },
                         {
                           "kind": "keyword",
                           "span": {
-                            "endOffset": 538,
+                            "endOffset": 536,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 530
+                            "startOffset": 528
                           },
                           "value": ":default"
                         },
                         {
                           "kind": "float",
                           "span": {
-                            "endOffset": 542,
+                            "endOffset": 540,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 539
+                            "startOffset": 537
                           },
                           "value": 0.5
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 543,
+                        "endOffset": 541,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 501
+                        "startOffset": 499
                       }
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 551,
+                        "endOffset": 549,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 550
+                        "startOffset": 548
                       },
                       "value": "_"
                     },
@@ -2159,44 +2159,44 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 562,
+                            "endOffset": 560,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 559
+                            "startOffset": 557
                           },
                           "value": "log"
                         },
                         {
                           "kind": "string",
                           "span": {
-                            "endOffset": 584,
+                            "endOffset": 582,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 563
+                            "startOffset": 561
                           },
                           "value": "loaded settings for"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 589,
+                            "endOffset": 587,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 585
+                            "startOffset": 583
                           },
                           "value": "host"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 590,
+                        "endOffset": 588,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 558
+                        "startOffset": 556
                       }
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 591,
+                    "endOffset": 589,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 335
+                    "startOffset": 333
                   }
                 },
                 {
@@ -2204,9 +2204,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 604,
+                        "endOffset": 602,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 597
+                        "startOffset": 595
                       },
                       "value": "succeed"
                     },
@@ -2216,18 +2216,18 @@
                           "key": {
                             "kind": "keyword",
                             "span": {
-                              "endOffset": 611,
+                              "endOffset": 609,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 606
+                              "startOffset": 604
                             },
                             "value": ":host"
                           },
                           "value": {
                             "kind": "symbol",
                             "span": {
-                              "endOffset": 616,
+                              "endOffset": 614,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 612
+                              "startOffset": 610
                             },
                             "value": "host"
                           }
@@ -2236,18 +2236,18 @@
                           "key": {
                             "kind": "keyword",
                             "span": {
-                              "endOffset": 622,
+                              "endOffset": 620,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 617
+                              "startOffset": 615
                             },
                             "value": ":port"
                           },
                           "value": {
                             "kind": "symbol",
                             "span": {
-                              "endOffset": 627,
+                              "endOffset": 625,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 623
+                              "startOffset": 621
                             },
                             "value": "port"
                           }
@@ -2256,18 +2256,18 @@
                           "key": {
                             "kind": "keyword",
                             "span": {
-                              "endOffset": 634,
+                              "endOffset": 632,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 628
+                              "startOffset": 626
                             },
                             "value": ":debug"
                           },
                           "value": {
                             "kind": "symbol",
                             "span": {
-                              "endOffset": 640,
+                              "endOffset": 638,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 635
+                              "startOffset": 633
                             },
                             "value": "debug"
                           }
@@ -2276,18 +2276,18 @@
                           "key": {
                             "kind": "keyword",
                             "span": {
-                              "endOffset": 647,
+                              "endOffset": 645,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 641
+                              "startOffset": 639
                             },
                             "value": ":ratio"
                           },
                           "value": {
                             "kind": "symbol",
                             "span": {
-                              "endOffset": 653,
+                              "endOffset": 651,
                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                              "startOffset": 648
+                              "startOffset": 646
                             },
                             "value": "ratio"
                           }
@@ -2295,31 +2295,31 @@
                       ],
                       "kind": "map",
                       "span": {
-                        "endOffset": 654,
+                        "endOffset": 652,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 605
+                        "startOffset": 603
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 655,
+                    "endOffset": 653,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 596
+                    "startOffset": 594
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 656,
+                "endOffset": 654,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 326
+                "startOffset": 324
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 657,
+            "endOffset": 655,
             "sourceId": "surfaces/effect-typescript/config-and-logging",
             "startOffset": 305
           }
@@ -2329,18 +2329,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 660,
+                "endOffset": 658,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 659
+                "startOffset": 657
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 679,
+                "endOffset": 677,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 661
+                "startOffset": 659
               },
               "value": "validated-settings"
             },
@@ -2349,18 +2349,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 687,
+                    "endOffset": 685,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 681
+                    "startOffset": 679
                   },
                   "value": "Effect"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 702,
+                    "endOffset": 700,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 688
+                    "startOffset": 686
                   },
                   "value": "ServerSettings"
                 },
@@ -2369,43 +2369,43 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 717,
+                        "endOffset": 715,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 704
+                        "startOffset": 702
                       },
                       "value": "Misconfigured"
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 718,
+                    "endOffset": 716,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 703
+                    "startOffset": 701
                   }
                 },
                 {
                   "items": [],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 721,
+                    "endOffset": 719,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 719
+                    "startOffset": 717
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 722,
+                "endOffset": 720,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 680
+                "startOffset": 678
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 723,
+            "endOffset": 721,
             "sourceId": "surfaces/effect-typescript/config-and-logging",
-            "startOffset": 658
+            "startOffset": 656
           }
         },
         {
@@ -2413,18 +2413,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 731,
+                "endOffset": 729,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 725
+                "startOffset": 723
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 752,
+                "endOffset": 748,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 734
+                "startOffset": 730
               },
               "value": "validated-settings"
             },
@@ -2433,9 +2433,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 759,
+                    "endOffset": 755,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 756
+                    "startOffset": 752
                   },
                   "value": "do!"
                 },
@@ -2444,9 +2444,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 778,
+                        "endOffset": 774,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 772
+                        "startOffset": 768
                       },
                       "value": "loaded"
                     },
@@ -2455,18 +2455,18 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 791,
+                            "endOffset": 787,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 786
+                            "startOffset": 782
                           },
                           "value": "catch"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 808,
+                            "endOffset": 796,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 800
+                            "startOffset": 788
                           },
                           "value": "settings"
                         },
@@ -2475,27 +2475,27 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 829,
+                                "endOffset": 817,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 818
+                                "startOffset": 806
                               },
                               "value": "ConfigError"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 831,
+                                "endOffset": 819,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 830
+                                "startOffset": 818
                               },
                               "value": "_"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 832,
+                            "endOffset": 820,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 817
+                            "startOffset": 805
                           }
                         },
                         {
@@ -2503,9 +2503,9 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 846,
+                                "endOffset": 834,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 842
+                                "startOffset": 830
                               },
                               "value": "fail"
                             },
@@ -2514,9 +2514,9 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 861,
+                                    "endOffset": 849,
                                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                    "startOffset": 848
+                                    "startOffset": 836
                                   },
                                   "value": "Misconfigured"
                                 },
@@ -2526,18 +2526,18 @@
                                       "key": {
                                         "kind": "keyword",
                                         "span": {
-                                          "endOffset": 870,
+                                          "endOffset": 858,
                                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                          "startOffset": 863
+                                          "startOffset": 851
                                         },
                                         "value": ":reason"
                                       },
                                       "value": {
                                         "kind": "string",
                                         "span": {
-                                          "endOffset": 889,
+                                          "endOffset": 877,
                                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                          "startOffset": 871
+                                          "startOffset": 859
                                         },
                                         "value": "HOST is required"
                                       }
@@ -2545,41 +2545,41 @@
                                   ],
                                   "kind": "map",
                                   "span": {
-                                    "endOffset": 890,
+                                    "endOffset": 878,
                                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                    "startOffset": 862
+                                    "startOffset": 850
                                   }
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 891,
+                                "endOffset": 879,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 847
+                                "startOffset": 835
                               }
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 892,
+                            "endOffset": 880,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 841
+                            "startOffset": 829
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 893,
+                        "endOffset": 881,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 785
+                        "startOffset": 781
                       }
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 894,
+                    "endOffset": 882,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 764
+                    "startOffset": 760
                   }
                 },
                 {
@@ -2587,9 +2587,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 902,
+                        "endOffset": 890,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 900
+                        "startOffset": 888
                       },
                       "value": "if"
                     },
@@ -2598,9 +2598,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 913,
+                            "endOffset": 895,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 910
+                            "startOffset": 892
                           },
                           "value": "and"
                         },
@@ -2609,9 +2609,9 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 916,
+                                "endOffset": 898,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 915
+                                "startOffset": 897
                               },
                               "value": ">"
                             },
@@ -2620,53 +2620,53 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 921,
+                                    "endOffset": 903,
                                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                    "startOffset": 918
+                                    "startOffset": 900
                                   },
                                   "value": "get"
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 928,
+                                    "endOffset": 910,
                                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                    "startOffset": 922
+                                    "startOffset": 904
                                   },
                                   "value": "loaded"
                                 },
                                 {
                                   "kind": "keyword",
                                   "span": {
-                                    "endOffset": 934,
+                                    "endOffset": 916,
                                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                    "startOffset": 929
+                                    "startOffset": 911
                                   },
                                   "value": ":port"
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 935,
+                                "endOffset": 917,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 917
+                                "startOffset": 899
                               }
                             },
                             {
                               "kind": "int",
                               "span": {
-                                "endOffset": 937,
+                                "endOffset": 919,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 936
+                                "startOffset": 918
                               },
                               "value": 0
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 938,
+                            "endOffset": 920,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 914
+                            "startOffset": 896
                           }
                         },
                         {
@@ -2674,9 +2674,9 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 941,
+                                "endOffset": 923,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 940
+                                "startOffset": 922
                               },
                               "value": "<"
                             },
@@ -2685,61 +2685,61 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 946,
+                                    "endOffset": 928,
                                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                    "startOffset": 943
+                                    "startOffset": 925
                                   },
                                   "value": "get"
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 953,
+                                    "endOffset": 935,
                                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                    "startOffset": 947
+                                    "startOffset": 929
                                   },
                                   "value": "loaded"
                                 },
                                 {
                                   "kind": "keyword",
                                   "span": {
-                                    "endOffset": 959,
+                                    "endOffset": 941,
                                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                    "startOffset": 954
+                                    "startOffset": 936
                                   },
                                   "value": ":port"
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 960,
+                                "endOffset": 942,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 942
+                                "startOffset": 924
                               }
                             },
                             {
                               "kind": "int",
                               "span": {
-                                "endOffset": 966,
+                                "endOffset": 948,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 961
+                                "startOffset": 943
                               },
                               "value": 65536
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 967,
+                            "endOffset": 949,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 939
+                            "startOffset": 921
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 968,
+                        "endOffset": 950,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 909
+                        "startOffset": 891
                       }
                     },
                     {
@@ -2747,27 +2747,27 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 983,
+                            "endOffset": 965,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 976
+                            "startOffset": 958
                           },
                           "value": "succeed"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 990,
+                            "endOffset": 972,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 984
+                            "startOffset": 966
                           },
                           "value": "loaded"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 991,
+                        "endOffset": 973,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 975
+                        "startOffset": 957
                       }
                     },
                     {
@@ -2775,9 +2775,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1003,
+                            "endOffset": 985,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 999
+                            "startOffset": 981
                           },
                           "value": "fail"
                         },
@@ -2786,9 +2786,9 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1026,
+                                "endOffset": 1008,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1013
+                                "startOffset": 995
                               },
                               "value": "Misconfigured"
                             },
@@ -2798,9 +2798,9 @@
                                   "key": {
                                     "kind": "keyword",
                                     "span": {
-                                      "endOffset": 1045,
+                                      "endOffset": 1027,
                                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                      "startOffset": 1038
+                                      "startOffset": 1020
                                     },
                                     "value": ":reason"
                                   },
@@ -2809,18 +2809,18 @@
                                       {
                                         "kind": "symbol",
                                         "span": {
-                                          "endOffset": 1050,
+                                          "endOffset": 1032,
                                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                          "startOffset": 1047
+                                          "startOffset": 1029
                                         },
                                         "value": "str"
                                       },
                                       {
                                         "kind": "string",
                                         "span": {
-                                          "endOffset": 1058,
+                                          "endOffset": 1040,
                                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                          "startOffset": 1051
+                                          "startOffset": 1033
                                         },
                                         "value": "port "
                                       },
@@ -2829,102 +2829,102 @@
                                           {
                                             "kind": "symbol",
                                             "span": {
-                                              "endOffset": 1063,
+                                              "endOffset": 1045,
                                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                              "startOffset": 1060
+                                              "startOffset": 1042
                                             },
                                             "value": "get"
                                           },
                                           {
                                             "kind": "symbol",
                                             "span": {
-                                              "endOffset": 1070,
+                                              "endOffset": 1052,
                                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                              "startOffset": 1064
+                                              "startOffset": 1046
                                             },
                                             "value": "loaded"
                                           },
                                           {
                                             "kind": "keyword",
                                             "span": {
-                                              "endOffset": 1076,
+                                              "endOffset": 1058,
                                               "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                              "startOffset": 1071
+                                              "startOffset": 1053
                                             },
                                             "value": ":port"
                                           }
                                         ],
                                         "kind": "list",
                                         "span": {
-                                          "endOffset": 1077,
+                                          "endOffset": 1059,
                                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                          "startOffset": 1059
+                                          "startOffset": 1041
                                         }
                                       },
                                       {
                                         "kind": "string",
                                         "span": {
-                                          "endOffset": 1096,
+                                          "endOffset": 1078,
                                           "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                          "startOffset": 1078
+                                          "startOffset": 1060
                                         },
                                         "value": " is out of range"
                                       }
                                     ],
                                     "kind": "list",
                                     "span": {
-                                      "endOffset": 1097,
+                                      "endOffset": 1079,
                                       "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                      "startOffset": 1046
+                                      "startOffset": 1028
                                     }
                                   }
                                 }
                               ],
                               "kind": "map",
                               "span": {
-                                "endOffset": 1098,
+                                "endOffset": 1080,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1037
+                                "startOffset": 1019
                               }
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1099,
+                            "endOffset": 1081,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 1012
+                            "startOffset": 994
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1100,
+                        "endOffset": 1082,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 998
+                        "startOffset": 980
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1101,
+                    "endOffset": 1083,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 899
+                    "startOffset": 887
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1102,
+                "endOffset": 1084,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 755
+                "startOffset": 751
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1103,
+            "endOffset": 1085,
             "sourceId": "surfaces/effect-typescript/config-and-logging",
-            "startOffset": 724
+            "startOffset": 722
           }
         },
         {
@@ -2932,18 +2932,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 1106,
+                "endOffset": 1088,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 1105
+                "startOffset": 1087
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1115,
+                "endOffset": 1097,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 1107
+                "startOffset": 1089
               },
               "value": "base-url"
             },
@@ -2952,18 +2952,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1123,
+                    "endOffset": 1105,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 1117
+                    "startOffset": 1099
                   },
                   "value": "Effect"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1130,
+                    "endOffset": 1112,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 1124
+                    "startOffset": 1106
                   },
                   "value": "String"
                 },
@@ -2972,43 +2972,43 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1145,
+                        "endOffset": 1127,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 1132
+                        "startOffset": 1114
                       },
                       "value": "Misconfigured"
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 1146,
+                    "endOffset": 1128,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 1131
+                    "startOffset": 1113
                   }
                 },
                 {
                   "items": [],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 1149,
+                    "endOffset": 1131,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 1147
+                    "startOffset": 1129
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1150,
+                "endOffset": 1132,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 1116
+                "startOffset": 1098
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1151,
+            "endOffset": 1133,
             "sourceId": "surfaces/effect-typescript/config-and-logging",
-            "startOffset": 1104
+            "startOffset": 1086
           }
         },
         {
@@ -3016,18 +3016,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1159,
+                "endOffset": 1141,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 1153
+                "startOffset": 1135
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 1170,
+                "endOffset": 1150,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 1162
+                "startOffset": 1142
               },
               "value": "base-url"
             },
@@ -3036,9 +3036,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 1177,
+                    "endOffset": 1157,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 1174
+                    "startOffset": 1154
                   },
                   "value": "do!"
                 },
@@ -3047,27 +3047,27 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1190,
+                        "endOffset": 1166,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 1183
+                        "startOffset": 1159
                       },
                       "value": "current"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1209,
+                        "endOffset": 1185,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 1191
+                        "startOffset": 1167
                       },
                       "value": "validated-settings"
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 1210,
+                    "endOffset": 1186,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 1182
+                    "startOffset": 1158
                   }
                 },
                 {
@@ -3075,9 +3075,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 1223,
+                        "endOffset": 1199,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 1216
+                        "startOffset": 1192
                       },
                       "value": "succeed"
                     },
@@ -3086,9 +3086,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 1234,
+                            "endOffset": 1210,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 1231
+                            "startOffset": 1207
                           },
                           "value": "str"
                         },
@@ -3097,9 +3097,9 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1246,
+                                "endOffset": 1214,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1244
+                                "startOffset": 1212
                               },
                               "value": "if"
                             },
@@ -3108,70 +3108,70 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1251,
+                                    "endOffset": 1219,
                                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                    "startOffset": 1248
+                                    "startOffset": 1216
                                   },
                                   "value": "get"
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 1259,
+                                    "endOffset": 1227,
                                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                    "startOffset": 1252
+                                    "startOffset": 1220
                                   },
                                   "value": "current"
                                 },
                                 {
                                   "kind": "keyword",
                                   "span": {
-                                    "endOffset": 1266,
+                                    "endOffset": 1234,
                                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                    "startOffset": 1260
+                                    "startOffset": 1228
                                   },
                                   "value": ":debug"
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 1267,
+                                "endOffset": 1235,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1247
+                                "startOffset": 1215
                               }
                             },
                             {
                               "kind": "string",
                               "span": {
-                                "endOffset": 1274,
+                                "endOffset": 1242,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1268
+                                "startOffset": 1236
                               },
                               "value": "http"
                             },
                             {
                               "kind": "string",
                               "span": {
-                                "endOffset": 1282,
+                                "endOffset": 1250,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1275
+                                "startOffset": 1243
                               },
                               "value": "https"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1283,
+                            "endOffset": 1251,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 1243
+                            "startOffset": 1211
                           }
                         },
                         {
                           "kind": "string",
                           "span": {
-                            "endOffset": 1297,
+                            "endOffset": 1265,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 1292
+                            "startOffset": 1260
                           },
                           "value": "://"
                         },
@@ -3180,44 +3180,44 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1310,
+                                "endOffset": 1278,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1307
+                                "startOffset": 1275
                               },
                               "value": "get"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1318,
+                                "endOffset": 1286,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1311
+                                "startOffset": 1279
                               },
                               "value": "current"
                             },
                             {
                               "kind": "keyword",
                               "span": {
-                                "endOffset": 1324,
+                                "endOffset": 1292,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1319
+                                "startOffset": 1287
                               },
                               "value": ":host"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1325,
+                            "endOffset": 1293,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 1306
+                            "startOffset": 1274
                           }
                         },
                         {
                           "kind": "string",
                           "span": {
-                            "endOffset": 1337,
+                            "endOffset": 1305,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 1334
+                            "startOffset": 1302
                           },
                           "value": ":"
                         },
@@ -3226,68 +3226,68 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1350,
+                                "endOffset": 1318,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1347
+                                "startOffset": 1315
                               },
                               "value": "get"
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 1358,
+                                "endOffset": 1326,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1351
+                                "startOffset": 1319
                               },
                               "value": "current"
                             },
                             {
                               "kind": "keyword",
                               "span": {
-                                "endOffset": 1364,
+                                "endOffset": 1332,
                                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                                "startOffset": 1359
+                                "startOffset": 1327
                               },
                               "value": ":port"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 1365,
+                            "endOffset": 1333,
                             "sourceId": "surfaces/effect-typescript/config-and-logging",
-                            "startOffset": 1346
+                            "startOffset": 1314
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 1366,
+                        "endOffset": 1334,
                         "sourceId": "surfaces/effect-typescript/config-and-logging",
-                        "startOffset": 1230
+                        "startOffset": 1206
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 1367,
+                    "endOffset": 1335,
                     "sourceId": "surfaces/effect-typescript/config-and-logging",
-                    "startOffset": 1215
+                    "startOffset": 1191
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 1368,
+                "endOffset": 1336,
                 "sourceId": "surfaces/effect-typescript/config-and-logging",
-                "startOffset": 1173
+                "startOffset": 1153
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 1369,
+            "endOffset": 1337,
             "sourceId": "surfaces/effect-typescript/config-and-logging",
-            "startOffset": 1152
+            "startOffset": 1134
           }
         }
       ],

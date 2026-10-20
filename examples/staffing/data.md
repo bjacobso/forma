@@ -13,34 +13,44 @@
 ;; ---------------------------------------------------------------------------
 ;; Addresses
 ;; ---------------------------------------------------------------------------
-(seed Address "addr:employer-hq"
+(seed Address
+  "addr:employer-hq"
   {
     :street "100 Staffing Plaza"
     :city "Austin"
     :state "TX"
     :zip "78701"
     :country "USA"})
-(seed Address "addr:client-techcorp"
+(seed Address
+  "addr:client-techcorp"
   {
     :street "200 Tech Drive"
     :city "San Francisco"
     :state "CA"
     :zip "94102"
     :country "USA"})
-(seed Address "addr:client-retail"
+(seed Address
+  "addr:client-retail"
   {
     :street "300 Commerce Way"
     :city "Dallas"
     :state "TX"
     :zip "75201"
     :country "USA"})
-(seed Address "addr:emp-alice"
-  {:street "123 Main St" :city "Austin" :state "TX" :zip "78702" :country "USA"})
+(seed Address
+  "addr:emp-alice"
+  {
+    :street "123 Main St"
+    :city "Austin"
+    :state "TX"
+    :zip "78702"
+    :country "USA"})
 
 ;; ---------------------------------------------------------------------------
 ;; Employers (Staffing Agencies)
 ;; ---------------------------------------------------------------------------
-(seed Employer "employer:acme"
+(seed Employer
+  "employer:acme"
   {
     :name "Acme Staffing"
     :ein "12-3456789"
@@ -48,7 +58,8 @@
     :email "hr@acmestaffing.com"
     :status "active"
     :address "addr:employer-hq"})
-(seed Employer "employer:premier"
+(seed Employer
+  "employer:premier"
   {
     :name "Premier Workforce"
     :ein "98-7654321"
@@ -59,7 +70,8 @@
 ;; ---------------------------------------------------------------------------
 ;; Clients (End Employers)
 ;; ---------------------------------------------------------------------------
-(seed Client "client:techcorp"
+(seed Client
+  "client:techcorp"
   {
     :name "TechCorp Industries"
     :industry "Technology"
@@ -67,7 +79,8 @@
     :email "staffing@techcorp.com"
     :status "active"
     :address "addr:client-techcorp"})
-(seed Client "client:retail-giant"
+(seed Client
+  "client:retail-giant"
   {
     :name "Retail Giant Inc"
     :industry "Retail"
@@ -75,7 +88,8 @@
     :email "hr@retailgiant.com"
     :status "active"
     :address "addr:client-retail"})
-(seed Client "client:healthcare"
+(seed Client
+  "client:healthcare"
   {
     :name "Healthcare Plus"
     :industry "Healthcare"
@@ -86,25 +100,29 @@
 ;; ---------------------------------------------------------------------------
 ;; Job Types
 ;; ---------------------------------------------------------------------------
-(seed JobType "job:software-dev"
+(seed JobType
+  "job:software-dev"
   {
     :jobtype/name "Software Developer"
     :jobtype/description "Full-stack software development"
     :jobtype/hourly-rate 75
     :jobtype/bill-rate 125})
-(seed JobType "job:warehouse"
+(seed JobType
+  "job:warehouse"
   {
     :jobtype/name "Warehouse Associate"
     :jobtype/description "General warehouse operations"
     :jobtype/hourly-rate 18
     :jobtype/bill-rate 28})
-(seed JobType "job:admin"
+(seed JobType
+  "job:admin"
   {
     :jobtype/name "Administrative Assistant"
     :jobtype/description "Office administrative support"
     :jobtype/hourly-rate 22
     :jobtype/bill-rate 35})
-(seed JobType "job:nurse"
+(seed JobType
+  "job:nurse"
   {
     :jobtype/name "Registered Nurse"
     :jobtype/description "Healthcare nursing services"
@@ -114,7 +132,8 @@
 ;; ---------------------------------------------------------------------------
 ;; Employees (Workers)
 ;; ---------------------------------------------------------------------------
-(seed Employee "emp:alice"
+(seed Employee
+  "emp:alice"
   {
     :first-name "Alice"
     :last-name "Johnson"
@@ -123,7 +142,8 @@
     :status "active"
     :hire-date 1672531200000
     :address "addr:emp-alice"})
-(seed Employee "emp:bob"
+(seed Employee
+  "emp:bob"
   {
     :first-name "Bob"
     :last-name "Williams"
@@ -131,7 +151,8 @@
     :phone "+1-512-555-1002"
     :status "active"
     :hire-date 1688515200000})
-(seed Employee "emp:carol"
+(seed Employee
+  "emp:carol"
   {
     :first-name "Carol"
     :last-name "Martinez"
@@ -139,21 +160,24 @@
     :phone "+1-512-555-1003"
     :status "active"
     :hire-date 1696291200000})
-(seed Employee "emp:david"
+(seed Employee
+  "emp:david"
   {
     :first-name "David"
     :last-name "Chen"
     :email "david.chen@email.com"
     :status "onboarding"
     :hire-date 1704067200000})
-(seed Employee "emp:emma"
+(seed Employee
+  "emp:emma"
   {
     :first-name "Emma"
     :last-name "Garcia"
     :email "emma.garcia@email.com"
     :status "onboarding"
     :hire-date 1704240000000})
-(seed Employee "emp:frank"
+(seed Employee
+  "emp:frank"
   {
     :first-name "Frank"
     :last-name "Brown"
@@ -164,7 +188,8 @@
 ;; ---------------------------------------------------------------------------
 ;; Placements
 ;; ---------------------------------------------------------------------------
-(seed Placement "placement:alice-techcorp"
+(seed Placement
+  "placement:alice-techcorp"
   {
     :start-date 1672531200000
     :status "active"
@@ -174,7 +199,8 @@
     :employer "employer:acme"
     :client "client:techcorp"
     :job-type "job:software-dev"})
-(seed Placement "placement:bob-retail"
+(seed Placement
+  "placement:bob-retail"
   {
     :start-date 1688515200000
     :status "active"
@@ -184,7 +210,8 @@
     :employer "employer:acme"
     :client "client:retail-giant"
     :job-type "job:warehouse"})
-(seed Placement "placement:carol-techcorp"
+(seed Placement
+  "placement:carol-techcorp"
   {
     :start-date 1696291200000
     :status "active"
@@ -194,9 +221,11 @@
     :employer "employer:premier"
     :client "client:techcorp"
     :job-type "job:admin"})
-(seed Placement "placement:david-pending"
+(seed Placement
+  "placement:david-pending"
   {:start-date 1704067200000 :status "pending" :employee "emp:david"})
-(seed Placement "placement:emma-acme"
+(seed Placement
+  "placement:emma-acme"
   {
     :start-date 1704240000000
     :status "active"
@@ -210,13 +239,15 @@
 ;; ---------------------------------------------------------------------------
 ;; Policies
 ;; ---------------------------------------------------------------------------
-(seed Policy "policy:federal-standard"
+(seed Policy
+  "policy:federal-standard"
   {
     :name "Federal Standard Onboarding"
     :description
       "Standard federal compliance requirements for all new hires: I-9, W-4, BGC, direct deposit, and employee handbook"
     :status "active"})
-(seed Policy "policy:california"
+(seed Policy
+  "policy:california"
   {
     :name "California Supplement"
     :description
@@ -226,7 +257,8 @@
 ;; ---------------------------------------------------------------------------
 ;; Onboarding Tasks - David
 ;; ---------------------------------------------------------------------------
-(seed OnboardingTask "task:david-i9"
+(seed OnboardingTask
+  "task:david-i9"
   {
     :onboardingtask/title "I-9 Employment Eligibility"
     :onboardingtask/document-name "I-9 Employment Eligibility"
@@ -237,7 +269,8 @@
     :onboardingtask/employee "emp:david"
     :onboardingtask/placement "placement:david-pending"
     :onboardingtask/policy "policy:federal-standard"})
-(seed OnboardingTask "task:david-w4"
+(seed OnboardingTask
+  "task:david-w4"
   {
     :onboardingtask/title "W-4 Federal Tax Withholding"
     :onboardingtask/document-name "W-4 Federal Tax Withholding"
@@ -249,7 +282,8 @@
     :onboardingtask/employee "emp:david"
     :onboardingtask/placement "placement:david-pending"
     :onboardingtask/policy "policy:federal-standard"})
-(seed OnboardingTask "task:david-bgc"
+(seed OnboardingTask
+  "task:david-bgc"
   {
     :onboardingtask/title "Background Check"
     :onboardingtask/document-name "Background Check Consent"
@@ -260,7 +294,8 @@
     :onboardingtask/employee "emp:david"
     :onboardingtask/placement "placement:david-pending"
     :onboardingtask/policy "policy:federal-standard"})
-(seed OnboardingTask "task:david-dd"
+(seed OnboardingTask
+  "task:david-dd"
   {
     :onboardingtask/title "Direct Deposit Setup"
     :onboardingtask/document-name "Direct Deposit Authorization"
@@ -271,7 +306,8 @@
     :onboardingtask/employee "emp:david"
     :onboardingtask/placement "placement:david-pending"
     :onboardingtask/policy "policy:federal-standard"})
-(seed OnboardingTask "task:david-handbook"
+(seed OnboardingTask
+  "task:david-handbook"
   {
     :onboardingtask/title "Employee Handbook Acknowledgment"
     :onboardingtask/document-name "Employee Handbook"
@@ -287,7 +323,8 @@
 ;; David's I-9 Section 2 requirement record. Runtime employer work still flows
 ;; through the live Task system, but this ontology record tracks the required
 ;; onboarding step for coverage and compliance reasoning.
-(seed OnboardingTask "task:david-i9-s2"
+(seed OnboardingTask
+  "task:david-i9-s2"
   {
     :onboardingtask/title "I-9 Section 2 (Employer Review)"
     :onboardingtask/document-name "I-9 Employment Eligibility"
@@ -308,7 +345,8 @@
 ;; ---------------------------------------------------------------------------
 ;; Onboarding Tasks - Alice (completed)
 ;; ---------------------------------------------------------------------------
-(seed OnboardingTask "task:alice-i9"
+(seed OnboardingTask
+  "task:alice-i9"
   {
     :onboardingtask/title "I-9 Employment Eligibility"
     :onboardingtask/document-name "I-9 Employment Eligibility"
@@ -319,7 +357,8 @@
     :onboardingtask/employee "emp:alice"
     :onboardingtask/placement "placement:alice-techcorp"
     :onboardingtask/policy "policy:federal-standard"})
-(seed OnboardingTask "task:alice-w4"
+(seed OnboardingTask
+  "task:alice-w4"
   {
     :onboardingtask/title "W-4 Federal Tax Withholding"
     :onboardingtask/document-name "W-4 Federal Tax Withholding"
@@ -330,7 +369,8 @@
     :onboardingtask/employee "emp:alice"
     :onboardingtask/placement "placement:alice-techcorp"
     :onboardingtask/policy "policy:federal-standard"})
-(seed OnboardingTask "task:alice-bgc"
+(seed OnboardingTask
+  "task:alice-bgc"
   {
     :onboardingtask/title "Background Check"
     :onboardingtask/document-name "Background Check Consent"
@@ -345,7 +385,8 @@
 ;; ---------------------------------------------------------------------------
 ;; Documents
 ;; ---------------------------------------------------------------------------
-(seed Document "doc:alice-i9"
+(seed Document
+  "doc:alice-i9"
   {
     :name "Alice Johnson - I-9"
     :type "i9"
@@ -353,7 +394,8 @@
     :created-at 1671926400000
     :signed-at 1672099200000
     :employee "emp:alice"})
-(seed Document "doc:alice-w4"
+(seed Document
+  "doc:alice-w4"
   {
     :name "Alice Johnson - W-4"
     :type "w4"
@@ -361,7 +403,8 @@
     :created-at 1671926400000
     :signed-at 1672099200000
     :employee "emp:alice"})
-(seed Document "doc:alice-bgc"
+(seed Document
+  "doc:alice-bgc"
   {
     :name "Alice Johnson - BGC Consent"
     :type "bgc-consent"
@@ -369,14 +412,16 @@
     :created-at 1671926400000
     :signed-at 1672272000000
     :employee "emp:alice"})
-(seed Document "doc:david-i9"
+(seed Document
+  "doc:david-i9"
   {
     :name "David Chen - I-9"
     :type "i9"
     :status "generated"
     :created-at 1704067200000
     :employee "emp:david"})
-(seed Document "doc:david-w4"
+(seed Document
+  "doc:david-w4"
   {
     :name "David Chen - W-4"
     :type "w4"
@@ -384,7 +429,8 @@
     :created-at 1704067200000
     :signed-at 1703894400000
     :employee "emp:david"})
-(seed Document "doc:david-handbook"
+(seed Document
+  "doc:david-handbook"
   {
     :name "David Chen - Employee Handbook"
     :type "handbook-ack"
@@ -397,37 +443,55 @@
 ;; Link Instances
 ;; ---------------------------------------------------------------------------
 ;; Employment relationships
-(link works-at "emp:alice" "employer:acme"
+(link works-at
+  "emp:alice"
+  "employer:acme"
   {:start-date 1672531200000 :status "active"})
-(link works-at "emp:bob" "employer:acme"
+(link works-at
+  "emp:bob"
+  "employer:acme"
   {:start-date 1688515200000 :status "active"})
-(link works-at "emp:carol" "employer:premier"
+(link works-at
+  "emp:carol"
+  "employer:premier"
   {:start-date 1696291200000 :status "active"})
-(link works-at "emp:emma" "employer:acme"
+(link works-at
+  "emp:emma"
+  "employer:acme"
   {:start-date 1704240000000 :status "active"})
-(link works-at "emp:frank" "employer:acme"
+(link works-at
+  "emp:frank"
+  "employer:acme"
   {:start-date 1660348800000 :end-date 1701475200000 :status "inactive"})
 
 ;; Placements at clients
-(link placed-at "emp:alice" "client:techcorp"
+(link placed-at
+  "emp:alice"
+  "client:techcorp"
   {
     :start-date 1672531200000
     :employer "employer:acme"
     :jobtype "job:software-dev"
     :status "active"})
-(link placed-at "emp:bob" "client:retail-giant"
+(link placed-at
+  "emp:bob"
+  "client:retail-giant"
   {
     :start-date 1688515200000
     :employer "employer:acme"
     :jobtype "job:warehouse"
     :status "active"})
-(link placed-at "emp:carol" "client:techcorp"
+(link placed-at
+  "emp:carol"
+  "client:techcorp"
   {
     :start-date 1696291200000
     :employer "employer:premier"
     :jobtype "job:admin"
     :status "active"})
-(link placed-at "emp:emma" "client:techcorp"
+(link placed-at
+  "emp:emma"
+  "client:techcorp"
   {
     :start-date 1704240000000
     :employer "employer:acme"
@@ -435,17 +499,27 @@
     :status "active"})
 
 ;; Employer-Client relationships
-(link serves-client "employer:acme" "client:techcorp"
+(link serves-client
+  "employer:acme"
+  "client:techcorp"
   {:since 1609459200000 :contract-type "preferred"})
-(link serves-client "employer:acme" "client:retail-giant"
+(link serves-client
+  "employer:acme"
+  "client:retail-giant"
   {:since 1672531200000 :contract-type "approved"})
-(link serves-client "employer:premier" "client:techcorp"
+(link serves-client
+  "employer:premier"
+  "client:techcorp"
   {:since 1688515200000 :contract-type "approved"})
 
 ;; Policy governance
-(link governed-by "employer:acme" "policy:federal-standard"
+(link governed-by
+  "employer:acme"
+  "policy:federal-standard"
   {:since 1609459200000 :overridden false})
-(link governed-by "employer:premier" "policy:federal-standard"
+(link governed-by
+  "employer:premier"
+  "policy:federal-standard"
   {:since 1688515200000 :overridden false})
 
 ;; Task assignments
@@ -453,7 +527,9 @@
 (link assigned-task "emp:david" "task:david-w4" {:assigned-at 1704067200000})
 (link assigned-task "emp:david" "task:david-bgc" {:assigned-at 1704067200000})
 (link assigned-task "emp:david" "task:david-dd" {:assigned-at 1704067200000})
-(link assigned-task "emp:david" "task:david-handbook"
+(link assigned-task
+  "emp:david"
+  "task:david-handbook"
   {:assigned-at 1704067200000})
 (link assigned-task "emp:david" "task:david-i9-s2" {:assigned-at 1704153600000})
 
@@ -468,7 +544,10 @@
 (link has-document "emp:alice" "doc:alice-bgc" {:uploaded-at 1672272000000})
 (link has-document "emp:david" "doc:david-i9" {:uploaded-at 1704067200000})
 (link has-document "emp:david" "doc:david-w4" {:uploaded-at 1703894400000})
-(link has-document "emp:david" "doc:david-handbook" {:uploaded-at 1703980800000})
+(link has-document
+  "emp:david"
+  "doc:david-handbook"
+  {:uploaded-at 1703980800000})
 ```
 
 ```

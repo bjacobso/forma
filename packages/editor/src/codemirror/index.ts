@@ -37,3 +37,5 @@ export {
   type LispEditorIntelligence,
 } from "./types.js";
 export { editorAppearance, type SyntaxPalette } from "./appearance.js";
+
+export { formatDocument, formatMarkdownDocument, formattingKeymap, markdownFormattingKeymap } from "./format.js";

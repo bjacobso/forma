@@ -6,9 +6,9 @@
       "severity": "error",
       "code": "mechanics/missing-field",
       "message": "Point requires :y.",
-      "line": 6,
+      "line": 5,
       "column": 25,
-      "endLine": 6,
+      "endLine": 5,
       "endColumn": 31
     },
     {

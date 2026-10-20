@@ -1,8 +1,7 @@
 # Views
 
 ```lisp
-(export
-  lr-dashboard
+(export lr-dashboard
   covered-placement-queue
   authorization-task-queue
   cba-template-library
@@ -20,8 +19,7 @@
   :description
     "Covered placements, authorization work, and document routing state."
   :layout
-    (rows
-      (heading "Labor Relations Operations")
+    (rows (heading "Labor Relations Operations")
       (workflow-strip
         {
           :title "Union Authorization Flow"
@@ -55,8 +53,7 @@
         (metric {:label "Executed Cards" :value (length (query documents))})
         (metric {:label "Rehire Reviews" :value (length (query reviews))}))
       (columns
-        (card
-          {:title "Open Authorization Work"}
+        (card {:title "Open Authorization Work"}
           (table
             {
               :bind (query tasks)
@@ -71,8 +68,7 @@
                   {:key "?unionauthtask_assignee_role" :label "Assignee"}
                   {:key "?unionauthtask_due_date" :label "Due" :kind "date"}]
               :empty-state "No authorization tasks are open."}))
-        (card
-          {:title "Covered Placements"}
+        (card {:title "Covered Placements"}
           (table
             {
               :bind (query placements)
@@ -96,8 +92,7 @@
   :description
     "Placements where employee-level or position-level CBA data can trigger card work."
   :layout
-    (rows
-      (heading "Covered Placement Queue")
+    (rows (heading "Covered Placement Queue")
       (table
         {
           :bind (query placements)
@@ -117,8 +112,7 @@
   :title "Authorization Task Queue"
   :description "Union authorization tasks produced by CBA policy evaluation."
   :layout
-    (rows
-      (heading "Authorization Task Queue")
+    (rows (heading "Authorization Task Queue")
       (table
         {
           :bind (query tasks)
@@ -140,11 +134,9 @@
   :title "CBA Template Library"
   :description "Template metadata as consumed from the CBA master data source."
   :layout
-    (rows
-      (heading "CBA Template Library")
+    (rows (heading "CBA Template Library")
       (columns
-        (card
-          {:title "Card Templates"}
+        (card {:title "Card Templates"}
           (table
             {
               :bind (query templates)
@@ -162,8 +154,7 @@
                     :kind "status"}
                   {:key "?authcardtemplate_form_mode" :label "Form Mode"}]
               :empty-state "No templates are available."}))
-        (card
-          {:title "CBAs Needing Review"}
+        (card {:title "CBAs Needing Review"}
           (table
             {
               :bind (query review)
@@ -175,15 +166,16 @@
                   {:key "?cba_status" :label "Status" :kind "status"}]
               :empty-state "All CBA records are active."}))))
   :queries
-    {:templates {:ref "all-cba-templates"} :review {:ref "cbas-needing-review"}})
+    {
+      :templates {:ref "all-cba-templates"}
+      :review {:ref "cbas-needing-review"}})
 (view rehire-review
   :subject session
   :title "Rehire Review"
   :description
     "Returning workers where prior authorization policy must be evaluated."
   :layout
-    (rows
-      (heading "Rehire Review")
+    (rows (heading "Rehire Review")
       (table
         {
           :bind (query rehires)
@@ -202,8 +194,7 @@
   :title "Document Routing Monitor"
   :description "Executed authorization documents and downstream routing status."
   :layout
-    (rows
-      (heading "Document Routing Monitor")
+    (rows (heading "Document Routing Monitor")
       (stat-group
         (metric
           {:label "Available Documents" :value (length (query documents))})
@@ -236,8 +227,7 @@
   :description
     "Webhook-style events emitted for downstream labor-relations systems."
   :layout
-    (rows
-      (heading "Integration Events")
+    (rows (heading "Integration Events")
       (table
         {
           :bind (query events)
@@ -261,8 +251,7 @@
   :title "Union Authorization"
   :description "Employee-facing authorization task and submitted card details."
   :layout
-    (rows
-      (heading "Union Authorization")
+    (rows (heading "Union Authorization")
       (custom
         {
           :component-name "runtime/employee-task-list"

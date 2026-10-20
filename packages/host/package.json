@@ -30,6 +30,10 @@
       "types": "./dist/types.d.mts",
       "import": "./dist/types.mjs"
     },
+    "./format": {
+      "types": "./dist/format.d.mts",
+      "import": "./dist/format.mjs"
+    },
     "./json-abi": {
       "types": "./dist/json-abi.d.mts",
       "import": "./dist/json-abi.mjs"

@@ -1,3 +1,4 @@
+import type { FormatDiagnostic } from "@formalang/ts/format";
 import { readFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -7,6 +8,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 
 export interface FormaWorkspaceOptions {
   readonly workspaceRoot?: string;
+  readonly onFormattingDiagnostic?: (uri: string, diagnostic: FormatDiagnostic) => void;
   /** Prelude files, absolute or relative to the workspace root, in load order. */
   readonly preludePaths?: readonly string[];
   readonly analysis?: WorkspaceOptions;
@@ -26,8 +28,10 @@ export class FormaWorkspace {
   readonly #preludeUris: readonly string[];
   readonly #preludePaths: ReadonlyMap<string, string>;
   #loading: Promise<void> | undefined;
+  readonly #onFormattingDiagnostic: FormaWorkspaceOptions["onFormattingDiagnostic"];
 
   constructor(options: FormaWorkspaceOptions = {}) {
+    this.#onFormattingDiagnostic = options.onFormattingDiagnostic;
     this.workspaceRoot = options.workspaceRoot ?? process.cwd();
     this.analysis = new AnalysisWorkspace(options.analysis);
     const paths = (options.preludePaths ?? readPreludePathsFromEnv() ?? []).map((path) =>
@@ -47,6 +51,10 @@ export class FormaWorkspace {
     await this.#loading;
   }
 
+  reportFormattingDiagnostics(uri: string, diagnostics: readonly FormatDiagnostic[]): void {
+    for (const diagnostic of diagnostics) this.#onFormattingDiagnostic?.(uri, diagnostic);
+  }
+
   isPrelude(uri: string): boolean {
     return this.#preludePaths.has(uri);
   }
@@ -59,6 +67,7 @@ export class FormaWorkspace {
   async update(document: TextDocument): Promise<readonly TextDocument[]> {
     await this.ready();
     this.documents.set(document.uri, document);
+    if (isMarkdownDocument(document)) return [document];
     if (this.isPrelude(document.uri)) {
       this.analysis.setPrelude(document.uri, document.getText());
       return [...this.documents.values()];
@@ -105,3 +114,6 @@ function readPreludePathsFromEnv(): readonly string[] | undefined {
     .map((name) => name.trim())
     .filter((name) => name.length > 0);
 }
+
+/** Markdown currently has fence formatting, not Lisp analysis of its prose. */
+export const isMarkdownDocument = (document: TextDocument): boolean => document.languageId === "markdown" || /\.md(?:[?#]|$)/i.test(document.uri);

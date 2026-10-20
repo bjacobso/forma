@@ -1,8 +1,7 @@
 # Workspaces
 
 ```lisp
-(export
-  onboarding-operations
+(export onboarding-operations
   account-portfolio
   employee-profile
   staffing-api-access)

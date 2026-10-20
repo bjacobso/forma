@@ -6,8 +6,7 @@
 ; (seed Employee "employee:ada" {:name "Ada" :department "department:engineering"})
 ; (query employees :from Employee :select [name department])
 ; Canonical domain forms. Their type and projection definitions are the source of truth.
-(type
-  EntityFieldIR
+(type EntityFieldIR
   {
     :name Keyword
     :type Type
@@ -15,8 +14,7 @@
     :indexed Bool
     :description (Option String)
     :default (Option Json)})
-(type
-  EntityIR
+(type EntityIR
   {
     :kind "Entity"
     :name Symbol
@@ -24,24 +22,21 @@
     :doc (Option String)
     :role (Option String)
     :idPattern (Option String)})
-(type
-  RelationIR
+(type RelationIR
   {
     :kind "Relation"
     :name Symbol
     :source Symbol
     :target Symbol
     :fields (List EntityFieldIR)})
-(type
-  RecordIR
+(type RecordIR
   {
     :kind "Record"
     :name String
     :id String
     :entity Symbol
     :fields (Map String Json)})
-(type
-  LinkIR
+(type LinkIR
   {
     :kind "Link"
     :name String
@@ -51,8 +46,7 @@
     :sourceId String
     :targetId String
     :fields (Map String Json)})
-(type
-  SystemAttributeIR
+(type SystemAttributeIR
   {
     :kind "SystemAttribute"
     :name Symbol
@@ -61,12 +55,10 @@
     :doc (Option String)})
 (define optional-type? [t] (and (list? t) (= (str (first t)) "Option")))
 (define field-base-type [t] (type/base (if (optional-type? t) (nth t 1) t)))
-(define
-  fields->ir
+(define fields->ir
   [owner fields]
   (map
-    (fn
-      [[key t]]
+    (fn [[key t]]
       {
         :name (keyword owner key)
         :type (field-base-type t)
@@ -74,22 +66,18 @@
         :indexed (meta t :indexed false)
         :description (meta t :doc nil)
         :default
-          (if
-            (contains? (type/metadata t) :default)
+          (if (contains? (type/metadata t) :default)
             (Some (meta t :default nil))
             None)})
     fields))
-(define
-  assignments->ir
+(define assignments->ir
   [owner fields]
   (reduce
-    (fn
-      [record [key value]]
+    (fn [record [key value]]
       (assoc record (keyword/name (keyword owner key)) value))
     {}
     fields))
-(type
-  MetaEntityIR
+(type MetaEntityIR
   {
     :kind "MetaEntity"
     :name Symbol
@@ -98,8 +86,7 @@
     :role (Option String)
     :idPattern (Option String)})
 (type EntityDeclarationIR (Union EntityIR MetaEntityIR))
-(form
-  (entity name fields {:keys [doc role id-pattern tier]})
+(form (entity name fields {:keys [doc role id-pattern tier]})
   "A named record of attributes."
   :types
     {
@@ -117,8 +104,7 @@
     :doc doc
     :role role
     :idPattern id-pattern})
-(form
-  (relation name source target fields)
+(form (relation name source target fields)
   "A typed relation between entities."
   :types
     {
@@ -133,33 +119,27 @@
     :source source
     :target target
     :fields (fields->ir name fields)})
-(define
-  seed-row
+(define seed-row
   [owner]
   (reduce
-    (fn
-      [row key]
-      (assoc
-        row
+    (fn [row key]
+      (assoc row
         (keyword owner key)
         (type/base (meta/get (declaration-fields owner) key))))
     {}
     (keys (declaration-fields owner))))
-(define
-  seed-values
+(define seed-values
   [owner fields]
   (let
     [
       provided
-      (reduce
-        (fn [record [key value]] (assoc record (keyword owner key) value))
+      (reduce (fn [record [key value]] (assoc record (keyword owner key) value))
         {}
         fields)
       schema
       (declaration-fields owner)]
     (reduce
-      (fn
-        [record key]
+      (fn [record key]
         (let
           [
             metadata
@@ -174,17 +154,14 @@
             record)))
       provided
       (keys schema))))
-(define
-  seed-assignments
+(define seed-assignments
   [owner fields]
-  (let
-    [values (seed-values owner fields)]
+  (let [values (seed-values owner fields)]
     (reduce
       (fn [record key] (assoc record (keyword/name key) (meta/get values key)))
       {}
       (keys values))))
-(form
-  (seed entity id fields)
+(form (seed entity id fields)
   "Seed data for an entity."
   :types
     {
@@ -193,8 +170,7 @@
       :fields (Record Json)}
   :ir RecordIR
   :check
-    (fn
-      [{:keys [entity fields]}]
+    (fn [{:keys [entity fields]}]
       (schema/validate-record (seed-row entity) (seed-values entity fields)))
   :type RecordDef
   {
@@ -203,8 +179,7 @@
     :id id
     :entity entity
     :fields (seed-assignments entity fields)})
-(form
-  (link relation source target fields)
+(form (link relation source target fields)
   "A relation instance."
   :types
     {
@@ -214,11 +189,9 @@
       :fields (Record Json)}
   :ir LinkIR
   :check
-    (fn
-      [{:keys [relation source target fields]}]
+    (fn [{:keys [relation source target fields]}]
       (concat
-        (schema/validate-record
-          (seed-row relation)
+        (schema/validate-record (seed-row relation)
           (seed-values relation fields))
         (schema/validate-record
           {
@@ -237,8 +210,7 @@
     :sourceId source
     :targetId target
     :fields (seed-assignments relation fields)})
-(form
-  (attribute name value-type {:keys [doc]})
+(form (attribute name value-type {:keys [doc]})
   "A shared attribute."
   :types {:name (Declares SchemaDecl) :value-type Type :doc (Option String)}
   :ir SystemAttributeIR
@@ -248,8 +220,7 @@
     :valueType (field-base-type value-type)
     :required (not (optional-type? value-type))
     :doc doc})
-(type
-  QueryIR
+(type QueryIR
   {
     :kind "Query"
     :name Symbol
@@ -257,8 +228,7 @@
     :where (Option RuntimeExpr)
     :datalog (Option RuntimeExpr)
     :select (List Keyword)})
-(define
-  entity-fields
+(define entity-fields
   [entity]
   (let
     [
@@ -266,8 +236,7 @@
       (declaration-fields entity)
       row
       (reduce
-        (fn
-          [row key]
+        (fn [row key]
           (assoc row (keyword key) (type/base (meta/get fields key))))
         {}
         (keys fields))]
@@ -279,10 +248,8 @@
           (keys fields))
         (str entity)
         row)
-      :it
-      row)))
-(form
-  (query name {:keys [from where select]})
+      :it row)))
+(form (query name {:keys [from where select]})
   "A named read over one entity."
   :types
     {
@@ -301,8 +268,7 @@
     :select (map (fn [field] (keyword from field)) (or select []))})
 
 ; Domain projections are ordinary functions over typed syntax holes.
-(type
-  WorkspaceIR
+(type WorkspaceIR
   {
     :kind "Workspace"
     :name Symbol
@@ -311,8 +277,7 @@
     :subject (Option Symbol)
     :home (Option Symbol)
     :views (List Symbol)})
-(form
-  (workspace name {:keys [title persona subject home views]})
+(form (workspace name {:keys [title persona subject home views]})
   :types
     {
       :name (Declares WorkspaceDef)
@@ -330,8 +295,7 @@
     :subject subject
     :home home
     :views (or views [])})
-(type
-  IdentityDeclarationIR
+(type IdentityDeclarationIR
   {
     :kind "IdentityDeclaration"
     :identityKind String
@@ -366,8 +330,7 @@
     :principal principal
     :resource resource
     :resolver resolver})
-(type
-  PermissionDeclarationIR
+(type PermissionDeclarationIR
   {
     :kind "PermissionDeclaration"
     :name Symbol
@@ -401,24 +364,20 @@
     :description description})
 (type TriggerIR {:kind "Trigger" :triggerKind String :entity Symbol})
 (type process-trigger TriggerIR)
-(form
-  (process-trigger/on-create entity)
+(form (process-trigger/on-create entity)
   :types {:entity (Refers SchemaDecl)}
   :ir TriggerIR
   {:kind "Trigger" :triggerKind "on-create" :entity entity})
-(form
-  (process-trigger/on-update entity)
+(form (process-trigger/on-update entity)
   :types {:entity (Refers SchemaDecl)}
   :ir TriggerIR
   {:kind "Trigger" :triggerKind "on-update" :entity entity})
-(form
-  (process-trigger/on-delete entity)
+(form (process-trigger/on-delete entity)
   :types {:entity (Refers SchemaDecl)}
   :ir TriggerIR
   {:kind "Trigger" :triggerKind "on-delete" :entity entity})
 (type ProcessInputIR {:name String :expr RuntimeExpr})
-(type
-  ProcessNodeIR
+(type ProcessNodeIR
   {
     :kind "Node"
     :id Symbol
@@ -427,17 +386,15 @@
     :join (Option String)
     :fanOut (Option String)
     :inputs (List ProcessInputIR)})
-(type
-  ProcessEdgeIR
+(type ProcessEdgeIR
   {:kind "Edge" :from Symbol :to Symbol :guard (Option RuntimeExpr)})
 (type process-child (Union ProcessNodeIR ProcessEdgeIR))
-(define
-  expression-entries
+(define expression-entries
   [fields]
-  (map (fn [[key value]] {:name (keyword/name key) :expr value}) (or fields [])))
+  (map (fn [[key value]] {:name (keyword/name key) :expr value})
+    (or fields [])))
 (define reference [kind name] (if (nil? name) nil {:kind kind :name name}))
-(form
-  (process-child/node id {:keys [action join fan-out input]})
+(form (process-child/node id {:keys [action join fan-out input]})
   :types
     {
       :id Symbol
@@ -454,13 +411,11 @@
     :join join
     :fanOut fan-out
     :inputs (expression-entries input)})
-(form
-  (process-child/edge from to {:keys [guard]})
+(form (process-child/edge from to {:keys [guard]})
   :types {:from Symbol :to Symbol :guard (Option (Expr Bool))}
   :ir ProcessEdgeIR
   {:kind "Edge" :from from :to to :guard guard})
-(type
-  ProcessIR
+(type ProcessIR
   {
     :kind "Process"
     :name Symbol
@@ -468,29 +423,23 @@
     :trigger TriggerIR
     :nodes (List ProcessNodeIR)
     :edges (List ProcessEdgeIR)})
-(define
-  children-of-kind
+(define children-of-kind
   [kind children]
   (filter (fn [child] (= child.kind kind)) children))
-(define
-  unique-values
+(define unique-values
   [values]
   (reduce
     (fn [unique value] (if (contains? unique value) unique (conj unique value)))
     []
     values))
-(define
-  graph/reachable?
+(define graph/reachable?
   [edges from to visited]
-  (if
-    (= from to)
+  (if (= from to)
     true
-    (if
-      (contains? visited from)
+    (if (contains? visited from)
       false
       (reduce
-        (fn
-          [found edge]
+        (fn [found edge]
           (or
             found
             (and
@@ -498,16 +447,12 @@
               (graph/reachable? edges edge.to to (conj visited from)))))
         false
         edges))))
-(define
-  graph/cycle-diagnostics
+(define graph/cycle-diagnostics
   [edges]
   (reduce
-    (fn
-      [diagnostics edge]
-      (if
-        (graph/reachable? edges edge.to edge.from [])
-        (conj
-          diagnostics
+    (fn [diagnostics edge]
+      (if (graph/reachable? edges edge.to edge.from [])
+        (conj diagnostics
           {
             :severity :error
             :message
@@ -515,8 +460,7 @@
         diagnostics))
     []
     edges))
-(define
-  process/check
+(define process/check
   [children]
   (let
     [
@@ -525,30 +469,27 @@
       edges
       (children-of-kind "Edge" children)
       duplicates
-      (if
-        (= (count nodes) (count (unique-values nodes)))
+      (if (= (count nodes) (count (unique-values nodes)))
         []
         [{:severity :error :message "Duplicate process node id"}])]
     (reduce
-      (fn
-        [diagnostics edge]
-        (concat
-          diagnostics
-          (if
-            (or (= edge.from (quote start)) (contains? nodes edge.from))
+      (fn [diagnostics edge]
+        (concat diagnostics
+          (if (or (= edge.from (quote start)) (contains? nodes edge.from))
             []
             [
               {
                 :severity :error
                 :message (str "Unknown process node " edge.from)}])
-          (if
-            (contains? nodes edge.to)
+          (if (contains? nodes edge.to)
             []
-            [{:severity :error :message (str "Unknown process node " edge.to)}])))
+            [
+              {
+                :severity :error
+                :message (str "Unknown process node " edge.to)}])))
       (concat duplicates (graph/cycle-diagnostics edges))
       edges)))
-(form
-  (process name {:keys [description trigger]} child ...)
+(form (process name {:keys [description trigger]} child ...)
   :types
     {
       :name (Declares ProcessDef)
@@ -567,37 +508,30 @@
     :edges (children-of-kind "Edge" child)})
 (type DocumentOptionIR {:kind "Option" :value String :label String})
 (type document-option DocumentOptionIR)
-(form
-  (document-option/option value label)
+(form (document-option/option value label)
   :types {:value String :label String}
   :ir DocumentOptionIR
   {:kind "Option" :value value :label label})
-(type
-  AttributeBindingIR
+(type AttributeBindingIR
   {
     :kind "AttributeBinding"
     :attribute Keyword
     :entity Symbol
     :transform (Option String)
     :cardinality (Option String)})
-(define
-  binding/key
+(define binding/key
   [owner field]
   (first
     (filter
-      (fn
-        [key]
+      (fn [key]
         (or
           (= (str key) field)
-          (=
-            (nth (split (str key) "/") (- (count (split (str key) "/")) 1))
+          (= (nth (split (str key) "/") (- (count (split (str key) "/")) 1))
             field)))
       (keys (declaration-fields owner)))))
-(define
-  binding/check
+(define binding/check
   [binding]
-  (if
-    (nil? binding)
+  (if (nil? binding)
     []
     (let
       [
@@ -607,19 +541,16 @@
         (sym (first parts))
         field
         (nth parts 1)]
-      (if
-        (and (= (count parts) 2) (not (nil? (binding/key owner field))))
+      (if (and (= (count parts) 2) (not (nil? (binding/key owner field))))
         []
         [
           {
             :severity :error
             :slot :bind
             :message (str "Unknown entity attribute " binding)}]))))
-(define
-  attribute-binding
+(define attribute-binding
   [binding transform cardinality]
-  (if
-    (nil? binding)
+  (if (nil? binding)
     nil
     (let
       [
@@ -635,8 +566,7 @@
         :attribute (keyword owner field)
         :transform (if (nil? transform) nil (keyword/name transform))
         :cardinality (if (nil? cardinality) nil (keyword/name cardinality))})))
-(type
-  DocumentFieldIR
+(type DocumentFieldIR
   {
     :kind "Field"
     :type String
@@ -984,8 +914,7 @@
     :required (or required false)
     :binding (attribute-binding bind transform cardinality)
     :options option})
-(form
-  (document-field/content path content)
+(form (document-field/content path content)
   :types {:path Keyword :content String}
   :ir DocumentFieldIR
   {
@@ -995,8 +924,7 @@
     :content content
     :required false
     :options []})
-(type
-  DocumentCompletionIR
+(type DocumentCompletionIR
   {
     :kind "CompletionMutation"
     :mutation Symbol
@@ -1004,8 +932,7 @@
     :entity (Option Symbol)
     :entityRef (Option {:kind "Entity" :name Symbol})})
 (type document-completion DocumentCompletionIR)
-(form
-  (document-completion/completion action {:keys [entity]})
+(form (document-completion/completion action {:keys [entity]})
   :types {:action (Refers ActionDef) :entity (Option (Refers SchemaDecl))}
   :ir DocumentCompletionIR
   {
@@ -1014,8 +941,7 @@
     :mutationRef (reference "Action" action)
     :entity entity
     :entityRef (reference "Entity" entity)})
-(type
-  DocumentPageIR
+(type DocumentPageIR
   {
     :kind "Page"
     :sectionId Symbol
@@ -1047,8 +973,7 @@
     :dependsOn (or depends-on [])
     :completion completion
     :fields child})
-(define
-  document/check
+(define document/check
   [pages]
   (let
     [
@@ -1058,44 +983,35 @@
       (flat-map (fn [page] (map (fn [field] field.path) page.fields)) pages)
       edges
       (flat-map
-        (fn
-          [page]
-          (map
-            (fn [dependency] {:from dependency :to page.sectionId})
+        (fn [page]
+          (map (fn [dependency] {:from dependency :to page.sectionId})
             page.dependsOn))
         pages)
       duplicates
       (concat
-        (if
-          (= (count sections) (count (unique-values sections)))
+        (if (= (count sections) (count (unique-values sections)))
           []
           [{:severity :error :message "Duplicate document section id"}])
-        (if
-          (= (count fields) (count (unique-values fields)))
+        (if (= (count fields) (count (unique-values fields)))
           []
           [{:severity :error :message "Duplicate document field path"}]))]
     (reduce
-      (fn
-        [diagnostics edge]
-        (if
-          (contains? sections edge.from)
+      (fn [diagnostics edge]
+        (if (contains? sections edge.from)
           diagnostics
-          (conj
-            diagnostics
+          (conj diagnostics
             {
               :severity :error
               :message (str "Unknown document dependency " edge.from)})))
       (concat duplicates (graph/cycle-diagnostics edges))
       edges)))
-(type
-  DocumentIR
+(type DocumentIR
   {
     :kind "Document"
     :name Symbol
     :description (Option String)
     :pages (List DocumentPageIR)})
-(form
-  (document name {:keys [description]} page ...)
+(form (document name {:keys [description]} page ...)
   :types
     {
       :name (Declares DocumentDef)
@@ -1105,8 +1021,7 @@
   :ir DocumentIR
   {:kind "Document" :name name :description description :pages page})
 (type TaskInputIR {:name Keyword :type Type :required Bool})
-(type
-  TaskDefinitionIR
+(type TaskDefinitionIR
   {
     :kind "TaskDefinition"
     :name Symbol
@@ -1146,51 +1061,43 @@
     :guidanceRef guidance
     :inputs
       (map
-        (fn
-          [[key t]]
+        (fn [[key t]]
           {
             :name key
             :type (field-base-type t)
             :required (not (optional-type? t))})
         fields)
     :scope scope})
-(type
-  DocumentRoleLocaleIR
+(type DocumentRoleLocaleIR
   {
     :kind "Role"
     :name Symbol
     :label (Option String)
     :description (Option String)})
-(type
-  DocumentSectionLocaleIR
+(type DocumentSectionLocaleIR
   {
     :kind "Section"
     :name Symbol
     :label (Option String)
     :description (Option String)})
-(type
-  DocumentFieldLocaleIR
+(type DocumentFieldLocaleIR
   {
     :kind "LocaleField"
     :path Keyword
     :label (Option String)
     :description (Option String)
     :options (List DocumentOptionIR)})
-(type
-  document-locale-child
+(type document-locale-child
   (Union DocumentRoleLocaleIR DocumentSectionLocaleIR DocumentFieldLocaleIR))
-(form
-  (document-locale-child/role name {:keys [label description]})
+(form (document-locale-child/role name {:keys [label description]})
   :types {:name Symbol :label (Option String) :description (Option String)}
   :ir DocumentRoleLocaleIR
   {:kind "Role" :name name :label label :description description})
-(form
-  (document-locale-child/section name {:keys [label description]})
+(form (document-locale-child/section name {:keys [label description]})
   :types {:name Symbol :label (Option String) :description (Option String)}
   :ir DocumentSectionLocaleIR
   {:kind "Section" :name name :label label :description description})
-(form
-  (document-locale-child/field path {:keys [label description]} option ...)
+(form (document-locale-child/field path {:keys [label description]} option ...)
   :types
     {
       :path Keyword
@@ -1204,8 +1111,7 @@
     :label label
     :description description
     :options option})
-(type
-  DocumentLocaleIR
+(type DocumentLocaleIR
   {
     :kind "DocumentLocale"
     :documentName Symbol
@@ -1214,18 +1120,14 @@
     :roles (List DocumentRoleLocaleIR)
     :sections (List DocumentSectionLocaleIR)
     :fields (List DocumentFieldLocaleIR)})
-(define
-  document/raw-option
+(define document/raw-option
   [items key]
-  (if
-    (empty? items)
+  (if (empty? items)
     nil
-    (if
-      (= (first items) key)
+    (if (= (first items) key)
       (nth items 1)
       (document/raw-option (rest items) key))))
-(define
-  document/locale-check
+(define document/locale-check
   [document children]
   (let
     [
@@ -1237,41 +1139,33 @@
       (map (fn [page] (document/raw-option page :assignee)) pages)
       fields
       (flat-map
-        (fn
-          [page]
-          (map
-            (fn [field] (nth field 1))
+        (fn [page]
+          (map (fn [field] (nth field 1))
             (filter
-              (fn
-                [field]
-                (if
-                  (list? field)
+              (fn [field]
+                (if (list? field)
                   (if (> (count field) 1) (keyword? (nth field 1)) false)
                   false))
               page)))
         pages)]
     (flat-map
-      (fn
-        [child]
+      (fn [child]
         (let
           [
             value
             (if (= child.kind "LocaleField") child.path child.name)
             members
-            (if
-              (= child.kind "Role")
+            (if (= child.kind "Role")
               roles
               (if (= child.kind "Section") sections fields))]
-          (if
-            (contains? members value)
+          (if (contains? members value)
             []
             [
               {
                 :severity :error
                 :message (str "Unknown document " child.kind " " value)}])))
       children)))
-(form
-  (document-locale document locale child ...)
+(form (document-locale document locale child ...)
   :type DocumentLocaleDef
   :types
     {
@@ -1288,16 +1182,14 @@
     :roles (children-of-kind "Role" child)
     :sections (children-of-kind "Section" child)
     :fields (children-of-kind "LocaleField" child)})
-(type
-  DocumentLocalizedIR
+(type DocumentLocalizedIR
   {
     :kind "DocumentLocalized"
     :documentName Symbol
     :documentRef {:kind "Document" :name Symbol}
     :locales (List String)
     :defaultLocale (Option String)})
-(form
-  (document-localized document locales {:keys [default-locale]})
+(form (document-localized document locales {:keys [default-locale]})
   :type DocumentLocalizedDef
   :types
     {
@@ -1306,10 +1198,8 @@
       :default-locale (Option String)}
   :ir DocumentLocalizedIR
   :check
-    (fn
-      [{:keys [locales default-locale]}]
-      (if
-        (or (nil? default-locale) (contains? locales default-locale))
+    (fn [{:keys [locales default-locale]}]
+      (if (or (nil? default-locale) (contains? locales default-locale))
         []
         [
           {
@@ -1324,23 +1214,19 @@
     :defaultLocale default-locale})
 (type PdfSetIR {:kind "Set" :pdfField String :value Json})
 (type pdf-set PdfSetIR)
-(form
-  (pdf-set/set field value)
+(form (pdf-set/set field value)
   :types {:field String :value Json}
   :ir PdfSetIR
   {:kind "Set" :pdfField field :value value})
 (type PdfCaseIR {:kind "Case" :when String :assignments (List PdfSetIR)})
 (type pdf-case PdfCaseIR)
-(form
-  (pdf-case/case value assignment ...)
+(form (pdf-case/case value assignment ...)
   :types {:value String :assignment (List pdf-set)}
   :ir PdfCaseIR
   {:kind "Case" :when value :assignments assignment})
-(type
-  PdfDirectIR
+(type PdfDirectIR
   {:kind "Direct" :source Keyword :pdfField String :transform (Option Symbol)})
-(type
-  PdfComputedIR
+(type PdfComputedIR
   {
     :kind "Computed"
     :expr RuntimeExpr
@@ -1349,23 +1235,19 @@
 (type PdfSwitchIR {:kind "Switch" :source Keyword :cases (List PdfCaseIR)})
 (type PdfMappingEntryIR (Union PdfDirectIR PdfComputedIR PdfSwitchIR))
 (type pdf-entry PdfMappingEntryIR)
-(form
-  (pdf-entry/direct source field {:keys [transform]})
+(form (pdf-entry/direct source field {:keys [transform]})
   :types {:source Keyword :field String :transform (Option Symbol)}
   :ir PdfDirectIR
   {:kind "Direct" :source source :pdfField field :transform transform})
-(form
-  (pdf-entry/computed expression field {:keys [transform]})
+(form (pdf-entry/computed expression field {:keys [transform]})
   :types {:expression Syntax :field String :transform (Option Symbol)}
   :ir PdfComputedIR
   {:kind "Computed" :expr expression :pdfField field :transform transform})
-(form
-  (pdf-entry/switch source case ...)
+(form (pdf-entry/switch source case ...)
   :types {:source Keyword :case (List pdf-case)}
   :ir PdfSwitchIR
   {:kind "Switch" :source source :cases case})
-(type
-  PdfMappingIR
+(type PdfMappingIR
   {
     :kind "PdfMapping"
     :name Symbol
@@ -1415,8 +1297,7 @@
 
 ; Constraints share entity scope with queries. Resolution parameters are records.
 (type ResolutionInputIR {:param String :runtimeSource RuntimeExpr})
-(type
-  ResolutionIR
+(type ResolutionIR
   {
     :kind "Resolution"
     :label String
@@ -1425,8 +1306,7 @@
     :autoInvoke Bool
     :inputs (List ResolutionInputIR)})
 (type constraint-child (Union ResolutionIR ConstraintTaskAssignmentIR))
-(form
-  (constraint-child/resolution label action {:keys [auto input]})
+(form (constraint-child/resolution label action {:keys [auto input]})
   :types
     {
       :label String
@@ -1442,20 +1322,17 @@
     :autoInvoke (or auto false)
     :inputs
       (map
-        (fn
-          [[key expression]]
+        (fn [[key expression]]
           {:param (keyword/name key) :runtimeSource expression})
         (or input []))})
-(type
-  ConstraintTaskAssignmentIR
+(type ConstraintTaskAssignmentIR
   {
     :kind "TaskAssignment"
     :role Symbol
     :priority (Option String)
     :title (Option RuntimeExpr)
     :body (Option RuntimeExpr)})
-(form
-  (constraint-child/assigns-task-to role {:keys [priority title body]})
+(form (constraint-child/assigns-task-to role {:keys [priority title body]})
   :types
     {
       :role Symbol
@@ -1463,33 +1340,31 @@
       :title (Option (Expr String))
       :body (Option (Expr String))}
   :ir ConstraintTaskAssignmentIR
-  {:kind "TaskAssignment" :role role :priority priority :title title :body body})
-(define
-  scope/merge
+  {
+    :kind "TaskAssignment"
+    :role role
+    :priority priority
+    :title title
+    :body body})
+(define scope/merge
   [left right]
-  (reduce
-    (fn [scope [key type]] (assoc scope key type))
+  (reduce (fn [scope [key type]] (assoc scope key type))
     left
     (meta/entries right)))
-(define
-  datalog/scope
+(define datalog/scope
   [query]
-  (let
-    [items (sexpr-items query)]
-    (if
-      (or (= (str (first items)) "not") (= (str (first items)) "not-join"))
+  (let [items (sexpr-items query)]
+    (if (or (= (str (first items)) "not") (= (str (first items)) "not-join"))
       {}
       (reduce
-        (fn
-          [scope clause]
+        (fn [scope clause]
           (let
             [
               scope
               (scope/merge scope (datalog/scope clause))
               items
               (sexpr-items clause)]
-            (if
-              (and (= (count items) 3) (keyword? (nth items 1)))
+            (if (and (= (count items) 3) (keyword? (nth items 1)))
               (let
                 [
                   subject
@@ -1499,22 +1374,18 @@
                   value
                   (nth items 2)
                   type
-                  (if
-                    (= attribute :_schema/type)
+                  (if (= attribute :_schema/type)
                     (quote String)
                     (attribute-type attribute))]
-                (if
-                  (= attribute :_schema/type)
+                (if (= attribute :_schema/type)
                   (assoc scope (str subject) (list (quote Id) (sym value)))
-                  (if
-                    (and (symbol? value) (starts-with? (str value) "?"))
+                  (if (and (symbol? value) (starts-with? (str value) "?"))
                     (assoc scope (str value) (field-base-type type))
                     scope)))
               scope)))
         {}
         items))))
-(type
-  ConstraintIR
+(type ConstraintIR
   {
     :kind "Constraint"
     :name Symbol
@@ -1548,18 +1419,14 @@
     {
       :when (fn [{:keys [entity]}] (entity-fields entity))
       :message
-        (fn
-          [{:keys [entity query]}]
+        (fn [{:keys [entity query]}]
           (scope/merge (entity-fields entity) (datalog/scope query)))
       :child
-        (fn
-          [{:keys [entity query]}]
+        (fn [{:keys [entity query]}]
           (scope/merge (entity-fields entity) (datalog/scope query)))}
   :check
-    (fn
-      [{:keys [when query]}]
-      (if
-        (= (nil? when) (nil? query))
+    (fn [{:keys [when query]}]
+      (if (= (nil? when) (nil? query))
         [
           {
             :severity :error
@@ -1580,16 +1447,14 @@
     :taskAssignments (children-of-kind "TaskAssignment" child)
     :resolutions (children-of-kind "Resolution" child)})
 (type QueryPresetParamIR {:name String :value RuntimeExpr})
-(type
-  QueryPresetIR
+(type QueryPresetIR
   {
     :kind "QueryPreset"
     :name Symbol
     :queryRef {:kind "Query" :name Symbol}
     :defaults (List QueryPresetParamIR)
     :mergePolicy String})
-(form
-  (query-preset name query defaults {:keys [merge-policy]})
+(form (query-preset name query defaults {:keys [merge-policy]})
   :types
     {
       :name (Declares QueryPresetDef)
@@ -1604,25 +1469,21 @@
     :defaults
       (map (fn [[key value]] {:name (keyword/name key) :value value}) defaults)
     :mergePolicy (keyword/name (or merge-policy :caller-overrides))})
-(form
-  (datalog-query name expression)
+(form (datalog-query name expression)
   :types {:name (Declares QueryDef) :expression Syntax}
   :ir QueryIR
   {:kind "Query" :name name :from (quote *) :datalog expression :select []})
 
 ; A view and an embeddable fragment have one shape. State and inputs use records.
-(type
-  ViewColumnIR
+(type ViewColumnIR
   {:name Keyword :label (Option String) :expr (Option RuntimeExpr)})
 (type view-column ViewColumnIR)
-(form
-  (view-column/column name {:keys [label expr]})
+(form (view-column/column name {:keys [label expr]})
   :types {:name Keyword :label (Option String) :expr (Option Syntax)}
   :ir ViewColumnIR
   {:name name :label label :expr expr})
 (type ViewSortIR {:field Keyword :direction String})
-(type
-  ViewIR
+(type ViewIR
   {
     :kind "View"
     :name Symbol
@@ -1644,36 +1505,27 @@
     :defs (Option Json)
     :root (Option Json)
     :layout (Option Json)})
-(define
-  optional-record
+(define optional-record
   [entries]
-  (if
-    (nil? entries)
+  (if (nil? entries)
     nil
-    (reduce
-      (fn [record [key value]] (assoc record (keyword/name key) value))
+    (reduce (fn [record [key value]] (assoc record (keyword/name key) value))
       {}
       entries)))
-(define
-  view/sort
+(define view/sort
   [sort]
-  (if
-    (nil? sort)
+  (if (nil? sort)
     nil
     {
       :field (keyword (first sort))
       :direction (keyword/name (or (nth sort 1) :asc))}))
-(define
-  view/defs
+(define view/defs
   [defs state queries input]
-  (if
-    (nil? defs)
+  (if (nil? defs)
     nil
     (reduce
-      (fn
-        [record [key value]]
-        (assoc
-          record
+      (fn [record [key value]]
+        (assoc record
           (keyword/name key)
           (meta/compile-descriptor-tree "viewspec" value)))
       {}
@@ -1727,7 +1579,9 @@
       root
       (meta/compile-descriptor-tree "viewspec" layout)
       root
-      (if (or (nil? definition) (nil? root)) root (assoc root :defs definition))]
+      (if (or (nil? definition) (nil? root))
+        root
+        (assoc root :defs definition))]
     {
       :kind "View"
       :name name
@@ -1752,8 +1606,7 @@
 
 ; Internal action projection. Public operations are a signature plus an ordinary define.
 (type ActionInputIR {:name String :type Type :required Bool})
-(type
-  ActionIR
+(type ActionIR
   {
     :kind "Action"
     :name Symbol
@@ -1761,8 +1614,7 @@
     :returns Type
     :do RuntimeExpr})
 (type (Action a) (Effect a [] [OntologyRuntime]))
-(define
-  action/effect
+(define action/effect
   [result]
   (quasiquote (Effect (unquote result) [] [OntologyRuntime])))
 (form
@@ -1783,8 +1635,7 @@
   :scope
     {
       :checked
-        (fn
-          [{:keys [fields entities relations calls]}]
+        (fn [{:keys [fields entities relations calls]}]
           (action/scope fields entities relations calls))}
   :ir ActionIR
   {
@@ -1792,8 +1643,7 @@
     :name name
     :inputs
       (map
-        (fn
-          [[key type]]
+        (fn [[key type]]
           {
             :name (keyword/name key)
             :type (field-base-type type)
@@ -1801,108 +1651,86 @@
         fields)
     :returns returns
     :do body})
-(define
-  action/record
+(define action/record
   [entity optional]
   (reduce
-    (fn
-      [record key]
-      (let
-        [type (meta/get (declaration-fields entity) key)]
-        (assoc
-          record
+    (fn [record key]
+      (let [type (meta/get (declaration-fields entity) key)]
+        (assoc record
           (keyword key)
-          (if
-            optional
+          (if optional
             (list (quote Option) (field-base-type type))
             (type/base type)))))
     {}
     (keys (declaration-fields entity))))
-(define
-  action/input-type
+(define action/input-type
   [type]
-  (if
-    (not (empty? (declaration-fields type)))
+  (if (not (empty? (declaration-fields type)))
     (quasiquote
       (unquote (assoc (action/record type false) :id (list (quote Id) type))))
     (quasiquote (unquote type))))
-(define
-  action/scope
+(define action/scope
   [fields entities relations calls]
   (let
     [
       inputs
-      (reduce
-        (fn [scope [key type]] (assoc scope key (action/input-type type)))
+      (reduce (fn [scope [key type]] (assoc scope key (action/input-type type)))
         {"emit!" (quote (-> String (Effect Unit [] [OntologyRuntime])))}
         fields)
       inputs
       (reduce
-        (fn
-          [scope name]
+        (fn [scope name]
           (let
             [
               fields
               (declaration-hole name :fields)
               returns
               (declaration-hole name :returns)]
-            (assoc
-              scope
+            (assoc scope
               (str name)
-              (concat
-                [(quasiquote ->)]
-                (map
-                  (fn [[key type]] (action/input-type type))
+              (concat [(quasiquote ->)]
+                (map (fn [[key type]] (action/input-type type))
                   (meta/entries fields))
                 [(action/effect returns)]))))
         inputs
         calls)
       inputs
       (reduce
-        (fn
-          [scope relation]
-          (assoc
-            scope
+        (fn [scope relation]
+          (assoc scope
             (str "__action.link/" relation)
             (quasiquote
-              (->
-                (Id (unquote (declaration-hole relation :source)))
+              (-> (Id (unquote (declaration-hole relation :source)))
                 (Id (unquote (declaration-hole relation :target)))
                 (unquote (action/record relation false))
                 (Effect Unit [] [OntologyRuntime])))))
         inputs
         relations)]
     (reduce
-      (fn
-        [scope entity]
+      (fn [scope entity]
         (let
           [
             scope
             (assoc
               (assoc
-                (assoc
-                  scope
+                (assoc scope
                   (str "__action.create/" entity)
                   (quasiquote
-                    (->
-                      (unquote (action/record entity false))
+                    (-> (unquote (action/record entity false))
                       (Effect (Id (unquote entity)) [] [OntologyRuntime]))))
                 (str "__action.update/" entity)
                 (quasiquote
-                  (->
-                    (Id (unquote entity))
+                  (-> (Id (unquote entity))
                     (unquote (action/record entity true))
                     (Effect Unit [] [OntologyRuntime]))))
               (str "__action.retract/" entity)
               (quasiquote
                 (-> (Id (unquote entity)) (Effect Unit [] [OntologyRuntime]))))]
           (assoc
-            (assoc
-              scope
+            (assoc scope
               (str "__action.instantiate/" entity)
               (quasiquote
-                (->
-                  Symbol
+                (-> Symbol
                   (Id (unquote entity))
                   (Effect String [] [OntologyRuntime]))))
             (str "__action.task/" entity)
@@ -1921,40 +1749,32 @@
                 (Effect String [] [OntologyRuntime]))))))
       inputs
       entities)))
-(define
-  syntax-option
+(define syntax-option
   [syntax key]
   (let
     [
       state
       (reduce
-        (fn
-          [state value]
-          (if
-            state.found
+        (fn [state value]
+          (if state.found
             state
-            (if
-              state.next
+            (if state.next
               {:found true :next false :value (Some value)}
               {:found false :next (= value key) :value None})))
         {:found false :next false :value None}
         syntax)]
     state.value))
-(define
-  process/scope
+(define process/scope
   [children]
   {
     :outputs
       (reduce
-        (fn
-          [outputs node]
-          (if
-            (= (str (first node)) "node")
+        (fn [outputs node]
+          (if (= (str (first node)) "node")
             (let
               [
                 returns
-                (match
-                  (syntax-option node :action)
+                (match (syntax-option node :action)
                   (Some action)
                   (or (declaration-hole action :returns) (quote Unit))
                   None
@@ -1965,8 +1785,7 @@
         children)})
 
 ; Datalog introduces the variables bound by positive attribute clauses.
-(type
-  HttpEndpointIR
+(type HttpEndpointIR
   {
     :kind "Endpoint"
     :name Symbol
@@ -2006,11 +1825,9 @@
     :errors (or errors [])
     :openapi openapi})
 (: http/type-check (-> Any (List Any)))
-(define
-  http/type-check
+(define http/type-check
   [t]
-  (if
-    (symbol? t)
+  (if (symbol? t)
     (if
       (or
         (contains?
@@ -2032,13 +1849,10 @@
           :severity :error
           :code "http/unknown-schema-ref"
           :message (str "Unknown HTTP type " t)}])
-    (if
-      (map? t)
+    (if (map? t)
       (flat-map (fn [[key value]] (http/type-check value)) (meta/entries t))
-      (if
-        (list? t)
-        (if
-          (contains? ["List" "Option" "Map" "Union" "Brand"] (str (first t)))
+      (if (list? t)
+        (if (contains? ["List" "Option" "Map" "Union" "Brand"] (str (first t)))
           (flat-map http/type-check (rest t))
           [
             {
@@ -2046,12 +1860,10 @@
               :code "http/unsupported-type"
               :message (str "Unsupported HTTP type " t)}])
         []))))
-(define
-  http/path-parameters
+(define http/path-parameters
   [path]
   (map (fn [part] (first (split part "}"))) (rest (split path "{"))))
-(define
-  http/api-check
+(define http/api-check
   [path-params endpoints]
   (let
     [
@@ -2062,16 +1874,14 @@
       routes
       (map (fn [endpoint] (str endpoint.method " " endpoint.path)) endpoints)]
     (concat
-      (if
-        (= (count names) (count (unique-values names)))
+      (if (= (count names) (count (unique-values names)))
         []
         [
           {
             :severity :error
             :code "http/duplicate-endpoint"
             :message "Duplicate endpoint name"}])
-      (if
-        (= (count routes) (count (unique-values routes)))
+      (if (= (count routes) (count (unique-values routes)))
         []
         [
           {
@@ -2080,14 +1890,11 @@
             :message "Duplicate HTTP method and path"}])
       (flat-map (fn [[key t]] (http/type-check t)) (or path-params []))
       (flat-map
-        (fn
-          [endpoint]
+        (fn [endpoint]
           (concat
             (flat-map
-              (fn
-                [parameter]
-                (if
-                  (contains? declared parameter)
+              (fn [parameter]
+                (if (contains? declared parameter)
                   []
                   [
                     {
@@ -2097,36 +1904,31 @@
               (http/path-parameters endpoint.path))
             (http/type-check endpoint.success)
             (if (nil? endpoint.payload) [] (http/type-check endpoint.payload))
-            (flat-map
-              (fn [[key t]] (http/type-check t))
+            (flat-map (fn [[key t]] (http/type-check t))
               (meta/entries endpoint.query))
-            (flat-map
-              (fn [[key t]] (http/type-check t))
+            (flat-map (fn [[key t]] (http/type-check t))
               (meta/entries endpoint.headers))
             (flat-map
-              (fn
-                [error]
-                (if
-                  (= (type/kind error) :error)
+              (fn [error]
+                (if (= (type/kind error) :error)
                   []
                   [
                     {
                       :severity :error
                       :code "http/undeclared-error"
                       :message
-                        (str "HTTP errors require an error declaration: " error)}]))
+                        (str "HTTP errors require an error declaration: "
+                          error)}]))
               endpoint.errors)))
         endpoints))))
-(type
-  HttpApiIR
+(type HttpApiIR
   {
     :kind "HttpApi"
     :name Symbol
     :pathParams (Map String Type)
     :endpoints (List HttpEndpointIR)
     :openapi (Option Json)})
-(form
-  (api name {:keys [path-params openapi]} endpoint ...)
+(form (api name {:keys [path-params openapi]} endpoint ...)
   :types
     {
       :name (Declares HttpApiDecl)

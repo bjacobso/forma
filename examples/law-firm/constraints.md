@@ -1,8 +1,7 @@
 # Constraints
 
 ```lisp
-(export
-  onboarding-client-needs-conflict-check
+(export onboarding-client-needs-conflict-check
   conflict-needs-attorney-review
   active-client-needs-attorney
   matter-needs-signed-engagement-letter
@@ -31,8 +30,7 @@
   :severity :error
   :query
     ((find ?client ?clientName)
-      (where
-        [?client :_schema/type "Client"]
+      (where [?client :_schema/type "Client"]
         [?client :client/status "onboarding"]
         [?client :client/name ?clientName]
         [not [?check :conflict-for/client ?client]]))
@@ -47,8 +45,7 @@
   :severity :warning
   :query
     ((find ?check ?terms ?result)
-      (where
-        [?check :_schema/type "ConflictCheck"]
+      (where [?check :_schema/type "ConflictCheck"]
         [?check :conflictcheck/status "needs-review"]
         [?check :conflictcheck/search-terms ?terms]
         [?check :conflictcheck/result ?result]))
@@ -62,8 +59,7 @@
   :severity :warning
   :query
     ((find ?client ?clientName)
-      (where
-        [?client :_schema/type "Client"]
+      (where [?client :_schema/type "Client"]
         [?client :client/status "active"]
         [?client :client/name ?clientName]
         [not [?rep :represents/client ?client]]))
@@ -80,18 +76,15 @@
   :severity :error
   :query
     ((find ?matter ?title)
-      (where
-        [?matter :_schema/type "Matter"]
+      (where [?matter :_schema/type "Matter"]
         [?matter :matter/status "active"]
         [?matter :matter/title ?title]
         [not [?letter :engagement-letter-for/matter ?matter]]))
   :message
     (format "Matter \"{}\" is active without a linked engagement letter" ?title)
-  (resolution
-    "Generate Engagement Letter"
+  (resolution "Generate Engagement Letter"
     generate-engagement-letter
-    :auto
-    true))
+    :auto true))
 (constraint active-matter-needs-attorney
   :entity Matter
   :description "Active matters must have a managing attorney"
@@ -99,8 +92,7 @@
   :severity :warning
   :query
     ((find ?matter ?title)
-      (where
-        [?matter :_schema/type "Matter"]
+      (where [?matter :_schema/type "Matter"]
         [?matter :matter/status "active"]
         [?matter :matter/title ?title]
         [not [?mgmt :matter-managed-by/matter ?matter]]))
@@ -112,8 +104,7 @@
   :severity :error
   :query
     ((find ?task ?title)
-      (where
-        [?task :_schema/type "CaseTask"]
+      (where [?task :_schema/type "CaseTask"]
         [?task :casetask/priority "urgent"]
         [?task :casetask/title ?title]
         [not [?task :casetask/assignee-role ?role]]))
@@ -125,8 +116,7 @@
   :severity :warning
   :query
     ((find ?request ?title ?from)
-      (where
-        [?request :_schema/type "DocumentRequest"]
+      (where [?request :_schema/type "DocumentRequest"]
         [?request :documentrequest/status "overdue"]
         [?request :documentrequest/title ?title]
         [?request :documentrequest/requested-from ?from]))
@@ -142,14 +132,12 @@
   :severity :warning
   :query
     ((find ?invoice ?number ?amount)
-      (where
-        [?invoice :_schema/type "Invoice"]
+      (where [?invoice :_schema/type "Invoice"]
         [?invoice :invoice/needs-review true]
         [?invoice :invoice/number ?number]
         [?invoice :invoice/amount ?amount]))
   :message
-    (format
-      "Invoice {} for {} needs attorney review before sending"
+    (format "Invoice {} for {} needs attorney review before sending"
       ?number
       ?amount)
   (resolution "Approve Invoice" approve-invoice :auto false))
@@ -160,15 +148,13 @@
   :severity :info
   :query
     ((find ?client ?clientName ?industry)
-      (where
-        [?client :_schema/type "Client"]
+      (where [?client :_schema/type "Client"]
         [?client :client/risk-level "high"]
         [?client :client/status "active"]
         [?client :client/name ?clientName]
         [?client :client/industry ?industry]))
   :message
-    (format
-      "{} ({}): High-risk client - ensure attorney review is scheduled"
+    (format "{} ({}): High-risk client - ensure attorney review is scheduled"
       ?clientName
       ?industry))
 ```

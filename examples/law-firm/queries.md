@@ -1,8 +1,7 @@
 # Queries
 
 ```lisp
-(export
-  onboarding-clients
+(export onboarding-clients
   active-clients
   high-risk-clients
   active-matters

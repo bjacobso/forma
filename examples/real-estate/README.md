@@ -16,7 +16,8 @@ Listings and agents example in canonical ontology syntax.
 
 ```lisp
 (seed Agent "agent:noah" {:name "Noah Bennett" :market "Austin"})
-(seed Listing "listing:oakhill"
+(seed Listing
+  "listing:oakhill"
   {:address "18 Oakhill Drive" :status "active" :agent "agent:noah"})
 ```
 

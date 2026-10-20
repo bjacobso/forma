@@ -4,17 +4,14 @@
 (type ShapeId (Brand String))
 (type Color (Union :red :green :blue))
 (type Point (Tuple Float Float))
-(type
-  Shape
+(type Shape
   (Tagged
-    :tag
-    kind
+    :tag kind
     (Circle {:radius Float})
     (Rectangle {:width Float :height Float})
     (Polygon {:points (List Point)})))
 (type Label (Union String Int))
-(type
-  Drawing
+(type Drawing
   {
     :id ShapeId
     :shape Shape
@@ -24,8 +21,7 @@
     :title (String :doc "Human readable title")})
 (error InvalidDrawing {:message String})
 (: make-circle (-> String Float Drawing))
-(define
-  make-circle
+(define make-circle
   [id radius]
   {
     :id (ShapeId id)
@@ -34,11 +30,9 @@
     :tags {}
     :title (str "circle " id)})
 (: area (-> Shape (Effect Float)))
-(define
-  area
+(define area
   [shape]
-  (match
-    shape
+  (match shape
     (Circle c)
     (succeed (* 3.14 (get c :radius) (get c :radius)))
     (Rectangle r)
@@ -48,16 +42,13 @@
 (: warmth (-> Color (Effect String)))
 (define warmth [color] (match color "red" (succeed "warm") _ (succeed "cool")))
 (: parse-drawing (-> Json (Effect Drawing [InvalidDrawing] [])))
-(define
-  parse-drawing
+(define parse-drawing
   [input]
-  (catch
-    (decode Drawing input)
+  (catch (decode Drawing input)
     (SchemaError _)
     (fail (InvalidDrawing {:message "drawing does not match the schema"}))))
 (: describe-drawing (-> Json (Effect String [InvalidDrawing] [])))
-(define
-  describe-drawing
+(define describe-drawing
   [input]
   (do!
     [
@@ -67,11 +58,9 @@
       (area (get drawing :shape))
       tone
       (warmth (get drawing :color))
-      :let
-      [label (get drawing :label)]]
+      :let [label (get drawing :label)]]
     (succeed
-      (str
-        (get drawing :title)
+      (str (get drawing :title)
         ": "
         tone
         " "

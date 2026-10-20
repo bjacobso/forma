@@ -3,18 +3,16 @@
 ; Pricing
 (define tax-rate 0.0825)
 
-(define with-tax [amount]
+(define with-tax
+  [amount]
   ; The amount plus sales tax, rounded to cents.
-  (let [tax (* amount tax-rate)]
-    (/ (round (* 100 (+ amount tax))) 100)))
+  (let [tax (* amount tax-rate)] (/ (round (* 100 (+ amount tax))) 100)))
 
 (map with-tax [40 250 1200])
 
-(define badge [years]
-  (cond
-    (>= years 5) "gold"
-    (>= years 2) "silver"
-    :else "bronze"))
+(define badge
+  [years]
+  (cond (>= years 5) "gold" (>= years 2) "silver" :else "bronze"))
 
 (map badge [1 3 7])
 
@@ -38,7 +36,8 @@
 ; Capabilities run only after you allow them.
 (define hire (Directory.lookup "ada"))
 
-(define welcome [person]
+(define welcome
+  [person]
   (Chat.post "#people" (str "Welcome, " (get person :name) "!")))
 
 (welcome hire)

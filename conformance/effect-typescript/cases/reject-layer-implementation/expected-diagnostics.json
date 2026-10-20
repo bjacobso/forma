@@ -6,10 +6,10 @@
       "severity": "error",
       "code": "mechanics/undeclared-error",
       "message": "Cache.read can fail with Corrupt here, but the service declares only [Unavailable] for it.",
-      "line": 11,
-      "column": 15,
-      "endLine": 11,
-      "endColumn": 35
+      "line": 13,
+      "column": 26,
+      "endLine": 13,
+      "endColumn": 46
     },
     {
       "phase": "check",
@@ -18,8 +18,8 @@
       "message": "Layer CacheBroken does not implement Cache.write.",
       "line": 9,
       "column": 1,
-      "endLine": 12,
-      "endColumn": 26
+      "endLine": 13,
+      "endColumn": 65
     }
   ]
 }

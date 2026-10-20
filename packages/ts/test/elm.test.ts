@@ -12,9 +12,10 @@ describe("Elm prelude", () => {
   test.each([
     [source.replace('[:span (str model.count)]', '[:span (let [ignored (log "oops")] "x")]'), "effect hidden in view"],
     [source + "\n(typo ignored)", "unknown top-level form"],
-    [source.replace("  Increment (with", "  _ (with"), "wildcard update"],
+    [source.replace(/  Increment(\s+)\(with/, "  _$1(with"), "wildcard update"],
     [source.replace(":load-count)", ":typo)"), "unknown command"],
   ].map(([program, reason]) => ({ program: program!, reason })))("rejects $reason", ({ program }) => {
+    expect(program).not.toBe(source);
     const result = generateElmProgram(program);
     expect(result.ok).toBe(false);
     expect(result.code).toBeUndefined();

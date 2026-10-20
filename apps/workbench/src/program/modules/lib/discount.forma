@@ -1,3 +1,2 @@
 (export apply-discount)
-(define apply-discount [amount]
-  (- amount (/ amount 10)))
+(define apply-discount [amount] (- amount (/ amount 10)))

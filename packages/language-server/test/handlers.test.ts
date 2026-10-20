@@ -165,11 +165,12 @@ describe("Forma language server handlers", () => {
     expect(types).toEqual(["keyword", "function", "parameter", "parameter"]);
   });
 
-  test("formatting returns one full-document edit", async () => {
+  test("formatting returns whitespace edits that retain token anchors", async () => {
     const { workspace, document } = await setup("(define   x   1)");
     const edits = formatDocument(workspace, document);
-    expect(edits).toHaveLength(1);
-    expect(edits[0]?.newText).toBe("(define x 1)\n");
+    expect(edits).toHaveLength(3);
+    expect(edits.every(e => /^\s*$/.test(e.newText))).toBe(true);
+    expect(TextDocument.applyEdits(document, edits)).toBe("(define x 1)\n");
   });
 
   test("an open prelude replaces its file for every document", async () => {

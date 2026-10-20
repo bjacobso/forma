@@ -6,9 +6,9 @@
       "severity": "error",
       "code": "mechanics/type-mismatch",
       "message": "Expected Msg, but this is \"Increment\".",
-      "line": 26,
+      "line": 36,
       "column": 25,
-      "endLine": 26,
+      "endLine": 36,
       "endColumn": 36
     }
   ]

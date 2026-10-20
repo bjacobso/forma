@@ -1,3 +1,4 @@
+import { formatMarkdownDocument, markdownFormattingKeymap } from "../codemirror/format.js";
 /**
  * MarkdownEditor
  *
@@ -41,6 +42,8 @@ export interface MarkdownEditorProps {
 }
 
 export interface MarkdownEditorRef {
+  /** Format Lisp fences in the selection, or throughout the document. */
+  format: () => boolean;
   /** Reveal a specific line (centers the line in view) */
   revealLine: (line: number) => void;
   /** Get the underlying CodeMirror EditorView instance */
@@ -50,8 +53,8 @@ export interface MarkdownEditorRef {
 const ontologyCodeLanguages = [
   LanguageDescription.of({
     name: "lisp",
-    alias: ["clojure", "scheme"],
-    extensions: ["lisp", "clj"],
+    alias: ["forma", "clojure", "scheme"],
+    extensions: ["lisp", "forma", "clj"],
     support: lispSupport(),
   }),
 ];
@@ -101,6 +104,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         view.focus();
       },
       getEditor: () => viewRef.current,
+      format: () => viewRef.current ? formatMarkdownDocument(viewRef.current) : false,
     }));
 
     const createEditor = useCallback(() => {
@@ -121,7 +125,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         history(),
         bracketMatching(),
         closeBrackets(),
-        keymap.of([...defaultKeymap, ...historyKeymap]),
+        keymap.of([...markdownFormattingKeymap, ...defaultKeymap, ...historyKeymap]),
         ...(showLineNumbers ? [lineNumbers()] : []),
         ...(placeholder ? [cmPlaceholder(placeholder)] : []),
         ...(readOnly ? [EditorState.readOnly.of(true)] : []),

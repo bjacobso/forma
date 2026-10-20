@@ -16,15 +16,18 @@ Core company org example in canonical ontology syntax.
 ```
 
 ```lisp
-(seed Department "department:engineering"
+(seed Department
+  "department:engineering"
   {:name "Engineering" :cost-center "1001"})
 (seed Department "department:finance" {:name "Finance" :cost-center "2001"})
-(seed Employee "employee:alice"
+(seed Employee
+  "employee:alice"
   {
     :name "Alice Chen"
     :title "VP Engineering"
     :department "department:engineering"})
-(seed Employee "employee:mario"
+(seed Employee
+  "employee:mario"
   {:name "Mario Ruiz" :title "Controller" :department "department:finance"})
 ```
 

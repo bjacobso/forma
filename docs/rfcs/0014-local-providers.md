@@ -130,8 +130,8 @@ providing `Service`. Each member is a `define` with the syntax a `layer`
 member uses today. It can appear wherever `provide` accepts a layer:
 
 ```lisp
-(provide effect LayerName)            ; today
-(provide effect (implement Svc ...))  ; proposed
+(provide effect LayerName) ; today
+(provide effect (implement Svc ...)) ; proposed
 ```
 
 Methods are closures. They can refer to function parameters, `let` and `do!`
@@ -165,20 +165,25 @@ already among the declared errors of the members.
   (: set (-> String String (Effect Unit))))
 
 (: save-user (-> String (Effect String [] [Store.get Store.set])))
-(define save-user [name]
-  (do! [_ (Store.set "user" name)
-        saved (Store.get "user")]
-    saved))
+(define save-user
+  [name]
+  (do! [_ (Store.set "user" name) saved (Store.get "user")] saved))
 
 (: stored-writes (Effect (List String)))
 (define stored-writes
-  (do! [writes (ref-make [])
-        _ (provide (save-user "Bob")
-            (implement Store
-              (define get [key] (succeed "Bob"))
-              (define set [key value]
-                (ref-update writes (fn [xs] (conj xs value))))))
-        seen (ref-get writes)]
+  (do!
+    [
+      writes
+      (ref-make [])
+      _
+      (provide (save-user "Bob")
+        (implement Store
+          (define get [key] (succeed "Bob"))
+          (define set
+            [key value]
+            (ref-update writes (fn [xs] (conj xs value))))))
+      seen
+      (ref-get writes)]
     seen))
 ```
 
@@ -194,9 +199,11 @@ rest to the `Svc` provided outside the `provide` expression:
 
 ```lisp
 (provide (Checkout.place request)
-  (implement Payments :delegate
-    (define charge [customer cents]
-      (fail (PaymentDeclined {:reason "card expired"})))))
+  (implement Payments
+    :delegate
+      (define charge
+        [customer cents]
+        (fail (PaymentDeclined {:reason "card expired"})))))
 ```
 
 The result's requirements contain `Svc.m` for each delegated member `m` that

@@ -31,5 +31,6 @@
   :persona "Integration Operator"
   :subject session
   :home integration-events-view
-  :views [integration-events-view document-routing-monitor cba-template-library])
+  :views
+    [integration-events-view document-routing-monitor cba-template-library])
 ```

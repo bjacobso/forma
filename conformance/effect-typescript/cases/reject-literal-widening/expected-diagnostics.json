@@ -6,10 +6,10 @@
       "severity": "error",
       "code": "mechanics/type-mismatch",
       "message": "Expected Member, but this is {:name String :role String}.",
-      "line": 13,
-      "column": 19,
-      "endLine": 13,
-      "endColumn": 25
+      "line": 11,
+      "column": 69,
+      "endLine": 11,
+      "endColumn": 75
     }
   ]
 }

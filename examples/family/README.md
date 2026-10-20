@@ -17,7 +17,8 @@ Family relationships example in canonical ontology syntax.
 
 ```lisp
 (seed Household "household:rivera" {:name "Rivera Household"})
-(seed Person "person:maya"
+(seed Person
+  "person:maya"
   {:name "Maya Rivera" :role "parent" :household "household:rivera"})
 ```
 

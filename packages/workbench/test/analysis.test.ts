@@ -1,3 +1,4 @@
+import { sourceToOutline } from "@formalang/ts/syntax";
 import { describe, expect, it } from "vitest";
 
 import { analyzeSource, onboarding } from "./support/program.js";
@@ -6,7 +7,9 @@ describe("analyzing a program", () => {
   it("keeps the document's text and ids", async () => {
     const analysis = await analyzeSource(onboarding);
     expect(analysis.document.source).toBe(onboarding);
-    expect(analysis.rows.length).toBeGreaterThan(30);
+    expect(analysis.document.identity.nodes.map(node => node.id)).toEqual(
+      sourceToOutline(onboarding).identity.nodes.map(node => node.id),
+    );
   });
 
   it("types code and elaborates descriptor forms in one document", async () => {

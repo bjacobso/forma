@@ -6,9 +6,9 @@
       "severity": "error",
       "code": "mechanics/pure-service",
       "message": "View expression cannot call CounterStore.get: functions and constants have no services in scope.",
-      "line": 25,
+      "line": 35,
       "column": 12,
-      "endLine": 25,
+      "endLine": 35,
       "endColumn": 30
     },
     {
@@ -16,9 +16,9 @@
       "severity": "error",
       "code": "mechanics/type-mismatch",
       "message": "Expected String, but this is (Effect Int [CounterUnavailable] [CounterStore.get]).",
-      "line": 25,
+      "line": 35,
       "column": 12,
-      "endLine": 25,
+      "endLine": 35,
       "endColumn": 30
     }
   ]

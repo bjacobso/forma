@@ -9,17 +9,13 @@
 (document union-authorization-card
   :description
     "Collect employee acknowledgement, dues authorization, and electronic signature for a covered CBA placement"
-  (page
-    employee-authorization
-    :assignee
-    employee
-    :description
-    "Employee Authorization"
-    :completion
-    (completion submit-union-authorization-card :entity Employee)
+  (page employee-authorization
+    :assignee employee
+    :description "Employee Authorization"
+    :completion (completion submit-union-authorization-card :entity Employee)
     (content
       :unionauth.intro
-      "# Union Authorization Card\n\nReview the covered position, bargaining unit, and authorization language. Confirm your information and sign electronically to complete this required labor-relations task.\n\n---")
+        "# Union Authorization Card\n\nReview the covered position, bargaining unit, and authorization language. Confirm your information and sign electronically to complete this required labor-relations task.\n\n---")
     (text :unionauth.employee_name "Employee Name" :required true)
     (text :unionauth.employee_email "Employee Email" :bind Employee.email)
     (text :unionauth.employee_phone "Employee Phone" :bind Employee.phone)
@@ -31,7 +27,7 @@
     (text :unionauth.cba_identifier "CBA Identifier" :bind Employee.cba-id)
     (content
       :unionauth.authorization_text
-      "## Authorization\n\nI acknowledge that my position is covered by a collective bargaining agreement. I authorize the employer to process the applicable union authorization and dues deduction according to the active agreement, payroll policy, and any legally required notices.\n\nThis demonstration text is representative and client-neutral; production implementations use the approved language for the applicable CBA and card template version.")
+        "## Authorization\n\nI acknowledge that my position is covered by a collective bargaining agreement. I authorize the employer to process the applicable union authorization and dues deduction according to the active agreement, payroll policy, and any legally required notices.\n\nThis demonstration text is representative and client-neutral; production implementations use the approved language for the applicable CBA and card template version.")
     (checkbox
       :unionauth.acknowledgement
         "I have reviewed the CBA authorization information"
@@ -45,13 +41,11 @@
       :required true
       :bind Employee.union-card-signed)
     (date :unionauth.signature_date "Signature Date" :required true)))
-(document-locale union-authorization-card "en"
-  (role
-    employee
-    :label
-    "Employee"
-    :description
-    "The worker completing the union authorization card")
+(document-locale union-authorization-card
+  "en"
+  (role employee
+    :label "Employee"
+    :description "The worker completing the union authorization card")
   (section employee-authorization :label "Employee Authorization")
   (field :unionauth.employee_name :label "Employee Name")
   (field :unionauth.employee_email :label "Employee Email")

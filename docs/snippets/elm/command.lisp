@@ -7,6 +7,6 @@
 (type Msg (Tagged (GotCount {:count Int}) (LoadFailed {:reason String})))
 (: load-message (Effect Msg [] [CounterStore.get]))
 (define load-message
-  (catch
-    (do! [n fetch-count] (GotCount {:count n}))
-    (CounterUnavailable e) (LoadFailed {:reason e.reason})))
+  (catch (do! [n fetch-count] (GotCount {:count n}))
+    (CounterUnavailable e)
+    (LoadFailed {:reason e.reason})))

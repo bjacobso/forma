@@ -53,8 +53,7 @@ same module.
 (: increment (-> Int Int))
 (define increment [value] (+ value 1))
 
-(define distance [point]
-  (+ point.x point.y))
+(define distance [point] (+ point.x point.y))
 (: distance (-> {:x Float :y Float} Float))
 ```
 
@@ -80,8 +79,7 @@ or a present value, represented by `(Some value)`.
   {:id OrderId :status Status :total-cents Int :coupon (Option String)})
 
 (: example Order)
-(define example
-  {:id (OrderId "order:1") :status :pending :total-cents 1200})
+(define example {:id (OrderId "order:1") :status :pending :total-cents 1200})
 ```
 
 In a record checked against an expected type, an omitted optional field becomes
@@ -96,9 +94,7 @@ union of keyword or string literals. Dictionary lookup returns `(Option V)`.
 ```lisp
 (: scores (Map String Int))
 (define scores {"Ada" 10 "Grace" 12})
-(match (get scores "Ada")
-  (Some score) score
-  None         0)
+(match (get scores "Ada") (Some score) score None 0)
 ```
 
 An open record includes a row variable after `&`, as in `{:name String & row}`.
@@ -135,11 +131,15 @@ binding patterns.
 ```lisp
 (type Shape (Tagged (Circle {:radius Float}) (Square {:side Float}) Point))
 (: area (-> Shape Float))
-(define area [shape]
+(define area
+  [shape]
   (match shape
-    (Circle {:radius radius}) (* 3.14159 radius radius)
-    (Square {:side side})     (* side side)
-    Point                    0))
+    (Circle {:radius radius})
+    (* 3.14159 radius radius)
+    (Square {:side side})
+    (* side side)
+    Point
+    0))
 ```
 
 Constructors belong to their type: `Shape.Circle` is always explicit. Bare
@@ -180,8 +180,7 @@ Effect is a value.
 ```lisp
 (service Clock (: now (Effect Int)))
 (: next (Effect Int [] [Clock.now]))
-(define next
-  (do! [now Clock.now :let [later (+ now 1)]] later))
+(define next (do! [now Clock.now :let [later (+ now 1)]] later))
 ```
 
 `do!` runs effects; `:let` binds pure values within the sequence. A plain tail value
@@ -196,7 +195,8 @@ positional arguments, trailing keyword options, and repeated child forms. Its
 hole types specify how those arguments parse and check.
 
 ```lisp
-(type GreetingIR {:kind "Greeting" :name Symbol :message String :doc (Option String)})
+(type GreetingIR
+  {:kind "Greeting" :name Symbol :message String :doc (Option String)})
 (form (greeting name message {:keys [doc]})
   "Declare a greeting."
   :types {:name (Declares Greeting) :message String :doc (Option String)}
@@ -232,7 +232,8 @@ Entities use short field names and derive attribute namespaces. References use
 (entity Department {:name String})
 (entity Employee
   {:name String :department (Id Department) :active (Option Bool)})
-(seed Employee "employee:ada"
+(seed Employee
+  "employee:ada"
   {:name "Ada" :department "department:engineering"})
 (query people :from Employee :where (= name "Ada") :select [name])
 ```

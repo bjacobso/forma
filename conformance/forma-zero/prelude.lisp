@@ -37,67 +37,60 @@
 ; dynamic Map (not a fixed record) on the HM engine; runtime value is {}
 (define empty-env (: {} (Map String String)))
 
-(define member?
-   [xs x]
-    (not (empty? (filter (fn [y] (= y x)) xs))))
+(define member? [xs x] (not (empty? (filter (fn [y] (= y x)) xs))))
 
 (define dedup
-   [xs]
-    (reduce (fn [acc x] (if (member? acc x) acc (conj acc x)))
-            (concat [] [])
-            xs))
+  [xs]
+  (reduce (fn [acc x] (if (member? acc x) acc (conj acc x))) (concat [] []) xs))
 
 ; --- layer 1: the query algebra ----------------------------------------------
 
 ; extend env with v = x; returns 0-or-1 envs
-(define bind [v x env]
+(define bind
+  [v x env]
   (match (get env v)
-    None [(assoc env v x)]
-    (Some bound) (if (= bound x) [env] [])))
+    None
+    [(assoc env v x)]
+    (Some bound)
+    (if (= bound x) [env] [])))
 
 ; Query results bind the requested variable before this projection.
-(define binding-value [env key]
+(define binding-value
+  [env key]
   (match (get env key) (Some value) value None ""))
 
 ; match one pattern slot against one fact slot
 (define unify-slot
-   [vars p f env]
-    (cond
-      (member? vars p) (bind p f env)
-      (= p f) [env]
-      :else []))
+  [vars p f env]
+  (cond (member? vars p) (bind p f env) (= p f) [env] :else []))
 
 ; unify a 3-slot pattern against a fact, threading the env through the slots
 (define unify
-   [vars pat fact env]
-    (flat-map (fn [env-b] (unify-slot vars (nth pat 2) (nth fact 2) env-b))
-      (flat-map (fn [env-a] (unify-slot vars (nth pat 1) (nth fact 1) env-a))
-        (unify-slot vars (nth pat 0) (nth fact 0) env))))
+  [vars pat fact env]
+  (flat-map (fn [env-b] (unify-slot vars (nth pat 2) (nth fact 2) env-b))
+    (flat-map (fn [env-a] (unify-slot vars (nth pat 1) (nth fact 1) env-a))
+      (unify-slot vars (nth pat 0) (nth fact 0) env))))
 
 ; all extensions of env by pat over facts fs
-(define matches
-   [vars pat fs env]
-    (flat-map (fn [f] (unify vars pat f env)) fs))
+(define matches [vars pat fs env] (flat-map (fn [f] (unify vars pat f env)) fs))
 
 ; conjunction: fold the env set through the patterns
 ; (no self-recursion anywhere in this kernel — every derivation is a fold,
 ; which is also the only shape both engines support: the HM engine's
 ; closures cannot see their own binding)
 (define where*
-   [vars pats fs envs]
-    (reduce (fn [es pat] (flat-map (fn [env] (matches vars pat fs env)) es))
-            envs
-            pats))
+  [vars pats fs envs]
+  (reduce (fn [es pat] (flat-map (fn [env] (matches vars pat fs env)) es))
+    envs
+    pats))
 
-(define where
-   [vars pats fs]
-    (where* vars pats fs (concat [empty-env] [])))
+(define where [vars pats fs] (where* vars pats fs (concat [empty-env] [])))
 
 ; negation-as-absence
 (define without
-   [vars pats neg fs]
-    (filter (fn [env] (empty? (where* vars neg fs (concat [env] []))))
-            (where vars pats fs)))
+  [vars pats neg fs]
+  (filter (fn [env] (empty? (where* vars neg fs (concat [env] []))))
+    (where vars pats fs)))
 
 ; --- layer 2: the derived "primitives" ----------------------------------------
 
@@ -106,73 +99,79 @@
 
 ; constraint (obligation reading): subjects bound to v matching `when` but not `need`
 (define violations
-   [vars when need v fs]
-    (dedup (map (fn [env] (binding-value env v)) (without vars when need fs))))
+  [vars when need v fs]
+  (dedup (map (fn [env] (binding-value env v)) (without vars when need fs))))
 
 ; authority: a grant is a fact; the check is a query over the log
-(define grant  [who what] [who "can" what])
+(define grant [who what] [who "can" what])
 
 (define can?
-   [author fact fs]
-    (not (empty? (where (concat [] []) (concat [[author "can" (nth fact 1)]] []) fs))))
+  [author fact fs]
+  (not
+    (empty?
+      (where (concat [] []) (concat [[author "can" (nth fact 1)]] []) fs))))
 
 ; action: a reaction gated on invocation facts  [who "invoke" name]
 (define make-action
-   [name produce]
-    (fn [f fs]
-      (if (= (nth f 1) "invoke")
-        (if (= (nth f 2) name) (produce f fs) (concat [] []))
-        (concat [] []))))
+  [name produce]
+  (fn [f fs]
+    (if (= (nth f 1) "invoke")
+      (if (= (nth f 2) name) (produce f fs) (concat [] []))
+      (concat [] []))))
 
 ; constraint reconciler: emit [s "must" oblig] for each violation not yet obligated
 (define make-obligate
-   [vars when need v oblig]
-    (fn [f fs]
-      (filter (fn [m] (not (member? fs m)))
-              (map (fn [s] [s "must" oblig])
-                   (violations vars when need v fs)))))
+  [vars when need v oblig]
+  (fn [f fs]
+    (filter (fn [m] (not (member? fs m)))
+      (map (fn [s] [s "must" oblig]) (violations vars when need v fs)))))
 
 ; --- layer 3: the generic workflow engine --------------------------------------
 
 ; the step graph is facts ([step "next" step]); one reaction advances on completion
 (define advance
-   [f fs]
-    (if (= (nth f 1) "completed")
-      (map (fn [env] [(nth f 0) "now" (binding-value env "n")])
-           (where (concat ["n"] []) (concat [[(nth f 2) "next" "n"]] []) fs))
-      (concat [] [])))
+  [f fs]
+  (if (= (nth f 1) "completed")
+    (map (fn [env] [(nth f 0) "now" (binding-value env "n")])
+      (where (concat ["n"] []) (concat [[(nth f 2) "next" "n"]] []) fs))
+    (concat [] [])))
 
 ; --- layer 4: opeval — the admission loop --------------------------------------
 
-(define emissions
-   [f fs reactions]
-    (flat-map (fn [r] (r f fs)) reactions))
+(define emissions [f fs reactions] (flat-map (fn [r] (r f fs)) reactions))
 
 ; one round: fold the queued proposals into the log; reactions to facts
 ; admitted this round are queued for the next round
 (define opeval-step
-   [reactions state]
-    (reduce
-      (fn [st p]
-        (let [f (get p :fact)
-              log (get st :log)]
-          (cond
-            (member? log f) st
-            (not (can? (get p :by) f log)) st
-            :else (let [logn (conj log f)
-                        emitted (map (fn [e] {:fact e :by "system"})
-                                     (emissions f logn reactions))]
-                    {:log logn :queue (concat (get st :queue) emitted)}))))
-      {:log (get state :log) :queue (concat [] [])}
-      (get state :queue)))
+  [reactions state]
+  (reduce
+    (fn [st p]
+      (let [f (get p :fact) log (get st :log)]
+        (cond
+          (member? log f)
+          st
+          (not (can? (get p :by) f log))
+          st
+          :else
+            (let
+              [
+                logn
+                (conj log f)
+                emitted
+                (map (fn [e] {:fact e :by "system"})
+                  (emissions f logn reactions))]
+              {:log logn :queue (concat (get st :queue) emitted)}))))
+    {:log (get state :log) :queue (concat [] [])}
+    (get state :queue)))
 
 ; the admission loop as a fold over a bounded round counter — admission is
 ; idempotent (duplicates are skipped), so extra rounds are no-ops; a real
 ; substrate iterates to fixpoint, but a bounded fold keeps the kernel
 ; recursion-free
 (define opeval
-   [log proposals reactions]
-    (get (reduce (fn [st r] (opeval-step reactions st))
-                 {:log log :queue proposals}
-                 [1 2 3 4 5 6 7 8])
-         :log))
+  [log proposals reactions]
+  (get
+    (reduce (fn [st r] (opeval-step reactions st))
+      {:log log :queue proposals}
+      [1 2 3 4 5 6 7 8])
+    :log))

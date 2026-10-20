@@ -84,7 +84,8 @@ The payroll department verifies the bank information and confirms the prenote st
 ## Locale: English
 
 ```lisp
-(define-document-locale "Direct Deposit Authorization" en
+(define-document-locale "Direct Deposit Authorization"
+  en
   (role "employee" (label "Employee"))
   (role "employer" (label "Payroll Department"))
   (section "bank-information" (label "Bank Information"))
@@ -94,19 +95,18 @@ The payroll department verifies the bank information and confirms the prenote st
   (field ":dd.account_number" (label "Account Number"))
   (field ":dd.account_type"
     (label "Account Type")
-    (options
-      (option "checking" "Checking")
-      (option "savings" "Savings")))
+    (options (option "checking" "Checking") (option "savings" "Savings")))
   (field ":dd.employee_signature" (label "Employee Signature"))
   (field ":dd.verified_by" (label "Verified By"))
   (field ":dd.verification_date" (label "Verification Date"))
   (field ":dd.prenote_status"
     (label "Prenote Status")
-    (options
-      (option "pending" "Pending")
+    (options (option "pending" "Pending")
       (option "verified" "Verified")
       (option "failed" "Failed")))
   (field ":dd.notes" (label "Notes")))
 
-(define-document-localized "Direct Deposit Authorization" (locales en) (default-locale en))
+(define-document-localized "Direct Deposit Authorization"
+  (locales en)
+  (default-locale en))
 ```

@@ -16,10 +16,8 @@
 (type ContentItalic {:kind "italic" :children (List ContentNode)})
 (type ContentLink {:kind "link" :href String :children (List ContentNode)})
 (type ContentDoc {:kind "doc" :children (List ContentNode)})
-(type
-  ContentNode
-  (Union
-    ContentText
+(type ContentNode
+  (Union ContentText
     ContentMarkdown
     ContentCode
     ContentH1

@@ -11,8 +11,7 @@ preludes:
 Client onboarding, matter management, document chasing, and billing review for a general law firm backoffice.
 
 ```lisp
-(export-from
-  "./schema.md"
+(export-from "./schema.md"
   [
     Attorney
     Paralegal
@@ -36,8 +35,7 @@ Client onboarding, matter management, document chasing, and billing review for a
     task-for-matter
     document-request-for
     invoice-for])
-(export-from
-  "./data.md"
+(export-from "./data.md"
   [
     represents
     contact-at
@@ -50,8 +48,7 @@ Client onboarding, matter management, document chasing, and billing review for a
     task-for-matter
     document-request-for
     invoice-for])
-(export-from
-  "./queries.md"
+(export-from "./queries.md"
   [
     onboarding-clients
     active-clients
@@ -68,8 +65,7 @@ Client onboarding, matter management, document chasing, and billing review for a
     open-document-requests
     invoices-needing-review
     active-violations])
-(export-from
-  "./views.md"
+(export-from "./views.md"
   [
     backoffice-dashboard
     client-onboarding-view
@@ -81,8 +77,7 @@ Client onboarding, matter management, document chasing, and billing review for a
     client-portfolio-view
     high-risk-clients-view])
 (export-from "./workspaces.md" [intake-coordinator managing-attorney])
-(export-from
-  "./actions.md"
+(export-from "./actions.md"
   [
     create-client
     create-intake-packet
@@ -103,8 +98,7 @@ Client onboarding, matter management, document chasing, and billing review for a
     flag-client-risk
     send-notification
     escalate-to-attorney])
-(export-from
-  "./constraints.md"
+(export-from "./constraints.md"
   [
     onboarding-client-needs-conflict-check
     conflict-needs-attorney-review
@@ -115,8 +109,7 @@ Client onboarding, matter management, document chasing, and billing review for a
     overdue-document-request
     invoice-needs-review-before-sending
     high-risk-client-review])
-(export-from
-  "./processes.md"
+(export-from "./processes.md"
   [client-onboarding matter-opening document-follow-up])
 (export-from "./documents.md" [client-intake-form engagement-letter])
 ```

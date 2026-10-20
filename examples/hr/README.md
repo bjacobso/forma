@@ -15,11 +15,14 @@ HR onboarding example in canonical ontology syntax.
 ```
 
 ```lisp
-(seed Candidate "candidate:sam"
+(seed Candidate
+  "candidate:sam"
   {:name "Sam Patel" :email "sam@example.com" :status "interviewing"})
-(seed Candidate "candidate:taylor"
+(seed Candidate
+  "candidate:taylor"
   {:name "Taylor Brooks" :email "taylor@example.com" :status "hired"})
-(seed Offer "offer:taylor"
+(seed Offer
+  "offer:taylor"
   {
     :title "Customer Success Manager"
     :status "accepted"

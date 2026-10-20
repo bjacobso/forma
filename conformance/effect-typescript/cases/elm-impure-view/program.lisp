@@ -5,27 +5,38 @@
 (: fetch-count (Effect Int [CounterUnavailable] [CounterStore.get]))
 (define fetch-count (CounterStore.get))
 
-(msg Increment Decrement Load
-  (GotCount {:count Int}) (LoadFailed {:reason String}))
+(msg Increment
+  Decrement
+  Load
+  (GotCount {:count Int})
+  (LoadFailed {:reason String}))
 
-(command load-count fetch-count
+(command load-count
+  fetch-count
   :ok [n (GotCount {:count n})]
   :error [(CounterUnavailable e) (LoadFailed {:reason e.reason})])
 
 (update [model message]
-  Increment (with (assoc model :count (+ model.count 1)))
-  Decrement (with (assoc model :count (- model.count 1)))
-  Load (with (assoc model :status :loading) :load-count)
-  (GotCount {:count n}) (with (assoc (assoc model :count n) :status :idle))
-  (LoadFailed {:reason reason}) (with (assoc (assoc model :status :failed) :reason reason)))
+  Increment
+  (with (assoc model :count (+ model.count 1)))
+  Decrement
+  (with (assoc model :count (- model.count 1)))
+  Load
+  (with (assoc model :status :loading) :load-count)
+  (GotCount {:count n})
+  (with (assoc (assoc model :count n) :status :idle))
+  (LoadFailed {:reason reason})
+  (with (assoc (assoc model :status :failed) :reason reason)))
 
 (view [model]
-  [:div {:class "counter"}
+  [
+    :div {:class "counter"}
     [:button {:on-click Decrement} "−"]
     [:span (CounterStore.get)]
     [:button {:on-click Increment} "+"]
     [:button {:on-click Load} "Load"]
     [:span (str model.status " " model.reason)]])
 
-(app Counter :model Model
+(app Counter
+  :model Model
   :init (with (Model {:count 0 :status :idle :reason ""})))

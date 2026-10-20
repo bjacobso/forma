@@ -81,3 +81,6 @@ export { findEditorTypeAtOffset } from "./editor.js";
 export { createDefaultLanguageHost, type DefaultLanguageHost } from "./default-host.js";
 export { TsLanguageHost } from "./ts-host.js";
 
+
+export { formatSource, formattingEdits } from "./format.js";
+export type { FormatRequest, FormatResult, FormatOptions } from "./format.js";

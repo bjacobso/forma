@@ -58,6 +58,7 @@ export function SourcePane({
 
   return (
     <div className="source-pane">
+      {!readOnly && onChange ? <div className="source-actions"><button className="icon-button" type="button" onClick={() => editorRef.current?.format()}>Format</button></div> : null}
       <LispEditor
         ariaLabel="Forma source"
         className="embedded-editor"
