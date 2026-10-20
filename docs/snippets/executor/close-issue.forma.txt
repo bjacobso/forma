@@ -1,0 +1,2 @@
+turn.lisp:19:25 error mechanics/undeclared-requirement
+  Operation main requires GitHub.close-issue, but its signature declares only [GitHub.list-issues Slack.post-message].

@@ -26,6 +26,7 @@ The structural workbench currently depends on unpublished Foldworks packages.
 - [Forma for Effect](https://raw.githubusercontent.com/bjacobso/forma/main/docs/effect.md): Generate Effect TypeScript from checked Forma declarations and programs.
 - [Forma for Elm-style apps](https://raw.githubusercontent.com/bjacobso/forma/main/docs/elm.md): Foldkit prototype with exhaustive update, checked command recovery, and pure views; shared HttpApi client generation remains proposed.
 - [Elm prototype reference](https://raw.githubusercontent.com/bjacobso/forma/main/docs/elm/reference.md): Isolated prelude generator, supported forms, mounting, and current limits.
+- [Forma for code mode](https://raw.githubusercontent.com/bjacobso/forma/main/docs/executor.md): An Executor-style tool catalog as Effect services, where an operation's signature names the tools it may call; checked and runnable as a conformance case, with no Executor integration.
 - [Effect reference](https://raw.githubusercontent.com/bjacobso/forma/main/docs/effect/reference.md): Supported schemas, services, errors, resources, and operations.
 - [Language services](https://raw.githubusercontent.com/bjacobso/forma/main/docs/language-services.md): Analysis, node identity, observations, and structural edit scripts.
 

@@ -17,6 +17,15 @@ Command arguments, subscriptions, richer views, editor/worker integration, and
 shared HttpApi server/client declarations remain proposed work. There is no
 production-readiness claim.
 
+## Code-mode tool catalogs
+
+The [code mode page](/executor) shows an Executor-style tool catalog written
+as Effect services. An operation's signature names the tool members it may call,
+and the checker rejects calls outside it, including calls TypeScript accepts.
+The `executor-digest` conformance case runs the generated module against a fake
+tool endpoint. Catalog rendering from tool types, an `execute` tool, checked runs,
+persistent sessions, and journals for Effect programs remain proposed work.
+
 ## Next
 
 1. Tighten the language specification around observable behavior and turn

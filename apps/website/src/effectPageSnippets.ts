@@ -56,7 +56,7 @@ function formaDiagnostics(source: string, sourceId: string): string {
 }
 
 /** Generates TypeScript with the Forma checker bypassed and reports what tsc says about it. */
-function uncheckedTsc(source: string, fileName: string): string {
+export function uncheckedTsc(source: string, fileName: string): string {
   const forms = Effect.runSync(parseManyToSExpr(source));
   const projected = mechanicsPackageableDeclarations(forms, fileName);
   if (!projected.ok) throw new Error(`${fileName} did not project`);

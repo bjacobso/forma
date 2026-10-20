@@ -59,6 +59,7 @@ For each positive case the runner checks that:
 | `edge-cases` | Regressions from adversarial testing: escaping, binder capture, prototype keys, shadowing, literal widening, literal and error matches, `provide` inside layer methods |
 | `elm-pure` | No-command app, pure init/update, nested let/if transitions, static view, mounting types |
 | `elm-counter` | `preludes/elm.lisp`, exhaustive update, pure Hiccup view, typed command recovery, headless Foldkit init/update/commands |
+| `executor-digest` | A tool catalog as services, a program whose signature names the tools it calls, layers that route members to tool paths and decode their output, typed rate-limit recovery, an exact call journal |
 | `http-api` | Prelude-defined endpoints, groups, handler contracts, derived builders, path/payload decoding, typed HTTP statuses, request service layers |
 
 The `http-api.json` marker selects `generateHttpApiProgram` for the HTTP case.

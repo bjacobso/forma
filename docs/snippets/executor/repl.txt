@@ -1,0 +1,16 @@
+; host → agent: catalog.lisp is in scope for every turn
+
+; agent → host: turn 1 (20 lines)
+rejected · 2 errors · nothing ran
+turn.lisp:9:48 error mechanics/type-mismatch
+  Expected (Enum "open" "closed"), but this is "stale".
+
+turn.lisp:9:3 error mechanics/undeclared-error
+  Operation open-issues can fail with RateLimited, but its signature declares no errors.
+
+; agent → host: turn 2 (21 lines)
+accepted · 0 errors
+  main requires
+    GitHub.list-issues  allow
+    Slack.post-message  ask
+  approval: 1 question before the first tool call (Slack.post-message)

@@ -34,6 +34,7 @@ export default defineConfig({
       { text: "Language", link: "/language" },
       { text: "Effect", link: "/effect" },
       { text: "Elm", link: "/elm" },
+      { text: "Code mode", link: "/executor" },
       { text: "Architecture", link: "/architecture" },
     ],
     sidebar: [
@@ -48,6 +49,7 @@ export default defineConfig({
           { text: "Prelude HTTP API spike", link: "/effect/http-api" },
           { text: "Forma for Elm-style apps", link: "/elm" },
           { text: "Elm prototype reference", link: "/elm/reference" },
+          { text: "Forma for code mode", link: "/executor" },
         ],
       },
       {

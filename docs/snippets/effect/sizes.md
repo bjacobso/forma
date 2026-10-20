@@ -6,6 +6,7 @@
 | `edge-cases` | 106 | 152 | 1.43× |
 | `elm-counter` | 25 | 88 | 3.52× |
 | `elm-pure` | 7 | 33 | 4.71× |
+| `executor-digest` | 28 | 46 | 1.64× |
 | `http-api` | 19 | 37 | 1.95× |
 | `multi-service-checkout` | 125 | 160 | 1.28× |
 | `ontology-actions` | 25 | 52 | 2.08× |
@@ -16,4 +17,4 @@
 | `stream-pipeline` | 60 | 70 | 1.17× |
 | `surface-review` | 45 | 95 | 2.11× |
 | `typed-errors` | 59 | 76 | 1.29× |
-| **All cases** | **1044** | **1359** | **1.30×** |
+| **All cases** | **1072** | **1405** | **1.31×** |
