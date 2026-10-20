@@ -1568,7 +1568,11 @@ body {
 .forma-effect div.language-txt pre,
 .forma-effect div.language-txt pre code,
 .forma-elm div.language-txt pre,
-.forma-elm div.language-txt pre code {
+.forma-elm div.language-txt pre code,
+.forma-executor div.language-txt pre,
+.forma-executor div.language-txt pre code,
+.forma-executor div.language-text pre,
+.forma-executor div.language-text pre code {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   width: auto;
@@ -1580,4 +1584,18 @@ body {
 
 .fh-eyebrow + h1 {
   margin-top: 24px !important;
+}
+
+/* /executor: the principles' closing line, stacked windows, and the proposed steps. */
+.forma-executor .fh-principles__close {
+  max-width: 780px;
+  margin: 36px 0 28px !important;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.forma-executor .fh-facts + .fh-window,
+.forma-executor .fh-window + .fh-window,
+.forma-executor .fh-steps {
+  margin-top: 28px;
 }

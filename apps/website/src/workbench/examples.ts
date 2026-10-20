@@ -1,4 +1,5 @@
 import { elmCommandSource, elmCommandBrokenSource } from "../elmPageSources";
+import { executorLiveBrokenSource, executorLiveSource } from "../executorPageSources";
 import { ordersSource, ordersUndeclaredSource, strictSource } from "../effectPageSources";
 import { contractSource, undeclaredCapabilitySource } from "../pipelines/sources";
 import { getPipeline } from "../pipelines";
@@ -18,6 +19,9 @@ export interface WorkbenchExample {
 export const workbenchExamples: readonly WorkbenchExample[] = [
   { id: "elm-command", title: "Elm command recovery", file: "counter-command.forma", source: elmCommandSource,
     broken: elmCommandBrokenSource, prompt: "Remove command recovery. load-message promises no typed failures, but fetch-count can still fail. Restore the mapping to LoadFailed.",
+    dialect: "effect", passes: ["parse", "typecheck"] },
+  { id: "executor-turn", title: "Code-mode tool manifest", file: "turn.forma", source: executorLiveSource,
+    broken: executorLiveBrokenSource, prompt: "Close every stale issue without declaring GitHub.close-issue. The checker finds the call the manifest does not admit. Add it to main's signature, or remove the call.",
     dialect: "effect", passes: ["parse", "typecheck"] },
   { id: "contracts", title: "Effect contracts", file: "log.forma", source: contractSource,
     broken: undeclaredCapabilitySource, prompt: "Remove Console.print from the signature. The body still needs it.",

@@ -1,0 +1,15 @@
+{
+  "typescript": "accepts",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/undeclared-requirement",
+      "message": "Operation main requires GitHub.close-issue, but its signature declares only [GitHub.list-issues Slack.post-message].",
+      "line": 31,
+      "column": 25,
+      "endLine": 31,
+      "endColumn": 81
+    }
+  ]
+}

@@ -3,7 +3,8 @@ import { elmCommandSource, elmCommandBrokenSource } from "./elmPageSources";
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
-import { homeSnippetDir, homeSnippets, elmPageSnippets, elmSnippetDir } from "./docsSnippets";
+import { homeSnippetDir, homeSnippets, elmPageSnippets, elmSnippetDir, executorPageSnippets, executorSnippetDir } from "./docsSnippets";
+import { executorLiveBrokenSource, executorLiveSource } from "./executorPageSources";
 import { effectPageSnippets, effectSnippetDir, typecheck } from "./effectPageSnippets";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
@@ -102,5 +103,48 @@ describe("docs /elm page snippets", () => {
   }, 30_000);
   test("the documented source matches the executed conformance case", () => {
     expect(snippets["counter.lisp"]).toBe(readFileSync(resolve(repoRoot, "conformance/effect-typescript/cases/elm-counter/program.lisp"), "utf8"));
+  });
+});
+
+describe("docs /executor page snippets", () => {
+  test("the live edit produces one located undeclared tool", () => {
+    expect(generateEffectProgram(executorLiveSource).diagnostics).toEqual([]);
+    const result = generateEffectProgram(executorLiveBrokenSource);
+    expect(result.diagnostics).toHaveLength(1);
+    expect(result.diagnostics[0]).toMatchObject({ code: "mechanics/undeclared-requirement", span: { startLine: 31 } });
+  });
+  const snippets = executorPageSnippets();
+  const dir = resolve(repoRoot, executorSnippetDir);
+  const suite = resolve(repoRoot, "conformance/effect-typescript/cases");
+  if (update) {
+    mkdirSync(dir, { recursive: true });
+    for (const [name, content] of Object.entries(snippets)) writeFileSync(resolve(dir, name), content);
+  }
+  test("contains exactly the generated files", () => {
+    expect(readdirSync(dir).sort()).toEqual(Object.keys(snippets).sort());
+  });
+  test.each(Object.keys(snippets))("%s matches engine output", name => {
+    expect(readFileSync(resolve(dir, name), "utf8")).toBe(snippets[name]);
+  });
+  test("the documented program and output are the executed conformance case", () => {
+    expect(snippets["program.lisp"]).toBe(readFileSync(resolve(suite, "executor-digest/program.lisp"), "utf8"));
+    expect(snippets["program.ts"]).toBe(readFileSync(resolve(suite, "executor-digest/expected.ts"), "utf8"));
+  });
+  test("the page's run journal is the one the harness asserts", () => {
+    const harness = readFileSync(resolve(suite, "executor-digest/harness.ts"), "utf8");
+    const page = readFileSync(resolve(repoRoot, "docs/executor.md"), "utf8");
+    for (const text of ['"2 stale issues posted at 1729.42"', '"Nothing stale."', 'path: "github.listIssues", input: { repo: "acme/api", state: "open" }',
+      'path: "slack.postMessage", input: { channel: "#eng", text: "#12 Flaky deploy\\n#31 Retry webhooks" }']) {
+      expect(harness).toContain(text);
+    }
+    for (const text of ["2 stale issues posted at 1729.42", "Nothing stale.", "github.listIssues", "slack.postMessage", "#12 Flaky deploy\\n#31 Retry webhooks"]) {
+      expect(page).toContain(text);
+    }
+  });
+  test("the page uses the generated snippets", () => {
+    const page = readFileSync(resolve(repoRoot, "docs/executor.md"), "utf8");
+    for (const name of ["catalog.lisp", "turn.lisp", "program.ts", "repl.txt", "close-issue.forma.txt", "close-issue.tsc.txt"]) {
+      expect(page).toContain(`snippets/executor/${name}`);
+    }
   });
 });

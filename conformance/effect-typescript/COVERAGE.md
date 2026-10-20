@@ -139,6 +139,18 @@ message union per source; commands wrap zero-argument Effect values. Subscriptio
 command arguments, richer DOM, source maps, worker/editor integration, module
 linking, and shared HttpApi client generation are absent.
 
+## Code-mode tool catalog example
+
+`executor-digest` uses no new forms. Services stand for tool integrations and
+members for individual tools, as on the [/executor page](../../docs/executor.md).
+Its harness routes each member to one tool path through a fake `call` endpoint,
+decodes tool output with the generated schemas, recovers a typed rate limit, and
+asserts the exact call journal. `executor-undeclared-tool` pins member-level
+requirement checking where TypeScript accepts the generated code: the program
+already requires the `GitHub` service, so a call to an undeclared GitHub member
+changes only Forma's requirement row. There is no Executor client, catalog
+generator, or `execute` tool in this repository.
+
 ## Baseline: `main` at `30d7db4`
 
 This is the inventory taken before the conformance suite existed. It was

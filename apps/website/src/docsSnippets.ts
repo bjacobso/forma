@@ -71,3 +71,4 @@ function effectTypeScript(source: string, sourceId: string): string {
 }
 
 export { elmPageSnippets, elmSnippetDir } from "./elmPageSnippets";
+export { executorPageSnippets, executorSnippetDir } from "./executorPageSnippets";

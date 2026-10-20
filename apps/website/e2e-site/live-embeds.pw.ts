@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 const screenshots = resolve(import.meta.dirname, "../../../.context");
 
-for (const route of ["/", "/effect", "/elm"]) {
+for (const route of ["/", "/effect", "/elm", "/executor"]) {
   test(`${route} embeds a live compiler and follows the docs theme`, async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
@@ -21,14 +21,14 @@ for (const route of ["/", "/effect", "/elm"]) {
     await expect(page.locator(".fh-hero__demo iframe")).toHaveCSS("height", `${reportedHeight}px`);
     await page.locator(".fh-hero__demo iframe").screenshot({ path: `${screenshots}/${route === "/" ? "homepage" : `${route.slice(1)}-page`}-embed.png` });
     await page.screenshot({ path: `${screenshots}/${route === "/" ? "homepage" : `${route.slice(1)}-page`}.png`, fullPage: true });
-    if (route === "/elm") {
+    if (route === "/elm" || route === "/executor") {
       await frame.getByRole("button", { name: "Reset", exact: true }).click();
       await expect(frame.getByRole("status")).toHaveText("0 errors · 0 warnings");
       for (const theme of ["light", "dark"] as const) {
         const isDark = await page.locator("html").evaluate(element => element.classList.contains("dark"));
         if (isDark !== (theme === "dark")) await page.getByRole("switch", { name: /Switch to (dark|light) theme/ }).click();
         await expect(frame.getByRole("combobox", { name: "Workbench appearance" })).toHaveValue(theme);
-        await page.screenshot({ path: `${screenshots}/elm-${theme}.png`, fullPage: true });
+        await page.screenshot({ path: `${screenshots}/${route.slice(1)}-${theme}.png`, fullPage: true });
       }
     }
     expect(errors).toEqual([]);
