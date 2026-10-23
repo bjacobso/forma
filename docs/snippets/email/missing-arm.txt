@@ -1,0 +1,2 @@
+warmup.lisp:19:5 error mechanics/non-exhaustive-match
+  match does not handle Skip.

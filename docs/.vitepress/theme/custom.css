@@ -511,6 +511,11 @@ body {
   overflow: auto;
 }
 
+/* A window whose source is the point of the section, shown without scrolling. */
+.fh-window--full div[class*="language-"] pre {
+  max-height: none;
+}
+
 .fh-ascii {
   margin: 0;
   padding: 20px 22px 22px;
@@ -624,6 +629,46 @@ body {
 
 .fh-split__copy > p:not(.fh-label) {
   margin-top: 16px !important;
+}
+
+/* A landing page pitch written as ordinary Markdown. */
+.fh-prose {
+  max-width: 780px;
+}
+
+.fh-prose > p {
+  font-size: 17px;
+  color: var(--vp-c-text-2);
+}
+
+.fh-prose > * + * {
+  margin-top: 18px !important;
+}
+
+.fh-prose > ul {
+  padding-left: 0 !important;
+  list-style: none;
+}
+
+.fh-prose li {
+  position: relative;
+  margin: 12px 0 0 !important;
+  padding-left: 24px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
+}
+
+.fh-prose li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--fh-brand);
+  font-family: var(--vp-font-family-mono);
+}
+
+.fh-prose strong {
+  color: var(--vp-c-text-1);
 }
 
 /* The x-ray */
@@ -1564,11 +1609,13 @@ body {
   }
 }
 
-/* The /effect page shows compiler diagnostics side by side; wrap them instead of scrolling. */
+/* Landing pages show compiler diagnostics side by side; wrap them instead of scrolling. */
 .forma-effect div.language-txt pre,
 .forma-effect div.language-txt pre code,
 .forma-elm div.language-txt pre,
-.forma-elm div.language-txt pre code {
+.forma-elm div.language-txt pre code,
+.forma-email div.language-txt pre,
+.forma-email div.language-txt pre code {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   width: auto;

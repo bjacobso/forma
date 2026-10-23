@@ -1,5 +1,6 @@
 import {
   timeoutRunResult,
+  type EngineDialect,
   type EnginePassName,
   type RunResult,
   type WorkerRequest,
@@ -23,7 +24,7 @@ export class EngineClient {
     }
   >();
 
-  run(source: string, passes: readonly EnginePassName[], sourceId = "demo", dialect?: "effect"): Promise<RunResult> {
+  run(source: string, passes: readonly EnginePassName[], sourceId = "demo", dialect?: EngineDialect): Promise<RunResult> {
     const id = this.nextId++;
     const worker = this.ensureWorker();
     const request: WorkerRequest = { id, sourceId, source, passes, ...(dialect ? { dialect } : {}) };

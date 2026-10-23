@@ -1,0 +1,15 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "mechanics/undeclared-error",
+      "message": "Operation run-warmup can fail with Bounced, but its signature declares no errors.",
+      "line": 21,
+      "column": 24,
+      "endLine": 21,
+      "endColumn": 61
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "email/fallthrough",
+      "message": "End a rule with a decision for every remaining contact: send, defer, or skip.",
+      "line": 8,
+      "column": 3,
+      "endLine": 8,
+      "endColumn": 46
+    }
+  ]
+}

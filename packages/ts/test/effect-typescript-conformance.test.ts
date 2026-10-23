@@ -18,6 +18,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import ts from "typescript";
 import { Mechanics } from "../src/index.js";
 import { generateElmProgram } from "../src/Elm.js";
+import { generateEmailProgram } from "../src/Email.js";
 import { generateHttpApiProgram, generateHttpApiBuilders } from "../src/HttpApi.js";
 import { parse } from "../src/reader/parser.js";
 import { toSExprMany } from "../src/reader/to-sexpr.js";
@@ -62,8 +63,11 @@ function sourceId(item: ConformanceCase): string {
 
 const isHttpApiCase = (item: ConformanceCase): boolean => existsSync(resolve(item.dir, "http-api.json"));
 const isElmCase = (item: ConformanceCase): boolean => existsSync(resolve(item.dir, "elm.json"));
+const isEmailCase = (item: ConformanceCase): boolean => existsSync(resolve(item.dir, "email.json"));
 const generate = (item: ConformanceCase) => isElmCase(item)
   ? generateElmProgram(item.source, {sourceId:sourceId(item)})
+  : isEmailCase(item)
+  ? generateEmailProgram(item.source, {sourceId:sourceId(item)})
   : isHttpApiCase(item)
   ? generateHttpApiProgram(item.source, {sourceId:sourceId(item)})
   : Mechanics.generateEffectProgram(item.source, {sourceId:sourceId(item)});
@@ -80,7 +84,8 @@ interface DiagnosticRecord {
 }
 
 function diagnosticRecords(source: string, item: ConformanceCase): readonly DiagnosticRecord[] {
-  return (isElmCase(item) ? generateElmProgram(source, { sourceId: sourceId(item) }) : Mechanics.elaborateEffectProgram(source, { sourceId: sourceId(item) })).diagnostics.map((diagnostic) => ({
+  return (isElmCase(item) ? generateElmProgram(source, { sourceId: sourceId(item) })
+    : isEmailCase(item) ? generateEmailProgram(source, { sourceId: sourceId(item) }) : Mechanics.elaborateEffectProgram(source, { sourceId: sourceId(item) })).diagnostics.map((diagnostic) => ({
     phase: diagnostic.phase ?? "check",
     severity: diagnostic.severity,
     code: diagnostic.code,
@@ -111,7 +116,7 @@ function typescriptVerdicts(): ReadonlyMap<string, TypeScriptVerdict> {
   const result = new Map<string, TypeScriptVerdict>();
   const files = new Map<string, string>();
   for (const item of negative) {
-    if (isElmCase(item)) { result.set(item.name, "not-generated"); continue; }
+    if (isElmCase(item) || isEmailCase(item)) { result.set(item.name, "not-generated"); continue; }
     let parsed: ReturnType<typeof parse>;
     try {
       parsed = parse(item.source);

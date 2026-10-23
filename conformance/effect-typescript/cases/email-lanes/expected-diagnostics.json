@@ -1,0 +1,35 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "email/per-hour",
+      "message": "A lane's :per-hour rate must be a positive whole number.",
+      "line": 5,
+      "column": 29,
+      "endLine": 5,
+      "endColumn": 30
+    },
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "email/duplicate-lane",
+      "message": "Lane \"gmail\" is declared more than once.",
+      "line": 6,
+      "column": 11,
+      "endLine": 6,
+      "endColumn": 18
+    },
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "email/lane",
+      "message": "Declare a lane as (lane \"name\" :per-hour n).",
+      "line": 7,
+      "column": 5,
+      "endLine": 7,
+      "endColumn": 18
+    }
+  ]
+}

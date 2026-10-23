@@ -10,6 +10,8 @@ import type {
 } from "@formalang/ts/engine";
 
 export type EnginePassName = PassName;
+/** Dialects compiled by a whole-program generator instead of the pass pipeline. */
+export type EngineDialect = "effect" | "email";
 export type { AstNode, Diagnostic, Span };
 
 export type TimedPassResult =
@@ -23,7 +25,7 @@ export interface RunRequest {
   readonly sourceId: string;
   readonly source: string;
   readonly passes: readonly EnginePassName[];
-  readonly dialect?: "effect";
+  readonly dialect?: EngineDialect;
 }
 
 export interface RunResult {

@@ -1,0 +1,2 @@
+warmup.lisp:8:37 error mechanics/type-mismatch
+  Expected EmailLane, but this is "gmial".

@@ -1,0 +1,25 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "email/unreachable",
+      "message": "This clause never applies: the decision before it covers every remaining contact.",
+      "line": 9,
+      "column": 3,
+      "endLine": 9,
+      "endColumn": 46
+    },
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "email/fallthrough",
+      "message": "End a rule with a decision for every remaining contact: send, defer, or skip.",
+      "line": 9,
+      "column": 3,
+      "endLine": 9,
+      "endColumn": 46
+    }
+  ]
+}
