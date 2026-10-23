@@ -1,5 +1,7 @@
 import { evaluate, expand, parse, typecheck } from "@formalang/ts/engine";
 import type { PassName } from "@formalang/ts/engine";
+import { generateEmailProgram } from "@formalang/ts/email";
+import { generateEffectProgram } from "@formalang/ts/mechanics";
 import { compileEffectDemo } from "./effectCompiler";
 import {
   hasErrors,
@@ -17,8 +19,8 @@ ctx.onmessage = (event: MessageEvent<RunRequest>) => {
 
 async function run(request: RunRequest): Promise<void> {
   try {
-    if (request.dialect === "effect") {
-      post({ kind: "result", result: compileEffectDemo(request) });
+    if (request.dialect) {
+      post({ kind: "result", result: compileEffectDemo(request, request.dialect === "email" ? generateEmailProgram : generateEffectProgram) });
       return;
     }
     const passResults: TimedPassResult[] = [];

@@ -1,0 +1,2 @@
+warmup.lisp:8:3 error email/fallthrough
+  End a rule with a decision for every remaining contact: send, defer, or skip.

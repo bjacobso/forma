@@ -135,6 +135,10 @@
     "./elm": {
       "types": "./dist/Elm.d.mts",
       "import": "./dist/Elm.mjs"
+    },
+    "./email": {
+      "types": "./dist/Email.d.mts",
+      "import": "./dist/Email.mjs"
     }
   },
   "files": [

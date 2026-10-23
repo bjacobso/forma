@@ -1,0 +1,2 @@
+warmup.lisp:21:24 error mechanics/undeclared-error
+  Operation run-warmup can fail with Bounced, but its signature declares no errors.

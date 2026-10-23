@@ -1,0 +1,15 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected EmailLane, but this is \"gmial\".",
+      "line": 8,
+      "column": 37,
+      "endLine": 8,
+      "endColumn": 44
+    }
+  ]
+}

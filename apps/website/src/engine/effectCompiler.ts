@@ -2,15 +2,24 @@ import { parse, typeProjection, type ExpressionType } from "@formalang/ts/engine
 import { generateEffectProgram, showMechanicsType } from "@formalang/ts/mechanics";
 import type { Diagnostic, RunRequest, RunResult } from "./protocol";
 
+/** A whole-program generator over the mechanics checker: the Effect dialect or a prelude linker. */
+type ProgramGenerator = (source: string, options: { readonly sourceId: string }) => {
+  readonly ok: boolean;
+  readonly diagnostics: readonly (Omit<Diagnostic, "phase"> & { readonly phase?: string })[];
+  readonly declarations: ReturnType<typeof generateEffectProgram>["declarations"];
+  readonly check?: ReturnType<typeof generateEffectProgram>["check"];
+  readonly code?: string;
+};
+
 /** One checker result drives diagnostics, body inference, IR, and generated code. */
-export function compileEffectDemo(request: RunRequest): RunResult {
+export function compileEffectDemo(request: RunRequest, generate: ProgramGenerator = generateEffectProgram): RunResult {
   const started = performance.now();
   const parsed = parse({ sourceId: request.sourceId, source: request.source });
   const readMs = performance.now() - started;
-  const result = generateEffectProgram(request.source, { sourceId: request.sourceId });
+  const result = generate(request.source, { sourceId: request.sourceId });
   const diagnostics: Diagnostic[] = result.diagnostics.map(diagnostic => ({
     ...diagnostic,
-    phase: diagnostic.phase === "read" ? "parse" : diagnostic.phase === "project" ? "elaborate" : "typecheck",
+    phase: diagnostic.phase === "read" || diagnostic.phase === "parse" ? "parse" : diagnostic.phase === "project" ? "elaborate" : "typecheck",
   }));
   const expressionTypes: ExpressionType[] = [];
   const contracts: NonNullable<RunResult["contracts"]>[number][] = [];

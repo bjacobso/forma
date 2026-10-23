@@ -59,6 +59,7 @@ For each positive case the runner checks that:
 | `edge-cases` | Regressions from adversarial testing: escaping, binder capture, prototype keys, shadowing, literal widening, literal and error matches, `provide` inside layer methods |
 | `elm-pure` | No-command app, pure init/update, nested let/if transitions, static view, mounting types |
 | `elm-counter` | `preludes/elm.lisp`, exhaustive update, pure Hiccup view, typed command recovery, headless Foldkit init/update/commands |
+| `email-warmup` | `preludes/email.lisp`, lanes as a literal union, first-match rule decisions, duration literals, prelude predicates, typed delivery recovery |
 | `http-api` | Prelude-defined endpoints, groups, handler contracts, derived builders, path/payload decoding, typed HTTP statuses, request service layers |
 
 The `http-api.json` marker selects `generateHttpApiProgram` for the HTTP case.
@@ -72,6 +73,10 @@ prototype and its `elm-*` rejection cases. The same golden, strict escape checks
 artifact validation, and harness execution apply; Foldkit is pinned to 0.168.0.
 Rejection verdicts are `not-generated`: this linker has no unchecked output path.
 See [the prototype reference](../../docs/elm/reference.md).
+
+The `email.json` marker selects `generateEmailProgram` for the isolated email
+rule prototype and its `email-*` rejection cases, with the same checks. Its
+verdicts are also `not-generated`. See [Forma for email automation](../../docs/email.md).
 
 ## Negative cases
 

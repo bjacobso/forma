@@ -1,8 +1,9 @@
 import { elmCommandSource, elmCommandBrokenSource } from "../elmPageSources";
+import { warmupLaneTypoSource, warmupSource } from "../emailPageSources";
 import { ordersSource, ordersUndeclaredSource, strictSource } from "../effectPageSources";
 import { contractSource, undeclaredCapabilitySource } from "../pipelines/sources";
 import { getPipeline } from "../pipelines";
-import type { EnginePassName } from "../engine/protocol";
+import type { EngineDialect, EnginePassName } from "../engine/protocol";
 
 export interface WorkbenchExample {
   id: string;
@@ -11,7 +12,7 @@ export interface WorkbenchExample {
   source: string;
   broken: string;
   prompt: string;
-  dialect?: "effect";
+  dialect?: EngineDialect;
   passes: readonly EnginePassName[];
 }
 
@@ -19,6 +20,9 @@ export const workbenchExamples: readonly WorkbenchExample[] = [
   { id: "elm-command", title: "Elm command recovery", file: "counter-command.forma", source: elmCommandSource,
     broken: elmCommandBrokenSource, prompt: "Remove command recovery. load-message promises no typed failures, but fetch-count can still fail. Restore the mapping to LoadFailed.",
     dialect: "effect", passes: ["parse", "typecheck"] },
+  { id: "email-rule", title: "Email rule lanes", file: "warmup.forma", source: warmupSource,
+    broken: warmupLaneTypoSource, prompt: "Misspell the Gmail lane. The rule's lanes become a closed type, so the typo is rejected before anything sends. Restore \"gmail\".",
+    dialect: "email", passes: ["parse", "typecheck"] },
   { id: "contracts", title: "Effect contracts", file: "log.forma", source: contractSource,
     broken: undeclaredCapabilitySource, prompt: "Remove Console.print from the signature. The body still needs it.",
     dialect: "effect", passes: ["parse", "typecheck"] },

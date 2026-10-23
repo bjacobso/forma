@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 const screenshots = resolve(import.meta.dirname, "../../../.context");
 
-for (const route of ["/", "/effect", "/elm"]) {
+for (const route of ["/", "/effect", "/elm", "/email"]) {
   test(`${route} embeds a live compiler and follows the docs theme`, async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
