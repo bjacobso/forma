@@ -84,6 +84,11 @@ export default defineConfig({
           { text: "0015: Tests in Forma", link: "/rfcs/0015-tests-in-forma" },
           { text: "0016: Host-call journals", link: "/rfcs/0016-host-call-journals" },
           { text: "0017: Diagnostic catalog", link: "/rfcs/0017-diagnostic-catalog" },
+          { text: "0018: Typed holes and goals", link: "/rfcs/0018-typed-holes" },
+          { text: "0019: Specs and claims", link: "/rfcs/0019-specs-and-claims" },
+          { text: "0020: Unchecked assumptions", link: "/rfcs/0020-trust-facts" },
+          { text: "0021: Artifact verification", link: "/rfcs/0021-artifact-verification" },
+          { text: "0022: Termination checks", link: "/rfcs/0022-termination-for-pure-fragments" },
         ],
       },
       {
