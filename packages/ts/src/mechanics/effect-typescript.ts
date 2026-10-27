@@ -1720,17 +1720,17 @@ function configReader(name: string): string {
   }
 }
 
-function isElseCondition(node: JsonValue | undefined): boolean {
+export function isElseCondition(node: JsonValue | undefined): boolean {
   return keywordName(node) === "else" || (isRecord(node) && node["kind"] === "Literal" && node["value"] === true);
 }
 
-function isFnLiteral(node: JsonValue | undefined): boolean {
+export function isFnLiteral(node: JsonValue | undefined): boolean {
   if (!isRecord(node) || node["kind"] !== "List") return false;
   const head = arrayItems(node["items"])[0];
   return isRecord(head) && head["kind"] === "Var" && head["name"] === "fn";
 }
 
-function isUnitLiteral(value: JsonValue | undefined): boolean {
+export function isUnitLiteral(value: JsonValue | undefined): boolean {
   if (!isRecord(value)) return false;
   if (value["kind"] === "Var" && value["name"] === "nil") return true;
   if (value["kind"] === "Literal" && value["value"] === null) return true;
@@ -1741,13 +1741,13 @@ function isUnitLiteral(value: JsonValue | undefined): boolean {
 const usageCache = new WeakMap<object, Map<string, boolean>>();
 
 /** A step in a binding sequence: a value, then (optionally) a name it binds. */
-interface Step {
+export interface Step {
   readonly value: JsonValue | undefined;
   readonly binds?: string;
 }
 
 /** Whether `name` is referenced by a sequence of bindings before something rebinds it. */
-function referencedIn(steps: readonly Step[], name: string): boolean {
+export function referencedIn(steps: readonly Step[], name: string): boolean {
   for (const step of steps) {
     if (freeIn(step.value, name)) return true;
     if (step.binds === name) return false;
@@ -1755,14 +1755,14 @@ function referencedIn(steps: readonly Step[], name: string): boolean {
   return false;
 }
 
-function bindingSteps(bindings: readonly JsonValue[]): Step[] {
+export function bindingSteps(bindings: readonly JsonValue[]): Step[] {
   return bindings.flatMap((binding) =>
     isRecord(binding) ? [{ value: binding["value"], ...(typeof binding["name"] === "string" ? { binds: binding["name"] } : {}) }] : [],
   );
 }
 
 /** `[name value ...]` pairs of a value-level `let`. */
-function letSteps(pairs: readonly JsonValue[]): Step[] {
+export function letSteps(pairs: readonly JsonValue[]): Step[] {
   const steps: Step[] = [];
   for (let index = 0; index + 1 < pairs.length; index += 2) {
     const binding = pairs[index];
@@ -1776,7 +1776,7 @@ function letSteps(pairs: readonly JsonValue[]): Step[] {
  * that shadows it (do!/let bindings, fn and layer parameters, catch and
  * match bindings) do not count.
  */
-function freeIn(node: JsonValue | undefined, name: string): boolean {
+export function freeIn(node: JsonValue | undefined, name: string): boolean {
   if (Array.isArray(node)) return node.some((item) => freeIn(item, name));
   if (!isRecord(node)) return false;
   let cached = usageCache.get(node);

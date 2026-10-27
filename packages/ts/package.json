@@ -143,6 +143,10 @@
     "./authoring": {
       "types": "./dist/Authoring.d.mts",
       "import": "./dist/Authoring.mjs"
+    },
+    "./effect-go": {
+      "types": "./dist/EffectGo.d.mts",
+      "import": "./dist/EffectGo.mjs"
     }
   },
   "files": [
