@@ -52,6 +52,7 @@ For each positive case the runner checks that:
 | `concurrent-workflow` | `all` over records and tuples, bounded `for-each`, `retry`, `race`, `timeout` and `TimeoutError`, `fork`/`join`, `sleep`, `Ref` |
 | `typed-errors` | `catchTags`, catch-all, `map-error`, `or-else-succeed`, `option`, `result` matched as data, `or-die` |
 | `schemas-and-decoding` | Tuples, unions, maps, annotations, tagged unions matched by tag, decoding JSON with `SchemaError` recovery |
+| `recursive-schemas` | Self and mutually recursive schemas through `Schema.suspend`, a recursive function over a tagged tree, pattern, length, and range filters checked when decoding |
 | `config-and-logging` | `Config` reads with defaults, `ConfigError`, `log` |
 | `pure-domain-logic` | `Schema.Class`, typed constants, pure functions, value-level `match`, collection and string functions |
 | `stream-pipeline` | Stream construction, effectful mapping with concurrency, `take`, folds, `runForEach`, functions returning streams |

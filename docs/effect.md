@@ -226,7 +226,7 @@ pageClass: forma-index forma-effect
 <li><strong>Source maps.</strong> Stack traces and breakpoints point at the generated TypeScript, not at the Forma line.</li>
 <li><strong>Packages.</strong> Relative file modules with explicit imports, exports, and linked Effect TypeScript are implemented. Package manifests, registries, and compile-time library imports remain proposals. See <a href="/modules">File modules</a>.</li>
 <li><strong>Generics.</strong> Operations and functions have no type parameters.</li>
-<li><strong>Parts of Effect.</strong> Recursive schemas (<code>Schema.suspend</code>), <code>TaggedClass</code>, transformations, <code>Queue</code>, <code>PubSub</code>, <code>Deferred</code>, <code>Semaphore</code>, scoped forks, schedule composition, <code>Effect.fn</code>, spans and tracing, and most of <code>Stream</code>. The <a href="/effect/reference">reference</a> lists what exists.</li>
+<li><strong>Parts of Effect.</strong> Recursion through brands and classes, <code>TaggedClass</code>, transformations, <code>Queue</code>, <code>PubSub</code>, <code>Deferred</code>, <code>Semaphore</code>, scoped forks, schedule composition, <code>Effect.fn</code>, spans and tracing, and most of <code>Stream</code>. The <a href="/effect/reference">reference</a> lists what exists.</li>
 <li><strong>Tooling.</strong> There is no CLI or watch mode; you call <code>generateEffectProgram</code> from your own build script. Packages are 0.x, and the output shape changed in this release.</li>
 <li><strong>The hosted runtime.</strong> <code>makeMechanicsRuntime</code> interprets only the original operation forms. Run the generated TypeScript instead.</li>
 </ul>

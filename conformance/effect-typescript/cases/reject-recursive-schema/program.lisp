@@ -1,8 +1,10 @@
-;; Recursive schemas need Schema.suspend, which Forma does not generate yet,
-;; so they are rejected instead of producing a module that fails at load.
-(type Category {:name String
+;; Recursive schemas are typed Schema.Codec<T>, which needs the decoded and
+;; encoded shapes to agree. Brands and classes make them differ, so recursion
+;; through either is rejected instead of producing a module that fails to
+;; typecheck.
+(type CategoryId (Brand String))
+(type Category {:id CategoryId
  :children (List Category)})
 
-(type Node {:value Int
- :next (Option Link)})
-(type Link {:target Node})
+(class Folder {:name String :parent (Option Entry)})
+(type Entry {:folder Folder})

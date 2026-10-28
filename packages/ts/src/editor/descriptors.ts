@@ -11,6 +11,8 @@ export type DescriptorSource = FormDescriptorRegistry | readonly FormDescriptor[
 /** Finds the descriptor for a form head. */
 export interface DescriptorLookup {
   get(name: string): FormDescriptor | undefined;
+  /** Every descriptor, when the lookup can enumerate them. */
+  list?(): readonly FormDescriptor[];
 }
 
 /**
@@ -49,5 +51,13 @@ export function descriptorsFromExpressions(
     descriptors instanceof FormDescriptorRegistry
       ? descriptors
       : new Map(descriptors.map((descriptor) => [descriptor.name, descriptor] as const));
-  return { get: (name) => found.get(name) ?? given.get(name) };
+  return {
+    get: (name) => found.get(name) ?? given.get(name),
+    list: () => {
+      const listed = given instanceof FormDescriptorRegistry ? given.list() : [...given.values()];
+      const all = new Map(listed.map((descriptor) => [descriptor.name, descriptor] as const));
+      for (const descriptor of found.list()) all.set(descriptor.name, descriptor);
+      return [...all.values()];
+    },
+  };
 }

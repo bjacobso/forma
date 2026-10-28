@@ -34,7 +34,18 @@ it("obtains missing slots and their templates from descriptors", async () => {
   );
 });
 
-it("fills keyword options in the form header and undoes with exact source", async () => {
+it("offers another child for a repeated slot, named by the form it inserts", async () => {
+  const analysis = await analyzeSource(onboarding);
+  const workflow = analysis.rows.find((row) => row.text.startsWith("workflow onboarding"))!;
+  expect(analysis.slots[workflow.id]).toEqual(
+    expect.arrayContaining([expect.objectContaining({ key: "item", label: "use", text: "use " })]),
+  );
+});
+
+it.each([
+  ["while the analysis is current", 1],
+  ["while the next revision is still being analyzed", 2],
+])("fills keyword options in the form header %s and undoes with exact source", async (_, revision) => {
   const analysis = await analyzeSource(onboarding);
   const parent = analysis.rows.find((row) => row.text.startsWith("step activate "))!;
   const rows = sourceToOutline(onboarding, { identity: analysis.document.identity }).items;
@@ -43,7 +54,7 @@ it("fills keyword options in the form header and undoes with exact source", asyn
     ...initialized,
     analysis,
     document: analysis.document,
-    outline: { ...Outliner.init({ id: "outline", items: fromRows(rows) }), revision: 1 },
+    outline: { ...Outliner.init({ id: "outline", items: fromRows(rows) }), revision },
     documents: [{ rows, document: analysis.document }],
   };
   const filled = update(
