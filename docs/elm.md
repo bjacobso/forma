@@ -10,9 +10,8 @@ pageClass: forma-index forma-elm
 <div class="forma-home">
 
 <header class="fh-hero" aria-labelledby="hero-title">
-<div class="fh-blueprint" aria-hidden="true"></div>
 <div class="fh-hero__copy">
-<p class="fh-eyebrow"><span class="fh-dot"></span>Forma for Foldkit · pre-alpha prototype</p>
+<p class="fh-eyebrow">Forma for Foldkit · pre-alpha prototype</p>
 <h1 id="hero-title">The Elm Architecture, checked from the database to the DOM.</h1>
 <p class="fh-lead">A message arrives. Update chooses the next model and commands. View describes the screen. Forma gives that loop a small Lisp vocabulary and checks its contracts, then generates Foldkit on Effect 4. Exhaustive update, typed command recovery, and pure view work in the TypeScript prototype today. A single API contract from server to client is the next step.</p>
 <div class="fh-actions">

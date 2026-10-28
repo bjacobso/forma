@@ -10,9 +10,8 @@ pageClass: forma-index forma-effect
 <div class="forma-home">
 
 <header class="fh-hero" aria-labelledby="hero-title">
-<div class="fh-blueprint" aria-hidden="true"></div>
 <div class="fh-hero__copy">
-<p class="fh-eyebrow"><span class="fh-dot"></span>Forma for Effect 4 · pre-alpha</p>
+<p class="fh-eyebrow">Forma for Effect 4 · pre-alpha</p>
 <h1 id="hero-title">A language for writing Effect, not a library inside one.</h1>
 <p class="fh-lead">If your backend is Effect from end to end, most of your code is schemas, tagged errors, services, operations, and layers. Forma makes those the language. You write them in a small typed Lisp. The compiler checks every failure and every dependency against the signature, then generates idiomatic Effect TypeScript that you could have written by hand.</p>
 <div class="fh-actions">
