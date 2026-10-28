@@ -497,15 +497,16 @@ export const analyzeProgram = (input: AnalyzeInput): Effect.Effect<Analysis, str
             nodeId: form.nodeId,
           }),
         );
+        // A filled slot is offered again only when it repeats, as a policy's children do.
         slots[form.nodeId] = result.slots
-          .filter((slot) => slot.available && slot.occurrences.length === 0)
+          .filter((slot) => slot.available && (slot.occurrences.length === 0 || slot.many))
           .map((slot) => {
             // The service supplies a source form; its outer parentheses are painted by the outline.
             const insertion = slot.insertion;
             const listed = insertion.text.startsWith("(") && insertion.text.endsWith(")");
             return {
               key: slot.name,
-              label: slot.name,
+              label: slot.many && slot.childForm !== undefined ? slot.childForm : slot.name,
               text: listed ? insertion.text.slice(1, -1) : insertion.text,
               inline: !listed && insertion.text.trimStart().startsWith(":"),
               caret: Math.max(0, insertion.cursor - (listed ? 1 : 0)),

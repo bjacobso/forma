@@ -1,14 +1,14 @@
 import { printFloat } from "../evaluator/types.js";
 import { Effect, Ref } from "effect";
 import type { Type } from "./types.js";
-import { flattenRow, TCon, TRow, REmpty, RExtend, type Row } from "./types.js";
+import { flattenRow, showType, TCon, TRow, REmpty, RExtend, type Row } from "./types.js";
 import type { TypeEnv } from "./substitution.js";
 import { applyType } from "./substitution.js";
 import type { CoreExpr } from "./core-expr.js";
 import { getInferDslProvider } from "./infer-state.js";
 import { InferContext } from "./context.js";
 import { InferenceError } from "./errors.js";
-import { assignType } from "./assign.js";
+import { assignType, literalBase } from "./assign.js";
 import { inferExpr, inferLam, originOf } from "./infer-core.js";
 
 /** Literals remain widened in inference and retain their exact value in checking. */
@@ -35,6 +35,11 @@ export const checkExpr = (env: TypeEnv, expr: CoreExpr, expected: Type): Effect.
     const precise=yield* assignType(literal,target,originOf(expr,"literal-check")).pipe(Effect.result);
     if (precise._tag === "Success") return target;
     yield* Ref.set(ctx.subst, snapshot);
+    const members = target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "Union" ? target.args : [];
+    const base = literal._tag === "TCon" ? literalBase(literal.name) : undefined;
+    if (base && members.length > 0 && members.every(member => member._tag === "TCon" && literalBase((member as Type & { _tag: "TCon" }).name) === base)) {
+      return yield* ctx.fail(originOf(expr,"literal-check"),{code:"typecheck/type-mismatch",message:`${showType(literal)} is not one of ${showType(target)}`});
+    }
   }
   if (target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "Map"
     && expr._tag === "App" && expr.fn._tag === "Var" && expr.fn.name === "__dictionary" && expr.args[0]?._tag === "Record") {
@@ -43,6 +48,14 @@ export const checkExpr = (env: TypeEnv, expr: CoreExpr, expected: Type): Effect.
       yield* assignType(key, target.args[0]!, originOf(expr, "map-key"));
       yield* checkExpr(env, field.value, target.args[1]!);
     }
+    return target;
+  }
+  // Each element of a vector literal is checked against the list's item type, so
+  // ["warehouse" "office"] can be a List of an enum.
+  if (target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "List" && target.args.length === 1
+    && expr._tag === "App" && expr.fn._tag === "Var" && expr.fn.name === "__vector") {
+    for (const item of expr.args) yield* checkExpr(env, item, target.args[0]!);
+    yield* ctx.recordType(expr.id, target);
     return target;
   }
   if (expr._tag === "Lam") {

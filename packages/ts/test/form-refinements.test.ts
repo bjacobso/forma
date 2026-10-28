@@ -128,6 +128,12 @@ describe("enum equality", () => {
     expect(await infer(source)).toBe("Bool");
   });
 
+  test("vector literals check their items against an enum list", async () => {
+    const oneOf = '(: one-of? (-> a (List a) Bool)) (define one-of? [x xs] true)';
+    expect(await infer(`${color} ${oneOf} (: f (-> Color Bool)) (define f [c] (one-of? c ["red" "green"])) (f "red")`)).toBe("Bool");
+    await expect(infer(`${color} ${oneOf} (: f (-> Color Bool)) (define f [c] (one-of? c ["red" "blu"])) (f "red")`)).rejects.toThrow('"blu" is not one of Union<"red", "green">');
+  });
+
   test.each([
     [`${color} (: f (-> Color Bool)) (define f [c] (= c "blue")) (f "red")`, '"blue" is not one of Union<"red", "green">'],
     ['(type Color (Union :red :green)) (: f (-> Color Bool)) (define f [c] (= c :blu)) (f :red)', ":blu is not one of Union<:red, :green>"],
@@ -138,21 +144,30 @@ describe("enum equality", () => {
 
 describe("refinements in generated Effect schemas", () => {
   test("emit Effect filters", () => {
-    const result = generateEffectProgram('(type Field {:name (String :pattern "^[a-z]+$" :min-length 1 :max-length 20) :width (Int :min 1 :max 12) :tags (List String :max-length 3)})');
+    const result = generateEffectProgram('(type Field {:name (String :pattern "^[a-z]+$" :min-length 1 :max-length 20) :width (Int :min 1 :max 12) :tags (List String :max-length 3) :wait (Float :finite true :min 0)})');
     expect(result.diagnostics).toEqual([]);
     const code = result.code ?? "";
     expect(code).toContain('name: Schema.String.check(Schema.isPattern(new RegExp("^[a-z]+$"))).check(Schema.isMinLength(1)).check(Schema.isMaxLength(20)),');
     expect(code).toContain("width: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)).check(Schema.isLessThanOrEqualTo(12)),");
     expect(code).toContain("tags: Schema.Array(Schema.String).check(Schema.isMaxLength(3)),");
+    expect(code).toContain("wait: Schema.Number.check(Schema.isFinite()).check(Schema.isGreaterThanOrEqualTo(0)),");
+  });
+
+  test("Null is JSON null", () => {
+    const result = generateEffectProgram('(type Run {:deleted_at (Option (Union String Null))}) (: deleted (-> Run (Option (Union String Null)))) (define deleted [run] (get run :deleted_at))');
+    expect(result.diagnostics).toEqual([]);
+    expect(result.code).toContain("deleted_at: Schema.optionalKey(Schema.Union([Schema.String, Schema.Null])),");
+    expect(result.code).toContain("Option.Option<string | null>");
   });
 
   test("reject filters on types they do not apply to", () => {
     const result = generateEffectProgram('(type Bad {:a (Int :pattern "x") :b (Bool :min-length 1) :c (String :min 1) :d (String :min-length -1)})');
     expect(result.diagnostics.map(d => d.message)).toEqual([":min-length metadata expects a non-negative Int"]);
-    expect(generateEffectProgram('(type Bad {:a (Int :pattern "x") :b (Bool :min-length 1) :c (String :min 1)})').diagnostics.map(d => d.message)).toEqual([
+    expect(generateEffectProgram('(type Bad {:a (Int :pattern "x") :b (Bool :min-length 1) :c (String :min 1) :d (Int :finite true)})').diagnostics.map(d => d.message)).toEqual([
       ":pattern applies to String.",
       ":min-length applies to String and List.",
       ":min applies to Int and Float.",
+      ":finite applies to Float.",
     ]);
   });
 });

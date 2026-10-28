@@ -6,6 +6,7 @@ import { head as expressionHead, name as expressionName } from "../surface/effec
  */
 
 import type { FormDescriptor, SlotSpec } from "../descriptor/FormDescriptor.js";
+import type { SExpr } from "../reader/types.js";
 import {
   identifySyntax,
   indexSyntax,
@@ -14,7 +15,7 @@ import {
   type SyntaxNode,
   type SyntaxSpan,
 } from "../syntax/identity.js";
-import { editorDescriptors, type DescriptorSource } from "./descriptors.js";
+import { editorDescriptors, type DescriptorLookup, type DescriptorSource } from "./descriptors.js";
 import type { EditPlace } from "./edit-script.js";
 
 export interface FormSlotsRequest {
@@ -66,6 +67,8 @@ export interface SlotAffordance {
   readonly aliases: readonly string[];
   /** A child form's name when the slot holds child forms. */
   readonly childForm?: string | undefined;
+  /** Every form the slot accepts, when it holds child forms of a category. */
+  readonly childForms?: readonly string[] | undefined;
   readonly occurrences: readonly SlotOccurrence[];
   /** No occurrence, or only occurrences without values. */
   readonly empty: boolean;
@@ -114,7 +117,7 @@ export function formSlots(request: FormSlotsRequest): FormSlots | undefined {
     if (node.kind !== "List") continue;
     const head = headOf(source, index, node);
     const descriptor = head ? descriptors.get(head.name) : undefined;
-    if (descriptor) return affordances(source, index, node, head!.node, descriptor, start);
+    if (descriptor) return affordances(source, index, node, head!.node, descriptor, start, descriptors);
   }
   return undefined;
 }
@@ -126,8 +129,9 @@ function affordances(
   head: SyntaxNode,
   descriptor: FormDescriptor,
   at: SyntaxNode,
+  descriptors: DescriptorLookup,
 ): FormSlots {
-  if (descriptor.surface) return surfaceAffordances(source, index, form, head, descriptor, at);
+  if (descriptor.surface) return surfaceAffordances(source, index, form, head, descriptor, at, descriptors);
   const text = (span: SyntaxSpan) => source.slice(span.start, span.end);
   const elements = index.children(form.id).filter((node) => node.kind !== "Comment");
   const args = elements.slice(1);
@@ -230,9 +234,26 @@ function keywordHead(source: string, index: SyntaxIndex, node: SyntaxNode): { na
     : undefined;
 }
 
+/**
+ * The forms an author can write in a child hole: the named form, or for a
+ * category alias such as `(type policy-child (Union RequiresIR NoteIR))`, the
+ * forms that produce its IR types.
+ */
+function childForms(childType: string, types: ReadonlyMap<string, SExpr>, descriptors: DescriptorLookup): readonly string[] {
+  if (descriptors.get(childType)?.surface) return [childType];
+  const members = (type: SExpr | undefined, seen: ReadonlySet<string>): readonly string[] => {
+    if (!type) return [];
+    const name = expressionName(type);
+    if (name !== undefined) return seen.has(name) ? [] : types.has(name) && types.get(name)!._tag !== "Map" ? members(types.get(name), new Set([...seen, name])) : [name];
+    return expressionHead(type) === "Union" && type._tag === "List" ? type.items.slice(1).flatMap((member: SExpr) => members(member, seen)) : [];
+  };
+  const produced = new Set(members(types.get(childType), new Set([childType])));
+  return (descriptors.list?.() ?? []).filter(descriptor => descriptor.surface && produced.has(descriptor.produces ?? "")).map(descriptor => descriptor.name);
+}
+
 /** Canonical patterns distinguish positional holes, option pairs, and children. */
 function surfaceAffordances(source: string, index: SyntaxIndex, form: SyntaxNode,
-  head: SyntaxNode, descriptor: FormDescriptor, at: SyntaxNode): FormSlots {
+  head: SyntaxNode, descriptor: FormDescriptor, at: SyntaxNode, descriptors: DescriptorLookup): FormSlots {
   const surface = descriptor.surface!;
   const text = (node: SyntaxNode) => source.slice(node.span.start, node.span.end);
   const args = index.children(form.id).filter(node => node.kind !== "Comment").slice(1);
@@ -290,10 +311,12 @@ function surfaceAffordances(source: string, index: SyntaxIndex, form: SyntaxNode
     const empty = occurrences.every(occurrence => !occurrence.values.length);
     const holeType = surface.holes.get(spec.name);
     const childType = holeType?._tag === "List" && expressionHead(holeType) === "List" ? expressionName(holeType.items[1]) : undefined;
-    const template = optionNames.has(spec.name) ? `:${spec.name} ` : spec.many ? `(${childType ?? spec.name} )` : spec.name;
+    const children = childType ? childForms(childType, surface.types, descriptors) : [];
+    const template = optionNames.has(spec.name) ? `:${spec.name} ` : spec.many ? `(${children[0] ?? childType ?? spec.name} )` : spec.name;
     return {name:spec.name,mode:spec.mode,required:spec.required === true,many:spec.many === true,
       ...(spec.type ? {type:spec.type} : {}),...(spec.doc ? {doc:spec.doc} : {}),aliases:[],
-      ...(childType ? {childForm:childType} : {}),occurrences,empty,missing:spec.required === true && empty,
+      ...(childType ? {childForm:children[0] ?? childType} : {}),...(children.length ? {childForms:children} : {}),
+      occurrences,empty,missing:spec.required === true && empty,
       available:!occurrences.length || spec.many === true,placeholder:`+ ${spec.name}`,
       insertion:{at:{parent:form.id},text:template,cursor:template.endsWith(")") ? template.length-1 : template.length}};
   });

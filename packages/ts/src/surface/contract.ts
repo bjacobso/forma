@@ -114,6 +114,9 @@ export function refinementErrors(value: KValue, metadata: readonly (readonly [SE
       case ":max-length":
         if (limit !== undefined && size !== undefined && size > limit) errors.push(`${path} must have at most ${limit} ${units(limit)}`);
         break;
+      case ":finite":
+        if (number !== undefined && !Number.isFinite(number)) errors.push(`${path} must be finite`);
+        break;
       case ":min":
         if (limit !== undefined && number !== undefined && number < limit) errors.push(`${path} must be at least ${limit}`);
         break;

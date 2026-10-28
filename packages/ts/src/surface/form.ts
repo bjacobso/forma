@@ -1,6 +1,6 @@
 import {buildDescriptorTreeLayoutAliases,rewriteDescriptorTreeLayoutAliases} from "../descriptor/descriptor-tree-aliases.js";
 import { createMetaBuiltins, type HostedMetaBuiltinsFactory } from "../descriptor/meta-builtins.js";
-import { datum } from "./datum.js";
+import { datum, syntaxForDatum } from "./datum.js";
 import { typeCheckDescriptorTree } from "../descriptor/descriptor-tree-check.js";
 import { coerceProgram } from "./coerce.js";
 import { reachableHelpers } from "./helpers.js";
@@ -14,7 +14,7 @@ import { ElaborationError, type ElaborationHook, type HookInput } from "../descr
 import { SimpleNormalizedSlots, type SlotValue } from "../descriptor/NormalizedSlots.js";
 import { Env } from "../Env.js";
 import { defaultBuiltins } from "../builtins/index.js";
-import { evaluateExprs } from "../evaluator/eval.js";
+import { evaluateExpandedExprs, expandExprs } from "../evaluator/eval.js";
 import type { KValue, BuiltinFn } from "../evaluator/types.js";
 import { showType, type Type } from "../type/types.js";
 import { InferContext, makeOwnedInferContext } from "../type/context.js";
@@ -238,6 +238,14 @@ function validLiteral(e: SExpr, type: SExpr, types: ReadonlyMap<string,SExpr> = 
   return true;
 }
 
+/**
+ * A hook runs the same program (the form's type constructors, reachable
+ * helpers, and its body or hook function) for every use of the form; only the
+ * hole bindings differ. Expanding it once per descriptor expression keeps a
+ * re-check proportional to the forms, not to the prelude's macro expansion.
+ */
+const expandedHookPrograms = new WeakMap<SExpr, readonly SExpr[]>();
+
 export interface LinkedFormContext {
   readonly environment: () => Env;
   readonly evaluateHole: (expression: SExpr, type: SExpr) => KValue;
@@ -329,10 +337,18 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
       },
     };
     const constructors = [...spec.types].filter(([,type]) => head(type) === "Tagged" || head(type) === "Brand").map(([typeName,type]) => list(type,[sym(type,"type"),sym(type,typeName),type]));
-    const run = (expression: SExpr) => linked
+    // `key` is the descriptor expression the program runs; its expansion is shared by every use.
+    const run = (expression: SExpr, key: SExpr = expression) => linked
       ? Effect.try({try: () => linked.run(expression,env,builtins),catch: error => new ElaborationError({message: error instanceof Error ? error.message : String(error),hookName:descriptor.name,phase:kind})})
-      : evaluateExprs([...constructors,...spec.helpers,expression],{env,builtins,stepLimit:100_000}).pipe(Effect.map(r=>r.value));
-    const invoke = (fn: SExpr) => run(list(fn,[fn,sym(fn,"__holes")]));
+      : Effect.gen(function* () {
+        let expanded = expandedHookPrograms.get(key);
+        if (!expanded) {
+          expanded = yield* expandExprs([...constructors,...spec.helpers,expression],{env,builtins,stepLimit:100_000});
+          expandedHookPrograms.set(key, expanded);
+        }
+        return (yield* evaluateExpandedExprs(expanded,{env,builtins,stepLimit:100_000})).value;
+      });
+    const invoke = (fn: SExpr) => run(list(fn,[fn,sym(fn,"__holes")]),fn);
     for (const [n,t] of spec.holes) {
       const e = values.get(n), u = unwrapOption(t);
       const repeatedChildren = head(u) === "List";
@@ -474,7 +490,10 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
           const slot = String(problem.get(":slot") ?? problem.get("slot") ?? "").replace(/^:/,"");
           const code = problem.get(":code") ?? problem.get("code");
           if (code !== undefined && typeof code !== "string") throw new ElaborationError({message:"Diagnostic code must be a string",hookName:descriptor.name,phase:"validate"});
-          diagnostics.push({...(code !== undefined ? {code} : {}),severity:severity as Diagnostic["severity"],message:String(problem.get(":message") ?? problem.get("message") ?? "Form validation failed"),loc:values.get(slot)?.loc ?? input.loc});
+          // `:at` names a value read from a Syntax hole, such as one field of a record, to report at its source.
+          const at = problem.get(":at") ?? problem.get("at");
+          const loc = (at === undefined ? undefined : syntaxForDatum(at)?.loc) ?? values.get(slot)?.loc ?? input.loc;
+          diagnostics.push({...(code !== undefined ? {code} : {}),severity:severity as Diagnostic["severity"],message:String(problem.get(":message") ?? problem.get("message") ?? "Form validation failed"),loc});
         }
       }
       return { kind: "validate" as const, diagnostics };

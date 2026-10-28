@@ -34,6 +34,14 @@ it("obtains missing slots and their templates from descriptors", async () => {
   );
 });
 
+it("offers another child for a repeated slot, named by the form it inserts", async () => {
+  const analysis = await analyzeSource(onboarding);
+  const workflow = analysis.rows.find((row) => row.text.startsWith("workflow onboarding"))!;
+  expect(analysis.slots[workflow.id]).toEqual(
+    expect.arrayContaining([expect.objectContaining({ key: "item", label: "use", text: "use " })]),
+  );
+});
+
 it("fills keyword options in the form header and undoes with exact source", async () => {
   const analysis = await analyzeSource(onboarding);
   const parent = analysis.rows.find((row) => row.text.startsWith("step activate "))!;

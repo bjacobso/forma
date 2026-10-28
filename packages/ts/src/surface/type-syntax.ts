@@ -3,7 +3,7 @@ import { head, name } from "./effect.js";
 import { splitTypeMetadata } from "./domain.js";
 
 const legacy = new Map(Object.entries({Str:"String",Nil:"Unit",Boolean:"Bool",Array:"List",Vector:"List",Optional:"Option",Uint8Array:"Bytes",string:"String",integer:"Int",number:"Float",boolean:"Bool"}));
-export const schemaMetadata = new Set([":doc", ":pattern", ":title", ":identifier", ":min-length", ":max-length", ":min", ":max"]);
+export const schemaMetadata = new Set([":doc", ":pattern", ":title", ":identifier", ":min-length", ":max-length", ":min", ":max", ":finite"]);
 const fieldMetadata = new Set([":indexed", ":doc", ":default"]);
 
 /** Retire numeric aliases in contexts whose other legacy names are still accepted. */
@@ -53,6 +53,7 @@ export function typeSyntaxErrors(expression: SExpr, allowedMetadata: ReadonlySet
       else if (n === ":pattern" && value._tag === "Str" && !validPattern(value.value)) errors.push(`:pattern metadata is not a valid regular expression`);
       else if ([":min-length",":max-length"].includes(n) && !(value._tag === "Num" && value.numericKind !== "float" && Number.isSafeInteger(value.value) && value.value >= 0)) errors.push(`${n} metadata expects a non-negative Int`);
       else if ([":min",":max"].includes(n) && value._tag !== "Num") errors.push(`${n} metadata expects a number`);
+      else if (n === ":finite" && !(value._tag === "Bool" && value.value)) errors.push(":finite metadata expects true");
     }
   } catch (error) { return [error instanceof Error ? error.message : String(error)]; }
   const n = name(type);
@@ -111,7 +112,7 @@ export function typeSyntaxErrors(expression: SExpr, allowedMetadata: ReadonlySet
 
 /** Resolve names in an authored type against its declaration environment. */
 export function unknownTypeReferences(expression: SExpr, isKnown: (name: string) => boolean): readonly string[] {
-  const primitives = new Set(["String", "Int", "Float", "Bool", "Unit", "Json", "Any", "Unknown", "Never", "Symbol", "Keyword", "Type", "Syntax", "RuntimeExpr", "Bytes", "DateTime", "Duration", "List", "Option", "Map", "Record", "Union", "Tagged", "Id", "Brand", "Result", "->", "Effect", "Stream", "Layer", "Fiber", "Ref", "RefCell", "Scope", "OntologyRuntime"]);
+  const primitives = new Set(["String", "Int", "Float", "Bool", "Unit", "Null", "Json", "Any", "Unknown", "Never", "Symbol", "Keyword", "Type", "Syntax", "RuntimeExpr", "Bytes", "DateTime", "Duration", "List", "Option", "Map", "Record", "Union", "Tagged", "Id", "Brand", "Result", "->", "Effect", "Stream", "Layer", "Fiber", "Ref", "RefCell", "Scope", "OntologyRuntime"]);
   const visit = (expr: SExpr): readonly string[] => {
     const type = splitTypeMetadata(expr).type;
     if (type._tag === "List" && ["Pick", "Omit", "Merge"].includes(head(type) ?? "")) {

@@ -803,6 +803,14 @@ class Layout {
     return { parent: place.parent, ...(before ? { before } : {}), ...(after ? { after } : {}) };
   }
 
+  /** A record value's key, which starts the pair the value belongs to; any other node itself. */
+  pairStart(node: SyntaxNode): SyntaxNode {
+    if (node.parent === null || this.node(node.parent).kind !== "Map" || node.kind === "Comment") return node;
+    const entries = this.index.children(node.parent).filter((child) => child.kind !== "Comment");
+    const position = entries.findIndex((child) => child.id === node.id);
+    return position % 2 === 1 ? entries[position - 1]! : node;
+  }
+
   /** Text with continuation lines shifted by `delta` columns, never inside strings. */
   reindent(span: SyntaxSpan, delta: number): { text: string; map: (offset: number) => number } {
     const text = textOf(this.source, span);
@@ -828,7 +836,7 @@ class Layout {
         ? this.reindent(moving.span, column - this.column(moving.span.start))
         : this.place(text, column);
     if (place.before) {
-      const anchor = place.before;
+      const anchor = this.pairStart(place.before);
       const column = columnOf(anchor);
       const laid = shifted(column);
       if (this.startsLine(anchor.span.start) || topElements(text).at(-1)?.kind === "Comment") {
@@ -844,8 +852,10 @@ class Layout {
     }
     if (place.after) {
       const anchor = place.after;
-      const ownLine = this.startsLine(anchor.span.start);
-      const column = ownLine ? columnOf(anchor) : parentColumn + 2;
+      // In a record, a value lays out with its key: the pair starts the line.
+      const lineStart = this.pairStart(anchor);
+      const ownLine = this.startsLine(lineStart.span.start);
+      const column = ownLine ? columnOf(lineStart) : parentColumn + 2;
       const afterComment = anchor.kind === "Comment";
       const laid = shifted(column);
       const commentEnd = this.trailingCommentEnd(anchor.span.end);

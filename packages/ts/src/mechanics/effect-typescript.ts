@@ -1523,6 +1523,8 @@ class Generator {
             return "boolean";
           case "Unit":
             return "void";
+          case "Null":
+            return "null";
           case "Json":
             this.use("Schema");
             return "Schema.Json";

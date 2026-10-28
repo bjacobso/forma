@@ -135,6 +135,7 @@ function annotatedSchema(schema: Readonly<Record<string, JsonValue>>, naming: Sc
     if (key === "title") annotations.push(`title: ${JSON.stringify(String(value))}`);
     if (key === "identifier") annotations.push(`identifier: ${JSON.stringify(String(value))}`);
     if (key === "pattern") checked = `${checked}.check(Schema.isPattern(new RegExp(${JSON.stringify(String(value))})))`;
+    if (key === "finite" && value === true) checked = `${checked}.check(Schema.isFinite())`;
     if (key === "min-length") checked = `${checked}.check(Schema.isMinLength(${Number(value)}))`;
     if (key === "max-length") checked = `${checked}.check(Schema.isMaxLength(${Number(value)}))`;
     if (key === "min") checked = `${checked}.check(Schema.isGreaterThanOrEqualTo(${Number(value)}))`;
@@ -155,6 +156,8 @@ function primitiveSchema(name: JsonValue | undefined): string {
       return "Schema.Boolean";
     case "Unit":
       return "Schema.Void";
+    case "Null":
+      return "Schema.Null";
     case "Json":
       return "Schema.Json";
     case "Bytes":

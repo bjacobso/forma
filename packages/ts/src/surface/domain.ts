@@ -9,7 +9,7 @@ export function namespaceOf(n: string): string {
 export function splitTypeMetadata(t: SExpr): { type: SExpr; metadata: readonly (readonly [SExpr,SExpr])[] } {
   if (t._tag !== "List") return {type:t,metadata:[]};
   const h = head(t);
-  const metadataKeys = new Set([":indexed", ":doc", ":default", ":pattern", ":min", ":max", ":min-length", ":max-length", ":format", ":title", ":identifier"]);
+  const metadataKeys = new Set([":indexed", ":doc", ":default", ":pattern", ":min", ":max", ":min-length", ":max-length", ":finite", ":format", ":title", ":identifier"]);
   const minimum = ["Map", "Result", "Pick", "Omit", "Merge"].includes(h ?? "") ? 3 : ["List", "Option", "Id", "Brand"].includes(h ?? "") ? 2 : 1;
   const at = t.items.findIndex((e, i) => i >= minimum && name(e)?.startsWith(":") && name(e) !== ":"
     && (h !== "Union" && h !== "Tagged" || metadataKeys.has(name(e)!)));

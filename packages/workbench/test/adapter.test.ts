@@ -42,7 +42,7 @@ describe("the analysis adapter", () => {
     const broken = row('map badge [1 "three" 7]');
     expect(broken.tone).toBe("error");
     const [diagnostic] = broken.diagnostics;
-    expect(broken.layout.text.slice(diagnostic!.from, diagnostic!.to)).toBe('[1 "three" 7]');
+    expect(broken.layout.text.slice(diagnostic!.from, diagnostic!.to)).toBe('"three"');
     expect(view.unplaced).toEqual([]);
   });
 

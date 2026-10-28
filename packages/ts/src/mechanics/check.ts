@@ -467,10 +467,12 @@ class Checker {
         const text = refined.kind === "prim" && refined.name === "String";
         const number = refined.kind === "prim" && (refined.name === "Int" || refined.name === "Float");
         for (const [key, value] of Object.entries(node["metadata"])) {
-          if (!["doc", "description", "title", "identifier", "pattern", "min-length", "max-length", "min", "max"].includes(key)) this.error(location, "mechanics/schema-metadata", `Unknown schema metadata :${key}.`);
+          if (!["doc", "description", "title", "identifier", "pattern", "min-length", "max-length", "min", "max", "finite"].includes(key)) this.error(location, "mechanics/schema-metadata", `Unknown schema metadata :${key}.`);
           else if (key === "pattern" && !text) this.error(location, "mechanics/schema-metadata", ":pattern applies to String.");
           else if ((key === "min-length" || key === "max-length") && !(text || refined.kind === "array")) this.error(location, "mechanics/schema-metadata", `:${key} applies to String and List.`);
           else if ((key === "min-length" || key === "max-length") && !(typeof value === "number" && Number.isSafeInteger(value) && value >= 0)) this.error(location, "mechanics/schema-metadata", `:${key} expects a non-negative Int.`);
+          else if (key === "finite" && !(refined.kind === "prim" && refined.name === "Float")) this.error(location, "mechanics/schema-metadata", ":finite applies to Float.");
+          else if (key === "finite" && value !== true) this.error(location, "mechanics/schema-metadata", ":finite expects true.");
           else if ((key === "min" || key === "max") && !number) this.error(location, "mechanics/schema-metadata", `:${key} applies to Int and Float.`);
           else if ((key === "min" || key === "max") && !(typeof value === "number" && Number.isFinite(value))) this.error(location, "mechanics/schema-metadata", `:${key} expects a number.`);
         }
@@ -2949,7 +2951,7 @@ export function typeFromValueSyntax(node: JsonValue | undefined, env: TypeEnviro
   if (!isRecord(node)) return undefined;
   if (node["kind"] === "Var") {
     const name = String(node["name"]);
-    const json: JsonValue = ["String", "Int", "Float", "Bool", "Unit", "Json", "Bytes", "DateTime"].includes(name)
+    const json: JsonValue = ["String", "Int", "Float", "Bool", "Unit", "Null", "Json", "Bytes", "DateTime"].includes(name)
       ? { kind: "Primitive", name }
       : { kind: "Ref", name };
     return typeFromJson(json, env);

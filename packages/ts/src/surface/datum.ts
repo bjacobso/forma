@@ -14,7 +14,12 @@ export function datum(expr: SExpr): KValue {
   switch (expr._tag) {
     case "Num": return numericDatum(expr);
     case "Str": case "Bool": return expr.value;
-    case "Sym": return expr.name === "nil" ? null : expr.name.startsWith(":") ? KKeyword(expr.name) : KSymbol(expr.name);
+    case "Sym":
+      if (expr.name === "nil") return null;
+      if (expr.name.startsWith(":")) return KKeyword(expr.name);
+      // Symbols are not interned, so each keeps its own syntax; keywords are shared.
+      value = KSymbol(expr.name);
+      break;
     case "List": case "Vector": value = expr.items.map(datum); break;
     case "Map": value = new Map(expr.pairs.map(([k, v]) => [mapKey(datum(k))!, datum(v)])); break;
     default: throw new Error(`Invalid form datum ${expr._tag}`);

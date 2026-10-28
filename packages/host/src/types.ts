@@ -807,6 +807,8 @@ export interface FormSlotAffordance {
   readonly doc?: string | undefined;
   readonly aliases: readonly string[];
   readonly childForm?: string | undefined;
+  /** Every form the slot accepts, when it holds child forms of a category. */
+  readonly childForms?: readonly string[] | undefined;
   readonly occurrences: readonly {
     readonly nodeId: string;
     readonly span: Span;

@@ -34,7 +34,7 @@ does not identify which child forms may appear. A child's diagnostics point at
 the child, not at the parent application.
 
 Hole and IR types may refine `String`, `Int`, `Float`, and `List` with metadata:
-`(String :pattern "^[a-z]+$" :min-length 1 :max-length 40)`, `(Int :min 0 :max 10)`,
+`(String :pattern "^[a-z]+$" :min-length 1 :max-length 40)`, `(Int :min 0 :max 10)`, `(Float :finite true)`,
 or `(List String :max-length 3)`. A literal in a refined hole is checked where
 the author wrote it, and the projected IR is checked against its declared
 refinements. A hole typed with an enum alias such as
@@ -57,8 +57,10 @@ receives a record of the holes and returns a list of diagnostic records.
   {:kind "Greeting" :name name :message message :doc doc})
 ```
 
-The optional `:slot` attaches the diagnostic to that authored hole. Without it,
-the span covers the application. Severity is `:error`, `:warning`, or `:info`;
+The optional `:slot` attaches the diagnostic to that authored hole. `:at` is
+finer: given a value read from a `Syntax` hole, such as one entry of a record,
+the diagnostic points at that value's source. Without either, the span covers
+the application. Severity is `:error`, `:warning`, or `:info`;
 warnings and informational diagnostics remain attached to successful artifacts.
 
 An expression hole can introduce local bindings with `:scope`. Each entry maps

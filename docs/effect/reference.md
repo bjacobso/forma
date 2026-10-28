@@ -45,7 +45,8 @@ Package resolution and compile-time library imports remain proposals.
 | `(Tuple A B)`, `(Union A B)`, `(List T)`, `(Map String T)` | tuple, union, array, and dictionary schemas |
 | `(type Shape (Tagged :tag kind (Circle {:radius Float}) (Square {:side Float})))` | a union of records with a literal `kind` field |
 | `(type Rule (Union {:kind "all" :rules (List Rule)} {:kind "not" :rule Rule}))` | `export type Rule = ...` and `export const Rule: Schema.Codec<Rule>`, with `Schema.suspend` for each recursive reference |
-| `(String :pattern "^[a-z]+$" :min-length 1 :max-length 40)`, `(Int :min 0 :max 10)`, `(List T :max-length 3)` | `.check(Schema.isPattern(...))`, `Schema.isMinLength`, `Schema.isMaxLength`, `Schema.isGreaterThanOrEqualTo`, and `Schema.isLessThanOrEqualTo` |
+| `(Union String Null)` | `Schema.Union([Schema.String, Schema.Null])`. `Null` is JSON `null` for schemas; `nil` in bodies is still `Unit`, so bodies cannot construct a `Null` yet |
+| `(String :pattern "^[a-z]+$" :min-length 1 :max-length 40)`, `(Int :min 0 :max 10)`, `(Float :finite true)`, `(List T :max-length 3)` | `.check(Schema.isPattern(...))`, `Schema.isFinite`, `Schema.isMinLength`, `Schema.isMaxLength`, `Schema.isGreaterThanOrEqualTo`, and `Schema.isLessThanOrEqualTo` |
 | `(class Customer {:name String})` | `class Customer extends Schema.Class<Customer>("Customer")({...})`; construct with `(Customer {:name "Ada"})` |
 | `(error NotFound {:id String})` | `class NotFound extends Schema.TaggedError<NotFound>()("NotFound", {...})` |
 | `(service Users (: find (-> String (Effect (Option User)))))` | `Context.Service` with a typed `find` method |
@@ -71,7 +72,7 @@ by their declared names. Schemas may refer to themselves, directly or through
 each other, as long as the cycle does not pass through a brand or a class:
 `Schema.Codec<T>` needs the decoded and encoded shapes to agree. `:pattern`
 applies to `String`, `:min-length` and `:max-length` to `String` and `List`, and
-`:min` and `:max` to `Int` and `Float`. In expressions, `(Ref T)` is an Effect reference, and
+`:min` and `:max` to `Int` and `Float`, and `:finite` to `Float`. In expressions, `(Ref T)` is an Effect reference, and
 `(Option T)`, `(Result A E)`, `(Fiber A [E])`, `(Stream A [E] [R])`, and
 `(-> A B)` are the corresponding value types.
 

@@ -30,7 +30,7 @@ Status key:
 | Tagged unions | `(Tagged :tag tag (Ctor {...}) ...)`, matched by tag | supported | schemas-and-decoding, pure-domain-logic |
 | Brands (`Schema.brand`, `.make`) | `(type Name (Brand T))`, `(Name value)` | supported | crud-users, schemas-and-decoding |
 | Annotations | `(T :doc "...")`, `:identifier`, `:title` | supported | schemas-and-decoding |
-| Filters (`Schema.isPattern`, `isMinLength`, `isMaxLength`, `isGreaterThanOrEqualTo`, `isLessThanOrEqualTo`) | `:pattern`, `:min-length`, `:max-length`, `:min`, `:max` | supported | schemas-and-decoding, recursive-schemas |
+| Filters (`Schema.isPattern`, `isFinite`, `isMinLength`, `isMaxLength`, `isGreaterThanOrEqualTo`, `isLessThanOrEqualTo`) | `:pattern`, `:finite`, `:min-length`, `:max-length`, `:min`, `:max` | supported | schemas-and-decoding, recursive-schemas |
 | `Schema.Class` | `(class N {...})`, `(N {...})` | supported | pure-domain-logic |
 | `Schema.decodeUnknownEffect` | `(decode Schema value)`, fails with `SchemaError` | supported | schemas-and-decoding |
 | `Option` | `(Option T)`, `Some`, `None`, `match`, `get-or-else`, `is-some` | supported | crud-users, pure-domain-logic |
