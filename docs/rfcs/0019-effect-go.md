@@ -431,6 +431,114 @@ does not mark the fiber interrupted. **Recommendation:**
 3. Let the shared Forma conformance suite catch the remaining drift, because
    both hosts run it.
 
+### DSL preludes on a second host
+
+Prelude vocabularies such as `http-api`, the Elm-style app prelude, the email
+prelude, and a future RPC prelude must reach Go without each becoming a
+separate Go project. A prelude `form` already has three layers:
+
+1. **Syntax, `:types`, and `:ir` are host-neutral.** `HttpEndpointIR` is
+   data: a method, a path, and `Type` holes. It packages as a portable
+   artifact.
+2. **Linker checks are host-neutral.** `artifact/http-validator.ts` checks
+   each handler's request, success type, and error set against its endpoint
+   using the mechanics `CheckInfo`. Every host gets these checks.
+3. **Emission is TypeScript-only.** One unkeyed `:emit` hook returns
+   quasiquoted TypeScript built from `ts/*` primitives, and each prelude's
+   linker (`HttpApi.ts`, `Elm.ts`, `Email.ts`) calls the TypeScript generator
+   directly.
+
+Only the third layer needs to change.
+
+**Host-keyed emit hooks.** `:emit` accepts either a function, which stays the
+TypeScript hook, or a map from host to function, in the manner of
+ClojureScript's reader conditionals:
+
+```lisp
+(form (endpoint name method path {:keys [params payload success errors]})
+  ...
+  :emit {:ts (fn [ir] ...)
+         :go (fn [ir]
+               `(httpapi.Endpoint ~(keyword/name (get ir :method)) ~(get ir :name) ~(get ir :path)
+                  ~@(map (fn [error] `(httpapi.Error ~(go/zero error) ~(go/annotation error "httpApiStatus")))
+                         (or (get ir :errors) []))))}
+  ...)
+```
+
+Existing preludes keep working unchanged. When a program uses a form with no
+emitter for the host being generated, the generator reports a located
+diagnostic on that form. This is the same rule as an `extern` without that
+host's key.
+
+**`go/*` primitives** mirror `ts/*` and are resolved by the Go generator. A
+template therefore never spells a Go type or name as a string:
+
+| Primitive | Result |
+| --- | --- |
+| `go/ref` | A Go identifier, validated. |
+| `go/declaration` | The Go name of a Forma declaration, for example `Shop`. |
+| `go/operation` | The Go function for an operation, after collision suffixes: `create-user` beside the `CreateUser` type becomes `CreateUserOp`. |
+| `go/type` | The Go type for a `Type` hole, through the generator's type mapping. |
+| `go/zero` | A zero value of a `Type` hole (`UserNotFound{}`), so generic Go functions can infer type arguments from values. |
+| `go/annotation` | A schema annotation such as `:status`, or `nil`. |
+| `go/children` | Nested forms, emitted with their own `:go` hooks. |
+| `go/method`, `go/code` | A method call; compiler-produced code. |
+
+Lists render as calls. Vectors and maps have no Go rendering, because Go
+literals need a type; emitters construct values with calls instead.
+
+**Linkers split into a check and a backend.** The prelude linker becomes a
+host-neutral pass that elaborates the domain forms, checks the mechanics
+program, and runs the linker checks. It returns the domain IR and
+`CheckInfo`. A backend then generates the mechanics module for its host and
+appends the emitted domain declarations.
+
+**A small runtime library per protocol on each host.** This is not a port of
+the platform packages. The runtime implements the protocol's semantics
+(routing, request decoding, error-to-status mapping) and binds Go's standard
+library underneath. For `http-api`, the Go runtime is `httpapi`, built on
+`net/http`. A handler is a generic `httpapi.Handler[Req, Res]` whose type
+arguments Go infers from the generated operation. Each request runs as a
+fiber whose `context.Context` is the request's, so a client that disconnects
+interrupts the handler and runs its finalizers.
+
+**A specified wire encoding.** Two hosts can only talk if Forma, not each
+host, defines how values are encoded. For JSON:
+
+- A record is an object keyed by Forma field names. An absent optional field
+  is omitted, and extra fields are ignored on decode.
+- A brand or enum encodes as its base value. `Int` is a JSON number in the
+  safe range. A map is an object, and a list is an array.
+- An error is its record plus `"_tag"`. Its HTTP status comes from `:status`
+  and defaults to 500.
+- A value that does not decode, for example `{"id": 42}` for `{:id String}`
+  or a missing required field, is a 400 response with an empty body.
+- An unknown route, or a known path with the wrong method, is a 404 with an
+  empty body.
+
+These rules are what Effect 4's `HttpApi` does today, measured against the
+`http-api` conformance case. The Go runtime must match them, including where
+Go's defaults differ: `encoding/json` accepts missing fields, and
+`http.ServeMux` answers a wrong method with 405.
+
+**Cross-host conformance.** A prelude case gains two checks beyond a single
+host:
+
+- A **differential test** sends the same requests to the TypeScript server
+  and to the Go server, both generated from one program, and compares
+  statuses and bodies.
+- A **cross-host client test** calls the Go server through
+  `HttpApiClient`, derived from the generated TypeScript `Shop`.
+
+**RPC** follows the same pattern. An `rpc` prelude would declare procedures
+with payload, success, and error schemas, plus a streaming flag. Its `:ts`
+emitter targets Effect's RPC modules, and its `:go` emitter targets a Go
+`rpc` runtime. The decision specific to RPC is the protocol. Implementing
+Effect RPC's own message format in Go lets Effect clients call Go servers,
+but makes the Go runtime track another upstream protocol. A Forma-owned
+format is cheaper but gives up that interoperability. Streaming RPC also
+depends on the `Stream` subset.
+
 ### Conformance on two hosts
 
 Each positive case in `conformance/effect-typescript/` keeps its TypeScript
@@ -664,10 +772,14 @@ Reading the table:
 4. **`extern :go`** after RFC 0018 lands, with `:cancel` required and
    negative cases for a missing `:cancel` and for an error outside the
    declared set.
-5. **Decoders and a `Stream` subset.** Generate decoders from schemas with the
+5. **Preludes on Go.** Host-keyed `:emit`, the `go/*` primitives, the
+   check/backend split for prelude linkers, and the `httpapi` runtime.
+   *Validation:* the `http-api` case passes a Go harness, the differential
+   test against the TypeScript server, and the `HttpApiClient` test.
+6. **Decoders and a `Stream` subset.** Generate decoders from schemas with the
    same failure shape as `SchemaError`, and port `Stream` on `iter.Seq`.
    *Validation:* `schemas-and-decoding` and `stream-pipeline` on both hosts.
-6. **Publish** the runtime as a versioned module only once stages 2–5 hold
+7. **Publish** the runtime as a versioned module only once stages 2–6 hold
    and a consumer depends on it.
 
 ## Decisions still required
@@ -685,6 +797,9 @@ Reading the table:
   path.
 - Whether `TestClock` stays alongside `synctest`, or tests use `synctest`
   only.
+- Where the wire encoding is specified, so that it binds both hosts and
+  their conformance cases.
+- For RPC: Effect RPC's message format, or a Forma-owned protocol.
 
 ## Related designs
 
