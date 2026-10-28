@@ -30,11 +30,13 @@ export interface KernelFrontendResult {
 }
 
 export function buildKernelExpansionEnv(options: KernelFrontendOptions = {}): Env {
-  const builtins = options.builtins ?? defaultBuiltins;
   const baseEnv =
     options.includePrelude === false
       ? undefined
-      : (options.preludeEnv ?? getPreludeEnvSync(builtins));
+      : // The kernel prelude only defines syntactic macros; expansion still runs
+        // with the caller's builtins. Build it once over the defaults instead of
+        // once per builtins object (hosts create one per elaboration hook).
+        (options.preludeEnv ?? getPreludeEnvSync(defaultBuiltins));
 
   if (!options.env) {
     return baseEnv ?? Env.empty();

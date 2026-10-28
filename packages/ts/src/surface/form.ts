@@ -14,7 +14,8 @@ import { ElaborationError, type ElaborationHook, type HookInput } from "../descr
 import { SimpleNormalizedSlots, type SlotValue } from "../descriptor/NormalizedSlots.js";
 import { Env } from "../Env.js";
 import { defaultBuiltins } from "../builtins/index.js";
-import { evaluateExprs } from "../evaluator/eval.js";
+import { evaluateExprs, evaluateExprsAfter } from "../evaluator/eval.js";
+import { expandKernelExprsSync } from "../evaluator/frontend.js";
 import type { KValue, BuiltinFn } from "../evaluator/types.js";
 import { showType, type Type } from "../type/types.js";
 import { InferContext, makeOwnedInferContext } from "../type/context.js";
@@ -226,6 +227,18 @@ export function normalizeUnifiedForm(descriptor: FormDescriptor, expr: SExpr) {
   return { formName: descriptor.name, descriptor, identifiers, slots: new SimpleNormalizedSlots(slots), loc: expr.loc, rawExpr: expr };
 }
 
+// A form's helpers and constructors are the same for every hook invocation:
+// expand them once per form instead of once per projection, scope and check.
+const helperExpansions = new WeakMap<UnifiedForm, readonly SExpr[]>();
+const expandedHelpers = (spec: UnifiedForm, constructors: readonly SExpr[]): readonly SExpr[] => {
+  let expanded = helperExpansions.get(spec);
+  if (!expanded) {
+    expanded = expandKernelExprsSync([...constructors, ...spec.helpers], { builtins: defaultBuiltins }).expanded;
+    helperExpansions.set(spec, expanded);
+  }
+  return expanded;
+};
+
 const projectionBuiltins: Record<string, BuiltinFn> = {
   List: args => Effect.succeed([KSymbol("List"), ...args]),
   Option: args => Effect.succeed([KSymbol("Option"), ...args]),
@@ -355,7 +368,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
     const constructors = [...spec.types].filter(([,type]) => head(type) === "Tagged" || head(type) === "Brand").map(([typeName,type]) => list(type,[sym(type,"type"),sym(type,typeName),type]));
     const run = (expression: SExpr) => linked
       ? Effect.try({try: () => linked.run(expression,env,builtins),catch: error => new ElaborationError({message: error instanceof Error ? error.message : String(error),hookName:descriptor.name,phase:kind})})
-      : evaluateExprs([...constructors,...spec.helpers,expression],{env,builtins,stepLimit:100_000}).pipe(Effect.map(r=>r.value));
+      : evaluateExprsAfter(expandedHelpers(spec,constructors),[expression],{env,builtins,stepLimit:100_000}).pipe(Effect.map(r=>r.value));
     const invoke = (fn: SExpr) => run(list(fn,[fn,sym(fn,"__holes")]));
     for (const [n,t] of spec.holes) {
       const e = values.get(n), u = unwrapOption(t);
