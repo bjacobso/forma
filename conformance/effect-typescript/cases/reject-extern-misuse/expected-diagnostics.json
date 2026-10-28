@@ -1,0 +1,25 @@
+{
+  "typescript": "rejects",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected Int, but this is String.",
+      "line": 15,
+      "column": 19,
+      "endLine": 15,
+      "endColumn": 45
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/undeclared-error",
+      "message": "Operation pay can fail with PaymentDeclined, but its signature declares no errors.",
+      "line": 14,
+      "column": 17,
+      "endLine": 14,
+      "endColumn": 43
+    }
+  ]
+}

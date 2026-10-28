@@ -61,6 +61,7 @@ Status key:
 | Layer types | `(: L (Layer [Provides] [Errors] [Requirements]))` | supported | multi-service-checkout |
 | `Effect.provide` | `(provide eff Layer)` | supported | multi-service-checkout |
 | Scoped layers | `acquire-release` in `:setup` | supported | resource-scope |
+| Existing TypeScript schemas, errors, services, and layers | `(extern "./module.js" (type ...) (error ...) (service ...) (: L (Layer [...])))` | supported | extern-interop. Imported, not generated; TypeScript checks them against the real exports. |
 
 ### Effect programs
 
@@ -70,6 +71,8 @@ Status key:
 | Branching | `if`, `when`, `unless`, `cond`, `match` (effect and value position) | supported | crud-users, pure-domain-logic |
 | Zero-argument operations | `(-> (Effect ...))` | supported | crud-users |
 | Pure functions and constants | `(: f (-> A B)) (define f (fn ...))`, `(: c T) (define c v)` | supported | pure-domain-logic |
+| TypeScript functions, constants, and Effect values | `(extern "./module.js" (: f (-> A B) :export "tsName") (: op (-> A (Effect B [E]))))` | supported | extern-interop, reject-extern-misuse. Single-file programs only. |
+| `Effect.promise`, callbacks, untyped JavaScript | none | missing | Wrap them in a TypeScript export with an Effect type and bind it with `extern`. |
 | Pure value expressions | records, vectors, `get`, `assoc`, `str`, arithmetic, comparisons, collection and string functions | supported | pure-domain-logic |
 | Generic operations/functions | none | missing | |
 | `Effect.fn`, spans, tracing | none | missing | |
@@ -123,7 +126,8 @@ the operational combinators above still use the mechanics compiler. See
 | Stricter than TypeScript | supported | `Bool` conditions, primitive-only `=`, `str` of primitives, `Int` versus `Number`, and `let` versus `do!`. See the `typescript` field of each rejection case. |
 | Generated code typechecks without `any` | supported | Under `tsconfig.base.json`. |
 | HM checker (`Type.inferSourceStr`) and language server | missing | They do not understand the new forms. The mechanics checker is authoritative for Effect programs. |
-| Hosted runtime (`makeMechanicsRuntime`) | partial | Executes only the original body forms. |
+| Hosted runtime (`makeMechanicsRuntime`) | partial | Executes only the original body forms. Imported (`extern`) operations raise `mechanics/extern-operation`. |
+| `extern` in file modules | missing | `linkEffectModules` and the HM checker do not know `extern` yet. |
 
 ## Elm-style app prototype
 

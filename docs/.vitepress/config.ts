@@ -84,6 +84,7 @@ export default defineConfig({
           { text: "0015: Tests in Forma", link: "/rfcs/0015-tests-in-forma" },
           { text: "0016: Host-call journals", link: "/rfcs/0016-host-call-journals" },
           { text: "0017: Diagnostic catalog", link: "/rfcs/0017-diagnostic-catalog" },
+          { text: "0018: Effect as the host", link: "/rfcs/0018-effect-as-host" },
         ],
       },
       {

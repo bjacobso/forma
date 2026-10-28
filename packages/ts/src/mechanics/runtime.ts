@@ -1,5 +1,6 @@
 import { KFloat, isKFloat, isNumeric, kEquals } from "../evaluator/types.js";
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
+import { externOf } from "./extern.js";
 
 function numericLiteral(value: unknown, kind: unknown): unknown {
   return typeof value === "number" && (kind === "float" || !Number.isInteger(value)) ? new KFloat(value) : value;
@@ -81,6 +82,14 @@ export function makeMechanicsRuntime(options: MechanicsRuntimeOptions): Mechanic
       );
     }
 
+    const extern = externOf(operation);
+    if (extern) {
+      throw new MechanicsRuntimeError(
+        "mechanics/extern-operation",
+        `${operationName} is imported from "${extern.module}"; the hosted runtime cannot run TypeScript exports. Run the generated module instead.`,
+        { operationName, module: extern.module },
+      );
+    }
     assertRequirementsAvailable(operation, services);
     const env = new Map<string, MechanicsRuntimeValue>();
     const params = arrayField(operation, "params");

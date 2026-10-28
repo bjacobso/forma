@@ -101,6 +101,17 @@ const payloadContracts: ReadonlyMap<string, PayloadContract> = new Map([
     },
   ],
   [
+    "mechanics/extern-def/v0",
+    {
+      requiredFields: ["kind", "name", "extern"],
+      fieldConstraints: [
+        { field: "kind", kind: "string" },
+        { field: "name", kind: "string" },
+        { field: "extern", kind: "object" },
+      ],
+    },
+  ],
+  [
     "mechanics/effect-def/v0",
     {
       requiredFields: ["kind", "name", "params", "effect", "body"],
@@ -224,6 +235,9 @@ function validateMechanicsContractPayload(
         index,
         diagnostics,
       );
+      break;
+    case "mechanics/extern-def/v0":
+      validateExternPayload(payload, contractName, declaration, index, diagnostics);
       break;
     case "mechanics/effect-def/v0":
       validateParamArray(
@@ -813,6 +827,62 @@ function validateCombinatorArg(
       return;
     default:
       validateBodyNode(value, path, contractName, declaration, index, diagnostics);
+  }
+}
+
+/** An imported declaration carries its type and where it comes from, never an implementation. */
+function validateExternPayload(
+  payload: Record<string, JsonValue>,
+  contractName: string,
+  declaration: PackageableDeclaration,
+  index: number,
+  diagnostics: Diagnostic[],
+): void {
+  const extern = expectRecord(payload["extern"], "$.payload.extern", contractName, declaration, index, diagnostics);
+  if (extern) {
+    expectString(extern["module"], "$.payload.extern.module", contractName, declaration, index, diagnostics);
+    expectString(extern["export"], "$.payload.extern.export", contractName, declaration, index, diagnostics);
+  }
+  switch (payload["kind"]) {
+    case "SchemaDef":
+    case "ErrorDef":
+    case "ClassDef":
+      validateSchemaNode(payload["schema"], "$.payload.schema", contractName, declaration, index, diagnostics);
+      break;
+    case "ServiceDef":
+      validateMethodArray(payload["methods"], "$.payload.methods", contractName, declaration, index, diagnostics);
+      break;
+    case "EffectDef":
+      validateParamArray(payload["params"], "$.payload.params", contractName, declaration, index, diagnostics);
+      validateEffectTypeNode(payload["effect"], "$.payload.effect", contractName, declaration, index, diagnostics);
+      break;
+    case "FunctionDef":
+      validateParamArray(payload["params"], "$.payload.params", contractName, declaration, index, diagnostics);
+      validateTypeNode(payload["returns"], "$.payload.returns", contractName, declaration, index, diagnostics);
+      break;
+    case "ValueDef":
+      validateTypeNode(payload["type"], "$.payload.type", contractName, declaration, index, diagnostics);
+      break;
+    case "LayerDef": {
+      const signature = expectRecord(payload["signature"], "$.payload.signature", contractName, declaration, index, diagnostics);
+      if (signature) {
+        for (const field of ["provides", "errors", "requirements"]) {
+          validateStringArray(signature[field], `$.payload.signature.${field}`, contractName, declaration, index, diagnostics);
+        }
+      }
+      const implementation = expectRecord(payload["implementation"], "$.payload.implementation", contractName, declaration, index, diagnostics);
+      if (implementation && implementation["kind"] !== "Extern") {
+        diagnostics.push(contractDiagnostic(contractName, "$.payload.implementation.kind", "Extern", String(implementation["kind"]), index, declaration));
+      }
+      break;
+    }
+    default:
+      diagnostics.push(contractDiagnostic(contractName, "$.payload.kind", "an importable declaration kind", String(payload["kind"]), index, declaration));
+  }
+  for (const field of ["body", "value"]) {
+    if (field in payload && !(payload["kind"] === "EffectDef" && field === "value" && payload[field] === true)) {
+      diagnostics.push(contractDiagnostic(contractName, `$.payload.${field}`, "no implementation", "an implementation", index, declaration));
+    }
   }
 }
 

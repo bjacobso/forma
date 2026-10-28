@@ -69,6 +69,61 @@ by their declared names. In expressions, `(Ref T)` is an Effect reference, and
 `(Option T)`, `(Result A E)`, `(Fiber A [E])`, `(Stream A [E] [R])`, and
 `(-> A B)` are the corresponding value types.
 
+## Importing TypeScript
+
+`extern` binds exports of an existing TypeScript module. Write the Forma type
+of each export you use. The declarations inside `extern` are the same forms
+as above, except that signatures have no `define` and services have no
+`layer`:
+
+```lisp
+(extern "./payments.js"
+  (type OrderId (Brand String))
+  (type Receipt {:order OrderId :cents Int})
+  (error PaymentDeclined {:reason String})
+  (service Payments
+    (: charge (-> OrderId Int (Effect Receipt [PaymentDeclined]))))
+  (: PaymentsLive (Layer [Payments]))
+  (: format-cents (-> Int String))
+  (: slug (-> String String) :export "toSlug")
+  (: audit (-> String (Effect Unit))))
+```
+
+| Inside `extern` | Imports | Used as |
+| --- | --- | --- |
+| `(type N T)`, `(class N {...})`, `(error N {...})` | the `Schema` constant or class `N` | a local schema, class, or error |
+| `(service N (: m Type) ...)` | the `Context.Service` class `N` | a local service |
+| `(: N (Layer [Provides] [Errors] [Requirements]))` | the `Layer` value `N` | `provide` and layer composition |
+| `(: f (-> A ... (Effect R [E] [Req])))`, `(: v (Effect R))` | an Effect function or value | an operation |
+| `(: f (-> A ... B))` | a function | a pure function |
+| `(: c T)` | a constant | a constant |
+
+Forma checks every use of an imported declaration exactly as it checks a local
+one, including the errors and requirements of imported operations. The
+generator emits an import instead of a definition:
+
+```ts
+import { audit, formatCents, OrderId, PaymentDeclined, Payments, PaymentsLive, toSlug as slug } from "./payments.js";
+```
+
+The module specifier is emitted verbatim. TypeScript names follow the
+generated names (`format-cents` becomes `formatCents`, `Payments` stays
+`Payments`); add `:export "name"` as the last option of a declaration to
+import a different export. Only declarations the generated module uses are
+imported, so strict `noUnusedLocals` projects accept it.
+
+Forma trusts the declared types. TypeScript checks them when it compiles the
+generated module: if `Payments.charge` really succeeds with a `Receipt` and the
+`extern` says `String`, the generated code does not typecheck. Declare service
+methods requirement-free, as for local services. An imported schema must be
+an Effect `Schema` value, not only a TypeScript type.
+
+The [`extern-interop` case](https://github.com/bjacobso/forma/tree/main/conformance/effect-typescript/cases/extern-interop)
+imports a hand-written `payments.ts` and runs its live layer. `extern` works in
+single-file programs (`generateEffectProgram`). File modules, the HM checker,
+and the hosted runtime do not support it yet; see
+[RFC 0018](/rfcs/0018-effect-as-host).
+
 ## Effect bodies
 
 | Forma | Effect TypeScript |
@@ -163,7 +218,9 @@ consumes. It rejects a program when:
   `_tag`);
 - a function or constant calls a service;
 - a top-level form is not part of an Effect program (an untyped `define`, a
-  misspelled declaration head, a bare expression, or an orphan signature).
+  misspelled declaration head, a bare expression, or an orphan signature);
+- an `extern` has no module string, contains a `define` or `layer`, has an
+  `:export` that is not a TypeScript identifier, or imports a name twice.
 
 TypeScript would also reject most of these mistakes once the code is
 generated. Forma reports them first, against the Forma source. Some checks
@@ -190,8 +247,11 @@ also reject the code generated with the checker bypassed.
 - Generic (type-parameterised) operations and functions.
 - Schedule composition beyond `jittered` (`both`, `either`, `while`/`until`
   predicates), `Queue`, `PubSub`, `Deferred`, `Semaphore`, and scoped forks.
-- JavaScript interop such as `Effect.promise`. Host code supplies that
-  through services.
+- Calling JavaScript directly, such as `Effect.promise` or a callback. Wrap
+  it in a TypeScript export with an Effect type and bind it with `extern`, or
+  supply it through a service.
+- `extern` in file modules (`linkEffectModules`), and reading declarations
+  from `.d.ts` files instead of restating them.
 - The hosted mechanics runtime (`makeMechanicsRuntime`) still executes only
   the original body forms.
 - The general HM typechecker (`Type.inferSourceStr`), which drives the

@@ -1,0 +1,45 @@
+{
+  "typescript": "not-projected",
+  "diagnostics": [
+    {
+      "phase": "project",
+      "severity": "error",
+      "code": "mechanics/extern",
+      "message": "extern expects a module specifier string, then declarations: (extern \"./module.js\" (: name Type) ...).",
+      "line": 4,
+      "column": 9,
+      "endLine": 4,
+      "endColumn": 17
+    },
+    {
+      "phase": "project",
+      "severity": "error",
+      "code": "mechanics/extern",
+      "message": "extern declares bindings that TypeScript implements; define has a Forma implementation. Use type, class, error, service, or (: name Type).",
+      "line": 7,
+      "column": 3,
+      "endLine": 7,
+      "endColumn": 44
+    },
+    {
+      "phase": "project",
+      "severity": "error",
+      "code": "mechanics/extern",
+      "message": ":export must be the last option and name a TypeScript identifier, as in :export \"randomUUID\".",
+      "line": 9,
+      "column": 38,
+      "endLine": 9,
+      "endColumn": 47
+    },
+    {
+      "phase": "project",
+      "severity": "error",
+      "code": "mechanics/extern",
+      "message": "currency is already imported from \"./rates.js\".",
+      "line": 11,
+      "column": 25,
+      "endLine": 11,
+      "endColumn": 44
+    }
+  ]
+}

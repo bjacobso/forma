@@ -17,6 +17,15 @@ Command arguments, subscriptions, richer views, editor/worker integration, and
 shared HttpApi server/client declarations remain proposed work. There is no
 production-readiness claim.
 
+## Effect as the host
+
+[RFC 0018](./rfcs/0018-effect-as-host.md) proposes treating Effect as Forma's
+host platform. Its first stage is implemented: `extern` imports existing
+TypeScript schemas, errors, services, layers, functions, constants, and
+operations into single-file Effect programs under checked Forma types. `extern`
+in file modules, a `.d.ts` importer, Effect combinators as library bindings,
+editor routing to the Effect checker, and source maps remain proposals.
+
 ## Next
 
 1. Tighten the language specification around observable behavior and turn

@@ -5,6 +5,7 @@ import type { Span } from "../diagnostic/diagnostic.js";
 import { diagnosticFromUnknown } from "../diagnostic/diagnostic.js";
 import { normalizeEffectProgram, serviceValues } from "../surface/effect.js";
 import type { SExpr } from "../reader/types.js";
+import { externJson, flattenExterns, isLayerType, type ExternImport } from "./extern.js";
 
 export interface MechanicsArtifactDiagnostic {
   readonly code: string;
@@ -28,8 +29,21 @@ export function mechanicsPackageableDeclarations(
   sourceId: string,
   normalized = false,
   context?: readonly SExpr[],
-  options: { readonly lowerOntology?: boolean } = {},
+  options: {
+    readonly lowerOntology?: boolean;
+    /** Names imported by `extern`, when the caller flattened externs before normalizing. */
+    readonly externs?: ReadonlyMap<string, ExternImport>;
+  } = {},
 ): MechanicsArtifactResult {
+  let externs = options.externs ?? new Map<string, ExternImport>();
+  if (!normalized) {
+    const flattened = flattenExterns(exprs);
+    if (flattened.diagnostics.length > 0) {
+      return { ok: false, diagnostics: flattened.diagnostics.map((item) => diagnostic(sourceId, item.expr, item.code, item.message)) };
+    }
+    exprs = flattened.exprs;
+    externs = new Map([...externs, ...flattened.externs]);
+  }
   try {
     exprs = normalizeEffectProgram(options.lowerOntology === false ? exprs : lowerOntologyOperations(exprs), !normalized);
     if (context) context = normalizeEffectProgram(options.lowerOntology === false ? context : lowerOntologyOperations(context), !normalized);
@@ -43,10 +57,19 @@ export function mechanicsPackageableDeclarations(
   const declarations: PackageableDeclaration[] = [];
   const signatures = operationSignatures(context ?? exprs);
   const serviceMethodEffects = collectServiceMethodEffects(context ?? exprs, sourceId);
-  const operationEffects = collectOperationEffects(context ?? exprs, sourceId, signatures);
+  const operationEffects = new Map([
+    ...collectOperationEffects(context ?? exprs, sourceId, signatures),
+    ...collectExternOperationEffects(context ?? exprs, sourceId, externs),
+  ]);
 
   for (let formIndex = 0; formIndex < exprs.length; formIndex++) {
     const expr = exprs[formIndex]!;
+    if (isExternSignature(expr, externs)) {
+      const result = externSignatureDeclaration(expr, sourceId, formIndex, externs);
+      if (!result.ok) return result;
+      declarations.push(result.declaration);
+      continue;
+    }
     if (!isMechanicsArtifactForm(expr) && !isTypedFunctionForm(expr, signatures)) continue;
 
     const result = declaration(
@@ -58,7 +81,7 @@ export function mechanicsPackageableDeclarations(
       operationEffects,
     );
     if (!result.ok) return result;
-    declarations.push(result.declaration);
+    declarations.push(isExternForm(expr, externs) ? withExtern(result.declaration, externs) : result.declaration);
   }
 
   return { ok: true, declarations };
@@ -275,6 +298,121 @@ function collectOperationEffects(
     }
   }
   return effects;
+}
+
+/**
+ * Whether a form is the one an `extern` declared. Normalization rebuilds forms
+ * but keeps their locations, so a local form reusing an imported name is not
+ * mistaken for the import.
+ */
+function isExternForm(expr: SExpr, externs: ReadonlyMap<string, ExternImport>): boolean {
+  const name = expr._tag === "List" ? symName(expr.items[1]) : undefined;
+  return name !== undefined && externs.get(name)?.loc === expr.loc;
+}
+
+/** `(: name Type)` from an `extern`: a declaration TypeScript implements. */
+function isExternSignature(expr: SExpr, externs: ReadonlyMap<string, ExternImport>): expr is Extract<SExpr, { readonly _tag: "List" }> {
+  return expr._tag === "List" && expr.items.length === 3 && symName(expr.items[0]) === ":" && isExternForm(expr, externs);
+}
+
+function externParams(signature: SExpr): Extract<SExpr, { readonly _tag: "Vector" }> {
+  const inputs = signature._tag === "List" && symName(signature.items[0]) === "->" ? signature.items.slice(1, -1) : [];
+  return {
+    _tag: "Vector",
+    items: inputs.map((input, index): SExpr => ({ _tag: "Sym", name: `arg${index}`, loc: input.loc })),
+    loc: signature.loc,
+  };
+}
+
+function isEffectSignature(signature: SExpr): boolean {
+  if (signature._tag !== "List") return false;
+  if (symName(signature.items[0]) === "Effect") return true;
+  const result = signature.items.at(-1);
+  return symName(signature.items[0]) === "->" && result?._tag === "List" && symName(result.items[0]) === "Effect";
+}
+
+function collectExternOperationEffects(
+  exprs: readonly SExpr[],
+  sourceId: string,
+  externs: ReadonlyMap<string, ExternImport>,
+): OperationEffects {
+  const effects = new Map<string, JsonValue>();
+  for (const expr of exprs) {
+    if (!isExternSignature(expr, externs) || !isEffectSignature(expr.items[2]!)) continue;
+    const signature = operationSignatureToJson(sourceId, expr.items[2]!, externParams(expr.items[2]!));
+    if (signature.ok) effects.set(symName(expr.items[1])!, signature.value.effect);
+  }
+  return effects;
+}
+
+/** Marks a type, class, error, or service declared inside `extern` as imported. */
+function withExtern(declaration: PackageableDeclaration, externs: ReadonlyMap<string, ExternImport>): PackageableDeclaration {
+  const name = declaration.summary.name;
+  const binding = name === undefined ? undefined : externs.get(name);
+  if (!binding || !isRecord(declaration.payload)) return declaration;
+  return {
+    ...declaration,
+    payload: { ...declaration.payload, extern: externJson(binding) },
+    payloadContract: "mechanics/extern-def/v0",
+  };
+}
+
+/**
+ * A signature inside `extern` becomes a declaration with a type and no
+ * implementation: a layer, an operation, a pure function, or a constant.
+ */
+function externSignatureDeclaration(
+  expr: Extract<SExpr, { readonly _tag: "List" }>,
+  sourceId: string,
+  formIndex: number,
+  externs: ReadonlyMap<string, ExternImport>,
+): DeclarationResult {
+  const name = symName(expr.items[1])!;
+  const signature = expr.items[2]!;
+  const extern = externJson(externs.get(name)!);
+  const declared = (kind: string, fields: Record<string, JsonValue>): DeclarationResult => ({
+    ok: true,
+    declaration: {
+      summary: { kind, name, resultType: kind },
+      payload: { kind, name, ...fields, extern },
+      payloadContract: "mechanics/extern-def/v0",
+      validators: ["payload-contract"],
+      sourceId,
+      formIndex,
+      span: spanOf(sourceId, expr),
+    },
+  });
+  if (isLayerType(signature)) {
+    const layer = layerTypeToJson(sourceId, signature);
+    if (!layer.ok) return layer;
+    return declared("LayerDef", { signature: layer.value, implementation: { kind: "Extern" } });
+  }
+  if (isEffectSignature(signature)) {
+    const operation = operationSignatureToJson(sourceId, signature, externParams(signature));
+    if (!operation.ok) return operation;
+    const effect = operation.value.effect;
+    const capabilities = isRecord(effect) && Array.isArray(effect["requirements"]) ? effect["requirements"] : [];
+    return declared("EffectDef", {
+      ...(signature._tag === "List" && symName(signature.items[0]) === "Effect" ? { value: true } : {}),
+      params: operation.value.params,
+      effect,
+      authority: { capabilities },
+    });
+  }
+  if (signature._tag === "List" && symName(signature.items[0]) === "->") {
+    const params: JsonValue[] = [];
+    for (const [index, input] of signature.items.slice(1, -1).entries()) {
+      const type = typeExprToJson(sourceId, input);
+      if (!type.ok) return type;
+      params.push({ name: `arg${index}`, type: type.value });
+    }
+    const returns = typeExprToJson(sourceId, signature.items.at(-1)!);
+    if (!returns.ok) return returns;
+    return declared("FunctionDef", { params, returns: returns.value });
+  }
+  const type = typeExprToJson(sourceId, signature);
+  if (!type.ok) return type;
+  return declared("ValueDef", { type: type.value });
 }
 
 function schemaDeclaration(
