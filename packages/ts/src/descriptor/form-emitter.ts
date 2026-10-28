@@ -142,6 +142,40 @@ export function emissionSchema(value: KValue): JsonValue {
   return payload["schema"];
 }
 
+/** A host that prelude forms can emit for. */
+export type EmitHost = "ts" | "go";
+
+/**
+ * Names and types the Go generator resolves for `go/*` primitives, so
+ * templates never spell a Go name or type as a string.
+ */
+export interface GoEmitNaming {
+  /** The Go name of a declaration (a type, layer, or emitted domain value). */
+  readonly declaration: (name: string) => string;
+  /** The Go function generated for an operation. */
+  readonly operation: (name: string) => string;
+  /** The Go type of a projected schema. */
+  readonly type: (schema: JsonValue) => string;
+  /** A zero value of a projected schema's Go type. */
+  readonly zero: (schema: JsonValue) => string;
+}
+
+export interface EmitTarget {
+  readonly host: EmitHost;
+  readonly go?: GoEmitNaming;
+}
+
+/**
+ * The hook a form declares for a host. `:emit` is either a function, the
+ * TypeScript hook, or a map from host keyword to function:
+ * `:emit {:ts (fn [ir] ...) :go (fn [ir] ...)}`.
+ */
+export function emitHook(descriptor: FormDescriptor, host: EmitHost): SExpr | undefined {
+  const option = descriptor.surface?.options.get(":emit");
+  if (option?._tag === "Map") return option.pairs.find(([key]) => name(key) === `:${host}`)?.[1];
+  return host === "ts" ? option : undefined;
+}
+
 /** Evaluate an authored :emit function over an IR value, including nested forms. */
 export function emitFormExpression(
   descriptor: FormDescriptor,
@@ -151,11 +185,12 @@ export function emitFormExpression(
     string,
     Readonly<Record<string, JsonValue>>
   > = new Map(),
+  target: EmitTarget = { host: "ts" },
 ): SExpr {
   const spec = descriptor.surface;
-  const hook = spec?.options.get(":emit");
+  const hook = emitHook(descriptor, target.host);
   if (!spec || !hook)
-    throw new Error(`Form ${descriptor.name} has no :emit hook`);
+    throw new Error(target.host === "ts" ? `Form ${descriptor.name} has no :emit hook` : `Form ${descriptor.name} has no :${target.host} emitter`);
   const nested = (value: KValue): SExpr => {
     if (!(value instanceof Map)) throw new Error("Expected a child IR record");
     const kind = value.get(":kind");
@@ -168,7 +203,7 @@ export function emitFormExpression(
         ),
     );
     if (!child) throw new Error(`No emitter for child kind ${String(kind)}`);
-    return emitFormExpression(child, value, descriptors, schemaAnnotations);
+    return emitFormExpression(child, value, descriptors, schemaAnnotations, target);
   };
   const schema = (value: KValue): KValue => {
     if (isKSExpr(value)) return value;
@@ -242,14 +277,33 @@ export function emitFormExpression(
       return targetCode(code);
     }),
   };
+  const go = target.go;
+  const goBuiltins = go ? {
+    "go/ref": pure((args) => goReference(String(args[0]))),
+    "go/declaration": pure((args) => goReference(go.declaration(String(args[0])))),
+    "go/operation": pure((args) => goReference(go.operation(String(args[0])))),
+    "go/type": pure((args) => goCode(go.type(emissionSchema(args[0]!)))),
+    "go/zero": pure((args) => goCode(go.zero(emissionSchema(args[0]!)))),
+    "go/annotation": pure((args) => {
+      const value = schemaAnnotations.get(String(args[0]))?.[String(args[1])];
+      return value === undefined ? (args[2] ?? null) : (value as KValue);
+    }),
+    "go/children": pure((args) => {
+      const value = args[0]!;
+      if (!Array.isArray(value)) throw new Error("go/children expects child records");
+      return value.map((v) => (isKSExpr(v) ? v : { _tag: "KSExpr", expr: nested(v) }));
+    }),
+  } : {};
+  const host = target.host === "go" ? goBuiltins : {};
   const expression = list(hook, [hook, sym(hook, "__ir")]);
   const env = Env.empty().bind("__ir", ir);
+  const hostBuiltins = { ...builtins, ...host };
   const expanded = expandKernelExprsSync([...spec.helpers, expression], {
     env,
-    builtins,
+    builtins: hostBuiltins,
   }).expanded;
   const result = Effect.runSync(
-    evaluateCompileTimeExprs(expanded, { env, builtins, stepLimit: 100_000 }),
+    evaluateCompileTimeExprs(expanded, { env, builtins: hostBuiltins, stepLimit: 100_000 }),
   );
   return kValueToSExpr(result.value);
 }
@@ -268,6 +322,66 @@ export const emitFormTypeScript = (
       schemaAnnotations,
     ),
   );
+
+const goIdentifier = /^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*$/;
+
+const goReference = (identifier: string): KValue => {
+  if (!goIdentifier.test(identifier)) throw new Error(`Invalid Go reference ${identifier}`);
+  return { _tag: "KSExpr", expr: { _tag: "Sym", name: identifier, loc } };
+};
+
+const goCode = (code: string): KValue => ({
+  _tag: "KSExpr",
+  expr: { _tag: "List", loc, items: [{ _tag: "Sym", name: "go/code", loc }, { _tag: "Str", value: code, loc }] },
+});
+
+/**
+ * Renders a `:go` template. Lists are calls; a call whose one-line form is
+ * long puts one argument per line, which gofmt keeps. Vectors and maps have
+ * no rendering because Go literals need a type: templates build values with
+ * calls.
+ */
+export function renderGo(e: SExpr, indent = ""): string {
+  switch (e._tag) {
+    case "Str":
+      return JSON.stringify(e.value);
+    case "Num":
+    case "Bool":
+      return String(e.value);
+    case "Sym": {
+      if (e.name === "nil") return "nil";
+      if (e.name.startsWith(":")) return JSON.stringify(e.name.slice(1));
+      if (!goIdentifier.test(e.name)) throw new Error(`Invalid Go reference ${e.name}`);
+      return e.name;
+    }
+    case "List": {
+      const args = e.items.slice(1);
+      switch (head(e)) {
+        case "go/code": {
+          if (args.length !== 1 || args[0]?._tag !== "Str") throw new Error("go/code expects one compiler-produced expression");
+          return args[0].value;
+        }
+        case "go/method": {
+          const method = args[1];
+          if (method?._tag !== "Str" || !/^[A-Za-z_]\w*$/.test(method.value)) throw new Error("Invalid method name");
+          return goCall(`${renderGo(args[0]!, indent)}.${method.value}`, args.slice(2), indent);
+        }
+        default:
+          if (!e.items[0]) throw new Error("Cannot emit an empty call");
+          return goCall(renderGo(e.items[0], indent), args, indent);
+      }
+    }
+    default:
+      throw new Error(`Go templates build values with calls, not ${e._tag === "Vector" ? "vectors" : e._tag === "Map" ? "maps" : e._tag}`);
+  }
+}
+
+function goCall(callee: string, args: readonly SExpr[], indent: string): string {
+  const inline = `${callee}(${args.map((arg) => renderGo(arg, indent)).join(", ")})`;
+  if (!inline.includes("\n") && indent.length * 4 + inline.length <= 100) return inline;
+  const inner = `${indent}\t`;
+  return `${callee}(\n${args.map((arg) => `${inner}${renderGo(arg, inner)},`).join("\n")}\n${indent})`;
+}
 
 /** Symbolic projection for the deliberately small builder subset. */
 export function projectBuilderIR(

@@ -1,0 +1,4 @@
+{
+  "extends": "../../conformance/effect-typescript/tsconfig.json",
+  "include": ["conformance/**/*.ts"]
+}

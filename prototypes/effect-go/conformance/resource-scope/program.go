@@ -9,18 +9,18 @@ import (
 
 // Connection is the Connection schema.
 type Connection struct {
-	Id string
+	Id string `json:"id"`
 }
 
 // Row is the Row schema.
 type Row struct {
-	Region string
-	Amount int64
+	Region string `json:"region"`
+	Amount int64  `json:"amount"`
 }
 
 // QueryFailed is the QueryFailed error.
 type QueryFailed struct {
-	Query string
+	Query string `json:"query"`
 }
 
 func (e QueryFailed) Error() string {

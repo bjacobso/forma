@@ -8,6 +8,7 @@ package forma
 
 import (
 	"cmp"
+	"encoding/json"
 	"fmt"
 	"math"
 	"slices"
@@ -337,3 +338,24 @@ func First[A any](xs []A) effect.Option[A] {
 
 // Concat joins two lists without sharing either backing array.
 func Concat[A any](xs, ys []A) []A { return append(slices.Clip(slices.Clone(xs)), ys...) }
+
+// MarshalJSON encodes the map as an object in key order.
+func (m Map[V]) MarshalJSON() ([]byte, error) {
+	var b strings.Builder
+	b.WriteByte('{')
+	for i, k := range m.Keys() {
+		if i > 0 {
+			b.WriteByte(',')
+		}
+		key, _ := json.Marshal(k)
+		value, err := json.Marshal(m.values[k])
+		if err != nil {
+			return nil, err
+		}
+		b.Write(key)
+		b.WriteByte(':')
+		b.Write(value)
+	}
+	b.WriteByte('}')
+	return []byte(b.String()), nil
+}

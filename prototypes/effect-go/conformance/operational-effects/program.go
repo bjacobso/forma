@@ -9,7 +9,7 @@ import (
 
 // ConsoleUnavailable is the ConsoleUnavailable error.
 type ConsoleUnavailable struct {
-	Message string
+	Message string `json:"message"`
 }
 
 func (e ConsoleUnavailable) Error() string {

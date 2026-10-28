@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { readFileSync, writeFileSync } from "node:fs";
-import { generateEffectGoProgram } from "../src/EffectGo.js";
+import { generateEffectGoProgram, generateHttpApiGoProgram } from "../src/EffectGo.js";
+import { bootstrapElmPreludes } from "../src/Elm.js";
+import { emitFormExpression, emitHook, renderGo } from "../src/descriptor/form-emitter.js";
 
 // The Go packages under prototypes/effect-go/conformance are goldens: the
 // generator's exact output, which the Go harnesses there build and run
@@ -41,5 +43,27 @@ describe("Effect Go prototype", () => {
     expect(result.ok).toBe(false);
     expect(result.code).toBeUndefined();
     expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toContain("mechanics/undeclared-error");
+  });
+
+  test("generates the http-api golden through the prelude's :go emit hooks", () => {
+    const result = generateHttpApiGoProgram(program("http-api"), { packageName: "shop" });
+    expect(result.diagnostics).toEqual([]);
+    const golden = new URL("../../../prototypes/effect-go/conformance/http-api/program.go", import.meta.url);
+    if (update) writeFileSync(golden, result.code!);
+    expect(result.code).toBe(readFileSync(golden, "utf8"));
+    expect(result.code).toContain('httpapi.Endpoint("get", "get-user", "/users/:id", httpapi.Error(UserNotFound{}, 404))');
+  });
+
+  test("keeps a function :emit as the TypeScript hook only", () => {
+    const command = bootstrapElmPreludes().descriptions.get("command")!;
+    expect(emitHook(command, "ts")).toBeDefined();
+    expect(emitHook(command, "go")).toBeUndefined();
+    expect(() => emitFormExpression(command, new Map(), [], new Map(), { host: "go" })).toThrow("Form command has no :go emitter");
+  });
+
+  test("renders Go calls and rejects untyped literals", () => {
+    const loc = { start: 0, end: 0, line: 1, col: 1 };
+    expect(renderGo({ _tag: "List", loc, items: [{ _tag: "Sym", name: "httpapi.New", loc }, { _tag: "Str", value: "Shop", loc }] })).toBe('httpapi.New("Shop")');
+    expect(() => renderGo({ _tag: "Vector", loc, items: [] })).toThrow("Go templates build values with calls, not vectors");
   });
 });

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // Forma source → generated Go → build → run, for RFC 0019.
 //
-// Generates Go for four Effect conformance programs with the built
-// @formalang/ts/effect-go entry point, writes it to a temporary directory,
-// and uses `go -overlay` so the Go toolchain builds that fresh output in
-// place of the committed goldens. Then it runs the runtime tests, the Go
-// twins of the TypeScript harnesses (with the race detector), and the demo
-// command. It installs nothing.
+// Generates Go for four Effect conformance programs and the http-api prelude
+// program with the built @formalang/ts/effect-go entry point, writes it to a
+// temporary directory, and uses `go -overlay` so the Go toolchain builds that
+// fresh output in place of the committed goldens. Then it runs the runtime
+// tests, the Go twins of the TypeScript harnesses (with the race detector),
+// the cross-host http-api check, and the demo command. It installs nothing.
 //
 //   pnpm effect-go:demo
 import { spawnSync } from "node:child_process";
@@ -23,19 +23,22 @@ const cases = [
   ["operational-effects", "operationaleffects"],
   ["concurrent-workflow", "concurrentworkflow"],
   ["resource-scope", "resourcescope"],
+  // A prelude program: http-api forms emit Go through their :go hooks.
+  ["http-api", "shop", "http-api"],
 ];
 
 const go = spawnSync("go", ["version"], { encoding: "utf8" });
 if (go.error || go.status !== 0) fail("Go 1.25 or later is required on PATH (see prototypes/effect-go/README.md).");
 if (!existsSync(entry)) fail("Build @formalang/ts first: pnpm --filter @formalang/ts build");
-const { generateEffectGoProgram } = await import(pathToFileURL(entry).href);
+const { generateEffectGoProgram, generateHttpApiGoProgram } = await import(pathToFileURL(entry).href);
 
 heading(`1. Generate Go from Forma (${go.stdout.trim()})`);
 const out = mkdtempSync(join(tmpdir(), "effect-go-demo-"));
 const overlay = { Replace: {} };
-for (const [name, packageName] of cases) {
+for (const [name, packageName, linker] of cases) {
+  const generate = linker === "http-api" ? generateHttpApiGoProgram : generateEffectGoProgram;
   const sourcePath = join(repoRoot, "conformance/effect-typescript/cases", name, "program.lisp");
-  const result = generateEffectGoProgram(readFileSync(sourcePath, "utf8"), { packageName, sourceId: `${name}/program.lisp` });
+  const result = generate(readFileSync(sourcePath, "utf8"), { packageName, sourceId: `${name}/program.lisp` });
   if (!result.ok) fail(`${name}: ${result.diagnostics.map((d) => `${d.code}: ${d.message}`).join("\n")}`);
   const generated = join(out, `${name}.go`);
   writeFileSync(generated, result.code);
@@ -59,12 +62,15 @@ heading("3. Vet, then test the runtime and the Go twins of the TypeScript harnes
 run("go", ["vet", `-overlay=${overlayPath}`, "./..."]);
 run("go", ["test", "-race", "-count=1", `-overlay=${overlayPath}`, "./effect/", "./forma/", "./conformance/..."]);
 
-heading("4. Run the generated programs");
+heading("4. One http-api program on two hosts: TypeScript server vs Go server, TypeScript client → Go server");
+run(join(repoRoot, "node_modules/.bin/tsx"), ["conformance/http-api/cross-host.ts"], { GOFLAGS: `-overlay=${overlayPath}` });
+
+heading("5. Run the generated programs");
 run("go", ["run", `-overlay=${overlayPath}`, "./cmd/demo"]);
 
-function run(command, args) {
-  console.log(`$ ${command} ${args.map((arg) => (arg.startsWith("-overlay=") ? "-overlay=…" : arg)).join(" ")}`);
-  const result = spawnSync(command, args, { cwd: moduleRoot, stdio: "inherit" });
+function run(command, args, env = {}) {
+  console.log(`$ ${command.replace(`${repoRoot}/`, "")} ${args.map((arg) => (arg.startsWith("-overlay=") ? "-overlay=…" : arg)).join(" ")}`);
+  const result = spawnSync(command, args, { cwd: moduleRoot, stdio: "inherit", env: { ...process.env, ...env } });
   if (result.status !== 0) fail(`${command} ${args[0]} failed`);
 }
 

@@ -9,26 +9,26 @@ import (
 
 // Profile is the Profile schema.
 type Profile struct {
-	Id   string
-	Name string
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
 
 // Activity is the Activity schema.
 type Activity struct {
-	Id     string
-	Events int64
+	Id     string `json:"id"`
+	Events int64  `json:"events"`
 }
 
 // Dashboard is the Dashboard schema.
 type Dashboard struct {
-	Profile  Profile
-	Activity Activity
-	Score    int64
+	Profile  Profile  `json:"profile"`
+	Activity Activity `json:"activity"`
+	Score    int64    `json:"score"`
 }
 
 // Unavailable is the Unavailable error.
 type Unavailable struct {
-	Service string
+	Service string `json:"service"`
 }
 
 func (e Unavailable) Error() string {
@@ -75,8 +75,8 @@ func DashboardOp(id string) effect.Effect[Dashboard] {
 	return effect.Gen(func(f *effect.Fiber) Dashboard {
 		activities := ActivitiesTag.Get(f)
 		profiles := ProfilesTag.Get(f)
-		parts := effect.Await(f, effect.Map(effect.All2(effect.Retry(profiles.Fetch(id), effect.Policy{Times: 2, Schedule: effect.Exponential(forma.Millis(1))}), activities.Fetch(id), effect.Unbounded), func(t effect.Tuple2[Profile, Activity]) partsRecord {
-			return partsRecord{Profile: t.V1, Activity: t.V2}
+		parts := effect.Await(f, effect.Map(effect.All2(effect.Retry(profiles.Fetch(id), effect.Policy{Times: 2, Schedule: effect.Exponential(forma.Millis(1))}), activities.Fetch(id), effect.Unbounded), func(t effect.Tuple2[Profile, Activity]) PartsRecord {
+			return PartsRecord{Profile: t.V1, Activity: t.V2}
 		}))
 		return Dashboard{Profile: parts.Profile, Activity: parts.Activity, Score: forma.IntMul(10, parts.Activity.Events)}
 	})
@@ -145,8 +145,8 @@ func Heartbeat(beats int64) effect.Effect[effect.Unit] {
 	})
 }
 
-// partsRecord is a record type no schema declares.
-type partsRecord struct {
-	Profile  Profile
-	Activity Activity
+// PartsRecord is a record type no schema declares.
+type PartsRecord struct {
+	Profile  Profile  `json:"profile"`
+	Activity Activity `json:"activity"`
 }

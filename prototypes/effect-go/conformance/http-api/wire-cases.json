@@ -1,0 +1,15 @@
+{
+  "description": "Requests and expected responses for the http-api conformance program. The Go harness, the TypeScript server, and the Go server are all checked against these cases. A null json means an empty body.",
+  "cases": [
+    { "name": "get a user", "method": "GET", "path": "/users/ada", "status": 200, "json": { "id": "ada", "name": "Ada" } },
+    { "name": "a declared error carries its tag and status", "method": "GET", "path": "/users/missing", "status": 404, "json": { "_tag": "UserNotFound", "id": "missing" } },
+    { "name": "create a user", "method": "POST", "path": "/users", "body": "{\"id\":\"new\",\"name\":\"New User\"}", "status": 200, "json": { "id": "new", "name": "New User" } },
+    { "name": "a wrongly typed field is 400", "method": "POST", "path": "/users", "body": "{\"id\":42}", "status": 400, "json": null },
+    { "name": "a missing required field is 400", "method": "POST", "path": "/users", "body": "{\"id\":\"x\"}", "status": 400, "json": null },
+    { "name": "a body that is not JSON is 400", "method": "POST", "path": "/users", "body": "nope", "status": 400, "json": null },
+    { "name": "extra fields are ignored and not echoed", "method": "POST", "path": "/users", "body": "{\"id\":\"x\",\"name\":\"n\",\"extra\":1}", "status": 200, "json": { "id": "x", "name": "n" } },
+    { "name": "a string success is a JSON string", "method": "GET", "path": "/health", "status": 200, "json": "ok" },
+    { "name": "an unknown route is 404", "method": "GET", "path": "/nope", "status": 404, "json": null },
+    { "name": "a known path with another method is 404", "method": "DELETE", "path": "/health", "status": 404, "json": null }
+  ]
+}

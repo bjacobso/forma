@@ -1,6 +1,7 @@
 package effect
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 )
@@ -439,4 +440,30 @@ type Tuple3[A, B, C any] struct {
 	V1 A
 	V2 B
 	V3 C
+}
+
+// IsZero reports absence, so an optional struct field tagged `omitzero` is
+// left out of JSON, as Forma's wire encoding requires.
+func (o Option[A]) IsZero() bool { return !o.ok }
+
+// MarshalJSON encodes the value, or null when absent.
+func (o Option[A]) MarshalJSON() ([]byte, error) {
+	if !o.ok {
+		return []byte("null"), nil
+	}
+	return json.Marshal(o.value)
+}
+
+// UnmarshalJSON decodes a present value; null is absent.
+func (o *Option[A]) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		*o = None[A]()
+		return nil
+	}
+	var value A
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*o = Some(value)
+	return nil
 }

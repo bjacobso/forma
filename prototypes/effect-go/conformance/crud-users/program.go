@@ -22,23 +22,23 @@ const (
 
 // User is the User schema.
 type User struct {
-	Id       UserId
-	Name     string
-	Email    string
-	Role     Role
-	Nickname effect.Option[string]
+	Id       UserId                `json:"id"`
+	Name     string                `json:"name"`
+	Email    string                `json:"email"`
+	Role     Role                  `json:"role"`
+	Nickname effect.Option[string] `json:"nickname,omitzero"`
 }
 
 // NewUser is the NewUser schema.
 type NewUser struct {
-	Name  string
-	Email string
-	Role  Role
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	Role  Role   `json:"role"`
 }
 
 // UserNotFound is the UserNotFound error.
 type UserNotFound struct {
-	Id UserId
+	Id UserId `json:"id"`
 }
 
 func (e UserNotFound) Error() string {
@@ -54,7 +54,7 @@ func (UserNotFound) Tag() string {
 
 // DuplicateEmail is the DuplicateEmail error.
 type DuplicateEmail struct {
-	Email string
+	Email string `json:"email"`
 }
 
 func (e DuplicateEmail) Error() string {
@@ -70,7 +70,7 @@ func (DuplicateEmail) Tag() string {
 
 // InvalidUser is the InvalidUser error.
 type InvalidUser struct {
-	Reason string
+	Reason string `json:"reason"`
 }
 
 func (e InvalidUser) Error() string {
