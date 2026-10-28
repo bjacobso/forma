@@ -107,8 +107,18 @@ Added on this branch, as a prototype:
 - `packages/ts/test/effect-go.test.ts`, which pins the generated Go as
   goldens in `pnpm check`. It does not need a Go toolchain.
 
-Not implemented: Go `extern` blocks, decoders, streams, tagged unions,
-platform bindings, and any supported or published Go package.
+- Host-keyed `:emit` hooks with `go/*` primitives in
+  `descriptor/form-emitter.ts`. `preludes/http-api.lisp` declares `:ts` and
+  `:go` hooks. The http-api linker is split into a host-neutral check
+  (`artifact/http-api-link.ts`) and two backends: `generateHttpApiProgram` and
+  `generateHttpApiGoProgram`. The TypeScript output is unchanged.
+- An `httpapi` Go package for the prototype runtime, and a cross-host check
+  for the `http-api` program.
+
+Not implemented: Go `extern` blocks, schema-derived decoders (`httpapi`
+decodes by reflection over JSON tags), streams, tagged unions, `:go` hooks
+for the Elm and email preludes, RPC, platform bindings, and any supported or
+published Go package.
 
 ## Proposal
 
@@ -448,7 +458,8 @@ separate Go project. A prelude `form` already has three layers:
    linker (`HttpApi.ts`, `Elm.ts`, `Email.ts`) calls the TypeScript generator
    directly.
 
-Only the third layer needs to change.
+Only the third layer needs to change. Everything below except RPC is
+prototyped for `http-api`; see [Preludes on Go](#preludes-on-go-http-api).
 
 **Host-keyed emit hooks.** `:emit` accepts either a function, which stays the
 TypeScript hook, or a map from host to function, in the manner of
@@ -477,7 +488,7 @@ template therefore never spells a Go type or name as a string:
 | --- | --- |
 | `go/ref` | A Go identifier, validated. |
 | `go/declaration` | The Go name of a Forma declaration, for example `Shop`. |
-| `go/operation` | The Go function for an operation, after collision suffixes: `create-user` beside the `CreateUser` type becomes `CreateUserOp`. |
+| `go/operation` | The Go function for an operation, after collision suffixes: `dashboard` beside the `Dashboard` type becomes `DashboardOp`. |
 | `go/type` | The Go type for a `Type` hole, through the generator's type mapping. |
 | `go/zero` | A zero value of a `Type` hole (`UserNotFound{}`), so generic Go functions can infer type arguments from values. |
 | `go/annotation` | A schema annotation such as `:status`, or `nil`. |
@@ -517,7 +528,8 @@ host, defines how values are encoded. For JSON:
   empty body.
 
 These rules are what Effect 4's `HttpApi` does today, measured against the
-`http-api` conformance case. The Go runtime must match them, including where
+`http-api` conformance case. The prototype records them as shared request
+cases in `prototypes/effect-go/conformance/http-api/wire-cases.json`. The Go runtime must match them, including where
 Go's defaults differ: `encoding/json` accepts missing fields, and
 `http.ServeMux` answers a wrong method with 405.
 
@@ -593,14 +605,57 @@ resource living exactly as long as `Provide`.
 | Positive case | Go |
 | --- | --- |
 | `crud-users`, `operational-effects`, `concurrent-workflow`, `resource-scope` | generated, builds, Go harness passes |
+| `http-api` (prelude) | generated through `:go` hooks; Go harness, differential test, and `HttpApiClient` test pass |
 | `multi-service-checkout`, `ontology-actions` | generated and builds; no Go harness yet |
 | `pure-domain-logic`, `schemas-and-decoding`, `edge-cases`, `surface-review` | not generated: tagged and structural unions |
 | `typed-errors` | not generated: `result` and catch-all arms |
 | `config-and-logging` | not generated: `config` |
 | `stream-pipeline` | not generated: streams |
 
-The Elm, email, and HTTP API cases use their own generators and were not
-attempted.
+The Elm and email cases use their own generators. Their preludes have no
+`:go` hooks yet.
+
+### Preludes on Go (http-api)
+
+The `http-api` conformance program now generates Go without any HTTP code in
+the Go generator:
+
+- **Hooks.** Each of the five forms in `preludes/http-api.lisp` has a `:go`
+  hook next to its unchanged `:ts` hook, one to five lines each. The endpoint
+  hook maps its error types with an ordinary `map` over a nested
+  quasiquote. The TypeScript goldens for the case (`expected.ts` and
+  `builders.ts`) did not change.
+- **Generated Go.** `var Shop = httpapi.New("Shop", httpapi.Group("users",
+  httpapi.Endpoint("get", "get-user", "/users/:id", httpapi.Error(UserNotFound{}, 404)), ...))`
+  and `var ShopUsersLive = httpapi.Handle(Shop, "users", httpapi.Handler("get-user", Lookup), ...)`.
+  Go infers each handler's request and success types from the generated
+  operation, such as `func Lookup(request LookupRequest) effect.Effect[User]`.
+- **Runtime.** `httpapi` is about 350 lines on `net/http`. It has its own
+  router, because `ServeMux` answers a wrong method with 405 and Effect
+  answers 404. It decodes strictly, because `encoding/json` accepts missing
+  fields. It writes `"_tag"` first in error bodies, as Effect does.
+- **Shared wire cases.** Ten request cases in `wire-cases.json` (success, a
+  tagged 404, three kinds of 400, ignored extra fields, a string body, an
+  unknown route, and a wrong method) are run by the Go harness. They are also
+  run by `cross-host.ts` against both servers, which must agree with each
+  other and with the case.
+- **Client across hosts.** `HttpApiClient.make(Shop)` from Effect-TS calls
+  the Go server, decodes its `User`, and receives a decoded `UserNotFound`
+  instance for the 404.
+- **Interruption.** A request whose client disconnects interrupts the
+  handler's fiber and runs its finalizers, because the request context is the
+  fiber's context. A Go test pins this.
+
+Two generator changes were needed and changed the existing Go goldens.
+Struct fields gained JSON tags with Forma's field names. Hoisted record types
+became exported and are named after their use: `PartsRecord`,
+`LookupRequest`, `LookupRequestParams`. Request records are part of a
+handler's API, so external Go code needs to construct them.
+
+What the prototype does not settle: decoding uses reflection over JSON tags
+rather than decoders generated from schemas. Only the response cases the
+TypeScript harness reaches are pinned; for example, a `Unit` success and
+non-string path parameters are not.
 
 ### Benchmarks
 
@@ -775,7 +830,9 @@ Reading the table:
 5. **Preludes on Go.** Host-keyed `:emit`, the `go/*` primitives, the
    check/backend split for prelude linkers, and the `httpapi` runtime.
    *Validation:* the `http-api` case passes a Go harness, the differential
-   test against the TypeScript server, and the `HttpApiClient` test.
+   test against the TypeScript server, and the `HttpApiClient` test. These
+   are prototyped and pass. Remaining: `:go` hooks for the Elm and email
+   preludes, schema-derived decoders, and the cross-host check in CI.
 6. **Decoders and a `Stream` subset.** Generate decoders from schemas with the
    same failure shape as `SchemaError`, and port `Stream` on `iter.Seq`.
    *Validation:* `schemas-and-decoding` and `stream-pipeline` on both hosts.

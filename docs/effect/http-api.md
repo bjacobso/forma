@@ -134,6 +134,14 @@ A `(form name child ...)` pattern generates `.add()` accumulation. Target
 type refinements describe native constraints and generics; the target
 expressions still come from the Lisp hooks.
 
+`:emit` may also be a map from host to hook, as `preludes/http-api.lisp`
+writes it: `:emit {:ts (fn [ir] ...) :go (fn [ir] ...)}`. The `:ts` hook is
+the one described above. The `:go` hook is used only by the isolated effect-go
+prototype (`generateHttpApiGoProgram` in `@formalang/ts/effect-go`), which is
+not a supported target. It builds Go calls with `go/*` primitives, such as
+`go/operation`, `go/zero`, and `go/children`. See
+[RFC 0019](../rfcs/0019-effect-go.md#dsl-preludes-on-a-second-host).
+
 Builder derivation currently requires projections made from record literals,
 literal values, and hole references. It rejects executable `:check`, `:scope`,
 computed `:type`, expression holes, and unsupported projection expressions.
