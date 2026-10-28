@@ -44,6 +44,8 @@ Package resolution and compile-time library imports remain proposals.
 | `(type Role (Union :admin :member))` | `Schema.Literals(["admin", "member"])` |
 | `(Tuple A B)`, `(Union A B)`, `(List T)`, `(Map String T)` | tuple, union, array, and dictionary schemas |
 | `(type Shape (Tagged :tag kind (Circle {:radius Float}) (Square {:side Float})))` | a union of records with a literal `kind` field |
+| `(type Rule (Union {:kind "all" :rules (List Rule)} {:kind "not" :rule Rule}))` | `export type Rule = ...` and `export const Rule: Schema.Codec<Rule>`, with `Schema.suspend` for each recursive reference |
+| `(String :pattern "^[a-z]+$" :min-length 1 :max-length 40)`, `(Int :min 0 :max 10)`, `(List T :max-length 3)` | `.check(Schema.isPattern(...))`, `Schema.isMinLength`, `Schema.isMaxLength`, `Schema.isGreaterThanOrEqualTo`, and `Schema.isLessThanOrEqualTo` |
 | `(class Customer {:name String})` | `class Customer extends Schema.Class<Customer>("Customer")({...})`; construct with `(Customer {:name "Ada"})` |
 | `(error NotFound {:id String})` | `class NotFound extends Schema.TaggedError<NotFound>()("NotFound", {...})` |
 | `(service Users (: find (-> String (Effect (Option User)))))` | `Context.Service` with a typed `find` method |
@@ -65,7 +67,11 @@ A zero-argument effect is a value: `(: ready (Effect Bool)) (define ready
 
 Records require fields by default. `(Option T)` fields may be absent and generate
 optional wire keys. Class and error types are nominal. Refer to other schemas
-by their declared names. In expressions, `(Ref T)` is an Effect reference, and
+by their declared names. Schemas may refer to themselves, directly or through
+each other, as long as the cycle does not pass through a brand or a class:
+`Schema.Codec<T>` needs the decoded and encoded shapes to agree. `:pattern`
+applies to `String`, `:min-length` and `:max-length` to `String` and `List`, and
+`:min` and `:max` to `Int` and `Float`. In expressions, `(Ref T)` is an Effect reference, and
 `(Option T)`, `(Result A E)`, `(Fiber A [E])`, `(Stream A [E] [R])`, and
 `(-> A B)` are the corresponding value types.
 
@@ -155,7 +161,7 @@ consumes. It rejects a program when:
 - a service method declares a requirement (Effect service methods are
   requirement-free; give the layer the dependency instead);
 - names, types, errors, or requirements are unknown, or definitions are
-  duplicated, or schemas are recursive (`Schema.suspend` is not generated yet);
+  duplicated, or a recursive schema passes through a brand or a class;
 - two Forma names become the same TypeScript name (`foo-bar` and `fooBar`),
   or a declaration takes a name the module needs (`Effect`, `Math`);
 - a value cannot be represented (`1e400`, integers beyond ±2^53, `__proto__`
@@ -185,8 +191,8 @@ also reject the code generated with the checker bypassed.
 
 ## What is not covered yet
 
-- Recursive schemas (`Schema.suspend`), `Schema.TaggedClass`, and schema
-  transformations.
+- Recursion through brands, classes, and errors, `Schema.TaggedClass`, and
+  schema transformations.
 - Generic (type-parameterised) operations and functions.
 - Schedule composition beyond `jittered` (`both`, `either`, `while`/`until`
   predicates), `Queue`, `PubSub`, `Deferred`, `Semaphore`, and scoped forks.

@@ -1,5 +1,6 @@
 import type { SExpr } from "../reader/types.js";
 import { head, name, list, sym, vector } from "./effect.js";
+import { splitTypeMetadata } from "./domain.js";
 
 /** Keep generic alias parameters with their body in the compile-time type table. */
 export function typeDefinition(expr: SExpr): readonly [string, SExpr] | undefined {
@@ -35,4 +36,4 @@ export function resolveTypeAlias(type: SExpr, types: ReadonlyMap<string,SExpr>, 
   return resolveTypeAlias(definition,types,next);
 }
 
-export const optionalType = (type: SExpr, types: ReadonlyMap<string,SExpr>): boolean => head(resolveTypeAlias(type,types))==="Option";
+export const optionalType = (type: SExpr, types: ReadonlyMap<string,SExpr>): boolean => head(resolveTypeAlias(splitTypeMetadata(type).type,types))==="Option";

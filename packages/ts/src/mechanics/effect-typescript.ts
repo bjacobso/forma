@@ -25,7 +25,7 @@ import {
   type EffectType,
   type LayerInfo,
 } from "./check.js";
-import { inlineBrands, orderSchemaDeclarations, schemaExpressionTs, type SchemaNaming } from "./effect-schema.js";
+import { inlineBrands, orderSchemaDeclarations, recursiveSchemaNames, schemaExpressionTs, type SchemaNaming } from "./effect-schema.js";
 import {
   camelIdentifier,
   effectModules,
@@ -177,6 +177,8 @@ class Generator {
    * with literal types get `satisfies`.
    */
   private contextual = false;
+  /** Schemas whose constants reach themselves; they refer to each other through Schema.suspend. */
+  private recursive: ReadonlySet<string> = new Set();
 
   constructor(
     private readonly declarations: readonly PackageableDeclaration[],
@@ -210,6 +212,7 @@ class Generator {
       ...classes.map((payload) => ({ name: String(payload["name"]), schema: payload["schema"] ?? null, kind: "ClassDef" })),
       ...errors.map((payload) => ({ name: String(payload["name"]), schema: payload["schema"] ?? null, kind: "ErrorDef" })),
     ]);
+    this.recursive = recursiveSchemaNames(data.filter((declaration) => declaration.kind === "SchemaDef"));
     for (const declaration of data) {
       sections.push(
         declaration.kind === "SchemaDef"
@@ -258,14 +261,22 @@ class Generator {
   private schemaLines(name: string, schema: JsonValue): string[] {
     this.use("Schema");
     const constName = typeName(name);
+    const recursive = this.recursive.has(name);
+    const naming: SchemaNaming = recursive
+      ? { schemaConst: (reference) => this.recursive.has(reference) ? `Schema.suspend((): Schema.Codec<${typeName(reference)}> => ${typeName(reference)})` : typeName(reference) }
+      : schemaNaming;
     const struct = isRecord(schema) && schema["kind"] === "Struct" ? arrayItems(schema["fields"]).filter(isRecord) : [];
-    let expression = struct.length > 0 ? `Schema.Struct({\n${this.fieldLines(struct, "  ").join("\n")}\n})` : schemaExpressionTs(schema, schemaNaming, true);
+    let expression = struct.length > 0 ? `Schema.Struct({\n${this.fieldLines(struct, "  ", naming).join("\n")}\n})` : schemaExpressionTs(schema, naming, true);
     if (`export const ${constName} = ${expression};`.length > maxWidth && expression.startsWith("Schema.Union([")) {
       expression = breakUnion(expression);
     }
     const tagged=this.linked && isRecord(schema) && schema["kind"] === "TaggedUnion";
+    if (tagged && recursive) throw new Error(`Effect TypeScript: recursive tagged union ${name} cannot be branded in a linked module yet`);
     if (tagged) expression+=`.pipe(Schema.brand(${JSON.stringify(name)}))`;
-    const lines=[`export const ${constName} = ${expression};`, `export type ${constName} = typeof ${constName}.Type;`];
+    // TypeScript cannot infer a type that refers to itself, so recursive schemas spell theirs out.
+    const lines=recursive
+      ? [`export type ${constName} = ${this.typeTs(typeFromJson(schema, this.info.env))};`, `export const ${constName}: Schema.Codec<${constName}> = ${expression};`]
+      : [`export const ${constName} = ${expression};`, `export type ${constName} = typeof ${constName}.Type;`];
     if (tagged && isRecord(schema)) {
       const tag=String(schema["discriminator"] ?? "_tag");
       lines.push(`export const ${constName}Constructors = {`);
@@ -280,10 +291,10 @@ class Generator {
     return lines;
   }
 
-  private fieldLines(fields: readonly JsonRecord[], indent: string): string[] {
+  private fieldLines(fields: readonly JsonRecord[], indent: string, naming: SchemaNaming = schemaNaming): string[] {
     return fields.flatMap((field) =>
       typeof field["name"] === "string"
-        ? [`${indent}${propertyName(field["name"])}: ${schemaExpressionTs(field["schema"], schemaNaming)},`]
+        ? [`${indent}${propertyName(field["name"])}: ${schemaExpressionTs(field["schema"], naming)},`]
         : [],
     );
   }

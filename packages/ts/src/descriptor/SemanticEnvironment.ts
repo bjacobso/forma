@@ -13,7 +13,8 @@ import { InferContext, makeOwnedInferContext } from "../type/context.js";
 import { resetNodeIds } from "../type/core-expr.js";
 import { inferProgram } from "../type/infer.js";
 import { lowerProgram } from "../type/lower.js";
-import { mono, type Type } from "../type/types.js";
+import { applyType } from "../type/substitution.js";
+import { EVar, fevType, frvType, ftvType, RVar, Scheme, TVar, type Type } from "../type/types.js";
 import type {
   ExpressionTypeResult,
   SemanticEnvironment,
@@ -189,7 +190,7 @@ export class SimpleSemanticEnvironment implements SemanticEnvironment {
       resetNodeIds();
       const coreExprs = lowerProgram([lowerMembers(expr,new Set(this.getVisibleBindings().keys()))]);
       const initialEnv = new Map(
-        [...this.getVisibleBindings()].map(([name, type]) => [name, mono(type)] as const),
+        [...this.getVisibleBindings()].map(([name, type]) => [name, bindingScheme(name, type)] as const),
       );
       const ctxService = Effect.runSync(makeOwnedInferContext());
       const layer = Layer.succeed(InferContext, ctxService);
@@ -213,6 +214,24 @@ export class SimpleSemanticEnvironment implements SemanticEnvironment {
   private currentFrame(): ScopeFrame | undefined {
     return this.frames[this.frames.length - 1];
   }
+}
+
+/**
+ * Binding types come from declarations and :scope hooks, never from the
+ * expression being checked, so their variables are universal: a generic
+ * predicate such as (-> (Option a) Bool) applies to differently typed
+ * bindings. Each inference starts a fresh variable supply, so quantified
+ * variables are renamed to names that supply never produces.
+ */
+function bindingScheme(name: string, type: Type): Scheme {
+  const tvars = [...ftvType(type)], rvars = [...frvType(type)], evars = [...fevType(type)];
+  const rename = (variable: string) => `${name}#${variable}`;
+  const renamed = applyType({
+    tvars: new Map(tvars.map(variable => [variable, TVar(rename(variable))])),
+    rvars: new Map(rvars.map(variable => [variable, RVar(rename(variable))])),
+    evars: new Map(evars.map(variable => [variable, EVar(rename(variable))])),
+  }, type);
+  return Scheme(tvars.map(rename), rvars.map(rename), renamed, evars.map(rename));
 }
 
 function getTypedFact(

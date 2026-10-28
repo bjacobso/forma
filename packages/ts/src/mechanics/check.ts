@@ -17,7 +17,7 @@
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
 import { arithmeticOperators, builtins, type BuiltinOverload } from "./builtins.js";
 import { isEffectFormName } from "./artifact.js";
-import { inlineBrands, schemaReferences } from "./effect-schema.js";
+import { inlineBrands, recursiveSchemaNames, schemaReferences } from "./effect-schema.js";
 import { camelIdentifier, effectModules, generatedGlobals, typeName } from "./naming.js";
 import {
   applySubstitution,
@@ -459,7 +459,21 @@ class Checker {
       if (!isRecord(node)) return;
       const location = node["span"] ?? span;
       if (node["kind"] === "Annotated" && isRecord(node["metadata"])) {
-        for (const key of Object.keys(node["metadata"])) if (!["doc", "description", "title", "identifier", "pattern"].includes(key)) this.error(location, "mechanics/schema-metadata", `Unknown schema metadata :${key}.`);
+        const base = (type: MType): MType => {
+          const resolved = resolve(type, this.env);
+          return resolved.kind === "brand" ? base(resolved.base) : resolved;
+        };
+        const refined = base(typeFromJson(node["schema"], this.env));
+        const text = refined.kind === "prim" && refined.name === "String";
+        const number = refined.kind === "prim" && (refined.name === "Int" || refined.name === "Float");
+        for (const [key, value] of Object.entries(node["metadata"])) {
+          if (!["doc", "description", "title", "identifier", "pattern", "min-length", "max-length", "min", "max"].includes(key)) this.error(location, "mechanics/schema-metadata", `Unknown schema metadata :${key}.`);
+          else if (key === "pattern" && !text) this.error(location, "mechanics/schema-metadata", ":pattern applies to String.");
+          else if ((key === "min-length" || key === "max-length") && !(text || refined.kind === "array")) this.error(location, "mechanics/schema-metadata", `:${key} applies to String and List.`);
+          else if ((key === "min-length" || key === "max-length") && !(typeof value === "number" && Number.isSafeInteger(value) && value >= 0)) this.error(location, "mechanics/schema-metadata", `:${key} expects a non-negative Int.`);
+          else if ((key === "min" || key === "max") && !number) this.error(location, "mechanics/schema-metadata", `:${key} applies to Int and Float.`);
+          else if ((key === "min" || key === "max") && !(typeof value === "number" && Number.isFinite(value))) this.error(location, "mechanics/schema-metadata", `:${key} expects a number.`);
+        }
       }
       if (node["kind"] === "Map" && node["key"] !== undefined) {
         const key = resolve(typeFromJson(node["key"], this.env), this.env);
@@ -524,39 +538,42 @@ class Checker {
     for (const name of dependencies.keys()) visit(name, []);
   }
 
-  /** Generated schema constants refer to each other eagerly, so cycles are rejected. */
+  /**
+   * Recursive schemas reach each other through Schema.suspend, typed as
+   * Schema.Codec<T>. That type requires the encoded shape to equal the decoded
+   * one, which brands and classes break, so recursion through them is rejected.
+   */
   private checkSchemaCycles(): void {
-    const data = new Map<string, { readonly schema: JsonValue | undefined; readonly span: JsonValue | undefined }>();
+    const data = new Map<string, { readonly kind: string; readonly schema: JsonValue | undefined; readonly span: JsonValue | undefined }>();
     for (const declaration of this.declarations) {
       const payload = declaration.payload;
       if (!isRecord(payload) || typeof payload["name"] !== "string") continue;
       if (["SchemaDef", "ErrorDef", "ClassDef"].includes(String(payload["kind"]))) {
-        data.set(payload["name"], { schema: payload["schema"], span: declarationSpan(declaration) });
+        data.set(payload["name"], { kind: String(payload["kind"]), schema: payload["schema"], span: declarationSpan(declaration) });
       }
     }
-    const state = new Map<string, "visiting" | "done">();
-    const visit = (name: string, path: readonly string[]): void => {
-      const current = state.get(name);
-      if (current === "done") return;
-      if (current === "visiting") {
-        const cycle = [...path.slice(path.indexOf(name)), name];
-        this.error(
-          data.get(name)?.span,
-          "mechanics/recursive-schema",
-          `Recursive schemas are not supported yet (${cycle.join(" -> ")}); Effect needs Schema.suspend for them.`,
-        );
-        return;
+    const recursive = recursiveSchemaNames([...data].map(([name, { schema }]) => ({ name, schema })));
+    for (const name of recursive) {
+      const reached = new Set<string>();
+      const pending = [name];
+      let blocker: string | undefined;
+      while (pending.length > 0 && !blocker) {
+        const next = pending.pop()!;
+        if (reached.has(next)) continue;
+        reached.add(next);
+        const declaration = data.get(next);
+        if (!declaration) continue;
+        if (declaration.kind !== "SchemaDef") blocker = `the ${declaration.kind === "ErrorDef" ? "error" : "class"} ${next}`;
+        else if (hasBrand(declaration.schema)) blocker = `a brand in ${next}`;
+        else pending.push(...schemaReferences(declaration.schema));
       }
-      state.set(name, "visiting");
-      for (const reference of schemaReferences(data.get(name)?.schema)) {
-        if (data.has(reference) && reference !== name) visit(reference, [...path, name]);
-        else if (reference === name) {
-          this.error(data.get(name)?.span, "mechanics/recursive-schema", `Recursive schemas are not supported yet (${name} -> ${name}); Effect needs Schema.suspend for them.`);
-        }
+      const own = data.get(name)!;
+      if (own.kind !== "SchemaDef") {
+        this.error(own.span, "mechanics/recursive-schema", `${own.kind === "ErrorDef" ? "Error" : "Class"} ${name} is recursive; recursive classes and errors are not supported yet.`);
+      } else if (blocker) {
+        this.error(own.span, "mechanics/recursive-schema", `Recursive schema ${name} reaches ${blocker}; recursion through brands and classes is not supported yet.`);
       }
-      state.set(name, "done");
-    };
-    for (const name of data.keys()) visit(name, []);
+    }
   }
 
   private paramsFromJson(value: JsonValue | undefined, env:TypeEnvironment=this.env): readonly { readonly name: string; readonly type: MType }[] {
@@ -2618,6 +2635,12 @@ function mergeLayers(layers: readonly LayerType[]): LayerType {
     errors: unionSets(...layers.map((layer) => layer.errors)),
     requirements: unionSets(...layers.map((layer) => layer.requirements)),
   };
+}
+
+function hasBrand(node: JsonValue | undefined): boolean {
+  if (Array.isArray(node)) return node.some(hasBrand);
+  if (!isRecord(node)) return false;
+  return node["kind"] === "Brand" || Object.entries(node).some(([key, value]) => key !== "span" && hasBrand(value));
 }
 
 function declarationSpan(declaration: PackageableDeclaration): JsonValue | undefined {

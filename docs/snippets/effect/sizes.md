@@ -12,9 +12,10 @@
 | `ontology-actions` | 25 | 52 | 2.08× |
 | `operational-effects` | 11 | 24 | 2.18× |
 | `pure-domain-logic` | 133 | 84 | 0.63× |
+| `recursive-schemas` | 39 | 52 | 1.33× |
 | `resource-scope` | 69 | 94 | 1.36× |
 | `schemas-and-decoding` | 80 | 78 | 0.97× |
 | `stream-pipeline` | 60 | 70 | 1.17× |
 | `surface-review` | 45 | 95 | 2.11× |
 | `typed-errors` | 59 | 76 | 1.29× |
-| **All cases** | **1066** | **1428** | **1.34×** |
+| **All cases** | **1105** | **1480** | **1.34×** |
