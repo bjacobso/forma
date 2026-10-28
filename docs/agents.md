@@ -23,7 +23,7 @@ The structural workbench currently depends on unpublished Foldworks packages.
 
 - [Writing a form](https://raw.githubusercontent.com/bjacobso/forma/main/docs/writing-a-form.md): Define domain vocabulary with preludes, descriptors, and elaboration hooks.
 - [Architecture](https://raw.githubusercontent.com/bjacobso/forma/main/docs/architecture.md): Engine boundary, host ABI and JSON CLI, artifacts, and conformance goldens.
-- [Forma for Effect](https://raw.githubusercontent.com/bjacobso/forma/main/docs/effect.md): Generate Effect TypeScript from checked Forma declarations and programs.
+- [Forma for Effect](https://raw.githubusercontent.com/bjacobso/forma/main/docs/effect.md): Generate Effect TypeScript from checked Forma declarations and programs; `extern` imports existing TypeScript exports into single-file programs.
 - [Forma for Elm-style apps](https://raw.githubusercontent.com/bjacobso/forma/main/docs/elm.md): Foldkit prototype with exhaustive update, checked command recovery, and pure views; shared HttpApi client generation remains proposed.
 - [Elm prototype reference](https://raw.githubusercontent.com/bjacobso/forma/main/docs/elm/reference.md): Isolated prelude generator, supported forms, mounting, and current limits.
 - [Forma for email automation](https://raw.githubusercontent.com/bjacobso/forma/main/docs/email.md): Email rule prelude prototype with closed lanes, first-match decisions, pure rules, and typed delivery recovery; scheduling, rate enforcement, and dry runs are not implemented.
@@ -36,4 +36,5 @@ The structural workbench currently depends on unpublished Foldworks packages.
 - [Conformance](https://raw.githubusercontent.com/bjacobso/forma/main/conformance/README.md): Fixtures and stored goldens that pin implemented engine behavior.
 - [Retiring the OCaml engine](https://raw.githubusercontent.com/bjacobso/forma/main/docs/engine-consolidation.md): Why TypeScript is the only engine, the 2026-10-06 engine benchmarks, and remaining performance follow-ups.
 - [Roadmap](https://raw.githubusercontent.com/bjacobso/forma/main/docs/roadmap.md): Current foundation and planned work; planned features are not compatibility promises.
+- [Effect as the host](https://raw.githubusercontent.com/bjacobso/forma/main/docs/rfcs/0018-effect-as-host.md): Proposed direction; stage 1 (`extern` typed TypeScript imports in single-file programs) is implemented.
 - [Record row rollout](https://raw.githubusercontent.com/bjacobso/forma/main/docs/rfcs/0005-row-operations.md): Implemented closed-record operations and links to proposed generic constraints, normalization, typed reflection, and bounded row mapping.

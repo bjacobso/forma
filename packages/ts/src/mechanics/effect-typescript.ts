@@ -26,6 +26,7 @@ import {
   type LayerInfo,
 } from "./check.js";
 import { inlineBrands, orderSchemaDeclarations, schemaExpressionTs, type SchemaNaming } from "./effect-schema.js";
+import { externOf } from "./extern.js";
 import {
   camelIdentifier,
   effectModules,
@@ -186,7 +187,11 @@ class Generator {
   ) {}
 
   module(): MechanicsEffectTypeScriptModule {
-    const payloads = this.declarations.map((declaration) => declaration.payload).filter(isRecord);
+    const all = this.declarations.map((declaration) => declaration.payload).filter(isRecord);
+    // Imported declarations are visible to every name below but are not emitted.
+    const imported = all.filter((payload) => externOf(payload));
+    for (const payload of imported) this.reserved.add(declarationIdentifier(payload));
+    const payloads = all.filter((payload) => !externOf(payload));
     const of = (kind: string): readonly JsonRecord[] => payloads.filter((payload) => payload["kind"] === kind);
     const schemas = of("SchemaDef");
     const errors = of("ErrorDef");
@@ -200,7 +205,7 @@ class Generator {
     for (const payload of [...schemas, ...errors, ...classes, ...services, ...layers]) this.reserved.add(typeName(String(payload["name"])));
 
     const sections: string[][] = [];
-    const declared = new Set([...schemas, ...errors, ...classes].map((payload) => String(payload["name"])));
+    const declared = new Set([...schemas, ...errors, ...classes, ...imported].map((payload) => String(payload["name"])));
     const brands = inlineBrands(payloads).filter((brand) => !declared.has(brand.name) && !this.externalNames.has(brand.name));
     for (const name of this.externalNames) { this.reserved.add(typeName(name)); this.reserved.add(camelIdentifier(name)); }
     for (const brand of brands) this.reserved.add(typeName(brand.name));
@@ -239,8 +244,13 @@ class Generator {
       ] : []),
     ]);
     const imports = [...this.imports].sort();
-    const header = imports.length > 0 ? [`import { ${imports.join(", ")} } from "effect";`, ""] : [];
     const body = sections.map((lines) => lines.join("\n")).join("\n\n");
+    const externImports = externImportLines(imported, body);
+    const header = [
+      ...(imports.length > 0 ? [`import { ${imports.join(", ")} } from "effect";`] : []),
+      ...externImports,
+    ];
+    if (header.length > 0) header.push("");
     return {
       code: `${[...header, body].join("\n").trimEnd()}\n`,
       operationNames: operations.map((operation) => String(operation["name"])),
@@ -1873,4 +1883,101 @@ function orderLayers(layers: readonly JsonRecord[]): readonly JsonRecord[] {
   };
   layers.forEach(visit);
   return ordered;
+}
+
+const pascalKinds = new Set(["SchemaDef", "ErrorDef", "ClassDef", "ServiceDef", "LayerDef"]);
+
+/** The TypeScript identifier a declaration has in the generated module. */
+function declarationIdentifier(payload: JsonRecord): string {
+  const name = String(payload["name"]);
+  return pascalKinds.has(String(payload["kind"])) ? typeName(name) : camelIdentifier(name);
+}
+
+/**
+ * One import per extern module, naming only the declarations the generated
+ * code uses, so strict `noUnusedLocals` projects accept it. Modules appear in
+ * declaration order and names are sorted.
+ */
+function externImportLines(imported: readonly JsonRecord[], body: string): string[] {
+  const used = referencedIdentifiers(body);
+  const byModule = new Map<string, string[]>();
+  for (const payload of imported) {
+    const extern = externOf(payload)!;
+    const local = declarationIdentifier(payload);
+    if (!used.has(local)) continue;
+    const specifier = extern.export === local ? local : `${extern.export} as ${local}`;
+    byModule.set(extern.module, [...(byModule.get(extern.module) ?? []), specifier]);
+  }
+  return [...byModule].map(([module, names]) => {
+    const sorted = [...names].sort((left, right) => left.split(" as ").at(-1)!.localeCompare(right.split(" as ").at(-1)!));
+    return `import { ${sorted.join(", ")} } from ${JSON.stringify(module)};`;
+  });
+}
+
+/**
+ * Identifiers that generated code reads as values or types. Skips string and
+ * template text, property names after `.`, and binding or key positions
+ * (`name:` after `{`, `,`, `(`, `readonly`, or `const`).
+ */
+export function referencedIdentifiers(code: string): ReadonlySet<string> {
+  const found = new Set<string>();
+  const templates: number[] = [];
+  let depth = 0;
+  let previous = "";
+  let index = 0;
+  const templateText = (start: number): number => {
+    let at = start;
+    while (at < code.length) {
+      if (code[at] === "\\") at += 2;
+      else if (code[at] === "`") return at + 1;
+      else if (code[at] === "$" && code[at + 1] === "{") {
+        templates.push(depth++);
+        return at + 2;
+      } else at++;
+    }
+    return at;
+  };
+  while (index < code.length) {
+    const char = code[index]!;
+    if (/\s/.test(char)) {
+      index++;
+    } else if (char === '"' || char === "'") {
+      index++;
+      while (index < code.length && code[index] !== char) index += code[index] === "\\" ? 2 : 1;
+      index++;
+      previous = "string";
+    } else if (char === "`") {
+      index = templateText(index + 1);
+      previous = "string";
+    } else if (char === "/" && code[index + 1] === "/") {
+      while (index < code.length && code[index] !== "\n") index++;
+    } else if (/[A-Za-z_$]/.test(char)) {
+      let end = index + 1;
+      while (end < code.length && /[\w$]/.test(code[end]!)) end++;
+      const word = code.slice(index, end);
+      let next = end;
+      while (next < code.length && /\s/.test(code[next]!)) next++;
+      const binding = code[next] === ":" && code[next + 1] !== ":" && ["{", ",", "(", "readonly", "const", "let"].includes(previous);
+      if (previous !== "." && !binding) found.add(word);
+      previous = word;
+      index = end;
+    } else if (/[0-9]/.test(char)) {
+      while (index < code.length && /[\w.]/.test(code[index]!)) index++;
+      previous = "number";
+    } else {
+      if (char === "{") depth++;
+      if (char === "}") {
+        depth--;
+        if (templates.at(-1) === depth) {
+          templates.pop();
+          index = templateText(index + 1);
+          previous = "string";
+          continue;
+        }
+      }
+      previous = char === "?" && code[index + 1] === "." ? "." : char;
+      index += char === "?" && code[index + 1] === "." ? 2 : 1;
+    }
+  }
+  return found;
 }

@@ -7,6 +7,7 @@
 | `elm-counter` | 25 | 88 | 3.52× |
 | `elm-pure` | 7 | 33 | 4.71× |
 | `email-warmup` | 22 | 69 | 3.14× |
+| `extern-interop` | 23 | 21 | 0.91× |
 | `http-api` | 19 | 37 | 1.95× |
 | `multi-service-checkout` | 125 | 160 | 1.28× |
 | `ontology-actions` | 25 | 52 | 2.08× |
@@ -17,4 +18,4 @@
 | `stream-pipeline` | 60 | 70 | 1.17× |
 | `surface-review` | 45 | 95 | 2.11× |
 | `typed-errors` | 59 | 76 | 1.29× |
-| **All cases** | **1066** | **1428** | **1.34×** |
+| **All cases** | **1089** | **1449** | **1.33×** |

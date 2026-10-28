@@ -19,6 +19,7 @@ import { arithmeticOperators, builtins, type BuiltinOverload } from "./builtins.
 import { isEffectFormName } from "./artifact.js";
 import { inlineBrands, schemaReferences } from "./effect-schema.js";
 import { camelIdentifier, effectModules, generatedGlobals, typeName } from "./naming.js";
+import { externOf } from "./extern.js";
 import {
   applySubstitution,
   arrayItems,
@@ -231,6 +232,7 @@ class Checker {
           break;
         case "ValueDef": {
           this.checkTypeReferences(payload["type"], span);
+          if (externOf(payload)) break;
           const type = this.constants.get(String(payload["name"]));
           this.pureOwner = `Constant ${String(payload["name"])}`;
           if (type) this.value(payload["value"], new Map(), type);
@@ -643,7 +645,7 @@ class Checker {
     this.checkTypeReferences(payload["params"], span);
     this.checkTypeReferences(payload["effect"], span);
     const signature = this.operations.get(name);
-    if (!signature) return;
+    if (!signature || externOf(payload)) return;
     const scope: Scope = new Map(signature.params.map((param) => [param.name, param.type]));
     this.checkParamNames(payload["params"], `Operation ${name}`, span);
     const body = this.effect(payload["body"], scope, signature.result.success);
@@ -683,7 +685,7 @@ class Checker {
     this.checkTypeReferences(payload["params"], span, true);
     this.checkTypeReferences(payload["returns"], span, true);
     const signature = this.functions.get(name);
-    if (!signature) return;
+    if (!signature || externOf(payload)) return;
     const scope: Scope = new Map(signature.params.map((param) => [param.name, param.type]));
     this.checkParamNames(payload["params"], `Function ${name}`, span);
     this.pureOwner = `Function ${name}`;
@@ -718,6 +720,17 @@ class Checker {
     } else if (isRecord(implementation) && implementation["kind"] === "Compose") {
       const type = this.layerExprType(implementation["layer"], entry.span);
       info = type ? { type, contextServices: [] } : undefined;
+    } else if (isRecord(implementation) && implementation["kind"] === "Extern") {
+      // An imported layer has only its signature, which checkLayerSignature validates.
+      const signature = isRecord(entry.payload["signature"]) ? entry.payload["signature"] : {};
+      info = {
+        type: {
+          provides: stringItems(signature["provides"]),
+          errors: setOf(stringItems(signature["errors"])),
+          requirements: setOf(stringItems(signature["requirements"]).map(requirementService)),
+        },
+        contextServices: [],
+      };
     }
     this.layersInProgress.delete(name);
     if (!info) return undefined;

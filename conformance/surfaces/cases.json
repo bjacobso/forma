@@ -518,6 +518,14 @@
       ]
     },
     {
+      "id": "effect-typescript/extern-interop",
+      "sourceFile": "../effect-typescript/cases/extern-interop/program.lisp",
+      "passes": [
+        "parse",
+        "effect-ir"
+      ]
+    },
+    {
       "id": "review-stateless-form-definition",
       "source": "(type GreetingIR {:text String}) (form (greet text) :types {:text String} :ir GreetingIR {:text text})",
       "passes": [

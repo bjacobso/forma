@@ -60,6 +60,7 @@ For each positive case the runner checks that:
 | `elm-pure` | No-command app, pure init/update, nested let/if transitions, static view, mounting types |
 | `elm-counter` | `preludes/elm.lisp`, exhaustive update, pure Hiccup view, typed command recovery, headless Foldkit init/update/commands |
 | `email-warmup` | `preludes/email.lisp`, lanes as a literal union, first-match rule decisions, duration literals, prelude predicates, typed delivery recovery |
+| `extern-interop` | `extern` over a hand-written `payments.ts`: an imported brand, schema, tagged error, service and live layer, renamed and plain pure functions, a constant, and an operation. Only used names are imported, and the harness checks that the real layer ran |
 | `http-api` | Prelude-defined endpoints, groups, handler contracts, derived builders, path/payload decoding, typed HTTP statuses, request service layers |
 
 The `http-api.json` marker selects `generateHttpApiProgram` for the HTTP case.
