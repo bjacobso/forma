@@ -1477,7 +1477,7 @@
     },
     "typecheck": {
       "diagnostics": [],
-      "type": "String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>"
+      "type": "(-> String (Effect Unit [ConsoleUnavailable] [Console.print]))"
     }
   },
   "version": 1

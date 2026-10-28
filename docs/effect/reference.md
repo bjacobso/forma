@@ -27,6 +27,17 @@ pipeline reads the source, projects mechanics declarations (the portable IR), ch
 the check finds no errors. Every diagnostic has a line and column in your
 source.
 
+Canonical artifact emission and `validateDeclarations` run the same mechanics
+semantic check before packaging declarations. Payload contracts and domain
+validators remain additional checks. Selecting one module for emission checks
+its resolved dependencies first; a bad dependency cannot be hidden by selection.
+
+Host/CLI typechecking, host editor analysis, and the language-server analysis
+workspace also use mechanics diagnostics for explicit Effect signatures,
+services, layers, and their signed helpers. Unrelated kernel and descriptor
+forms keep their existing checks. Hover uses recorded mechanics expression
+types and declared signatures; definitions use the existing symbol index.
+
 The [Effect TypeScript conformance suite](https://github.com/bjacobso/forma/tree/main/conformance/effect-typescript)
 contains complete programs for each feature. For every one it records the
 exact generated module, typechecks it, and runs it.
@@ -194,6 +205,12 @@ also reject the code generated with the checker bypassed.
   through services.
 - The hosted mechanics runtime (`makeMechanicsRuntime`) still executes only
   the original body forms.
-- The general HM typechecker (`Type.inferSourceStr`), which drives the
-  language server, does not yet understand layers, combinators, streams, or
-  multi-clause `catch`. For Effect programs, use the mechanics checker.
+- The low-level HM API (`Type.inferSourceStr`) remains separate and does not
+  understand every mechanics form. The shared path routes supported declarations
+  to the mechanics checker; it does not merge the two type systems.
+- Editor analysis does not infer missing Effect signatures or expose every
+  mechanics type through the HM type environment. Service-member navigation
+  remains limited by the symbol index. File import resolution in the
+  language-server workspace remains unfinished; host/CLI module checking and
+  linking use the resolved module graph. Effect module evaluation still rejects
+  programs with `module/effect-runtime`.

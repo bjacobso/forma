@@ -23,7 +23,7 @@ const names = (e?: SExpr): string[] => e?._tag === "Vector" || e?._tag === "List
 /** Manifest projection only; module resolution/typechecking belongs to modules/. */
 export function artifactModules(session: LanguageSession, declarations: readonly PackageableDeclaration[], sourceIds: readonly string[]): readonly ArtifactModule[] {
   return sourceIds.map(sourceId => {
-    const local = declarations.filter(d => d.sourceId === sourceId && d.summary.name !== undefined).map(d => ({ localName: d.summary.name!, kind: d.summary.kind, canonicalName: `${sourceId}/${d.summary.name}` }));
+    const local = declarations.filter(d => d.sourceId === sourceId && d.summary.name !== undefined).map(d => ({ localName: (d.authoredName ?? d.summary.name!), kind: d.summary.kind, canonicalName: `${sourceId}/${(d.authoredName ?? d.summary.name!)}` }));
     const usedPreludes: { prelude: string }[] = [], imports: Record<string, JsonValue>[] = [], exports: Record<string, JsonValue>[] = [], reExports: Record<string, JsonValue>[] = [];
     for (const form of toSExprMany(parse(session.sourceText(sourceId) ?? "").redTree)) {
       if (form._tag !== "List") continue;

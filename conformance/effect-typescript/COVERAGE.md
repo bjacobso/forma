@@ -122,8 +122,18 @@ the operational combinators above still use the mechanics compiler. See
 | Layer completeness and signatures | supported | |
 | Stricter than TypeScript | supported | `Bool` conditions, primitive-only `=`, `str` of primitives, `Int` versus `Number`, and `let` versus `do!`. See the `typescript` field of each rejection case. |
 | Generated code typechecks without `any` | supported | Under `tsconfig.base.json`. |
-| HM checker (`Type.inferSourceStr`) and language server | missing | They do not understand the new forms. The mechanics checker is authoritative for Effect programs. |
+| Canonical artifact semantics | supported | `emit` and `validateDeclarations` enforce mechanics body, error, and requirement checks before branding declarations. Module dependencies are checked before selecting emitted declarations. Payload/domain validators still run. |
+| Author checks and language services | supported for explicit Effect declarations | Host/CLI checks, host editor analysis, and `AnalysisWorkspace` route Effect signatures, services, layers, their signed helpers and referenced schema metadata to the mechanics checker. Unrelated kernel and descriptor forms keep their existing checks. Recorded mechanics expression types support hover; the symbol index supplies definitions. |
+| General HM checker (`Type.inferSourceStr`) | separate | This low-level HM API still does not understand all mechanics forms. The checkers have not been merged. |
 | Hosted runtime (`makeMechanicsRuntime`) | partial | Executes only the original body forms. |
+
+Workspace analysis recovers around malformed top-level forms and invalidates
+checks when document or prelude text changes. It does not infer missing Effect
+signatures or fabricate HM types from mechanics results. The language-server
+workspace does not resolve file imports into a module graph; use host/CLI module
+checking and linking for that boundary. Full completion/type-environment parity
+between mechanics and HM remains unfinished. Effect module evaluation still
+returns `module/effect-runtime`.
 
 ## Elm-style app prototype
 

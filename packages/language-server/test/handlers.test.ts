@@ -184,3 +184,18 @@ describe("Forma language server handlers", () => {
     expect(getDiagnostics(workspace, document).diagnostics).toEqual([]);
   });
 });
+
+test("Effect diagnostics, hover and definitions use mechanics checking and update after edits", async () => {
+  const source = '(service Clock (: now (Effect Int)))\n(: main (Effect Int [] [Clock.now]))\n(define main (do! [n Clock.now] (succeed (increment n))))\n(: increment (-> Int Int)) (define increment [x] (+ x 1))';
+  const {workspace, document} = await setup(source);
+  expect(getDiagnostics(workspace, document).diagnostics).toEqual([]);
+  const hover = getHover(workspace, document, {textDocument:{uri}, position:position(document, "(increment n)", 1)});
+  expect(JSON.stringify(hover?.contents)).toContain("Int");
+  const definition = getDefinition(workspace, document, {textDocument:{uri}, position:position(document, "increment", 1)});
+  expect(definition).toMatchObject({uri, range:{start:{line:3}}});
+  const invalid = TextDocument.create(uri, "forma", 2, source.replace("[Clock.now]", "[]"));
+  await workspace.update(invalid);
+  const diagnostics = getDiagnostics(workspace, invalid).diagnostics;
+  expect(diagnostics.map(d => d.code)).toEqual(["mechanics/undeclared-requirement"]);
+  expect(diagnostics[0]?.range.start.line).toBe(2);
+});

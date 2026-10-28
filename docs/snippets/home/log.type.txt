@@ -1,1 +1,1 @@
-String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>
+(-> String (Effect Unit [ConsoleUnavailable] [Console.print]))

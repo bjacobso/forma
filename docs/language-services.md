@@ -326,10 +326,16 @@ queries. It is the language server's whole implementation.
   of the ones before it. A document sees their macros, the inferred types of
   their definitions, and the forms their descriptors describe. An open
   prelude is analyzed in exactly the scope it contributes to later sources.
+- **Effect checking.** Explicit Effect signatures, services, layers, signed
+  helpers and referenced schema metadata use the same mechanics checker as
+  generation and canonical artifact validation. Other kernel and descriptor
+  forms retain their existing checks. Hover reads recorded mechanics types;
+  definitions use the symbol index. Mechanics types remain separate from the
+  HM type environment, and service-member navigation remains limited.
 - **Recovery.** Top-level forms that do not parse are blanked (keeping every
   offset) so the rest of the document is still typed. A form that does not
   lower is reported and the others are lowered on their own, with the
-  document's macros.
+  document's macros. Host editor analysis uses the same broken-form recovery.
 - **Reuse.** Symbol indexing keeps each unchanged document's reading and the
   expansion of the unchanged documents before the first changed one, so an
   edit re-expands only the edited document and what follows it.

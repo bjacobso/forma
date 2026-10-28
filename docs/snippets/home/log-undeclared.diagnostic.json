@@ -1,17 +1,11 @@
 {
-  "code": "typecheck/type-mismatch",
+  "code": "mechanics/undeclared-requirement",
   "severity": "error",
-  "message": "Type application arity mismatch (at offset 209)",
+  "message": "Operation log requires Console.print, but its signature declares no requirements.",
   "phase": "typecheck",
   "span": {
     "sourceId": "log.lisp",
-    "startOffset": 209,
-    "endOffset": 260
-  },
-  "details": {
-    "code": "typecheck/type-mismatch",
-    "message": "Type application arity mismatch",
-    "left": "Set<Console.print>",
-    "right": "Set<>"
+    "startOffset": 217,
+    "endOffset": 240
   }
 }

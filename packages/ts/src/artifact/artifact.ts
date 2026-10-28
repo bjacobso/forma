@@ -1,3 +1,4 @@
+import { checkMechanicsProgram } from "../mechanics/checked.js";
 import { makeArtifactValidatorRegistry } from "./validator-catalog.js";
 import type { ArtifactValidatorRegistry } from "./validator-registry.js";
 import type { PayloadContract as DescriptorPayloadContract } from "./descriptor-contracts.js";
@@ -50,6 +51,10 @@ export interface PackageableDeclaration {
   readonly validators?: readonly string[] | undefined;
   readonly origin?: DeclarationOrigin | undefined;
   readonly sourceMap?: readonly SourceMapEntry[] | undefined;
+  /** Lexical author names → resolved mechanics identities for domain validators. */
+  readonly resolvedBindings?: Readonly<Record<string, string>>;
+  /** Author spelling when the payload name is a resolved module identity. */
+  readonly authoredName?: string;
 }
 
 export interface ArtifactSourceSummary extends SessionSourceSummary {
@@ -103,7 +108,7 @@ export function packageArtifact(options: PackageArtifactOptions): ArtifactResult
     const validation = validatedDeclarations.get(declaration);
     if (!validation) return [declarationDiagnostic("artifact/unvalidated-declaration", index, declaration)];
     if (validation.session !== options.session) return [declarationDiagnostic("artifact/session-mismatch", index, declaration)];
-    if (validation.sourceHash !== options.session.source(declaration.sourceId)?.hash || validation.preludeFingerprint !== options.session.preludeFingerprint()) return [declarationDiagnostic("artifact/stale-declaration", index, declaration)];
+    if (validation.sourceHash !== options.session.source(declaration.sourceId)?.hash || validation.preludeFingerprint !== options.session.preludeFingerprint() || [...validation.dependencies].some(([id, hash]) => options.session.source(id)?.hash !== hash)) return [declarationDiagnostic("artifact/stale-declaration", index, declaration)];
     if (options.sourceIds && !options.sourceIds.includes(declaration.sourceId)) return [declarationDiagnostic("artifact/source-not-selected", index, declaration)];
     return [];
   });
@@ -328,20 +333,24 @@ const validatedDeclarationBrand: unique symbol = Symbol("ValidatedDeclaration");
 export interface ValidatedDeclaration extends PackageableDeclaration {
   readonly [validatedDeclarationBrand]: true;
 }
-const validatedDeclarations = new WeakMap<object, { readonly session: LanguageSession; readonly sourceHash: string | undefined; readonly preludeFingerprint: string }>();
+const validatedDeclarations = new WeakMap<object, { readonly session: LanguageSession; readonly sourceHash: string | undefined; readonly preludeFingerprint: string; readonly dependencies: ReadonlyMap<string, string | undefined> }>();
 export type DeclarationValidationResult =
   | { readonly ok: true; readonly declarations: readonly ValidatedDeclaration[] }
   | { readonly ok: false; readonly diagnostics: readonly Diagnostic[] };
 
 /** The only constructor: validate the whole batch, snapshot, then freeze it. */
-export function validateDeclarations(session: LanguageSession, declarations: readonly PackageableDeclaration[], registry?: ArtifactValidatorRegistry): DeclarationValidationResult {
-  const diagnostics = validatePackageableDeclarations(session, declarations, registry);
+export function validateDeclarations(session: LanguageSession, declarations: readonly PackageableDeclaration[], registry?: ArtifactValidatorRegistry, dependencies: readonly PackageableDeclaration[] = []): DeclarationValidationResult {
+  const context = [...declarations, ...dependencies.filter(d => !declarations.includes(d))];
+  const diagnostics = validatePackageableDeclarations(session, context, registry);
   if (diagnostics.some(d => d.severity === "error")) return { ok: false, diagnostics };
+  const checked = checkMechanicsProgram(context);
+  if (!checked.ok) return {ok: false, diagnostics: checked.diagnostics};
+  const dependencyHashes = new Map(context.map(d => [d.sourceId, session.source(d.sourceId)?.hash]));
   const validated = declarations.map(declaration => {
     const snapshot = structuredClone(declaration) as PackageableDeclaration;
     const value: ValidatedDeclaration = { ...snapshot, [validatedDeclarationBrand]: true };
     deepFreeze(value);
-    validatedDeclarations.set(value, { session, sourceHash: session.source(value.sourceId)?.hash, preludeFingerprint: session.preludeFingerprint() });
+    validatedDeclarations.set(value, { session, sourceHash: session.source(value.sourceId)?.hash, preludeFingerprint: session.preludeFingerprint(), dependencies: dependencyHashes });
     return value;
   });
   return { ok: true, declarations: Object.freeze(validated) };

@@ -84,7 +84,7 @@ pageClass: forma-index
 <span class="fh-status is-live">Live · TypeScript engine</span>
 </div>
 <div class="fh-row__body">
-<p>Operations infer <code>Effect&lt;A, E, R&gt;</code>. A reviewer reads one line instead of a call graph.</p>
+<p>Operations check <code>Effect&lt;A, E, R&gt;</code> contracts. A reviewer reads one line instead of a call graph.</p>
 <dl class="fh-effect">
 <div><dt>A</dt><dd>the value it returns</dd></div>
 <div><dt>E</dt><dd>every failure it can raise, as a closed set</dd></div>
@@ -96,7 +96,7 @@ pageClass: forma-index
 
 <<< @/snippets/home/log.lisp [log.lisp]
 
-<<< @/snippets/home/log.type.txt [inferred type]
+<<< @/snippets/home/log.type.txt [checked type]
 
 <<< @/snippets/home/log.ts [generated.ts]
 

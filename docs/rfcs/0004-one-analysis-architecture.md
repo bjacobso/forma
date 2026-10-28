@@ -161,9 +161,15 @@ queries   parse(id)            lossless tree and errors; never fails
 - **Inference snapshots.** Prelude and REPL scopes now retain alias, record,
   ADT, typeclass, and instance registries with their fresh-variable supply.
   Per-form memoization must include this state among its query inputs.
-- **The mechanics checker.** Effect programs (`define-layer`, combinators,
-  streams) are checked by the mechanics checker, not Hindley–Milner, so the
-  language server reports false errors on them. Stage 7 should decide whether
-  the two checkers converge or the workspace routes forms to the right one.
+- **The mechanics checker.** Implemented routing now sends explicit Effect
+  declarations, signed helpers, and referenced schema metadata through the
+  existing mechanics checker. Canonical artifact emission, host/CLI checks and
+  workspace language services share its checked-declaration result, including
+  source diagnostics and recorded expression types. Kernel and descriptor forms
+  retain their own checks. Module checking uses resolved lexical identities and
+  checks dependencies before emission selection. This is not stage 7's proposed
+  IR redesign or full checker unification: the low-level HM API remains separate,
+  mechanics types are not fabricated as HM types, and the language-server
+  workspace does not yet resolve file imports into a module graph.
 - **OCaml editor operations.** Resolved: they were deleted with the OCaml
   engine.
