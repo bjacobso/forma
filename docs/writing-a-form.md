@@ -123,6 +123,11 @@ use local bindings, and branch. Elaboration checks the declared contract;
 a body that returns the wrong shape produces a diagnostic at elaboration.
 Built-in (native) projection is an optimization of this behavior.
 
+Hosts that recheck documents can reuse their bootstrapped prelude. Unchanged
+form descriptors reuse expanded hook programs, while evaluation still uses the
+current holes and semantic environment. The kernel macro prelude is shared
+across hooks, including hooks with different host builtins.
+
 Protocols and schemas derive from `type` declarations. Completion, option
 availability, declaration bindings, and form layout derive from the form
 pattern and hole types. Add another form by writing another definition;
