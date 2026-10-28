@@ -454,7 +454,7 @@ const updateModel = (model: Model, message: Message): UpdateReturn =>
       if (
         event._tag === "FilledPlaceholder" &&
         event.parentId !== null &&
-        model.analysis?.revision === model.outline.revision
+        model.analysis !== null
       ) {
         const slot = model.analysis.slots[event.parentId]?.find((slot) => slot.key === event.key);
         const parent = find(model.outline.items, event.parentId);
