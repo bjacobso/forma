@@ -791,6 +791,67 @@ describe("host prelude diagnostics", () => {
     expect(diagnostics).toHaveLength(1);
     expect(source.slice(diagnostics[0]!.span!.startOffset, diagnostics[0]!.span!.endOffset)).toBe(syntax);
   });
+  test('polymorphic :scope signatures instantiate freshly at each use', () => {
+    const scoped = bootstrapFromSources('', `(type ProbeIR {:kind "Probe"})
+      (form (probe e) :types {:e (Expr Int)}
+        :scope {:e (fn [holes] {:rows (quote (List {:at String}))
+                                :size (quote (-> (List a) Int))
+                                :first-of (quote (-> (List a) (-> a String) String))})}
+        :ir ProbeIR {:kind "Probe"})`);
+    const result = elaborateProgram('(probe (+ (size rows) (size [(first-of rows (fn [r] r.at)) "x"])))', { prelude: scoped });
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+    expect(result.declarations[0]?.payload).toEqual({ kind: 'Probe' });
+  });
+  test('type-definition reflects author type aliases', () => {
+    const reflected = bootstrapFromSources('', `(type NoteIR {:kind "Note" :members Json})
+      (form (note name) :types {:name Symbol} :ir NoteIR {:kind "Note" :members (map (fn [m] (keyword/name m)) (rest (type-definition name)))})`);
+    expect(elaborateProgram('(type Color (Union :red :blue)) (note Color)', { prelude: reflected }).declarations[0]?.payload).toEqual({ kind: 'Note', members: ['red', 'blue'] });
+  });
+  test('reflection returns declaration names, docstrings, and metadata-free type definitions', () => {
+    const reflected = bootstrapFromSources('', `(type Status (Union :draft :sent))
+      (type EntryIR {:kind "Entry" :name Symbol :doc (Option String)})
+      (form (entry name doc fields) :types {:name (Declares Entry) :doc (Option String) :fields (Record Type)}
+        :ir EntryIR {:kind "Entry" :name name :doc doc})
+      (type OtherIR {:kind "Other" :name Symbol})
+      (form (other name) :types {:name (Declares Other)} :ir OtherIR {:kind "Other" :name name})
+      (type SnapshotIR {:kind "Snapshot" :names (List Symbol) :docs (List String) :author Json :prelude Json :unknown Json})
+      (form (snapshot) :types {} :ir SnapshotIR
+        {:kind "Snapshot" :names (declarations-of 'entry)
+         :docs (map (fn [n] (or (declaration-hole n :doc) "")) (declarations-of 'entry))
+         :author (type-definition 'Profile) :prelude (type-definition 'Status)
+         :unknown (type-definition 'Missing)})`);
+    const result = elaborateProgram(`(type Profile {:name (String :doc "Display name") :state Status})
+      (snapshot)
+      (entry first "First entry" {:count Int})
+      (entry second {:active Bool})
+      (other unrelated)`, { prelude: reflected });
+    expect(result.diagnostics).toEqual([]);
+    expect(result.declarations.map(d => d.payload)).toEqual([
+      { kind: 'Snapshot', names: ['first', 'second'], docs: ['First entry', ''],
+        author: { name: 'String', state: 'Status' }, prelude: ['Union', ':draft', ':sent'], unknown: null },
+      { kind: 'Entry', name: 'first', doc: 'First entry' },
+      { kind: 'Entry', name: 'second' },
+      { kind: 'Other', name: 'unrelated' },
+    ]);
+  });
+  test.each([
+    ['[:entries :name 1]', 'Int'],
+    ['[:entries (quote name) 1]', 'Int'],
+    ['[:entries "name" 1]', 'Int'],
+    ['[:entries :name 9]', '(List Int)'],
+    ['[:missing]', '{:name (List Int)}'],
+  ])(':at path %s selects authored record values or falls back to :slot', (path, selected) => {
+    const checked = bootstrapFromSources('', `(type ProbeIR {:kind "Probe"})
+      (form (probe entries) :types {:entries Syntax} :ir ProbeIR
+        :check (fn [holes] [{:code "probe/path" :message "invalid type" :slot :entries :at ${path}}])
+        {:kind "Probe"})`);
+    const source = '(probe {:name (List Int)})';
+    const { diagnostics } = elaborateProgram(source, { prelude: checked });
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0]?.code).toBe('probe/path');
+    expect(source.slice(diagnostics[0]!.span!.startOffset, diagnostics[0]!.span!.endOffset)).toBe(selected);
+  });
   test('optional docstrings and declarations-of', () => {
     const result = elaborateProgram('(catalog a "Documented" (item x)) (catalog b (item y))', { prelude: prelude() });
     expect(result.diagnostics).toEqual([]);
