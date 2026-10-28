@@ -23,3 +23,10 @@ generation and snapshot tests.
 also carry TypeScript emit hooks and derive a typed builder DSL. Bootstrap
 it with `compiler.lisp`, separately from the ontology's older `api` form.
 See [the HTTP API spike](../docs/effect/http-api.md).
+
+The site's [prelude reference](https://forma-lang.com/preludes/) is generated
+from these files when the docs build: forms and slot types from descriptors,
+signatures from `(: name type)`, and documentation from docstrings and the
+comments directly above each definition. Catalog titles and maturity labels
+live in `docs/.vitepress/preludes.ts`; a new file appears as uncatalogued until
+it has an entry there.

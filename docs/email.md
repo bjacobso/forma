@@ -10,9 +10,8 @@ pageClass: forma-index forma-email
 <div class="forma-home">
 
 <header class="fh-hero" aria-labelledby="hero-title">
-<div class="fh-blueprint" aria-hidden="true"></div>
 <div class="fh-hero__copy">
-<p class="fh-eyebrow"><span class="fh-dot"></span>Forma for email automation · pre-alpha prototype</p>
+<p class="fh-eyebrow">Forma for email automation · pre-alpha prototype</p>
 <h1 id="hero-title">Email automation you can review before it sends.</h1>
 <p class="fh-lead">Who gets an email, when, and how fast. Write a campaign rule as a small Lisp form. Forma checks every lane, every decision, and every delivery failure, then generates plain Effect TypeScript for your sender. The whole vocabulary is one short prelude, shown in full below.</p>
 <div class="fh-actions">

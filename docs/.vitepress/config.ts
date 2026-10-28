@@ -1,6 +1,18 @@
 import { resolve } from "node:path";
 
-import { defineConfig } from "vitepress";
+import { defineConfig, type DefaultTheme } from "vitepress";
+
+import { groupTitles, loadPreludes, type PreludeGroup } from "./preludes.ts";
+
+const preludeSidebar: DefaultTheme.SidebarItem[] = [
+  { text: "Preludes", items: [{ text: "Catalog", link: "/preludes/" }] },
+  ...(Object.keys(groupTitles) as PreludeGroup[]).map((group) => ({
+    text: groupTitles[group],
+    items: loadPreludes()
+      .filter((prelude) => prelude.group === group)
+      .map((prelude) => ({ text: prelude.slug, link: `/preludes/${prelude.slug}` })),
+  })),
+];
 
 export default defineConfig({
   lang: "en-US",
@@ -12,7 +24,7 @@ export default defineConfig({
   outDir: resolve(import.meta.dirname, "../../dist-docs"),
   head: [
     ["link", { rel: "icon", type: "image/svg+xml", href: "/mark.svg" }],
-    ["meta", { name: "theme-color", content: "#101418" }],
+    ["meta", { name: "theme-color", content: "#faf8f3" }],
     ["meta", { property: "og:type", content: "website" }],
     ["meta", { property: "og:site_name", content: "Forma" }],
   ],
@@ -23,77 +35,94 @@ export default defineConfig({
     },
     languages: ["json", "lisp", "scheme", "sh", "ts"],
   },
+  transformPageData(pageData) {
+    // Generated prelude pages carry their metadata as route params.
+    const params = pageData.params;
+    if (!params?.slug || !pageData.relativePath.startsWith("preludes/")) return;
+    pageData.title = String(params.title);
+    pageData.description = String(params.description);
+    pageData.frontmatter.outline = params.outline;
+  },
   themeConfig: {
-    logo: { src: "/mark.svg", alt: "Forma" },
-    siteTitle: "Forma",
+    siteTitle: "forma",
     nav: [
-      { text: "Playground", link: "/playground", target: "_self", rel: "" },
-      { text: "Examples", link: "/playground/demo", target: "_self", rel: "" },
-      { text: "Workbench", link: "/workbench/demo/", target: "_self", rel: "" },
-      { text: "Vision", link: "/vision" },
-      { text: "Language", link: "/language" },
-      { text: "Effect", link: "/effect" },
-      { text: "Elm", link: "/elm" },
-      { text: "Email", link: "/email" },
-      { text: "Architecture", link: "/architecture" },
-    ],
-    sidebar: [
       {
-        text: "Start",
+        text: "Learn",
         items: [
-          { text: "Vision", link: "/vision" },
-          { text: "Language", link: "/language" },
+          { text: "Language guide", link: "/language" },
           { text: "Writing a form", link: "/writing-a-form" },
-          { text: "Forma for Effect", link: "/effect" },
-          { text: "Effect reference", link: "/effect/reference" },
-          { text: "Prelude HTTP API spike", link: "/effect/http-api" },
-          { text: "Forma for Elm-style apps", link: "/elm" },
-          { text: "Elm prototype reference", link: "/elm/reference" },
-          { text: "Forma for email automation", link: "/email" },
-        ],
-      },
-      {
-        text: "Design",
-        items: [
-          { text: "Architecture", link: "/architecture" },
-          { text: "Design decisions", link: "/design-decisions" },
-          { text: "Retiring the OCaml engine", link: "/engine-consolidation" },
-          { text: "Language services", link: "/language-services" },
           { text: "File modules", link: "/modules" },
-          { text: "Workbench vision", link: "/workbench-vision" },
-          { text: "Workbench", link: "/workbench" },
-        ],
-      },
-      {
-        text: "RFCs",
-        items: [
-          { text: "0001: One language, one syntax", link: "/rfcs/0001-unified-syntax" },
-          { text: "0002: Modules and packages", link: "/rfcs/0002-modules-and-packages" },
-          { text: "0003: Direct-style effects", link: "/rfcs/0003-direct-style-effects" },
-          { text: "0004: One analysis architecture", link: "/rfcs/0004-one-analysis-architecture" },
-          { text: "0005: Record type operations", link: "/rfcs/0005-row-operations" },
-          { text: "0006: Qualified rows", link: "/rfcs/0006-qualified-rows" },
-          { text: "0007: Shared type normalization", link: "/rfcs/0007-type-normalization" },
-          { text: "0008: Typed form results", link: "/rfcs/0008-typed-form-results" },
-          { text: "0009: Field names and row map", link: "/rfcs/0009-field-names-and-row-map" },
-          { text: "0010: Live sessions", link: "/rfcs/0010-live-sessions" },
-          { text: "0011: Signatures as contracts", link: "/rfcs/0011-signatures-as-contracts" },
-          { text: "0012: Checked evaluation", link: "/rfcs/0012-checked-evaluation" },
-          { text: "0013: A runnable host", link: "/rfcs/0013-runnable-host" },
-          { text: "0014: Local providers", link: "/rfcs/0014-local-providers" },
-          { text: "0015: Tests in Forma", link: "/rfcs/0015-tests-in-forma" },
-          { text: "0016: Host-call journals", link: "/rfcs/0016-host-call-journals" },
-          { text: "0017: Diagnostic catalog", link: "/rfcs/0017-diagnostic-catalog" },
-        ],
-      },
-      {
-        text: "Project",
-        items: [
-          { text: "For agents", link: "/agents" },
+          { text: "Vision", link: "/vision" },
+          { text: "Architecture", link: "/architecture" },
           { text: "Roadmap", link: "/roadmap" },
         ],
       },
+      { text: "Preludes", link: "/preludes/", activeMatch: "^/(preludes|effect|elm|email)" },
+      { text: "Examples", link: "/playground/demo", target: "_self", rel: "" },
+      { text: "Workbench", link: "/workbench/demo/", target: "_self", rel: "" },
+      { text: "Playground", link: "/playground", target: "_self", rel: "" },
     ],
+    sidebar: {
+      "/preludes/": preludeSidebar,
+      "/": [
+        {
+          text: "Start",
+          items: [
+            { text: "Preludes", link: "/preludes/" },
+            { text: "Vision", link: "/vision" },
+            { text: "Language", link: "/language" },
+            { text: "Writing a form", link: "/writing-a-form" },
+            { text: "Forma for Effect", link: "/effect" },
+            { text: "Effect reference", link: "/effect/reference" },
+            { text: "Prelude HTTP API spike", link: "/effect/http-api" },
+            { text: "Forma for Elm-style apps", link: "/elm" },
+            { text: "Elm prototype reference", link: "/elm/reference" },
+            { text: "Forma for email automation", link: "/email" },
+          ],
+        },
+        {
+          text: "Design",
+          items: [
+            { text: "Architecture", link: "/architecture" },
+            { text: "Design decisions", link: "/design-decisions" },
+            { text: "Retiring the OCaml engine", link: "/engine-consolidation" },
+            { text: "Language services", link: "/language-services" },
+            { text: "File modules", link: "/modules" },
+            { text: "Workbench vision", link: "/workbench-vision" },
+            { text: "Workbench", link: "/workbench" },
+          ],
+        },
+        {
+          text: "RFCs",
+          items: [
+            { text: "0001: One language, one syntax", link: "/rfcs/0001-unified-syntax" },
+            { text: "0002: Modules and packages", link: "/rfcs/0002-modules-and-packages" },
+            { text: "0003: Direct-style effects", link: "/rfcs/0003-direct-style-effects" },
+            { text: "0004: One analysis architecture", link: "/rfcs/0004-one-analysis-architecture" },
+            { text: "0005: Record type operations", link: "/rfcs/0005-row-operations" },
+            { text: "0006: Qualified rows", link: "/rfcs/0006-qualified-rows" },
+            { text: "0007: Shared type normalization", link: "/rfcs/0007-type-normalization" },
+            { text: "0008: Typed form results", link: "/rfcs/0008-typed-form-results" },
+            { text: "0009: Field names and row map", link: "/rfcs/0009-field-names-and-row-map" },
+            { text: "0010: Live sessions", link: "/rfcs/0010-live-sessions" },
+            { text: "0011: Signatures as contracts", link: "/rfcs/0011-signatures-as-contracts" },
+            { text: "0012: Checked evaluation", link: "/rfcs/0012-checked-evaluation" },
+            { text: "0013: A runnable host", link: "/rfcs/0013-runnable-host" },
+            { text: "0014: Local providers", link: "/rfcs/0014-local-providers" },
+            { text: "0015: Tests in Forma", link: "/rfcs/0015-tests-in-forma" },
+            { text: "0016: Host-call journals", link: "/rfcs/0016-host-call-journals" },
+            { text: "0017: Diagnostic catalog", link: "/rfcs/0017-diagnostic-catalog" },
+          ],
+        },
+        {
+          text: "Project",
+          items: [
+            { text: "For agents", link: "/agents" },
+            { text: "Roadmap", link: "/roadmap" },
+          ],
+        },
+      ],
+    },
     search: {
       provider: "local",
       options: { detailedView: true },
