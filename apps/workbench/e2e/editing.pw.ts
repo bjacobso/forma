@@ -22,9 +22,10 @@ test("analyzes each edit and underlines the new type error", async ({ page }) =>
   await page.keyboard.type(' "x"]');
   await expect(call).toHaveAttribute("data-tone", "error");
   await expect(page.getByText(/1 error ·/)).toBeVisible();
-  // The underline is painted token by token over the vector.
-  const underlined = await call.locator(".fw-text-diagnostic").allTextContents();
-  expect(underlined.join("")).toBe('[1 3 7 "x"]');
+  // The underline marks the element of the wrong type, once the edit's analysis lands.
+  await expect
+    .poll(async () => (await call.locator(".fw-text-diagnostic").allTextContents()).join(""))
+    .toBe('"x"');
   // Fixing it clears the error.
   await page.keyboard.press("End");
   await page.keyboard.press("ArrowLeft");
@@ -43,4 +44,20 @@ test("keeps analyzing the rest of the program while a row does not read", async 
   await page.keyboard.press("Backspace");
   await expect(call).toHaveAttribute("data-tone", "error");
   await expect(page.getByText(/13 forms · 1 error · 2 warnings/)).toBeVisible();
+});
+
+test("keeps the caret in a row with slot placeholders while each keystroke is analyzed", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByText(/0 errors/)).toBeVisible();
+  const step = row(page, /^step activate/);
+  const input = step.locator("textarea");
+  await input.click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(' :doc "Ready"', { delay: 150 });
+  await expect(input).toBeFocused();
+  await expect(input).toHaveValue('step activate :system "Okta" :reads [:check :i9 :payroll] :doc "Ready"');
+  await expect(page.locator("[data-workbench]")).toHaveAttribute("data-analyzed", "true");
+  await expect(page.getByText(/0 errors/)).toBeVisible();
 });

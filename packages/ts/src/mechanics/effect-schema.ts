@@ -135,6 +135,11 @@ function annotatedSchema(schema: Readonly<Record<string, JsonValue>>, naming: Sc
     if (key === "title") annotations.push(`title: ${JSON.stringify(String(value))}`);
     if (key === "identifier") annotations.push(`identifier: ${JSON.stringify(String(value))}`);
     if (key === "pattern") checked = `${checked}.check(Schema.isPattern(new RegExp(${JSON.stringify(String(value))})))`;
+    if (key === "finite" && value === true) checked = `${checked}.check(Schema.isFinite())`;
+    if (key === "min-length") checked = `${checked}.check(Schema.isMinLength(${Number(value)}))`;
+    if (key === "max-length") checked = `${checked}.check(Schema.isMaxLength(${Number(value)}))`;
+    if (key === "min") checked = `${checked}.check(Schema.isGreaterThanOrEqualTo(${Number(value)}))`;
+    if (key === "max") checked = `${checked}.check(Schema.isLessThanOrEqualTo(${Number(value)}))`;
   }
   return annotations.length === 0 ? checked : `${checked}.annotate({ ${annotations.join(", ")} })`;
 }
@@ -151,6 +156,8 @@ function primitiveSchema(name: JsonValue | undefined): string {
       return "Schema.Boolean";
     case "Unit":
       return "Schema.Void";
+    case "Null":
+      return "Schema.Null";
     case "Json":
       return "Schema.Json";
     case "Bytes":
@@ -216,6 +223,32 @@ export function orderSchemaDeclarations<T extends { readonly name: string; reado
   };
   for (const declaration of declarations) visit(declaration);
   return ordered;
+}
+
+/**
+ * Declarations that refer back to themselves, directly or through other
+ * declarations. Their constants must reach each other through Schema.suspend.
+ */
+export function recursiveSchemaNames(
+  declarations: readonly { readonly name: string; readonly schema: JsonValue | undefined }[],
+): ReadonlySet<string> {
+  const references = new Map(declarations.map((declaration) => [declaration.name, schemaReferences(declaration.schema)]));
+  const recursive = new Set<string>();
+  for (const { name } of declarations) {
+    const seen = new Set<string>();
+    const pending = [...(references.get(name) ?? [])];
+    while (pending.length > 0) {
+      const next = pending.pop()!;
+      if (next === name) {
+        recursive.add(name);
+        break;
+      }
+      if (seen.has(next)) continue;
+      seen.add(next);
+      pending.push(...(references.get(next) ?? []));
+    }
+  }
+  return recursive;
 }
 
 /** Names a schema node refers to (schema references and inline brands). */

@@ -79,7 +79,12 @@ export type SemanticFactValue =
 
 export type ExpressionTypeResult =
   | { readonly _tag: "success"; readonly type: Type }
-  | { readonly _tag: "failure"; readonly message: string };
+  | {
+      readonly _tag: "failure";
+      readonly message: string;
+      /** Source offsets of the subexpression the checker blamed, when it named one. */
+      readonly span?: { readonly start: number; readonly end: number } | undefined;
+    };
 
 /** Semantic environment accumulated during binding inference */
 export interface SemanticEnvironment {

@@ -104,6 +104,18 @@ export function evaluateExprs(
   exprs: readonly SExpr[],
   options: KernelOptions,
 ): Effect.Effect<KernelResult, KernelError> {
+  return Effect.flatMap(expandExprs(exprs, options), (expanded) => evaluateExpandedExprs(expanded, options));
+}
+
+/**
+ * The expansion half of `evaluateExprs`. A caller that runs the same program
+ * in many environments, such as a form hook, expands it once and evaluates the
+ * result with `evaluateExpandedExprs`.
+ */
+export function expandExprs(
+  exprs: readonly SExpr[],
+  options: KernelOptions,
+): Effect.Effect<readonly SExpr[], KernelError> {
   return Effect.gen(function* () {
     const frontend = yield* Effect.try({
       try: () =>
@@ -118,12 +130,16 @@ export function evaluateExprs(
     if (syntaxError !== null) {
       return yield* Effect.fail(syntaxError);
     }
-    return yield* evaluateExpandedRuntimeExprs(
-      frontend.expanded,
-      options.env ?? Env.empty(),
-      options,
-    );
+    return frontend.expanded;
   });
+}
+
+/** The evaluation half of `evaluateExprs`, for expressions `expandExprs` returned. */
+export function evaluateExpandedExprs(
+  expanded: readonly SExpr[],
+  options: KernelOptions,
+): Effect.Effect<KernelResult, KernelError> {
+  return evaluateExpandedRuntimeExprs(expanded, options.env ?? Env.empty(), options);
 }
 
 function evaluateExpandedRuntimeExprs(

@@ -165,6 +165,7 @@ export const coreTypeNames = new Set([
   "Syntax",
   "RuntimeExpr",
   "Bytes",
+  "Null",
   "DateTime",
   "Duration",
   "List",

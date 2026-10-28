@@ -109,6 +109,21 @@ describe("formSlots", () => {
     expect(Editor.formSlots({source:`${prelude}\n${source}`,offset:prelude.length+3})?.form.name).toBe("workflow");
   });
 
+  test("offers the forms a category of children accepts", () => {
+    const prelude = `(type RequiresIR {:kind "requires" :form Symbol})
+(type NoteIR {:kind "note" :text String})
+(type policy-child (Union RequiresIR NoteIR))
+(type PolicyIR {:kind "policy" :children (List policy-child)})
+(form (requires form) :types {:form Symbol} :ir RequiresIR {:kind "requires" :form form})
+(form (note text) :types {:text String} :ir NoteIR {:kind "note" :text text})
+(form (policy name child ...) :types {:name (Declares Policy) :child (List policy-child)} :ir PolicyIR
+  {:kind "policy" :children child})`;
+    const source = "(policy onboarding\n  (requires w-4))";
+    const child = Editor.formSlots({source,offset:2,descriptorSources:[prelude]})!.slots.find(slot => slot.name === "child")!;
+    expect(child).toMatchObject({childForm:"requires",childForms:["requires","note"],available:true});
+    expect(child.insertion.text).toBe("(requires )");
+  });
+
   test("returns nothing outside descriptor forms", () => {
     expect(Editor.formSlots({ source: "(+ 1 2)", offset: 1, descriptors })).toBeUndefined();
     expect(Editor.formSlots({ source: "", offset: 0, descriptors })).toBeUndefined();

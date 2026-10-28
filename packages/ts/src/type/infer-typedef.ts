@@ -150,6 +150,7 @@ const mechanicsBuiltinTypes = new Set([
   "List",
   "Map",
   "Nil",
+  "Null",
   "Option",
   "Str",
   "String",

@@ -173,6 +173,17 @@ describe('typed form contracts and shared binding patterns', () => {
     expect(elaborateProgram('(check local)',{prelude}).ok).toBe(true);
     expect(elaborateProgram('(check 42)',{prelude}).diagnostics[0]?.message).toContain('expects String');
   });
+  test(':check diagnostics can point at a value inside a Syntax hole', () => {
+    const prelude=bootstrapFromSources('', `(type FieldsIR {:kind "Fields"})
+      (form (fields entries) :types {:entries Syntax} :ir FieldsIR
+        :check (fn [{:keys [entries]}]
+          (filter (fn [d] (not (nil? d)))
+            (map (fn [[name type]] (if (= (str type) "Text") {:message "unknown type Text" :at type} nil)) (meta/entries entries))))
+        {:kind "Fields"})`);
+    const source='(fields {:name String\n         :nickname Text})';
+    const diagnostic=elaborateProgram(source,{prelude}).diagnostics[0]!;
+    expect([diagnostic.message,source.slice(diagnostic.span!.startOffset,diagnostic.span!.endOffset)]).toEqual(['unknown type Text','Text']);
+  });
   test('warning diagnostics do not reject a valid form', () => {
     const prelude=bootstrapFromSources('', '(type NoticeIR {:kind "Notice"}) (form (notice) :types {} :ir NoticeIR :check (fn [holes] [{:severity :warning :message "Consider a name"}]) {:kind "Notice"})');
     const result=elaborateProgram('(notice)',{prelude});

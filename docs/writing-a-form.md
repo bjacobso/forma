@@ -30,7 +30,15 @@ accepts a record of type expressions. A pattern ending in `child ...`, paired
 with `(List child)` in `:types`, parses and projects each child before passing
 its value to the parent. Here `child` is a form name or a lowercase category
 alias, such as `(type child (Union TextIR ImageIR))`. A record IR type by itself
-does not identify which child forms may appear.
+does not identify which child forms may appear. A child's diagnostics point at
+the child, not at the parent application.
+
+Hole and IR types may refine `String`, `Int`, `Float`, and `List` with metadata:
+`(String :pattern "^[a-z]+$" :min-length 1 :max-length 40)`, `(Int :min 0 :max 10)`, `(Float :finite true)`,
+or `(List String :max-length 3)`. A literal in a refined hole is checked where
+the author wrote it, and the projected IR is checked against its declared
+refinements. A hole typed with an enum alias such as
+`(type Status (Union "active" "inactive"))` accepts only its members.
 
 ## Checking and scope
 
@@ -49,8 +57,10 @@ receives a record of the holes and returns a list of diagnostic records.
   {:kind "Greeting" :name name :message message :doc doc})
 ```
 
-The optional `:slot` attaches the diagnostic to that authored hole. Without it,
-the span covers the application. Severity is `:error`, `:warning`, or `:info`;
+The optional `:slot` attaches the diagnostic to that authored hole. `:at` is
+finer: given a value read from a `Syntax` hole, such as one entry of a record,
+the diagnostic points at that value's source. Without either, the span covers
+the application. Severity is `:error`, `:warning`, or `:info`;
 warnings and informational diagnostics remain attached to successful artifacts.
 
 An expression hole can introduce local bindings with `:scope`. Each entry maps
@@ -62,7 +72,10 @@ a hole name to a function returning a record of names and quoted types:
 ```
 
 Those bindings apply while checking `where`. The ontology query form uses this
-to expose the fields of its selected entity. `:type` supplies a constant result
+to expose the fields of its selected entity. A scope may also bind functions.
+Their type variables are generic, so `{:present? (quote (-> (Option a) Bool))}`
+applies to bindings of different types in one expression. Enum aliases keep
+their members: `(= status "actve")` against `Status` is an error. `:type` supplies a constant result
 type, or a function computing a type from the holes, independently of the
 artifact's IR type.
 

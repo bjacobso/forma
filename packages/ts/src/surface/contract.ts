@@ -5,10 +5,12 @@ import type { SExpr } from "../reader/types.js";
 import type { FormDescriptor, DescriptorExtensionValue } from "../descriptor/FormDescriptor.js";
 import type { KValue } from "../evaluator/types.js";
 import { head, name } from "./effect.js";
+import { splitTypeMetadata } from "./domain.js";
 
 const optional = (t: SExpr) => head(t) === "Option" && t._tag === "List";
 const field = (e: SExpr) => (name(e) ?? (e._tag === "Str" ? e.value : "")).replace(/^:/, "");
 export function protocolType(t: SExpr, types: ReadonlyMap<string, SExpr> = new Map()): DescriptorExtensionValue {
+  t = splitTypeMetadata(t).type;
   if (t._tag === "List" && types.has(head(t) ?? "")) t = resolveTypeAlias(t, types);
   const descend = (t: SExpr) => protocolType(t, types);
   if (t._tag === "Map") return {object: Object.fromEntries(t.pairs.map(([key, value]) => [field(key), {...(descend(value) as Record<string, DescriptorExtensionValue>), required: !optionalType(value, types)}]))};
@@ -46,7 +48,14 @@ export function typeDescriptor(n: string, t: SExpr, types: ReadonlyMap<string, S
 
 /** Validate a form's actual output against the declared IR type, including references. */
 export function contractErrors(value: KValue, t: SExpr, types: ReadonlyMap<string,SExpr>, path = "payload", seen = new Set<string>()): readonly string[] {
+  const {type, metadata} = splitTypeMetadata(t);
+  if (metadata.length) {
+    const errors = contractErrors(value, type, types, path, seen);
+    return errors.length ? errors : refinementErrors(value, metadata, path);
+  }
   t=resolveTypeAlias(t,types);
+  // An alias such as (type Slug (String :pattern "...")) resolves to a refined type.
+  if (splitTypeMetadata(t).metadata.length) return contractErrors(value, t, types, path, seen);
   if (optional(t) && t._tag === "List") {
     if (value === null || value === undefined || value instanceof Map && value.get(":_tag") === "None") return [];
     const inner = value instanceof Map && value.get(":_tag") === "Some" ? value.get(":value") : value;
@@ -82,9 +91,46 @@ export function contractErrors(value: KValue, t: SExpr, types: ReadonlyMap<strin
   return valid ? [] : [`${path} must be ${n}`];
 }
 
+/** The outer type with aliases resolved and refinement metadata removed. */
+const bareType = (t: SExpr, types: ReadonlyMap<string,SExpr>): SExpr =>
+  splitTypeMetadata(resolveTypeAlias(splitTypeMetadata(t).type, types)).type;
+
+/** Refinement metadata constrains a value that already has its base type. */
+export function refinementErrors(value: KValue, metadata: readonly (readonly [SExpr,SExpr])[], path: string): readonly string[] {
+  if (value instanceof Map && value.get(":_tag") === "Some") value = value.get(":value") ?? null;
+  const size = typeof value === "string" || Array.isArray(value) ? value.length : undefined;
+  const units = (limit: number) => `${typeof value === "string" ? "character" : "item"}${limit === 1 ? "" : "s"}`;
+  const number = typeof value === "number" ? value : isNumeric(value) ? value.value : undefined;
+  const errors: string[] = [];
+  for (const [key, setting] of metadata) {
+    const limit = setting._tag === "Num" ? setting.value : undefined;
+    switch (name(key)) {
+      case ":pattern":
+        if (setting._tag === "Str" && typeof value === "string" && !new RegExp(setting.value).test(value)) errors.push(`${path} must match the pattern ${setting.value}`);
+        break;
+      case ":min-length":
+        if (limit !== undefined && size !== undefined && size < limit) errors.push(`${path} must have at least ${limit} ${units(limit)}`);
+        break;
+      case ":max-length":
+        if (limit !== undefined && size !== undefined && size > limit) errors.push(`${path} must have at most ${limit} ${units(limit)}`);
+        break;
+      case ":finite":
+        if (number !== undefined && !Number.isFinite(number)) errors.push(`${path} must be finite`);
+        break;
+      case ":min":
+        if (limit !== undefined && number !== undefined && number < limit) errors.push(`${path} must be at least ${limit}`);
+        break;
+      case ":max":
+        if (limit !== undefined && number !== undefined && number > limit) errors.push(`${path} must be at most ${limit}`);
+        break;
+    }
+  }
+  return errors;
+}
+
 /** Optional fields are omitted from IR objects when the form leaves them absent. */
 export function normalizeContractValue(value: KValue, t: SExpr, types: ReadonlyMap<string,SExpr>, seen = new Set<string>()): KValue {
-  t=resolveTypeAlias(t,types);
+  t=bareType(t,types);
   const n = name(t);
   if (optional(t) && t._tag === "List") {
     if (value === null || value instanceof Map && value.get(":_tag") === "None") return null;
@@ -114,7 +160,7 @@ export function normalizeContractValue(value: KValue, t: SExpr, types: ReadonlyM
 
 /** Convert typed atoms to their wire spelling only at the artifact boundary. */
 export function projectContractValue(value: KValue, t: SExpr, types: ReadonlyMap<string,SExpr>): KValue {
-  t=resolveTypeAlias(t,types);
+  t=bareType(t,types);
   const n = name(t);
   if (n === "RuntimeExpr" && value!==null) return new Map([[":kind","raw-expr"],[":expr",projectRuntimeExpression(value)]]);
   if (n === "Keyword" || n?.startsWith(":")) return isKKeyword(value) ? value.name.slice(1) : value;

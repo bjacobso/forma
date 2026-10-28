@@ -20,6 +20,7 @@ export type PrimitiveName =
   | "Float"
   | "Bool"
   | "Unit"
+  | "Null"
   | "Json"
   | "Bytes"
   | "DateTime"
@@ -243,6 +244,7 @@ function primitiveType(name: JsonValue | undefined): MType {
     case "Int":
     case "Bool":
     case "Unit":
+    case "Null":
     case "Json":
     case "Bytes":
     case "DateTime":

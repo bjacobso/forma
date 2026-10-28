@@ -168,6 +168,19 @@ describe("applyEditScript", () => {
     );
   });
 
+  test("inserts a record entry as a pair laid out like its siblings", () => {
+    const record = "(attributes employee\n  {:a {:type Bool}\n   :b {:type Bool}})";
+    const { id, apply } = setup(record);
+    expect(ok(apply({ op: "insert", at: { after: id("{:type Bool}", 1) }, text: ":c {:type Int}" })).source).toBe(
+      "(attributes employee\n  {:a {:type Bool}\n   :b {:type Bool}\n   :c {:type Int}})",
+    );
+    expect(ok(apply({ op: "insert", at: { before: id(":b") }, text: ":c {:type Int}" })).source).toBe(
+      "(attributes employee\n  {:a {:type Bool}\n   :c {:type Int}\n   :b {:type Bool}})",
+    );
+    const inline = setup("{:a 1 :b 2}");
+    expect(ok(inline.apply({ op: "insert", at: { after: inline.id("2") }, text: ":c 3" })).source).toBe("{:a 1 :b 2 :c 3}");
+  });
+
   test("replaces a node, keeping its id when the kind is unchanged", () => {
     const { id, apply } = setup();
     const result = ok(apply({ op: "replace", target: id("(* revenue tax-rate)"), text: "(* revenue\n   tax-rate)" }));

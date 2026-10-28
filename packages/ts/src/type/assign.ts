@@ -93,7 +93,8 @@ export const joinType = (left: Type, right: Type, origin: Origin): Effect.Effect
   return applyType(yield* Ref.get(ctx.subst),a);
 });
 
-function literalBase(name: string): string | undefined {
+/** The primitive a literal type name belongs to, if it is a literal. */
+export function literalBase(name: string): string | undefined {
   if (name.startsWith(":")) return "Keyword";
   try { const value=JSON.parse(name); return typeof value==="string" ? "String" : typeof value==="boolean" ? "Bool" : typeof value==="number" ? /[.eE]/.test(name) ? "Float" : "Int" : undefined; } catch { return; }
 }

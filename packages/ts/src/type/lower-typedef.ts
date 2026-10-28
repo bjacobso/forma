@@ -463,6 +463,8 @@ function primitiveSchemaTypeName(name: string): string | undefined {
       return "Json";
     case "unit":
       return "Unit";
+    case "null":
+      return "Null";
     default:
       return undefined;
   }

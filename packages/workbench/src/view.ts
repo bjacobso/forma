@@ -115,6 +115,8 @@ export const view = defineView<Model, Message>((model, h): Html => {
       h.OnKeyDownPreventDefault((key) => key === "F12" ? Option.some(Message.DefinitionAtCaret()) : Option.none()),
       h.DataAttribute("workbench", model.id),
       h.DataAttribute("source-dirty", String(model.sourceDirty)),
+      // Whether the facts on screen describe the current text, for hosts and tests.
+      h.DataAttribute("analyzed", String(model.analysis?.revision === model.outline.revision)),
     ],
     [
       h.section(
@@ -412,10 +414,10 @@ export const view = defineView<Model, Message>((model, h): Html => {
                           content: hoverContent(fact, h),
                         };
                       },
+                      // Placeholders stay while the next revision is analyzed: removing
+                      // them re-renders the rows around the caret and drops its focus.
                       placeholders: (parentId) =>
-                        parentId === null || model.analysis?.revision !== model.outline.revision
-                          ? []
-                          : (model.analysis.slots[parentId] ?? []),
+                        parentId === null ? [] : (model.analysis?.slots[parentId] ?? []),
                       rowAccessory: (row) => {
                         if (
                           model.analysis?.rows.find((layout) => layout.id === row.id)?.text !==

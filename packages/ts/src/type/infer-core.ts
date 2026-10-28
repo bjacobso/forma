@@ -31,7 +31,7 @@ import {
   buildRow,
 } from "./types.js";
 import { applyType, applyEnv, type TypeEnv, applyERow } from "./substitution.js";
-import { assignType, joinType } from "./assign.js";
+import { assignType, joinType, literalBase } from "./assign.js";
 import { unify } from "./unify.js";
 import { InferContext } from "./context.js";
 import type { Origin } from "./errors.js";
@@ -630,6 +630,19 @@ export const inferLam = (
 // App
 // ---------------------------------------------------------------------------
 
+const literalMembers = (t: Type): readonly string[] | undefined =>
+  t._tag === "TApp" && t.con._tag === "TCon" && t.con.name === "Union" && t.args.length > 0 && t.args.every(member => member._tag === "TCon" && literalBase(member.name))
+    ? t.args.map(member => (member as Type & { _tag: "TCon" }).name) : undefined;
+const literalName = (e: CoreExpr): string | undefined =>
+  e._tag !== "Lit" ? undefined
+  : e.lit._tag === "LString" ? JSON.stringify(e.lit.value)
+  : e.lit._tag === "LKeyword" ? e.lit.value
+  : e.lit._tag === "LInt" || e.lit._tag === "LFloat" || e.lit._tag === "LBool" ? String(e.lit.value) : undefined;
+const sameLiteral = (member: string, literal: string): boolean => {
+  if (member === literal) return true;
+  try { return !member.startsWith(":") && JSON.parse(member) === JSON.parse(literal); } catch { return false; }
+};
+
 const inferApp = (
   env: TypeEnv,
   expr: CoreExpr & { _tag: "App" },
@@ -639,6 +652,20 @@ const inferApp = (
 
     if (expr.fn._tag === "Var" && !env.has(expr.fn.name) && ctx.builtinScheme(expr.fn.name) && ["=","!="].includes(expr.fn.name) && expr.args.length === 2) {
       const left=yield* inferExpr(env,expr.args[0]!), right=yield* inferExpr(env,expr.args[1]!);
+      const subst=yield* Ref.get(ctx.subst);
+      // An enum (a union of literals) compares with its base type; a literal outside it is a typo.
+      for (const [enumType, other, otherType] of [[left, expr.args[1]!, right], [right, expr.args[0]!, left]] as const) {
+        const members=literalMembers(applyType(subst,enumType));
+        if (!members) continue;
+        const literal=literalName(other);
+        if (literal !== undefined) {
+          if (members.some(member => sameLiteral(member, literal))) return TCon("Bool");
+          return yield* ctx.fail(originOf(other,"equality"),{code:"typecheck/type-mismatch",message:`${literal} is not one of ${showType(applyType(subst,enumType))}, so this comparison is always false`});
+        }
+        const bases=new Set(members.map(literalBase)), resolved=applyType(subst,otherType);
+        const otherMembers=resolved._tag === "TCon" && literalBase(resolved.name) ? [resolved.name] : literalMembers(resolved);
+        if (resolved._tag === "TCon" && bases.has(resolved.name) || otherMembers?.every(member => bases.has(literalBase(member)))) return TCon("Bool");
+      }
       const keyword=(t:Type):boolean => t._tag === "TCon" && (t.name === "Keyword" || t.name.startsWith(":")) || t._tag === "TApp" && t.con._tag === "TCon" && t.con.name === "Union" && t.args.every(keyword);
       if (!(keyword(left) && keyword(right))) yield* joinType(left,right,originOf(expr,"equality"));
       return TCon("Bool");
