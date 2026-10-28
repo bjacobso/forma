@@ -63,7 +63,7 @@ describe("refined fields in form contracts", () => {
     expect(elaborate(prelude, '(account "ada" "active")').ok).toBe(true);
     expect(elaborate(prelude, '(account "Ada" "actve")').diagnostics).toEqual([
       { message: "name must match the pattern ^[a-z]+$", text: '"Ada"' },
-      { message: "status does not match its declared hole type", text: '"actve"' },
+      { message: 'status must be one of "active", "inactive"', text: '"actve"' },
     ]);
   });
 
@@ -111,8 +111,11 @@ describe("scoped expressions", () => {
 
   test("enum bindings compare with their members and reject other literals", () => {
     expect(elaborate(prelude, '(visible-when (or (= status "active") (= plan "paid")))').diagnostics).toEqual([]);
-    expect(elaborate(prelude, '(visible-when (= status "actve"))').diagnostics.map(d => d.message)).toEqual([
-      expect.stringContaining('"actve" is not one of Union<"active", "inactive">'),
+    expect(elaborate(prelude, '(visible-when (= status "actve"))').diagnostics).toEqual([
+      { message: expect.stringContaining('"actve" is not one of Union<"active", "inactive">'), text: '"actve"' },
+    ]);
+    expect(elaborate(prelude, '(visible-when (and (present? age) (= nickame "x")))').diagnostics).toEqual([
+      { message: expect.stringContaining("nickame"), text: "nickame" },
     ]);
   });
 });

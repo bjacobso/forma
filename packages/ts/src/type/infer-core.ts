@@ -660,7 +660,7 @@ const inferApp = (
         const literal=literalName(other);
         if (literal !== undefined) {
           if (members.some(member => sameLiteral(member, literal))) return TCon("Bool");
-          return yield* ctx.fail(originOf(expr,"equality"),{code:"typecheck/type-mismatch",message:`${literal} is not one of ${showType(applyType(subst,enumType))}, so this comparison is always false`});
+          return yield* ctx.fail(originOf(other,"equality"),{code:"typecheck/type-mismatch",message:`${literal} is not one of ${showType(applyType(subst,enumType))}, so this comparison is always false`});
         }
         const bases=new Set(members.map(literalBase)), resolved=applyType(subst,otherType);
         const otherMembers=resolved._tag === "TCon" && literalBase(resolved.name) ? [resolved.name] : literalMembers(resolved);

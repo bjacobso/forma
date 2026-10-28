@@ -246,6 +246,26 @@ function validLiteral(e: SExpr, type: SExpr, types: ReadonlyMap<string,SExpr> = 
  */
 const expandedHookPrograms = new WeakMap<SExpr, readonly SExpr[]>();
 
+/** The values of an enum hole type, as written, or undefined for any other type. */
+function enumMembers(type: SExpr, types: ReadonlyMap<string,SExpr>): readonly string[] | undefined {
+  let resolved: SExpr;
+  try { resolved = stripTypeMetadata(resolveTypeAlias(stripTypeMetadata(type), types)); } catch { return undefined; }
+  if (head(resolved) !== "Union" || resolved._tag !== "List") return undefined;
+  const members = resolved.items.slice(1).map(member => member._tag === "Str" ? JSON.stringify(member.value) : member._tag === "Num" || member._tag === "Bool" ? String(member.value) : name(member)?.startsWith(":") ? name(member) : undefined);
+  return members.every(member => member !== undefined) ? members as string[] : undefined;
+}
+
+/** The innermost authored node with exactly this span, to report a checker error where it occurred. */
+function innermost(expression: SExpr, span: { readonly start: number; readonly end: number }): SExpr | undefined {
+  if (expression.loc.start > span.start || expression.loc.end < span.end) return undefined;
+  const children = expression._tag === "Map" ? expression.pairs.flat() : expression._tag === "List" || expression._tag === "Vector" ? expression.items : [];
+  for (const child of children) {
+    const found = innermost(child, span);
+    if (found) return found;
+  }
+  return expression.loc.start === span.start && expression.loc.end === span.end ? expression : undefined;
+}
+
 export interface LinkedFormContext {
   readonly environment: () => Env;
   readonly evaluateHole: (expression: SExpr, type: SExpr) => KValue;
@@ -419,7 +439,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         const childHole = name(u) !== undefined && /^[a-z]/.test(name(u)!) && !spec.types.has(name(u)!);
         const literal = !syntaxHole && !childHole && (e._tag === "Str" || e._tag === "Num" || e._tag === "Bool");
         const problems = linked && !syntaxHole ? contractErrors(converted.get(`:${n}`)!,t,spec.types,n)
-          : !validLiteral(e,t,spec.types) ? [`${n} does not match its declared hole type`]
+          : !validLiteral(e,t,spec.types) ? [enumMembers(u,spec.types) ? `${n} must be one of ${enumMembers(u,spec.types)!.join(", ")}` : `${n} does not match its declared hole type`]
           : literal ? contractErrors(datum(e),t,spec.types,n) : [];
         for (const message of problems) diagnostics.push({severity:"error",message,loc:e.loc});
         if (n === "layout" && registry) {
@@ -469,7 +489,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
             semanticEnv = child;
           }
           const inferred = semanticEnv.inferExpression(checkedExpression);
-          if (inferred._tag === "failure") diagnostics.push({ severity: "error", message: inferred.message, loc: e.loc });
+          if (inferred._tag === "failure") diagnostics.push({ severity: "error", message: inferred.message, loc: (inferred.span && innermost(e, inferred.span)?.loc) ?? e.loc });
           else {
             const expectedSyntax = arg(u)!;
             const expected = yield* resolveType(converted.get(`:${name(expectedSyntax)}`) ?? datum(expectedSyntax), e, spec.types);

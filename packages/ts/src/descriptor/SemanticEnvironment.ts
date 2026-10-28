@@ -12,6 +12,7 @@ import type { SExpr } from "../reader/types.js";
 import { InferContext, makeOwnedInferContext } from "../type/context.js";
 import { resetNodeIds } from "../type/core-expr.js";
 import { inferProgram } from "../type/infer.js";
+import { InferenceError } from "../diagnostic/errors.js";
 import { lowerProgram } from "../type/lower.js";
 import { applyType } from "../type/substitution.js";
 import { EVar, fevType, frvType, ftvType, RVar, Scheme, TVar, type Type } from "../type/types.js";
@@ -199,9 +200,11 @@ export class SimpleSemanticEnvironment implements SemanticEnvironment {
       );
       return { _tag: "success", type };
     } catch (error) {
+      const span = error instanceof InferenceError ? error.origin?.span : undefined;
       return {
         _tag: "failure",
         message: error instanceof Error ? error.message : String(error),
+        ...(span ? { span: { start: span.start, end: span.end } } : {}),
       };
     }
   }
