@@ -742,3 +742,61 @@ test("keyword literals retain their exact type through binding and branching", a
 test("conditional records join their keyword field types", () => {
   expect(Effect.runSync(Type.inferSourceStr('(get (if true {:state :open} {:state :done}) :state)'))).toBe('Union<:open, :done>');
 });
+
+describe("host prelude diagnostics", () => {
+  const prelude = () => bootstrapFromSources('', `(type ItemIR {:kind "Item" :name Symbol :limit (Option RuntimeExpr)})
+    (type item ItemIR)
+    (form (item name {:keys [limit]}) :types {:name Symbol :limit (Option (Expr Int))} :ir ItemIR
+      {:kind "Item" :name name :limit limit})
+    (type ListIR {:kind "Catalog" :name Symbol :doc (Option String) :peers (List Symbol) :items (List ItemIR)})
+    (form (catalog name doc child ...) :types {:name (Declares CatalogDef) :doc (Option String) :child (List item)}
+      :check (fn [{:keys [child]}]
+        (if (= (count child) 2) [{:severity :error :code "catalog/second" :message "second limit" :at [:child (quote second) :limit]}] []))
+      :ir ListIR
+      {:kind "Catalog" :name name :doc doc :peers (declarations-of 'catalog) :items child})`);
+  test(':check diagnostics locate nested syntax with :at', () => {
+    const source = '(catalog c (item first :limit 1)\n  (item second :limit 2))';
+    const [diagnostic] = elaborateProgram(source, { prelude: prelude() }).diagnostics;
+    expect(diagnostic?.code).toBe('catalog/second');
+    expect(source.slice(diagnostic!.span!.startOffset, diagnostic!.span!.endOffset)).toBe('2');
+  });
+  test('child diagnostics keep their own location', () => {
+    const source = '(catalog c (item first :limit 1) (item second :limit "two") (item third :limit "three"))';
+    const { diagnostics } = elaborateProgram(source, { prelude: prelude() });
+    expect(diagnostics.map(d => source.slice(d.span!.startOffset, d.span!.endOffset))).toEqual(['"two"', '"three"']);
+  });
+  test('child checks keep distinct codes and spans and skip the parent check', () => {
+    const checked = bootstrapFromSources('', `(type LeafIR {:kind "Leaf" :name Symbol})
+      (form (leaf name limit) :types {:name Symbol :limit Int} :ir LeafIR
+        :check (fn [{:keys [name]}] [{:code (str "leaf/" name) :message "invalid limit" :at [:limit]}])
+        {:kind "Leaf" :name name})
+      (type TreeIR {:kind "Tree" :children (List LeafIR)})
+      (form (tree child ...) :types {:child (List leaf)} :ir TreeIR
+        :check (fn [holes] [{:code "tree/unexpected" :message "parent should not run"}])
+        {:kind "Tree" :children child})`);
+    const source = '(tree (leaf first 10)\n      (leaf second 20))';
+    const result = elaborateProgram(source, { prelude: checked, sourceId: 'children.lisp' });
+    expect(result.ok).toBe(false);
+    expect(result.declarations).toEqual([]);
+    expect(result.diagnostics.map(d => [d.code, d.span?.sourceId, source.slice(d.span!.startOffset, d.span!.endOffset)]))
+      .toEqual([['leaf/first', 'children.lisp', '10'], ['leaf/second', 'children.lisp', '20']]);
+  });
+  test.each(['(List Int)', '[Int String]'])(':at preserves authored Syntax datum identity for %s', syntax => {
+    const checked = bootstrapFromSources('', `(type ProbeIR {:kind "Probe"})
+      (form (probe entries) :types {:entries Syntax} :ir ProbeIR
+        :check (fn [{:keys [entries]}] [{:message "invalid type" :at (get entries :field)}])
+        {:kind "Probe"})`);
+    const source = `(probe {:field ${syntax}})`;
+    const { diagnostics } = elaborateProgram(source, { prelude: checked });
+    expect(diagnostics).toHaveLength(1);
+    expect(source.slice(diagnostics[0]!.span!.startOffset, diagnostics[0]!.span!.endOffset)).toBe(syntax);
+  });
+  test('optional docstrings and declarations-of', () => {
+    const result = elaborateProgram('(catalog a "Documented" (item x)) (catalog b (item y))', { prelude: prelude() });
+    expect(result.diagnostics).toEqual([]);
+    expect(result.declarations.map(d => d.payload)).toEqual([
+      { kind: 'Catalog', name: 'a', doc: 'Documented', peers: ['a', 'b'], items: [{ kind: 'Item', name: 'x' }] },
+      { kind: 'Catalog', name: 'b', peers: ['a', 'b'], items: [{ kind: 'Item', name: 'y' }] },
+    ]);
+  });
+});

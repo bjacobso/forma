@@ -181,7 +181,9 @@ export function matchFormSyntax(spec: UnifiedForm, expr: SExpr): ReadonlyMap<str
         i++;
       } else {
         const optional = head(spec.holes.get(n)) === "Option";
-        const value = optional && accepted.has(fieldName(expr.items[at]!) ?? "") ? undefined : expr.items[at++];
+        // An optional String hole (a docstring) only consumes a string literal.
+        const skipsString = optional && name(arg(spec.holes.get(n)!)) === "String" && expr.items[at]?._tag !== "Str";
+        const value = optional && (skipsString || accepted.has(fieldName(expr.items[at]!) ?? "")) ? undefined : expr.items[at++];
         if (value) result.set(n, value);
         else if (head(spec.holes.get(n)) !== "Option") throw new Error(`Missing positional argument ${n}`);
       }
@@ -189,6 +191,33 @@ export function matchFormSyntax(spec: UnifiedForm, expr: SExpr): ReadonlyMap<str
   }
   if (at < expr.items.length) throw new Error("Too many positional arguments");
   return result;
+}
+
+/**
+ * Follow a `:check` diagnostic's `:at` path into a form's authored syntax.
+ * The first step names a hole. Later steps descend: an integer selects an
+ * item, a keyword selects the value after that option (or record key), and a
+ * symbol or string selects the child form named by its first argument.
+ * Unresolved steps stop at the deepest node reached.
+ */
+export function locateSyntax(values: ReadonlyMap<string, SExpr>, path: readonly KValue[]): SExpr | undefined {
+  const label = (step: KValue): string | undefined => isKKeyword(step) || isKSymbol(step) ? step.name.replace(/^:/, "") : typeof step === "string" ? step : undefined;
+  const [first, ...rest] = path;
+  let node = first === undefined ? undefined : values.get(label(first) ?? "");
+  for (const step of rest) {
+    if (!node) break;
+    let next: SExpr | undefined;
+    const items = node._tag === "List" || node._tag === "Vector" ? node.items : undefined;
+    if (typeof step === "number") next = items?.[step];
+    else if (isKKeyword(step) && node._tag === "Map") next = node.pairs.find(([key]) => fieldName(key) === label(step))?.[1];
+    else if (isKKeyword(step) && items) {
+      const index = items.findIndex(item => item._tag === "Sym" && item.name === step.name);
+      next = index >= 0 ? items[index + 1] : undefined;
+    } else if (items) next = items.find(item => item._tag === "List" && name(item.items[1]) === label(step));
+    if (!next) break;
+    node = next;
+  }
+  return node;
 }
 
 export function normalizeUnifiedForm(descriptor: FormDescriptor, expr: SExpr) {
@@ -298,6 +327,10 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         ? Effect.succeed([...args[0]].map(([key, value]) => [mapKeyValue(key), value]))
         : Effect.fail(new KernelTypeError({message:"meta/entries expects a record",expected:"record",got:typeof args[0]})),
       "declaration-fields": args => Effect.succeed(fieldsOf(args[0]!)),
+      "declarations-of": args => {
+        const formName = String(isKSymbol(args[0]!) || isKKeyword(args[0]!) ? args[0]!.name : args[0]).replace(/^:/, "");
+        return Effect.succeed([...input.semanticEnv.getDeclaredNames()].filter(([,declared]) => declared.formName === formName).map(([declaredName]) => KSymbol(declaredName)));
+      },
       "attribute-type": args => {
         const attribute=String(args[0]).replace(/^:/, "");
         for (const owner of input.semanticEnv.getDeclaredNames().keys()) {
@@ -510,9 +543,9 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
           const slot = String(problem.get(":slot") ?? problem.get("slot") ?? "").replace(/^:/,"");
           const code = problem.get(":code") ?? problem.get("code");
           if (code !== undefined && typeof code !== "string") throw new ElaborationError({message:"Diagnostic code must be a string",hookName:descriptor.name,phase:"validate"});
-          // `:at` names a value read from a Syntax hole, such as one field of a record, to report at its source.
+          // Preserve Syntax datum identity before interpreting a constructed list as a path.
           const at = problem.get(":at") ?? problem.get("at");
-          const loc = (at === undefined ? undefined : syntaxForDatum(at)?.loc) ?? values.get(slot)?.loc ?? input.loc;
+          const loc = (at === undefined ? undefined : syntaxForDatum(at)?.loc) ?? (Array.isArray(at) ? locateSyntax(values, at)?.loc : undefined) ?? values.get(slot)?.loc ?? input.loc;
           diagnostics.push({...(code !== undefined ? {code} : {}),severity:severity as Diagnostic["severity"],message:String(problem.get(":message") ?? problem.get("message") ?? "Form validation failed"),loc});
         }
       }

@@ -57,10 +57,25 @@ receives a record of the holes and returns a list of diagnostic records.
   {:kind "Greeting" :name name :message message :doc doc})
 ```
 
-The optional `:slot` attaches the diagnostic to that authored hole. `:at` is
-finer: given a value read from a `Syntax` hole, such as one entry of a record,
-the diagnostic points at that value's source. Without either, the span covers
-the application. Severity is `:error`, `:warning`, or `:info`;
+The optional `:slot` attaches the diagnostic to that authored hole. `:at` can
+name a value read from a `Syntax` hole, such as one entry of a record, to point
+at that value's source. It can also be a constructed path: the first step names
+a hole, an integer selects an item, a keyword selects the value after that
+option (or record key), and a quoted symbol selects the child form named by its
+first argument. `[:child (quote second) :limit]` points at the `:limit` value of
+`(item second :limit 2)`. A path stops at the deepest resolved node. A value read
+from a `Syntax` hole keeps its source even when it is a list or vector; use a
+new list or vector to construct a path. Without a resolved `:at`, `:slot` is used,
+then the application span. Child forms keep their own diagnostic codes and spans.
+
+Checks and projections can reflect on other declarations:
+`(declaration-fields name)` returns a declaration's record fields,
+`(declaration-hole name :hole)` its authored hole, and
+`(declarations-of 'form)` the names declared by a form. An optional positional
+`(Option String)` hole, such as a docstring, consumes only a string literal and
+may be omitted before other positional arguments.
+
+Severity is `:error`, `:warning`, or `:info`;
 warnings and informational diagnostics remain attached to successful artifacts.
 
 An expression hole can introduce local bindings with `:scope`. Each entry maps
