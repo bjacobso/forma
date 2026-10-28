@@ -182,8 +182,9 @@ export function matchFormSyntax(spec: UnifiedForm, expr: SExpr): ReadonlyMap<str
 /**
  * Follow a `:check` diagnostic's `:at` path into a form's authored syntax.
  * The first step names a hole. Later steps descend: an integer selects an
- * item, a keyword selects the value after that option (or record key), and a
- * symbol or string selects the child form named by its first argument.
+ * item, a keyword selects the value after that option, any name selects a
+ * record key, and a symbol or string selects the child form named by its first
+ * argument.
  * Unresolved steps stop at the deepest node reached.
  */
 export function locateSyntax(values: ReadonlyMap<string, SExpr>, path: readonly KValue[]): SExpr | undefined {
@@ -195,7 +196,7 @@ export function locateSyntax(values: ReadonlyMap<string, SExpr>, path: readonly 
     let next: SExpr | undefined;
     const items = node._tag === "List" || node._tag === "Vector" ? node.items : undefined;
     if (typeof step === "number") next = items?.[step];
-    else if (isKKeyword(step) && node._tag === "Map") next = node.pairs.find(([key]) => fieldName(key) === label(step))?.[1];
+    else if (node._tag === "Map") next = node.pairs.find(([key]) => fieldName(key) === label(step))?.[1];
     else if (isKKeyword(step) && items) {
       const index = items.findIndex(item => item._tag === "Sym" && item.name === step.name);
       next = index >= 0 ? items[index + 1] : undefined;
@@ -283,6 +284,12 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         ? Effect.succeed([...args[0]].map(([key, value]) => [mapKeyValue(key), value]))
         : Effect.fail(new KernelTypeError({message:"meta/entries expects a record",expected:"record",got:typeof args[0]})),
       "declaration-fields": args => Effect.succeed(fieldsOf(args[0]!)),
+      "type-definition": args => {
+        const typeName = String(isKSymbol(args[0]!) || isKKeyword(args[0]!) ? args[0]!.name : args[0]);
+        const authored = input.semanticEnv.getFact("type-definition", typeName);
+        const syntax = (authored instanceof Map ? authored.get("syntax") as SExpr | undefined : undefined) ?? spec.types.get(typeName);
+        return Effect.succeed(syntax ? datum(stripTypeMetadata(syntax)) : null);
+      },
       "declarations-of": args => {
         const formName = String(isKSymbol(args[0]!) || isKKeyword(args[0]!) ? args[0]!.name : args[0]).replace(/^:/, "");
         return Effect.succeed([...input.semanticEnv.getDeclaredNames()].filter(([,declared]) => declared.formName === formName).map(([declaredName]) => KSymbol(declaredName)));

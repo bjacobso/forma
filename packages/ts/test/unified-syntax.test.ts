@@ -754,6 +754,20 @@ describe("host prelude diagnostics", () => {
     const { diagnostics } = elaborateProgram(source, { prelude: prelude() });
     expect(diagnostics.map(d => source.slice(d.span!.startOffset, d.span!.endOffset))).toEqual(['"two"', '"three"']);
   });
+  test('polymorphic :scope signatures instantiate freshly at each use', () => {
+    const scoped = bootstrapFromSources('', `(type ProbeIR {:kind "Probe"})
+      (form (probe e) :types {:e (Expr Int)}
+        :scope {:e (fn [holes] {:rows (quote (List {:at String}))
+                                :size (quote (-> (List a) Int))
+                                :first-of (quote (-> (List a) (-> a String) String))})}
+        :ir ProbeIR {:kind "Probe"})`);
+    expect(elaborateProgram('(probe (size [(first-of rows (fn [r] r.at)) "x"]))', { prelude: scoped }).diagnostics).toEqual([]);
+  });
+  test('type-definition reflects author type aliases', () => {
+    const reflected = bootstrapFromSources('', `(type NoteIR {:kind "Note" :members Json})
+      (form (note name) :types {:name Symbol} :ir NoteIR {:kind "Note" :members (map (fn [m] (keyword/name m)) (rest (type-definition name)))})`);
+    expect(elaborateProgram('(type Color (Union :red :blue)) (note Color)', { prelude: reflected }).declarations[0]?.payload).toEqual({ kind: 'Note', members: ['red', 'blue'] });
+  });
   test('optional docstrings and declarations-of', () => {
     const result = elaborateProgram('(catalog a "Documented" (item x)) (catalog b (item y))', { prelude: prelude() });
     expect(result.diagnostics).toEqual([]);
