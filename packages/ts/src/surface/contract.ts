@@ -54,6 +54,8 @@ export function contractErrors(value: KValue, t: SExpr, types: ReadonlyMap<strin
     return errors.length ? errors : refinementErrors(value, metadata, path);
   }
   t=resolveTypeAlias(t,types);
+  // An alias such as (type Slug (String :pattern "...")) resolves to a refined type.
+  if (splitTypeMetadata(t).metadata.length) return contractErrors(value, t, types, path, seen);
   if (optional(t) && t._tag === "List") {
     if (value === null || value === undefined || value instanceof Map && value.get(":_tag") === "None") return [];
     const inner = value instanceof Map && value.get(":_tag") === "Some" ? value.get(":value") : value;
@@ -89,6 +91,10 @@ export function contractErrors(value: KValue, t: SExpr, types: ReadonlyMap<strin
   return valid ? [] : [`${path} must be ${n}`];
 }
 
+/** The outer type with aliases resolved and refinement metadata removed. */
+const bareType = (t: SExpr, types: ReadonlyMap<string,SExpr>): SExpr =>
+  splitTypeMetadata(resolveTypeAlias(splitTypeMetadata(t).type, types)).type;
+
 /** Refinement metadata constrains a value that already has its base type. */
 export function refinementErrors(value: KValue, metadata: readonly (readonly [SExpr,SExpr])[], path: string): readonly string[] {
   if (value instanceof Map && value.get(":_tag") === "Some") value = value.get(":value") ?? null;
@@ -121,7 +127,7 @@ export function refinementErrors(value: KValue, metadata: readonly (readonly [SE
 
 /** Optional fields are omitted from IR objects when the form leaves them absent. */
 export function normalizeContractValue(value: KValue, t: SExpr, types: ReadonlyMap<string,SExpr>, seen = new Set<string>()): KValue {
-  t=resolveTypeAlias(splitTypeMetadata(t).type,types);
+  t=bareType(t,types);
   const n = name(t);
   if (optional(t) && t._tag === "List") {
     if (value === null || value instanceof Map && value.get(":_tag") === "None") return null;
@@ -151,7 +157,7 @@ export function normalizeContractValue(value: KValue, t: SExpr, types: ReadonlyM
 
 /** Convert typed atoms to their wire spelling only at the artifact boundary. */
 export function projectContractValue(value: KValue, t: SExpr, types: ReadonlyMap<string,SExpr>): KValue {
-  t=resolveTypeAlias(splitTypeMetadata(t).type,types);
+  t=bareType(t,types);
   const n = name(t);
   if (n === "RuntimeExpr" && value!==null) return new Map([[":kind","raw-expr"],[":expr",projectRuntimeExpression(value)]]);
   if (n === "Keyword" || n?.startsWith(":")) return isKKeyword(value) ? value.name.slice(1) : value;

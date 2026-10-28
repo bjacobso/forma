@@ -36,4 +36,4 @@ export function resolveTypeAlias(type: SExpr, types: ReadonlyMap<string,SExpr>, 
   return resolveTypeAlias(definition,types,next);
 }
 
-export const optionalType = (type: SExpr, types: ReadonlyMap<string,SExpr>): boolean => head(resolveTypeAlias(splitTypeMetadata(type).type,types))==="Option";
+export const optionalType = (type: SExpr, types: ReadonlyMap<string,SExpr>): boolean => head(splitTypeMetadata(resolveTypeAlias(splitTypeMetadata(type).type,types)).type)==="Option";

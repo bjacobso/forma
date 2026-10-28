@@ -29,6 +29,21 @@ describe("refined fields in form contracts", () => {
     expect(result.diagnostics).toEqual([{ message: "payload.slug must match the pattern ^[a-z]+$", text: '(slug "ABC")' }]);
   });
 
+  test("refined aliases check the values they name", () => {
+    const prelude = `(type ResourceKey (String :pattern "^[a-z]+(?:[.-][a-z]+)*$" :title "resource key"))
+      (type NodeName (String :pattern "^[a-z_]+$"))
+      (type NodeIR (Union {:type "wait" :name NodeName} {:type "send" :name NodeName}))
+      (type FlowIR {:kind "Flow" :key ResourceKey :nodes (List NodeIR)})
+      (form (flow key node ...) :types {:key String :node (List String)} :ir FlowIR
+        {:kind "Flow" :key key :nodes (map (fn [n] {:type "wait" :name n}) node)})`;
+    expect(elaborate(prelude, '(flow "acme.reminder" "wait_two_days")').payloads).toEqual([
+      { kind: "Flow", key: "acme.reminder", nodes: [{ type: "wait", name: "wait_two_days" }] },
+    ]);
+    expect(elaborate(prelude, '(flow "Acme reminder" "Wait")').diagnostics.map(d => d.message)).toEqual([
+      "payload.key must match the pattern ^[a-z]+(?:[.-][a-z]+)*$; payload.nodes[0] does not match any Union member",
+    ]);
+  });
+
   test("length and range refinements check IR values", () => {
     const prelude = `(type FieldIR {:kind "Field" :label (String :min-length 1 :max-length 5) :width (Int :min 1 :max 12) :tags (List String :max-length 1)})
       (form (field label width tag ...) :types {:label String :width Int :tag (List String)} :ir FieldIR
