@@ -50,7 +50,17 @@ receives a record of the holes and returns a list of diagnostic records.
 ```
 
 The optional `:slot` attaches the diagnostic to that authored hole. Without it,
-the span covers the application. Severity is `:error`, `:warning`, or `:info`;
+the span covers the application. For a nested node, `:at` gives a path: the
+first step names a hole, an integer selects an item, a keyword selects the
+value after that option (or record key), and a quoted symbol selects the child
+form it names. `[:child (quote second) :limit]` points at the `:limit` value of
+the child `(item second :limit 2)`. Child forms report their own diagnostics at
+their own locations.
+
+Checks can reflect on other declarations: `(declaration-fields name)` returns a
+declaration's record fields, `(declaration-hole name :hole)` its authored hole,
+and `(declarations-of 'form)` the names declared by a form. An optional
+positional `String` hole, such as a docstring, may be omitted. Severity is `:error`, `:warning`, or `:info`;
 warnings and informational diagnostics remain attached to successful artifacts.
 
 An expression hole can introduce local bindings with `:scope`. Each entry maps
