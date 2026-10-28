@@ -13,7 +13,25 @@ import { InferContext, makeOwnedInferContext } from "../type/context.js";
 import { resetNodeIds } from "../type/core-expr.js";
 import { inferProgram } from "../type/infer.js";
 import { lowerProgram } from "../type/lower.js";
-import { mono, type Type } from "../type/types.js";
+import { RVar, Scheme, TVar, ftvType, frvType, type Type } from "../type/types.js";
+import { applyType } from "../type/substitution.js";
+
+// Rename a closed signature's variables apart from the checker's fresh names,
+// then quantify them.
+const closedScheme = (type: Type) => {
+  const tvars = [...ftvType(type)];
+  const rvars = [...frvType(type)];
+  if (tvars.length === 0 && rvars.length === 0) return Scheme([], [], type, [], []);
+  const renamed = applyType(
+    {
+      tvars: new Map(tvars.map((v) => [v, TVar(`scope$${v}`)])),
+      rvars: new Map(rvars.map((v) => [v, RVar(`scope$${v}`)])),
+      evars: new Map(),
+    },
+    type,
+  );
+  return Scheme(tvars.map((v) => `scope$${v}`), rvars.map((v) => `scope$${v}`), renamed, [], []);
+};
 import type {
   ExpressionTypeResult,
   SemanticEnvironment,
@@ -188,8 +206,10 @@ export class SimpleSemanticEnvironment implements SemanticEnvironment {
     try {
       resetNodeIds();
       const coreExprs = lowerProgram([lowerMembers(expr,new Set(this.getVisibleBindings().keys()))]);
+      // Declared binding types are closed signatures: quantify their variables so
+      // each use instantiates them freshly instead of sharing one variable.
       const initialEnv = new Map(
-        [...this.getVisibleBindings()].map(([name, type]) => [name, mono(type)] as const),
+        [...this.getVisibleBindings()].map(([name, type]) => [name, closedScheme(type)] as const),
       );
       const ctxService = Effect.runSync(makeOwnedInferContext());
       const layer = Layer.succeed(InferContext, ctxService);

@@ -126,6 +126,35 @@ export function evaluateExprs(
   });
 }
 
+/**
+ * Like {@link evaluateExprs}, for a program whose `prefix` was already
+ * expanded with {@link expandKernelExprsSync} (for example, helper definitions
+ * shared by many evaluations). Only `exprs` are expanded here.
+ */
+export function evaluateExprsAfter(
+  prefix: readonly SExpr[],
+  exprs: readonly SExpr[],
+  options: KernelOptions,
+): Effect.Effect<KernelResult, KernelError> {
+  return Effect.gen(function* () {
+    const frontend = yield* Effect.try({
+      try: () =>
+        expandKernelExprsSync(exprs, {
+          builtins: options.builtins ?? {},
+          ...(options.includePrelude === false ? {includePrelude:false} : {}),
+          ...(options.env ? { env: options.env } : {}),
+        }),
+      catch: toKernelError,
+    });
+    const program = [...prefix, ...frontend.expanded];
+    const syntaxError = checkCanonicalPublicSyntax(program);
+    if (syntaxError !== null) {
+      return yield* Effect.fail(syntaxError);
+    }
+    return yield* evaluateExpandedRuntimeExprs(program, options.env ?? Env.empty(), options);
+  });
+}
+
 function evaluateExpandedRuntimeExprs(
   exprs: readonly SExpr[],
   runtimeEnv: Env,

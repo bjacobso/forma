@@ -14,7 +14,8 @@ import { ElaborationError, type ElaborationHook, type HookInput } from "../descr
 import { SimpleNormalizedSlots, type SlotValue } from "../descriptor/NormalizedSlots.js";
 import { Env } from "../Env.js";
 import { defaultBuiltins } from "../builtins/index.js";
-import { evaluateExprs } from "../evaluator/eval.js";
+import { evaluateExprs, evaluateExprsAfter } from "../evaluator/eval.js";
+import { expandKernelExprsSync } from "../evaluator/frontend.js";
 import type { KValue, BuiltinFn } from "../evaluator/types.js";
 import { showType, type Type } from "../type/types.js";
 import { InferContext, makeOwnedInferContext } from "../type/context.js";
@@ -167,7 +168,9 @@ export function matchFormSyntax(spec: UnifiedForm, expr: SExpr): ReadonlyMap<str
         i++;
       } else {
         const optional = head(spec.holes.get(n)) === "Option";
-        const value = optional && accepted.has(fieldName(expr.items[at]!) ?? "") ? undefined : expr.items[at++];
+        // An optional String hole (a docstring) only consumes a string literal.
+        const skipsString = optional && name(arg(spec.holes.get(n)!)) === "String" && expr.items[at]?._tag !== "Str";
+        const value = optional && (skipsString || accepted.has(fieldName(expr.items[at]!) ?? "")) ? undefined : expr.items[at++];
         if (value) result.set(n, value);
         else if (head(spec.holes.get(n)) !== "Option") throw new Error(`Missing positional argument ${n}`);
       }
@@ -175,6 +178,34 @@ export function matchFormSyntax(spec: UnifiedForm, expr: SExpr): ReadonlyMap<str
   }
   if (at < expr.items.length) throw new Error("Too many positional arguments");
   return result;
+}
+
+/**
+ * Follow a `:check` diagnostic's `:at` path into a form's authored syntax.
+ * The first step names a hole. Later steps descend: an integer selects an
+ * item, a keyword selects the value after that option, any name selects a
+ * record key, and a symbol or string selects the child form named by its first
+ * argument.
+ * Unresolved steps stop at the deepest node reached.
+ */
+export function locateSyntax(values: ReadonlyMap<string, SExpr>, path: readonly KValue[]): SExpr | undefined {
+  const label = (step: KValue): string | undefined => isKKeyword(step) || isKSymbol(step) ? step.name.replace(/^:/, "") : typeof step === "string" ? step : undefined;
+  const [first, ...rest] = path;
+  let node = first === undefined ? undefined : values.get(label(first) ?? "");
+  for (const step of rest) {
+    if (!node) break;
+    let next: SExpr | undefined;
+    const items = node._tag === "List" || node._tag === "Vector" ? node.items : undefined;
+    if (typeof step === "number") next = items?.[step];
+    else if (node._tag === "Map") next = node.pairs.find(([key]) => fieldName(key) === label(step))?.[1];
+    else if (isKKeyword(step) && items) {
+      const index = items.findIndex(item => item._tag === "Sym" && item.name === step.name);
+      next = index >= 0 ? items[index + 1] : undefined;
+    } else if (items) next = items.find(item => item._tag === "List" && name(item.items[1]) === label(step));
+    if (!next) break;
+    node = next;
+  }
+  return node;
 }
 
 export function normalizeUnifiedForm(descriptor: FormDescriptor, expr: SExpr) {
@@ -195,6 +226,18 @@ export function normalizeUnifiedForm(descriptor: FormDescriptor, expr: SExpr) {
   }
   return { formName: descriptor.name, descriptor, identifiers, slots: new SimpleNormalizedSlots(slots), loc: expr.loc, rawExpr: expr };
 }
+
+// A form's helpers and constructors are the same for every hook invocation:
+// expand them once per form instead of once per projection, scope and check.
+const helperExpansions = new WeakMap<UnifiedForm, readonly SExpr[]>();
+const expandedHelpers = (spec: UnifiedForm, constructors: readonly SExpr[]): readonly SExpr[] => {
+  let expanded = helperExpansions.get(spec);
+  if (!expanded) {
+    expanded = expandKernelExprsSync([...constructors, ...spec.helpers], { builtins: defaultBuiltins }).expanded;
+    helperExpansions.set(spec, expanded);
+  }
+  return expanded;
+};
 
 const projectionBuiltins: Record<string, BuiltinFn> = {
   List: args => Effect.succeed([KSymbol("List"), ...args]),
@@ -235,6 +278,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
     let env = linked?.environment() ?? Env.empty();
     const converted = new Map<string,KValue>();
     const childDiagnostics: Diagnostic[] = [];
+    let childFailed = false;
     for (const [n,t] of spec.holes) {
       const e = values.get(n);
       const u = unwrapOption(t);
@@ -253,6 +297,16 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         ? Effect.succeed([...args[0]].map(([key, value]) => [mapKeyValue(key), value]))
         : Effect.fail(new KernelTypeError({message:"meta/entries expects a record",expected:"record",got:typeof args[0]})),
       "declaration-fields": args => Effect.succeed(fieldsOf(args[0]!)),
+      "type-definition": args => {
+        const typeName = String(isKSymbol(args[0]!) || isKKeyword(args[0]!) ? args[0]!.name : args[0]);
+        const authored = input.semanticEnv.getFact("type-definition", typeName);
+        const syntax = (authored instanceof Map ? authored.get("syntax") as SExpr | undefined : undefined) ?? spec.types.get(typeName);
+        return Effect.succeed(syntax ? datum(stripTypeMetadata(syntax)) : null);
+      },
+      "declarations-of": args => {
+        const formName = String(isKSymbol(args[0]!) || isKKeyword(args[0]!) ? args[0]!.name : args[0]).replace(/^:/, "");
+        return Effect.succeed([...input.semanticEnv.getDeclaredNames()].filter(([,declared]) => declared.formName === formName).map(([declaredName]) => KSymbol(declaredName)));
+      },
       "attribute-type": args => {
         const attribute=String(args[0]).replace(/^:/, "");
         for (const owner of input.semanticEnv.getDeclaredNames().keys()) {
@@ -314,7 +368,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
     const constructors = [...spec.types].filter(([,type]) => head(type) === "Tagged" || head(type) === "Brand").map(([typeName,type]) => list(type,[sym(type,"type"),sym(type,typeName),type]));
     const run = (expression: SExpr) => linked
       ? Effect.try({try: () => linked.run(expression,env,builtins),catch: error => new ElaborationError({message: error instanceof Error ? error.message : String(error),hookName:descriptor.name,phase:kind})})
-      : evaluateExprs([...constructors,...spec.helpers,expression],{env,builtins,stepLimit:100_000}).pipe(Effect.map(r=>r.value));
+      : evaluateExprsAfter(expandedHelpers(spec,constructors),[expression],{env,builtins,stepLimit:100_000}).pipe(Effect.map(r=>r.value));
     const invoke = (fn: SExpr) => run(list(fn,[fn,sym(fn,"__holes")]));
     for (const [n,t] of spec.holes) {
       const e = values.get(n), u = unwrapOption(t);
@@ -353,7 +407,11 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
           const childInput = {...input,semanticEnv,formName:childDescriptor.name,descriptor:childDescriptor,rawExpr:child,loc:child.loc,identifiers:normalized.identifiers,normalizedSlots:normalized.slots};
           return Effect.gen(function* () {
             const checked = yield* hooks.find(h=>h.kind==="validate")!.execute(childInput);
-            if (checked.kind === "validate" && checked.diagnostics.some(d=>d.severity==="error")) return yield* Effect.fail(new ElaborationError({message:checked.diagnostics.map(d=>d.message).join("; "),hookName:childDescriptor.name,phase:"validate"}));
+            if (checked.kind === "validate" && checked.diagnostics.some(d=>d.severity==="error")) {
+              // While validating, report each child problem at its own location and code.
+              if (kind === "validate") { childDiagnostics.push(...checked.diagnostics); childFailed = true; return null; }
+              return yield* Effect.fail(new ElaborationError({message:checked.diagnostics.map(d=>d.message).join("; "),hookName:childDescriptor.name,phase:"validate"}));
+            }
             if (checked.kind === "validate") childDiagnostics.push(...checked.diagnostics);
             const out = yield* hooks.find(h=>h.kind==="construct")!.execute(childInput);
             return out.kind === "construct" ? out.ir as KValue : null;
@@ -430,7 +488,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
           }
         }
       }
-      const check = spec.options.get(":check");
+      const check = childFailed ? undefined : spec.options.get(":check");
       if (check) {
         const extra = yield* invoke(check);
         if (!Array.isArray(extra)) throw new ElaborationError({message: ":check must return a list of diagnostics",hookName:descriptor.name,phase:"validate"});
@@ -441,7 +499,9 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
           const slot = String(problem.get(":slot") ?? problem.get("slot") ?? "").replace(/^:/,"");
           const code = problem.get(":code") ?? problem.get("code");
           if (code !== undefined && typeof code !== "string") throw new ElaborationError({message:"Diagnostic code must be a string",hookName:descriptor.name,phase:"validate"});
-          diagnostics.push({...(code !== undefined ? {code} : {}),severity:severity as Diagnostic["severity"],message:String(problem.get(":message") ?? problem.get("message") ?? "Form validation failed"),loc:values.get(slot)?.loc ?? input.loc});
+          const at = problem.get(":at") ?? problem.get("at");
+          const located = Array.isArray(at) ? locateSyntax(values, at) : undefined;
+          diagnostics.push({...(code !== undefined ? {code} : {}),severity:severity as Diagnostic["severity"],message:String(problem.get(":message") ?? problem.get("message") ?? "Form validation failed"),loc:located?.loc ?? values.get(slot)?.loc ?? input.loc});
         }
       }
       return { kind: "validate" as const, diagnostics };

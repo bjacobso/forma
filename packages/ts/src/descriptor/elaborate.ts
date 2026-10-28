@@ -159,7 +159,10 @@ export function elaborateSources(
   const semanticEnv = options.semanticEnv ?? new SimpleSemanticEnvironment();
   for (const expression of authorForms) if (["type", "error", "class"].includes(head(expression) ?? "") && expression._tag === "List") {
     const definition=typeDefinition(expression);
-    if (definition) semanticEnv.setFact("type-kind", definition[0], head(expression)!);
+    if (definition) {
+      semanticEnv.setFact("type-kind", definition[0], head(expression)!);
+      semanticEnv.setFact("type-definition", definition[0], new Map([["syntax", definition[1]]]));
+    }
   }
   const declared = new Map<string, string>();
   const forms: {
