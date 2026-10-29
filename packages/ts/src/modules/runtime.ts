@@ -71,6 +71,9 @@ export class ModuleRuntime {
     stepLimit: number,
     observe?: ObservationOptions,
   ): Promise<ModuleInstance> {
+    graph = { ...graph, modules: graph.modules.map(module => ({
+      ...module, expressions: module.runtimeExpressions ?? module.expressions,
+    })) };
     // Effect programs execute through the linked Effect target. The kernel must not
     // accidentally execute an Effect initializer while importing its definitions.
     for (const module of graph.modules) {
@@ -115,7 +118,7 @@ export class ModuleRuntime {
           ? new ObservationCollector(module.source, module.expressions, observe)
           : undefined;
       const result = await Effect.runPromise(
-        evaluateExprs(module.expressions.filter(definition), {
+        evaluateExprs(module.expressions.filter(e => definition(e) && headSym(e) !== "form"), {
           env,
           builtins: defaultBuiltins,
           includePrelude: false,
@@ -158,7 +161,7 @@ export class ModuleRuntime {
       ]),
     );
     const values: Record<string, KValue> = {};
-    const referenced = referencedSymbols(module.expressions);
+    const referenced = referencedSymbols(module.runtimeExpressions ?? module.expressions);
     for (const dependency of new Set([
       ...dependencies,
       ...this.instances.values(),
@@ -194,7 +197,7 @@ export class ModuleRuntime {
   ): Promise<{ result: KernelResult; collector?: ObservationCollector }> {
     const instance = await this.initialize(graph, stepLimit, observe);
     const entry = graph.modules.find((m) => m.id === graph.entry)!;
-    const expressions = entry.expressions.filter((e) => !definition(e));
+    const expressions = (entry.runtimeExpressions ?? entry.expressions).filter((e) => !definition(e));
     const { collector } = instance;
     const result = expressions.length
       ? await Effect.runPromise(

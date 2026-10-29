@@ -130,6 +130,74 @@ they do not invoke it. Executable Effects still require the existing explicit
 runner. Graph requests rebuild compile-time interfaces from current sources,
 including private helper dependencies.
 
+## Runtime projections from form libraries
+
+A module-defined form can opt into a runtime projection with `:lower`. The
+projection runs after its ordinary hole checks and IR contract validation. It
+receives the checked IR and returns a quoted vector of ordinary Forma
+declarations:
+
+```lisp
+;; vocabulary.forma
+(export operation)
+(type OperationId Symbol)
+(type OperationIR {:name Symbol :signature Type :body RuntimeExpr})
+
+(form (operation name signature body)
+  :types {:name (Declares OperationId) :signature Type :body RuntimeExpr}
+  :ir OperationIR
+  :lower (fn [ir]
+    `[(: ~(get ir :name) ~(lower-syntax (get ir :signature)))
+      (define ~(get ir :name) ~(lower-syntax (get ir :body)))])
+  {:name name :signature signature :body body})
+
+;; counter.forma
+(import "./vocabulary.forma" [operation])
+(export increment)
+(operation increment (-> Int Int) (fn [count] (+ count 1)))
+```
+
+`increment` retains its declaration identity, classification, and inspectable
+compile-time IR. Its runtime facet has a separately checked function signature.
+Other modules can import it, re-export it through a barrel, and call it as an
+ordinary function. The compiler checks the lowered bodies; a `RuntimeExpr` hole
+does not bypass typechecking. Forms without `:lower` remain compile-time data.
+Compile-time forms, metadata schemas, and data do not become JavaScript imports
+or exports merely because a module exports them to Forma consumers.
+
+`lower-syntax` is available only while executing `:lower`. It reinserts syntax
+retained in the IR, preserving list/vector shape and author locations. Template
+nodes point at the form application; reinserted expressions keep their own spans.
+Private runtime helper references retain their defining module. Introduced `fn`
+and `let` binders are freshened using the same hygiene rules as module macros.
+Other binding constructs retain the macro system's existing hygiene limits.
+
+The current projection must define every `Declares` binding exactly once, with
+optional signatures. It may emit only `define` and `:` for those bindings. It
+cannot introduce unregistered top-level names, imports, schemas, or another form
+application. Declare schemas and services with ordinary module forms. There is no
+recursive runtime-lowering protocol or arbitrary TypeScript escape in this stage.
+This hook is implemented in the file-module pipeline; standalone legacy artifact
+generators do not automatically consume it. `:emit` remains the separate target
+adapter hook.
+
+Zero-argument callbacks have the type `(-> Result)`, distinct from both `Result`
+and `(-> Unit Result)`. For example, `(fn [] (load id))` can capture arguments and
+return an Effect when invoked. A constructor can return such a callback through
+its own Effect success type, keeping constructor and invocation errors and Service
+requirements separate. The Effect target still requires effect-body forms to live
+in operations; pure callbacks can invoke named operations to build deferred work.
+Inferred module signatures also retain the parameter groups of returned functions.
+For example, `(-> Int (-> Model Model))` has two calls: the first supplies an
+operation's argument, and the second applies its pure Step to a Model.
+
+The [runtime module fixture](https://github.com/bjacobso/forma/tree/main/conformance/runtime-modules)
+checks a library-defined operation, typed arguments, a deferred callback, a handler
+constructor, Service imports, and barrel exports. Its harness strictly compiles
+the generated TypeScript and executes it against success and failure Service
+Layers. Importing performs no Service work; constructor work runs once per
+execution, and the returned callback retains its captured value.
+
 ## Host and browser use
 
 `TsLanguageHost` supports source-bundle, `moduleGraph`, `typecheck`, `expand`,

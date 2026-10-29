@@ -4,17 +4,22 @@ import { Env } from "../Env.js";
 import { defaultBuiltins } from "../Builtins.js";
 import { evaluateCompileTimeExprs } from "../evaluator/eval.js";
 import { expandKernelExprsSync } from "../evaluator/frontend.js";
+import { kValueToSExpr } from "../evaluator/quasiquote.js";
+import { sourceLocOf, tagExpandedExpr } from "../evaluator/source-trace.js";
+import { freshenExpansion } from "../expander/expand.js";
+import { ArityError } from "../diagnostic/errors.js";
 import {
   isKFn,
   isKMacro,
   isKSymbol,
   isKKeyword,
+  isKSExpr,
   mapKeyValue,
   KSymbol,
   type KValue,
 } from "../evaluator/types.js";
 import { normalizeCoreProgram } from "../surface/core.js";
-import { datum } from "../surface/datum.js";
+import { datum, syntaxForDatum } from "../surface/datum.js";
 import { head, name } from "../surface/effect.js";
 import {
   matchFormSyntax,
@@ -26,7 +31,7 @@ import type { FormDescriptor } from "../descriptor/FormDescriptor.js";
 import { SimpleSemanticEnvironment } from "../descriptor/SemanticEnvironment.js";
 import { FormDescriptorRegistry } from "../descriptor/FormDescriptorRegistry.js";
 import type { Span } from "../diagnostic/diagnostic.js";
-import type { SExpr } from "../reader/types.js";
+import { children, type SExpr } from "../reader/types.js";
 import type { DSLTypeProvider } from "../type/dsl-provider.js";
 import { mono, TCon } from "../type/types.js";
 import {
@@ -88,6 +93,8 @@ export interface ModuleCompileTime {
     builtins?: Record<string, import("../evaluator/types.js").BuiltinFn>,
   ) => KValue;
   readonly expand: (expressions: readonly SExpr[]) => readonly SExpr[];
+  /** Passive runtime projection; absence leaves the declaration data-only. */
+  readonly lower: (expressions: readonly SExpr[]) => readonly SExpr[] | undefined;
 }
 const spanOf = (e: SExpr): Span => ({
   sourceId: e.loc.sourceId ?? "",
@@ -252,6 +259,15 @@ export function prepareCompileTimeModule(
     });
   };
   for (const binding of visible) {
+    if (["type", "class", "error", "service"].includes(binding.kind))
+      semantic.setFact("type-kind", binding.symbol, binding.kind);
+    if (binding.kind === "service") {
+      const owner = binding.identity.moduleId === module.id ? module : ownerOf(binding.identity);
+      const declaration = owner?.expressions.find(e => head(e) === "service" && e._tag === "List" && name(e.items[1]) === binding.symbol);
+      if (declaration?._tag === "List") for (const method of declaration.items.slice(2))
+        if (head(method) === ":" && method._tag === "List" && name(method.items[1]))
+          semantic.setFact("service-method", `${binding.symbol}.${name(method.items[1])}`, true);
+    }
     const declaration = binding.declaration;
     if (declaration)
       semantic.declare(binding.symbol, bindingSymbolOf(declaration.form), {
@@ -375,6 +391,80 @@ export function prepareCompileTimeModule(
     environment: () => env,
     read,
     run,
+    lower: (expressions) => {
+      let changed = false;
+      const lowered = expressions.flatMap((application) => {
+        const form = forms.get(head(application) ?? "");
+        const hook = form?.descriptor.surface?.options.get(":lower");
+        if (!hook || !form?.descriptor.surface) return [application];
+        changed = true;
+        const holes = matchFormSyntax(form.descriptor.surface, application);
+        const symbols = [...form.descriptor.surface.holes].flatMap(([hole, type]) => {
+          const value = holes.get(hole);
+          return head(unwrap(type)) === "Declares" && value?._tag === "Sym" ? [value.name] : [];
+        });
+        if (!symbols.length)
+          return fail(application, "module/lower-contract", ":lower requires at least one Declares hole.");
+        const declaration = read(symbols[0]!);
+        const ir = declaration instanceof Map ? declaration.get(":data") : undefined;
+        if (ir === undefined)
+          return fail(application, "module/lower-contract", "Missing checked declaration IR.");
+        const builtins = {
+          ...defaultBuiltins,
+          "lower-syntax": (args: readonly KValue[]) => args.length !== 1
+            ? Effect.fail(new ArityError({ name: "lower-syntax", expected: 1, got: args.length }))
+            : Effect.succeed({
+              _tag: "KSExpr" as const,
+              expr: syntaxForDatum(args[0]!) ?? kValueToSExpr(args[0]!),
+            }),
+        };
+        let value: KValue;
+        try {
+          value = form.owner.run(
+            { _tag: "List", loc: application.loc, items: [hook, { _tag: "Sym", name: "__lower_ir", loc: application.loc }] },
+            form.owner.environment().bind("__lower_ir", ir),
+            builtins,
+          );
+        } catch (error) {
+          return fail(application, "module/lower", error instanceof Error ? error.message : String(error));
+        }
+        let syntax: SExpr;
+        try { syntax = isKSExpr(value) ? value.expr : kValueToSExpr(value); }
+        catch { return fail(application, "module/lower-result", ":lower must return syntax declarations, not a runtime value."); }
+        if (syntax._tag !== "Vector")
+          return fail(application, "module/lower-result", ":lower must return a vector of define and optional signature declarations.");
+        let counter = 0;
+        const hygienic = freshenExpansion(syntax, [...holes.values()], () =>
+          `lower_${symbols[0]}_${application.loc.start}_local_${counter++}`,
+        );
+        // A projection may select one nested piece of a syntax hole.
+        const authored: SExpr[] = [];
+        const collect = (e: SExpr): void => { authored.push(e); children(e).forEach(collect); };
+        holes.forEach(collect);
+        tagExpandedExpr(hygienic, { macroName: form.descriptor.name, loc: application.loc }, authored);
+        const locate = (e: SExpr): SExpr => {
+          const loc = sourceLocOf(e);
+          if (e._tag === "Map") return { ...e, loc, pairs: e.pairs.map(([k, v]) => [locate(k), locate(v)] as const) };
+          if (e._tag === "List" || e._tag === "Vector" || e._tag === "Set") return { ...e, loc, items: e.items.map(locate) };
+          return { ...e, loc };
+        };
+        const definitions = new Set<string>(), signatures = new Set<string>();
+        const output = (hygienic as Extract<SExpr, { _tag: "Vector" }>).items.map(locate);
+        for (const e of output) {
+          const h = head(e), symbol = e._tag === "List" ? name(e.items[1]) : undefined;
+          if (!["define", ":"].includes(h ?? "") || !symbol || !symbols.includes(symbol))
+            return fail(application, "module/lower-declaration", ":lower may only define or annotate its own Declares bindings.");
+          const seen = h === "define" ? definitions : signatures;
+          if (seen.has(symbol))
+            return fail(application, "module/lower-declaration", `Duplicate lowered ${h} for ${symbol}.`);
+          seen.add(symbol);
+        }
+        for (const symbol of symbols) if (!definitions.has(symbol))
+          return fail(application, "module/lower-declaration", `:lower must define ${symbol}.`);
+        return output;
+      });
+      return changed ? lowered : undefined;
+    },
     expand: (expressions) =>
       expressions.flatMap((e) =>
         head(e) === "macro"

@@ -87,6 +87,14 @@ Hiccup fits a Lisp tree; the existing ontology-driven `ui.lisp` / ViewSpec has a
 different data model and remains independent. A future component bridge needs to
 preserve typed events and model bindings across those surfaces.
 
+The general [file-module pipeline](/modules#runtime-projections-from-form-libraries)
+supports library-defined runtime projections, separate compile-time and runtime
+interfaces, and deferred zero-argument callbacks with checked Effect channels.
+These are compiler foundations for reusable application features. This Elm
+generator does not yet use that pipeline: `block`, child Bindings, operations,
+OutMessages, checked composition graphs, and the newer Foldkit handler Layer
+adapter remain unimplemented. Its Foldkit and Effect version targets are unchanged.
+
 Command arguments, subscriptions, cancellation, managed resources, routing,
 input events, dynamic child lists, a component system, SSR, hydration, module
 linking, and source maps are unimplemented. Subscriptions need model-driven

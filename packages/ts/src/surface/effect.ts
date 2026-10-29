@@ -204,7 +204,10 @@ export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true,
       case "define": {
         if (!n || !args[0]) return e;
         const sig = signatures.get(name(n) ?? "");
-        if (effectResult(sig)) {
+        // A function-valued constant can return an Effect when called. It is
+        // not itself an operation body and must retain its deferred function.
+        const callable = args[0]._tag === "Vector" && args.length > 1 || head(args[0]) === "fn";
+        if (effectResult(sig) && (head(sig) === "Effect" || callable)) {
           const params = args[0]._tag === "Vector" && args.length > 1 ? args[0] : vector(e, []);
           const fn = head(args[0]) === "fn" && args[0]._tag === "List" ? args[0] : undefined;
           const result = call(e, "__operation", n, fn ? fn.items[1]! : params, ...((fn ? fn.items.slice(2) : params === args[0] ? args.slice(1) : args).map(a => body(lowerConstructors(lowerMembers(a,new Set([...moduleBindings(exprs),...patternBindings(fn ? fn.items[1] : params)])),constructors),protectedNames))));

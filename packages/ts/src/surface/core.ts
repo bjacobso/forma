@@ -36,7 +36,7 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
   }
   if (e._tag !== "List") return e;
   const h = head(e);
-  if (h === "quote" || h === "quasiquote" || h === "__schema" || h === "__sum-type") return e;
+  if (h === "quote" || h === "quasiquote" || h === "__schema" || h === "__sum-type" || h === "__service") return e;
   const obsolete = new Map([["def","define"],["defn","define"],["defmacro","macro"],["lambda","fn"],["let*","let"]]);
   if (h && obsolete.has(h)) throw new Error(`Use ${obsolete.get(h)} instead of ${h}`);
   if (h === ":" && e.items.length === 3) {

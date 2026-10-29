@@ -60,11 +60,12 @@ export function originOf(expr: CoreExpr, kind: string): Origin {
 }
 
 export function fnTypeWithEffect(params: readonly Type[], ret: Type, effect: ERow): Type {
+  if (!params.length) return { ...TFun(tNil, ret, effect), nullary: true };
   let result = ret;
   for (let i = params.length - 1; i >= 0; i--) {
     result = TFun(params[i]!, result, i === params.length - 1 ? effect : undefined);
   }
-  return result;
+  return result._tag === "TFun" ? { ...result, arity: params.length } : result;
 }
 
 export function variadicFnTypeWithEffect(
@@ -80,12 +81,16 @@ export const applyFnWithEffect = (
   fnT: Type,
   argT: Type,
   origin: Origin,
+  arity?: number,
 ): Effect.Effect<{ result: Type; effect: ERow }, InferenceError, InferContext> =>
   Effect.gen(function* () {
     const ctx = yield* InferContext;
     const retT = yield* ctx.freshTVar;
     const effectT = yield* ctx.freshEVar;
-    yield* unify(fnT, TFun(argT, retT, effectT), origin);
+    yield* unify(fnT, {
+      ...TFun(argT, retT, effectT),
+      ...(arity !== undefined ? { arity } : {}),
+    }, origin);
     const s = yield* Ref.get(ctx.subst);
     return {
       result: applyType(s, retT),
@@ -101,14 +106,9 @@ export function attachEffectToOperationType(opType: Type, effectName: string): T
     return opType;
   }
   if (opType.res._tag === "TFun" || opType.res._tag === "TVariadic") {
-    return TFun(
-      opType.arg,
-      attachEffectToOperationType(opType.res, effectName),
-      opType.effect,
-      opType.rest,
-    );
+    return { ...opType, res: attachEffectToOperationType(opType.res, effectName) };
   }
-  return TFun(opType.arg, opType.res, EExtend(effectName, opType.effect ?? EEmpty), opType.rest);
+  return { ...opType, effect: EExtend(effectName, opType.effect ?? EEmpty) };
 }
 
 // ---------------------------------------------------------------------------
@@ -592,8 +592,12 @@ export const inferLam = (
     const paramTypes: Type[] = [];
     const lamEnv = new Map(env);
     let restElemType: Type | undefined;
+    if (expected?._tag === "TFun" && !expr.restParam && !!expected.nullary !== (expr.params.length === 0))
+      return yield* ctx.fail(originOf(expr, "lambda"), { code: "typecheck/arity", message: "The callback has a different number of arguments than its expected type" });
 
     let parameterHint = expected;
+    if (!expr.params.length && !expr.restParam && parameterHint?._tag === "TFun" && parameterHint.nullary)
+      parameterHint = parameterHint.res;
     for (const param of expr.params) {
       const tv = parameterHint?._tag === "TFun" ? parameterHint.arg : yield* ctx.freshTVar;
       parameterHint = parameterHint?._tag === "TFun" ? parameterHint.res : undefined;
@@ -715,6 +719,20 @@ const inferApp = (
       return args.every(t=>t._tag === "TCon" && t.name === "Int") ? TCon("Int") : tFloat;
     }
     let fnT = yield* inferExpr(env, expr.fn);
+    if (!expr.args.length) {
+      const current = applyType(yield* Ref.get(ctx.subst), fnT);
+      if (current._tag === "TFun" && current.nullary) {
+        yield* emitAmbientEffect(current.effect ?? EEmpty, originOf(expr, "app"));
+        return current.res;
+      }
+      if (current._tag === "TVar") {
+        const result = yield* ctx.freshTVar;
+        yield* unify(current, fnType([], result), originOf(expr, "app"));
+        return applyType(yield* Ref.get(ctx.subst), result);
+      }
+      if (current._tag === "TFun")
+        return yield* ctx.fail(originOf(expr, "app"), { code: "typecheck/arity", message: "This function requires an argument" });
+    }
     // Solve repeated unconstrained parameters together, using their common
     // supertype rather than letting the first argument narrow the variable.
     const parameters: Type[] = [];
@@ -735,6 +753,8 @@ const inferApp = (
       const current = applyType(sBefore, fnT);
       const envN = applyEnv(sBefore,env);
       if (current._tag === "TFun") {
+        if (current.nullary)
+          return yield* ctx.fail(originOf(expr, "app"), { code: "typecheck/arity", message: "A zero-argument function does not accept arguments" });
         yield* checkExpr(envN,expr.args[i]!,current.arg);
         const sAfter=yield* Ref.get(ctx.subst);
         yield* emitAmbientEffect(applyERow(sAfter,current.effect ?? EEmpty),originOf(expr,"app"));
@@ -752,7 +772,7 @@ const inferApp = (
         if (i > 0 && current._tag !== "TVar" && !(current._tag === "TCon" && current.name === "Unknown"))
           return yield* ctx.fail(originOf(expr,"app"), {code:"typecheck/arity", message:"Too many arguments for this function"});
         const argT=yield* inferExpr(envN,expr.args[i]!);
-        const applied=yield* applyFnWithEffect(current,argT,originOf(expr,"app"));
+        const applied=yield* applyFnWithEffect(current,argT,originOf(expr,"app"),expr.args.length - i);
         yield* emitAmbientEffect(applied.effect,originOf(expr,"app"));
         fnT=applied.result;
       }

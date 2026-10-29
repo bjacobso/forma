@@ -2115,6 +2115,21 @@ class Checker {
       this.value(args[0], scope, { kind: "named", name });
       return { kind: "named", name };
     }
+    const constant = this.constants.get(name);
+    if (constant) {
+      const callable = resolve(constant, this.env);
+      if (callable.kind !== "function") {
+        this.error(span, "mechanics/call", `${name} is ${showType(callable)}, not a function.`);
+        return tUnknown;
+      }
+      resolveAs({ kind: "function", name });
+      const result = this.callFunction(name, callable.params, callable.result, args, scope, span);
+      if (result.kind === "effect") {
+        if (this.layerContext && result.requirements.size > 0) this.layerContext.contextCalls.add(node);
+        this.info.effectTypes.set(node, result);
+      }
+      return result;
+    }
     const fn = this.functions.get(name);
     if (fn) {
       resolveAs({ kind: "function", name });

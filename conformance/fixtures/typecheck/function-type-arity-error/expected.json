@@ -11,10 +11,10 @@
   "expectation": {
     "kind": "error",
     "diagnostic": {
-      "code": "lower/type-expression",
+      "code": "surface/invalid-form",
       "span": {
         "start": 5,
-        "end": 15
+        "end": 9
       }
     }
   }

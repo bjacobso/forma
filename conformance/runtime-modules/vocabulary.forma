@@ -1,0 +1,13 @@
+(export operation)
+
+(type OperationId Symbol)
+(type OperationIR {:name Symbol :signature Type :body RuntimeExpr})
+
+; A library defines the runtime projection. The compiler owns no operation form.
+(form (operation name signature body)
+  :types {:name (Declares OperationId) :signature Type :body RuntimeExpr}
+  :ir OperationIR
+  :lower (fn [ir]
+    `[(: ~(get ir :name) ~(lower-syntax (get ir :signature)))
+      (define ~(get ir :name) ~(lower-syntax (get ir :body)))])
+  {:name name :signature signature :body body})

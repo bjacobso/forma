@@ -1,0 +1,32 @@
+(import "./vocabulary.forma" [operation])
+(import "./store.forma" [Store Unavailable])
+(export load prepare make-handler Model plan Store Unavailable)
+
+(type Model {:count Int})
+
+(operation add
+  (-> Int (-> Model Model))
+  (fn [amount] (fn [model] (assoc model :count (+ model.count amount)))))
+
+; Inference must preserve a unary operation returning a unary pure Step.
+(define plan [amount] (add amount))
+
+(operation load
+  (-> String (Effect Int [Unavailable] [Store.get]))
+  (fn [id] (Store.get id)))
+
+; A pure operation captures its argument and returns deferred work.
+(operation prepare
+  (-> String (-> (Effect Int [Unavailable] [Store.get])))
+  (fn [id] (fn [] (load id))))
+
+; Constructor work runs once when this Effect is executed. The returned
+; handler captures the result and requires no Store when invoked later.
+(operation completed
+  (-> Int (Effect Int))
+  (fn [value] (succeed value)))
+
+(operation make-handler
+  (Effect (-> (Effect Int)) [Unavailable] [Store.get])
+  (do! [seed (Store.get "seed")]
+    (succeed (fn [] (completed seed)))))

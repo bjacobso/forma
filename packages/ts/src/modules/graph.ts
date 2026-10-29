@@ -11,7 +11,8 @@ import {
   type ModuleData,
   type ModuleFormMetadata,
 } from "./compile-time.js";
-import { matchFormSyntax } from "../surface/form.js";
+import { matchFormSyntax, parseUnifiedForm } from "../surface/form.js";
+import type { FormDescriptor } from "../descriptor/FormDescriptor.js";
 import type { Span } from "../diagnostic/diagnostic.js";
 
 /** A resolver is supplied by the host. IDs identify file instances, not contents. */
@@ -80,6 +81,8 @@ export interface ResolvedModule {
   readonly id: string;
   readonly source: string;
   readonly expressions: readonly SExpr[];
+  /** Checked form projections lowered to runtime declarations, when present. */
+  readonly runtimeExpressions?: readonly SExpr[];
   readonly dependencies: readonly string[];
   readonly bindings: ReadonlyMap<string, ModuleBinding>;
   readonly imports: ReadonlyMap<string, ModuleBinding>;
@@ -685,11 +688,26 @@ export function resolveModuleGraph(
       return [];
     };
     let resolvingTemplate = false;
+    const formContracts = new Map<string, FormDescriptor>();
+    const localTypes = new Map(authored.flatMap(e =>
+      headSym(e) === "type" && e._tag === "List" && scalar(e.items[1]) && e.items[2]
+        ? [[scalar(e.items[1])!, e.items[2]] as const] : []));
+    for (const e of authored) if (headSym(e) === "form") {
+      const descriptor = parseUnifiedForm(e, localTypes);
+      const binding = descriptor && bindings.get(descriptor.name);
+      if (descriptor && binding) formContracts.set(binding.symbol, descriptor);
+    }
+    for (const binding of [...imports.values(), ...[...namespaces.values()].flatMap(m => m.interface.exports)]) {
+      const descriptor = completed.get(binding.identity.moduleId)?.compileTime?.forms.get(binding.symbol)?.descriptor;
+      if (descriptor) formContracts.set(binding.symbol, descriptor);
+    }
+    const typeHoles = new WeakSet<SExpr>();
     const walk = (
       e: SExpr,
       locals: ReadonlySet<string> = new Set(),
       type = false,
     ): SExpr => {
+      type = type || typeHoles.has(e);
       if (e._tag === "Sym") return resolve(e, locals, type);
       if (e._tag === "Map")
         return {
@@ -701,6 +719,24 @@ export function resolveModuleGraph(
       if (e._tag !== "List") return e;
       const h = headSym(e),
         items = e.items;
+      if (items[0]?._tag === "Sym") {
+        const resolvedHead = resolve(items[0], locals, type);
+        const contract = formContracts.get(scalar(resolvedHead) ?? "")?.surface;
+        if (contract) {
+          const holes = matchFormSyntax(contract, e);
+          const markType = (syntax: SExpr, contract: SExpr): void => {
+            if (headSym(contract) === "Option" && contract._tag === "List" && contract.items[1])
+              return markType(syntax, contract.items[1]);
+            if (scalar(contract) === "Type") typeHoles.add(syntax);
+            if (headSym(contract) === "List" && contract._tag === "List" && contract.items[1] && syntax._tag === "Vector")
+              syntax.items.forEach(item => markType(item, contract.items[1]!));
+          };
+          for (const [hole, holeType] of contract.holes) {
+            const syntax = holes.get(hole);
+            if (syntax) markType(syntax, holeType);
+          }
+        }
+      }
       if (directives.has(h ?? ""))
         fail(
           id,
@@ -1084,9 +1120,15 @@ export function resolveModuleGraph(
         ),
       },
     };
-    const prepared = prepareCompileTimeModule(module, (identity) =>
+    let prepared = prepareCompileTimeModule(module, (identity) =>
       completed.get(identity.moduleId),
     );
+    const lowered = prepared.compileTime?.lower(expressions);
+    if (lowered) {
+      allowResolved = true;
+      prepared = { ...prepared, runtimeExpressions: lowered.map((e) => walk(e)) };
+      allowResolved = false;
+    }
     completed.set(id, prepared);
     active.pop();
     return prepared;

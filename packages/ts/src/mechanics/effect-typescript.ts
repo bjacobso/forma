@@ -1287,7 +1287,7 @@ class Generator {
         this.contextual = contextual;
         return this.value(args[0], names, indent);
       case "function":
-        return atom(layout(camelIdentifier(call.name), this.argRenders(args, names), indent));
+        return atom(this.withContext(node, layout(camelIdentifier(call.name), this.argRenders(args, names), indent)));
       case "operation":
         return atom(this.withContext(node, layout(camelIdentifier(call.name), this.argRenders(args, names), indent)));
       case "service":

@@ -63,9 +63,10 @@ export function schemeSyntax(scheme: Scheme, e: SExpr, target = true): SExpr {
       case "TCon":
         return sym(t.name);
       case "TFun": {
+        if (t.nullary) return list("->", [convert(t.res)]);
         const params: SExpr[] = [];
         let result: Type = t;
-        while (result._tag === "TFun") {
+        while (result._tag === "TFun" && !result.nullary && params.length < (t.arity ?? Infinity)) {
           params.push(convert(result.arg));
           if (result.rest) {
             if (target)
@@ -141,16 +142,5 @@ export function schemeSyntax(scheme: Scheme, e: SExpr, target = true): SExpr {
     }
   };
   const type = convert(scheme.type);
-  // HM represents a zero-argument lambda with Unit as its input.
-  const value = e._tag === "List" ? e.items[2] : undefined;
-  const zero =
-    (value?._tag === "Vector" && value.items.length === 0) ||
-    (value &&
-      headSym(value) === "fn" &&
-      value?._tag === "List" &&
-      value.items[1]?._tag === "Vector" &&
-      value.items[1].items.length === 0);
-  return zero && type._tag === "List" && headSym(type) === "->"
-    ? { ...type, items: [type.items[0]!, ...type.items.slice(2)] }
-    : type;
+  return type;
 }

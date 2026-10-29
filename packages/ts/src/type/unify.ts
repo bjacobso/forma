@@ -129,6 +129,8 @@ export const unify = (
 
     // TFun: unify arg, res, and effects
     if (a._tag === "TFun" && b._tag === "TFun") {
+      if (!!a.nullary !== !!b.nullary)
+        return yield* ctx.fail(origin, { code: "typecheck/arity", message: "A zero-argument function and a function with an argument have different types" });
       yield* unify(a.arg, b.arg, origin);
       yield* unify(a.res, b.res, origin);
       if (a.rest && b.rest) {

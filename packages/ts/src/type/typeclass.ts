@@ -43,6 +43,7 @@ function matchType(pattern: Type, target: Type): Map<string, Type> | undefined {
     }
     if (p._tag === "TFun" && t._tag === "TFun") {
       return (
+        !!p.nullary === !!t.nullary &&
         go(p.arg, t.arg) &&
         go(p.res, t.res) &&
         (p.rest && t.rest ? go(p.rest, t.rest) : p.rest === t.rest)
@@ -75,6 +76,7 @@ function typesEqual(a: Type, b: Type): boolean {
     case "TFun":
       return (
         b._tag === "TFun" &&
+        !!a.nullary === !!b.nullary &&
         typesEqual(a.arg, b.arg) &&
         typesEqual(a.res, b.res) &&
         (a.rest && b.rest ? typesEqual(a.rest, b.rest) : a.rest === b.rest)
@@ -185,6 +187,7 @@ function showTypeSimple(t: Type): string {
     case "TApp":
       return `(${showTypeSimple(t.con)} ${t.args.map(showTypeSimple).join(" ")})`;
     case "TFun":
+      if (t.nullary) return `(-> ${showTypeSimple(t.res)})`;
       return t.rest
         ? `(-> ${showTypeSimple(t.arg)} & ${showTypeSimple(t.rest)} ${showTypeSimple(t.res)})`
         : `(-> ${showTypeSimple(t.arg)} ${showTypeSimple(t.res)})`;

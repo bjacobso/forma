@@ -32,6 +32,10 @@ export interface TFun {
   readonly res: Type;
   readonly rest?: Type | undefined;
   readonly effect?: ERow | undefined;
+  /** A zero-argument function, distinct from a unary Unit argument. */
+  readonly nullary?: true;
+  /** Number of parameters in this function group, before a returned function. */
+  readonly arity?: number;
 }
 
 /** Pure variadic function: zero or more rest args of one type -> result */
@@ -366,7 +370,7 @@ export function showType(t: Type): string {
     case "TCon":
       return showPublicTypeName(t.name);
     case "TFun": {
-      const p = t.arg._tag === "TFun" ? `(${showType(t.arg)})` : showType(t.arg);
+      const p = t.nullary ? "()" : t.arg._tag === "TFun" ? `(${showType(t.arg)})` : showType(t.arg);
       const arrow = t.rest
         ? ` -rest ${showType(t.rest)}${t.effect && t.effect._tag !== "EEmpty" ? ` -{${showERow(t.effect)}}` : ""}-> `
         : t.effect && t.effect._tag !== "EEmpty"
@@ -430,11 +434,12 @@ export function showScheme(s: Scheme): string {
 
 /** Build a multi-arg function type: (a, b, c) -> ret  becomes  a -> b -> c -> ret */
 export function fnType(params: readonly Type[], ret: Type): Type {
+  if (!params.length) return { ...TFun(tNil, ret), nullary: true };
   let result = ret;
   for (let i = params.length - 1; i >= 0; i--) {
     result = TFun(params[i]!, result);
   }
-  return result;
+  return result._tag === "TFun" ? { ...result, arity: params.length } : result;
 }
 
 export function variadicFnType(

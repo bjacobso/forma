@@ -16,7 +16,7 @@ import type { Diagnostic } from "../diagnostic/diagnostic.js";
 import { diagnosticFromUnknown } from "../diagnostic/diagnostic.js";
 import type { ModuleGraph, ModuleInterface, ResolvedModule } from "./graph.js";
 import { schemeSyntax } from "./signatures.js";
-import type { SExpr } from "../reader/types.js";
+import { headSym, type SExpr } from "../reader/types.js";
 import { ModuleError } from "./graph.js";
 import { moduleFormProvider } from "./compile-time.js";
 
@@ -99,14 +99,15 @@ export function checkModuleGraph(
               ]),
             ]),
           );
+          const services = new Set(imported.filter(b => b.kind === "service").map(b => b.symbol));
           for (const dependency of module.dependencies)
             for (const [symbol, scheme] of environments.get(dependency) ?? []) {
-              if (allowed.has(symbol)) initial.set(symbol, scheme);
+              if (allowed.has(symbol) || services.has(symbol.split(".")[0]!)) initial.set(symbol, scheme);
             }
           const source = module.expressions.map(printSExpr).join("\n");
           const expressions =
-            module.compileTime?.expand(module.expressions) ??
-            module.expressions;
+            module.compileTime?.expand(module.runtimeExpressions ?? module.expressions) ??
+            module.runtimeExpressions ?? module.expressions;
           const referenced = new Set<string>();
           const references = (e: SExpr): void => {
             if (e._tag === "Sym") referenced.add(e.name.split(".")[0]!);
@@ -299,7 +300,7 @@ export function checkModuleGraph(
       const owner = graph.modules.find(
         (m) => m.id === binding.identity.moduleId,
       )!;
-      const expression = owner.expressions.find(
+      const expression = (owner.runtimeExpressions ?? owner.expressions).find(
         (e) =>
           e._tag === "List" &&
           (e.items[1]?._tag === "Sym"
@@ -348,7 +349,9 @@ export function checkModuleGraph(
       if (
         !expression ||
         !scheme ||
-        ["declaration", "form", "macro"].includes(binding.kind)
+        ["form", "macro"].includes(binding.kind) ||
+        (binding.kind === "declaration" && !owner.runtimeExpressions?.some(e =>
+          headSym(e) === "define" && e._tag === "List" && e.items[1]?._tag === "Sym" && e.items[1].name === binding.symbol))
       )
         return binding;
       // The portable interface syntax names quantified variables by order, not engine IDs.
@@ -364,7 +367,7 @@ export function checkModuleGraph(
       return {
         ...binding,
         ...(!compileOnly ? { scheme: { parameters, type } } : {}),
-        ...(binding.data
+        ...(binding.data && binding.kind !== "declaration"
           ? { data: { ...binding.data, scheme: { parameters, type } } }
           : {}),
       };

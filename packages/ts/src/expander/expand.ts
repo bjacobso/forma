@@ -173,7 +173,7 @@ function expandExpr(
         const args = expr.items.slice(1);
         const result = evaluateMacro(binding, args, builtins, macroStepLimit);
         const hygienic = binding.name.includes("__forma_")
-          ? hygienicExpansion(result, args, state)
+          ? freshenExpansion(result, args, () => `macro__forma_local_${state.bindingCounter++}`)
           : result;
         const expanded = markExpansion(expr, hygienic, args);
         tagExpandedExpr(expanded, { macroName: binding.name, loc: sourceLocOf(expr) }, args);
@@ -729,10 +729,10 @@ function isTopLevelDefMacro(expr: SExpr): expr is SExpr & { _tag: "List" } {
 }
 
 /** Freshen template binders while retaining the lexical context of caller syntax. */
-function hygienicExpansion(
+export function freshenExpansion(
   expression: SExpr,
   args: readonly SExpr[],
-  state: ExpandState,
+  freshName: () => string,
 ): SExpr {
   const authored = new Set<SExpr>();
   const collect = (e: SExpr): void => {
@@ -766,7 +766,7 @@ function hygienicExpansion(
       if (caller(pattern)) return pattern;
       if (pattern._tag === "Sym") {
         if (pattern.name === "&" || pattern.name === "...") return pattern;
-        const fresh = `macro__forma_local_${state.bindingCounter++}`;
+        const fresh = freshName();
         local.set(pattern.name, fresh);
         return copySourceTrace(pattern, { ...pattern, name: fresh });
       }

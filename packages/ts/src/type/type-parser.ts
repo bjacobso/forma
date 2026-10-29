@@ -106,8 +106,8 @@ function parseTypeExprInner(expr: SExpr): TypeExpr {
 
       // Function type: (-> A B C) means A -> B -> C
       if (head.name === "->") {
-        if (items.length < 3) {
-          throw new InferenceError({ message: "(-> ...) requires at least 2 type arguments" });
+        if (items.length < 2) {
+          throw new InferenceError({ message: "(-> ...) requires a return type" });
         }
 
         const params = items.slice(1, -1).map(parseTypeExpr);

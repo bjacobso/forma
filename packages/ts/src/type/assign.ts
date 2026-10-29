@@ -34,6 +34,7 @@ export const assignType = (actual: Type, expected: Type, origin: Origin): Effect
   }
   if (a._tag === "TCon" && a.name === "Int" && b._tag === "TCon" && b.name === "Float") return;
   if (a._tag === "TFun" && b._tag === "TFun") {
+    if (!!a.nullary !== !!b.nullary) { yield* unify(a, b, origin); return; }
     yield* assignType(b.arg,a.arg,origin);
     yield* assignType(a.res,b.res,origin);
     if (a.rest || b.rest || a.effect || b.effect) yield* unify({...a,arg:b.arg,res:b.res},b,origin);

@@ -1,0 +1,9 @@
+(import "./public.forma" :as feature)
+(export main feature-handler Store Unavailable)
+(import "./public.forma" [Store Unavailable])
+
+(: feature-handler (-> (Effect Int [Unavailable] [Store.get])))
+(define feature-handler (feature/prepare "counter-1"))
+
+(: main (Effect Int [Unavailable] [Store.get]))
+(define main (feature-handler))

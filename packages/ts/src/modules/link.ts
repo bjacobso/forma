@@ -1,5 +1,5 @@
 import type { PackageableDeclaration } from "../artifact/artifact.js";
-import { checkModuleGraph } from "./check.js";
+import { checkModuleGraph, type ModuleCheckResult } from "./check.js";
 import { inferredModuleSignatures } from "./signatures.js";
 import type { Diagnostic } from "../diagnostic/diagnostic.js";
 import { mechanicsPackageableDeclarations } from "../mechanics/artifact.js";
@@ -8,6 +8,8 @@ import { checkMechanicsDeclarations } from "../mechanics/check.js";
 import { generateMechanicsEffectTypeScriptModule } from "../mechanics/effect-typescript.js";
 import { camelIdentifier, typeName } from "../mechanics/naming.js";
 import { isRecord } from "../mechanics/types.js";
+import { headSym, type SExpr } from "../reader/types.js";
+import { flattenRow, type Type } from "../type/types.js";
 import {
   type ModuleGraph,
   type ModuleBinding,
@@ -36,15 +38,67 @@ export function generatedBindingName(binding: ModuleBinding): string {
     ? typeName(binding.symbol)
     : camelIdentifier(binding.symbol);
 }
+
+function containsTypeName(type: Type, names: ReadonlySet<string>): boolean {
+  switch (type._tag) {
+    case "TCon": return names.has(type.name);
+    case "TFun": return containsTypeName(type.arg, names) || containsTypeName(type.res, names) || !!type.rest && containsTypeName(type.rest, names);
+    case "TVariadic": return containsTypeName(type.rest, names) || containsTypeName(type.res, names);
+    case "TApp": return containsTypeName(type.con, names) || type.args.some(t => containsTypeName(t, names));
+    case "TRow": return [...flattenRow(type.row).fields.values()].some(t => containsTypeName(t, names));
+    default: return false;
+  }
+}
+
+/** Metadata stays in the compile-time interface, never in generated JS imports. */
+function compileTimeBindings(graph: ModuleGraph, check: ModuleCheckResult): ReadonlySet<string> {
+  const metaTypes = new Set(["Declaration", "Syntax", "RuntimeExpr", "Symbol", "Keyword", "Type", "FormDescriptor"]);
+  const syntaxContainsMeta = (e: SExpr): boolean => e._tag === "Sym" ? metaTypes.has(e.name)
+    : e._tag === "Map" ? e.pairs.some(([, value]) => syntaxContainsMeta(value))
+    : e._tag === "List" || e._tag === "Vector" ? e.items.some(syntaxContainsMeta) : false;
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const module of graph.modules) for (const [name, type] of module.compileTime?.types ?? [])
+      if (!metaTypes.has(name) && syntaxContainsMeta(type)) { metaTypes.add(name); changed = true; }
+  }
+  const symbols = new Set<string>();
+  const runtimeTypes = new Set(["Effect", "Stream", "Layer", "Fiber", "Ref", "RefCell"]);
+  for (const module of graph.modules) for (const binding of module.bindings.values()) {
+    const scheme = check.environments.get(module.id)?.get(binding.symbol);
+    if (["macro", "form"].includes(binding.kind) || metaTypes.has(binding.symbol) ||
+        (scheme && containsTypeName(scheme.type, metaTypes) && !containsTypeName(scheme.type, runtimeTypes)))
+      symbols.add(binding.symbol);
+  }
+  return symbols;
+}
+
+function targetExpressions(module: ModuleGraph["modules"][number], compileOnly: ReadonlySet<string>): readonly SExpr[] {
+  const expressions = module.runtimeExpressions ?? module.expressions;
+  const expanded = module.compileTime?.expand(expressions) ?? expressions;
+  return expanded.filter(e => {
+    const head = headSym(e);
+    if (head === "form" || head === "macro" || module.compileTime?.forms.has(head ?? "")) return false;
+    const name = e._tag === "List" && e.items[1]?._tag === "Sym" ? e.items[1].name : undefined;
+    return !name || !compileOnly.has(name);
+  });
+}
 /** Project with graph-wide resolved metadata, preserving each expression's author file. */
 export function moduleMechanicsDeclarations(graph: ModuleGraph): {
   declarations: readonly PackageableDeclaration[];
   diagnostics: readonly Diagnostic[];
 } {
-  const check = checkModuleGraph(graph);
+  return projectModuleMechanics(graph, checkModuleGraph(graph));
+}
+
+function projectModuleMechanics(graph: ModuleGraph, check: ModuleCheckResult): {
+  declarations: readonly PackageableDeclaration[];
+  diagnostics: readonly Diagnostic[];
+} {
   if (!check.ok) return { declarations: [], diagnostics: check.diagnostics };
+  const compileOnly = compileTimeBindings(graph, check);
   const enriched = graph.modules.map((m) => {
-    const expanded = m.compileTime?.expand(m.expressions) ?? m.expressions;
+    const expanded = targetExpressions(m, compileOnly);
     return {
       ...m,
       expressions: inferredModuleSignatures(
@@ -83,12 +137,14 @@ export function linkEffectModules(
   graph: ModuleGraph,
   declarations?: readonly PackageableDeclaration[],
 ): LinkedEffectProgram {
+  const moduleCheck = checkModuleGraph(graph);
+  const compileOnly = compileTimeBindings(graph, moduleCheck);
   const projected = declarations
     ? { declarations, diagnostics: [] as readonly Diagnostic[] }
-    : moduleMechanicsDeclarations(graph);
+    : projectModuleMechanics(graph, moduleCheck);
   const declarationDiagnostics: Diagnostic[] = [];
   for (const module of graph.modules) {
-    for (const expression of module.expressions) {
+    for (const expression of targetExpressions(module, compileOnly)) {
       const head =
         expression._tag === "List" && expression.items[0]?._tag === "Sym"
           ? expression.items[0].name
@@ -128,7 +184,7 @@ export function linkEffectModules(
         .map((d) => d.summary.name),
     );
     for (const binding of module.bindings.values()) {
-      if (binding.kind === "macro" || emitted.has(binding.symbol)) continue;
+      if (compileOnly.has(binding.symbol) || emitted.has(binding.symbol)) continue;
       const expression = module.expressions.find(
         (e) =>
           e._tag === "List" &&
@@ -161,7 +217,7 @@ export function linkEffectModules(
     ...declarationDiagnostics,
     ...checked.diagnostics.map((d) => ({ ...d, phase: "typecheck" as const })),
   ];
-  const interfaces = checkModuleGraph(graph).interfaces,
+  const interfaces = moduleCheck.interfaces,
     modules: LinkedEffectModule[] = [];
   if (!diagnostics.some((d) => d.severity === "error")) {
     const owners = new Map(
@@ -185,7 +241,7 @@ export function linkEffectModules(
       local.forEach((d) => visit(d.payload));
       // Public signatures may refer to transitive types even without a local runtime use.
       for (const b of module.interface.exports)
-        if (b.identity.moduleId !== module.id)
+        if (b.identity.moduleId !== module.id && !compileOnly.has(b.symbol))
           external.set(b.symbol, b.identity.moduleId);
       const imports: string[] = [];
       const byOwner = new Map<string, string[]>();
@@ -236,7 +292,7 @@ export function linkEffectModules(
       // can link the reference; the language interface remains private.
       for (const consumer of graph.modules)
         if (consumer.id !== module.id) {
-          const references = JSON.stringify(consumer.expressions);
+          const references = JSON.stringify(consumer.runtimeExpressions ?? consumer.expressions);
           for (const binding of module.bindings.values())
             if (references.includes(JSON.stringify(binding.symbol)))
               exported.add(binding.symbol);
@@ -247,7 +303,7 @@ export function linkEffectModules(
         exports: exported,
       });
       const reexports = module.interface.exports
-        .filter((b) => b.identity.moduleId !== module.id)
+        .filter((b) => b.identity.moduleId !== module.id && !compileOnly.has(b.symbol))
         .map(
           (b) =>
             `export { ${[generatedBindingName(b), ...(b.constructors.length ? [`${typeName(b.symbol)}Constructors`] : [])].join(", ")} } from ${JSON.stringify(`./${moduleOutputName(b.identity.moduleId).replace(/\.ts$/, ".js")}`)};`,

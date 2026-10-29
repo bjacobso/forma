@@ -50,7 +50,11 @@ export function applyType(s: Subst, t: Type): Type {
     case "TFun": {
       const effect = t.effect ? applyERow(s, t.effect) : undefined;
       const rest = t.rest ? applyType(s, t.rest) : undefined;
-      return TFun(applyType(s, t.arg), applyType(s, t.res), effect, rest);
+      return {
+        ...TFun(applyType(s, t.arg), applyType(s, t.res), effect, rest),
+        ...(t.nullary ? { nullary: true as const } : {}),
+        ...(t.arity !== undefined ? { arity: t.arity } : {}),
+      };
     }
     case "TVariadic": {
       const effect = t.effect ? applyERow(s, t.effect) : undefined;
