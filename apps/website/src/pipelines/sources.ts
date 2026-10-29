@@ -57,6 +57,6 @@ export const undeclaredFailureSource = `${consoleServiceSource}
 (: log (-> String (Effect Unit [] [Console.print])))
 ${logOperationSource}`;
 
-/** The type the TypeScript engine infers for `contractSource`. */
+/** The checked type the TypeScript engine reports for `contractSource`. */
 export const contractType =
-  "String -> Effect<Unit, ErrorSet<ConsoleUnavailable>, RequirementSet<Console.print>>";
+  "(-> String (Effect Unit [ConsoleUnavailable] [Console.print]))";

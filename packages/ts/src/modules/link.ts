@@ -4,7 +4,7 @@ import { inferredModuleSignatures } from "./signatures.js";
 import type { Diagnostic } from "../diagnostic/diagnostic.js";
 import { mechanicsPackageableDeclarations } from "../mechanics/artifact.js";
 import { normalizeEffectProgram } from "../surface/effect.js";
-import { checkMechanicsDeclarations } from "../mechanics/check.js";
+import { checkMechanicsProgram } from "../mechanics/checked.js";
 import { generateMechanicsEffectTypeScriptModule } from "../mechanics/effect-typescript.js";
 import { camelIdentifier, typeName } from "../mechanics/naming.js";
 import { isRecord } from "../mechanics/types.js";
@@ -155,7 +155,7 @@ export function linkEffectModules(
       });
     }
   }
-  const checked = checkMechanicsDeclarations(projected.declarations);
+  const checked = checkMechanicsProgram(projected.declarations);
   const diagnostics: Diagnostic[] = [
     ...projected.diagnostics,
     ...declarationDiagnostics,
@@ -242,7 +242,7 @@ export function linkEffectModules(
               exported.add(binding.symbol);
         }
       const generated = generateMechanicsEffectTypeScriptModule(local, {
-        check: checked.info,
+        check: checked.check,
         externalNames: new Set(external.keys()),
         exports: exported,
       });

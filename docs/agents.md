@@ -10,6 +10,10 @@ tools, language server, and workbench. The earlier OCaml engine was removed.
 Conformance fixtures and reviewed stored goldens pin implemented behavior.
 The TypeScript engine distinguishes Int and Float, including integral Float
 literals and results; Int arithmetic checks the JavaScript safe integer range.
+Effect generation, canonical artifact validation, host/CLI checks, and workspace
+analysis share mechanics semantic checks for supported explicit Effect
+declarations. Low-level HM inference remains separate; language-server file
+import resolution and complete mechanics editor parity are unfinished.
 The structural workbench currently depends on unpublished Foldworks packages.
 
 ## Getting started

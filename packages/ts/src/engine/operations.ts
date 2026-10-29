@@ -1,4 +1,7 @@
 import { validateHostTypes, hostTypeNames } from "./type-policy.js";
+import { analyzeLsp } from "../lsp/hm-lsp.js";
+import { hasEffectDeclarations } from "../mechanics/analysis.js";
+import { inferenceDiagnostics, inferenceExpressionTypes } from "./session-validation.js";
 import { checkSessionTypes } from "./session-validation.js";
 import { bootstrapFromSources, type BootstrappedPrelude } from "../descriptor/bootstrap.js";
 import { descriptorFormProvider } from "../type/unified-form-provider.js";
@@ -316,6 +319,14 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
       return { ...checked, diagnostics: [...formErrors, ...checked.diagnostics] };
     }
     const inferOptions = typeInferOptions(mergedRequest);
+    if (hasEffectDeclarations(toSExprMany(parseSurface(mergedSource).redTree))) {
+      const analysis = Effect.runSync(analyzeLsp(mergedSource, {sourceId, inferOptions}));
+      const display = analysis.resultTypeString;
+      return { sourceId, pass: "typecheck", ...(display ? {display, type:typeProjection(display)} : {}),
+        diagnostics: inferenceDiagnostics(sourceId, analysis),
+        ...(request.result === "per-expression" ? {expressionTypes:inferenceExpressionTypes(sourceId, mergedSource, analysis)} : {}),
+      };
+    }
     const result =
       mergedRequest.result === "per-expression"
         ? Effect.runSync(Type.inferSourceAll(mergedSource, inferOptions))

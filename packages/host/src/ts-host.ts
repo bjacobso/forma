@@ -832,10 +832,13 @@ export class TsLanguageHost implements LanguageHost {
         const display = Modules.moduleResultDisplay(checked, graph.entry);
         return { sourceId, success: checked.ok, parse,
           ...(checked.ok ? { resultTypeDisplay: display, resultType: typeProjection(display) } : {}),
-          typedSpans: (checked.typedSpans.get(graph.entry) ?? []).map((typed) => ({
+          typedSpans: [...(checked.mechanics?.typedSpans.filter(s => s.span.sourceId === graph.entry).map((s, index) => ({
+            id: `mechanics:${index}`, span: s.span, display: s.display, type: typeProjection(s.display),
+            code: request.source.slice(s.span.startOffset, s.span.endOffset), exprTag: s.exprTag,
+          })) ?? []), ...(checked.typedSpans.get(graph.entry) ?? []).map((typed) => ({
             id: typed.id, span: { sourceId, startOffset: typed.span.start, endOffset: typed.span.end },
             display: typed.typeString, type: typeProjection(typed.typeString), code: typed.code, exprTag: typed.exprTag,
-          })),
+          }))],
           errors: [], diagnostics: checked.diagnostics,
         };
       } catch (error) {
@@ -848,7 +851,17 @@ export class TsLanguageHost implements LanguageHost {
       hostBuiltins: request.hostBuiltins ?? session?.hostBuiltins,
       typePolicy: request.typePolicy ?? session?.typePolicy,
     });
-    const lspResult = await Effect.runPromise(Lsp.analyzeLsp(request.source, { inferOptions }));
+    const scope = session?.language.scope;
+    const lspResult = await Effect.runPromise(Lsp.analyzeLsp(request.source, {
+      sourceId,
+      inferOptions: { ...inferOptions, ...(scope?.inferenceState ? {initialState:scope.inferenceState} : {}) },
+      ...(scope ? {
+        initialEnv: scope.typeEnv,
+        macroEnv: scope.macroEnv,
+        mechanicsContext: scope.mechanicsSources ?? [],
+        ...(scope.formProvider ? {dslProvider:scope.formProvider} : {}),
+      } : {}),
+    }));
     return {
       sourceId,
       success: lspResult.success,
@@ -858,7 +871,10 @@ export class TsLanguageHost implements LanguageHost {
             resultType: typeProjection(lspResult.resultTypeString),
           }
         : {}),
-      typedSpans: lspResult.typedSpans.map((span) => ({
+      typedSpans: [...(lspResult.mechanics?.typedSpans.filter(s => s.span.sourceId === sourceId).map((s, index) => ({
+        id: `mechanics:${index}`, span: s.span, display: s.display, type: typeProjection(s.display),
+        code: request.source.slice(s.span.startOffset, s.span.endOffset), exprTag: s.exprTag,
+      })) ?? []), ...lspResult.typedSpans.map((span) => ({
         id: span.id,
         span: {
           sourceId,
@@ -869,7 +885,7 @@ export class TsLanguageHost implements LanguageHost {
         type: typeProjection(span.typeString),
         code: span.code,
         exprTag: span.exprTag,
-      })),
+      }))],
       errors: lspResult.errors.map((error) => ({
         message: error.message,
         ...(error.span
@@ -882,9 +898,10 @@ export class TsLanguageHost implements LanguageHost {
             }
           : {}),
         ...(error.code ? { code: error.code } : {}),
+        ...(error.diagnosticCode ? { diagnosticCode: error.diagnosticCode } : {}),
       })),
       diagnostics: lspResult.diagnostics.map((diagnostic) => ({
-        code: `${diagnostic.source}/diagnostic`,
+        code: diagnostic.code ?? `${diagnostic.source}/diagnostic`,
         severity: diagnostic.severity,
         message: diagnostic.message,
         phase: "typecheck",

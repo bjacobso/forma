@@ -9,8 +9,8 @@ import { validatorDiagnostic, type ValidatorInput } from "./validator-registry.j
 export type HttpDeclaration = PackageableDeclaration & { readonly formName?: string };
 export function checkHttpApiDeclarations(projected: readonly HttpDeclaration[], mechanics: readonly PackageableDeclaration[], report: (declaration: HttpDeclaration, code: string, message: string, operation?: string) => void): void {
   const info = checkMechanicsDeclarations(mechanics).info;
-  const type = (value: JsonValue): MType =>
-    typeFromJson(schemaProjection(value), info.env);
+  const type = (value: JsonValue, declaration: HttpDeclaration): MType =>
+    typeFromJson(resolvedSchema(schemaProjection(value), declaration), info.env);
   const apis = projected.filter((d) => d.formName === "api");
   const groupHandlers = new Set<string>();
   for (const declaration of projected) {
@@ -40,7 +40,7 @@ export function checkHttpApiDeclarations(projected: readonly HttpDeclaration[], 
             );
           endpoints.add(endpointName);
           for (const error of arrayItems(endpoint["errors"]))
-            if (errorName(error) !== "InternalError" && !info.env.errors.has(errorName(error) ?? ""))
+            if (errorName(error) !== "InternalError" && !info.env.errors.has(resolveBinding(declaration, errorName(error) ?? "")))
               report(
                 declaration,
                 "error-schema",
@@ -103,7 +103,7 @@ export function checkHttpApiDeclarations(projected: readonly HttpDeclaration[], 
       const endpoint = arrayItems(group["endpoints"])
         .filter(isRecord)
         .find((e) => e["name"] === endpointName);
-      const signature = info.operations.get(operation);
+      const signature = info.operations.get(resolveBinding(declaration, operation));
       if (!endpoint) {
         report(
           declaration,
@@ -122,7 +122,7 @@ export function checkHttpApiDeclarations(projected: readonly HttpDeclaration[], 
         );
         continue;
       }
-      const allowed = new Set(arrayItems(endpoint["errors"]).map(errorName));
+      const allowed = new Set(arrayItems(endpoint["errors"]).map(e => resolveBinding(api!, errorName(e) ?? "")));
       for (const error of signature.result.errors.keys())
         if (!allowed.has(error))
           report(
@@ -135,7 +135,7 @@ export function checkHttpApiDeclarations(projected: readonly HttpDeclaration[], 
         endpoint["success"] !== undefined &&
         !isAssignable(
           signature.result.success,
-          type(endpoint["success"]),
+          type(endpoint["success"], api!),
           info.env,
         )
       )
@@ -150,7 +150,7 @@ export function checkHttpApiDeclarations(projected: readonly HttpDeclaration[], 
         if (endpoint[field] != null)
           fields.push({
             name: field,
-            type: type(endpoint[field]),
+            type: type(endpoint[field], api!),
             optional: false,
           });
       const request: MType = { kind: "struct", fields };
@@ -187,7 +187,7 @@ export function validateHttpArtifacts(inputs: readonly ValidatorInput[], all: re
     else if (isRecord(node)) {
       if (node["kind"] === "Ref") {
         const target = node["name"] ?? node["target"];
-        if (typeof target === "string" && !declared.has(target)) diagnostics.push(validatorDiagnostic(input, code, `Unknown schema reference ${JSON.stringify(target)}.`, path));
+        if (typeof target === "string" && !declared.has(resolveBinding(input.declaration, target))) diagnostics.push(validatorDiagnostic(input, code, `Unknown schema reference ${JSON.stringify(target)}.`, path));
       }
       for (const [field, child] of Object.entries(node)) if (!["kind", "name", "target", "span", "annotations"].includes(field) && !(node["kind"] === "Literal" && ["value", "values"].includes(field))) references(input, child, `${path}.${field}`, declared, code);
     }
@@ -266,4 +266,18 @@ function isSchemaNode(value: JsonValue | undefined): boolean {
     case "Tuple": return Array.isArray(value["items"]) && value["items"].every(isSchemaNode);
     default: return false;
   }
+}
+
+/** Domain payloads retain authored names; only reference positions use the
+ * lexical identities supplied by module resolution. Literal data is untouched.
+ */
+function resolveBinding(declaration: PackageableDeclaration, name: string): string {
+  return declaration.resolvedBindings?.[name] ?? name;
+}
+function resolvedSchema(value: JsonValue, declaration: PackageableDeclaration): JsonValue {
+  if (Array.isArray(value)) return value.map(child => resolvedSchema(child, declaration));
+  if (!isRecord(value) || value["kind"] === "Literal") return value;
+  if (value["kind"] === "Ref") return {...value, ...(typeof value["name"] === "string" ? {name:resolveBinding(declaration, value["name"])} : {}),
+    ...(typeof value["target"] === "string" ? {target:resolveBinding(declaration, value["target"])} : {})};
+  return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, resolvedSchema(child, declaration)]));
 }

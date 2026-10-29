@@ -322,3 +322,37 @@ describe("structural editor services on the TypeScript host", () => {
   });
 
 });
+
+it("checks Effect declarations consistently through host checks, emission and editor analysis", async () => {
+  const host = new TsLanguageHost();
+  const {sessionId} = await host.openSession();
+  const sourceId = "effect.forma";
+  const source = '(service Clock (: now (Effect Int)))\n(: main (Effect Int [] [Clock.now])) (define main Clock.now)';
+  for (const context of [{}, {sessionId}]) {
+    expect((await host.typecheck({...context, sourceId, source})).diagnostics).toEqual([]);
+    const editor = await host.analyzeEditor({...context, sourceId, source});
+    expect(editor.success, JSON.stringify(editor)).toBe(true);
+    expect(editor.typedSpans.some(s => s.display.includes("Effect"))).toBe(true);
+    const invalid = source.replace("[Clock.now]", "[]");
+    const checked = await host.typecheck({...context, sourceId, source:invalid});
+    const analyzed = await host.analyzeEditor({...context, sourceId, source:invalid});
+    expect(checked.diagnostics.map(d => d.code)).toEqual(["mechanics/undeclared-requirement"]);
+    expect(analyzed.errors.map(d => d.diagnosticCode)).toEqual(["mechanics/undeclared-requirement"]);
+    expect(analyzed.errors[0]?.span?.sourceId).toBe(sourceId);
+  }
+  const invalid = source.replace("[Clock.now]", "[]");
+  const emitted = await host.emit({sessionId, sourceId, source:invalid});
+  expect(emitted.ok).toBe(false);
+  expect(emitted.diagnostics.map(d => d.code)).toEqual(["mechanics/undeclared-requirement"]);
+  await host.closeSession({sessionId});
+});
+
+it("retains Effect and kernel types around an incomplete editor form", async () => {
+  const host = new TsLanguageHost();
+  const source = '(: main (Effect Int)) (define main (succeed 1))\n(define good 42)\n(define broken [';
+  const result = await host.analyzeEditor({sourceId:"partial", source});
+  expect(result.success).toBe(false);
+  expect(result.errors.some(e => e.diagnosticCode === "parse/syntax")).toBe(true);
+  expect(result.typedSpans.some(s => s.display === "(Effect Int [] [])")).toBe(true);
+  expect(result.typedSpans.find(s => source.slice(s.span.startOffset, s.span.endOffset) === "42")?.display).toBe("Int");
+});

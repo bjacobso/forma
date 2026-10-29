@@ -7,7 +7,10 @@
  * - Type errors with locations
  */
 
+import { blankBrokenForms } from "./recovery.js";
 import { Effect, Layer, Ref } from "effect";
+import { elaborateSources } from "../descriptor/elaborate.js";
+import { analyzeMechanicsSources, hasEffectDeclarations, type MechanicsAnalysis, type MechanicsAnalysisSource } from "../mechanics/analysis.js";
 import { parseManyToSExpr } from "../reader/index.js";
 import type { Type } from "../type/types.js";
 import { showType, tNil } from "../type/types.js";
@@ -51,6 +54,10 @@ export interface LspError {
 }
 
 export interface LspResult {
+  /** Mechanics types stay in their own representation; no fabricated HM types. */
+  readonly mechanics?: MechanicsAnalysis;
+  /** Descriptor-owned syntax is excluded before retaining prelude check inputs. */
+  readonly mechanicsInput?: MechanicsAnalysisSource;
   readonly success: boolean;
   readonly resultType?: Type | undefined;
   readonly resultTypeString?: string | undefined;
@@ -138,6 +145,8 @@ export function collectNodes(expr: CoreExpr): CoreExpr[] {
  * Options for LSP analysis.
  */
 export interface AnalyzeLspOptions {
+  readonly sourceId?: string;
+  readonly mechanicsContext?: readonly MechanicsAnalysisSource[];
   /**
    * Optional DSL type provider for recognizing and type-checking DSL forms.
    * When provided, forms like (entity ...) are lowered to CDSLForm nodes
@@ -171,30 +180,59 @@ export function analyzeLsp(
 ): Effect.Effect<LspResult, never> {
   return Effect.gen(function* () {
     // Parse
-    const parseResult = yield* Effect.result(parseManyToSExpr(source));
+    const initialParse = yield* Effect.result(parseManyToSExpr(source));
+    let parseResult = initialParse;
+    let analysisSource = source;
+    const syntaxErrors: LspError[] = [];
+    if (initialParse._tag === "Failure") {
+      const err = initialParse.failure;
+      syntaxErrors.push({message:`Parse error: ${err.message}`, diagnosticCode:"parse/syntax",
+        ...(err.loc ? {span:{start:err.loc.start, end:err.loc.end}} : {}),
+      });
+      try {
+        analysisSource = blankBrokenForms(source);
+        parseResult = yield* Effect.result(parseManyToSExpr(analysisSource));
+      } catch {
+        // Lexer failures can prevent structural recovery; retain the read error.
+      }
+    }
     if (parseResult._tag === "Failure") {
-      const err = parseResult.failure;
       return {
         success: false,
         typedSpans: [],
-        errors: [
-          {
-            message: `Parse error: ${err.message}`,
-            span: err.loc ? { start: err.loc.start, end: err.loc.end } : undefined,
-          },
-        ],
+        errors: syntaxErrors,
         diagnostics: [],
       };
     }
 
-    const sexprs = parseResult.success;
-    if (sexprs.length === 0) {
+    const authored = parseResult.success;
+    const sourceId = options?.sourceId ?? "source";
+    const formErrors: InferenceError[] = [];
+    let dslProvider = options?.dslProvider;
+    try { dslProvider = unifiedFormProvider(analysisSource, authored, options?.dslProvider); }
+    catch (e) { formErrors.push(asInferenceError(e)); }
+    let mechanicsInput: MechanicsAnalysisSource = {sourceId, expressions:authored};
+    if (dslProvider?.descriptorPrelude && [mechanicsInput, ...(options?.mechanicsContext ?? [])].some(s => hasEffectDeclarations(s.expressions))) {
+      try {
+        const projected = elaborateSources([{sourceId, source:analysisSource}], {prelude:dslProvider.descriptorPrelude});
+        const starts = new Set(projected.declarations.map(d => d.span.startOffset));
+        const names = new Set(projected.declarations.flatMap(d => d.summary.name ? [d.summary.name] : []));
+        mechanicsInput = {sourceId, expressions:authored.filter(e => !starts.has(e.loc.start) &&
+          !(e._tag === "List" && e.items[0]?._tag === "Sym" && [":", "define"].includes(e.items[0].name) &&
+            e.items[1]?._tag === "Sym" && names.has(e.items[1].name)))};
+      } catch {
+        // Descriptor checks report malformed metadata through their own path.
+      }
+    }
+    const mechanics = analyzeMechanicsSources([...(options?.mechanicsContext ?? []), mechanicsInput]);
+    const sexprs = mechanics ? authored.filter(e => !mechanics.owned.has(e)) : authored;
+    if (sexprs.length === 0 && !mechanics) {
       return {
-        success: true,
-        resultType: tNil,
-        resultTypeString: showType(tNil),
+        success: formErrors.length === 0 && syntaxErrors.length === 0,
+        mechanicsInput,
+        ...(syntaxErrors.length === 0 && formErrors.length === 0 ? {resultType:tNil, resultTypeString:showType(tNil)} : {}),
         typedSpans: [],
-        errors: [],
+        errors: syntaxErrors,
         diagnostics: [],
       };
     }
@@ -205,13 +243,6 @@ export function analyzeLsp(
     resetNodeIds();
     // An invalid local `form` declaration is reported; the program is still
     // typed with the forms its preludes describe.
-    const formErrors: InferenceError[] = [];
-    let dslProvider = options?.dslProvider;
-    try {
-      dslProvider = unifiedFormProvider(source, sexprs, options?.dslProvider);
-    } catch (e) {
-      formErrors.push(asInferenceError(e));
-    }
     const lowered = lowerRecovering(sexprs, dslProvider, options?.macroEnv);
     const coreExprs = lowered.core;
     // Infer (passing DSL provider for result types and type bindings). A
@@ -233,16 +264,26 @@ export function analyzeLsp(
     );
 
     // Collect diagnostics regardless of success/failure
-    const collectedDiagnostics = yield* Ref.get(ctxService.diagnostics);
+    const collectedDiagnostics = [...yield* Ref.get(ctxService.diagnostics), ...(mechanics?.diagnostics.filter(d => d.severity === "warning" && (!d.span || d.span.sourceId === sourceId)).map(d => ({
+      code:d.code, message:d.message, severity:"warning" as const, source:"mechanics",
+      ...(d.span ? {span:{start:d.span.startOffset, end:d.span.endOffset}} : {}),
+    })) ?? [])];
     const failures = inferResult._tag === "Failure" ? [...formErrors, inferResult.failure] : formErrors;
-    const errors = failures.map((err) => ({
+    const errors: LspError[] = [...syntaxErrors, ...failures.map((err) => ({
       message: err.message,
       span: err.origin?.span,
       diagnosticCode: typeof err.details.code === "string" ? err.details.code : "typecheck/type-mismatch",
       code: err.origin?.span ? extractCode(source, err.origin.span) : undefined,
-    }));
+    }))];
 
-    const resultType = inferResult._tag === "Success" ? inferResult.success : undefined;
+    if (mechanics) errors.push(...mechanics.diagnostics.filter(d => d.severity === "error" && (!d.span || d.span.sourceId === sourceId)).map(d => ({
+      message: d.message, diagnosticCode: d.code,
+      ...(d.span ? { span: { start: d.span.startOffset, end: d.span.endOffset } } : {}),
+    })));
+    const last = authored.at(-1);
+    const mechanicsDisplay = last && mechanics?.owned.has(last) && last._tag === "List" && last.items[1]?._tag === "Sym"
+      ? mechanics.bindingTypes.get(last.items[1].name) : undefined;
+    const resultType = mechanicsDisplay === undefined && inferResult._tag === "Success" ? inferResult.success : undefined;
     // Types recorded early in inference are resolved with everything learned since.
     const finalSubst = yield* Ref.get(ctxService.subst);
     options?.captureState?.(yield* ctxService.snapshot);
@@ -275,9 +316,10 @@ export function analyzeLsp(
 
     return {
       success: errors.length === 0,
-      ...(resultType !== undefined && errors.length === 0
-        ? { resultType, resultTypeString: showType(resultType) }
-        : {}),
+      ...(errors.length === 0 && mechanicsDisplay !== undefined ? {resultTypeString:mechanicsDisplay} :
+        resultType !== undefined && errors.length === 0 ? {resultType, resultTypeString:showType(resultType)} : {}),
+      mechanicsInput,
+      ...(mechanics ? { mechanics } : {}),
       typedSpans,
       errors,
       diagnostics: collectedDiagnostics,

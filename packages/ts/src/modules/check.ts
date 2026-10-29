@@ -15,6 +15,9 @@ import { showType, type Scheme, type Type } from "../type/types.js";
 import type { Diagnostic } from "../diagnostic/diagnostic.js";
 import { diagnosticFromUnknown } from "../diagnostic/diagnostic.js";
 import type { ModuleGraph, ModuleInterface, ResolvedModule } from "./graph.js";
+import { analyzeMechanicsSources } from "../mechanics/analysis.js";
+import type { CheckedMechanicsDeclarations } from "../mechanics/checked.js";
+import { inferredModuleSignatures } from "./signatures.js";
 import { schemeSyntax } from "./signatures.js";
 import type { SExpr } from "../reader/types.js";
 import { ModuleError } from "./graph.js";
@@ -32,6 +35,8 @@ export interface ModuleCheckResult {
   readonly diagnostics: readonly Diagnostic[];
   readonly environments: ReadonlyMap<string, ReadonlyMap<string, Scheme>>;
   readonly results: ReadonlyMap<string, Type>;
+  readonly mechanics?: CheckedMechanicsDeclarations;
+  readonly resultDisplays?: ReadonlyMap<string, string>;
   readonly typedSpans: ReadonlyMap<string, readonly TypedSpan[]>;
 }
 /** Check each lexical module separately, sharing only resolved dependency types. */
@@ -43,6 +48,10 @@ export function checkModuleGraph(
     results = new Map<string, Type>(),
     typedSpans = new Map<string, readonly TypedSpan[]>(),
     diagnostics: Diagnostic[] = [];
+  const expandedModules = graph.modules.map(module => ({ ...module,
+    expressions: module.compileTime?.expand(module.expressions) ?? module.expressions }));
+  const routing = analyzeMechanicsSources(expandedModules.map(m => ({sourceId: m.id, expressions: m.expressions})));
+  let mechanics: CheckedMechanicsDeclarations | undefined;
   let current: ResolvedModule | undefined;
   try {
     Effect.runSync(
@@ -72,7 +81,7 @@ export function checkModuleGraph(
         const coreClasses = new Map(yield* Ref.get(ctx.classRegistry));
         const coreInstances = new Map(yield* Ref.get(ctx.instanceRegistry));
         resetNodeIds();
-        for (const module of graph.modules) {
+        for (const module of expandedModules) {
           current = module;
           // Compile-time dictionaries are lexical too. Imported nominal metadata
           // stays available by identity, but a sibling's private instances do not.
@@ -104,9 +113,7 @@ export function checkModuleGraph(
               if (allowed.has(symbol)) initial.set(symbol, scheme);
             }
           const source = module.expressions.map(printSExpr).join("\n");
-          const expressions =
-            module.compileTime?.expand(module.expressions) ??
-            module.expressions;
+          const expressions = module.expressions.filter(e => !routing?.owned.has(e));
           const referenced = new Set<string>();
           const references = (e: SExpr): void => {
             if (e._tag === "Sym") referenced.add(e.name.split(".")[0]!);
@@ -218,6 +225,10 @@ export function checkModuleGraph(
               }
             };
             if (scheme) visit(scheme.type);
+            const annotation = graph.modules.find(m => m.id === binding.identity.moduleId)?.expressions.find(e =>
+              e._tag === "List" && e.items[0]?._tag === "Sym" && e.items[0].name === ":" &&
+              e.items[1]?._tag === "Sym" && e.items[1].name === binding.symbol);
+            if (annotation?._tag === "List") visit(annotation.items[2]);
             if (["type", "class", "error", "service"].includes(binding.kind)) {
               const owner = graph.modules.find(
                 (m) => m.id === binding.identity.moduleId,
@@ -274,6 +285,16 @@ export function checkModuleGraph(
         ? error.diagnostic
         : diagnosticFromUnknown(error, "typecheck", current?.id ?? graph.entry),
     );
+  }
+  if (routing) {
+    try {
+      mechanics = analyzeMechanicsSources(expandedModules.map(m => ({sourceId: m.id,
+        expressions: inferredModuleSignatures(m, environments.get(m.id) ?? new Map()),
+      })));
+      if (mechanics) diagnostics.push(...mechanics.diagnostics);
+    } catch (error) {
+      diagnostics.push(diagnosticFromUnknown(error, "typecheck", current?.id ?? graph.entry));
+    }
   }
   const syntax = (e: SExpr): import("./graph.js").ModuleTypeSyntax => {
     switch (e._tag) {
@@ -345,6 +366,24 @@ export function checkModuleGraph(
             }
           : binding;
       }
+      if (!scheme && mechanics?.bindingTypes.has(binding.symbol)) {
+        const signature = owner.expressions.find(e => e._tag === "List" && e.items[0]?._tag === "Sym" &&
+          e.items[0].name === ":" && e.items[1]?._tag === "Sym" && e.items[1].name === binding.symbol);
+        if (signature?._tag === "List" && signature.items[2]) {
+          const variables = new Map<string, string>();
+          const rename = (e: SExpr): SExpr => {
+            if (e._tag === "Sym" && /^[a-z][A-Za-z0-9_]*$/.test(e.name) && !e.name.includes("__forma_")) {
+              if (!variables.has(e.name)) variables.set(e.name, `a${variables.size}`);
+              return {...e, name:variables.get(e.name)!};
+            }
+            if (e._tag === "Map") return {...e, pairs:e.pairs.map(([k,v]) => [k,rename(v)] as const)};
+            if (e._tag === "List" || e._tag === "Vector") return {...e, items:e.items.map(rename)};
+            return e;
+          };
+          const type = syntax(rename(signature.items[2]));
+          return {...binding, scheme:{parameters:[...variables.values()], type}};
+        }
+      }
       if (
         !expression ||
         !scheme ||
@@ -377,12 +416,19 @@ export function checkModuleGraph(
     environments,
     results,
     typedSpans,
+    ...(mechanics ? { mechanics, resultDisplays: new Map(expandedModules.flatMap(m => {
+      const last = m.expressions.at(-1);
+      const display = last && routing?.owned.has(last) && last._tag === "List" && last.items[1]?._tag === "Sym"
+        ? mechanics?.bindingTypes.get(last.items[1].name) : undefined;
+      return display ? [[m.id, display] as const] : [];
+    })) } : {}),
   };
 }
 export function moduleResultDisplay(
   check: ModuleCheckResult,
   id: string,
 ): string {
+  const display = check.resultDisplays?.get(id);
   const type = check.results.get(id);
-  return type ? showType(type) : "Unit";
+  return display ?? (type ? showType(type) : "Unit");
 }

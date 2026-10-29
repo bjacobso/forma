@@ -58,9 +58,9 @@ describe("contracts pipeline", () => {
   test.each([
     ["capability", undeclaredCapabilitySource],
     ["failure", undeclaredFailureSource],
-  ])("rejects an undeclared %s at the operation", (_, source) => {
+  ])("rejects an undeclared %s at the call that introduces it", (_, source) => {
     const [diagnostic, ...rest] = check(source).diagnostics;
-    const operationStart = source.indexOf("(do!");
+    const operationStart = source.indexOf("(Console.print");
 
     expect(rest).toEqual([]);
     expect(diagnostic).toMatchObject({ severity: "error", phase: "typecheck" });

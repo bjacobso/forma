@@ -25,6 +25,7 @@ import {
   type SymbolReference,
 } from "../editor/symbols.js";
 import { formatLispSource } from "../Formatter.js";
+import { blankBrokenForms } from "../lsp/recovery.js";
 import { analyzeLsp, type LspResult } from "../lsp/hm-lsp.js";
 import { parse, toSExprMany } from "../reader/index.js";
 import { head } from "../surface/effect.js";
@@ -69,6 +70,7 @@ export interface DocumentAnalysis {
   readonly diagnostics: readonly Diagnostic[];
   /** Types of the document's definitions and everything in scope before it. */
   readonly typeEnv: TypeEnv;
+  readonly mechanicsBindingTypes?: ReadonlyMap<string, string>;
 }
 
 export interface Hover {
@@ -231,13 +233,16 @@ export class AnalysisWorkspace {
     if (node?.kind === "Symbol") {
       const name = text.slice(node.span.start, node.span.end);
       span = { sourceId, startOffset: node.span.start, endOffset: node.span.end };
+      const mechanicsExpression = typed?.exprTag.startsWith("Mechanics.");
       const type =
         typed && typed.start === node.span.start && typed.end === node.span.end
           ? typed.type
-          : this.#typeOfName(sourceId, name);
+          : this.analysis(sourceId).mechanicsBindingTypes?.get(name) ??
+            (mechanicsExpression ? undefined : this.#typeOfName(sourceId, name));
       const descriptor = this.#descriptors().find((candidate) => candidate.name === name);
       if (descriptor) sections.push(describeForm(descriptor));
       else if (type !== undefined) sections.push(codeBlock(`${name} : ${type}`));
+      else if (mechanicsExpression && typed) sections.push(codeBlock(typed.type));
       const definition = this.definition(sourceId, offset);
       if (definition && !descriptor) {
         const where = definition.sourceId === sourceId ? "" : ` in \`${definition.sourceId}\``;
@@ -405,7 +410,10 @@ export class AnalysisWorkspace {
   }
 
   #typeOfName(sourceId: string, name: string): string | undefined {
-    const scheme = this.analysis(sourceId).typeEnv.get(name) ?? builtinScheme(name);
+    const analysis = this.analysis(sourceId);
+    const mechanicsType = analysis.mechanicsBindingTypes?.get(name);
+    if (mechanicsType) return mechanicsType;
+    const scheme = analysis.typeEnv.get(name) ?? builtinScheme(name);
     return scheme ? showScheme(scheme) : undefined;
   }
 }
@@ -439,6 +447,7 @@ function analyzeDocument(
   const result: LspResult = Effect.runSync(
     analyzeLsp(typedText, {
       ...analyzeOptions(scope, inferOptions),
+      sourceId,
       captureEnv: (env) => {
         typeEnv = env;
       },
@@ -480,14 +489,15 @@ function analyzeDocument(
   return {
     sourceId,
     ...(result.resultTypeString !== undefined ? { resultType: result.resultTypeString } : {}),
-    typedSpans: result.typedSpans.map((span) => ({
+    typedSpans: [...(result.mechanics?.typedSpans.filter(s => s.span.sourceId === sourceId).map(s => ({ start: s.span.startOffset, end: s.span.endOffset, type: s.display, exprTag: s.exprTag })) ?? []), ...result.typedSpans.map((span) => ({
       start: span.span.start,
       end: span.span.end,
       type: span.typeString,
       exprTag: span.exprTag,
-    })),
+    }))],
     diagnostics: dedupe(diagnostics),
     typeEnv,
+    ...(result.mechanics ? { mechanicsBindingTypes: result.mechanics.bindingTypes } : {}),
   };
 }
 
@@ -508,23 +518,6 @@ function formDiagnostics(sourceId: string, text: string, scope: Scope): readonly
   }
 }
 
-function blankBrokenForms(text: string): string {
-  const identity = identifySyntax(text);
-  const broken = identity.nodes.filter(
-    (node) =>
-      node.parent === null &&
-      (node.kind === "Error" ||
-        identity.errors.some(
-          (error) => error.span.start < node.span.end && node.span.start <= error.span.start,
-        )),
-  );
-  let result = text;
-  for (const node of broken) {
-    const blank = text.slice(node.span.start, node.span.end).replace(/[^\n]/g, " ");
-    result = result.slice(0, node.span.start) + blank + result.slice(node.span.end);
-  }
-  return result;
-}
 
 function withoutOffset(message: string): string {
   return message.replace(/ \(at offset \d+\)$/, "");

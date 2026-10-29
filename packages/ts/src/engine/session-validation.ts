@@ -222,6 +222,7 @@ export function validatePreludeTypes(
 export function checkSessionTypes(request: TypecheckRequest & { readonly session: LanguageSession; readonly source: string }, sourceId: string, dslProvider?: Type.DSLTypeProvider): import("./operations.js").TypecheckResult {
   const result = Effect.runSync(analyzeLsp(request.source, {
     ...analyzeOptions(request.session.scope, typeInferOptions(request)),
+    sourceId,
     ...(dslProvider ? {dslProvider} : {}),
     macroEnv: request.session.scope.macroEnv ?? request.session.env.flatten(),
   }));
@@ -229,11 +230,16 @@ export function checkSessionTypes(request: TypecheckRequest & { readonly session
   return {
     sourceId, pass: "typecheck", ...(display ? { display, type: typeProjection(display) } : {}),
     diagnostics: inferenceDiagnostics(sourceId, result),
-    ...(request.result === "per-expression" ? { expressionTypes: toSExprMany(parse(request.source).redTree).map((expr, index) => {
-      const display = result.typedSpans.find(span => span.span.start === expr.loc.start && span.span.end === expr.loc.end)?.typeString ?? "Unit";
-      return { expressionId: `${sourceId}:${index}`, formIndex: index, display, type: typeProjection(display) };
-    }) } : {}),
+    ...(request.result === "per-expression" ? {expressionTypes:inferenceExpressionTypes(sourceId, request.source, result)} : {}),
   };
+}
+
+export function inferenceExpressionTypes(sourceId: string, source: string, result: LspResult): readonly import("./operations.js").ExpressionType[] {
+  return toSExprMany(parse(source).redTree).map((expr, index) => {
+    const display = result.mechanics?.typedSpans.find(s => s.span.sourceId === sourceId && s.span.startOffset === expr.loc.start && s.span.endOffset === expr.loc.end)?.display ??
+      result.typedSpans.find(s => s.span.start === expr.loc.start && s.span.end === expr.loc.end)?.typeString;
+    return {expressionId:`${sourceId}:${index}`, formIndex:index, display:display ?? "Unit", type:typeProjection(display ?? "Unit")};
+  });
 }
 
 function configuredBindingType(env: Env, name: string): Type.Type {

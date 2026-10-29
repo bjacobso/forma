@@ -25,6 +25,7 @@ export interface SourceText {
 
 /** The names, macros, and forms visible to a source. */
 export interface Scope {
+  readonly mechanicsSources?: readonly import("../mechanics/analysis.js").MechanicsAnalysisSource[];
   readonly inferenceState?: import("../type/inference-snapshot.js").InferenceSnapshot | undefined;
   /** Types of the names earlier preludes define. */
   readonly typeEnv: TypeEnv;
@@ -74,6 +75,7 @@ export function buildPreludeScopes(
     const analysis = Effect.runSync(
       analyzeLsp(source.text, {
         ...analyzeOptions(before, inferOptions),
+        sourceId: source.sourceId,
         captureState: state => { inferenceState = state; },
         captureEnv: (env) => {
           typeEnv = env;
@@ -81,7 +83,7 @@ export function buildPreludeScopes(
       }),
     );
     layers.push({ sourceId: source.sourceId, before, analysis });
-    scope = { ...before, typeEnv, inferenceState, macroEnv: extendMacros(before.macroEnv, source.text) };
+    scope = { ...before, mechanicsSources: [...(before.mechanicsSources ?? []), analysis.mechanicsInput ?? {sourceId: source.sourceId, expressions: toSExprMany(parse(source.text).redTree)}], typeEnv, inferenceState, macroEnv: extendMacros(before.macroEnv, source.text) };
   }
   return { layers, scope };
 }
@@ -93,6 +95,7 @@ export function analyzeOptions(
 ): Parameters<typeof analyzeLsp>[1] {
   return {
     initialEnv: scope.typeEnv,
+    mechanicsContext: scope.mechanicsSources ?? [],
     ...(scope.macroEnv ? { macroEnv: scope.macroEnv } : {}),
     ...(scope.formProvider ? { dslProvider: scope.formProvider } : {}),
     inferOptions: { ...inferOptions, ...(scope.inferenceState ? { initialState: scope.inferenceState } : {}) },

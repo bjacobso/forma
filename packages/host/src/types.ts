@@ -109,6 +109,8 @@ export interface EditorTypedSpan {
 }
 
 export interface EditorAnalysisError {
+  /** Compiler diagnostic identity, separate from the author source excerpt. */
+  readonly diagnosticCode?: string | undefined;
   readonly message: string;
   readonly span?: Span | undefined;
   readonly code?: string | undefined;

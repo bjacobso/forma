@@ -52,3 +52,5 @@ export {
 
 /** Display a mechanics checker type in Forma notation. */
 export { showType as showMechanicsType, type MType as MechanicsType } from "./mechanics/types.js";
+
+export { checkMechanicsProgram, type CheckedMechanicsDeclarations, type MechanicsTypedSpan } from "./mechanics/checked.js";

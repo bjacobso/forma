@@ -14,7 +14,8 @@ import { lowerOntologyOperations } from "../surface/ontology-effect.js";
 import { normalizeEffectProgram } from "../surface/effect.js";
 import type { SExpr } from "../reader/types.js";
 import { isMechanicsArtifactForm, mechanicsPackageableDeclarations, type MechanicsArtifactDiagnostic } from "./artifact.js";
-import { checkMechanicsDeclarations, type CheckInfo, type MechanicsCheckDiagnostic } from "./check.js";
+import { type CheckInfo } from "./check.js";
+import { checkMechanicsProgram } from "./checked.js";
 import { generateMechanicsEffectTypeScriptModule } from "./effect-typescript.js";
 
 export interface EffectProgramSpan {
@@ -148,12 +149,12 @@ export function elaborateEffectProgram(
     };
   }
 
-  const checked = checkMechanicsDeclarations(projected.declarations);
+  const checked = checkMechanicsProgram(projected.declarations);
   return {
     ok: checked.ok,
     declarations: projected.declarations,
     diagnostics: checked.diagnostics.map((diagnostic) => checkDiagnostic(diagnostic, locate)),
-    check: checked.info,
+    check: checked.check,
   };
 }
 
@@ -182,12 +183,12 @@ function projectDiagnostic(
 }
 
 function checkDiagnostic(
-  diagnostic: MechanicsCheckDiagnostic,
+  diagnostic: import("../diagnostic/diagnostic.js").Diagnostic,
   locate: (start: number, end: number) => EffectProgramSpan,
 ): EffectProgramDiagnostic {
   return {
     phase: "check",
-    severity: diagnostic.severity,
+    severity: diagnostic.severity === "info" ? "warning" : diagnostic.severity,
     code: diagnostic.code,
     message: diagnostic.message,
     ...(diagnostic.span ? { span: locate(diagnostic.span.startOffset, diagnostic.span.endOffset) } : {}),
