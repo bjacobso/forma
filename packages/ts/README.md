@@ -31,7 +31,7 @@ so hosts do not need to vendor them or read them from disk:
 ```ts
 import { bootstrapOntologyPreludes, preludeSource } from "@formalang/ts/preludes";
 
-const ontology = bootstrapOntologyPreludes(); // define-entity, define-action, ...
+const ontology = bootstrapOntologyPreludes(); // entity, seed, query, ...
 const kernel = preludeSource("kernel.lisp");
 ```
 
@@ -134,6 +134,13 @@ duplicate fields are reported at the declaration that refers to them. Forms
 outside the core ontology (views, processes, documents) are returned untouched
 in `model.others`.
 
+## Experimental prototypes
+
+`@formalang/ts/elm` (Elm-style Foldkit apps) and `@formalang/ts/email` (email
+automation rules) are isolated prototypes. Each bootstraps its own bundled
+prelude and generates Effect TypeScript. Their APIs and preludes may change in
+any minor release.
+
 ## Structural editor services
 
 These services back outline and structural editors. Their design is in
@@ -232,15 +239,14 @@ pnpm --filter @formalang/ts typecheck
 
 ## Effect 4 consumer migration
 
-The next release uses `effect@4.0.3` in its public Effect types and
+Version 0.4.0 uses `effect@4.0.3` in its public Effect types and
 runtime. Consumers should install that same version, remove any Effect 3 alias
 used only for Forma, and import `Effect` directly from `effect`. Generated
 Effect TypeScript and Schema modules now target the Effect 4 APIs, including
 `Context.Service` and `Schema.annotate`.
 
-Release this change through the repository's normal changeset/version workflow.
-After publication, consumers can replace the Effect 3 based
-`@formalang/ts@0.2.0` with the new version.
+Version 0.2.0 uses Effect 3 and 0.3.0 uses the `effect@4.0.0-rc.112`
+prerelease; consumers of either should move to `effect@4.0.3` with 0.4.0.
 
 ## Descriptor typing and definition checks
 

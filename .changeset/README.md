@@ -5,9 +5,9 @@ packages, a version bump, and a short user-facing summary. Commit the generated
 Markdown file with the implementation.
 
 Include only public packages in a changeset's frontmatter. Private workspaces,
-including `@formalang/ocaml`, are excluded from versioning; mixing them with
-public packages prevents Changesets from creating a release plan. An entry for
-a public package may still describe related changes in the private engine.
+such as the website and workbench apps, are excluded from versioning; mixing
+them with public packages prevents Changesets from creating a release plan.
+Start a breaking entry with `**Breaking:**` and say what consumers must change.
 Run `pnpm check:changesets` to validate the release plan; `pnpm check` also runs
 this validation in CI before merge.
 Changesets compares against `origin/main`, so CI fetches full history before
