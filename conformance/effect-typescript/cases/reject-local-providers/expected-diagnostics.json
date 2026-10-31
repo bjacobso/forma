@@ -1,0 +1,95 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/missing-method",
+      "message": "implement Store does not define Store.set. Define it, or add :delegate to forward it to the outer Store.",
+      "line": 12,
+      "column": 50,
+      "endLine": 12,
+      "endColumn": 96
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/unknown-method",
+      "message": "Service Store has no method delete.",
+      "line": 23,
+      "column": 7,
+      "endLine": 23,
+      "endColumn": 40
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/duplicate-name",
+      "message": "implement Store defines get twice.",
+      "line": 33,
+      "column": 7,
+      "endLine": 33,
+      "endColumn": 41
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/undeclared-error",
+      "message": "Store.get can fail with Corrupt here, but the service declares only [NotFound] for it.",
+      "line": 41,
+      "column": 44,
+      "endLine": 41,
+      "endColumn": 62
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/layer-cycle",
+      "message": "implement Store cannot use Store in its own members.",
+      "line": 48,
+      "column": 69,
+      "endLine": 48,
+      "endColumn": 84
+    },
+    {
+      "phase": "check",
+      "severity": "warning",
+      "code": "mechanics/unused-provider",
+      "message": "The provided effect requires nothing from Store, so this implement is unused.",
+      "line": 55,
+      "column": 5,
+      "endLine": 55,
+      "endColumn": 84
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/implement",
+      "message": "implement is only valid as the layer argument of provide, as in (provide effect (implement Service ...)).",
+      "line": 61,
+      "column": 24,
+      "endLine": 61,
+      "endColumn": 103
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/provide",
+      "message": "store-layer is a local value, not a layer. Write (implement Service ...) inside provide, or define a layer with layer.",
+      "line": 62,
+      "column": 25,
+      "endLine": 62,
+      "endColumn": 36
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/undeclared-requirement",
+      "message": "Operation stored requires Store.get, but its signature declares no requirements.",
+      "line": 62,
+      "column": 14,
+      "endLine": 62,
+      "endColumn": 24
+    }
+  ]
+}

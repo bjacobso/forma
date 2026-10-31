@@ -81,9 +81,10 @@ closed requirement and failure sets. Combinators such as `retry`, `timeout`, and
 [RFC 0003](./rfcs/0003-direct-style-effects.md) proposed direct-style calls with
 inferred requirements and failures, and was declined: inference would let a
 requirement widen unreviewed, and direct style needs open effect rows and
-effect-polymorphic functions. Forma also removed algebraic `handle` forms;
-[RFC 0014](./rfcs/0014-local-providers.md) proposes inline providers rather than
-handlers with continuations.
+effect-polymorphic functions. Forma also removed algebraic `handle` forms. For
+swapping implementations, as in tests, `(provide effect (implement Service ...))`
+supplies an inline layer ([RFC 0014](./rfcs/0014-local-providers.md)) rather than
+a handler with continuations.
 
 ## Artifacts cross a typed boundary
 

@@ -61,6 +61,7 @@ Status key:
 | `Layer.mergeAll`, `Layer.provide`, `Layer.provideMerge` | `layer-merge`, `layer-provide`, `layer-provide-merge` | supported | multi-service-checkout |
 | Layer types | `(: L (Layer [Provides] [Errors] [Requirements]))` | supported | multi-service-checkout |
 | `Effect.provide` | `(provide eff Layer)` | supported | multi-service-checkout |
+| Inline layers | `(provide eff (implement Svc ...))`, `:delegate` spreads the outer service | supported | local-providers |
 | Scoped layers | `acquire-release` in `:setup` | supported | resource-scope |
 
 ### Effect programs

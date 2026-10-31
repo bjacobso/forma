@@ -662,7 +662,7 @@ class Generator {
         return layout(
           "Effect.catchTag",
           [
-            (inner) => this.effectExpression(node["body"], names, inner),
+            (inner) => this.taggedCatchBody(node["body"], names, inner),
             () => JSON.stringify(String(node["errorType"])),
             (inner) => this.handler(String(node["binding"]), node["handler"], names, inner),
           ],
@@ -691,7 +691,7 @@ class Generator {
         return layout(
           "Effect.catchTags",
           [
-            (inner) => this.effectExpression(node["body"], names, inner),
+            (inner) => this.taggedCatchBody(node["body"], names, inner),
             (inner) => {
               const deeper = `${inner}  `;
               const entries = handlers.map(
@@ -768,6 +768,82 @@ class Generator {
     const scope = names.child();
     const params = stringItems(node["params"]).map((param) => scope.bind(param, unusedPrefix(param, node["body"])));
     return `(${params.join(", ")}) => ${this.effectExpression(node["body"], scope, indent)}`;
+  }
+
+  /**
+   * `Effect.provide(effect, layer)`, or `effect.pipe(Effect.provide(layer))`
+   * where a direct call would hide the effect's error type from inference.
+   */
+  private provide(node: JsonRecord, names: Names, indent: string, piped: boolean): string {
+    this.use("Effect");
+    const args = arrayItems(node["args"]);
+    const layerNode = args[1];
+    const layer: Render = isRecord(layerNode) && layerNode["kind"] === "InlineLayer"
+      ? (inner) => this.inlineLayer(layerNode, names, inner)
+      : (inner) => this.value(layerNode, names, inner).code;
+    const body: Render = (inner) => this.serviceScope(args[0], names, inner);
+    const provided = piped
+      ? `${body(indent)}.pipe(${layout("Effect.provide", [layer], indent)})`
+      : layout("Effect.provide", [body, layer], indent);
+    // Inside a layer method, what the provided layer leaves unsatisfied comes from the captured context.
+    return this.withContext(node, provided);
+  }
+
+  /**
+   * The effect a tagged catch protects. TypeScript cannot infer catchTag's
+   * tags from a direct `Effect.provide(...)` argument, so that one is piped.
+   */
+  private taggedCatchBody(body: JsonValue | undefined, names: Names, indent: string): string {
+    if (isRecord(body) && body["kind"] === "Combinator" && body["name"] === "provide") return this.provide(body, names, indent, true);
+    return this.effectExpression(body, names, indent);
+  }
+
+  /**
+   * `(implement Service ...)`: a layer built where it is provided. Methods
+   * close over the enclosing bindings and services. A delegating implement
+   * spreads the outer Service; operation calls that need services run in the
+   * context captured when the layer is built.
+   */
+  private inlineLayer(node: JsonRecord, names: Names, indent: string): string {
+    this.use("Layer");
+    const service = String(node["service"]);
+    const serviceClass = typeName(service);
+    const methods = arrayItems(node["methods"]).filter(isRecord);
+    const contextServices = this.info.inlineLayers.get(node)?.contextServices ?? [];
+    const outer = node["delegate"] === true ? this.serviceVar(service) : undefined;
+    const saved = this.contextVar;
+    const scope = names.child();
+    this.contextVar = contextServices.length > 0 ? scope.bind("context:implement", "context") : undefined;
+    const shape = (inner: string): string => {
+      const entryIndent = `${inner}  `;
+      const entries = outer ? [`...${outer}`] : [];
+      for (const method of methods) {
+        const methodScope = scope.child();
+        const params = stringItems(method["params"]).map((param) => methodScope.bind(param, unusedPrefix(param, method["body"])));
+        const key = propertyName(camelIdentifier(String(method["name"])));
+        const isValue = this.info.services.get(service)?.get(String(method["name"]))?.value;
+        const prefix = `${key}:${isValue ? "" : ` (${params.join(", ")}) =>`}`;
+        const body = this.effectExpression(method["body"], methodScope.child(), entryIndent);
+        entries.push(
+          body.includes("\n") || `${entryIndent}${prefix} ${body},`.length <= maxWidth
+            ? `${prefix} ${body}`
+            : `${prefix}\n${entryIndent}  ${this.effectExpression(method["body"], methodScope.child(), `${entryIndent}  `)}`,
+        );
+      }
+      const oneLine = `${serviceClass}.of({ ${entries.join(", ")} })`;
+      if (!oneLine.includes("\n") && inner.length + oneLine.length <= maxWidth) return oneLine;
+      return `${serviceClass}.of({\n${entries.map((entry) => `${entryIndent}${entry},`).join("\n")}\n${inner}})`;
+    };
+    let layer: string;
+    if (this.contextVar) {
+      this.use("Effect");
+      const context = `const ${this.contextVar} = yield* Effect.context<${contextServices.map(typeName).join(" | ")}>();`;
+      layer = layout("Layer.effect", [() => serviceClass, (inner) => `Effect.gen(function* () {\n${inner}  ${context}\n${inner}  return ${shape(`${inner}  `)};\n${inner}})`], indent);
+    } else {
+      layer = layout("Layer.succeed", [() => serviceClass, shape], indent);
+    }
+    this.contextVar = saved;
+    return layer;
   }
 
   private withContext(node: JsonRecord, call: string): string {
@@ -884,11 +960,8 @@ class Generator {
         return call("Effect.option", [effect(0)]);
       case "result":
         return call("Effect.result", [effect(0)]);
-      case "provide": {
-        // Inside a layer method, what the provided layer leaves unsatisfied comes from the captured context.
-        const provided = call("Effect.provide", [(inner) => this.serviceScope(args[0], names, inner), value(1)]);
-        return this.withContext(node, provided);
-      }
+      case "provide":
+        return this.provide(node, names, indent, false);
       case "log":
         return call("Effect.log", args.map((_, index) => value(index)));
       case "ref-make": {
@@ -1012,6 +1085,8 @@ class Generator {
         arrayItems(item["args"]).slice(1).forEach(visit);
         return;
       }
+      // A delegating implement spreads the outer service.
+      if (item["kind"] === "InlineLayer" && item["delegate"] === true && typeof item["service"] === "string") services.add(item["service"]);
       for (const [key, value] of Object.entries(item)) {
         if (key !== "span" && key !== "effect") visit(value);
       }

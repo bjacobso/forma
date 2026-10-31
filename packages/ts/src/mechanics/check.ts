@@ -130,6 +130,8 @@ export interface CheckInfo {
   readonly literalTargets: WeakMap<object, MType>;
   /** Operation calls inside layer methods that must be given the layer's captured context. */
   readonly contextCalls: WeakSet<object>;
+  /** Checked `(implement ...)` layers given to provide, keyed by their InlineLayer node. */
+  readonly inlineLayers: WeakMap<object, LayerInfo>;
 }
 
 export interface MechanicsCheckResult {
@@ -160,6 +162,12 @@ interface ValueOptions {
 interface LayerContext {
   readonly name: string;
   readonly contextCalls: Set<object>;
+}
+
+/** What implements a service: a named layer or an inline `(implement Service ...)`. */
+interface ImplementationOwner {
+  readonly kind: "layer" | "implement";
+  readonly name: string;
 }
 
 export function checkMechanicsDeclarations(
@@ -204,6 +212,7 @@ class Checker {
       recordTargets: new WeakMap(),
       literalTargets: new WeakMap(),
       contextCalls: new WeakSet(),
+      inlineLayers: new WeakMap(),
     };
   }
 
@@ -863,9 +872,120 @@ class Checker {
     }
 
     this.layerContext = context;
+    const { requirements: methodRequirements, implemented } = this.checkLayerMethods(
+      { kind: "layer", name },
+      service,
+      methods,
+      implementation["methods"],
+      scope,
+      span,
+    );
+    for (const methodName of methods.keys()) {
+      if (!implemented.has(methodName)) {
+        this.error(span, "mechanics/missing-method", `Layer ${name} does not implement ${service}.${methodName}.`);
+      }
+    }
+    this.layerContext = previous;
+    const contextServices = this.capturedServices(context, service);
+    const requirements = new Map<string, JsonValue | undefined>();
+    for (const [requirement, requirementSpan] of [...setupRequirements, ...methodRequirements]) {
+      if (requirement === "Scope" || requirementService(requirement) === service) continue;
+      const serviceName = requirementService(requirement);
+      if (!requirements.has(serviceName)) requirements.set(serviceName, requirementSpan);
+    }
+    return {
+      type: { provides: [service], errors: setupErrors, requirements },
+      contextServices,
+    };
+  }
+
+  /**
+   * Records the operation calls in a layer's methods that need its captured
+   * context, and returns the services that context must hold.
+   */
+  private capturedServices(context: LayerContext, service: string): readonly string[] {
+    const services = new Set<string>();
+    for (const call of context.contextCalls) {
+      this.info.contextCalls.add(call);
+      const type = this.info.effectTypes.get(call);
+      for (const requirement of type?.requirements.keys() ?? []) {
+        if (requirement !== "Scope") services.add(requirementService(requirement));
+      }
+    }
+    return [...services].filter((item) => item !== service).sort();
+  }
+
+  /**
+   * `(implement Service [:delegate] ...)` given to provide: a layer whose
+   * methods close over the enclosing scope. Requirements keep member
+   * granularity, and a delegating implement requires every member it forwards
+   * from the outer Service.
+   */
+  private checkInlineLayer(node: JsonRecord, scope: Scope, span: JsonValue | undefined): LayerInfo | undefined {
+    const service = String(node["service"]);
+    const location = node["span"] ?? span;
+    const methods = this.services.get(service);
+    if (!methods) {
+      this.error(location, "mechanics/unknown-service", `implement names unknown service ${service}.`);
+      return undefined;
+    }
+    const context: LayerContext = { name: `implement ${service}`, contextCalls: new Set() };
+    const previous = this.layerContext;
+    this.layerContext = context;
+    const { requirements: methodRequirements, implemented } = this.checkLayerMethods(
+      { kind: "implement", name: service },
+      service,
+      methods,
+      node["methods"],
+      scope,
+      location,
+    );
+    this.layerContext = previous;
+    const delegate = node["delegate"] === true;
+    const forwarded = [...methods.keys()].filter((member) => !implemented.has(member));
+    if (!delegate) {
+      for (const member of forwarded) {
+        this.error(
+          location,
+          "mechanics/missing-method",
+          `implement ${service} does not define ${service}.${member}. Define it, or add :delegate to forward it to the outer ${service}.`,
+        );
+      }
+    } else if (forwarded.length === 0) {
+      this.warning(location, "mechanics/unused-delegate", `implement ${service} defines every member, so :delegate forwards nothing.`);
+    }
+    const requirements = new Map<string, JsonValue | undefined>();
+    for (const [requirement, requirementSpan] of methodRequirements) {
+      if (requirement === "Scope" || requirementService(requirement) === service) continue;
+      if (!requirements.has(requirement)) requirements.set(requirement, requirementSpan);
+    }
+    // The forwarded members come from the outer Service, read when the layer is provided.
+    if (delegate) for (const member of forwarded) requirements.set(`${service}.${member}`, location);
+    const info: LayerInfo = {
+      type: { provides: [service], errors: emptySet, requirements },
+      contextServices: this.capturedServices(context, service),
+    };
+    this.info.inlineLayers.set(node, info);
+    return info;
+  }
+
+  /**
+   * Checks the methods of a layer or an inline implement against the service
+   * members they implement. Returns the requirements of their bodies and the
+   * members they define.
+   */
+  private checkLayerMethods(
+    owner: ImplementationOwner,
+    service: string,
+    methods: ReadonlyMap<string, ServiceMethodSignature>,
+    methodNodes: JsonValue | undefined,
+    scope: Scope,
+    span: JsonValue | undefined,
+  ): { readonly requirements: Provenance; readonly implemented: ReadonlySet<string> } {
+    const name = owner.name;
     let methodRequirements: Provenance = emptySet;
     const implemented = new Set<string>();
-    for (const method of arrayItems(implementation["methods"])) {
+    for (const method of arrayItems(methodNodes)) {
       if (!isRecord(method)) continue;
       const methodName = String(method["name"]);
       const methodSpan = method["span"] ?? span;
@@ -875,7 +995,11 @@ class Checker {
         continue;
       }
       if (implemented.has(methodName)) {
-        this.error(methodSpan, "mechanics/duplicate-name", `Layer ${name} implements ${service}.${methodName} twice.`);
+        this.error(
+          methodSpan,
+          "mechanics/duplicate-name",
+          owner.kind === "layer" ? `Layer ${name} implements ${service}.${methodName} twice.` : `implement ${service} defines ${methodName} twice.`,
+        );
       }
       implemented.add(methodName);
       const params = stringItems(method["params"]);
@@ -883,7 +1007,7 @@ class Checker {
         this.error(
           methodSpan,
           "mechanics/arity",
-          `${service}.${methodName} takes ${signature.params.length} parameter(s), but the layer binds ${params.length}.`,
+          `${service}.${methodName} takes ${signature.params.length} parameter(s), but the ${owner.kind} binds ${params.length}.`,
         );
         continue;
       }
@@ -909,7 +1033,13 @@ class Checker {
             `${service}.${methodName} would require Scope from its caller; acquire resources in the layer's :setup or wrap the method body in scoped.`,
           );
         } else if (requirementService(requirement) === service) {
-          this.error(requirementSpan ?? methodSpan, "mechanics/layer-cycle", `Layer ${name} cannot use ${service} while implementing it.`);
+          this.error(
+            requirementSpan ?? methodSpan,
+            "mechanics/layer-cycle",
+            owner.kind === "layer"
+              ? `Layer ${name} cannot use ${service} while implementing it.`
+              : `implement ${service} cannot use ${service} in its own members.`,
+          );
         }
       }
       methodRequirements = unionSets(methodRequirements, body.requirements);
@@ -921,31 +1051,7 @@ class Checker {
         );
       }
     }
-    for (const methodName of methods.keys()) {
-      if (!implemented.has(methodName)) {
-        this.error(span, "mechanics/missing-method", `Layer ${name} does not implement ${service}.${methodName}.`);
-      }
-    }
-    this.layerContext = previous;
-    for (const call of context.contextCalls) this.info.contextCalls.add(call);
-
-    const contextServices = new Set<string>();
-    for (const call of context.contextCalls) {
-      const type = this.info.effectTypes.get(call);
-      for (const requirement of type?.requirements.keys() ?? []) {
-        if (requirement !== "Scope") contextServices.add(requirementService(requirement));
-      }
-    }
-    const requirements = new Map<string, JsonValue | undefined>();
-    for (const [requirement, requirementSpan] of [...setupRequirements, ...methodRequirements]) {
-      if (requirement === "Scope" || requirementService(requirement) === service) continue;
-      const serviceName = requirementService(requirement);
-      if (!requirements.has(serviceName)) requirements.set(serviceName, requirementSpan);
-    }
-    return {
-      type: { provides: [service], errors: setupErrors, requirements },
-      contextServices: [...contextServices].filter((item) => item !== service).sort(),
-    };
+    return { requirements: methodRequirements, implemented };
   }
 
   // -------------------------------------------------------------------------
@@ -1591,20 +1697,31 @@ class Checker {
         const body = this.effect(args[0], scope, expected);
         this.layerContext = layerContext;
         const layerNode = args[1];
+        const inline = isRecord(layerNode) && layerNode["kind"] === "InlineLayer" ? layerNode : undefined;
         const layerName = isRecord(layerNode) && layerNode["kind"] === "Var" ? String(layerNode["name"]) : undefined;
-        if (!layerName) {
-          this.error(spanOf(layerNode) ?? span, "mechanics/provide", "provide expects the name of a layer defined with layer.");
+        if (!layerName && !inline) {
+          this.error(spanOf(layerNode) ?? span, "mechanics/provide", "provide expects the name of a layer defined with layer, or (implement Service ...).");
           return body;
         }
-        const layer = this.layerInfo(layerName, spanOf(layerNode) ?? span);
+        if (layerName && scope.has(layerName)) {
+          this.error(spanOf(layerNode) ?? span, "mechanics/provide", `${layerName} is a local value, not a layer. Write (implement Service ...) inside provide, or define a layer with layer.`);
+          return body;
+        }
+        const layer = inline ? this.checkInlineLayer(inline, scope, span) : this.layerInfo(layerName!, spanOf(layerNode) ?? span);
         if (!layer) return body;
         if (isRecord(layerNode)) this.info.valueTypes.set(layerNode, { kind: "layer", layer: layer.type });
+        if (inline && ![...body.requirements.keys()].some((requirement) => layer.type.provides.includes(requirementService(requirement)))) {
+          const service = layer.type.provides[0]!;
+          this.warning(spanOf(layerNode) ?? span, "mechanics/unused-provider", `The provided effect requires nothing from ${service}, so this implement is unused.`);
+        }
+        // An inline layer's requirements already point at the calls inside it.
+        const layerRequirements = inline ? layer.type.requirements : reprovenance(layer.type.requirements, spanOf(layerNode));
         const provided = effectOf(
           body.success,
           unionSets(body.errors, reprovenance(layer.type.errors, spanOf(layerNode))),
           unionSets(
             new Map([...body.requirements].filter(([requirement]) => !layer.type.provides.includes(requirementService(requirement)))),
-            reprovenance(layer.type.requirements, spanOf(layerNode)),
+            layerRequirements,
           ),
         );
         if (this.layerContext && provided.requirements.size > 0) this.layerContext.contextCalls.add(node);
@@ -2014,6 +2131,10 @@ class Checker {
       case "!=":
         resolveAs({ kind: "equality", operator: name });
         return this.equality(name, args, scope, span);
+      case "implement":
+        resolveAs({ kind: "special", name });
+        this.error(span, "mechanics/implement", "implement is only valid as the layer argument of provide, as in (provide effect (implement Service ...)).");
+        return tUnknown;
       case "str":
         resolveAs({ kind: "special", name });
         for (const arg of args) {

@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Stages 1 and 2 implemented (2026-10-30); stage 4 not needed yet |
 | Created | 2026-10-16 |
 | Scope | Expression-scoped service implementations, partial delegation, requirement discharge, Effect TypeScript lowering, effect IR projection |
 | Direction | `provide` accepts an inline `implement` expression that captures lexical values; closed requirement sets and portable IR are unchanged |
@@ -82,7 +82,7 @@ This RFC stays inside that decision:
 Multi-shot resumption, generators, and backtracking handlers remain out of
 scope, as the declined [RFC 0003](./0003-direct-style-effects.md) also recorded.
 
-## Current state
+## State before this RFC
 
 - **Services and layers.** `surface/effect.ts` normalizes `service` to
   `__service` and `layer` to `__layer`. The projector in
@@ -172,7 +172,7 @@ already among the declared errors of the members.
 
 (: stored-writes (Effect (List String)))
 (define stored-writes
-  (do! [writes (ref-make [])
+  (do! [writes (ref-make (: [] (List String)))
         _ (provide (save-user "Bob")
             (implement Store
               (define get [key] (succeed "Bob"))
@@ -199,8 +199,11 @@ rest to the `Svc` provided outside the `provide` expression:
       (fail (PaymentDeclined {:reason "card expired"})))))
 ```
 
-The result's requirements contain `Svc.m` for each delegated member `m` that
-the body requires. A delegating `implement` that defines every member is
+The result's requirements contain `Svc.m` for every delegated member `m`,
+whether or not the body calls it: the generated layer reads the outer `Svc`
+when it is built, so the outer service is needed either way. A requirement on
+the whole service, such as `[Svc]`, is discharged member by member the same
+way. A delegating `implement` that defines every member is
 reported as `mechanics/unused-delegate`. Delegation is shallow: a defined
 method that calls one of its own service's members is still rejected with
 `mechanics/layer-cycle`. A method that wants the outer implementation of its
@@ -285,6 +288,14 @@ removed.)
 
 ## Implementation stages and validation
 
+Stages 1 and 2 are implemented. The cases are `local-providers`,
+`reject-local-providers`, and `reject-local-delegation` in
+`conformance/effect-typescript/cases/`, and `local-providers` is on the
+`effect-ir` surface. When a tagged `catch` protects a `provide`, the generator
+writes `effect.pipe(Effect.provide(layer))`, because TypeScript cannot infer
+`Effect.catchTag`'s tags through a direct `Effect.provide(...)` argument. This
+applies to named layers too.
+
 1. **Complete local providers.** Parsing, projection, checking, and
    generation of `implement` without `:delegate`. A positive
    `conformance/effect-typescript/cases/local-providers` case records a
@@ -303,15 +314,23 @@ removed.)
    tests without generating TypeScript, `makeMechanicsRuntime` gains `provide`
    for named and inline layers. Otherwise this stage is not needed.
 
-## Decisions still required
+## Decisions
 
-- Whether `implement` may appear under `layer-merge` and `layer-provide`, or be
-  bound with `let` and reused.
+Settled by the implementation:
+
+- `implement` is valid only as the layer argument of `provide`. Anywhere else
+  it is `mechanics/implement`, and a `let`-bound local given to `provide` is
+  `mechanics/provide`. Allowing it under `layer-merge` and `layer-provide`, or
+  binding it for reuse, can be revisited.
+- A service-wide requirement such as `[Store]` is discharged member by member
+  when `:delegate` leaves some members to the outer provider, and every
+  forwarded member is required (see [Delegation](#delegation)).
+
+Still open:
+
 - Whether a defined method may call the outer implementation of its own
   member, for wrappers that decorate a call. A dedicated binding such as
   `:outer prev` is one option.
-- Whether a service-wide requirement such as `[Store]` should be discharged
-  member by member when `:delegate` leaves some members to the outer provider.
 - Whether `implement` should support a `:setup` block, as service layers do,
   or whether `do!` around the `provide` is enough.
 

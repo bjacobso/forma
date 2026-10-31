@@ -134,6 +134,14 @@
       ]
     },
     {
+      "id": "effect-typescript/local-providers",
+      "sourceFile": "../effect-typescript/cases/local-providers/program.lisp",
+      "passes": [
+        "parse",
+        "effect-ir"
+      ]
+    },
+    {
       "id": "canonical-int-number",
       "source": "[(+ 1 2) (/ 1 2) (floor 1.5)]",
       "passes": [
