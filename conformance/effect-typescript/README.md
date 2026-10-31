@@ -57,7 +57,7 @@ For each positive case the runner checks that:
 | `pure-domain-logic` | `Schema.Class`, typed constants, pure functions, value-level `match`, collection and string functions |
 | `stream-pipeline` | Stream construction, effectful mapping with concurrency, `take`, folds, `runForEach`, functions returning streams |
 | `operational-effects` | The shared operational-effects fixture (`../operational-effects`) |
-| `local-providers` | `(provide eff (implement Svc ...))`: methods closing over locals, a recorder, nested providers, a typed failure, `:delegate`, and captured context |
+| `local-providers` | `(provide eff (implement Svc ...))`: methods closing over locals, a recorder, nested providers, several layers in one `provide`, a typed failure, `:delegate`, and captured context |
 | `effect-sequencing` | Effect bodies of `do!`, `let`, and `do` with several forms; result values and call order |
 | `edge-cases` | Regressions from adversarial testing: escaping, binder capture, prototype keys, shadowing, literal widening, literal and error matches, `provide` inside layer methods |
 | `elm-pure` | No-command app, pure init/update, nested let/if transitions, static view, mounting types |

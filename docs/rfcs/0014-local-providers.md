@@ -210,6 +210,39 @@ method that calls one of its own service's members is still rejected with
 own member must receive it another way. That would need a separate design
 (see decisions).
 
+### Several layers
+
+`provide` accepts several layers. Each wraps the ones before it:
+
+```lisp
+(provide effect A B C)   ; = (provide (provide (provide effect A) B) C)
+```
+
+This is the order `layer-provide` uses: the layers that need a service come
+first, and the layers that supply it follow. A layer's methods resolve their
+services where the layer is provided, outside it, so a Store double whose
+methods use Clock lists Clock after it:
+
+```lisp
+(provide (stamp key)
+  (implement Store
+    (define get [k] (do! [t (Clock.now nil)] (str "stored at " t)))
+    (define set [k v] (succeed nil)))
+  (implement Clock (define now [_] (succeed 42))))
+```
+
+Merging the layers instead, as `Layer.mergeAll` does, would build them
+independently, so one double could not serve another. Nesting covers
+independent layers as well, since their order then does not matter. The form
+is projected as nested `provide` combinators, so the IR, checking rules, and
+generated code are those of nested `provide`.
+
+A layer that uses a service provided inside it, directly nested or earlier in
+the same `provide`, gets that service from outside instead. The checker warns
+with `mechanics/provide-order` at the call, because this is almost always a
+reversed order. If the outer service is wanted, the warning can be avoided by
+not providing the same service inside.
+
 ### Lowering
 
 An `implement` becomes an inline layer in the generated `Effect.gen`:
@@ -291,7 +324,8 @@ removed.)
 Stages 1 and 2 are implemented. The cases are `local-providers`,
 `reject-local-providers`, and `reject-local-delegation` in
 `conformance/effect-typescript/cases/`, and `local-providers` is on the
-`effect-ir` surface. When a tagged `catch` protects a `provide`, the generator
+`effect-ir` surface. `provide` with several layers was added with stage 1.
+When a tagged `catch` protects a `provide`, the generator
 writes `effect.pipe(Effect.provide(layer))`, because TypeScript cannot infer
 `Effect.catchTag`'s tags through a direct `Effect.provide(...)` argument. This
 applies to named layers too.
@@ -317,6 +351,9 @@ applies to named layers too.
 ## Decisions
 
 Settled by the implementation:
+
+- `provide` takes several layers and nests them, later wrapping earlier (see
+  [Several layers](#several-layers)), rather than merging them.
 
 - `implement` is valid only as the layer argument of `provide`. Anywhere else
   it is `mechanics/implement`, and a `let`-bound local given to `provide` is

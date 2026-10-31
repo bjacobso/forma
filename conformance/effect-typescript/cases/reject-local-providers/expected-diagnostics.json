@@ -90,6 +90,26 @@
       "column": 14,
       "endLine": 62,
       "endColumn": 24
+    },
+    {
+      "phase": "check",
+      "severity": "warning",
+      "code": "mechanics/provide-order",
+      "message": "implement Store uses Clock, but Clock is provided inside it, so it gets Clock from outside this provide. To use the provided Clock, list it after Store.",
+      "line": 72,
+      "column": 46,
+      "endLine": 72,
+      "endColumn": 61
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/undeclared-requirement",
+      "message": "Operation wrong-order requires Clock.now, but its signature declares no requirements.",
+      "line": 72,
+      "column": 46,
+      "endLine": 72,
+      "endColumn": 61
     }
   ]
 }

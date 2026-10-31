@@ -900,6 +900,33 @@ class Checker {
   }
 
   /**
+   * A layer resolves its own requirements outside its provide, so a service
+   * provided inside it (directly nested, or earlier in one provide) does not
+   * reach it. Warn where the layer uses such a service.
+   */
+  private checkProvideOrder(body: JsonValue | undefined, layer: LayerInfo, label: string, span: JsonValue | undefined): void {
+    const inner = new Set<string>();
+    let cursor = body;
+    while (isRecord(cursor) && cursor["kind"] === "Combinator" && cursor["name"] === "provide") {
+      const [innerBody, innerLayer] = arrayItems(cursor["args"]);
+      const type = isRecord(innerLayer) ? this.info.valueTypes.get(innerLayer) : undefined;
+      if (type?.kind === "layer") for (const service of type.layer.provides) inner.add(service);
+      cursor = innerBody;
+    }
+    const warned = new Set<string>();
+    for (const [requirement, requirementSpan] of layer.type.requirements) {
+      const service = requirementService(requirement);
+      if (!inner.has(service) || warned.has(service)) continue;
+      warned.add(service);
+      this.warning(
+        requirementSpan ?? span,
+        "mechanics/provide-order",
+        `${label} uses ${service}, but ${service} is provided inside it, so it gets ${service} from outside this provide. To use the provided ${service}, list it after ${label.replace(/^(implement|Layer) /, "")}.`,
+      );
+    }
+  }
+
+  /**
    * Records the operation calls in a layer's methods that need its captured
    * context, and returns the services that context must hold.
    */
@@ -1714,6 +1741,7 @@ class Checker {
           const service = layer.type.provides[0]!;
           this.warning(spanOf(layerNode) ?? span, "mechanics/unused-provider", `The provided effect requires nothing from ${service}, so this implement is unused.`);
         }
+        this.checkProvideOrder(args[0], layer, inline ? `implement ${layer.type.provides[0]}` : `Layer ${layerName}`, spanOf(layerNode) ?? span);
         // An inline layer's requirements already point at the calls inside it.
         const layerRequirements = inline ? layer.type.requirements : reprovenance(layer.type.requirements, spanOf(layerNode));
         const provided = effectOf(

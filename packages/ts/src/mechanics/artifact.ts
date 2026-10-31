@@ -1137,6 +1137,21 @@ function combinatorToJson(
     : -1;
   const positional = optionStart === -1 ? items : items.slice(0, optionStart);
   const optionItems = optionStart === -1 ? [] : items.slice(optionStart);
+  if (name === "provide" && positional.length > 2) {
+    // (provide effect A B ...) is (provide (provide effect A) B ...): each layer
+    // wraps the ones before it, so a later layer can serve an earlier one.
+    let provided = combinatorToJson(context, { ...expr, items: [expr.items[0]!, positional[0]!, positional[1]!] }, name, spec);
+    for (const layer of positional.slice(2)) {
+      provided = {
+        kind: "Combinator",
+        name,
+        args: [provided, combinatorArgToJson(context, layer, "layer", name)],
+        effect: context.effect,
+        span: spanJson(context.sourceId, expr),
+      };
+    }
+    return provided;
+  }
   const arity = spec.args.length;
   if (spec.rest ? positional.length < arity : positional.length !== arity) {
     return report(

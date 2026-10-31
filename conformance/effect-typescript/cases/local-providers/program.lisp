@@ -75,3 +75,19 @@
       Store
       (define get [key] (succeed name))
       (define set [key value] (audited (str "audited " key "=" value))))))
+(: stacked (-> String (Effect (List String) [NotFound] [])))
+(define
+  stacked
+  [name]
+  (do!
+    [entries
+     (ref-make (: [] (List String)))
+     _
+     (provide
+       (save-user name)
+       (implement
+         Store
+         (define get [key] (succeed name))
+         (define set [key value] (Audit.record (str key "=" value))))
+       (implement Audit (define record [entry] (ref-update entries (fn [xs] (conj xs entry))))))]
+    (ref-get entries)))

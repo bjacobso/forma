@@ -2212,6 +2212,628 @@
         }
       },
       {
+        "formIndex": 18,
+        "payload": {
+          "authority": {
+            "capabilities": []
+          },
+          "body": {
+            "bindings": [
+              {
+                "name": "entries",
+                "span": {
+                  "endOffset": 2538,
+                  "sourceId": "surfaces/effect-typescript/local-providers",
+                  "startOffset": 2507
+                },
+                "value": {
+                  "args": [
+                    {
+                      "items": [
+                        {
+                          "kind": "Expr",
+                          "source": {
+                            "kind": "Symbol",
+                            "name": ":"
+                          },
+                          "span": {
+                            "endOffset": 2537,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2517
+                          }
+                        },
+                        {
+                          "items": [],
+                          "kind": "Vector",
+                          "span": {
+                            "endOffset": 2522,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2520
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "Array",
+                              "span": {
+                                "endOffset": 2536,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2523
+                              }
+                            },
+                            {
+                              "kind": "Var",
+                              "name": "String",
+                              "span": {
+                                "endOffset": 2535,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2529
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 2536,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2523
+                          }
+                        }
+                      ],
+                      "kind": "List",
+                      "span": {
+                        "endOffset": 2537,
+                        "sourceId": "surfaces/effect-typescript/local-providers",
+                        "startOffset": 2517
+                      }
+                    }
+                  ],
+                  "effect": {
+                    "errors": [
+                      "NotFound"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 2452,
+                      "sourceId": "surfaces/effect-typescript/local-providers",
+                      "startOffset": 2416
+                    },
+                    "success": {
+                      "item": {
+                        "kind": "Primitive",
+                        "name": "String",
+                        "span": {
+                          "endOffset": 2436,
+                          "sourceId": "surfaces/effect-typescript/local-providers",
+                          "startOffset": 2430
+                        }
+                      },
+                      "kind": "Array"
+                    }
+                  },
+                  "kind": "Combinator",
+                  "name": "ref-make",
+                  "span": {
+                    "endOffset": 2538,
+                    "sourceId": "surfaces/effect-typescript/local-providers",
+                    "startOffset": 2507
+                  }
+                }
+              },
+              {
+                "name": "_",
+                "span": {
+                  "endOffset": 2826,
+                  "sourceId": "surfaces/effect-typescript/local-providers",
+                  "startOffset": 2551
+                },
+                "value": {
+                  "args": [
+                    {
+                      "args": [
+                        {
+                          "args": [
+                            {
+                              "kind": "Var",
+                              "name": "name",
+                              "span": {
+                                "endOffset": 2582,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2578
+                              }
+                            }
+                          ],
+                          "effect": {
+                            "errors": [
+                              "NotFound"
+                            ],
+                            "kind": "Effect",
+                            "requirements": [
+                              "Store"
+                            ],
+                            "span": {
+                              "endOffset": 485,
+                              "sourceId": "surfaces/effect-typescript/local-providers",
+                              "startOffset": 451
+                            },
+                            "success": {
+                              "kind": "Primitive",
+                              "name": "String",
+                              "span": {
+                                "endOffset": 465,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 459
+                              }
+                            }
+                          },
+                          "kind": "OperationCall",
+                          "operation": "save-user",
+                          "span": {
+                            "endOffset": 2583,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2567
+                          }
+                        },
+                        {
+                          "delegate": false,
+                          "kind": "InlineLayer",
+                          "methods": [
+                            {
+                              "body": {
+                                "effect": {
+                                  "errors": [],
+                                  "kind": "Effect",
+                                  "requirements": [],
+                                  "success": {
+                                    "kind": "Primitive",
+                                    "name": "Unit"
+                                  }
+                                },
+                                "kind": "Succeed",
+                                "span": {
+                                  "endOffset": 2658,
+                                  "sourceId": "surfaces/effect-typescript/local-providers",
+                                  "startOffset": 2644
+                                },
+                                "value": {
+                                  "kind": "Var",
+                                  "name": "name",
+                                  "span": {
+                                    "endOffset": 2657,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2653
+                                  }
+                                }
+                              },
+                              "name": "get",
+                              "params": [
+                                "key"
+                              ],
+                              "span": {
+                                "endOffset": 2659,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2626
+                              }
+                            },
+                            {
+                              "body": {
+                                "args": [
+                                  {
+                                    "items": [
+                                      {
+                                        "kind": "Var",
+                                        "name": "str",
+                                        "span": {
+                                          "endOffset": 2711,
+                                          "sourceId": "surfaces/effect-typescript/local-providers",
+                                          "startOffset": 2708
+                                        }
+                                      },
+                                      {
+                                        "kind": "Var",
+                                        "name": "key",
+                                        "span": {
+                                          "endOffset": 2715,
+                                          "sourceId": "surfaces/effect-typescript/local-providers",
+                                          "startOffset": 2712
+                                        }
+                                      },
+                                      {
+                                        "kind": "Literal",
+                                        "span": {
+                                          "endOffset": 2719,
+                                          "sourceId": "surfaces/effect-typescript/local-providers",
+                                          "startOffset": 2716
+                                        },
+                                        "value": "="
+                                      },
+                                      {
+                                        "kind": "Var",
+                                        "name": "value",
+                                        "span": {
+                                          "endOffset": 2725,
+                                          "sourceId": "surfaces/effect-typescript/local-providers",
+                                          "startOffset": 2720
+                                        }
+                                      }
+                                    ],
+                                    "kind": "List",
+                                    "span": {
+                                      "endOffset": 2726,
+                                      "sourceId": "surfaces/effect-typescript/local-providers",
+                                      "startOffset": 2707
+                                    }
+                                  }
+                                ],
+                                "effect": {
+                                  "errors": [],
+                                  "kind": "Effect",
+                                  "requirements": [
+                                    "Audit.record"
+                                  ],
+                                  "span": {
+                                    "endOffset": 423,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 404
+                                  },
+                                  "success": {
+                                    "kind": "Primitive",
+                                    "name": "Unit",
+                                    "span": {
+                                      "endOffset": 416,
+                                      "sourceId": "surfaces/effect-typescript/local-providers",
+                                      "startOffset": 412
+                                    }
+                                  }
+                                },
+                                "kind": "ServiceCall",
+                                "method": "record",
+                                "service": "Audit",
+                                "span": {
+                                  "endOffset": 2727,
+                                  "sourceId": "surfaces/effect-typescript/local-providers",
+                                  "startOffset": 2693
+                                }
+                              },
+                              "name": "set",
+                              "params": [
+                                "key",
+                                "value"
+                              ],
+                              "span": {
+                                "endOffset": 2728,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2669
+                              }
+                            }
+                          ],
+                          "service": "Store",
+                          "span": {
+                            "endOffset": 2729,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2591
+                          }
+                        }
+                      ],
+                      "effect": {
+                        "errors": [
+                          "NotFound"
+                        ],
+                        "kind": "Effect",
+                        "requirements": [],
+                        "span": {
+                          "endOffset": 2452,
+                          "sourceId": "surfaces/effect-typescript/local-providers",
+                          "startOffset": 2416
+                        },
+                        "success": {
+                          "item": {
+                            "kind": "Primitive",
+                            "name": "String",
+                            "span": {
+                              "endOffset": 2436,
+                              "sourceId": "surfaces/effect-typescript/local-providers",
+                              "startOffset": 2430
+                            }
+                          },
+                          "kind": "Array"
+                        }
+                      },
+                      "kind": "Combinator",
+                      "name": "provide",
+                      "span": {
+                        "endOffset": 2826,
+                        "sourceId": "surfaces/effect-typescript/local-providers",
+                        "startOffset": 2551
+                      }
+                    },
+                    {
+                      "delegate": false,
+                      "kind": "InlineLayer",
+                      "methods": [
+                        {
+                          "body": {
+                            "args": [
+                              {
+                                "kind": "Var",
+                                "name": "entries",
+                                "span": {
+                                  "endOffset": 2796,
+                                  "sourceId": "surfaces/effect-typescript/local-providers",
+                                  "startOffset": 2789
+                                }
+                              },
+                              {
+                                "items": [
+                                  {
+                                    "kind": "Var",
+                                    "name": "fn",
+                                    "span": {
+                                      "endOffset": 2800,
+                                      "sourceId": "surfaces/effect-typescript/local-providers",
+                                      "startOffset": 2798
+                                    }
+                                  },
+                                  {
+                                    "items": [
+                                      {
+                                        "kind": "Var",
+                                        "name": "xs",
+                                        "span": {
+                                          "endOffset": 2804,
+                                          "sourceId": "surfaces/effect-typescript/local-providers",
+                                          "startOffset": 2802
+                                        }
+                                      }
+                                    ],
+                                    "kind": "Vector",
+                                    "span": {
+                                      "endOffset": 2805,
+                                      "sourceId": "surfaces/effect-typescript/local-providers",
+                                      "startOffset": 2801
+                                    }
+                                  },
+                                  {
+                                    "items": [
+                                      {
+                                        "kind": "Var",
+                                        "name": "conj",
+                                        "span": {
+                                          "endOffset": 2811,
+                                          "sourceId": "surfaces/effect-typescript/local-providers",
+                                          "startOffset": 2807
+                                        }
+                                      },
+                                      {
+                                        "kind": "Var",
+                                        "name": "xs",
+                                        "span": {
+                                          "endOffset": 2814,
+                                          "sourceId": "surfaces/effect-typescript/local-providers",
+                                          "startOffset": 2812
+                                        }
+                                      },
+                                      {
+                                        "kind": "Var",
+                                        "name": "entry",
+                                        "span": {
+                                          "endOffset": 2820,
+                                          "sourceId": "surfaces/effect-typescript/local-providers",
+                                          "startOffset": 2815
+                                        }
+                                      }
+                                    ],
+                                    "kind": "List",
+                                    "span": {
+                                      "endOffset": 2821,
+                                      "sourceId": "surfaces/effect-typescript/local-providers",
+                                      "startOffset": 2806
+                                    }
+                                  }
+                                ],
+                                "kind": "List",
+                                "span": {
+                                  "endOffset": 2822,
+                                  "sourceId": "surfaces/effect-typescript/local-providers",
+                                  "startOffset": 2797
+                                }
+                              }
+                            ],
+                            "effect": {
+                              "errors": [],
+                              "kind": "Effect",
+                              "requirements": [],
+                              "success": {
+                                "kind": "Primitive",
+                                "name": "Unit"
+                              }
+                            },
+                            "kind": "Combinator",
+                            "name": "ref-update",
+                            "span": {
+                              "endOffset": 2823,
+                              "sourceId": "surfaces/effect-typescript/local-providers",
+                              "startOffset": 2777
+                            }
+                          },
+                          "name": "record",
+                          "params": [
+                            "entry"
+                          ],
+                          "span": {
+                            "endOffset": 2824,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2754
+                          }
+                        }
+                      ],
+                      "service": "Audit",
+                      "span": {
+                        "endOffset": 2825,
+                        "sourceId": "surfaces/effect-typescript/local-providers",
+                        "startOffset": 2737
+                      }
+                    }
+                  ],
+                  "effect": {
+                    "errors": [
+                      "NotFound"
+                    ],
+                    "kind": "Effect",
+                    "requirements": [],
+                    "span": {
+                      "endOffset": 2452,
+                      "sourceId": "surfaces/effect-typescript/local-providers",
+                      "startOffset": 2416
+                    },
+                    "success": {
+                      "item": {
+                        "kind": "Primitive",
+                        "name": "String",
+                        "span": {
+                          "endOffset": 2436,
+                          "sourceId": "surfaces/effect-typescript/local-providers",
+                          "startOffset": 2430
+                        }
+                      },
+                      "kind": "Array"
+                    }
+                  },
+                  "kind": "Combinator",
+                  "name": "provide",
+                  "span": {
+                    "endOffset": 2826,
+                    "sourceId": "surfaces/effect-typescript/local-providers",
+                    "startOffset": 2551
+                  }
+                }
+              }
+            ],
+            "body": {
+              "args": [
+                {
+                  "kind": "Var",
+                  "name": "entries",
+                  "span": {
+                    "endOffset": 2848,
+                    "sourceId": "surfaces/effect-typescript/local-providers",
+                    "startOffset": 2841
+                  }
+                }
+              ],
+              "effect": {
+                "errors": [
+                  "NotFound"
+                ],
+                "kind": "Effect",
+                "requirements": [],
+                "span": {
+                  "endOffset": 2452,
+                  "sourceId": "surfaces/effect-typescript/local-providers",
+                  "startOffset": 2416
+                },
+                "success": {
+                  "item": {
+                    "kind": "Primitive",
+                    "name": "String",
+                    "span": {
+                      "endOffset": 2436,
+                      "sourceId": "surfaces/effect-typescript/local-providers",
+                      "startOffset": 2430
+                    }
+                  },
+                  "kind": "Array"
+                }
+              },
+              "kind": "Combinator",
+              "name": "ref-get",
+              "span": {
+                "endOffset": 2849,
+                "sourceId": "surfaces/effect-typescript/local-providers",
+                "startOffset": 2832
+              }
+            },
+            "effect": {
+              "errors": [
+                "NotFound"
+              ],
+              "kind": "Effect",
+              "requirements": [],
+              "span": {
+                "endOffset": 2452,
+                "sourceId": "surfaces/effect-typescript/local-providers",
+                "startOffset": 2416
+              },
+              "success": {
+                "item": {
+                  "kind": "Primitive",
+                  "name": "String",
+                  "span": {
+                    "endOffset": 2436,
+                    "sourceId": "surfaces/effect-typescript/local-providers",
+                    "startOffset": 2430
+                  }
+                },
+                "kind": "Array"
+              }
+            },
+            "kind": "Do",
+            "span": {
+              "endOffset": 2850,
+              "sourceId": "surfaces/effect-typescript/local-providers",
+              "startOffset": 2484
+            }
+          },
+          "effect": {
+            "errors": [
+              "NotFound"
+            ],
+            "kind": "Effect",
+            "requirements": [],
+            "span": {
+              "endOffset": 2452,
+              "sourceId": "surfaces/effect-typescript/local-providers",
+              "startOffset": 2416
+            },
+            "success": {
+              "item": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 2436,
+                  "sourceId": "surfaces/effect-typescript/local-providers",
+                  "startOffset": 2430
+                }
+              },
+              "kind": "Array"
+            }
+          },
+          "kind": "EffectDef",
+          "name": "stacked",
+          "params": [
+            {
+              "name": "name",
+              "type": {
+                "kind": "Primitive",
+                "name": "String",
+                "span": {
+                  "endOffset": 2415,
+                  "sourceId": "surfaces/effect-typescript/local-providers",
+                  "startOffset": 2409
+                }
+              }
+            }
+          ]
+        },
+        "sourceId": "surfaces/effect-typescript/local-providers",
+        "span": {
+          "endOffset": 2851,
+          "sourceId": "surfaces/effect-typescript/local-providers",
+          "startOffset": 2455
+        }
+      },
+      {
         "formIndex": 0,
         "payload": {
           "kind": "ErrorDef",
@@ -6062,6 +6684,783 @@
             "endOffset": 2393,
             "sourceId": "surfaces/effect-typescript/local-providers",
             "startOffset": 2186
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "keyword",
+              "span": {
+                "endOffset": 2396,
+                "sourceId": "surfaces/effect-typescript/local-providers",
+                "startOffset": 2395
+              },
+              "value": ":"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 2404,
+                "sourceId": "surfaces/effect-typescript/local-providers",
+                "startOffset": 2397
+              },
+              "value": "stacked"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 2408,
+                    "sourceId": "surfaces/effect-typescript/local-providers",
+                    "startOffset": 2406
+                  },
+                  "value": "->"
+                },
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 2415,
+                    "sourceId": "surfaces/effect-typescript/local-providers",
+                    "startOffset": 2409
+                  },
+                  "value": "String"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 2423,
+                        "sourceId": "surfaces/effect-typescript/local-providers",
+                        "startOffset": 2417
+                      },
+                      "value": "Effect"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 2429,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2425
+                          },
+                          "value": "List"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 2436,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2430
+                          },
+                          "value": "String"
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 2437,
+                        "sourceId": "surfaces/effect-typescript/local-providers",
+                        "startOffset": 2424
+                      }
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 2447,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2439
+                          },
+                          "value": "NotFound"
+                        }
+                      ],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 2448,
+                        "sourceId": "surfaces/effect-typescript/local-providers",
+                        "startOffset": 2438
+                      }
+                    },
+                    {
+                      "items": [],
+                      "kind": "vector",
+                      "span": {
+                        "endOffset": 2451,
+                        "sourceId": "surfaces/effect-typescript/local-providers",
+                        "startOffset": 2449
+                      }
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 2452,
+                    "sourceId": "surfaces/effect-typescript/local-providers",
+                    "startOffset": 2416
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 2453,
+                "sourceId": "surfaces/effect-typescript/local-providers",
+                "startOffset": 2405
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 2454,
+            "sourceId": "surfaces/effect-typescript/local-providers",
+            "startOffset": 2394
+          }
+        },
+        {
+          "items": [
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 2462,
+                "sourceId": "surfaces/effect-typescript/local-providers",
+                "startOffset": 2456
+              },
+              "value": "define"
+            },
+            {
+              "kind": "symbol",
+              "span": {
+                "endOffset": 2472,
+                "sourceId": "surfaces/effect-typescript/local-providers",
+                "startOffset": 2465
+              },
+              "value": "stacked"
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 2480,
+                    "sourceId": "surfaces/effect-typescript/local-providers",
+                    "startOffset": 2476
+                  },
+                  "value": "name"
+                }
+              ],
+              "kind": "vector",
+              "span": {
+                "endOffset": 2481,
+                "sourceId": "surfaces/effect-typescript/local-providers",
+                "startOffset": 2475
+              }
+            },
+            {
+              "items": [
+                {
+                  "kind": "symbol",
+                  "span": {
+                    "endOffset": 2488,
+                    "sourceId": "surfaces/effect-typescript/local-providers",
+                    "startOffset": 2485
+                  },
+                  "value": "do!"
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 2501,
+                        "sourceId": "surfaces/effect-typescript/local-providers",
+                        "startOffset": 2494
+                      },
+                      "value": "entries"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 2516,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2508
+                          },
+                          "value": "ref-make"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "keyword",
+                              "span": {
+                                "endOffset": 2519,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2518
+                              },
+                              "value": ":"
+                            },
+                            {
+                              "items": [],
+                              "kind": "vector",
+                              "span": {
+                                "endOffset": 2522,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2520
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 2528,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2524
+                                  },
+                                  "value": "List"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 2535,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2529
+                                  },
+                                  "value": "String"
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 2536,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2523
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 2537,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2517
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 2538,
+                        "sourceId": "surfaces/effect-typescript/local-providers",
+                        "startOffset": 2507
+                      }
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 2545,
+                        "sourceId": "surfaces/effect-typescript/local-providers",
+                        "startOffset": 2544
+                      },
+                      "value": "_"
+                    },
+                    {
+                      "items": [
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 2559,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2552
+                          },
+                          "value": "provide"
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 2577,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2568
+                              },
+                              "value": "save-user"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 2582,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2578
+                              },
+                              "value": "name"
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 2583,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2567
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 2601,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2592
+                              },
+                              "value": "implement"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 2616,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2611
+                              },
+                              "value": "Store"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 2633,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2627
+                                  },
+                                  "value": "define"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 2637,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2634
+                                  },
+                                  "value": "get"
+                                },
+                                {
+                                  "items": [
+                                    {
+                                      "kind": "symbol",
+                                      "span": {
+                                        "endOffset": 2642,
+                                        "sourceId": "surfaces/effect-typescript/local-providers",
+                                        "startOffset": 2639
+                                      },
+                                      "value": "key"
+                                    }
+                                  ],
+                                  "kind": "vector",
+                                  "span": {
+                                    "endOffset": 2643,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2638
+                                  }
+                                },
+                                {
+                                  "items": [
+                                    {
+                                      "kind": "symbol",
+                                      "span": {
+                                        "endOffset": 2652,
+                                        "sourceId": "surfaces/effect-typescript/local-providers",
+                                        "startOffset": 2645
+                                      },
+                                      "value": "succeed"
+                                    },
+                                    {
+                                      "kind": "symbol",
+                                      "span": {
+                                        "endOffset": 2657,
+                                        "sourceId": "surfaces/effect-typescript/local-providers",
+                                        "startOffset": 2653
+                                      },
+                                      "value": "name"
+                                    }
+                                  ],
+                                  "kind": "list",
+                                  "span": {
+                                    "endOffset": 2658,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2644
+                                  }
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 2659,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2626
+                              }
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 2676,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2670
+                                  },
+                                  "value": "define"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 2680,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2677
+                                  },
+                                  "value": "set"
+                                },
+                                {
+                                  "items": [
+                                    {
+                                      "kind": "symbol",
+                                      "span": {
+                                        "endOffset": 2685,
+                                        "sourceId": "surfaces/effect-typescript/local-providers",
+                                        "startOffset": 2682
+                                      },
+                                      "value": "key"
+                                    },
+                                    {
+                                      "kind": "symbol",
+                                      "span": {
+                                        "endOffset": 2691,
+                                        "sourceId": "surfaces/effect-typescript/local-providers",
+                                        "startOffset": 2686
+                                      },
+                                      "value": "value"
+                                    }
+                                  ],
+                                  "kind": "vector",
+                                  "span": {
+                                    "endOffset": 2692,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2681
+                                  }
+                                },
+                                {
+                                  "items": [
+                                    {
+                                      "kind": "symbol",
+                                      "span": {
+                                        "endOffset": 2706,
+                                        "sourceId": "surfaces/effect-typescript/local-providers",
+                                        "startOffset": 2694
+                                      },
+                                      "value": "Audit.record"
+                                    },
+                                    {
+                                      "items": [
+                                        {
+                                          "kind": "symbol",
+                                          "span": {
+                                            "endOffset": 2711,
+                                            "sourceId": "surfaces/effect-typescript/local-providers",
+                                            "startOffset": 2708
+                                          },
+                                          "value": "str"
+                                        },
+                                        {
+                                          "kind": "symbol",
+                                          "span": {
+                                            "endOffset": 2715,
+                                            "sourceId": "surfaces/effect-typescript/local-providers",
+                                            "startOffset": 2712
+                                          },
+                                          "value": "key"
+                                        },
+                                        {
+                                          "kind": "string",
+                                          "span": {
+                                            "endOffset": 2719,
+                                            "sourceId": "surfaces/effect-typescript/local-providers",
+                                            "startOffset": 2716
+                                          },
+                                          "value": "="
+                                        },
+                                        {
+                                          "kind": "symbol",
+                                          "span": {
+                                            "endOffset": 2725,
+                                            "sourceId": "surfaces/effect-typescript/local-providers",
+                                            "startOffset": 2720
+                                          },
+                                          "value": "value"
+                                        }
+                                      ],
+                                      "kind": "list",
+                                      "span": {
+                                        "endOffset": 2726,
+                                        "sourceId": "surfaces/effect-typescript/local-providers",
+                                        "startOffset": 2707
+                                      }
+                                    }
+                                  ],
+                                  "kind": "list",
+                                  "span": {
+                                    "endOffset": 2727,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2693
+                                  }
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 2728,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2669
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 2729,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2591
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 2747,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2738
+                              },
+                              "value": "implement"
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 2753,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2748
+                              },
+                              "value": "Audit"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 2761,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2755
+                                  },
+                                  "value": "define"
+                                },
+                                {
+                                  "kind": "symbol",
+                                  "span": {
+                                    "endOffset": 2768,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2762
+                                  },
+                                  "value": "record"
+                                },
+                                {
+                                  "items": [
+                                    {
+                                      "kind": "symbol",
+                                      "span": {
+                                        "endOffset": 2775,
+                                        "sourceId": "surfaces/effect-typescript/local-providers",
+                                        "startOffset": 2770
+                                      },
+                                      "value": "entry"
+                                    }
+                                  ],
+                                  "kind": "vector",
+                                  "span": {
+                                    "endOffset": 2776,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2769
+                                  }
+                                },
+                                {
+                                  "items": [
+                                    {
+                                      "kind": "symbol",
+                                      "span": {
+                                        "endOffset": 2788,
+                                        "sourceId": "surfaces/effect-typescript/local-providers",
+                                        "startOffset": 2778
+                                      },
+                                      "value": "ref-update"
+                                    },
+                                    {
+                                      "kind": "symbol",
+                                      "span": {
+                                        "endOffset": 2796,
+                                        "sourceId": "surfaces/effect-typescript/local-providers",
+                                        "startOffset": 2789
+                                      },
+                                      "value": "entries"
+                                    },
+                                    {
+                                      "items": [
+                                        {
+                                          "kind": "symbol",
+                                          "span": {
+                                            "endOffset": 2800,
+                                            "sourceId": "surfaces/effect-typescript/local-providers",
+                                            "startOffset": 2798
+                                          },
+                                          "value": "fn"
+                                        },
+                                        {
+                                          "items": [
+                                            {
+                                              "kind": "symbol",
+                                              "span": {
+                                                "endOffset": 2804,
+                                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                                "startOffset": 2802
+                                              },
+                                              "value": "xs"
+                                            }
+                                          ],
+                                          "kind": "vector",
+                                          "span": {
+                                            "endOffset": 2805,
+                                            "sourceId": "surfaces/effect-typescript/local-providers",
+                                            "startOffset": 2801
+                                          }
+                                        },
+                                        {
+                                          "items": [
+                                            {
+                                              "kind": "symbol",
+                                              "span": {
+                                                "endOffset": 2811,
+                                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                                "startOffset": 2807
+                                              },
+                                              "value": "conj"
+                                            },
+                                            {
+                                              "kind": "symbol",
+                                              "span": {
+                                                "endOffset": 2814,
+                                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                                "startOffset": 2812
+                                              },
+                                              "value": "xs"
+                                            },
+                                            {
+                                              "kind": "symbol",
+                                              "span": {
+                                                "endOffset": 2820,
+                                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                                "startOffset": 2815
+                                              },
+                                              "value": "entry"
+                                            }
+                                          ],
+                                          "kind": "list",
+                                          "span": {
+                                            "endOffset": 2821,
+                                            "sourceId": "surfaces/effect-typescript/local-providers",
+                                            "startOffset": 2806
+                                          }
+                                        }
+                                      ],
+                                      "kind": "list",
+                                      "span": {
+                                        "endOffset": 2822,
+                                        "sourceId": "surfaces/effect-typescript/local-providers",
+                                        "startOffset": 2797
+                                      }
+                                    }
+                                  ],
+                                  "kind": "list",
+                                  "span": {
+                                    "endOffset": 2823,
+                                    "sourceId": "surfaces/effect-typescript/local-providers",
+                                    "startOffset": 2777
+                                  }
+                                }
+                              ],
+                              "kind": "list",
+                              "span": {
+                                "endOffset": 2824,
+                                "sourceId": "surfaces/effect-typescript/local-providers",
+                                "startOffset": 2754
+                              }
+                            }
+                          ],
+                          "kind": "list",
+                          "span": {
+                            "endOffset": 2825,
+                            "sourceId": "surfaces/effect-typescript/local-providers",
+                            "startOffset": 2737
+                          }
+                        }
+                      ],
+                      "kind": "list",
+                      "span": {
+                        "endOffset": 2826,
+                        "sourceId": "surfaces/effect-typescript/local-providers",
+                        "startOffset": 2551
+                      }
+                    }
+                  ],
+                  "kind": "vector",
+                  "span": {
+                    "endOffset": 2827,
+                    "sourceId": "surfaces/effect-typescript/local-providers",
+                    "startOffset": 2493
+                  }
+                },
+                {
+                  "items": [
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 2840,
+                        "sourceId": "surfaces/effect-typescript/local-providers",
+                        "startOffset": 2833
+                      },
+                      "value": "ref-get"
+                    },
+                    {
+                      "kind": "symbol",
+                      "span": {
+                        "endOffset": 2848,
+                        "sourceId": "surfaces/effect-typescript/local-providers",
+                        "startOffset": 2841
+                      },
+                      "value": "entries"
+                    }
+                  ],
+                  "kind": "list",
+                  "span": {
+                    "endOffset": 2849,
+                    "sourceId": "surfaces/effect-typescript/local-providers",
+                    "startOffset": 2832
+                  }
+                }
+              ],
+              "kind": "list",
+              "span": {
+                "endOffset": 2850,
+                "sourceId": "surfaces/effect-typescript/local-providers",
+                "startOffset": 2484
+              }
+            }
+          ],
+          "kind": "list",
+          "span": {
+            "endOffset": 2851,
+            "sourceId": "surfaces/effect-typescript/local-providers",
+            "startOffset": 2455
           }
         }
       ],

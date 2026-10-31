@@ -60,3 +60,13 @@
   (do!
     [:let [store-layer (implement Store (define get [k] (succeed k)) (define set [k v] (succeed nil)))]]
     (provide (read key) store-layer)))
+(: stamped-read (-> String (Effect String [NotFound] [Store.get Clock.now])))
+(define stamped-read [key] (do! [t (Clock.now nil)] (Store.get key)))
+(: wrong-order (-> String (Effect String [NotFound] [])))
+(define
+  wrong-order
+  [key]
+  (provide
+    (stamped-read key)
+    (implement Clock (define now [_] (succeed 1)))
+    (implement Store (define get [k] (do! [t (Clock.now nil)] (str k t))) (define set [k v] (succeed nil)))))

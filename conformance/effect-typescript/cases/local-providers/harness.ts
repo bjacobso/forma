@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { Effect, Layer } from "effect";
-import { Audit, auditedWrites, forwardReads, layered, lookup, NotFound, recordedWrites, Store } from "./expected.js";
+import { Audit, auditedWrites, forwardReads, layered, lookup, NotFound, recordedWrites, stacked, Store } from "./expected.js";
 
 export default async function check(): Promise<void> {
   // A recorder provided inline captures every set; nothing else is needed to run.
@@ -32,6 +32,9 @@ export default async function check(): Promise<void> {
   // An operation called from an inline method runs with the context captured when the layer is built.
   assert.equal(await Effect.runPromise(Effect.provide(auditedWrites("Grace"), AuditLive)), "Grace");
   assert.deepEqual(audit.splice(0), ["audited user=Grace"]);
+
+  // Several layers in one provide: the later Audit serves the Store before it.
+  assert.deepEqual(await Effect.runPromise(stacked("Ada")), ["user=Ada"]);
 
   // The outer Store is not consulted for members the inline layer defines.
   const failing = Layer.succeed(Store, Store.of({

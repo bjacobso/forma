@@ -102,3 +102,22 @@ export const auditedWrites = (name: string): Effect.Effect<string, NotFound, Aud
       });
     })));
   });
+
+export const stacked = (name: string): Effect.Effect<ReadonlyArray<string>, NotFound> =>
+  Effect.gen(function* () {
+    const entries = yield* Ref.make<ReadonlyArray<string>>([]);
+    yield* Effect.provide(
+      Effect.gen(function* () {
+        const audit = yield* Audit;
+        return yield* Effect.provide(saveUser(name), Layer.succeed(Store, Store.of({
+          get: (_key) => Effect.succeed(name),
+          set: (key, value) => audit.record(`${key}=${value}`),
+        })));
+      }),
+      Layer.succeed(
+        Audit,
+        Audit.of({ record: (entry) => Ref.update(entries, (xs) => [...xs, entry]) }),
+      ),
+    );
+    return yield* Ref.get(entries);
+  });

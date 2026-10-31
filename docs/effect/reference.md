@@ -93,8 +93,24 @@ undefined members to the outer implementation of the service:
 `(implement Payments :delegate (define charge [cents] (fail ...)))`. The
 `provide` discharges the service from the effect's requirements and adds the
 requirements of the methods, plus every forwarded member of a delegating
-`implement`. `implement` is valid only as the layer argument of `provide`; it
+`implement`. `implement` is valid only as a layer argument of `provide`; it
 cannot be bound with `let` or passed to `layer-merge`.
+
+`provide` takes several layers, and each wraps the ones before it, so
+`(provide eff A B)` is `(provide (provide eff A) B)`. A layer's methods get
+their services from outside it, so list a dependency after the layers that use
+it. Here the Store double records through the Audit double:
+
+```lisp
+(provide (save-user "Ada")
+  (implement Store
+    (define get [key] (succeed "Ada"))
+    (define set [key value] (Audit.record (str key "=" value))))
+  (implement Audit (define record [entry] (ref-update entries (fn [xs] (conj xs entry))))))
+```
+
+Listing Audit first is reported as `mechanics/provide-order`, at the call that
+would reach past it.
 Requirements name individual capabilities or whole services. `Scope` is the
 requirement introduced by resources.
 
@@ -144,7 +160,7 @@ applies to `String`, `:min-length` and `:max-length` to `String` and `List`, and
 | `(ref-make v)`, `(ref-get r)`, `(ref-set r v)`, `(ref-update r f)` | `Ref.make`, `Ref.get`, `Ref.set`, `Ref.update` |
 | `(config Int "PORT" :default 8080)` | `Config.withDefault(Config.Int("PORT"), 8080)` (fails with `ConfigError`) |
 | `(decode User input)` | `Schema.decodeUnknownEffect(User)(input)` (fails with `SchemaError`) |
-| `(provide eff AppLive)`, `(provide eff (implement Svc ...))` | `Effect.provide`. Services used inside are resolved inside the provided effect. |
+| `(provide eff AppLive)`, `(provide eff (implement Svc ...) OtherLive)` | `Effect.provide`. Services used inside are resolved inside the provided effect. |
 | `(log "message" value)` | `Effect.log` |
 
 The body of `do!`, `let`, or `do` may hold several forms. Forms before the last
@@ -201,8 +217,9 @@ consumes. It rejects a program when:
   with an error the service does not declare, or a layer's declared type does
   not match what it provides and requires;
 - an `implement` misses a member without `:delegate`, appears anywhere but as
-  the layer argument of `provide`, or (as a warning) provides a service the
-  effect does not use or delegates when it defines every member;
+  a layer argument of `provide`, or (as a warning) provides a service the
+  effect does not use, delegates when it defines every member, or uses a
+  service that is provided inside it;
 - a service method declares a requirement (Effect service methods are
   requirement-free; give the layer the dependency instead);
 - names, types, errors, or requirements are unknown, or definitions are

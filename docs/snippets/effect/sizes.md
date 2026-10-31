@@ -9,7 +9,7 @@
 | `elm-pure` | 7 | 33 | 4.71× |
 | `email-warmup` | 22 | 69 | 3.14× |
 | `http-api` | 19 | 37 | 1.95× |
-| `local-providers` | 74 | 94 | 1.27× |
+| `local-providers` | 90 | 112 | 1.24× |
 | `multi-service-checkout` | 125 | 160 | 1.28× |
 | `ontology-actions` | 25 | 52 | 2.08× |
 | `operational-effects` | 11 | 24 | 2.18× |
@@ -20,4 +20,4 @@
 | `stream-pipeline` | 60 | 70 | 1.17× |
 | `surface-review` | 45 | 95 | 2.11× |
 | `typed-errors` | 59 | 76 | 1.29× |
-| **All cases** | **1205** | **1620** | **1.34×** |
+| **All cases** | **1221** | **1638** | **1.34×** |
