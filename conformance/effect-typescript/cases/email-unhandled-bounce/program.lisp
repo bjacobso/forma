@@ -18,7 +18,7 @@
   (let [decision (launch-warmup-3 contact)]
     (match decision
       (EmailDecision.Send s)
-        (catch (do! [_ (Mailer.deliver s.lane contact.email)] decision)
+        (catch (do (Mailer.deliver s.lane contact.email) decision)
           (RateLimited e) (defer e.retry-in-hours))
       (EmailDecision.Defer d) decision
       (EmailDecision.Skip s) decision)))

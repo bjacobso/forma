@@ -82,8 +82,9 @@
           names
           (fn
             [name]
-            (do!
-              [_ (sleep (millis 1)) _ (ref-update counter (fn [n] (+ n 1)))]
+            (do
+              (sleep (millis 1))
+              (ref-update counter (fn [n] (+ n 1)))
               (Metrics.track name 1)))
           :concurrency :unbounded))
       _

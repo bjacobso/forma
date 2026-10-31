@@ -1,0 +1,35 @@
+{
+  "typescript": "rejects",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/undeclared-requirement",
+      "message": "Operation undeclared-forward requires Store.get, but its signature declares no requirements.",
+      "line": 14,
+      "column": 24,
+      "endLine": 14,
+      "endColumn": 90
+    },
+    {
+      "phase": "check",
+      "severity": "warning",
+      "code": "mechanics/unused-delegate",
+      "message": "implement Store defines every member, so :delegate forwards nothing.",
+      "line": 21,
+      "column": 5,
+      "endLine": 21,
+      "endColumn": 105
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/layer-cycle",
+      "message": "implement Store cannot use Store in its own members.",
+      "line": 26,
+      "column": 79,
+      "endLine": 26,
+      "endColumn": 94
+    }
+  ]
+}

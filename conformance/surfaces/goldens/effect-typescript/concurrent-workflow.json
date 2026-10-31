@@ -1583,18 +1583,18 @@
                   {
                     "kind": "Literal",
                     "span": {
-                      "endOffset": 2755,
+                      "endOffset": 2762,
                       "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                      "startOffset": 2744
+                      "startOffset": 2751
                     },
                     "value": "heartbeat"
                   },
                   {
                     "kind": "Literal",
                     "span": {
-                      "endOffset": 2757,
+                      "endOffset": 2764,
                       "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                      "startOffset": 2756
+                      "startOffset": 2763
                     },
                     "value": 1
                   }
@@ -1624,9 +1624,9 @@
                 "method": "track",
                 "service": "Metrics",
                 "span": {
-                  "endOffset": 2758,
+                  "endOffset": 2765,
                   "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                  "startOffset": 2729
+                  "startOffset": 2736
                 }
               }
             ],
@@ -1637,17 +1637,17 @@
                 "Metrics.track"
               ],
               "span": {
-                "endOffset": 2686,
+                "endOffset": 2693,
                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                "startOffset": 2654
+                "startOffset": 2661
               },
               "success": {
                 "kind": "Primitive",
                 "name": "Unit",
                 "span": {
-                  "endOffset": 2666,
+                  "endOffset": 2673,
                   "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                  "startOffset": 2662
+                  "startOffset": 2669
                 }
               }
             },
@@ -1660,9 +1660,9 @@
                   "kind": "Var",
                   "name": "beats",
                   "span": {
-                    "endOffset": 2771,
+                    "endOffset": 2778,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2766
+                    "startOffset": 2773
                   }
                 }
               },
@@ -1674,34 +1674,34 @@
                       "kind": "Var",
                       "name": "spaced",
                       "span": {
-                        "endOffset": 2789,
+                        "endOffset": 2796,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2783
+                        "startOffset": 2790
                       }
                     },
                     {
                       "kind": "Literal",
                       "span": {
-                        "endOffset": 2791,
+                        "endOffset": 2798,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2790
+                        "startOffset": 2797
                       },
                       "value": 1
                     }
                   ],
                   "kind": "List",
                   "span": {
-                    "endOffset": 2792,
+                    "endOffset": 2799,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2782
+                    "startOffset": 2789
                   }
                 }
               }
             ],
             "span": {
-              "endOffset": 2793,
+              "endOffset": 2800,
               "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-              "startOffset": 2721
+              "startOffset": 2728
             }
           },
           "effect": {
@@ -1711,17 +1711,17 @@
               "Metrics.track"
             ],
             "span": {
-              "endOffset": 2686,
+              "endOffset": 2693,
               "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-              "startOffset": 2654
+              "startOffset": 2661
             },
             "success": {
               "kind": "Primitive",
               "name": "Unit",
               "span": {
-                "endOffset": 2666,
+                "endOffset": 2673,
                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                "startOffset": 2662
+                "startOffset": 2669
               }
             }
           },
@@ -1734,9 +1734,9 @@
                 "kind": "Primitive",
                 "name": "Int",
                 "span": {
-                  "endOffset": 2653,
+                  "endOffset": 2660,
                   "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                  "startOffset": 2650
+                  "startOffset": 2657
                 }
               }
             }
@@ -1744,9 +1744,9 @@
         },
         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
         "span": {
-          "endOffset": 2794,
+          "endOffset": 2801,
           "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-          "startOffset": 2689
+          "startOffset": 2696
         }
       },
       {
@@ -1811,7 +1811,7 @@
               {
                 "name": "worker",
                 "span": {
-                  "endOffset": 2545,
+                  "endOffset": 2552,
                   "sourceId": "surfaces/effect-typescript/concurrent-workflow",
                   "startOffset": 2304
                 },
@@ -1830,251 +1830,6 @@
                         },
                         {
                           "body": {
-                            "bindings": [
-                              {
-                                "name": "_",
-                                "span": {
-                                  "endOffset": 2429,
-                                  "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                  "startOffset": 2411
-                                },
-                                "value": {
-                                  "args": [
-                                    {
-                                      "items": [
-                                        {
-                                          "kind": "Var",
-                                          "name": "millis",
-                                          "span": {
-                                            "endOffset": 2425,
-                                            "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                            "startOffset": 2419
-                                          }
-                                        },
-                                        {
-                                          "kind": "Literal",
-                                          "span": {
-                                            "endOffset": 2427,
-                                            "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                            "startOffset": 2426
-                                          },
-                                          "value": 1
-                                        }
-                                      ],
-                                      "kind": "List",
-                                      "span": {
-                                        "endOffset": 2428,
-                                        "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                        "startOffset": 2418
-                                      }
-                                    }
-                                  ],
-                                  "effect": {
-                                    "errors": [],
-                                    "kind": "Effect",
-                                    "requirements": [
-                                      "Metrics"
-                                    ],
-                                    "span": {
-                                      "endOffset": 2206,
-                                      "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                      "startOffset": 2181
-                                    },
-                                    "success": {
-                                      "kind": "Primitive",
-                                      "name": "Int",
-                                      "span": {
-                                        "endOffset": 2192,
-                                        "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                        "startOffset": 2189
-                                      }
-                                    }
-                                  },
-                                  "kind": "Combinator",
-                                  "name": "sleep",
-                                  "span": {
-                                    "endOffset": 2429,
-                                    "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                    "startOffset": 2411
-                                  }
-                                }
-                              },
-                              {
-                                "name": "_",
-                                "span": {
-                                  "endOffset": 2469,
-                                  "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                  "startOffset": 2432
-                                },
-                                "value": {
-                                  "args": [
-                                    {
-                                      "kind": "Var",
-                                      "name": "counter",
-                                      "span": {
-                                        "endOffset": 2451,
-                                        "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                        "startOffset": 2444
-                                      }
-                                    },
-                                    {
-                                      "items": [
-                                        {
-                                          "kind": "Var",
-                                          "name": "fn",
-                                          "span": {
-                                            "endOffset": 2455,
-                                            "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                            "startOffset": 2453
-                                          }
-                                        },
-                                        {
-                                          "items": [
-                                            {
-                                              "kind": "Var",
-                                              "name": "n",
-                                              "span": {
-                                                "endOffset": 2458,
-                                                "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                "startOffset": 2457
-                                              }
-                                            }
-                                          ],
-                                          "kind": "Vector",
-                                          "span": {
-                                            "endOffset": 2459,
-                                            "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                            "startOffset": 2456
-                                          }
-                                        },
-                                        {
-                                          "items": [
-                                            {
-                                              "kind": "Var",
-                                              "name": "+",
-                                              "span": {
-                                                "endOffset": 2462,
-                                                "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                "startOffset": 2461
-                                              }
-                                            },
-                                            {
-                                              "kind": "Var",
-                                              "name": "n",
-                                              "span": {
-                                                "endOffset": 2464,
-                                                "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                "startOffset": 2463
-                                              }
-                                            },
-                                            {
-                                              "kind": "Literal",
-                                              "span": {
-                                                "endOffset": 2466,
-                                                "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                "startOffset": 2465
-                                              },
-                                              "value": 1
-                                            }
-                                          ],
-                                          "kind": "List",
-                                          "span": {
-                                            "endOffset": 2467,
-                                            "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                            "startOffset": 2460
-                                          }
-                                        }
-                                      ],
-                                      "kind": "List",
-                                      "span": {
-                                        "endOffset": 2468,
-                                        "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                        "startOffset": 2452
-                                      }
-                                    }
-                                  ],
-                                  "effect": {
-                                    "errors": [],
-                                    "kind": "Effect",
-                                    "requirements": [
-                                      "Metrics"
-                                    ],
-                                    "span": {
-                                      "endOffset": 2206,
-                                      "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                      "startOffset": 2181
-                                    },
-                                    "success": {
-                                      "kind": "Primitive",
-                                      "name": "Int",
-                                      "span": {
-                                        "endOffset": 2192,
-                                        "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                        "startOffset": 2189
-                                      }
-                                    }
-                                  },
-                                  "kind": "Combinator",
-                                  "name": "ref-update",
-                                  "span": {
-                                    "endOffset": 2469,
-                                    "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                    "startOffset": 2432
-                                  }
-                                }
-                              }
-                            ],
-                            "body": {
-                              "args": [
-                                {
-                                  "kind": "Var",
-                                  "name": "name",
-                                  "span": {
-                                    "endOffset": 2504,
-                                    "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                    "startOffset": 2500
-                                  }
-                                },
-                                {
-                                  "kind": "Literal",
-                                  "span": {
-                                    "endOffset": 2506,
-                                    "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                    "startOffset": 2505
-                                  },
-                                  "value": 1
-                                }
-                              ],
-                              "effect": {
-                                "errors": [],
-                                "kind": "Effect",
-                                "requirements": [
-                                  "Metrics.track"
-                                ],
-                                "span": {
-                                  "endOffset": 675,
-                                  "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                  "startOffset": 662
-                                },
-                                "success": {
-                                  "kind": "Primitive",
-                                  "name": "Unit",
-                                  "span": {
-                                    "endOffset": 674,
-                                    "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                    "startOffset": 670
-                                  }
-                                }
-                              },
-                              "kind": "ServiceCall",
-                              "method": "track",
-                              "service": "Metrics",
-                              "span": {
-                                "endOffset": 2507,
-                                "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                "startOffset": 2485
-                              }
-                            },
                             "effect": {
                               "errors": [],
                               "kind": "Effect",
@@ -2096,9 +1851,238 @@
                                 }
                               }
                             },
+                            "forms": [
+                              {
+                                "args": [
+                                  {
+                                    "items": [
+                                      {
+                                        "kind": "Var",
+                                        "name": "millis",
+                                        "span": {
+                                          "endOffset": 2421,
+                                          "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                          "startOffset": 2415
+                                        }
+                                      },
+                                      {
+                                        "kind": "Literal",
+                                        "span": {
+                                          "endOffset": 2423,
+                                          "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                          "startOffset": 2422
+                                        },
+                                        "value": 1
+                                      }
+                                    ],
+                                    "kind": "List",
+                                    "span": {
+                                      "endOffset": 2424,
+                                      "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                      "startOffset": 2414
+                                    }
+                                  }
+                                ],
+                                "effect": {
+                                  "errors": [],
+                                  "kind": "Effect",
+                                  "requirements": [
+                                    "Metrics"
+                                  ],
+                                  "span": {
+                                    "endOffset": 2206,
+                                    "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                    "startOffset": 2181
+                                  },
+                                  "success": {
+                                    "kind": "Primitive",
+                                    "name": "Int",
+                                    "span": {
+                                      "endOffset": 2192,
+                                      "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                      "startOffset": 2189
+                                    }
+                                  }
+                                },
+                                "kind": "Combinator",
+                                "name": "sleep",
+                                "span": {
+                                  "endOffset": 2425,
+                                  "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                  "startOffset": 2407
+                                }
+                              },
+                              {
+                                "args": [
+                                  {
+                                    "kind": "Var",
+                                    "name": "counter",
+                                    "span": {
+                                      "endOffset": 2459,
+                                      "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                      "startOffset": 2452
+                                    }
+                                  },
+                                  {
+                                    "items": [
+                                      {
+                                        "kind": "Var",
+                                        "name": "fn",
+                                        "span": {
+                                          "endOffset": 2463,
+                                          "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                          "startOffset": 2461
+                                        }
+                                      },
+                                      {
+                                        "items": [
+                                          {
+                                            "kind": "Var",
+                                            "name": "n",
+                                            "span": {
+                                              "endOffset": 2466,
+                                              "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                              "startOffset": 2465
+                                            }
+                                          }
+                                        ],
+                                        "kind": "Vector",
+                                        "span": {
+                                          "endOffset": 2467,
+                                          "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                          "startOffset": 2464
+                                        }
+                                      },
+                                      {
+                                        "items": [
+                                          {
+                                            "kind": "Var",
+                                            "name": "+",
+                                            "span": {
+                                              "endOffset": 2470,
+                                              "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                              "startOffset": 2469
+                                            }
+                                          },
+                                          {
+                                            "kind": "Var",
+                                            "name": "n",
+                                            "span": {
+                                              "endOffset": 2472,
+                                              "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                              "startOffset": 2471
+                                            }
+                                          },
+                                          {
+                                            "kind": "Literal",
+                                            "span": {
+                                              "endOffset": 2474,
+                                              "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                              "startOffset": 2473
+                                            },
+                                            "value": 1
+                                          }
+                                        ],
+                                        "kind": "List",
+                                        "span": {
+                                          "endOffset": 2475,
+                                          "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                          "startOffset": 2468
+                                        }
+                                      }
+                                    ],
+                                    "kind": "List",
+                                    "span": {
+                                      "endOffset": 2476,
+                                      "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                      "startOffset": 2460
+                                    }
+                                  }
+                                ],
+                                "effect": {
+                                  "errors": [],
+                                  "kind": "Effect",
+                                  "requirements": [
+                                    "Metrics"
+                                  ],
+                                  "span": {
+                                    "endOffset": 2206,
+                                    "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                    "startOffset": 2181
+                                  },
+                                  "success": {
+                                    "kind": "Primitive",
+                                    "name": "Int",
+                                    "span": {
+                                      "endOffset": 2192,
+                                      "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                      "startOffset": 2189
+                                    }
+                                  }
+                                },
+                                "kind": "Combinator",
+                                "name": "ref-update",
+                                "span": {
+                                  "endOffset": 2477,
+                                  "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                  "startOffset": 2440
+                                }
+                              },
+                              {
+                                "args": [
+                                  {
+                                    "kind": "Var",
+                                    "name": "name",
+                                    "span": {
+                                      "endOffset": 2511,
+                                      "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                      "startOffset": 2507
+                                    }
+                                  },
+                                  {
+                                    "kind": "Literal",
+                                    "span": {
+                                      "endOffset": 2513,
+                                      "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                      "startOffset": 2512
+                                    },
+                                    "value": 1
+                                  }
+                                ],
+                                "effect": {
+                                  "errors": [],
+                                  "kind": "Effect",
+                                  "requirements": [
+                                    "Metrics.track"
+                                  ],
+                                  "span": {
+                                    "endOffset": 675,
+                                    "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                    "startOffset": 662
+                                  },
+                                  "success": {
+                                    "kind": "Primitive",
+                                    "name": "Unit",
+                                    "span": {
+                                      "endOffset": 674,
+                                      "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                      "startOffset": 670
+                                    }
+                                  }
+                                },
+                                "kind": "ServiceCall",
+                                "method": "track",
+                                "service": "Metrics",
+                                "span": {
+                                  "endOffset": 2514,
+                                  "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                  "startOffset": 2492
+                                }
+                              }
+                            ],
                             "kind": "Do",
                             "span": {
-                              "endOffset": 2508,
+                              "endOffset": 2515,
                               "sourceId": "surfaces/effect-typescript/concurrent-workflow",
                               "startOffset": 2389
                             }
@@ -2108,7 +2092,7 @@
                             "name"
                           ],
                           "span": {
-                            "endOffset": 2509,
+                            "endOffset": 2516,
                             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
                             "startOffset": 2354
                           }
@@ -2147,15 +2131,15 @@
                               "name": ":unbounded"
                             },
                             "span": {
-                              "endOffset": 2543,
+                              "endOffset": 2550,
                               "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                              "startOffset": 2533
+                              "startOffset": 2540
                             }
                           }
                         }
                       ],
                       "span": {
-                        "endOffset": 2544,
+                        "endOffset": 2551,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
                         "startOffset": 2318
                       }
@@ -2185,7 +2169,7 @@
                   "kind": "Combinator",
                   "name": "fork",
                   "span": {
-                    "endOffset": 2545,
+                    "endOffset": 2552,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
                     "startOffset": 2304
                   }
@@ -2194,9 +2178,9 @@
               {
                 "name": "_",
                 "span": {
-                  "endOffset": 2573,
+                  "endOffset": 2580,
                   "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                  "startOffset": 2560
+                  "startOffset": 2567
                 },
                 "value": {
                   "args": [
@@ -2204,9 +2188,9 @@
                       "kind": "Var",
                       "name": "worker",
                       "span": {
-                        "endOffset": 2572,
+                        "endOffset": 2579,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2566
+                        "startOffset": 2573
                       }
                     }
                   ],
@@ -2234,18 +2218,18 @@
                   "kind": "Combinator",
                   "name": "join",
                   "span": {
-                    "endOffset": 2573,
+                    "endOffset": 2580,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2560
+                    "startOffset": 2567
                   }
                 }
               },
               {
                 "name": "total",
                 "span": {
-                  "endOffset": 2609,
+                  "endOffset": 2616,
                   "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                  "startOffset": 2592
+                  "startOffset": 2599
                 },
                 "value": {
                   "args": [
@@ -2253,9 +2237,9 @@
                       "kind": "Var",
                       "name": "counter",
                       "span": {
-                        "endOffset": 2608,
+                        "endOffset": 2615,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2601
+                        "startOffset": 2608
                       }
                     }
                   ],
@@ -2283,9 +2267,9 @@
                   "kind": "Combinator",
                   "name": "ref-get",
                   "span": {
-                    "endOffset": 2609,
+                    "endOffset": 2616,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2592
+                    "startOffset": 2599
                   }
                 }
               }
@@ -2314,17 +2298,17 @@
               },
               "kind": "Succeed",
               "span": {
-                "endOffset": 2630,
+                "endOffset": 2637,
                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                "startOffset": 2615
+                "startOffset": 2622
               },
               "value": {
                 "kind": "Var",
                 "name": "total",
                 "span": {
-                  "endOffset": 2629,
+                  "endOffset": 2636,
                   "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                  "startOffset": 2624
+                  "startOffset": 2631
                 }
               }
             },
@@ -2351,7 +2335,7 @@
             },
             "kind": "Do",
             "span": {
-              "endOffset": 2631,
+              "endOffset": 2638,
               "sourceId": "surfaces/effect-typescript/concurrent-workflow",
               "startOffset": 2241
             }
@@ -2399,7 +2383,7 @@
         },
         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
         "span": {
-          "endOffset": 2632,
+          "endOffset": 2639,
           "sourceId": "surfaces/effect-typescript/concurrent-workflow",
           "startOffset": 2209
         }
@@ -5949,188 +5933,160 @@
                                     {
                                       "kind": "symbol",
                                       "span": {
-                                        "endOffset": 2393,
+                                        "endOffset": 2392,
                                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
                                         "startOffset": 2390
                                       },
-                                      "value": "do!"
+                                      "value": "do"
                                     },
                                     {
                                       "items": [
                                         {
                                           "kind": "symbol",
                                           "span": {
-                                            "endOffset": 2410,
+                                            "endOffset": 2413,
                                             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                            "startOffset": 2409
+                                            "startOffset": 2408
                                           },
-                                          "value": "_"
+                                          "value": "sleep"
                                         },
                                         {
                                           "items": [
                                             {
                                               "kind": "symbol",
                                               "span": {
-                                                "endOffset": 2417,
+                                                "endOffset": 2421,
                                                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                "startOffset": 2412
+                                                "startOffset": 2415
                                               },
-                                              "value": "sleep"
+                                              "value": "millis"
+                                            },
+                                            {
+                                              "kind": "int",
+                                              "span": {
+                                                "endOffset": 2423,
+                                                "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                                "startOffset": 2422
+                                              },
+                                              "value": 1
+                                            }
+                                          ],
+                                          "kind": "list",
+                                          "span": {
+                                            "endOffset": 2424,
+                                            "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                            "startOffset": 2414
+                                          }
+                                        }
+                                      ],
+                                      "kind": "list",
+                                      "span": {
+                                        "endOffset": 2425,
+                                        "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                        "startOffset": 2407
+                                      }
+                                    },
+                                    {
+                                      "items": [
+                                        {
+                                          "kind": "symbol",
+                                          "span": {
+                                            "endOffset": 2451,
+                                            "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                            "startOffset": 2441
+                                          },
+                                          "value": "ref-update"
+                                        },
+                                        {
+                                          "kind": "symbol",
+                                          "span": {
+                                            "endOffset": 2459,
+                                            "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                            "startOffset": 2452
+                                          },
+                                          "value": "counter"
+                                        },
+                                        {
+                                          "items": [
+                                            {
+                                              "kind": "symbol",
+                                              "span": {
+                                                "endOffset": 2463,
+                                                "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                                "startOffset": 2461
+                                              },
+                                              "value": "fn"
                                             },
                                             {
                                               "items": [
                                                 {
                                                   "kind": "symbol",
                                                   "span": {
-                                                    "endOffset": 2425,
+                                                    "endOffset": 2466,
                                                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                    "startOffset": 2419
+                                                    "startOffset": 2465
                                                   },
-                                                  "value": "millis"
+                                                  "value": "n"
+                                                }
+                                              ],
+                                              "kind": "vector",
+                                              "span": {
+                                                "endOffset": 2467,
+                                                "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                                "startOffset": 2464
+                                              }
+                                            },
+                                            {
+                                              "items": [
+                                                {
+                                                  "kind": "symbol",
+                                                  "span": {
+                                                    "endOffset": 2470,
+                                                    "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                                    "startOffset": 2469
+                                                  },
+                                                  "value": "+"
+                                                },
+                                                {
+                                                  "kind": "symbol",
+                                                  "span": {
+                                                    "endOffset": 2472,
+                                                    "sourceId": "surfaces/effect-typescript/concurrent-workflow",
+                                                    "startOffset": 2471
+                                                  },
+                                                  "value": "n"
                                                 },
                                                 {
                                                   "kind": "int",
                                                   "span": {
-                                                    "endOffset": 2427,
+                                                    "endOffset": 2474,
                                                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                    "startOffset": 2426
+                                                    "startOffset": 2473
                                                   },
                                                   "value": 1
                                                 }
                                               ],
                                               "kind": "list",
                                               "span": {
-                                                "endOffset": 2428,
+                                                "endOffset": 2475,
                                                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                "startOffset": 2418
+                                                "startOffset": 2468
                                               }
                                             }
                                           ],
                                           "kind": "list",
                                           "span": {
-                                            "endOffset": 2429,
+                                            "endOffset": 2476,
                                             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                            "startOffset": 2411
-                                          }
-                                        },
-                                        {
-                                          "kind": "symbol",
-                                          "span": {
-                                            "endOffset": 2431,
-                                            "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                            "startOffset": 2430
-                                          },
-                                          "value": "_"
-                                        },
-                                        {
-                                          "items": [
-                                            {
-                                              "kind": "symbol",
-                                              "span": {
-                                                "endOffset": 2443,
-                                                "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                "startOffset": 2433
-                                              },
-                                              "value": "ref-update"
-                                            },
-                                            {
-                                              "kind": "symbol",
-                                              "span": {
-                                                "endOffset": 2451,
-                                                "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                "startOffset": 2444
-                                              },
-                                              "value": "counter"
-                                            },
-                                            {
-                                              "items": [
-                                                {
-                                                  "kind": "symbol",
-                                                  "span": {
-                                                    "endOffset": 2455,
-                                                    "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                    "startOffset": 2453
-                                                  },
-                                                  "value": "fn"
-                                                },
-                                                {
-                                                  "items": [
-                                                    {
-                                                      "kind": "symbol",
-                                                      "span": {
-                                                        "endOffset": 2458,
-                                                        "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                        "startOffset": 2457
-                                                      },
-                                                      "value": "n"
-                                                    }
-                                                  ],
-                                                  "kind": "vector",
-                                                  "span": {
-                                                    "endOffset": 2459,
-                                                    "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                    "startOffset": 2456
-                                                  }
-                                                },
-                                                {
-                                                  "items": [
-                                                    {
-                                                      "kind": "symbol",
-                                                      "span": {
-                                                        "endOffset": 2462,
-                                                        "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                        "startOffset": 2461
-                                                      },
-                                                      "value": "+"
-                                                    },
-                                                    {
-                                                      "kind": "symbol",
-                                                      "span": {
-                                                        "endOffset": 2464,
-                                                        "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                        "startOffset": 2463
-                                                      },
-                                                      "value": "n"
-                                                    },
-                                                    {
-                                                      "kind": "int",
-                                                      "span": {
-                                                        "endOffset": 2466,
-                                                        "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                        "startOffset": 2465
-                                                      },
-                                                      "value": 1
-                                                    }
-                                                  ],
-                                                  "kind": "list",
-                                                  "span": {
-                                                    "endOffset": 2467,
-                                                    "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                    "startOffset": 2460
-                                                  }
-                                                }
-                                              ],
-                                              "kind": "list",
-                                              "span": {
-                                                "endOffset": 2468,
-                                                "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                                "startOffset": 2452
-                                              }
-                                            }
-                                          ],
-                                          "kind": "list",
-                                          "span": {
-                                            "endOffset": 2469,
-                                            "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                            "startOffset": 2432
+                                            "startOffset": 2460
                                           }
                                         }
                                       ],
-                                      "kind": "vector",
+                                      "kind": "list",
                                       "span": {
-                                        "endOffset": 2470,
+                                        "endOffset": 2477,
                                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                        "startOffset": 2408
+                                        "startOffset": 2440
                                       }
                                     },
                                     {
@@ -6138,42 +6094,42 @@
                                         {
                                           "kind": "symbol",
                                           "span": {
-                                            "endOffset": 2499,
+                                            "endOffset": 2506,
                                             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                            "startOffset": 2486
+                                            "startOffset": 2493
                                           },
                                           "value": "Metrics.track"
                                         },
                                         {
                                           "kind": "symbol",
                                           "span": {
-                                            "endOffset": 2504,
+                                            "endOffset": 2511,
                                             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                            "startOffset": 2500
+                                            "startOffset": 2507
                                           },
                                           "value": "name"
                                         },
                                         {
                                           "kind": "int",
                                           "span": {
-                                            "endOffset": 2506,
+                                            "endOffset": 2513,
                                             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                            "startOffset": 2505
+                                            "startOffset": 2512
                                           },
                                           "value": 1
                                         }
                                       ],
                                       "kind": "list",
                                       "span": {
-                                        "endOffset": 2507,
+                                        "endOffset": 2514,
                                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                        "startOffset": 2485
+                                        "startOffset": 2492
                                       }
                                     }
                                   ],
                                   "kind": "list",
                                   "span": {
-                                    "endOffset": 2508,
+                                    "endOffset": 2515,
                                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
                                     "startOffset": 2389
                                   }
@@ -6181,7 +6137,7 @@
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 2509,
+                                "endOffset": 2516,
                                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
                                 "startOffset": 2354
                               }
@@ -6189,25 +6145,25 @@
                             {
                               "kind": "keyword",
                               "span": {
-                                "endOffset": 2532,
+                                "endOffset": 2539,
                                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                "startOffset": 2520
+                                "startOffset": 2527
                               },
                               "value": ":concurrency"
                             },
                             {
                               "kind": "keyword",
                               "span": {
-                                "endOffset": 2543,
+                                "endOffset": 2550,
                                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                                "startOffset": 2533
+                                "startOffset": 2540
                               },
                               "value": ":unbounded"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 2544,
+                            "endOffset": 2551,
                             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
                             "startOffset": 2318
                           }
@@ -6215,7 +6171,7 @@
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 2545,
+                        "endOffset": 2552,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
                         "startOffset": 2304
                       }
@@ -6223,9 +6179,9 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 2553,
+                        "endOffset": 2560,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2552
+                        "startOffset": 2559
                       },
                       "value": "_"
                     },
@@ -6234,35 +6190,35 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 2565,
+                            "endOffset": 2572,
                             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                            "startOffset": 2561
+                            "startOffset": 2568
                           },
                           "value": "join"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 2572,
+                            "endOffset": 2579,
                             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                            "startOffset": 2566
+                            "startOffset": 2573
                           },
                           "value": "worker"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 2573,
+                        "endOffset": 2580,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2560
+                        "startOffset": 2567
                       }
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 2585,
+                        "endOffset": 2592,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2580
+                        "startOffset": 2587
                       },
                       "value": "total"
                     },
@@ -6271,33 +6227,33 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 2600,
+                            "endOffset": 2607,
                             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                            "startOffset": 2593
+                            "startOffset": 2600
                           },
                           "value": "ref-get"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 2608,
+                            "endOffset": 2615,
                             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                            "startOffset": 2601
+                            "startOffset": 2608
                           },
                           "value": "counter"
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 2609,
+                        "endOffset": 2616,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2592
+                        "startOffset": 2599
                       }
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 2610,
+                    "endOffset": 2617,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
                     "startOffset": 2250
                   }
@@ -6307,33 +6263,33 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 2623,
+                        "endOffset": 2630,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2616
+                        "startOffset": 2623
                       },
                       "value": "succeed"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 2629,
+                        "endOffset": 2636,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2624
+                        "startOffset": 2631
                       },
                       "value": "total"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 2630,
+                    "endOffset": 2637,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2615
+                    "startOffset": 2622
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 2631,
+                "endOffset": 2638,
                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
                 "startOffset": 2241
               }
@@ -6341,7 +6297,7 @@
           ],
           "kind": "list",
           "span": {
-            "endOffset": 2632,
+            "endOffset": 2639,
             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
             "startOffset": 2209
           }
@@ -6351,18 +6307,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 2635,
+                "endOffset": 2642,
                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                "startOffset": 2634
+                "startOffset": 2641
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 2645,
+                "endOffset": 2652,
                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                "startOffset": 2636
+                "startOffset": 2643
               },
               "value": "heartbeat"
             },
@@ -6371,18 +6327,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 2649,
+                    "endOffset": 2656,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2647
+                    "startOffset": 2654
                   },
                   "value": "->"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 2653,
+                    "endOffset": 2660,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2650
+                    "startOffset": 2657
                   },
                   "value": "Int"
                 },
@@ -6391,18 +6347,18 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 2661,
+                        "endOffset": 2668,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2655
+                        "startOffset": 2662
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 2666,
+                        "endOffset": 2673,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2662
+                        "startOffset": 2669
                       },
                       "value": "Unit"
                     },
@@ -6410,9 +6366,9 @@
                       "items": [],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 2669,
+                        "endOffset": 2676,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2667
+                        "startOffset": 2674
                       }
                     },
                     {
@@ -6420,42 +6376,42 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 2684,
+                            "endOffset": 2691,
                             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                            "startOffset": 2671
+                            "startOffset": 2678
                           },
                           "value": "Metrics.track"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 2685,
+                        "endOffset": 2692,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2670
+                        "startOffset": 2677
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 2686,
+                    "endOffset": 2693,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2654
+                    "startOffset": 2661
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 2687,
+                "endOffset": 2694,
                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                "startOffset": 2646
+                "startOffset": 2653
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 2688,
+            "endOffset": 2695,
             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-            "startOffset": 2633
+            "startOffset": 2640
           }
         },
         {
@@ -6463,18 +6419,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 2696,
+                "endOffset": 2703,
                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                "startOffset": 2690
+                "startOffset": 2697
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 2708,
+                "endOffset": 2715,
                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                "startOffset": 2699
+                "startOffset": 2706
               },
               "value": "heartbeat"
             },
@@ -6483,18 +6439,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 2717,
+                    "endOffset": 2724,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2712
+                    "startOffset": 2719
                   },
                   "value": "beats"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 2718,
+                "endOffset": 2725,
                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                "startOffset": 2711
+                "startOffset": 2718
               }
             },
             {
@@ -6502,9 +6458,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 2728,
+                    "endOffset": 2735,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2722
+                    "startOffset": 2729
                   },
                   "value": "repeat"
                 },
@@ -6513,62 +6469,62 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 2743,
+                        "endOffset": 2750,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2730
+                        "startOffset": 2737
                       },
                       "value": "Metrics.track"
                     },
                     {
                       "kind": "string",
                       "span": {
-                        "endOffset": 2755,
+                        "endOffset": 2762,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2744
+                        "startOffset": 2751
                       },
                       "value": "heartbeat"
                     },
                     {
                       "kind": "int",
                       "span": {
-                        "endOffset": 2757,
+                        "endOffset": 2764,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2756
+                        "startOffset": 2763
                       },
                       "value": 1
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 2758,
+                    "endOffset": 2765,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2729
+                    "startOffset": 2736
                   }
                 },
                 {
                   "kind": "keyword",
                   "span": {
-                    "endOffset": 2765,
+                    "endOffset": 2772,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2759
+                    "startOffset": 2766
                   },
                   "value": ":times"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 2771,
+                    "endOffset": 2778,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2766
+                    "startOffset": 2773
                   },
                   "value": "beats"
                 },
                 {
                   "kind": "keyword",
                   "span": {
-                    "endOffset": 2781,
+                    "endOffset": 2788,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2772
+                    "startOffset": 2779
                   },
                   "value": ":schedule"
                 },
@@ -6577,43 +6533,43 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 2789,
+                        "endOffset": 2796,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2783
+                        "startOffset": 2790
                       },
                       "value": "spaced"
                     },
                     {
                       "kind": "int",
                       "span": {
-                        "endOffset": 2791,
+                        "endOffset": 2798,
                         "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                        "startOffset": 2790
+                        "startOffset": 2797
                       },
                       "value": 1
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 2792,
+                    "endOffset": 2799,
                     "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                    "startOffset": 2782
+                    "startOffset": 2789
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 2793,
+                "endOffset": 2800,
                 "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-                "startOffset": 2721
+                "startOffset": 2728
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 2794,
+            "endOffset": 2801,
             "sourceId": "surfaces/effect-typescript/concurrent-workflow",
-            "startOffset": 2689
+            "startOffset": 2696
           }
         }
       ],

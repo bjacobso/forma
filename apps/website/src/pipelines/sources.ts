@@ -42,8 +42,8 @@ const consoleServiceSource = `(error ConsoleUnavailable {:message String})
 `;
 
 const logOperationSource = `(define log [message]
-  (do! [_ (Console.print message)]
-    (succeed nil)))`;
+  (do (Console.print message)
+      nil))`;
 
 export const contractSource = `${consoleServiceSource}
 (: log (-> String (Effect Unit [ConsoleUnavailable] [Console.print])))
