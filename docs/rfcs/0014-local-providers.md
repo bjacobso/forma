@@ -80,7 +80,7 @@ This RFC stays inside that decision:
   `preludes/http-api.lisp`, and the legacy rejection messages refer to it.
 
 Multi-shot resumption, generators, and backtracking handlers remain out of
-scope, as [RFC 0003](./0003-direct-style-effects.md) already records.
+scope, as the declined [RFC 0003](./0003-direct-style-effects.md) also recorded.
 
 ## Current state
 
@@ -252,16 +252,9 @@ interface InlineLayer {
 
 ### Relation to direct-style effects
 
-Under [RFC 0003](./0003-direct-style-effects.md), `provide` takes a function
-to invoke with the provider installed. `implement` is accepted there in the
-same position:
-
-```lisp
-(provide (fn [] (pay order))
-  (implement Payments (define charge [id cents] "charge:test")))
-```
-
-No other part of this RFC depends on RFC 0003.
+[RFC 0003](./0003-direct-style-effects.md) proposed that `provide` take a
+function to invoke with the provider installed. It was declined, so `provide`
+keeps taking an effect, and this RFC does not depend on it.
 
 ## Alternatives considered
 

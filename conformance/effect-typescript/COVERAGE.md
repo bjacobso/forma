@@ -67,7 +67,7 @@ Status key:
 
 | Effect construct | Forma surface | Status | Case |
 | --- | --- | --- | --- |
-| `Effect.gen` | `do!`, `let`, `<-` | supported | all |
+| `Effect.gen` | `do!`, `let`, `do`, `<-` | supported | all; effect-sequencing for bodies with several forms |
 | Branching | `if`, `when`, `unless`, `cond`, `match` (effect and value position) | supported | crud-users, pure-domain-logic |
 | Zero-argument operations | `(-> (Effect ...))` | supported | crud-users |
 | Pure functions and constants | `(: f (-> A B)) (define f (fn ...))`, `(: c T) (define c v)` | supported | pure-domain-logic |

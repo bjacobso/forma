@@ -91,9 +91,10 @@ applies to `String`, `:min-length` and `:max-length` to `String` and `List`, and
 
 | Forma | Effect TypeScript |
 | --- | --- |
-| `(do! [x eff _ eff2] body)` | `const x = yield* eff; yield* eff2; ...` |
+| `(do! [x eff] eff2 body)` | `const x = yield* eff; yield* eff2; ...` |
 | `(do! [x eff :let [y value]] body)` | mixes effects with lexical pure bindings |
-| `(let [x value] body)` | `const x = value` (`let` binds values; running an effect needs `do!`) |
+| `(let [x value] eff body)` | `const x = value; yield* eff; ...` (`let` binds values; running an effect needs `do!`) |
+| `(do eff eff2 body)` | `yield* eff; yield* eff2; ...` |
 | `(succeed v)`, a plain value | `return v` |
 | `(fail (NotFound {:id id}))` | `yield* Effect.fail(new NotFound({ id }))` |
 | `(Users.find id)`, `(other-op x)` | `users.find(id)`, `otherOp(x)` |
@@ -120,6 +121,10 @@ applies to `String`, `:min-length` and `:max-length` to `String` and `List`, and
 | `(decode User input)` | `Schema.decodeUnknownEffect(User)(input)` (fails with `SchemaError`) |
 | `(provide eff AppLive)` | `Effect.provide`. Services used inside are resolved inside the provided effect. |
 | `(log "message" value)` | `Effect.log` |
+
+The body of `do!`, `let`, or `do` may hold several forms. Forms before the last
+run in order for their effects, and the last form is the result, so an effect
+whose result is unused needs no `_` binding.
 
 Streams are values: `stream-of`, `stream-range`, `stream-map`,
 `stream-filter`, `stream-take`, and `stream-map-effect` build them, and

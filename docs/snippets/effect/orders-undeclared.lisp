@@ -22,7 +22,7 @@
     (match found
       None (fail (OrderNotFound {:id id}))
       (Some order)
-        (do! [_ (retry (Payments.charge (get order :total-cents)) :times 2)
-              paid (succeed (assoc order :status "paid"))
-              _ (Orders.save paid)]
-          (succeed paid)))))
+        (let [paid (assoc order :status "paid")]
+          (retry (Payments.charge (get order :total-cents)) :times 2)
+          (Orders.save paid)
+          paid))))

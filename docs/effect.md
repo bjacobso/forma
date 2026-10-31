@@ -92,7 +92,7 @@ pageClass: forma-index forma-effect
 <div class="fh-window">
 <div class="fh-window__bar"><span>orders.lisp</span><span>declared, then checked</span></div>
 
-<<< @/snippets/effect/orders.lisp{23,29}
+<<< @/snippets/effect/orders.lisp{23,26}
 
 </div>
 </div>

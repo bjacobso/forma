@@ -1690,144 +1690,6 @@
             "methods": [
               {
                 "body": {
-                  "bindings": [
-                    {
-                      "name": "_",
-                      "span": {
-                        "endOffset": 2066,
-                        "sourceId": "surfaces/effect-typescript/resource-scope",
-                        "startOffset": 2017
-                      },
-                      "value": {
-                        "args": [
-                          {
-                            "kind": "Var",
-                            "name": "store",
-                            "span": {
-                              "endOffset": 2034,
-                              "sourceId": "surfaces/effect-typescript/resource-scope",
-                              "startOffset": 2029
-                            }
-                          },
-                          {
-                            "items": [
-                              {
-                                "kind": "Var",
-                                "name": "str",
-                                "span": {
-                                  "endOffset": 2039,
-                                  "sourceId": "surfaces/effect-typescript/resource-scope",
-                                  "startOffset": 2036
-                                }
-                              },
-                              {
-                                "kind": "Literal",
-                                "span": {
-                                  "endOffset": 2049,
-                                  "sourceId": "surfaces/effect-typescript/resource-scope",
-                                  "startOffset": 2040
-                                },
-                                "value": "insert "
-                              },
-                              {
-                                "kind": "Var",
-                                "name": "name",
-                                "span": {
-                                  "endOffset": 2054,
-                                  "sourceId": "surfaces/effect-typescript/resource-scope",
-                                  "startOffset": 2050
-                                }
-                              },
-                              {
-                                "kind": "Literal",
-                                "span": {
-                                  "endOffset": 2058,
-                                  "sourceId": "surfaces/effect-typescript/resource-scope",
-                                  "startOffset": 2055
-                                },
-                                "value": " "
-                              },
-                              {
-                                "kind": "Var",
-                                "name": "total",
-                                "span": {
-                                  "endOffset": 2064,
-                                  "sourceId": "surfaces/effect-typescript/resource-scope",
-                                  "startOffset": 2059
-                                }
-                              }
-                            ],
-                            "kind": "List",
-                            "span": {
-                              "endOffset": 2065,
-                              "sourceId": "surfaces/effect-typescript/resource-scope",
-                              "startOffset": 2035
-                            }
-                          }
-                        ],
-                        "effect": {
-                          "errors": [
-                            "QueryFailed"
-                          ],
-                          "kind": "Effect",
-                          "requirements": [
-                            "Pool.query"
-                          ],
-                          "span": {
-                            "endOffset": 487,
-                            "sourceId": "surfaces/effect-typescript/resource-scope",
-                            "startOffset": 451
-                          },
-                          "success": {
-                            "item": {
-                              "kind": "Ref",
-                              "name": "Row",
-                              "span": {
-                                "endOffset": 468,
-                                "sourceId": "surfaces/effect-typescript/resource-scope",
-                                "startOffset": 465
-                              }
-                            },
-                            "kind": "Array"
-                          }
-                        },
-                        "kind": "ServiceCall",
-                        "method": "query",
-                        "service": "Pool",
-                        "span": {
-                          "endOffset": 2066,
-                          "sourceId": "surfaces/effect-typescript/resource-scope",
-                          "startOffset": 2017
-                        }
-                      }
-                    }
-                  ],
-                  "body": {
-                    "effect": {
-                      "errors": [],
-                      "kind": "Effect",
-                      "requirements": [],
-                      "success": {
-                        "kind": "Primitive",
-                        "name": "Unit"
-                      }
-                    },
-                    "kind": "Succeed",
-                    "span": {
-                      "endOffset": 2081,
-                      "sourceId": "surfaces/effect-typescript/resource-scope",
-                      "startOffset": 2068
-                    },
-                    "value": {
-                      "kind": "Var",
-                      "name": "nil",
-                      "span": {
-                        "endOffset": 2080,
-                        "sourceId": "surfaces/effect-typescript/resource-scope",
-                        "startOffset": 2077
-                      }
-                    }
-                  },
                   "effect": {
                     "errors": [],
                     "kind": "Effect",
@@ -1837,9 +1699,139 @@
                       "name": "Unit"
                     }
                   },
+                  "forms": [
+                    {
+                      "args": [
+                        {
+                          "kind": "Var",
+                          "name": "store",
+                          "span": {
+                            "endOffset": 2030,
+                            "sourceId": "surfaces/effect-typescript/resource-scope",
+                            "startOffset": 2025
+                          }
+                        },
+                        {
+                          "items": [
+                            {
+                              "kind": "Var",
+                              "name": "str",
+                              "span": {
+                                "endOffset": 2035,
+                                "sourceId": "surfaces/effect-typescript/resource-scope",
+                                "startOffset": 2032
+                              }
+                            },
+                            {
+                              "kind": "Literal",
+                              "span": {
+                                "endOffset": 2045,
+                                "sourceId": "surfaces/effect-typescript/resource-scope",
+                                "startOffset": 2036
+                              },
+                              "value": "insert "
+                            },
+                            {
+                              "kind": "Var",
+                              "name": "name",
+                              "span": {
+                                "endOffset": 2050,
+                                "sourceId": "surfaces/effect-typescript/resource-scope",
+                                "startOffset": 2046
+                              }
+                            },
+                            {
+                              "kind": "Literal",
+                              "span": {
+                                "endOffset": 2054,
+                                "sourceId": "surfaces/effect-typescript/resource-scope",
+                                "startOffset": 2051
+                              },
+                              "value": " "
+                            },
+                            {
+                              "kind": "Var",
+                              "name": "total",
+                              "span": {
+                                "endOffset": 2060,
+                                "sourceId": "surfaces/effect-typescript/resource-scope",
+                                "startOffset": 2055
+                              }
+                            }
+                          ],
+                          "kind": "List",
+                          "span": {
+                            "endOffset": 2061,
+                            "sourceId": "surfaces/effect-typescript/resource-scope",
+                            "startOffset": 2031
+                          }
+                        }
+                      ],
+                      "effect": {
+                        "errors": [
+                          "QueryFailed"
+                        ],
+                        "kind": "Effect",
+                        "requirements": [
+                          "Pool.query"
+                        ],
+                        "span": {
+                          "endOffset": 487,
+                          "sourceId": "surfaces/effect-typescript/resource-scope",
+                          "startOffset": 451
+                        },
+                        "success": {
+                          "item": {
+                            "kind": "Ref",
+                            "name": "Row",
+                            "span": {
+                              "endOffset": 468,
+                              "sourceId": "surfaces/effect-typescript/resource-scope",
+                              "startOffset": 465
+                            }
+                          },
+                          "kind": "Array"
+                        }
+                      },
+                      "kind": "ServiceCall",
+                      "method": "query",
+                      "service": "Pool",
+                      "span": {
+                        "endOffset": 2062,
+                        "sourceId": "surfaces/effect-typescript/resource-scope",
+                        "startOffset": 2013
+                      }
+                    },
+                    {
+                      "effect": {
+                        "errors": [],
+                        "kind": "Effect",
+                        "requirements": [],
+                        "success": {
+                          "kind": "Primitive",
+                          "name": "Unit"
+                        }
+                      },
+                      "kind": "Pure",
+                      "span": {
+                        "endOffset": 2066,
+                        "sourceId": "surfaces/effect-typescript/resource-scope",
+                        "startOffset": 2063
+                      },
+                      "value": {
+                        "kind": "Var",
+                        "name": "nil",
+                        "span": {
+                          "endOffset": 2066,
+                          "sourceId": "surfaces/effect-typescript/resource-scope",
+                          "startOffset": 2063
+                        }
+                      }
+                    }
+                  ],
                   "kind": "Do",
                   "span": {
-                    "endOffset": 2082,
+                    "endOffset": 2067,
                     "sourceId": "surfaces/effect-typescript/resource-scope",
                     "startOffset": 2009
                   }
@@ -1850,7 +1842,7 @@
                   "total"
                 ],
                 "span": {
-                  "endOffset": 2083,
+                  "endOffset": 2068,
                   "sourceId": "surfaces/effect-typescript/resource-scope",
                   "startOffset": 1971
                 }
@@ -1915,7 +1907,7 @@
         },
         "sourceId": "surfaces/effect-typescript/resource-scope",
         "span": {
-          "endOffset": 2084,
+          "endOffset": 2069,
           "sourceId": "surfaces/effect-typescript/resource-scope",
           "startOffset": 1876
         }
@@ -5044,145 +5036,107 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 2013,
+                        "endOffset": 2012,
                         "sourceId": "surfaces/effect-typescript/resource-scope",
                         "startOffset": 2010
                       },
-                      "value": "do!"
+                      "value": "do"
                     },
                     {
                       "items": [
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 2016,
+                            "endOffset": 2024,
                             "sourceId": "surfaces/effect-typescript/resource-scope",
-                            "startOffset": 2015
+                            "startOffset": 2014
                           },
-                          "value": "_"
+                          "value": "Pool.query"
+                        },
+                        {
+                          "kind": "symbol",
+                          "span": {
+                            "endOffset": 2030,
+                            "sourceId": "surfaces/effect-typescript/resource-scope",
+                            "startOffset": 2025
+                          },
+                          "value": "store"
                         },
                         {
                           "items": [
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 2028,
+                                "endOffset": 2035,
                                 "sourceId": "surfaces/effect-typescript/resource-scope",
-                                "startOffset": 2018
+                                "startOffset": 2032
                               },
-                              "value": "Pool.query"
+                              "value": "str"
+                            },
+                            {
+                              "kind": "string",
+                              "span": {
+                                "endOffset": 2045,
+                                "sourceId": "surfaces/effect-typescript/resource-scope",
+                                "startOffset": 2036
+                              },
+                              "value": "insert "
                             },
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 2034,
+                                "endOffset": 2050,
                                 "sourceId": "surfaces/effect-typescript/resource-scope",
-                                "startOffset": 2029
+                                "startOffset": 2046
                               },
-                              "value": "store"
+                              "value": "name"
                             },
                             {
-                              "items": [
-                                {
-                                  "kind": "symbol",
-                                  "span": {
-                                    "endOffset": 2039,
-                                    "sourceId": "surfaces/effect-typescript/resource-scope",
-                                    "startOffset": 2036
-                                  },
-                                  "value": "str"
-                                },
-                                {
-                                  "kind": "string",
-                                  "span": {
-                                    "endOffset": 2049,
-                                    "sourceId": "surfaces/effect-typescript/resource-scope",
-                                    "startOffset": 2040
-                                  },
-                                  "value": "insert "
-                                },
-                                {
-                                  "kind": "symbol",
-                                  "span": {
-                                    "endOffset": 2054,
-                                    "sourceId": "surfaces/effect-typescript/resource-scope",
-                                    "startOffset": 2050
-                                  },
-                                  "value": "name"
-                                },
-                                {
-                                  "kind": "string",
-                                  "span": {
-                                    "endOffset": 2058,
-                                    "sourceId": "surfaces/effect-typescript/resource-scope",
-                                    "startOffset": 2055
-                                  },
-                                  "value": " "
-                                },
-                                {
-                                  "kind": "symbol",
-                                  "span": {
-                                    "endOffset": 2064,
-                                    "sourceId": "surfaces/effect-typescript/resource-scope",
-                                    "startOffset": 2059
-                                  },
-                                  "value": "total"
-                                }
-                              ],
-                              "kind": "list",
+                              "kind": "string",
                               "span": {
-                                "endOffset": 2065,
+                                "endOffset": 2054,
                                 "sourceId": "surfaces/effect-typescript/resource-scope",
-                                "startOffset": 2035
-                              }
+                                "startOffset": 2051
+                              },
+                              "value": " "
+                            },
+                            {
+                              "kind": "symbol",
+                              "span": {
+                                "endOffset": 2060,
+                                "sourceId": "surfaces/effect-typescript/resource-scope",
+                                "startOffset": 2055
+                              },
+                              "value": "total"
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 2066,
+                            "endOffset": 2061,
                             "sourceId": "surfaces/effect-typescript/resource-scope",
-                            "startOffset": 2017
-                          }
-                        }
-                      ],
-                      "kind": "vector",
-                      "span": {
-                        "endOffset": 2067,
-                        "sourceId": "surfaces/effect-typescript/resource-scope",
-                        "startOffset": 2014
-                      }
-                    },
-                    {
-                      "items": [
-                        {
-                          "kind": "symbol",
-                          "span": {
-                            "endOffset": 2076,
-                            "sourceId": "surfaces/effect-typescript/resource-scope",
-                            "startOffset": 2069
-                          },
-                          "value": "succeed"
-                        },
-                        {
-                          "kind": "nil",
-                          "span": {
-                            "endOffset": 2080,
-                            "sourceId": "surfaces/effect-typescript/resource-scope",
-                            "startOffset": 2077
+                            "startOffset": 2031
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 2081,
+                        "endOffset": 2062,
                         "sourceId": "surfaces/effect-typescript/resource-scope",
-                        "startOffset": 2068
+                        "startOffset": 2013
+                      }
+                    },
+                    {
+                      "kind": "nil",
+                      "span": {
+                        "endOffset": 2066,
+                        "sourceId": "surfaces/effect-typescript/resource-scope",
+                        "startOffset": 2063
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 2082,
+                    "endOffset": 2067,
                     "sourceId": "surfaces/effect-typescript/resource-scope",
                     "startOffset": 2009
                   }
@@ -5190,7 +5144,7 @@
               ],
               "kind": "list",
               "span": {
-                "endOffset": 2083,
+                "endOffset": 2068,
                 "sourceId": "surfaces/effect-typescript/resource-scope",
                 "startOffset": 1971
               }
@@ -5198,7 +5152,7 @@
           ],
           "kind": "list",
           "span": {
-            "endOffset": 2084,
+            "endOffset": 2069,
             "sourceId": "surfaces/effect-typescript/resource-scope",
             "startOffset": 1876
           }

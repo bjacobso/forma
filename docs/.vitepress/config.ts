@@ -97,7 +97,7 @@ export default defineConfig({
           items: [
             { text: "0001: One language, one syntax", link: "/rfcs/0001-unified-syntax" },
             { text: "0002: Modules and packages", link: "/rfcs/0002-modules-and-packages" },
-            { text: "0003: Direct-style effects", link: "/rfcs/0003-direct-style-effects" },
+            { text: "0003: Direct-style effects (declined)", link: "/rfcs/0003-direct-style-effects" },
             { text: "0004: One analysis architecture", link: "/rfcs/0004-one-analysis-architecture" },
             { text: "0005: Record type operations", link: "/rfcs/0005-row-operations" },
             { text: "0006: Qualified rows", link: "/rfcs/0006-qualified-rows" },

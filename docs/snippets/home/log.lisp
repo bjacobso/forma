@@ -5,5 +5,5 @@
 
 (: log (-> String (Effect Unit [ConsoleUnavailable] [Console.print])))
 (define log [message]
-  (do! [_ (Console.print message)]
-    (succeed nil)))
+  (do (Console.print message)
+      nil))

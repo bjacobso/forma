@@ -45,8 +45,8 @@ export const pay = (
     const found = yield* orders.find(id);
     if (Option.isSome(found)) {
       const order = found.value;
-      yield* Effect.retry(payments.charge(order["total-cents"]), { times: 2 });
       const paid = { ...order, status: "paid" } satisfies Order;
+      yield* Effect.retry(payments.charge(order["total-cents"]), { times: 2 });
       yield* orders.save(paid);
       return paid;
     } else {

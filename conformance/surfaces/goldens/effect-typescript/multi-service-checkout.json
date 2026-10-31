@@ -20,9 +20,9 @@
                     "kind": "Var",
                     "name": "request",
                     "span": {
-                      "endOffset": 3604,
+                      "endOffset": 3599,
                       "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                      "startOffset": 3597
+                      "startOffset": 3592
                     }
                   }
                 ],
@@ -55,18 +55,18 @@
                 "method": "place",
                 "service": "Checkout",
                 "span": {
-                  "endOffset": 3605,
+                  "endOffset": 3600,
                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                  "startOffset": 3581
+                  "startOffset": 3576
                 }
               },
               {
                 "kind": "Var",
                 "name": "AppLive",
                 "span": {
-                  "endOffset": 3613,
+                  "endOffset": 3608,
                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                  "startOffset": 3606
+                  "startOffset": 3601
                 }
               }
             ],
@@ -83,26 +83,26 @@
                 "Payments"
               ],
               "span": {
-                "endOffset": 3539,
+                "endOffset": 3534,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3436
+                "startOffset": 3431
               },
               "success": {
                 "kind": "Ref",
                 "name": "Receipt",
                 "span": {
-                  "endOffset": 3457,
+                  "endOffset": 3452,
                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                  "startOffset": 3450
+                  "startOffset": 3445
                 }
               }
             },
             "kind": "Combinator",
             "name": "provide",
             "span": {
-              "endOffset": 3614,
+              "endOffset": 3609,
               "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-              "startOffset": 3572
+              "startOffset": 3567
             }
           },
           "effect": {
@@ -118,17 +118,17 @@
               "Payments"
             ],
             "span": {
-              "endOffset": 3539,
+              "endOffset": 3534,
               "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-              "startOffset": 3436
+              "startOffset": 3431
             },
             "success": {
               "kind": "Ref",
               "name": "Receipt",
               "span": {
-                "endOffset": 3457,
+                "endOffset": 3452,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3450
+                "startOffset": 3445
               }
             }
           },
@@ -141,9 +141,9 @@
                 "kind": "Ref",
                 "name": "OrderRequest",
                 "span": {
-                  "endOffset": 3431,
+                  "endOffset": 3426,
                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                  "startOffset": 3419
+                  "startOffset": 3414
                 }
               }
             }
@@ -151,9 +151,9 @@
         },
         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
         "span": {
-          "endOffset": 3615,
+          "endOffset": 3610,
           "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-          "startOffset": 3542
+          "startOffset": 3537
         }
       },
       {
@@ -1619,25 +1619,25 @@
                       "kind": "LayerRef",
                       "name": "CatalogStatic",
                       "span": {
-                        "endOffset": 3376,
+                        "endOffset": 3371,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3363
+                        "startOffset": 3358
                       }
                     },
                     {
                       "kind": "LayerRef",
                       "name": "NotifierLog",
                       "span": {
-                        "endOffset": 3388,
+                        "endOffset": 3383,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3377
+                        "startOffset": 3372
                       }
                     }
                   ],
                   "span": {
-                    "endOffset": 3389,
+                    "endOffset": 3384,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3350
+                    "startOffset": 3345
                   }
                 }
               ],
@@ -1646,15 +1646,15 @@
                 "kind": "LayerRef",
                 "name": "CheckoutLive",
                 "span": {
-                  "endOffset": 3349,
+                  "endOffset": 3344,
                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                  "startOffset": 3337
+                  "startOffset": 3332
                 }
               },
               "span": {
-                "endOffset": 3390,
+                "endOffset": 3385,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3322
+                "startOffset": 3317
               }
             }
           },
@@ -1672,17 +1672,17 @@
               "Payments"
             ],
             "span": {
-              "endOffset": 3301,
+              "endOffset": 3296,
               "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-              "startOffset": 3253
+              "startOffset": 3248
             }
           }
         },
         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
         "span": {
-          "endOffset": 3391,
+          "endOffset": 3386,
           "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-          "startOffset": 3303
+          "startOffset": 3298
         }
       },
       {
@@ -2089,7 +2089,7 @@
                     {
                       "name": "charge-id",
                       "span": {
-                        "endOffset": 3032,
+                        "endOffset": 3027,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
                         "startOffset": 2859
                       },
@@ -2190,114 +2190,6 @@
                         },
                         "errorType": "PaymentDeclined",
                         "handler": {
-                          "bindings": [
-                            {
-                              "name": "_",
-                              "span": {
-                                "endOffset": 3013,
-                                "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                "startOffset": 2979
-                              },
-                              "value": {
-                                "args": [
-                                  {
-                                    "items": [
-                                      {
-                                        "kind": "Var",
-                                        "name": "get",
-                                        "span": {
-                                          "endOffset": 2996,
-                                          "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                          "startOffset": 2993
-                                        }
-                                      },
-                                      {
-                                        "kind": "Var",
-                                        "name": "request",
-                                        "span": {
-                                          "endOffset": 3004,
-                                          "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                          "startOffset": 2997
-                                        }
-                                      },
-                                      {
-                                        "kind": "Expr",
-                                        "source": {
-                                          "kind": "Symbol",
-                                          "name": ":lines"
-                                        },
-                                        "span": {
-                                          "endOffset": 3011,
-                                          "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                          "startOffset": 3005
-                                        }
-                                      }
-                                    ],
-                                    "kind": "List",
-                                    "span": {
-                                      "endOffset": 3012,
-                                      "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                      "startOffset": 2992
-                                    }
-                                  }
-                                ],
-                                "effect": {
-                                  "errors": [],
-                                  "kind": "Effect",
-                                  "requirements": [
-                                    "Inventory.release"
-                                  ],
-                                  "span": {
-                                    "endOffset": 2002,
-                                    "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                    "startOffset": 1966
-                                  },
-                                  "success": {
-                                    "kind": "Primitive",
-                                    "name": "Unit",
-                                    "span": {
-                                      "endOffset": 1978,
-                                      "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                      "startOffset": 1974
-                                    }
-                                  }
-                                },
-                                "kind": "OperationCall",
-                                "operation": "release-all",
-                                "span": {
-                                  "endOffset": 3013,
-                                  "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                  "startOffset": 2979
-                                }
-                              }
-                            }
-                          ],
-                          "body": {
-                            "effect": {
-                              "errors": [],
-                              "kind": "Effect",
-                              "requirements": [],
-                              "success": {
-                                "kind": "Primitive",
-                                "name": "Unit"
-                              }
-                            },
-                            "error": {
-                              "kind": "Var",
-                              "name": "declined",
-                              "span": {
-                                "endOffset": 3029,
-                                "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                "startOffset": 3021
-                              }
-                            },
-                            "kind": "Fail",
-                            "span": {
-                              "endOffset": 3030,
-                              "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                              "startOffset": 3015
-                            }
-                          },
                           "effect": {
                             "errors": [],
                             "kind": "Effect",
@@ -2307,16 +2199,116 @@
                               "name": "Unit"
                             }
                           },
+                          "forms": [
+                            {
+                              "args": [
+                                {
+                                  "items": [
+                                    {
+                                      "kind": "Var",
+                                      "name": "get",
+                                      "span": {
+                                        "endOffset": 2992,
+                                        "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                                        "startOffset": 2989
+                                      }
+                                    },
+                                    {
+                                      "kind": "Var",
+                                      "name": "request",
+                                      "span": {
+                                        "endOffset": 3000,
+                                        "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                                        "startOffset": 2993
+                                      }
+                                    },
+                                    {
+                                      "kind": "Expr",
+                                      "source": {
+                                        "kind": "Symbol",
+                                        "name": ":lines"
+                                      },
+                                      "span": {
+                                        "endOffset": 3007,
+                                        "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                                        "startOffset": 3001
+                                      }
+                                    }
+                                  ],
+                                  "kind": "List",
+                                  "span": {
+                                    "endOffset": 3008,
+                                    "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                                    "startOffset": 2988
+                                  }
+                                }
+                              ],
+                              "effect": {
+                                "errors": [],
+                                "kind": "Effect",
+                                "requirements": [
+                                  "Inventory.release"
+                                ],
+                                "span": {
+                                  "endOffset": 2002,
+                                  "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                                  "startOffset": 1966
+                                },
+                                "success": {
+                                  "kind": "Primitive",
+                                  "name": "Unit",
+                                  "span": {
+                                    "endOffset": 1978,
+                                    "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                                    "startOffset": 1974
+                                  }
+                                }
+                              },
+                              "kind": "OperationCall",
+                              "operation": "release-all",
+                              "span": {
+                                "endOffset": 3009,
+                                "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                                "startOffset": 2975
+                              }
+                            },
+                            {
+                              "effect": {
+                                "errors": [],
+                                "kind": "Effect",
+                                "requirements": [],
+                                "success": {
+                                  "kind": "Primitive",
+                                  "name": "Unit"
+                                }
+                              },
+                              "error": {
+                                "kind": "Var",
+                                "name": "declined",
+                                "span": {
+                                  "endOffset": 3024,
+                                  "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                                  "startOffset": 3016
+                                }
+                              },
+                              "kind": "Fail",
+                              "span": {
+                                "endOffset": 3025,
+                                "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                                "startOffset": 3010
+                              }
+                            }
+                          ],
                           "kind": "Do",
                           "span": {
-                            "endOffset": 3031,
+                            "endOffset": 3026,
                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
                             "startOffset": 2971
                           }
                         },
                         "kind": "Catch",
                         "span": {
-                          "endOffset": 3032,
+                          "endOffset": 3027,
                           "sourceId": "surfaces/effect-typescript/multi-service-checkout",
                           "startOffset": 2859
                         }
@@ -2325,9 +2317,9 @@
                     {
                       "name": "placed-at",
                       "span": {
-                        "endOffset": 3068,
+                        "endOffset": 3063,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3059
+                        "startOffset": 3054
                       },
                       "value": {
                         "args": [],
@@ -2356,9 +2348,9 @@
                         "method": "now",
                         "service": "Clock",
                         "span": {
-                          "endOffset": 3068,
+                          "endOffset": 3063,
                           "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                          "startOffset": 3059
+                          "startOffset": 3054
                         },
                         "value": true
                       }
@@ -2366,9 +2358,9 @@
                     {
                       "name": "_",
                       "span": {
-                        "endOffset": 3158,
+                        "endOffset": 3153,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3087
+                        "startOffset": 3082
                       },
                       "value": {
                         "args": [
@@ -2378,18 +2370,18 @@
                                 "kind": "Var",
                                 "name": "get",
                                 "span": {
-                                  "endOffset": 3106,
+                                  "endOffset": 3101,
                                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                  "startOffset": 3103
+                                  "startOffset": 3098
                                 }
                               },
                               {
                                 "kind": "Var",
                                 "name": "request",
                                 "span": {
-                                  "endOffset": 3114,
+                                  "endOffset": 3109,
                                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                  "startOffset": 3107
+                                  "startOffset": 3102
                                 }
                               },
                               {
@@ -2399,17 +2391,17 @@
                                   "name": ":customer"
                                 },
                                 "span": {
-                                  "endOffset": 3124,
+                                  "endOffset": 3119,
                                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                  "startOffset": 3115
+                                  "startOffset": 3110
                                 }
                               }
                             ],
                             "kind": "List",
                             "span": {
-                              "endOffset": 3125,
+                              "endOffset": 3120,
                               "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                              "startOffset": 3102
+                              "startOffset": 3097
                             }
                           },
                           {
@@ -2418,17 +2410,17 @@
                                 "kind": "Var",
                                 "name": "str",
                                 "span": {
-                                  "endOffset": 3130,
+                                  "endOffset": 3125,
                                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                  "startOffset": 3127
+                                  "startOffset": 3122
                                 }
                               },
                               {
                                 "kind": "Literal",
                                 "span": {
-                                  "endOffset": 3141,
+                                  "endOffset": 3136,
                                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                  "startOffset": 3131
+                                  "startOffset": 3126
                                 },
                                 "value": "charged "
                               },
@@ -2436,26 +2428,26 @@
                                 "kind": "Var",
                                 "name": "total",
                                 "span": {
-                                  "endOffset": 3147,
+                                  "endOffset": 3142,
                                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                  "startOffset": 3142
+                                  "startOffset": 3137
                                 }
                               },
                               {
                                 "kind": "Literal",
                                 "span": {
-                                  "endOffset": 3156,
+                                  "endOffset": 3151,
                                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                  "startOffset": 3148
+                                  "startOffset": 3143
                                 },
                                 "value": " cents"
                               }
                             ],
                             "kind": "List",
                             "span": {
-                              "endOffset": 3157,
+                              "endOffset": 3152,
                               "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                              "startOffset": 3126
+                              "startOffset": 3121
                             }
                           }
                         ],
@@ -2484,9 +2476,9 @@
                         "method": "send",
                         "service": "Notifier",
                         "span": {
-                          "endOffset": 3158,
+                          "endOffset": 3153,
                           "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                          "startOffset": 3087
+                          "startOffset": 3082
                         }
                       }
                     }
@@ -2503,9 +2495,9 @@
                     },
                     "kind": "Succeed",
                     "span": {
-                      "endOffset": 3238,
+                      "endOffset": 3233,
                       "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                      "startOffset": 3166
+                      "startOffset": 3161
                     },
                     "value": {
                       "entries": [
@@ -2517,18 +2509,18 @@
                               "name": ":charge-id"
                             },
                             "span": {
-                              "endOffset": 3186,
+                              "endOffset": 3181,
                               "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                              "startOffset": 3176
+                              "startOffset": 3171
                             }
                           },
                           "value": {
                             "kind": "Var",
                             "name": "charge-id",
                             "span": {
-                              "endOffset": 3196,
+                              "endOffset": 3191,
                               "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                              "startOffset": 3187
+                              "startOffset": 3182
                             }
                           }
                         },
@@ -2540,18 +2532,18 @@
                               "name": ":total-cents"
                             },
                             "span": {
-                              "endOffset": 3209,
+                              "endOffset": 3204,
                               "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                              "startOffset": 3197
+                              "startOffset": 3192
                             }
                           },
                           "value": {
                             "kind": "Var",
                             "name": "total",
                             "span": {
-                              "endOffset": 3215,
+                              "endOffset": 3210,
                               "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                              "startOffset": 3210
+                              "startOffset": 3205
                             }
                           }
                         },
@@ -2563,27 +2555,27 @@
                               "name": ":placed-at"
                             },
                             "span": {
-                              "endOffset": 3226,
+                              "endOffset": 3221,
                               "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                              "startOffset": 3216
+                              "startOffset": 3211
                             }
                           },
                           "value": {
                             "kind": "Var",
                             "name": "placed-at",
                             "span": {
-                              "endOffset": 3236,
+                              "endOffset": 3231,
                               "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                              "startOffset": 3227
+                              "startOffset": 3222
                             }
                           }
                         }
                       ],
                       "kind": "Record",
                       "span": {
-                        "endOffset": 3237,
+                        "endOffset": 3232,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3175
+                        "startOffset": 3170
                       }
                     }
                   },
@@ -2598,7 +2590,7 @@
                   },
                   "kind": "Do",
                   "span": {
-                    "endOffset": 3239,
+                    "endOffset": 3234,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
                     "startOffset": 2568
                   }
@@ -2608,7 +2600,7 @@
                   "request"
                 ],
                 "span": {
-                  "endOffset": 3240,
+                  "endOffset": 3235,
                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
                   "startOffset": 2532
                 }
@@ -2622,7 +2614,7 @@
         },
         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
         "span": {
-          "endOffset": 3241,
+          "endOffset": 3236,
           "sourceId": "surfaces/effect-typescript/multi-service-checkout",
           "startOffset": 2485
         }
@@ -7468,85 +7460,66 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 2975,
+                                    "endOffset": 2974,
                                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
                                     "startOffset": 2972
                                   },
-                                  "value": "do!"
+                                  "value": "do"
                                 },
                                 {
                                   "items": [
                                     {
                                       "kind": "symbol",
                                       "span": {
-                                        "endOffset": 2978,
+                                        "endOffset": 2987,
                                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                        "startOffset": 2977
+                                        "startOffset": 2976
                                       },
-                                      "value": "_"
+                                      "value": "release-all"
                                     },
                                     {
                                       "items": [
                                         {
                                           "kind": "symbol",
                                           "span": {
-                                            "endOffset": 2991,
+                                            "endOffset": 2992,
                                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                            "startOffset": 2980
+                                            "startOffset": 2989
                                           },
-                                          "value": "release-all"
+                                          "value": "get"
                                         },
                                         {
-                                          "items": [
-                                            {
-                                              "kind": "symbol",
-                                              "span": {
-                                                "endOffset": 2996,
-                                                "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                                "startOffset": 2993
-                                              },
-                                              "value": "get"
-                                            },
-                                            {
-                                              "kind": "symbol",
-                                              "span": {
-                                                "endOffset": 3004,
-                                                "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                                "startOffset": 2997
-                                              },
-                                              "value": "request"
-                                            },
-                                            {
-                                              "kind": "keyword",
-                                              "span": {
-                                                "endOffset": 3011,
-                                                "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                                "startOffset": 3005
-                                              },
-                                              "value": ":lines"
-                                            }
-                                          ],
-                                          "kind": "list",
+                                          "kind": "symbol",
                                           "span": {
-                                            "endOffset": 3012,
+                                            "endOffset": 3000,
                                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                            "startOffset": 2992
-                                          }
+                                            "startOffset": 2993
+                                          },
+                                          "value": "request"
+                                        },
+                                        {
+                                          "kind": "keyword",
+                                          "span": {
+                                            "endOffset": 3007,
+                                            "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                                            "startOffset": 3001
+                                          },
+                                          "value": ":lines"
                                         }
                                       ],
                                       "kind": "list",
                                       "span": {
-                                        "endOffset": 3013,
+                                        "endOffset": 3008,
                                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                        "startOffset": 2979
+                                        "startOffset": 2988
                                       }
                                     }
                                   ],
-                                  "kind": "vector",
+                                  "kind": "list",
                                   "span": {
-                                    "endOffset": 3014,
+                                    "endOffset": 3009,
                                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                    "startOffset": 2976
+                                    "startOffset": 2975
                                   }
                                 },
                                 {
@@ -7554,33 +7527,33 @@
                                     {
                                       "kind": "symbol",
                                       "span": {
-                                        "endOffset": 3020,
+                                        "endOffset": 3015,
                                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                        "startOffset": 3016
+                                        "startOffset": 3011
                                       },
                                       "value": "fail"
                                     },
                                     {
                                       "kind": "symbol",
                                       "span": {
-                                        "endOffset": 3029,
+                                        "endOffset": 3024,
                                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                        "startOffset": 3021
+                                        "startOffset": 3016
                                       },
                                       "value": "declined"
                                     }
                                   ],
                                   "kind": "list",
                                   "span": {
-                                    "endOffset": 3030,
+                                    "endOffset": 3025,
                                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                    "startOffset": 3015
+                                    "startOffset": 3010
                                   }
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 3031,
+                                "endOffset": 3026,
                                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
                                 "startOffset": 2971
                               }
@@ -7588,7 +7561,7 @@
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 3032,
+                            "endOffset": 3027,
                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
                             "startOffset": 2859
                           }
@@ -7596,27 +7569,27 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3050,
+                            "endOffset": 3045,
                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                            "startOffset": 3041
+                            "startOffset": 3036
                           },
                           "value": "placed-at"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3068,
+                            "endOffset": 3063,
                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                            "startOffset": 3059
+                            "startOffset": 3054
                           },
                           "value": "Clock.now"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3078,
+                            "endOffset": 3073,
                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                            "startOffset": 3077
+                            "startOffset": 3072
                           },
                           "value": "_"
                         },
@@ -7625,9 +7598,9 @@
                             {
                               "kind": "symbol",
                               "span": {
-                                "endOffset": 3101,
+                                "endOffset": 3096,
                                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                "startOffset": 3088
+                                "startOffset": 3083
                               },
                               "value": "Notifier.send"
                             },
@@ -7636,36 +7609,36 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 3106,
+                                    "endOffset": 3101,
                                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                    "startOffset": 3103
+                                    "startOffset": 3098
                                   },
                                   "value": "get"
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 3114,
+                                    "endOffset": 3109,
                                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                    "startOffset": 3107
+                                    "startOffset": 3102
                                   },
                                   "value": "request"
                                 },
                                 {
                                   "kind": "keyword",
                                   "span": {
-                                    "endOffset": 3124,
+                                    "endOffset": 3119,
                                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                    "startOffset": 3115
+                                    "startOffset": 3110
                                   },
                                   "value": ":customer"
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 3125,
+                                "endOffset": 3120,
                                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                "startOffset": 3102
+                                "startOffset": 3097
                               }
                             },
                             {
@@ -7673,59 +7646,59 @@
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 3130,
+                                    "endOffset": 3125,
                                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                    "startOffset": 3127
+                                    "startOffset": 3122
                                   },
                                   "value": "str"
                                 },
                                 {
                                   "kind": "string",
                                   "span": {
-                                    "endOffset": 3141,
+                                    "endOffset": 3136,
                                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                    "startOffset": 3131
+                                    "startOffset": 3126
                                   },
                                   "value": "charged "
                                 },
                                 {
                                   "kind": "symbol",
                                   "span": {
-                                    "endOffset": 3147,
+                                    "endOffset": 3142,
                                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                    "startOffset": 3142
+                                    "startOffset": 3137
                                   },
                                   "value": "total"
                                 },
                                 {
                                   "kind": "string",
                                   "span": {
-                                    "endOffset": 3156,
+                                    "endOffset": 3151,
                                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                    "startOffset": 3148
+                                    "startOffset": 3143
                                   },
                                   "value": " cents"
                                 }
                               ],
                               "kind": "list",
                               "span": {
-                                "endOffset": 3157,
+                                "endOffset": 3152,
                                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                "startOffset": 3126
+                                "startOffset": 3121
                               }
                             }
                           ],
                           "kind": "list",
                           "span": {
-                            "endOffset": 3158,
+                            "endOffset": 3153,
                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                            "startOffset": 3087
+                            "startOffset": 3082
                           }
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 3159,
+                        "endOffset": 3154,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
                         "startOffset": 2579
                       }
@@ -7735,9 +7708,9 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3174,
+                            "endOffset": 3169,
                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                            "startOffset": 3167
+                            "startOffset": 3162
                           },
                           "value": "succeed"
                         },
@@ -7747,18 +7720,18 @@
                               "key": {
                                 "kind": "keyword",
                                 "span": {
-                                  "endOffset": 3186,
+                                  "endOffset": 3181,
                                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                  "startOffset": 3176
+                                  "startOffset": 3171
                                 },
                                 "value": ":charge-id"
                               },
                               "value": {
                                 "kind": "symbol",
                                 "span": {
-                                  "endOffset": 3196,
+                                  "endOffset": 3191,
                                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                  "startOffset": 3187
+                                  "startOffset": 3182
                                 },
                                 "value": "charge-id"
                               }
@@ -7767,18 +7740,18 @@
                               "key": {
                                 "kind": "keyword",
                                 "span": {
-                                  "endOffset": 3209,
+                                  "endOffset": 3204,
                                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                  "startOffset": 3197
+                                  "startOffset": 3192
                                 },
                                 "value": ":total-cents"
                               },
                               "value": {
                                 "kind": "symbol",
                                 "span": {
-                                  "endOffset": 3215,
+                                  "endOffset": 3210,
                                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                  "startOffset": 3210
+                                  "startOffset": 3205
                                 },
                                 "value": "total"
                               }
@@ -7787,18 +7760,18 @@
                               "key": {
                                 "kind": "keyword",
                                 "span": {
-                                  "endOffset": 3226,
+                                  "endOffset": 3221,
                                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                  "startOffset": 3216
+                                  "startOffset": 3211
                                 },
                                 "value": ":placed-at"
                               },
                               "value": {
                                 "kind": "symbol",
                                 "span": {
-                                  "endOffset": 3236,
+                                  "endOffset": 3231,
                                   "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                                  "startOffset": 3227
+                                  "startOffset": 3222
                                 },
                                 "value": "placed-at"
                               }
@@ -7806,23 +7779,23 @@
                           ],
                           "kind": "map",
                           "span": {
-                            "endOffset": 3237,
+                            "endOffset": 3232,
                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                            "startOffset": 3175
+                            "startOffset": 3170
                           }
                         }
                       ],
                       "kind": "list",
                       "span": {
-                        "endOffset": 3238,
+                        "endOffset": 3233,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3166
+                        "startOffset": 3161
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3239,
+                    "endOffset": 3234,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
                     "startOffset": 2568
                   }
@@ -7830,7 +7803,7 @@
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3240,
+                "endOffset": 3235,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
                 "startOffset": 2532
               }
@@ -7838,7 +7811,7 @@
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3241,
+            "endOffset": 3236,
             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
             "startOffset": 2485
           }
@@ -7848,18 +7821,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 3244,
+                "endOffset": 3239,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3243
+                "startOffset": 3238
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3252,
+                "endOffset": 3247,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3245
+                "startOffset": 3240
               },
               "value": "AppLive"
             },
@@ -7868,9 +7841,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3259,
+                    "endOffset": 3254,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3254
+                    "startOffset": 3249
                   },
                   "value": "Layer"
                 },
@@ -7879,27 +7852,27 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3269,
+                        "endOffset": 3264,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3261
+                        "startOffset": 3256
                       },
                       "value": "Checkout"
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 3270,
+                    "endOffset": 3265,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3260
+                    "startOffset": 3255
                   }
                 },
                 {
                   "items": [],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 3273,
+                    "endOffset": 3268,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3271
+                    "startOffset": 3266
                   }
                 },
                 {
@@ -7907,52 +7880,52 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3280,
+                        "endOffset": 3275,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3275
+                        "startOffset": 3270
                       },
                       "value": "Clock"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3290,
+                        "endOffset": 3285,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3281
+                        "startOffset": 3276
                       },
                       "value": "Inventory"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3299,
+                        "endOffset": 3294,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3291
+                        "startOffset": 3286
                       },
                       "value": "Payments"
                     }
                   ],
                   "kind": "vector",
                   "span": {
-                    "endOffset": 3300,
+                    "endOffset": 3295,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3274
+                    "startOffset": 3269
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3301,
+                "endOffset": 3296,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3253
+                "startOffset": 3248
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3302,
+            "endOffset": 3297,
             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-            "startOffset": 3242
+            "startOffset": 3237
           }
         },
         {
@@ -7960,18 +7933,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3309,
+                "endOffset": 3304,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3304
+                "startOffset": 3299
               },
               "value": "layer"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3319,
+                "endOffset": 3314,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3312
+                "startOffset": 3307
               },
               "value": "AppLive"
             },
@@ -7980,18 +7953,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3336,
+                    "endOffset": 3331,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3323
+                    "startOffset": 3318
                   },
                   "value": "layer-provide"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3349,
+                    "endOffset": 3344,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3337
+                    "startOffset": 3332
                   },
                   "value": "CheckoutLive"
                 },
@@ -8000,52 +7973,52 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3362,
+                        "endOffset": 3357,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3351
+                        "startOffset": 3346
                       },
                       "value": "layer-merge"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3376,
+                        "endOffset": 3371,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3363
+                        "startOffset": 3358
                       },
                       "value": "CatalogStatic"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3388,
+                        "endOffset": 3383,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3377
+                        "startOffset": 3372
                       },
                       "value": "NotifierLog"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3389,
+                    "endOffset": 3384,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3350
+                    "startOffset": 3345
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3390,
+                "endOffset": 3385,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3322
+                "startOffset": 3317
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3391,
+            "endOffset": 3386,
             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-            "startOffset": 3303
+            "startOffset": 3298
           }
         },
         {
@@ -8053,18 +8026,18 @@
             {
               "kind": "keyword",
               "span": {
-                "endOffset": 3394,
+                "endOffset": 3389,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3393
+                "startOffset": 3388
               },
               "value": ":"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3408,
+                "endOffset": 3403,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3397
+                "startOffset": 3392
               },
               "value": "place-order"
             },
@@ -8073,18 +8046,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3414,
+                    "endOffset": 3409,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3412
+                    "startOffset": 3407
                   },
                   "value": "->"
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3431,
+                    "endOffset": 3426,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3419
+                    "startOffset": 3414
                   },
                   "value": "OrderRequest"
                 },
@@ -8093,18 +8066,18 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3443,
+                        "endOffset": 3438,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3437
+                        "startOffset": 3432
                       },
                       "value": "Effect"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3457,
+                        "endOffset": 3452,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3450
+                        "startOffset": 3445
                       },
                       "value": "Receipt"
                     },
@@ -8113,36 +8086,36 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3477,
+                            "endOffset": 3472,
                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                            "startOffset": 3465
+                            "startOffset": 3460
                           },
                           "value": "InvalidOrder"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3488,
+                            "endOffset": 3483,
                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                            "startOffset": 3478
+                            "startOffset": 3473
                           },
                           "value": "OutOfStock"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3504,
+                            "endOffset": 3499,
                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                            "startOffset": 3489
+                            "startOffset": 3484
                           },
                           "value": "PaymentDeclined"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 3505,
+                        "endOffset": 3500,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3464
+                        "startOffset": 3459
                       }
                     },
                     {
@@ -8150,60 +8123,60 @@
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3518,
+                            "endOffset": 3513,
                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                            "startOffset": 3513
+                            "startOffset": 3508
                           },
                           "value": "Clock"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3528,
+                            "endOffset": 3523,
                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                            "startOffset": 3519
+                            "startOffset": 3514
                           },
                           "value": "Inventory"
                         },
                         {
                           "kind": "symbol",
                           "span": {
-                            "endOffset": 3537,
+                            "endOffset": 3532,
                             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                            "startOffset": 3529
+                            "startOffset": 3524
                           },
                           "value": "Payments"
                         }
                       ],
                       "kind": "vector",
                       "span": {
-                        "endOffset": 3538,
+                        "endOffset": 3533,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3512
+                        "startOffset": 3507
                       }
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3539,
+                    "endOffset": 3534,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3436
+                    "startOffset": 3431
                   }
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3540,
+                "endOffset": 3535,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3411
+                "startOffset": 3406
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3541,
+            "endOffset": 3536,
             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-            "startOffset": 3392
+            "startOffset": 3387
           }
         },
         {
@@ -8211,18 +8184,18 @@
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3549,
+                "endOffset": 3544,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3543
+                "startOffset": 3538
               },
               "value": "define"
             },
             {
               "kind": "symbol",
               "span": {
-                "endOffset": 3561,
+                "endOffset": 3556,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3550
+                "startOffset": 3545
               },
               "value": "place-order"
             },
@@ -8231,18 +8204,18 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3570,
+                    "endOffset": 3565,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3563
+                    "startOffset": 3558
                   },
                   "value": "request"
                 }
               ],
               "kind": "vector",
               "span": {
-                "endOffset": 3571,
+                "endOffset": 3566,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3562
+                "startOffset": 3557
               }
             },
             {
@@ -8250,9 +8223,9 @@
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3580,
+                    "endOffset": 3575,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3573
+                    "startOffset": 3568
                   },
                   "value": "provide"
                 },
@@ -8261,52 +8234,52 @@
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3596,
+                        "endOffset": 3591,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3582
+                        "startOffset": 3577
                       },
                       "value": "Checkout.place"
                     },
                     {
                       "kind": "symbol",
                       "span": {
-                        "endOffset": 3604,
+                        "endOffset": 3599,
                         "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                        "startOffset": 3597
+                        "startOffset": 3592
                       },
                       "value": "request"
                     }
                   ],
                   "kind": "list",
                   "span": {
-                    "endOffset": 3605,
+                    "endOffset": 3600,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3581
+                    "startOffset": 3576
                   }
                 },
                 {
                   "kind": "symbol",
                   "span": {
-                    "endOffset": 3613,
+                    "endOffset": 3608,
                     "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                    "startOffset": 3606
+                    "startOffset": 3601
                   },
                   "value": "AppLive"
                 }
               ],
               "kind": "list",
               "span": {
-                "endOffset": 3614,
+                "endOffset": 3609,
                 "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-                "startOffset": 3572
+                "startOffset": 3567
               }
             }
           ],
           "kind": "list",
           "span": {
-            "endOffset": 3615,
+            "endOffset": 3610,
             "sourceId": "surfaces/effect-typescript/multi-service-checkout",
-            "startOffset": 3542
+            "startOffset": 3537
           }
         }
       ],

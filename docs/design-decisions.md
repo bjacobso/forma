@@ -68,6 +68,23 @@ The language tracks failures and requirements statically, but target backends
 do not need native algebraic-effect support. Explicit IR operations allow a
 host to use promises, an effect library, a state machine, or native handlers.
 
+## Effects are values that `do!` runs
+
+A service call or a call to an operation produces an `Effect` value. `do!`
+runs effects and binds their results, `let` and `:let` bind pure values, and an
+effect body may contain several forms that run in order. Operations declare
+`(Effect A [E] [R])` signatures, and the checker holds bodies to them over
+closed requirement and failure sets. Combinators such as `retry`, `timeout`, and
+`provide` take effects directly, and effect bodies map one-to-one onto
+`Effect.gen`.
+
+[RFC 0003](./rfcs/0003-direct-style-effects.md) proposed direct-style calls with
+inferred requirements and failures, and was declined: inference would let a
+requirement widen unreviewed, and direct style needs open effect rows and
+effect-polymorphic functions. Forma also removed algebraic `handle` forms;
+[RFC 0014](./rfcs/0014-local-providers.md) proposes inline providers rather than
+handlers with continuations.
+
 ## Artifacts cross a typed boundary
 
 Artifact envelopes, declarations, summaries, and validation are typed before
