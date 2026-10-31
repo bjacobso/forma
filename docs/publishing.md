@@ -9,9 +9,14 @@ There are no native binaries.
 
 1. Run `pnpm changeset` and commit the release note with the code change.
 2. Merge the change into `main`. Changesets opens or updates a version PR.
-3. Review and merge the version PR. The Release workflow validates and packs
-   the packages, publishes through npm trusted publishing, and creates tags
-   and GitHub releases.
+3. Review the version PR, then merge it. The Release workflow validates and
+   packs the packages, publishes through npm trusted publishing, and creates
+   tags and GitHub releases.
+
+The version PR is opened with the workflow token, so CI does not run on it.
+Before merging, check out its branch and run `pnpm release:check`. A failure
+after the merge leaves `main` with versions that were never published. Read the
+generated changelogs as well: breaking entries start with `**Breaking:**`.
 
 `pnpm release:check` builds and tests the JavaScript packages, checks the
 surface goldens, and installs the packed tarballs in a temporary consumer
@@ -19,18 +24,18 @@ project. The consumer check loads every library export and analyzes a document
 with the language server's workspace. A release build machine needs only
 Node.js and pnpm.
 
-For the Effect 4 migration, publish the `@formalang/ts` minor release and the
-related package updates from the changeset before changing consumers. Consumers
-using the Effect 3 alias for Forma can then upgrade Forma, install
-`effect@4.0.3`, remove that alias, and import `Effect` from `effect`.
-Keep the dependency on this exact release until Forma and the
-consumer agree on a later Effect 4 version.
+Forma pins an exact Effect version in its public types. Version 0.2.0 uses
+Effect 3, 0.3.0 uses `effect@4.0.0-rc.112`, and 0.4.0 uses `effect@4.0.3`.
+Consumers should install the same version as the Forma release they use, remove
+any Effect 3 alias kept only for Forma, and import `Effect` from `effect`. Keep
+that exact version until Forma and the consumer agree on a later Effect 4
+version.
 
-## First publication
+## Publishing a new package
 
-An npm organization alone does not configure trusted publishing. Bootstrap
-the four packages with an authenticated maintainer session, then configure each
-package's trusted publisher with these exact values:
+An npm organization alone does not configure trusted publishing. Publish a new
+package's first version from an authenticated maintainer session, then configure
+its trusted publisher with these exact values:
 
 | Field | Value |
 | --- | --- |
@@ -41,9 +46,8 @@ package's trusted publisher with these exact values:
 | Environment | `npm-publish` |
 | Allowed action | `npm publish` |
 
-The initial changeset proposes version `0.2.0` from the current unpublished
-`0.1.0` manifests. Apply it through the version PR before bootstrapping so the
-first published versions match the repository. Validate with `pnpm release:check`,
+Apply the package's first changeset through the version PR before publishing so
+the published version matches the repository. Validate with `pnpm release:check`,
 then use `pnpm release:publish` from the validated main revision while logged
 in to npm. Complete npm's authentication prompts in the maintainer session.
 
