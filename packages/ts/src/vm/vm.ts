@@ -476,6 +476,7 @@ function executeVM(
             message: error.message,
             expected: error.expected,
             got: error.got,
+            ...(error.details ? { details: error.details } : {}),
             ...(error.loc ? { loc: error.loc } : {}),
             ...(error.macroOrigins ? { macroOrigins: error.macroOrigins } : {}),
             stackTrace: mergedStackTrace,
