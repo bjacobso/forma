@@ -1,5 +1,6 @@
 import { aboutDescription, galleryDescription, plainText, playgroundDescription } from "./lib/siteCopy";
 import { getPipeline } from "./pipelines";
+import { FORMA_WORKBENCH_URL } from "./lib/workbenchLocation";
 
 interface Env {
   readonly ASSETS: {
@@ -20,6 +21,11 @@ export default {
     }
 
     const url = new URL(request.url);
+    if (url.pathname === "/workbench/demo" || url.pathname === "/workbench/demo/") {
+      const destination = new URL(FORMA_WORKBENCH_URL);
+      destination.search = url.search;
+      return Response.redirect(destination.toString(), 302);
+    }
     if (url.pathname === "/about" || url.pathname === "/demo" || url.pathname.startsWith("/demo/")) {
       url.pathname = `/playground${url.pathname}`;
       return Response.redirect(url.toString(), 301);

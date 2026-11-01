@@ -77,9 +77,9 @@ agents.
   (`packages/ts/src/builtins/index.ts`) include none. A later definition can
   only shadow an earlier one, and closures that captured the earlier value
   keep it. That is also what OCaml's `replSubmit` did.
-- **Workbench REPL.** `mergeReplSource` (`packages/workbench/src/repl.ts`)
+- **Workbench REPL.** `mergeReplSource` (`@formalang/ts/authoring`)
   keys declarations by kind and name, lets later ones replace earlier ones,
-  and replays the merged source in a fresh session for each entry.
+  and the Foldworks app replays the merged source in a fresh session for each entry.
 - **Toy REPL.** `packages/ts/src/cli/repl.ts` threads an environment through
   input lines without types, modules, or host builtins. It is not a package
   binary.

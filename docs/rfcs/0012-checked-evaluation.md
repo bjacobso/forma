@@ -68,10 +68,10 @@ playgrounds, rule editors, and plugins.
   reported as `*`. It covers produced data, not host calls. It is pinned by
   `conformance/typed-authority/`. (It was never implemented in the OCaml
   engine, which has since been removed.)
-- **Workbench approvals.** The workbench computes the capabilities each row
-  can reach from the symbol index (`packages/workbench/src/requirements.ts`)
-  and turns each `HostCall` into a permission checkpoint
-  (`packages/workbench/src/run.ts`). A denial resumes with a
+- **Workbench approvals.** The Foldworks-hosted workbench uses Forma's
+  `requirementsFor` helper (`@formalang/ts/authoring`) to compute capabilities
+  reachable from resolved symbols, and turns each `HostCall` into a permission
+  checkpoint in the app. A denial resumes with a
   `capability/denied` failure. `HostCall` has no span, so the workbench
   locates a call only when the capability has exactly one reference.
 - **Cancellation.** The TypeScript host's `abortEvaluation` sets a flag that

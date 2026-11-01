@@ -13,7 +13,9 @@
       "/playground/*",
       "/about",
       "/demo",
-      "/demo/*"
+      "/demo/*",
+      "/workbench/demo",
+      "/workbench/demo/"
     ]
   }
 }

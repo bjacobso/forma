@@ -6,6 +6,7 @@ import { serializablePassResult, timeoutRunResult } from "./engine/protocol";
 import { getPipeline, pipelines } from "./pipelines";
 import { aboutDescription } from "./lib/siteCopy";
 import worker from "./worker";
+import { FORMA_WORKBENCH_URL } from "./lib/workbenchLocation";
 
 const indexHtml = `<!doctype html>
 <html lang="en">
@@ -21,6 +22,15 @@ const indexHtml = `<!doctype html>
 </html>`;
 
 describe("forma website worker metadata", () => {
+  test.each(["GET", "HEAD"])("redirects the old workbench with %s without fetching assets", async (method) => {
+    for (const path of ["/workbench/demo", "/workbench/demo/"]) {
+      const env = mockEnv();
+      const response = await worker.fetch(new Request(`https://forma-lang.com${path}?example=pricing`, { method }), env);
+      expect(response.status).toBe(302);
+      expect(response.headers.get("location")).toBe(`${FORMA_WORKBENCH_URL}?example=pricing`);
+      expect(env.ASSETS.fetch).not.toHaveBeenCalled();
+    }
+  });
   test.each(["/", "/vision", "/language", "/playground/assets/app.js", "/missing"])("passes %s through to assets", async (path) => {
     const env = mockEnv(new Response("docs or asset"));
     const request = new Request(`https://forma-lang.com${path}`);

@@ -7,6 +7,7 @@ import { useTheme } from "../lib/theme";
 import { typingEdit, workbenchExamples, type WorkbenchExample } from "../workbench/examples";
 import { TargetCodeView } from "./TargetCodeView";
 import { WorkbenchEditor } from "./WorkbenchEditor";
+import { FORMA_WORKBENCH_URL } from "../lib/workbenchLocation";
 
 const noDiagnostics: readonly Diagnostic[] = [];
 type OutputTab = "types" | "generated" | "read" | "expand" | "value" | "ir";
@@ -163,6 +164,6 @@ export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = 
       {diagnostics.map((diagnostic, index) => <button className={`workbench-diagnostic ${diagnostic.severity}`} key={index} type="button" onClick={() => revealSpan(diagnostic.span)}><span>{diagnostic.severity === "error" ? "×" : "!"}</span><div><p>{diagnostic.message}</p><small>{diagnostic.phase} · {diagnostic.code}{diagnostic.span ? ` · ${example.file}:${diagnostic.span.startLine ?? source.slice(0, diagnostic.span.startOffset).split("\n").length}` : ""}</small></div></button>)}
       {status === "ready" && !diagnostics.length ? <p className="workbench-clean">Program checks. All output above comes from this source.</p> : null}
     </div>
-    <footer className="workbench-footer"><span>Runs in your browser · @formalang/ts{example.dialect === "email" ? " · email.lisp prelude · Effect checker" : example.dialect ? " · Effect checker" : ""}</span><a href="/workbench/demo/" target={embedded ? "_top" : undefined}>Explore the structural workbench ↗</a></footer>
+    <footer className="workbench-footer"><span>Runs in your browser · @formalang/ts{example.dialect === "email" ? " · email.lisp prelude · Effect checker" : example.dialect ? " · Effect checker" : ""}</span><a href={FORMA_WORKBENCH_URL} target={embedded ? "_top" : undefined}>Structural workbench in Foldworks ↗</a></footer>
   </section>;
 }

@@ -32,8 +32,6 @@ jobs:
       - run: pnpm pack:check
       - run: pnpm --filter @formalang/website exec playwright install --with-deps chromium
       - run: pnpm test:visual
-      - run: pnpm --filter @formalang/workbench-app exec playwright install --with-deps chromium
-      - run: pnpm test:e2e:workbench
       - run: pnpm website:build
       - run: pnpm website:dry-run
       - run: pnpm test:site

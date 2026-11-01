@@ -2,6 +2,7 @@ import { Badge } from "../components/Badge";
 import { PipelineGrid } from "../components/PipelineGrid";
 import { useDocumentMeta } from "../lib/documentMeta";
 import { galleryDescription } from "../lib/siteCopy";
+import { FORMA_WORKBENCH_URL } from "../lib/workbenchLocation";
 
 export function DemoGallery({ compact = false }: { readonly compact?: boolean }) {
   useDocumentMeta({
@@ -24,10 +25,10 @@ export function DemoGallery({ compact = false }: { readonly compact?: boolean })
         <div className="pipeline-group-heading">
           <span>Structural editing</span>
           <h3 id="workbench-demo-heading">The outline is the program.</h3>
-          <p>Edit an onboarding workflow with live values, types, and diagnostics on every row.</p>
+          <p>Open the Foldworks-hosted Forma workbench for live values, types, and diagnostics on every row.</p>
         </div>
         <div className="pipeline-grid">
-          <a className="pipeline-card" href="/workbench/demo/">
+          <a className="pipeline-card" href={FORMA_WORKBENCH_URL}>
             <div className="pipeline-card-top">
               <Badge badge="live" />
               <span>Open</span>
