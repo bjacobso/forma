@@ -26,6 +26,7 @@ Node.js and pnpm.
 
 Forma pins an exact Effect version in its public types. Version 0.2.0 uses
 Effect 3, 0.3.0 uses `effect@4.0.0-rc.112`, and 0.4.0 uses `effect@4.0.3`.
+The development branch targets `effect@4.1.1` for the next release.
 Consumers should install the same version as the Forma release they use, remove
 any Effect 3 alias kept only for Forma, and import `Effect` from `effect`. Keep
 that exact version until Forma and the consumer agree on a later Effect 4
