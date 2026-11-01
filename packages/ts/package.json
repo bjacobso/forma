@@ -156,11 +156,12 @@
     "pack:check": "node ../../scripts/pnpm-pack-check.mjs",
     "preludes:generate": "node scripts/generate-preludes.mjs"
   },
-  "dependencies": {
-    "effect": "4.1.1"
+  "peerDependencies": {
+    "effect": "^4.1.1"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
+    "effect": "4.1.1",
     "fast-check": "^4.9.0",
     "typescript": "^6.0.3",
     "vitest": "5.0.4"
