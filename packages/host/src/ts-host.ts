@@ -1506,14 +1506,18 @@ function hostCallDiagnosticsError(code: string, message: string): KernelTypeErro
   });
 }
 
+/** A failed resume keeps the host's first code and every diagnostic it returned. */
 function hostCallDiagnosticsErrorFromDiagnostics(
   diagnostics: readonly Diagnostic[],
 ): KernelTypeError {
   const first = diagnostics[0];
-  return hostCallDiagnosticsError(
-    first?.code ?? "host-effect/failed",
-    first?.message ?? "Host call failed",
-  );
+  const code = first?.code ?? "host-effect/failed";
+  return new KernelTypeError({
+    message: first?.message ?? "Host call failed",
+    expected: "successful host call",
+    got: code,
+    details: { code, hostDiagnostics: diagnostics },
+  });
 }
 
 function variablesToBindings(

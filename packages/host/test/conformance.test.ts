@@ -512,7 +512,13 @@ describe("language-host shared ABI", () => {
 
       expect(failed).toMatchObject({
         status: "failed",
-        diagnostics: [{ code: "KernelTypeError", message: "host failure" }],
+        diagnostics: [
+          {
+            code: "test/failed",
+            message: "host failure",
+            details: { hostDiagnostics: [{ code: "test/failed", phase: "host-effect" }] },
+          },
+        ],
       });
     } finally {
       await tsHost.closeSession({ sessionId });
