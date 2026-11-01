@@ -3,7 +3,10 @@
 Language Server Protocol support for Forma, backed by the TypeScript engine.
 It provides diagnostics, hover, completion (including the open slots of
 descriptor forms), definitions, references, rename, document symbols,
-semantic tokens, and optional document formatting.
+workspace symbol search, semantic tokens, and optional document formatting.
+Workspace symbol search matches names and documentation across preludes and
+documents; `produces:IRType` and `type:TypeName` in the query filter by a
+form's `:ir` type or a definition's inferred type.
 
 ```sh
 npm install -g @formalang/language-server
