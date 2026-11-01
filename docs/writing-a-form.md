@@ -57,14 +57,32 @@ receives a record of the holes and returns a list of diagnostic records.
   {:kind "Greeting" :name name :message message :doc doc})
 ```
 
-The optional `:slot` attaches the diagnostic to that authored hole. `:at` is
-finer: given a value read from a `Syntax` hole, such as one entry of a record,
-the diagnostic points at that value's source. Without either, the span covers
-the application. Severity is `:error`, `:warning`, or `:info`;
+The optional `:slot` attaches the diagnostic to that authored hole. `:at` can
+name a value read from a `Syntax` hole, such as one entry of a record, to point
+at that value's source. It can also be a constructed path: the first step names
+a hole, an integer selects an item, a keyword selects the value after that
+option, any name selects a record key, and a quoted symbol selects the child
+form named by its first argument. `[:child (quote second) :limit]` points at the
+`:limit` value of `(item second :limit 2)`. A path stops at the deepest resolved node. A value read
+from a `Syntax` hole keeps its source even when it is a list or vector; use a
+new list or vector to construct a path. Without a resolved `:at`, `:slot` is used,
+then the application span. Child forms keep their own diagnostic codes and spans.
+
+Checks and projections can reflect on other declarations:
+`(declaration-fields name)` returns a declaration's record fields,
+`(declaration-hole name :hole)` its authored hole,
+`(declarations-of 'form)` the names declared by a form, and
+`(type-definition 'Name)` an author type alias. An optional positional
+`(Option String)` hole, such as a docstring, consumes only a string literal and
+may be omitted before other positional arguments.
+
+Severity is `:error`, `:warning`, or `:info`;
 warnings and informational diagnostics remain attached to successful artifacts.
 
-An expression hole can introduce local bindings with `:scope`. Each entry maps
-a hole name to a function returning a record of names and quoted types:
+An expression hole can introduce local bindings with `:scope`. Type, row, and
+effect variables in these signatures are quantified: each use instantiates
+them freshly, independently of other bindings using the same variable names.
+Each entry maps a hole name to a function returning a record of names and quoted types:
 
 ```lisp
 :types {:where (Expr Bool)}
@@ -79,12 +97,36 @@ their members: `(= status "actve")` against `Status` is an error. `:type` suppli
 type, or a function computing a type from the holes, independently of the
 artifact's IR type.
 
+## Reflection in checks and projections
+
+These builtins run in form hooks during elaboration; they are not general
+runtime reflection APIs. Declaration names are registered before hooks run,
+so reflection can see declarations written later in the program.
+
+| Call | Result |
+| --- | --- |
+| `(declarations-of 'entry)` | List of symbols declared by the named form, in declaration order; `[]` if none match. This selects the form name, not the declaration's result type. |
+| `(declaration-hole 'first :doc)` | The authored hole as data, or `nil` when absent. This includes optional positional docstrings. |
+| `(type-definition 'Profile)` | The author's type definition as data, falling back to the prelude's definition, or `nil` for an unknown name. Metadata such as `:doc` is stripped recursively; referenced aliases remain symbols. |
+
+For example, given `(type Status (Union :draft :sent))`,
+`(type-definition 'Status)` returns `(Union :draft :sent)` as data. A record
+alias such as `(type Profile {:name String :state Status})` returns the map
+`{:name 'String :state 'Status}`. These are type syntax values, not runtime
+schema objects. A form can return them in a `Json` IR field to let its host
+inspect the definition; the union above projects to `["Union", ":draft", ":sent"]`.
+
 ## Projection and generated consumers
 
 Projection bodies are ordinary pure Forma expressions. They can call helpers,
 use local bindings, and branch. Elaboration checks the declared contract;
 a body that returns the wrong shape produces a diagnostic at elaboration.
 Built-in (native) projection is an optimization of this behavior.
+
+Hosts that recheck documents can reuse their bootstrapped prelude. Unchanged
+form descriptors reuse expanded hook programs, while evaluation still uses the
+current holes and semantic environment. The kernel macro prelude is shared
+across hooks, including hooks with different host builtins.
 
 Protocols and schemas derive from `type` declarations. Completion, option
 availability, declaration bindings, and form layout derive from the form

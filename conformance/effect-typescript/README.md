@@ -2,7 +2,7 @@
 
 This suite runs Effect programs written in Forma end to end. Each program is
 read, projected to mechanics declarations, checked, and generated as an Effect
-4 (`effect@4.0.3`) module. The generated module is compared with a
+4 (`effect@4.1.1`) module. The generated module is compared with a
 golden file, typechecked under the repository's strictest settings, and
 executed. Programs that Forma must reject are checked for their exact,
 located diagnostics.
@@ -71,7 +71,7 @@ declarations package under contracts derived from `http-api.lisp`. See
 
 The `elm.json` marker selects `generateElmProgram` for the isolated Elm-style
 prototype and its `elm-*` rejection cases. The same golden, strict escape checks,
-artifact validation, and harness execution apply; Foldkit is pinned to 0.168.0.
+artifact validation, and harness execution apply; Foldkit is pinned to 0.170.0.
 Rejection verdicts are `not-generated`: this linker has no unchecked output path.
 See [the prototype reference](../../docs/elm/reference.md).
 

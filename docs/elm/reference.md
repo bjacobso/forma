@@ -1,8 +1,8 @@
 # Elm-style app prototype
 
 The [Elm landing page](/elm) explains the pitch and trade-offs. This is an
-isolated **TypeScript-engine prototype**, targeting `foldkit@0.168.0` and
-`effect@4.0.3`. It has no general HM/editor support.
+isolated **TypeScript-engine prototype**, targeting `foldkit@0.170.0` and
+`effect@4.1.1`. It has no general HM/editor support.
 
 `preludes/elm.lisp` defines the forms, typed declaration IR, and target adapter
 emit hooks. `generateElmProgram` links their expressions through the existing

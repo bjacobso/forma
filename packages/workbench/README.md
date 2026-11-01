@@ -177,17 +177,18 @@ Linking rewrites `pnpm-lock.yaml` with local paths. Do not commit it;
 Validated with Foldworks main at `695695e`. The
 manifest ranges describe the minimum intended releases, while that unpublished
 checkout currently has older version numbers. Forma uses Foldkit and @foldkit/ui
-0.168.0, @foldkit/vite-plugin 0.27.1, Effect 4.0.3, and StyleX 0.19.0. The
+0.170.0, @foldkit/vite-plugin 0.29.0, Effect 4.1.1, and StyleX 0.19.0. The
 workbench has no local Foldworks patches. Once the primitives are released, unlink, generate
 a registry lockfile, recheck, and remove `private` before publication.
 
-Foldkit's exact Effect 4.0.0 peers and the plugin's platform 4.0.0 dependencies
-are tested with 4.0.3 using scoped peer exceptions and dependency overrides in
+Foldkit and its plugin accept Effect 4.1.1 through their ~4.1.0 ranges;
+no Effect peer exceptions or plugin platform overrides are needed. Alchemy's
+Effect companions are pinned to 4.1.1 within its supported ^4.0.0 ranges in
 `pnpm-workspace.yaml`. The pinned Foldworks packages still declare Foldkit
-^0.156.0 peers; exact package exceptions let them share Forma's tested 0.168.0
+^0.156.0 peers; exact package exceptions let them share Forma's tested 0.170.0
 runtime. Revalidate these exceptions when upgrading either dependency. The
 workbench unit tests, standalone browser tests, and assembled-site browser tests
-exercise this combination. Vitest 5 satisfies @effect/vitest 4.0.3's peer range.
+exercise this combination. Vitest 5 satisfies @effect/vitest 4.1.1's peer range.
 
 CI, deployment, and release build jobs first validate the published registry
 dependencies, including Foldkit, with a frozen install, then build the pinned

@@ -223,6 +223,14 @@ provides bindings while checking a chosen hole. `:check` returns diagnostics;
 are ordinary Forma expressions. The declared IR type checks their output and
 provides the schema used at the artifact boundary.
 
+An optional positional `(Option String)` hole can hold a docstring; omitting it
+leaves the next non-string argument for the following hole. Scope signatures
+quantify their type, row, and effect variables independently at each use.
+Checks can attach diagnostics to nested authored syntax using `:at`, and form
+hooks can inspect declarations and aliases with `declarations-of` and
+`type-definition`. See [Writing a form](./writing-a-form.md) for diagnostic paths,
+reflection result shapes, and examples.
+
 ## Domain declarations
 
 Entities use short field names and derive attribute namespaces. References use
