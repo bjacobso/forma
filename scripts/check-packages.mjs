@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
+const effectVersion = JSON.parse(await readFile(join(root, "package.json"), "utf8")).devDependencies.effect;
 const temporary = await mkdtemp(join(tmpdir(), "forma-release-check-"));
 const run = (command, args, cwd = root) => execFileSync(command, args, {
   cwd, encoding: "utf8", timeout: 120_000, stdio: ["ignore", "pipe", "pipe"],
@@ -32,6 +33,13 @@ try {
     for (const spec of Object.values({ ...packed.dependencies, ...packed.optionalDependencies, ...packed.peerDependencies })) {
       assert(!/^(workspace|catalog):/.test(spec), `${manifest.name}: unresolved dependency ${spec}`);
     }
+    for (const name of Object.keys({ ...packed.dependencies, ...packed.optionalDependencies })) {
+      assert(!/^(effect|foldkit)$|^@(effect|foldkit)\//.test(name), `${manifest.name}: ${name} must be a peer dependency`);
+    }
+    if (manifest.devDependencies?.effect) {
+      assert.equal(manifest.devDependencies.effect, effectVersion, `${manifest.name}: test Effect must match the repository pin`);
+      assert.equal(packed.peerDependencies?.effect, `^${effectVersion}`, `${manifest.name}: packed Effect peer must admit the repository target`);
+    }
     assert.equal(packed.publishConfig.access, "public");
     assert.equal(packed.repository.url, "git+https://github.com/bjacobso/forma.git");
     for (const entry of entries) {
@@ -44,10 +52,16 @@ try {
   const consumer = join(temporary, "consumer");
   await mkdir(consumer);
   await writeFile(join(consumer, "package.json"), JSON.stringify({ private: true, type: "module" }));
-  run("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", ...packages.map(p => p.archive)], consumer);
+  run("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", `effect@${effectVersion}`, ...packages.map(p => p.archive)], consumer);
   const byDirectory = Object.fromEntries(packages.map(p => [p.directory, p.manifest.name]));
   const smoke = `
     import assert from 'node:assert/strict';
+    import { createRequire } from 'node:module';
+    const require = createRequire(import.meta.url);
+    for (const name of ${JSON.stringify(packages.filter(p => p.manifest.peerDependencies?.effect).map(p => p.manifest.name))}) {
+      const libraryRequire = createRequire(import.meta.resolve(name));
+      assert.equal(libraryRequire.resolve('effect'), require.resolve('effect'), name + ' must share the consumer Effect runtime');
+    }
     for (const name of ${JSON.stringify(packages.flatMap(p => Object.keys(p.manifest.exports).filter(e => e !== './server').map(e => p.manifest.name + (e === '.' ? '' : e.slice(1)))) )}) await import(name);
     const { createDefaultLanguageHost } = await import(${JSON.stringify(byDirectory.host)});
     assert.equal(typeof createDefaultLanguageHost().parseSync, 'function');
@@ -59,7 +73,7 @@ try {
       workspace.analysis.setDocument('numeric-smoke', source);
       assert.equal(workspace.analysis.analysis('numeric-smoke').resultType, expectedType);
     }
-    console.log('Installed tarballs: all library exports and the language server workspace work');
+    console.log('Installed tarballs: shared Effect runtime, all library exports, and the language server workspace work');
   `;
   await writeFile(join(consumer, "smoke.mjs"), smoke);
   console.log(run(process.execPath, ["smoke.mjs"], consumer).trim());

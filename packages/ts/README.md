@@ -4,6 +4,12 @@ The TypeScript implementation of Forma. It provides the lossless reader,
 formatter, macro expander, evaluator, bytecode VM, Hindley–Milner inference,
 editor analysis, elaboration protocols, and artifact generation.
 
+```sh
+npm install @formalang/ts effect@^4.1.1
+```
+
+Effect `^4.1.1` is a peer dependency supplied by the application.
+
 ```ts
 import { Evaluator, Reader, Type } from "@formalang/ts";
 import { parseManyToSExpr } from "@formalang/ts/reader";

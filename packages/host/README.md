@@ -3,8 +3,11 @@
 The host API and JSON boundary for Forma's TypeScript engine (`@formalang/ts`).
 
 ```sh
-npm install @formalang/host
+npm install @formalang/host effect@^4.1.1
 ```
+
+Effect `^4.1.1` is a peer dependency shared with the application's other Forma
+libraries.
 
 ```ts
 import { createDefaultLanguageHost } from "@formalang/host";
