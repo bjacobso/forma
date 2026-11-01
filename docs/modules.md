@@ -97,6 +97,14 @@ Exported types carry public schema syntax. Declaration and data interfaces carry
 compile-time schemes separately from runtime schemes; classification does not
 manufacture a runtime constructor.
 
+A form's `:ir` type can be one another module exports, so forms with different
+syntax in different libraries can produce the same IR. The imported type brings
+the definitions it refers to under their resolved identities, and payloads are
+checked against them; an exported type that reaches a private type is rejected
+with `module/private-type`. Each declaration's data records `contractId`, a
+SHA-256 identity of its `:ir` type and every type that type reaches. Two
+declarations that produce the same imported type share it.
+
 The complete [Stripe → Salesforce fixture](https://github.com/bjacobso/forma/tree/main/conformance/compile-time-modules)
 uses `billing/prices` to derive picklist entries and checks imported references
 at their authored spans. Data provenance contains paths into the elaborated
