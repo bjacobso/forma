@@ -92,8 +92,8 @@ stored goldens and reports differences by JSON path.
 `@formalang/editor` provides syntax, structural editing, diagnostics, hover, and
 React bindings. `@formalang/ts/analysis` is a workspace of preludes and
 documents whose language services (diagnostics, hover, completion,
-definitions, references, rename, document symbols, semantic tokens, and
-formatting) are memoized queries. Documents are typed in the scope of their
+definitions, references, rename, document symbols, search, semantic tokens,
+and formatting) are memoized queries. Documents are typed in the scope of their
 preludes. `@formalang/language-server` projects those queries into standard
 Language Server Protocol requests. It starts domain-neutral and loads only
 preludes explicitly supplied by its consumer. Language services are

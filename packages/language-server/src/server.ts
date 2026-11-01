@@ -19,6 +19,7 @@ import { getReferences } from "./handlers/references.js";
 import { prepareRename, rename } from "./handlers/rename.js";
 import { getSemanticTokens, semanticTokensLegend } from "./handlers/semantic-tokens.js";
 import { getDocumentSymbols } from "./handlers/symbols.js";
+import { getWorkspaceSymbols } from "./handlers/workspace-symbols.js";
 import { FormaWorkspace } from "./workspace.js";
 
 const connection = createConnection(ProposedFeatures.all);
@@ -50,6 +51,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
       referencesProvider: true,
       renameProvider: { prepareProvider: true },
       documentSymbolProvider: true,
+      workspaceSymbolProvider: true,
       semanticTokensProvider: { legend: semanticTokensLegend, full: true },
       documentFormattingProvider: formattingEnabled,
     },
@@ -90,6 +92,11 @@ connection.onReferences(handle([], getReferences));
 connection.onPrepareRename(handle(null, prepareRename));
 connection.onRenameRequest(handle(null, rename));
 connection.onDocumentSymbol(handle([], getDocumentSymbols));
+connection.onWorkspaceSymbol(async (params) => {
+  if (!workspace) return [];
+  await workspace.ready();
+  return getWorkspaceSymbols(workspace, params);
+});
 connection.languages.semanticTokens.on(
   handle({ data: [] }, (workspace, document) => getSemanticTokens(workspace, document)),
 );

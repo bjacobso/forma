@@ -316,8 +316,17 @@ from the same sources as the symbol index.
 
 `AnalysisWorkspace` in `@formalang/ts/analysis` holds ordered preludes and
 open documents and answers every service above, plus hover, completion,
-rename, document symbols, semantic tokens, and formatting, as memoized
-queries. It is the language server's whole implementation.
+rename, document symbols, search, semantic tokens, and formatting, as
+memoized queries. It is the language server's whole implementation.
+
+- **Search.** `search` ranks forms and global definitions by how many query
+  words match their names and documentation, name matches first. A form's
+  documentation is its docstring, slot docs, and `:ir` type name; a
+  definition's is its docstring or the comment lines directly above it or
+  above its `(: name type)` signature. Results can be limited to forms that
+  produce an IR type or to entries whose type mentions a type name. The
+  language server answers `workspace/symbol` with it, so an author or a model
+  can find an existing form before writing a new one.
 
 - **Inputs and revisions.** Setting a source's text bumps its revision only
   when the text changes. Each query result is keyed by the revisions it read,

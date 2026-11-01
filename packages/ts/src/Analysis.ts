@@ -17,6 +17,7 @@ export {
   type WorkspaceOptions,
 } from "./analysis/workspace.js";
 export { type CompletionItem, type CompletionKind } from "./analysis/completion.js";
+export { type SearchQuery, type SearchResult } from "./analysis/search.js";
 export {
   TOKEN_MODIFIERS,
   TOKEN_TYPES,
