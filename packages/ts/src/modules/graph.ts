@@ -12,6 +12,14 @@ import {
   type ModuleFormMetadata,
 } from "./compile-time.js";
 import { matchFormSyntax } from "../surface/form.js";
+import {
+  ModuleResolutionError,
+  packageOfModule,
+  packageProjects,
+  withPackages,
+  PACKAGE_ID_PREFIX,
+  type PackageTable,
+} from "./packages.js";
 import type { Span } from "../diagnostic/diagnostic.js";
 
 /** A resolver is supplied by the host. IDs identify file instances, not contents. */
@@ -203,12 +211,36 @@ export interface ModuleCoreOptions {
     readonly modules?: readonly string[];
   }[];
   readonly projectForModule?: (moduleId: string) => string | undefined;
+  /** Installed packages that bare specifiers resolve through (RFC 0018). */
+  readonly packages?: PackageTable;
 }
 export function resolveModuleGraph(
   entry: ModuleSource,
-  resolver: ModuleResolver,
-  core: ModuleCoreOptions = {},
+  hostResolver: ModuleResolver,
+  hostCore: ModuleCoreOptions = {},
 ): ModuleGraph {
+  let resolver = hostResolver;
+  if (hostCore.packages) {
+    try {
+      resolver = withPackages(hostCore.packages, hostResolver);
+    } catch (error) {
+      if (!(error instanceof ModuleResolutionError)) throw error;
+      throw new ModuleError({ code: error.code, message: error.message, severity: "error", phase: "typecheck" });
+    }
+  }
+  // Each package's own modules use its prelude, through the project mechanism.
+  const core: ModuleCoreOptions = hostCore.packages
+    ? {
+        ...hostCore,
+        projects: [...(hostCore.projects ?? []), ...packageProjects(hostCore.packages)],
+        projectForModule: (id) => {
+          const owner = packageOfModule(id);
+          return owner !== undefined && hostCore.packages!.packages.some((pkg) => pkg.name === owner && pkg.prelude !== undefined)
+            ? `${PACKAGE_ID_PREFIX}${owner}`
+            : hostCore.projectForModule?.(id);
+        },
+      }
+    : hostCore;
   const completed = new Map<string, ResolvedModule>(),
     active: string[] = [];
   const fail = (id: string, e: SExpr, code: string, message: string): never => {
@@ -243,7 +275,13 @@ export function resolveModuleGraph(
           ["import", "export-from"].includes(headSym(e) ?? "") &&
           e.items[1]?._tag === "Str"
         ) {
-          const target = resolver(e.items[1].value, id);
+          let target: ModuleSource | undefined;
+          try {
+            target = resolver(e.items[1].value, id);
+          } catch (error) {
+            // Resolution errors are reported where traversal reaches the import.
+            if (!(error instanceof ModuleResolutionError)) throw error;
+          }
           if (target) collect(target);
         }
       }
@@ -346,20 +384,23 @@ export function resolveModuleGraph(
           "An import or export-from requires a string file specifier.",
         );
       const specifier = e.items[1].value;
-      if (!specifier.startsWith("./") && !specifier.startsWith("../"))
-        fail(
-          id,
-          e.items[1],
-          "module/package-stage",
-          `Package import ${specifier} requires RFC 0002 stage 3; use a relative file import.`,
-        );
-      const resolved = resolver(specifier, id);
+      const relative = specifier.startsWith("./") || specifier.startsWith("../");
+      let resolved: ModuleSource | undefined;
+      try {
+        resolved = resolver(specifier, id);
+      } catch (error) {
+        if (error instanceof ModuleResolutionError)
+          return fail(id, e.items[1], error.code, error.message);
+        throw error;
+      }
       if (!resolved)
         return fail(
           id,
           e.items[1],
-          "module/not-found",
-          `Cannot resolve ${specifier} from ${id}.`,
+          relative || core.packages ? "module/not-found" : "module/package-not-found",
+          relative || core.packages
+            ? `Cannot resolve ${specifier} from ${id}.`
+            : `Cannot resolve package ${specifier} from ${id}: the host supplied no package table.`,
         );
       const target = normalizeModuleId(resolved.id);
       if (active.includes(target))

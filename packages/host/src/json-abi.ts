@@ -42,6 +42,13 @@ const value = JsonValueProjection;
 const configuration = { hostBuiltins: Schema.optionalKey(Schema.Array(builtin)), typePolicy: Schema.optionalKey(policy) };
 const variables = Schema.optionalKey(Schema.Array(Schema.Struct({ name: id, value })));
 const projects = Schema.optionalKey(Schema.Array(Schema.Struct({ id, base: id, prelude: optionalString, modules: Schema.optionalKey(Schema.Array(id)) })));
+const packages = Schema.optionalKey(Schema.Struct({
+  packages: Schema.Array(Schema.Struct({
+    name: id, version: optionalString, exports: Schema.Record(Schema.String, Schema.String),
+    dependencies: Schema.optionalKey(Schema.Array(id)), prelude: optionalString,
+  })),
+  dependencies: Schema.optionalKey(Schema.Array(id)),
+}));
 const source = { source: Schema.String, sourceId: optionalString };
 const sessionSource = { source: optionalString, sourceId: optionalString, sessionId: optionalString };
 const session = { sessionId: id };
@@ -58,7 +65,7 @@ const artifact = { ...session, sourceId: optionalString, sourceIds: Schema.optio
 /** Unsupported operations return abi/unsupported-op; known operations decode strictly. */
 export const JsonRequest = Schema.Union([
   operation("version", {}), operation("openSession", { defaultStepLimit: stepLimit }),
-  operation("configureSession", { ...session, ...configuration, variables, projects }),
+  operation("configureSession", { ...session, ...configuration, variables, projects, packages }),
   operation("loadSource", { ...session, ...document.fields, timings: Schema.optionalKey(Schema.Boolean) }),
   operation("loadSourceBundle", { ...session, sources: Schema.Array(document), timings: Schema.optionalKey(Schema.Boolean) }),
   ...(["closeSession", "resetSession", "sessionInfo"] as const).map(op => operation(op, session)),

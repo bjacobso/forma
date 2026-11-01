@@ -146,6 +146,7 @@ export function emit(request: EmitRequest): EmitResult {
       if (hasDirectives(id) && [...closure].some(hasMechanics)) {
         const graph = resolveModuleGraph(moduleSources.find(s => s.id === id)!, resolver, {
           bindings: new Set(request.session.configurationEnv.bindingNames()), projects: request.session.projects,
+          ...(request.session.packages ? { packages: request.session.packages } : {}),
         });
         for (const module of graph.modules) {
           const bindings: Record<string,string> = Object.fromEntries([...module.bindings.values(), ...module.imports.values()].map(b => [b.name, b.symbol]));

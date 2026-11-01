@@ -22,8 +22,9 @@ Effect TypeScript are implemented in stage 1; see [working file modules](../modu
 Relative compile-time library imports and host-selected project preludes are
 implemented in the TypeScript engine. They were also implemented in the Native
 OCaml engine, which has since been removed; TypeScript is the only engine (see
-[Retiring the OCaml engine](../engine-consolidation.md)). Package paths and project
-commands remain proposed.
+[Retiring the OCaml engine](../engine-consolidation.md)). Package imports are
+specified and implemented by [RFC 0018](./0018-packages.md), which replaces the
+`forma.toml` sketch below; project commands remain proposed.
 
 The examples use the current Effect-value authoring surface.
 [RFC 0003](./0003-direct-style-effects.md) proposes direct-style calls, inferred
@@ -521,6 +522,10 @@ occurs once per module instance in a runtime; detailed entry-point and capabilit
 configuration remains an open design item.
 
 ## Packages and tooling
+
+[RFC 0018](./0018-packages.md) supersedes this section's manifest and lockfile:
+packages use the `forma` field of `package.json`, and the host's package manager
+installs and locks them. The original sketch follows.
 
 A `forma.toml` manifest identifies the package, source roots, dependencies, and
 entry points. A lockfile records resolved package versions and integrity data.
