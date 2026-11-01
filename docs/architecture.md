@@ -66,7 +66,12 @@ suite.
 
 Artifacts use the `language-ts-artifact/v1` envelope and SHA-256 over canonical
 payload JSON with sorted object keys. They include module identities,
-provenance and type summaries. Artifact fixtures check the canonical IR golden
+provenance and type summaries. A declaration built by a form with a payload contract
+records the contract's name and `payloadContractId`, a SHA-256 content identity:
+for an `:ir` type, its definition and every type it reaches, ignoring layout and
+record field order; otherwise the resolved descriptor constraints. Forms with
+different syntax that produce the same IR type from the same definitions share
+an identity, so a consumer can reject payloads built against another definition. Artifact fixtures check the canonical IR golden
 and the 58-source, 548-declaration corpus counts; both expectations were
 captured from the retired OCaml engine, whose MD5 hashes and envelope metadata
 are not compared.

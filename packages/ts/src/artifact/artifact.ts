@@ -47,6 +47,12 @@ export interface PackageableDeclaration {
   readonly formIndex: number;
   readonly span?: Span | undefined;
   readonly payloadContract?: string | undefined;
+  /**
+   * SHA-256 content identity of the payload contract: for an `:ir` type, its
+   * definition and every type it reaches; otherwise the resolved constraints.
+   * Consumers compare it to reject payloads built against another definition.
+   */
+  readonly payloadContractId?: string | undefined;
   readonly payloadConstraints?: DescriptorPayloadContract | undefined;
   readonly validators?: readonly string[] | undefined;
   readonly origin?: DeclarationOrigin | undefined;
