@@ -5,6 +5,13 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  '@foldworks/agent': file:./vendor/foldworks-agent-0.1.0.tgz
+  '@foldworks/code-editor': file:./vendor/foldworks-code-editor-0.1.0.tgz
+  '@foldworks/history': file:./vendor/foldworks-history-0.1.1.tgz
+  '@foldworks/keyboard': file:./vendor/foldworks-keyboard-0.2.0.tgz
+  '@foldworks/outliner': file:./vendor/foldworks-outliner-0.0.0.tgz
+  '@foldworks/text-intelligence': file:./vendor/foldworks-text-intelligence-0.0.0.tgz
+  '@foldworks/ui': file:./vendor/foldworks-ui-0.2.0.tgz
   alchemy>@effect/sql-d1: 4.1.1
   alchemy>@effect/sql-sqlite-do: 4.1.1
   alchemy>@effect/vitest: 4.1.1
@@ -146,6 +153,9 @@ importers:
       '@foldkit/ui':
         specifier: 0.170.0
         version: 0.170.0(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))
+      '@foldworks/ui':
+        specifier: file:../../vendor/foldworks-ui-0.2.0.tgz
+        version: file:vendor/foldworks-ui-0.2.0.tgz(@foldkit/ui@0.170.0(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1)))(@stylexjs/stylex@0.19.0)(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))
       '@formalang/host':
         specifier: workspace:*
         version: link:../../packages/host
@@ -313,6 +323,24 @@ importers:
 
   packages/workbench:
     dependencies:
+      '@foldworks/agent':
+        specifier: file:../../vendor/foldworks-agent-0.1.0.tgz
+        version: file:vendor/foldworks-agent-0.1.0.tgz(@foldkit/ui@0.170.0(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1)))(@stylexjs/stylex@0.19.0)(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))
+      '@foldworks/code-editor':
+        specifier: file:../../vendor/foldworks-code-editor-0.1.0.tgz
+        version: file:vendor/foldworks-code-editor-0.1.0.tgz(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))
+      '@foldworks/history':
+        specifier: file:../../vendor/foldworks-history-0.1.1.tgz
+        version: file:vendor/foldworks-history-0.1.1.tgz(effect@4.1.1)
+      '@foldworks/outliner':
+        specifier: file:../../vendor/foldworks-outliner-0.0.0.tgz
+        version: file:vendor/foldworks-outliner-0.0.0.tgz(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))
+      '@foldworks/text-intelligence':
+        specifier: file:../../vendor/foldworks-text-intelligence-0.0.0.tgz
+        version: file:vendor/foldworks-text-intelligence-0.0.0.tgz(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))
+      '@foldworks/ui':
+        specifier: file:../../vendor/foldworks-ui-0.2.0.tgz
+        version: file:vendor/foldworks-ui-0.2.0.tgz(@foldkit/ui@0.170.0(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1)))(@stylexjs/stylex@0.19.0)(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))
       '@formalang/host':
         specifier: workspace:*
         version: link:../host
@@ -1009,6 +1037,56 @@ packages:
       effect: ~4.1.0
       foldkit: '>=0.167.0'
       vite: ^8.0.0
+
+  '@foldworks/agent@file:vendor/foldworks-agent-0.1.0.tgz':
+    resolution: {integrity: sha512-EVhRdvBldlT/n+8gKR3s/1z7iIiHmlk7m59LU/w5Do901v99TV4kZB8UiT+tJHfQf9ryIDDQvUo5P+A+fiK1eg==, tarball: file:vendor/foldworks-agent-0.1.0.tgz}
+    version: 0.1.0
+    peerDependencies:
+      '@stylexjs/stylex': ^0.19.0
+      effect: ^4.1.1
+      foldkit: ^0.170.0
+
+  '@foldworks/code-editor@file:vendor/foldworks-code-editor-0.1.0.tgz':
+    resolution: {integrity: sha512-xexngmC/y8e602SYs4oWi+ugCqm+Hj/Mc+OvV+73vHnF7n/FYaZBI6gv6vp1iL5okk8cLkKt/iH1/CsWutICBQ==, tarball: file:vendor/foldworks-code-editor-0.1.0.tgz}
+    version: 0.1.0
+    peerDependencies:
+      effect: ^4.1.1
+      foldkit: ^0.170.0
+
+  '@foldworks/history@file:vendor/foldworks-history-0.1.1.tgz':
+    resolution: {integrity: sha512-sDjMVVwdFcVu/qrfevccRbsfzra5PX/061EjFzPFMO53ACGYA9r7+FIUhJ1FnG+NTKpGE/WQiq7kWMMtq7KIKg==, tarball: file:vendor/foldworks-history-0.1.1.tgz}
+    version: 0.1.1
+    peerDependencies:
+      effect: ^4.1.1
+
+  '@foldworks/keyboard@file:vendor/foldworks-keyboard-0.2.0.tgz':
+    resolution: {integrity: sha512-ysxPuXk6rWGHLiPYicR+sJKp1ZU1dXr0kNTHN2fdF5Bo+v8ezYDyWKRW2ddA1GN0kaPcPgut0xe/BwupazMJsA==, tarball: file:vendor/foldworks-keyboard-0.2.0.tgz}
+    version: 0.2.0
+    peerDependencies:
+      effect: ^4.1.1
+
+  '@foldworks/outliner@file:vendor/foldworks-outliner-0.0.0.tgz':
+    resolution: {integrity: sha512-G9FUEtQ+zrjlTAyZtilmnB1gyHCq/8ESFxFFn9eemRvEvTEk1+9AVx0W+EymrokE1/IDdmIxOg1BfxWtuskn6A==, tarball: file:vendor/foldworks-outliner-0.0.0.tgz}
+    version: 0.0.0
+    peerDependencies:
+      effect: ^4.1.1
+      foldkit: ^0.170.0
+
+  '@foldworks/text-intelligence@file:vendor/foldworks-text-intelligence-0.0.0.tgz':
+    resolution: {integrity: sha512-poze1zeXnDs2Qh1nE5KZZ8GuHxEwKUlwfBVSpjb1I81qt2T2pTu3TUxe484dm3fhDo7J+RzNJaW+rqL7Vay/gw==, tarball: file:vendor/foldworks-text-intelligence-0.0.0.tgz}
+    version: 0.0.0
+    peerDependencies:
+      effect: ^4.1.1
+      foldkit: ^0.170.0
+
+  '@foldworks/ui@file:vendor/foldworks-ui-0.2.0.tgz':
+    resolution: {integrity: sha512-hu+SZy8Ye0yFChex46giokvjcyQqISaV5sH6yUEUzfXgOl+hhxwSsZBSVSB73eEqgTIr9HAo4oHGq7q/m9opXw==, tarball: file:vendor/foldworks-ui-0.2.0.tgz}
+    version: 0.2.0
+    peerDependencies:
+      '@foldkit/ui': ^0.170.0
+      '@stylexjs/stylex': ^0.19.0
+      effect: ^4.1.1
+      foldkit: ^0.170.0
 
   '@fontsource-variable/ibm-plex-sans@5.3.0':
     resolution: {integrity: sha512-agG8tXFEo0hD9+J7npa4vbbWult52eMLVaQ6WQRlhs/iCAojrMAoejru85W9HTVXHfyUj96KM7gp/KGAS87XaQ==}
@@ -4258,6 +4336,52 @@ snapshots:
       - bufferutil
       - redis
       - utf-8-validate
+
+  '@foldworks/agent@file:vendor/foldworks-agent-0.1.0.tgz(@foldkit/ui@0.170.0(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1)))(@stylexjs/stylex@0.19.0)(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))':
+    dependencies:
+      '@foldworks/ui': file:vendor/foldworks-ui-0.2.0.tgz(@foldkit/ui@0.170.0(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1)))(@stylexjs/stylex@0.19.0)(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))
+      '@lucide/icons': 1.40.0
+      '@stylexjs/stylex': 0.19.0
+      effect: 4.1.1
+      foldkit: 0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1)
+    transitivePeerDependencies:
+      - '@foldkit/ui'
+
+  '@foldworks/code-editor@file:vendor/foldworks-code-editor-0.1.0.tgz(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))':
+    dependencies:
+      '@foldworks/text-intelligence': file:vendor/foldworks-text-intelligence-0.0.0.tgz(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))
+      effect: 4.1.1
+      foldkit: 0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1)
+      yaml: 2.9.0
+
+  '@foldworks/history@file:vendor/foldworks-history-0.1.1.tgz(effect@4.1.1)':
+    dependencies:
+      effect: 4.1.1
+
+  '@foldworks/keyboard@file:vendor/foldworks-keyboard-0.2.0.tgz(effect@4.1.1)':
+    dependencies:
+      effect: 4.1.1
+
+  '@foldworks/outliner@file:vendor/foldworks-outliner-0.0.0.tgz(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))':
+    dependencies:
+      '@foldworks/history': file:vendor/foldworks-history-0.1.1.tgz(effect@4.1.1)
+      '@foldworks/text-intelligence': file:vendor/foldworks-text-intelligence-0.0.0.tgz(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))
+      effect: 4.1.1
+      foldkit: 0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1)
+
+  '@foldworks/text-intelligence@file:vendor/foldworks-text-intelligence-0.0.0.tgz(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))':
+    dependencies:
+      effect: 4.1.1
+      foldkit: 0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1)
+
+  '@foldworks/ui@file:vendor/foldworks-ui-0.2.0.tgz(@foldkit/ui@0.170.0(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1)))(@stylexjs/stylex@0.19.0)(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))':
+    dependencies:
+      '@foldkit/ui': 0.170.0(effect@4.1.1)(foldkit@0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1))
+      '@foldworks/keyboard': file:vendor/foldworks-keyboard-0.2.0.tgz(effect@4.1.1)
+      '@lucide/icons': 1.40.0
+      '@stylexjs/stylex': 0.19.0
+      effect: 4.1.1
+      foldkit: 0.170.0(@effect/platform-browser@4.1.1(effect@4.1.1))(effect@4.1.1)
 
   '@fontsource-variable/ibm-plex-sans@5.3.0': {}
 

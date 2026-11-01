@@ -8,16 +8,15 @@ behavior and planned features when changing code or docs.
 Use Node.js 24 and pnpm 10.20 (the version in `packageManager`). From the root:
 
 ```sh
-node scripts/setup-workspace.mjs
+pnpm install --frozen-lockfile
 pnpm check
 ```
 
-Setup validates registry dependencies with the frozen lockfile, then builds and
-packs the same pinned, unpublished Foldworks packages as CI. It installs those
-tarballs through the existing local link hook and restores the committed
-lockfile. `.context/`, `.foldworks/`, and `.pnpmfile.cjs` are local artifacts.
-Do not commit a lockfile containing local Foldworks paths. See
-`packages/workbench/README.md` for manual linking and current limits.
+The complete lockfile includes committed Foldworks tarballs in `vendor/`; no
+sibling checkout or link hook is needed. `vendor/manifest.json` records their
+source revision and SHA-256 hashes. See `vendor/README.md` for refreshing them
+from a local Foldworks checkout and `packages/workbench/README.md` for current
+limits. `.context/` is a local artifact.
 
 `pnpm check` runs the branding check, TypeScript checks, JavaScript tests,
 the surface golden check, and the VitePress docs build including the `llms.txt`
@@ -37,7 +36,7 @@ visual tests, workbench browser tests, and the Wrangler deployment dry run.
 - `apps/website/`: compiler playground, production Worker, and site tests.
 - `docs/`: VitePress source; `docs/agents.md` generates `/llms.txt` at build time.
 - `preludes/`, `examples/`, `conformance/`: library vocabulary and behavior fixtures.
-- `scripts/`: checks, package linking, surface goldens, and website assembly.
+- `scripts/`: checks, dependency vendoring, surface goldens, and website assembly.
 
 Use the existing ESM, TypeScript, Vitest, and Node script conventions. Domain
 vocabulary belongs in preludes and descriptors, not hardcoded compiler concepts.

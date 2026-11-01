@@ -2,20 +2,18 @@ packages:
   - "apps/*"
   - "packages/*"
 
-# Keep Alchemy's used Effect companions pinned to the same tested version.
-# These versions satisfy Alchemy's ^4.0.0 dependency and peer ranges.
 overrides:
+  # BEGIN vendored Foldworks
+  "@foldworks/agent": file:./vendor/foldworks-agent-0.1.0.tgz
+  "@foldworks/code-editor": file:./vendor/foldworks-code-editor-0.1.0.tgz
+  "@foldworks/history": file:./vendor/foldworks-history-0.1.1.tgz
+  "@foldworks/keyboard": file:./vendor/foldworks-keyboard-0.2.0.tgz
+  "@foldworks/outliner": file:./vendor/foldworks-outliner-0.0.0.tgz
+  "@foldworks/text-intelligence": file:./vendor/foldworks-text-intelligence-0.0.0.tgz
+  "@foldworks/ui": file:./vendor/foldworks-ui-0.2.0.tgz
+  # END vendored Foldworks
+  # Keep Alchemy's used Effect companions on the same tested version.
+  # These versions satisfy Alchemy's ^4.0.0 dependency and peer ranges.
   "alchemy>@effect/sql-d1": 4.1.1
   "alchemy>@effect/sql-sqlite-do": 4.1.1
   "alchemy>@effect/vitest": 4.1.1
-
-peerDependencyRules:
-  allowedVersions:
-    # The pinned, unpublished Foldworks tarballs still declare ^0.156.0.
-    # These exact packages are exercised by Forma's workbench tests.
-    "@foldworks/agent@0.1.0>foldkit": 0.170.0
-    "@foldworks/code-editor@0.1.0>foldkit": 0.170.0
-    "@foldworks/outliner@0.0.0>foldkit": 0.170.0
-    "@foldworks/text-intelligence@0.0.0>foldkit": 0.170.0
-    "@foldworks/ui@0.2.0>foldkit": 0.170.0
-    "@foldworks/ui@0.2.0>@foldkit/ui": 0.170.0

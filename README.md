@@ -314,18 +314,17 @@ it does not emit a placeholder program.
 Forma requires Node.js 24 and pnpm 10.20.
 
 ```sh
-node scripts/setup-workspace.mjs
+pnpm install --frozen-lockfile
 pnpm test
 pnpm dev
 ```
 
 The website and live compiler demos run at the Vite URL printed by `pnpm dev`.
-Setup validates the frozen registry lockfile, then installs the pinned,
-unpublished Foldworks packages used by CI. Run `pnpm check` to verify the
+The complete lockfile installs committed Foldworks tarballs from `vendor/`;
+no sibling checkout or link step is needed. Run `pnpm check` to verify the
 JavaScript workspace and docs. See [AGENTS.md](AGENTS.md) for contributor commands.
-The separate structural IDE runs with `pnpm workbench`. For manual linking,
-see the [Foldworks setup](packages/workbench/README.md#foldworks); its unpublished
-primitives currently require that development link.
+The separate structural IDE runs with `pnpm workbench`. To refresh its primitives
+from a local Foldworks checkout, see [vendoring](vendor/README.md).
 There is currently no published `forma` CLI. Pre-1.0 packages such as
 `@formalang/ts` are published to npm under the `@formalang` scope; otherwise
 work from this repository, where `@formalang/host` builds a `forma` JSON CLI

@@ -60,12 +60,12 @@ note describes the embed contract, themes, and the next language-service work.
   without changing the workbench. Two things go to `@formalang/ts` directly:
   reading one row's text in a view (`identifySyntax`, which is synchronous and
   pure) and elaboration, which the host ABI does not expose yet.
-- **Publication.** The Foldworks primitives the workbench needs are not on npm
-  yet, so the package is private until they are. For local development,
-  `scripts/foldworks-link.mjs` packs a built Foldworks checkout and points the
-  `@foldworks/*` dependencies at the tarballs through a gitignored
-  `.pnpmfile.cjs`. Committed manifests name the published ranges the
-  workbench needs.
+- **Publication.** The Foldworks primitives the workbench needs are not all on
+  npm yet, so the package remains private. Committed tarballs in `vendor/`
+  and file overrides in `pnpm-workspace.yaml` make a fresh clone install with
+  `pnpm install --frozen-lockfile`. No local checkout or link hook is needed.
+  `pnpm vendor:foldworks` refreshes the packages from a clean, installed
+  `FOLDWORKS_DIR` checkout; the manifest records the revision and hashes.
 
 ## Where state lives
 
@@ -361,26 +361,24 @@ approval, and cancellation on edits. The demo's Playwright scenarios cover the
 complete user loop. Production screenshots and verification results accompany
 the pull requests.
 
-The implementation is tested against Foldworks main at `695695e`, after PR 56
-merged. Its Lisp prototype at `80c1077` is only a historical reference; removing
-the demo, its tests, and `docs/structural-lisp.md` does not change the contract
-this package uses. There
-are no local Foldworks code patches or additional primitive requirements.
+The implementation uses Foldworks main at
+[`7b60eb4`](https://github.com/bjacobso/foldworks/commit/7b60eb4342773cbd532f27ebcfd87ca9d7555356),
+which matches Forma's Effect 4.1.1 and Foldkit 0.170.0 targets. There are no local
+Foldworks code patches or Foldworks peer exceptions. The Lisp prototype at
+`80c1077` is only a historical reference.
 
-The manifests declare the intended minimum releases: outliner and
+The manifests declare intended minimum releases: outliner and
 text-intelligence 0.1.0, ui 0.3.0, code-editor and agent 0.2.0, with history
-0.1.1. The main checkout still carries older package version numbers, so the
-commit and contract are the development requirement until publication.
-Once those releases exist, remove the development link,
-generate a registry-only lockfile with the new workspace importers, run the
-same checks, and then make the package public. A frozen install of the
-unlinked stack cannot succeed before those packages are released.
+0.1.1. The pinned checkout still carries older package version numbers;
+committed file overrides select those built exports, including the transitive
+keyboard primitive. The source revision and SHA-256 hashes live in
+`vendor/manifest.json`. All install paths use the same complete frozen lockfile,
+including CI and release jobs. Refreshing the tarballs is an optional maintainer
+operation, separate from installation.
 
-Until publication, PR CI validates the committed registry lockfile with the two
-unpublished workbench projects temporarily excluded, then builds and links the
-pinned Foldworks commit in the isolated job. It runs the repository checks and
-both website and workbench browser suites. The local dependency paths remain
-temporary; main and release installs still require the frozen registry lockfile.
+The workbench stays private until its dependency publication path is ready.
+Before making it public, select published Foldworks dependencies, remove the
+file overrides, regenerate the complete lockfile, and run the same checks.
 
 Follow-up language-service work includes spans on `HostCall`, paged value
 projection, an observation trace for step-through, independently observed

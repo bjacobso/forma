@@ -27,7 +27,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: node scripts/ci-install-registry.mjs
+      - uses: ./.github/actions/install
       - id: changesets
         uses: changesets/action/select-mode@v2
 
@@ -47,7 +47,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: node scripts/ci-install-registry.mjs
+      - uses: ./.github/actions/install
       - uses: changesets/action/version@v2
         with:
           script: pnpm release:version
@@ -96,7 +96,7 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
       - run: npm install --global npm@^11.5.1
-      - run: node scripts/ci-install-registry.mjs
+      - uses: ./.github/actions/install
       - uses: changesets/action/publish@v2
         with:
           pack-dir-artifact-id: ${{ needs.pack.outputs.pack-dir-artifact-id }}

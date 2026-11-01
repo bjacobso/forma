@@ -155,50 +155,40 @@ default. Runtime resources own host sessions and close them on disposal.
 
 ## Foldworks
 
-The workbench needs Foldworks primitives that are not published yet:
-`@foldworks/outliner` and `@foldworks/text-intelligence` 0.1.0,
-`@foldworks/ui` 0.3.0, `@foldworks/code-editor` 0.2.0, and
-`@foldworks/agent` 0.2.0. Until they are, the package is private, and a
-Foldworks checkout can be linked for development:
+The workbench uses unpublished Foldworks primitives packed from
+[`7b60eb4342773cbd532f27ebcfd87ca9d7555356`](https://github.com/bjacobso/foldworks/commit/7b60eb4342773cbd532f27ebcfd87ca9d7555356),
+the current `main` when vendored. Seven committed tarballs in `vendor/` include
+`agent`, `code-editor`, `history`, `keyboard` (a UI dependency), `outliner`,
+`text-intelligence`, and `ui`. The [manifest](../../vendor/manifest.json) records
+the source revision and SHA-256 of each archive. The workbench remains private.
 
-```sh
-# In a sibling Foldworks checkout:
-git checkout main
-pnpm install && pnpm build:packages
-# Here:
-FOLDWORKS_DIR=../foldworks pnpm foldworks:link
-pnpm install
-pnpm workbench
-```
+From a fresh Forma clone, `pnpm install --frozen-lockfile` installs these
+packages through `pnpm-workspace.yaml` file overrides. No Foldworks checkout,
+manifest rewriting, registry workaround, or link hook is required in local,
+CI, deployment, or release installs. Manifest version ranges still describe
+intended minimum releases; the overrides select the pinned source packages,
+whose version numbers have not yet caught up with those ranges.
 
-Linking rewrites `pnpm-lock.yaml` with local paths. Do not commit it;
-`pnpm foldworks:unlink` restores it.
+For local Foldworks development, refresh the tarballs from a clean local
+checkout with `FOLDWORKS_DIR=../foldworks pnpm vendor:foldworks`, then run
+`pnpm install --no-frozen-lockfile` and `pnpm workbench`. This is a snapshot of
+built package exports; after changing Foldworks, commit its changes and repeat
+the refresh. See the [vendoring instructions](../../vendor/README.md) for
+validation and how to discard a local experiment.
 
-Validated with Foldworks main at `695695e`. The
-manifest ranges describe the minimum intended releases, while that unpublished
-checkout currently has older version numbers. Forma uses Foldkit and @foldkit/ui
-0.170.0, @foldkit/vite-plugin 0.29.0, Effect 4.1.1, and StyleX 0.19.0. The
-workbench has no local Foldworks patches. Once the primitives are released, unlink, generate
-a registry lockfile, recheck, and remove `private` before publication.
+Forma uses Foldkit and @foldkit/ui 0.170.0, @foldkit/vite-plugin 0.29.0,
+Effect 4.1.1, and StyleX 0.19.0. The pinned Foldworks packages declare compatible
+peers, so no Foldworks peer exceptions are needed. Their upstream build runs
+as is; Forma applies no Foldworks patches. Foldkit and its plugin accept
+Effect 4.1.1 through their ~4.1.0 ranges. Alchemy's Effect companions remain
+pinned to 4.1.1 within its supported ^4.0.0 ranges in `pnpm-workspace.yaml`.
+The workbench unit tests, standalone browser tests, and assembled-site browser
+tests exercise this combination. Vitest 5 satisfies @effect/vitest 4.1.1's peer
+range. Release versioning regenerates the same complete lockfile.
 
-Foldkit and its plugin accept Effect 4.1.1 through their ~4.1.0 ranges;
-no Effect peer exceptions or plugin platform overrides are needed. Alchemy's
-Effect companions are pinned to 4.1.1 within its supported ^4.0.0 ranges in
-`pnpm-workspace.yaml`. The pinned Foldworks packages still declare Foldkit
-^0.156.0 peers; exact package exceptions let them share Forma's tested 0.170.0
-runtime. Revalidate these exceptions when upgrading either dependency. The
-workbench unit tests, standalone browser tests, and assembled-site browser tests
-exercise this combination. Vitest 5 satisfies @effect/vitest 4.1.1's peer range.
-
-CI, deployment, and release build jobs first validate the published registry
-dependencies, including Foldkit, with a frozen install, then build the pinned
-Foldworks commit and link its packages for that job. Release metadata jobs install only the registry
-dependencies: the registry install temporarily omits only unpublished
-`@foldworks/*` dependencies from the two workbench manifests and restores them
-afterward. Release versioning regenerates that same registry lockfile. The
-temporary tarballs, hook, and linked lockfile changes are never committed.
-Once the workbench is public and its release lockfile exists, all jobs use the
-full frozen registry install.
+Publication would require published Foldworks dependencies and revalidation
+without file overrides before removing `private`; vendoring does not publish
+any package.
 
 Known first-release limits: evaluation stops at the first failure, observation
 has no step trace, host calls have no exact dynamic source span, operational

@@ -1,0 +1,65 @@
+[
+  {
+    "name": "@foldworks/agent",
+    "version": "0.1.0",
+    "source": "foldworks/packages/agent",
+    "revision": "7b60eb4342773cbd532f27ebcfd87ca9d7555356",
+    "dirty": false,
+    "file": "foldworks-agent-0.1.0.tgz",
+    "sha256": "d981576e9b0e9a4d6650b546e70590929f01155d7791e4ab0dd028ad34db2f50"
+  },
+  {
+    "name": "@foldworks/code-editor",
+    "version": "0.1.0",
+    "source": "foldworks/packages/code-editor",
+    "revision": "7b60eb4342773cbd532f27ebcfd87ca9d7555356",
+    "dirty": false,
+    "file": "foldworks-code-editor-0.1.0.tgz",
+    "sha256": "1da3e8ee9a0a7c6bbb236d0851086d6cc46a20b69a9450688085a4ad52e70fcd"
+  },
+  {
+    "name": "@foldworks/history",
+    "version": "0.1.1",
+    "source": "foldworks/packages/history",
+    "revision": "7b60eb4342773cbd532f27ebcfd87ca9d7555356",
+    "dirty": false,
+    "file": "foldworks-history-0.1.1.tgz",
+    "sha256": "125ced054e7d03be10a04086804f36fb5f289a41b2952e88e57d9650455117b8"
+  },
+  {
+    "name": "@foldworks/keyboard",
+    "version": "0.2.0",
+    "source": "foldworks/packages/keyboard",
+    "revision": "7b60eb4342773cbd532f27ebcfd87ca9d7555356",
+    "dirty": false,
+    "file": "foldworks-keyboard-0.2.0.tgz",
+    "sha256": "056579e3e4296eac053797e264c13d12545afd421f02faf0faa1ce9e1196d9ca"
+  },
+  {
+    "name": "@foldworks/outliner",
+    "version": "0.0.0",
+    "source": "foldworks/packages/outliner",
+    "revision": "7b60eb4342773cbd532f27ebcfd87ca9d7555356",
+    "dirty": false,
+    "file": "foldworks-outliner-0.0.0.tgz",
+    "sha256": "837c6fbc453c01e3e3936a8303d7c8e63cbdb96d94a476796d1da1bbdeb0a57f"
+  },
+  {
+    "name": "@foldworks/text-intelligence",
+    "version": "0.0.0",
+    "source": "foldworks/packages/text-intelligence",
+    "revision": "7b60eb4342773cbd532f27ebcfd87ca9d7555356",
+    "dirty": false,
+    "file": "foldworks-text-intelligence-0.0.0.tgz",
+    "sha256": "80591154692e3bd5dee55b3245491eae95db3ec7f66e8fb444487d44a1482cd1"
+  },
+  {
+    "name": "@foldworks/ui",
+    "version": "0.2.0",
+    "source": "foldworks/packages/ui",
+    "revision": "7b60eb4342773cbd532f27ebcfd87ca9d7555356",
+    "dirty": false,
+    "file": "foldworks-ui-0.2.0.tgz",
+    "sha256": "8409641fdce1f8a65e274309006fa0ca7a58733658a348ac1fc4dc4a71b2706d"
+  }
+]
