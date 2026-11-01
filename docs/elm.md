@@ -158,7 +158,7 @@ pageClass: forma-index forma-elm
 <div class="fh-section__head">
 <p class="fh-label"><span>05</span> The output</p>
 <h2 id="output-heading">Plain Foldkit. Plain Effect.</h2>
-<p>This is the complete generated module from the counter source above, checked against <code>foldkit@0.168.0</code> and <code>effect@4.0.3</code>. No Forma runtime is imported.</p>
+<p>This is the complete generated module from the counter source above, checked against <code>foldkit@0.170.0</code> and <code>effect@4.1.1</code>. No Forma runtime is imported.</p>
 </div>
 <div class="fh-facts">
 <article><h3>Schema-backed data</h3><p>Model and Msg become Effect schemas and TypeScript types. Message tags and payload fields survive generation.</p></article>

@@ -239,6 +239,10 @@ pnpm --filter @formalang/ts typecheck
 
 ## Effect 4 consumer migration
 
+The development branch targets `effect@4.1.1` in its public types, runtime,
+and generated TypeScript. Consumers of the next release should install that
+same version.
+
 Version 0.4.0 uses `effect@4.0.3` in its public Effect types and
 runtime. Consumers should install that same version, remove any Effect 3 alias
 used only for Forma, and import `Effect` directly from `effect`. Generated

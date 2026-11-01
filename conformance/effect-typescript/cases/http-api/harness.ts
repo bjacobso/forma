@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { Effect, Layer, Schema } from "effect";
 import { HttpRouter, HttpServer } from "effect/http";
-import { HttpApiBuilder } from "effect/http-api";
+import { HttpApiBuilder, HttpApiSchema } from "effect/http-api";
 import { Shop, ShopUsersLive, ShopSystemLive, User, UserId, UserNotFound, UserRepo } from "./expected.js";
 import { Api, Group, Endpoint } from "./builders.js";
 
@@ -17,6 +17,27 @@ type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B 
 type Assert<T extends true> = T;
 export type BuilderGroups = Assert<Equal<keyof typeof built.value.groups, "users" | "system">>;
 export type BuilderEndpoints = Assert<Equal<keyof typeof built.value.groups.users.endpoints, "get-user" | "create-user">>;
+
+// Compile-only checks: Effect 4.1 permits streams and protocol upgrades as
+// successes, but rejects both as errors, including through response headers.
+export function errorSchemaTypechecks(): void {
+  const stream = HttpApiSchema.StreamUint8Array();
+  const upgrade = HttpApiSchema.Upgrade({ protocol: "tcp" });
+  const headers = { "x-request-id": Schema.String };
+  Endpoint.get("stream-success", "/", { success: stream });
+  Endpoint.get("upgrade-success", "/", { success: upgrade });
+  Endpoint.get("header-error", "/", {
+    success: Schema.String, errors: [HttpApiSchema.WithHeaders(UserNotFound, headers)],
+  });
+  // @ts-expect-error A stream cannot be an endpoint error.
+  Endpoint.get("stream-error", "/", { success: Schema.String, errors: [stream] });
+  // @ts-expect-error A protocol upgrade cannot be an endpoint error.
+  Endpoint.get("upgrade-error", "/", { success: Schema.String, errors: [upgrade] });
+  // @ts-expect-error Response headers cannot hide a stream error.
+  Endpoint.post("header-stream-error", "/", { success: Schema.String, errors: [HttpApiSchema.WithHeaders(stream, headers)] });
+  // @ts-expect-error Response headers cannot hide a protocol upgrade error.
+  Endpoint.post("header-upgrade-error", "/", { success: Schema.String, errors: [HttpApiSchema.WithHeaders(upgrade, headers)] });
+}
 
 // These handlers compile only if names, request fields, brands, and success
 // schemas survive the generated .add() chain. No explicit handler annotations.

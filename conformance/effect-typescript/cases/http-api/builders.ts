@@ -2,7 +2,7 @@ import { Schema } from "effect";
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, type HttpApiSchema } from "effect/http-api";
 import type { HttpRouter } from "effect/http";
 type ErrorSchema<S> = S extends HttpApiSchema.WithHeaders<infer Inner, Schema.Top> ? Inner : S;
-type ErrorSchemas<S extends readonly Schema.Top[]> = [Extract<ErrorSchema<S[number]>, HttpApiSchema.StreamSchema>] extends [never] ? S : never;
+type ErrorSchemas<S extends HttpApiEndpoint.ErrorConstraint> = [Extract<ErrorSchema<S extends ReadonlyArray<Schema.Constraint> ? S[number] : S>, HttpApiSchema.StreamSchema | HttpApiSchema.Upgrade>] extends [never] ? S : never;
 
 export type EndpointIR = { "kind": "HttpEndpoint", "name": string, "method": "get" | "post" | "put" | "patch" | "delete", "path": string, "params": Schema.Top | undefined, "payload": Schema.Top | undefined, "success": Schema.Top, "errors": readonly Schema.Top[] | undefined };
 

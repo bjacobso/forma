@@ -119,7 +119,7 @@ None of this is built into the compiler. The words a rule can use (`send`, `tag?
 <div class="fh-section__head">
 <p class="fh-label"><span>05</span> The output</p>
 <h2 id="output-heading">Plain Effect TypeScript.</h2>
-<p>This is the complete generated module for the program above, checked against <code>effect@4.0.3</code>. The <a href="https://github.com/bjacobso/forma/tree/main/conformance/effect-typescript/cases/email-warmup">conformance case</a> compares it with a golden, typechecks it under strict settings, and runs a harness against recording, rate-limited, and bouncing mailers.</p>
+<p>This is the complete generated module for the program above, checked against <code>effect@4.1.1</code>. The <a href="https://github.com/bjacobso/forma/tree/main/conformance/effect-typescript/cases/email-warmup">conformance case</a> compares it with a golden, typechecks it under strict settings, and runs a harness against recording, rate-limited, and bouncing mailers.</p>
 </div>
 <div class="fh-facts">
 <article><h3>Schema-backed contacts</h3><p><code>EmailContact</code>, <code>EmailLane</code>, and <code>EmailDecision</code> are Effect schemas, so a host can decode contacts from a CRM export before a rule sees them.</p></article>

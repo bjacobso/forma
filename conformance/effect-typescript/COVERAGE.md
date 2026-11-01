@@ -1,6 +1,6 @@
 # Effect TypeScript coverage matrix
 
-This matrix records which Effect 4 (`effect@4.0.0-rc.112`) constructs a Forma
+This matrix records which Effect 4 (`effect@4.1.1`) constructs a Forma
 program can express. The pipeline is `elaborateEffectProgram` /
 `generateEffectProgram`: read, then `mechanicsPackageableDeclarations`, then
 `checkMechanicsDeclarations`, then `generateMechanicsEffectTypeScriptModule`.
@@ -140,7 +140,7 @@ returns `module/effect-runtime`.
 
 `generateElmProgram` bootstraps `preludes/elm.lisp` independently and lowers its
 expressions through the existing mechanics checker. `elm-counter` checks an exact
-Foldkit 0.168.0 / Effect 4.0.3 golden, strict TypeScript without escapes, declaration
+Foldkit 0.170.0 / Effect 4.1.1 golden, strict TypeScript without escapes, declaration
 artifacts, mounting types, and headless init/update/command success and recovery.
 Exact rejection fixtures cover exhaustive update, unmapped command errors,
 catch-all error mapping, impure view/update, message payloads, and unknown commands.

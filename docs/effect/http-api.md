@@ -1,7 +1,7 @@
 # Prelude-defined HTTP APIs
 
 `preludes/http-api.lisp` is a declaration DSL targeting
-`effect@4.0.3` and `effect/http-api`. Its `form` declarations
+`effect@4.1.1` and `effect/http-api`. Its `form` declarations
 define syntax, typed IR, and TypeScript emission together. A second generator
 derives a TypeScript builder DSL from those same declarations.
 
