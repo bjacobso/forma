@@ -1,4 +1,4 @@
-import type { ModuleInterface, LinkedEffectProgram } from "@formalang/ts/modules";
+import type { ModuleInterface, LinkedEffectProgram, PackageTable } from "@formalang/ts/modules";
 export interface Span {
   readonly sourceId: string;
   readonly startOffset: number;
@@ -325,6 +325,8 @@ export interface OpenSessionResult {
 
 export interface ConfigureSessionRequest {
   readonly projects?: ModuleGraphRequest["projects"];
+  /** Installed packages that bare imports resolve through; store their files under `pkg:<name>/<path>` IDs. */
+  readonly packages?: PackageTable | undefined;
   readonly sessionId: string;
   readonly variables?: readonly SessionVariable[] | undefined;
   readonly hostBuiltins?: readonly HostBuiltinDescriptor[] | undefined;

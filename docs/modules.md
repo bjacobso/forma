@@ -138,6 +138,69 @@ they do not invoke it. Executable Effects still require the existing explicit
 runner. Graph requests rebuild compile-time interfaces from current sources,
 including private helper dependencies.
 
+## Packages
+
+[RFC 0018](./rfcs/0018-packages.md) adds package imports. A package is an npm
+package whose `package.json` has a `forma` field listing the files other
+packages may import:
+
+```json
+{
+  "name": "@acme/flows",
+  "version": "2.1.0",
+  "dependencies": { "@acme/ir": "^1.0.0" },
+  "forma": { "exports": { ".": "./src/index.forma", "./ir": "./src/ir.forma" } }
+}
+```
+
+```lisp
+(import "@acme/flows" [flow])       ; the "." export
+(import "@acme/flows/ir" [FlowIR])  ; the "./ir" export
+```
+
+npm, pnpm, or yarn install packages and lock their versions; Forma reads what
+is installed. A module may import a package only when its own package declares
+it in `dependencies`, `peerDependencies`, or `optionalDependencies` (and, for the
+package being developed, `devDependencies`). Errors are reported at the
+specifier: `module/undeclared-dependency`, `module/package-not-found`,
+`module/package-private` for a subpath missing from `exports`,
+`module/package-escape` for a relative import that leaves its package, and
+`module/specifier` for anything that is neither relative nor a package name.
+An optional `forma.prelude` file gives the package's own modules automatic
+imports, as project preludes do.
+
+Modules inside installed packages have IDs such as `pkg:@acme/flows/src/index.forma`,
+whatever directory they are installed in. Binding identities, generated names,
+and `contractId`s therefore match across machines and do not change between
+releases that leave a definition alone. A graph contains one version of each
+package; the Node adapter reports `module/package-version-conflict` when it finds
+two. Modules of the package being developed keep their file paths.
+
+`forma file <op> entry.forma` and `readModuleGraph` in `@formalang/ts/node`
+find the nearest `package.json` above the entry and follow its Forma
+dependencies through `node_modules`. Other hosts pass a table to
+`configureSession` and store package files under their `pkg:` IDs:
+
+```typescript
+await host.configureSession({
+  sessionId,
+  packages: {
+    packages: [
+      { name: "@acme/ir", version: "1.0.0", exports: { ".": "ir.forma" } },
+      { name: "@acme/flows", exports: { ".": "index.forma" }, dependencies: ["@acme/ir"] },
+    ],
+    dependencies: ["@acme/flows"], // what modules outside every package may import
+  },
+});
+await host.loadSourceBundle({ sessionId, sources: [
+  { kind: "source", sourceId: "pkg:@acme/ir/ir.forma", source: irSource },
+  { kind: "source", sourceId: "pkg:@acme/flows/index.forma", source: flowsSource },
+  { kind: "source", sourceId: "main.forma", source: mainSource },
+] });
+```
+
+The language server does not resolve packages yet.
+
 ## Host and browser use
 
 `TsLanguageHost` supports source-bundle, `moduleGraph`, `typecheck`, `expand`,
