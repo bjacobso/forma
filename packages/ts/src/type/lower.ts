@@ -74,6 +74,8 @@ export interface LowerProgramOptions {
   /** Macros visible to the program, such as those its preludes define. Kernel macros are always visible. */
   readonly macroEnv?: Env | undefined;
   readonly includePrelude?: boolean | undefined;
+  /** Types visible to the program's forms besides its own, such as imported `:ir` types. */
+  readonly types?: ReadonlyMap<string, SExpr> | undefined;
 }
 
 /**
@@ -91,7 +93,7 @@ export function lowerProgram(
   dslProvider?: DSLTypeProvider,
   options: LowerProgramOptions = {},
 ): CoreExpr[] {
-  const formTypes = new Map(exprs.flatMap(expr => {const entry=typeDefinition(expr);return entry ? [entry] : [];}));
+  const formTypes = new Map([...options.types ?? [], ...exprs.flatMap(expr => {const entry=typeDefinition(expr);return entry ? [entry] : [];})]);
   // Set the module-level provider for use by lower/lowerList/lowerDSLForm
   const prevProvider = getDslProvider();
   const prevInternalBindingCounter = getInternalBindingCounter();
