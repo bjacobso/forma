@@ -105,10 +105,12 @@ export class LanguageSession {
   }
 
   preludeFingerprint(): string {
+    // Code-unit order and JSON encoding keep the digest independent of locale
+    // and of separator characters in source ids.
     const items = [...this.preludes.values()]
-      .sort((left, right) => left.source.id.localeCompare(right.source.id))
-      .map((record) => `${record.source.id}:${record.source.hash}`);
-    return items.length === 0 ? "empty" : hashSourceText(items.join("|"));
+      .map((record) => [record.source.id, record.source.hash] as const)
+      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0));
+    return items.length === 0 ? "empty" : hashSourceText(JSON.stringify(items));
   }
 
   coreExpressions(): readonly SExpr[] {

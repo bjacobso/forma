@@ -77,23 +77,29 @@ Uses include:
 - **Suspension.** TypeScript suspends a running fiber with
   `Effect.callback`. It cannot serialize a suspended evaluation, so replay has
   to re-run from the start.
-- **Value projection is lossy.** `ValueProjection` has `nil`, `bool`, `int`,
+- **Value projection.** `ValueProjection` has `nil`, `bool`, `int`,
   `float`, `string`, `keyword`, `symbol`, `list`, `vector`, `map`, `function`,
-  and `opaque`. Resuming in TypeScript (`kValueFromProjection`) turns functions
-  and opaques into their display strings, map keys into strings, and vectors
-  into lists. It also projects `1.0` as `int`.
-- **Remaining nondeterminism.** `gensym` uses a process-global counter
-  (`builtins/macro.ts`), so generated symbol names
-  depend on earlier work in the same process.
+  and `opaque`. Int and Float stay distinct, and map keys keep their keyword,
+  symbol, or string kind in both directions. Resuming in TypeScript
+  (`kValueFromProjection`) decodes a function or opaque whose `valueRef` is
+  retained in the session to the retained value; without one, it still
+  decodes to its display string. `list` and `vector` both decode to the
+  kernel's single sequence type.
+- **Remaining nondeterminism.** `gensym` numbers names per expansion pass and
+  per top-level evaluation (`GensymScope` in `builtins/macro.ts`), so names no
+  longer depend on earlier work in the process. Code run outside any scope
+  still shares one process-wide counter.
   `FORMA_DISABLE_NATIVE_ELABORATION` changes elaboration.
 - **No history.** The workbench keeps one `RunOutcome` and replaces it on each
   run. Its REPL "replay" re-runs pure declarations; it does not replay host
   calls. `docs/workbench.md` notes that observations are not a trace.
 - **Identity.** `sessionInfo` reports per-source hashes and a prelude
-  fingerprint. TypeScript uses 32-bit FNV-1a, so these are not content
-  digests. Only SHA-256 over canonical JSON (`artifact/canonical-json.ts`,
-  `publicExportHash`) is. (The since-removed OCaml engine used MD5, so these
-  hashes were also not comparable across engines.)
+  fingerprint. Both are SHA-256: source hashes over the UTF-8 text, and the
+  fingerprint over the JSON list of prelude ids and hashes in code-unit order.
+  Artifacts use SHA-256 over canonical JSON (`artifact/canonical-json.ts`,
+  `publicExportHash`). `incrementalSummary` form digests remain FNV-1a change
+  hints. (The since-removed OCaml engine used MD5, so its hashes were not
+  comparable.)
 
 ## Proposal
 
@@ -196,12 +202,13 @@ journal then contains the replayed entries followed by any live ones.
 Replay reproduces an evaluation exactly when the program, preludes, and
 engine are the same. To make that guarantee hold:
 
-- `gensym` counters become per-evaluation, so generated
+- `gensym` counters are per-evaluation (implemented), so generated
   symbols do not depend on earlier work in the process.
 - TypeScript keeps the host's diagnostics on a failed resume, so a recorded
   failure replays with the same code.
-- The host projects and decodes `JournalValue` losslessly. This fixes the
-  float, map-key, and vector conversions listed above.
+- The host projects and decodes `JournalValue` losslessly. Float identity,
+  map-key kinds, and retained references already round-trip through host
+  calls; the journal format must preserve them in files.
 - Step limits apply as usual. A replay that exceeds a limit the recording did
   not reach is a real difference in behavior and is reported as one.
 
@@ -250,9 +257,9 @@ OCaml engine was removed.)
 ## Implementation stages and validation
 
 1. **Lossless values and failures.** `JournalValue` projection and decoding,
-   TypeScript resumes that keep host diagnostics, and per-evaluation `gensym`.
-   Host conformance tests round-trip `1.0`, keyword map keys, and vectors
-   through a host call. They also check that a failed resume keeps its code.
+   and TypeScript resumes that keep host diagnostics. Per-evaluation `gensym`,
+   map-key kinds, and retained references through host calls are implemented
+   and tested. Remaining tests check that a failed resume keeps its code.
 2. **Recording (TypeScript).** Header, entries, the callback, and the terminal
    journal. Tests record a program with two sequential calls, a failed call,
    and a nested call from a callback, and compare the journals with goldens.

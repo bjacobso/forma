@@ -10,6 +10,7 @@ import {
   type ExpandProgramOptions,
 } from "../expander/expand.js";
 import { PreludeEnv } from "../expander/prelude.js";
+import { currentGensymCounter } from "../builtins/macro.js";
 import type { BuiltinFn } from "./types.js";
 
 export interface KernelFrontendOptions extends Omit<
@@ -58,6 +59,7 @@ export function expandKernelExprsSync(
     ...(options.inlineCompileTimeCalls === true ? { inlineCompileTimeCalls: true } : {}),
     ...(options.keepMacroDefs === true ? { keepMacroDefs: true } : {}),
     ...(options.macroStepLimit !== undefined ? { macroStepLimit: options.macroStepLimit } : {}),
+    ...(options.gensym ? { gensym: options.gensym } : {}),
   });
 
   return {
@@ -75,7 +77,8 @@ export function expandKernelExprs(
   return Effect.gen(function* () {
     const preludeEnv =
       options.includePrelude === false ? undefined : (options.preludeEnv ?? (yield* PreludeEnv));
-    return expandKernelExprsSync(exprs, { ...options, preludeEnv });
+    const gensym = options.gensym ?? (yield* currentGensymCounter);
+    return expandKernelExprsSync(exprs, { ...options, preludeEnv, ...(gensym ? { gensym } : {}) });
   });
 }
 

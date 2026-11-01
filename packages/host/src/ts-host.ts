@@ -123,6 +123,14 @@ interface TsPendingEvaluation {
 
 
 
+/** Map keys keep their kind: keyword, symbol, or string. */
+function mapKeyProjection(key: string): ValueProjection {
+  const value = Evaluator.mapKeyValue(key);
+  if (Evaluator.isKKeyword(value)) return { kind: "keyword", value: value.name };
+  if (Evaluator.isKSymbol(value)) return { kind: "symbol", value: value.name };
+  return { kind: "string", value: String(value) };
+}
+
 function valueProjection(value: KValue): ValueProjection {
   if (Evaluator.isKKeyword(value)) return {kind:"keyword",value:value.name};
   if (Evaluator.isKSymbol(value)) return {kind:"symbol",value:value.name};
@@ -136,7 +144,7 @@ function valueProjection(value: KValue): ValueProjection {
     return {
       kind: "map",
       entries: [...value.entries()].map(([key, nested]) => ({
-        key: Evaluator.isKKeyword(Evaluator.mapKeyValue(key)) ? {kind:"keyword",value:key} : {kind:"string",value:String(Evaluator.mapKeyValue(key))},
+        key: mapKeyProjection(key),
         value: valueProjection(nested),
       })),
     };
@@ -206,7 +214,7 @@ function boundedValueProjection(
     }
     const entries = [...value.entries()];
     const shown = entries.slice(0, limits.maxItems).map(([key, nested]) => ({
-      key: { kind: "string", value: key } as ValueProjection,
+      key: mapKeyProjection(key),
       value: boundedValueProjection(nested, limits, depth + 1),
     }));
     if (entries.length > limits.maxItems) {
@@ -672,7 +680,11 @@ export class TsLanguageHost implements LanguageHost {
       );
     }
     try {
-      const value = await Effect.runPromise(retained.apply(request.args.map(kValueFromProjection)));
+      const value = await Effect.runPromise(
+        Evaluator.withGensymScope(
+          retained.apply(request.args.map((arg) => kValueFromProjection(arg, session))),
+        ),
+      );
       return {
         status: "completed",
         result: {
@@ -1214,7 +1226,7 @@ export class TsLanguageHost implements LanguageHost {
         call,
         resume: (result) => {
           if (result.ok) {
-            resume(Effect.succeed(kValueFromProjection(result.value)));
+            resume(Effect.succeed(kValueFromProjection(result.value, evaluation.session)));
           } else {
             resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics(result.diagnostics)));
           }
@@ -1283,7 +1295,7 @@ export class TsLanguageHost implements LanguageHost {
             key: this.#maybeRetainProjectedValue(
               session,
               key,
-              Evaluator.isKKeyword(Evaluator.mapKeyValue(key)) ? {kind:"keyword",value:key} : {kind:"string",value:String(Evaluator.mapKeyValue(key))},
+              mapKeyProjection(key),
               retainValues,
             ),
             value: this.#projectValue(session, nested, retainValues),
@@ -1361,9 +1373,9 @@ export class TsLanguageHost implements LanguageHost {
       ...Builtins.defaultBuiltins,
       ...this.#hostBuiltinFns(evaluation, session.hostBuiltins),
     };
-    const args = request.args.map(kValueFromProjection);
+    const args = request.args.map((arg) => kValueFromProjection(arg, session));
     const completion = Effect.runPromise(
-      Effect.gen(function* () {
+      Evaluator.withGensymScope(Effect.gen(function* () {
         if (VM.getVMClosure(value)) {
           const stepCounter = yield* Ref.make(0);
           const builtinRegistry = new VM.BuiltinRegistry(builtins);
@@ -1385,7 +1397,7 @@ export class TsLanguageHost implements LanguageHost {
           stepLimit: request.stepLimit ?? session.defaultStepLimit,
         };
         return yield* Evaluator.applyKFn(value, args, runtime);
-      }),
+      })),
     )
       .then(
         (value): EvaluationState => ({
@@ -1515,7 +1527,13 @@ function variablesToBindings(
   );
 }
 
-function kValueFromProjection(value: ValueProjection): KValue {
+/**
+ * Decode a projection into a kernel value. A function or opaque projection
+ * whose `valueRef` is retained in `session` decodes to the retained value;
+ * without one it decodes to its display text.
+ */
+function kValueFromProjection(value: ValueProjection, session?: TsSession): KValue {
+  const decode = (nested: ValueProjection) => kValueFromProjection(nested, session);
   switch (value.kind) {
     case "nil":
       return null;
@@ -1527,17 +1545,19 @@ function kValueFromProjection(value: ValueProjection): KValue {
     case "symbol": return Evaluator.KSymbol(value.value);
     case "list":
     case "vector":
-      return value.items.map(kValueFromProjection);
+      return value.items.map(decode);
     case "map":
       return new Map(
         value.entries.map((entry) => [
-          keyStringFromProjection(entry.key),
-          kValueFromProjection(entry.value),
+          Evaluator.mapKey(decode(entry.key)) ?? keyStringFromProjection(entry.key),
+          decode(entry.value),
         ]),
       );
     case "function":
-    case "opaque":
-      return value.display ?? value.kind;
+    case "opaque": {
+      const retained = value.valueRef ? session?.valueRefs.get(value.valueRef) : undefined;
+      return retained ? retained.value : value.display ?? value.kind;
+    }
   }
 }
 
