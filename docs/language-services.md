@@ -375,3 +375,14 @@ VM global-cell changes, and macro-aware refactoring redesign are deferred.
 These fixes preserve the host ABI and existing cross-document resolution rules.
 The regressions and properties live in `language-service-regressions.test.ts`;
 `FORMA_PROPERTY_SCALE` raises the local property counts.
+
+## UI-free authoring helpers
+
+`@formalang/ts/authoring` preserves reusable language logic from the structural
+workbench, which is now owned by Foldworks. It exports capability reachability
+(`requirementsFor`), declaration replay preparation (`mergeReplSource` and
+`replDefinitions`), outline/source coordinate mapping (`rowLayouts`, `nodeAt`,
+`rowContaining`, `rangeInRow`), and descriptor-span masking (`descriptorForms`
+and `blank`). These functions consume Forma syntax identities and plain source
+facts; they import no UI library. Hosts still own sessions, permissions, and
+presentation. See the [workbench boundary](./workbench.md).

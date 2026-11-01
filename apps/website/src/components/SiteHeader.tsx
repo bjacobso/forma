@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
+import { FORMA_WORKBENCH_URL } from "../lib/workbenchLocation";
 
 export function SiteHeader() {
   return (
@@ -13,7 +14,7 @@ export function SiteHeader() {
         <a href="/language">Learn</a>
         <a href="/preludes/">Preludes</a>
         <NavLink to="/demo">Examples</NavLink>
-        <a href="/workbench/demo/">Workbench</a>
+        <a href={FORMA_WORKBENCH_URL}>Workbench (Foldworks)</a>
         <NavLink className="site-nav-cta" end to="/">Playground</NavLink>
       </nav>
       <ThemeToggle />

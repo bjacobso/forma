@@ -1,6 +1,8 @@
 # The outline is the program
 
-This note states what the Forma workbench is for. [Workbench](./workbench.md)
+The structural Forma workbench is owned and hosted by Foldworks. Forma keeps
+the language and UI-free language services, without depending on Foldworks.
+This note states what that workbench is for. [Workbench](./workbench.md)
 records how it is built.
 
 An outline and an S-expression are the same object. A Forma form is a head

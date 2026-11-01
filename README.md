@@ -20,24 +20,21 @@ samples in `docs/snippets/home/` are generated from real engine output; run
 
 ## Structural workbench
 
-The outline is the program: each row is a Forma form, with its observed value,
-inferred type, and diagnostics beside it. Inspect a collection, fill a descriptor
-slot, or switch to source while keeping the same document and node identities.
+The structural Forma workbench lives in [Foldworks](https://foldworks.dev),
+which composes Forma's language service with its outline, source editor,
+inspector, history, and agent surfaces. Forma itself has no Foldworks
+dependencies. The homepage's source-first live compiler and
+`@formalang/editor` remain here.
 
-![Forma workbench showing editable outline rows, live values and types, descriptor slot placeholders, and a collection inspector](docs/images/workbench/outline.png)
+The outline is the program: each row is a Forma form, with observed values,
+inferred types, and diagnostics. The Foldworks app owns selection, focus,
+undo history, proposal review, and capability approval UI.
 
-The assistant proposes structural edits. Review the tree diff and its analyzed
-consequences before accepting one undoable change. Running a host capability
-pauses for approval before its implementation executes.
+![Forma workbench outline, now hosted by Foldworks](docs/images/workbench/outline.png)
 
-![Assistant proposal showing a new do wrapper, the moved form, analyzed consequences, and Accept and Discard controls](docs/images/workbench/proposal.png)
-
-See the [screenshot tour](packages/workbench/README.md#screenshots),
-[workbench vision](docs/workbench-vision.md), and
-[local setup](packages/workbench/README.md#foldworks). The standalone app runs
-with `pnpm workbench` after linking the unpublished Foldworks primitives.
-The website also includes it at `/workbench/demo/`, linked from the homepage
-and playground examples, when built with `pnpm website:build`.
+See the [workbench guide](docs/workbench.md) and [workbench vision](docs/workbench-vision.md).
+The old [workbench URL](https://forma-lang.com/workbench/demo/) redirects to the
+Foldworks-hosted app. It is no longer built or installed as part of Forma.
 
 ## Forma at a glance
 
@@ -314,18 +311,17 @@ it does not emit a placeholder program.
 Forma requires Node.js 24 and pnpm 10.20.
 
 ```sh
-node scripts/setup-workspace.mjs
+pnpm install --frozen-lockfile
 pnpm test
 pnpm dev
 ```
 
 The website and live compiler demos run at the Vite URL printed by `pnpm dev`.
-Setup validates the frozen registry lockfile, then installs the pinned,
-unpublished Foldworks packages used by CI. Run `pnpm check` to verify the
-JavaScript workspace and docs. See [AGENTS.md](AGENTS.md) for contributor commands.
-The separate structural IDE runs with `pnpm workbench`. For manual linking,
-see the [Foldworks setup](packages/workbench/README.md#foldworks); its unpublished
-primitives currently require that development link.
+The frozen install is the complete setup, with no sibling checkout or link step.
+Run `pnpm check` to verify the JavaScript workspace and docs. See
+[AGENTS.md](AGENTS.md) for contributor commands. The structural workbench is
+owned and hosted by Foldworks; the playground and homepage live compiler stay
+in this repository.
 There is currently no published `forma` CLI. Pre-1.0 packages such as
 `@formalang/ts` are published to npm under the `@formalang` scope; otherwise
 work from this repository, where `@formalang/host` builds a `forma` JSON CLI
@@ -360,8 +356,6 @@ work from this repository, where `@formalang/host` builds a `forma` JSON CLI
 | `@formalang/editor` | CodeMirror and React editing components |
 | `@formalang/language-server` | Language Server Protocol implementation |
 | `@formalang/website` | Browser-based compiler explorer and project site |
-| `@formalang/workbench` | Foldkit structural IDE over the real Forma services |
-| `@formalang/workbench-app` | Separate Vite demo of the structural workbench |
 | `conformance/` | Semantic and effect fixtures with stored goldens |
 
 ## Runtime configuration
@@ -380,11 +374,11 @@ and npm trusted-publisher setup are described in [Publishing](docs/publishing.md
 
 ## Website deployment
 
-The docs homepage, compiler explorer at `/playground`, and structural workbench
-at `/workbench/demo/` deploy to https://forma-lang.com with Alchemy
-and Cloudflare Workers. After CI succeeds for a push to `main`, the Deploy
-workflow builds and deploys that validated revision, then checks the home,
-about, and demo pages, including the workbench. Pull requests do not deploy.
+The docs homepage and compiler explorer at `/playground` deploy to
+https://forma-lang.com with Alchemy and Cloudflare Workers. After CI succeeds
+for a push to `main`, the Deploy workflow builds and deploys that validated
+revision, then checks the docs, playground, and legacy workbench redirect.
+The structural workbench is deployed by Foldworks. Pull requests do not deploy.
 
 Configure `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in the repository's
 GitHub `production` environment. The token needs Workers Scripts Edit, Account

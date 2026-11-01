@@ -18,7 +18,7 @@ export default Alchemy.Stack(
       assets: {
         htmlHandling: "auto-trailing-slash",
         notFoundHandling: "404-page",
-        runWorkerFirst: ["/playground", "/playground/*", "/about", "/demo", "/demo/*"],
+        runWorkerFirst: ["/playground", "/playground/*", "/about", "/demo", "/demo/*", "/workbench/demo", "/workbench/demo/"],
       },
       dev: { command: "pnpm dev" },
     });

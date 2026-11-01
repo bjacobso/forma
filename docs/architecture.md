@@ -16,7 +16,7 @@ source
 ## Engine
 
 `@formalang/ts` is the TypeScript/Effect engine. It runs the browser demo, the
-language server, the workbench, and the default host. It is the only
+language server, the Foldworks-hosted workbench, and the default host. It is the only
 implementation: an OCaml engine with native, JavaScript, and WebAssembly builds
 was removed (see [Retiring the OCaml engine](./engine-consolidation.md)).
 Conformance fixtures and stored goldens pin its behavior.
@@ -51,7 +51,7 @@ The TypeScript host's optional `replSubmit` operation checks each submission,
 evaluates it, and commits its value environment, inferred schemes and type
 registries, and source only on success. Results include a type projection.
 Ordinary `evaluateInSession`
-continues to evaluate snapshots; the workbench rebuilds its REPL context from
+continues to evaluate snapshots; the Foldworks-hosted workbench rebuilds its REPL context from
 current declarations so document edits cannot leave stale bindings.
 
 ## Effect projection

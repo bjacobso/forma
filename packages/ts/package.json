@@ -139,6 +139,10 @@
     "./email": {
       "types": "./dist/Email.d.mts",
       "import": "./dist/Email.mjs"
+    },
+    "./authoring": {
+      "types": "./dist/Authoring.d.mts",
+      "import": "./dist/Authoring.mjs"
     }
   },
   "files": [

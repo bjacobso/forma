@@ -45,9 +45,15 @@ jobs:
       - name: Verify production
         run: |
           response="$(mktemp)"
-          for path in / /vision /language /playground /playground/demo/types /workbench/demo/; do
+          for path in / /vision /language /playground /playground/demo/types; do
             curl --fail --silent --show-error --location \
               --retry 5 --retry-delay 2 --retry-all-errors \
               --output "$response" "https://forma-lang.com$path"
             grep --quiet '<title>.*Forma.*</title>' "$response"
+          done
+          expected="$(node --input-type=module -e 'import { FORMA_WORKBENCH_URL } from "./apps/website/src/lib/workbenchLocation.ts"; process.stdout.write(FORMA_WORKBENCH_URL)')"
+          for path in /workbench/demo /workbench/demo/; do
+            redirect="$(curl --fail --silent --show-error --output /dev/null \
+              --write-out '%{http_code} %{redirect_url}' "https://forma-lang.com$path")"
+            test "$redirect" = "302 $expected"
           done

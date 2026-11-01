@@ -15,7 +15,7 @@ import {
   type SyntaxIdentity,
   type SyntaxIndex,
   type SyntaxNode,
-} from "@formalang/ts/syntax";
+} from "../Syntax.js";
 
 /** A node of the source shown in a row, with its range in the row's text. */
 export interface RowNode {

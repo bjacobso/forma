@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -16,6 +17,7 @@ try {
   const packages = [];
   for (const directory of await readdir(join(root, "packages"))) {
     const cwd = join(root, "packages", directory);
+    if (!existsSync(join(cwd, "package.json"))) continue;
     const manifest = JSON.parse(await readFile(join(cwd, "package.json"), "utf8"));
     if (manifest.private) continue;
     const archive = join(temporary, `${directory}.tgz`);

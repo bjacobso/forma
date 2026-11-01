@@ -2,7 +2,7 @@
 
 The homepage and [Effect page](/effect) mount a source-first workbench. It runs
 Forma in a Web Worker and uses the real compiler's output. The full
-<a href="/workbench/demo/" target="_self">structural workbench</a> remains a separate destination for
+<a href="/workbench/demo/" target="_self">structural workbench in Foldworks</a> is a separate app for
 outline editing, modules, the REPL, proposal review, and capability approvals.
 
 ## The authoring loop
@@ -51,7 +51,7 @@ parent frame. Each frame reports its content height so the docs can stack the
 source and output on narrow screens without clipping diagnostics. Theme and
 palette preferences persist locally; source drafts do not persist across reloads.
 
-The outline workbench uses Foldworks themes. Extending these palette controls to
+The outline workbench is owned by Foldworks and uses its themes. Extending these palette controls to
 that app requires mapping the same semantic colors to its source, outline,
 inspector, diff, and diagnostic tokens; these embeds do not add that integration.
 

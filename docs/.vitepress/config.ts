@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { defineConfig, type DefaultTheme } from "vitepress";
 
 import { groupTitles, loadPreludes, type PreludeGroup } from "./preludes.ts";
+import { FORMA_WORKBENCH_URL } from "../../apps/website/src/lib/workbenchLocation.ts";
 
 const preludeSidebar: DefaultTheme.SidebarItem[] = [
   { text: "Preludes", items: [{ text: "Catalog", link: "/preludes/" }] },
@@ -59,7 +60,7 @@ export default defineConfig({
       },
       { text: "Preludes", link: "/preludes/", activeMatch: "^/(preludes|effect|elm|email)" },
       { text: "Examples", link: "/playground/demo", target: "_self", rel: "" },
-      { text: "Workbench", link: "/workbench/demo/", target: "_self", rel: "" },
+      { text: "Workbench (Foldworks)", link: FORMA_WORKBENCH_URL, target: "_self", rel: "" },
       { text: "Playground", link: "/playground", target: "_self", rel: "" },
     ],
     sidebar: {

@@ -1,49 +1,31 @@
 import { expect, test } from "@playwright/test";
+import { FORMA_WORKBENCH_URL } from "../src/lib/workbenchLocation";
 
-test("opens the live workbench from the docs site and loads its own assets on reload", async ({ page }) => {
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
-  page.on("response", (response) => {
-    if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`);
-  });
-
+test("links to the Foldworks-hosted workbench while keeping the Forma guide", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".fh-examples").getByRole("link", { name: /Open the workbench/ }))
+    .toContainText("Foldworks");
+  await expect(page.getByRole("navigation", { name: "Main Navigation" })
+    .getByRole("link", { name: "Workbench (Foldworks)", exact: true })).toHaveAttribute("href", FORMA_WORKBENCH_URL);
+  await page.goto("/playground/demo");
+  const demo = page.getByRole("link").filter({ has: page.getByRole("heading", { name: "Forma Workbench", exact: true }) });
+  await expect(demo).toHaveAttribute("href", FORMA_WORKBENCH_URL);
+  await expect(page.getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Workbench (Foldworks)", exact: true })).toHaveAttribute("href", FORMA_WORKBENCH_URL);
+  await page.goto("/workbench");
+  await expect(page.getByRole("heading", { name: "The Forma workbench in Foldworks", level: 1 })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open the workbench in Foldworks", exact: true }))
     .toHaveAttribute("href", "/workbench/demo/");
-  await page.getByRole("navigation", { name: "Main Navigation" })
-    .getByRole("link", { name: "Workbench", exact: true }).click();
-  await expect(page).toHaveURL(/\/workbench\/demo\/$/);
-  await expect(page.getByText("14 forms · 0 errors · 2 warnings")).toBeVisible();
-  await page.reload();
-  await expect(page.getByRole("tree", { name: "Program" })).toBeVisible();
-  await expect(page.getByText("14 forms · 0 errors · 2 warnings")).toBeVisible();
-  await page.goto("/workbench/demo");
-  await expect(page).toHaveURL(/\/workbench\/demo\/$/);
-  await expect(page.getByText("14 forms · 0 errors · 2 warnings")).toBeVisible();
-
-  const call = page.getByRole("tree", { name: "Program" }).getByRole("treeitem", { name: /^map badge/ });
-  await call.locator("textarea").fill('map badge [1 3 7 "x"]');
-  await expect(call).toHaveAttribute("data-tone", "error");
-  await expect(page.getByText(/1 error ·/)).toBeVisible();
-  await page.getByRole("button", { name: "Source", exact: true }).click();
-  await expect(page.getByRole("textbox", { name: "Forma source", exact: true }))
-    .toHaveValue(/\(map badge \[1 3 7 "x"\]\)/);
-  expect(errors).toEqual([]);
 });
 
-test("links the examples gallery to the workbench while preserving the design document", async ({ page }) => {
-  await page.goto("/playground/demo");
-  const demo = page.getByRole("link").filter({
-    has: page.getByRole("heading", { name: "Forma Workbench", exact: true }),
-  });
-  await expect(demo).toHaveAttribute("href", "/workbench/demo/");
-  await demo.click();
-  await expect(page.getByText("14 forms · 0 errors · 2 warnings")).toBeVisible();
-  await page.getByRole("link", { name: "About this demo", exact: true }).click();
-  await expect(page.getByRole("heading", { name: /^The Forma workbench/, level: 1 })).toBeVisible();
-  await page.getByRole("link", { name: "Open the live demo", exact: true }).click();
-  await expect(page.getByText("14 forms · 0 errors · 2 warnings")).toBeVisible();
-  await page.getByRole("navigation", { name: "Site navigation" })
-    .getByRole("link", { name: "Examples", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Choose a program to inspect.", exact: true })).toBeVisible();
+test("the production Worker redirects both legacy paths without serving an app shell", async ({ request }) => {
+  for (const method of ["GET", "HEAD"]) {
+    for (const path of ["/workbench/demo", "/workbench/demo/"]) {
+      const response = await request.fetch(`${path}?example=pricing`, { method, maxRedirects: 0 });
+      expect(response.status()).toBe(302);
+      expect(response.headers().location).toBe(`${FORMA_WORKBENCH_URL}?example=pricing`);
+    }
+  }
+  const retiredAsset = await request.get("/workbench/demo/assets/retired.js");
+  expect(retiredAsset.status()).toBe(404);
 });

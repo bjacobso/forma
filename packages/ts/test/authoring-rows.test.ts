@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { sourceToOutline } from "@formalang/ts/syntax";
+import { sourceToOutline } from "../src/Syntax.js";
 
-import { nodeAt, rangeInRow, rowContaining, rowLayouts } from "../src/rows.js";
+import { nodeAt, rangeInRow, rowContaining, rowLayouts } from "../src/Authoring.js";
 
 const source = `; Pricing
 (define tax-rate 0.08)

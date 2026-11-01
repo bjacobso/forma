@@ -285,3 +285,11 @@ validators, and artifact summary requirements. This stage does not load,
 evaluate, or mutate a session. The session-load workspace owns integration into
 host prelude loading. Its expectations are recorded in
 `conformance/thesis-gate/` and `conformance/descriptor-metacheck/`.
+
+## Source authoring helpers
+
+`@formalang/ts/authoring` supplies UI-free capability reachability, scratch
+REPL declaration merging/filtering, descriptor source-span masking, and
+outline/source coordinate mapping. These helpers moved from the structural
+workbench when that app moved to Foldworks. Forma's language service has no
+Foldworks dependency; applications own presentation, sessions, and approvals.
