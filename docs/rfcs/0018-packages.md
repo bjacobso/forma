@@ -43,8 +43,8 @@ This RFC replaces the `forma.toml` and lockfile sketch in
 [RFC 0002](./0002-modules-and-packages.md) implemented relative file modules
 and compile-time libraries; bare specifiers fail with `module/package-stage`.
 That blocks the main reason to have modules at all: sharing vocabulary between
-projects. Open Ontology vendors `compiler.lisp` and `ontology.lisp` and edits its
-copy because there is no way to import them. A form can now produce an `:ir`
+projects. A downstream ontology library vendors `compiler.lisp` and `ontology.lisp`
+and edits its copy because there is no way to import them. A form can now produce an `:ir`
 type another module exports, but only through relative paths inside one tree,
 so two libraries cannot target a type that a third library owns.
 
@@ -60,7 +60,7 @@ machines.
 Forma packages are npm packages. npm, pnpm, or yarn install them, resolve version
 ranges, and record integrity in their lockfile. Forma defines no registry,
 lockfile, or version solver. Consumers of Forma already depend on npm packages:
-`@formalang/ts`, Open Ontology, and generated Effect TypeScript all live there.
+`@formalang/ts`, downstream libraries, and generated Effect TypeScript all live there.
 
 ### The manifest is the `forma` field of `package.json`
 
@@ -169,7 +169,7 @@ a package name with a different version is `module/package-version-conflict`.
 2. **Language services.** Go-to-definition, hover, and search across package
    modules in the language server, which needs the Node table in its workspace.
 3. **Distribution of the repository preludes.** Publish reference vocabularies
-   as Forma packages so consumers such as Open Ontology import instead of vendoring.
+   as Forma packages so consumers import them instead of vendoring.
 
 ## Decisions still required
 
