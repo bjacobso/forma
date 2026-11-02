@@ -20,6 +20,6 @@
 (define
   deactivate
   [employee]
-  (do! [_ (update! Employee employee {:active false})] true))
+  (do (update! Employee employee {:active false}) true))
 (: remove (-> (Id Employee) (Action Unit)))
 (define remove [employee] (retract! Employee employee))

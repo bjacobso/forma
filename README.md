@@ -100,7 +100,7 @@ Operational effects make authority visible in the type:
   (: print (-> String (Effect Unit [ConsoleUnavailable]))))
 (: log (-> String (Effect Unit [ConsoleUnavailable] [Console.print])))
 (define log [message]
-  (do! [_ (Console.print message)] nil))
+  (Console.print message))
 ```
 
 The checker infers this contract:

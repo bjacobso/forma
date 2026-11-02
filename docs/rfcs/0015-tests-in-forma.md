@@ -139,7 +139,7 @@ error ends the test as a failure, and the requirement set must be empty:
 
 ```lisp
 (test "save-user writes the name once"
-  (do! [writes (ref-make [])
+  (do! [writes (ref-make (: [] (List String)))
         saved (provide (save-user "Bob")
                 (implement Store
                   (define get [key] (succeed "Bob"))

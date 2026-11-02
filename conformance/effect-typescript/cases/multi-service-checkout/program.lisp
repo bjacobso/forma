@@ -107,7 +107,7 @@
         (catch
           (Payments.charge (get request :customer) total)
           (PaymentDeclined declined)
-          (do! [_ (release-all (get request :lines))] (fail declined)))
+          (do (release-all (get request :lines)) (fail declined)))
         placed-at
         Clock.now
         _

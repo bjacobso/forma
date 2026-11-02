@@ -117,8 +117,7 @@ A submission is processed as one change:
 An expression failure in step 6 does not undo the revision, as in a REPL.
 Definitions are instantiated without host builtins. A definition whose
 initialization reaches a host call is rejected with a located diagnostic,
-consistent with pure module initialization in
-[RFC 0003](./0003-direct-style-effects.md). Host calls happen only in
+so module initialization stays pure. Host calls happen only in
 submitted expressions and in calls made by the host.
 
 Re-instantiation follows resolved binding references. A record of functions

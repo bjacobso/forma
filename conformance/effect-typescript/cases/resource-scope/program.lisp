@@ -69,4 +69,4 @@
   (define
     save
     [name total]
-    (do! [_ (Pool.query store (str "insert " name " " total))] (succeed nil))))
+    (do (Pool.query store (str "insert " name " " total)) nil)))

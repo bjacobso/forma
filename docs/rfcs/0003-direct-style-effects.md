@@ -2,10 +2,47 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Declined (2026-10-30); not implemented |
 | Created | 2026-10-06 |
 | Scope | Effect inference, service operations, evaluation order, deferred computations, and target lowering |
 | Direction | Ordinary Lisp calls and bindings, inferred effects, explicit capability contracts, and function-based deferral |
+
+## Decision
+
+Declined. Forma keeps effects as values: a service call or a call to an
+operation produces an `Effect`, and `do!` runs it and binds its result. The rest
+of this document is kept as a record of the proposal.
+
+- **Contracts stay declared.** Operations keep explicit `(Effect A [E] [R])`
+  signatures that the checker holds their bodies to. The
+  [Effect page](../effect.md) argues that a requirement widened by inference goes
+  unnoticed in review; inferring requirements and failures from bodies would
+  bring that back.
+- **No new type-system machinery.** Direct style needs latent effects on
+  function types, open effect rows, and effect-polymorphic higher-order
+  functions. This RFC left their syntax and rules undecided. Requirement and
+  failure sets stay closed, with no row variables.
+- **Combinators keep taking effects.** `(retry (Payments.charge cents) :times 2)`
+  stays as written. Direct style would require a `(fn [] ...)` around the
+  argument of `retry`, `fork`, `provide`, `timeout`, `race`, and similar
+  operations.
+- **Generated code stays predictable.** `do!` and effect bodies map one-to-one
+  onto `Effect.gen`.
+
+The current surface already removes most of the ceremony this RFC addressed.
+`let` and `:let` bind pure values, and an effect body of `do!`, `let`, or `do`
+may contain several forms: earlier forms run in order for their effects, and
+the last is the result. No `_` binding or `succeed` is needed:
+
+```lisp
+(let [paid (assoc order :status "paid")]
+  (Payments.charge (get order :total-cents))
+  (Orders.save paid)
+  paid)
+```
+
+Revisit this decision only with evidence that authors or agents write correct
+Effect programs much more reliably in direct style.
 
 ## Summary
 

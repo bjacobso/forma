@@ -145,10 +145,9 @@ default and has no authentication beyond file permissions.
 The pause and resume model stays, because each pause is a permission point.
 
 - **Concurrency.** Several evaluations per session may be pending at once, as
-  today. Within one evaluation, calls stay sequential until the concurrency
-  work in [RFC 0003](./0003-direct-style-effects.md) lands; pending calls are
-  already keyed by `callId`, so the protocol needs no change when an
-  evaluation can have several.
+  today. Within one evaluation, calls stay sequential. Pending calls are
+  already keyed by `callId`, so the protocol needs no change if an evaluation
+  can later have several.
 - **Streaming.** Forma does not receive streams from host calls. A host either
   accumulates a stream and resumes with the final value, or calls a function
   argument once per chunk through `callValue`. The TypeScript host supports
@@ -198,8 +197,9 @@ The pause and resume model stays, because each pause is a permission point.
 5. **OCaml envelope.** Dropped: the OCaml engine was removed. The envelope
    for the remaining JSON-lines daemon is part of stage 2.
 
-Running Effect programs from `forma run` depends on RFC 0003 and is not part of
-these stages.
+Running Effect programs from `forma run` is not part of these stages. It needs
+either a hosted mechanics runtime that executes every Effect body form or a way
+to run the generated Effect TypeScript.
 
 ## Decisions still required
 

@@ -271,5 +271,5 @@ data and global seed IDs in their artifact reference index. That index supplies
 artifact hooks with data; it never supplies functions or lexical bindings to a
 file module. File module interfaces now expose compile-time libraries and checked declaration
 data. Migrating these legacy artifact emit pipelines to those interfaces remains
-follow-up work. Manifests, registries, lockfiles, package imports, project commands,
-and RFC 0003 direct-style effects remain proposals.
+follow-up work. Manifests, registries, lockfiles, package imports, and project commands
+remain proposals.

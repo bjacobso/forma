@@ -26,8 +26,9 @@ OCaml engine, which has since been removed; TypeScript is the only engine (see
 commands remain proposed.
 
 The examples use the current Effect-value authoring surface.
-[RFC 0003](./0003-direct-style-effects.md) proposes direct-style calls, inferred
-effects, and deferred functions as an alternative surface for the same module model.
+[RFC 0003](./0003-direct-style-effects.md) proposed direct-style calls, inferred
+effects, and deferred functions as an alternative surface for the same module
+model. It was declined.
 
 ## Foundations before stage 1
 

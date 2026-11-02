@@ -751,6 +751,14 @@ function validateBodyNode(
       args?.forEach((arg, argIndex) =>
         validateCombinatorArg(arg, `${path}.args[${argIndex}]`, contractName, declaration, index, diagnostics),
       );
+      if (node["name"] === "provide" && args) {
+        // provide takes an effect and a layer: a layer name or an inline layer.
+        const layer = args[1];
+        const layerKind = typeof layer === "object" && layer !== null && !Array.isArray(layer) ? (layer as { readonly [key: string]: JsonValue })["kind"] : undefined;
+        if (args.length !== 2 || (layerKind !== "Var" && layerKind !== "InlineLayer")) {
+          diagnostics.push(contractDiagnostic(contractName, `${path}.args`, "an effect and a layer name or InlineLayer", args.length !== 2 ? `${args.length} arguments` : typeof layerKind === "string" ? layerKind : jsonKind(layer), index, declaration));
+        }
+      }
       if (node["options"] !== undefined) {
         const options = expectArray(node["options"], `${path}.options`, contractName, declaration, index, diagnostics);
         options?.forEach((option, optionIndex) => {
@@ -811,6 +819,22 @@ function validateCombinatorArg(
     case "TypeArg":
       validateTypeNode(node["type"], `${path}.type`, contractName, declaration, index, diagnostics);
       return;
+    case "InlineLayer": {
+      expectString(node["service"], `${path}.service`, contractName, declaration, index, diagnostics);
+      if (typeof node["delegate"] !== "boolean") {
+        diagnostics.push(contractDiagnostic(contractName, `${path}.delegate`, "boolean", jsonKind(node["delegate"]), index, declaration));
+      }
+      const methods = expectArray(node["methods"], `${path}.methods`, contractName, declaration, index, diagnostics);
+      methods?.forEach((method, methodIndex) => {
+        const methodPath = `${path}.methods[${methodIndex}]`;
+        const record = expectRecord(method, methodPath, contractName, declaration, index, diagnostics);
+        if (!record) return;
+        expectString(record["name"], `${methodPath}.name`, contractName, declaration, index, diagnostics);
+        validateStringArray(record["params"], `${methodPath}.params`, contractName, declaration, index, diagnostics);
+        validateBodyNode(record["body"], `${methodPath}.body`, contractName, declaration, index, diagnostics);
+      });
+      return;
+    }
     default:
       validateBodyNode(value, path, contractName, declaration, index, diagnostics);
   }

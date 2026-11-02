@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Stages 1 and 2 implemented (2026-10-30); stage 4 not needed yet |
 | Created | 2026-10-16 |
 | Scope | Expression-scoped service implementations, partial delegation, requirement discharge, Effect TypeScript lowering, effect IR projection |
 | Direction | `provide` accepts an inline `implement` expression that captures lexical values; closed requirement sets and portable IR are unchanged |
@@ -80,9 +80,9 @@ This RFC stays inside that decision:
   `preludes/http-api.lisp`, and the legacy rejection messages refer to it.
 
 Multi-shot resumption, generators, and backtracking handlers remain out of
-scope, as [RFC 0003](./0003-direct-style-effects.md) already records.
+scope, as the declined [RFC 0003](./0003-direct-style-effects.md) also recorded.
 
-## Current state
+## State before this RFC
 
 - **Services and layers.** `surface/effect.ts` normalizes `service` to
   `__service` and `layer` to `__layer`. The projector in
@@ -172,7 +172,7 @@ already among the declared errors of the members.
 
 (: stored-writes (Effect (List String)))
 (define stored-writes
-  (do! [writes (ref-make [])
+  (do! [writes (ref-make (: [] (List String)))
         _ (provide (save-user "Bob")
             (implement Store
               (define get [key] (succeed "Bob"))
@@ -199,13 +199,49 @@ rest to the `Svc` provided outside the `provide` expression:
       (fail (PaymentDeclined {:reason "card expired"})))))
 ```
 
-The result's requirements contain `Svc.m` for each delegated member `m` that
-the body requires. A delegating `implement` that defines every member is
+The result's requirements contain `Svc.m` for every delegated member `m`,
+whether or not the body calls it: the generated layer reads the outer `Svc`
+when it is built, so the outer service is needed either way. A requirement on
+the whole service, such as `[Svc]`, is discharged member by member the same
+way. A delegating `implement` that defines every member is
 reported as `mechanics/unused-delegate`. Delegation is shallow: a defined
 method that calls one of its own service's members is still rejected with
 `mechanics/layer-cycle`. A method that wants the outer implementation of its
 own member must receive it another way. That would need a separate design
 (see decisions).
+
+### Several layers
+
+`provide` accepts several layers. Each wraps the ones before it:
+
+```lisp
+(provide effect A B C)   ; = (provide (provide (provide effect A) B) C)
+```
+
+This is the order `layer-provide` uses: the layers that need a service come
+first, and the layers that supply it follow. A layer's methods resolve their
+services where the layer is provided, outside it, so a Store double whose
+methods use Clock lists Clock after it:
+
+```lisp
+(provide (stamp key)
+  (implement Store
+    (define get [k] (do! [t (Clock.now nil)] (str "stored at " t)))
+    (define set [k v] (succeed nil)))
+  (implement Clock (define now [_] (succeed 42))))
+```
+
+Merging the layers instead, as `Layer.mergeAll` does, would build them
+independently, so one double could not serve another. Nesting covers
+independent layers as well, since their order then does not matter. The form
+is projected as nested `provide` combinators, so the IR, checking rules, and
+generated code are those of nested `provide`.
+
+A layer that uses a service provided inside it, directly nested or earlier in
+the same `provide`, gets that service from outside instead. The checker warns
+with `mechanics/provide-order` at the call, because this is almost always a
+reversed order. If the outer service is wanted, the warning can be avoided by
+not providing the same service inside.
 
 ### Lowering
 
@@ -252,16 +288,9 @@ interface InlineLayer {
 
 ### Relation to direct-style effects
 
-Under [RFC 0003](./0003-direct-style-effects.md), `provide` takes a function
-to invoke with the provider installed. `implement` is accepted there in the
-same position:
-
-```lisp
-(provide (fn [] (pay order))
-  (implement Payments (define charge [id cents] "charge:test")))
-```
-
-No other part of this RFC depends on RFC 0003.
+[RFC 0003](./0003-direct-style-effects.md) proposed that `provide` take a
+function to invoke with the provider installed. It was declined, so `provide`
+keeps taking an effect, and this RFC does not depend on it.
 
 ## Alternatives considered
 
@@ -292,6 +321,15 @@ removed.)
 
 ## Implementation stages and validation
 
+Stages 1 and 2 are implemented. The cases are `local-providers`,
+`reject-local-providers`, and `reject-local-delegation` in
+`conformance/effect-typescript/cases/`, and `local-providers` is on the
+`effect-ir` surface. `provide` with several layers was added with stage 1.
+When a tagged `catch` protects a `provide`, the generator
+writes `effect.pipe(Effect.provide(layer))`, because TypeScript cannot infer
+`Effect.catchTag`'s tags through a direct `Effect.provide(...)` argument. This
+applies to named layers too.
+
 1. **Complete local providers.** Parsing, projection, checking, and
    generation of `implement` without `:delegate`. A positive
    `conformance/effect-typescript/cases/local-providers` case records a
@@ -310,15 +348,26 @@ removed.)
    tests without generating TypeScript, `makeMechanicsRuntime` gains `provide`
    for named and inline layers. Otherwise this stage is not needed.
 
-## Decisions still required
+## Decisions
 
-- Whether `implement` may appear under `layer-merge` and `layer-provide`, or be
-  bound with `let` and reused.
+Settled by the implementation:
+
+- `provide` takes several layers and nests them, later wrapping earlier (see
+  [Several layers](#several-layers)), rather than merging them.
+
+- `implement` is valid only as the layer argument of `provide`. Anywhere else
+  it is `mechanics/implement`, and a `let`-bound local given to `provide` is
+  `mechanics/provide`. Allowing it under `layer-merge` and `layer-provide`, or
+  binding it for reuse, can be revisited.
+- A service-wide requirement such as `[Store]` is discharged member by member
+  when `:delegate` leaves some members to the outer provider, and every
+  forwarded member is required (see [Delegation](#delegation)).
+
+Still open:
+
 - Whether a defined method may call the outer implementation of its own
   member, for wrappers that decorate a call. A dedicated binding such as
   `:outer prev` is one option.
-- Whether a service-wide requirement such as `[Store]` should be discharged
-  member by member when `:delegate` leaves some members to the outer provider.
 - Whether `implement` should support a `:setup` block, as service layers do,
   or whether `do!` around the `provide` is enough.
 

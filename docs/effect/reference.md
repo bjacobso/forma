@@ -66,10 +66,51 @@ Package resolution and compile-time library imports remain proposals.
 | `(: find-user (-> String (Effect User [NotFound] [Users.find]))) (define find-user [id] ...)` | an `Effect.gen` function |
 | `(layer UsersLive :provides Users (define find [id] ...))` | a layer implementing service methods |
 | `(layer AppLive (layer-provide A (layer-merge B C)))` | composition of layers |
+| `(provide eff (implement Users (define find [id] ...)))` | `Layer.succeed(Users, Users.of({...}))` built where it is provided |
 
 Signatures may appear anywhere in their module. An Effect type names its success
 value and optional finite sets of errors and requirements: `(Effect User)`,
 `(Effect User [NotFound])`, or `(Effect User [NotFound] [Users.find])`.
+
+### Local providers
+
+`implement` writes a service implementation inside `provide`, where its
+methods can use local values. It is how a Forma program supplies a test double:
+
+```lisp
+(do! [writes (ref-make (: [] (List String)))
+      _ (provide (save-user "Ada")
+          (implement Store
+            (define get [key] (succeed "Ada"))
+            (define set [key value] (ref-update writes (fn [xs] (conj xs value))))))]
+  (ref-get writes))
+```
+
+Members follow the layer rules: each matches its service signature, raises only
+the errors the member declares, and cannot use its own service. An `implement`
+defines every member unless it starts with `:delegate`, which forwards the
+undefined members to the outer implementation of the service:
+`(implement Payments :delegate (define charge [cents] (fail ...)))`. The
+`provide` discharges the service from the effect's requirements and adds the
+requirements of the methods, plus every forwarded member of a delegating
+`implement`. `implement` is valid only as a layer argument of `provide`; it
+cannot be bound with `let` or passed to `layer-merge`.
+
+`provide` takes several layers, and each wraps the ones before it, so
+`(provide eff A B)` is `(provide (provide eff A) B)`. A layer's methods get
+their services from outside it, so list a dependency after the layers that use
+it. Here the Store double records through the Audit double:
+
+```lisp
+(provide (save-user "Ada")
+  (implement Store
+    (define get [key] (succeed "Ada"))
+    (define set [key value] (Audit.record (str key "=" value))))
+  (implement Audit (define record [entry] (ref-update entries (fn [xs] (conj xs entry))))))
+```
+
+Listing Audit first is reported as `mechanics/provide-order`, at the call that
+would reach past it.
 Requirements name individual capabilities or whole services. `Scope` is the
 requirement introduced by resources.
 
@@ -91,9 +132,10 @@ applies to `String`, `:min-length` and `:max-length` to `String` and `List`, and
 
 | Forma | Effect TypeScript |
 | --- | --- |
-| `(do! [x eff _ eff2] body)` | `const x = yield* eff; yield* eff2; ...` |
+| `(do! [x eff] eff2 body)` | `const x = yield* eff; yield* eff2; ...` |
 | `(do! [x eff :let [y value]] body)` | mixes effects with lexical pure bindings |
-| `(let [x value] body)` | `const x = value` (`let` binds values; running an effect needs `do!`) |
+| `(let [x value] eff body)` | `const x = value; yield* eff; ...` (`let` binds values; running an effect needs `do!`) |
+| `(do eff eff2 body)` | `yield* eff; yield* eff2; ...` |
 | `(succeed v)`, a plain value | `return v` |
 | `(fail (NotFound {:id id}))` | `yield* Effect.fail(new NotFound({ id }))` |
 | `(Users.find id)`, `(other-op x)` | `users.find(id)`, `otherOp(x)` |
@@ -118,8 +160,12 @@ applies to `String`, `:min-length` and `:max-length` to `String` and `List`, and
 | `(ref-make v)`, `(ref-get r)`, `(ref-set r v)`, `(ref-update r f)` | `Ref.make`, `Ref.get`, `Ref.set`, `Ref.update` |
 | `(config Int "PORT" :default 8080)` | `Config.withDefault(Config.Int("PORT"), 8080)` (fails with `ConfigError`) |
 | `(decode User input)` | `Schema.decodeUnknownEffect(User)(input)` (fails with `SchemaError`) |
-| `(provide eff AppLive)` | `Effect.provide`. Services used inside are resolved inside the provided effect. |
+| `(provide eff AppLive)`, `(provide eff (implement Svc ...) OtherLive)` | `Effect.provide`. Services used inside are resolved inside the provided effect. |
 | `(log "message" value)` | `Effect.log` |
+
+The body of `do!`, `let`, or `do` may hold several forms. Forms before the last
+run in order for their effects, and the last form is the result, so an effect
+whose result is unused needs no `_` binding.
 
 Streams are values: `stream-of`, `stream-range`, `stream-map`,
 `stream-filter`, `stream-take`, and `stream-map-effect` build them, and
@@ -170,6 +216,10 @@ consumes. It rejects a program when:
 - a layer does not implement every method of its service, a method can fail
   with an error the service does not declare, or a layer's declared type does
   not match what it provides and requires;
+- an `implement` misses a member without `:delegate`, appears anywhere but as
+  a layer argument of `provide`, or (as a warning) provides a service the
+  effect does not use, delegates when it defines every member, or uses a
+  service that is provided inside it;
 - a service method declares a requirement (Effect service methods are
   requirement-free; give the layer the dependency instead);
 - names, types, errors, or requirements are unknown, or definitions are

@@ -5,7 +5,7 @@
   "phase": "typecheck",
   "span": {
     "sourceId": "log.lisp",
-    "startOffset": 217,
-    "endOffset": 240
+    "startOffset": 213,
+    "endOffset": 236
   }
 }

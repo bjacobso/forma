@@ -943,9 +943,10 @@ function report(context: BodyContext, expr: SExpr, code: string, message: string
  * Argument shapes for the Effect combinators a body can call. `effect`
  * arguments are effect programs, `lambda` arguments are `(fn [x] effect...)`,
  * `effects` is a vector or map of effect programs, `type` is a type
- * expression, and `value` is an ordinary value expression.
+ * expression, `value` is an ordinary value expression, and `layer` is a layer
+ * name or an inline `(implement Service ...)`.
  */
-type CombinatorArg = "effect" | "value" | "lambda" | "effects" | "type";
+type CombinatorArg = "effect" | "value" | "lambda" | "effects" | "type" | "layer";
 
 interface CombinatorSpec {
   readonly args: readonly CombinatorArg[];
@@ -973,7 +974,7 @@ const combinators: ReadonlyMap<string, CombinatorSpec> = new Map<string, Combina
   ["or-die", { args: ["effect"] }],
   ["option", { args: ["effect"] }],
   ["result", { args: ["effect"] }],
-  ["provide", { args: ["effect", "value"] }],
+  ["provide", { args: ["effect", "layer"] }],
   ["log", { args: [], rest: "value" }],
   ["ref-make", { args: ["value"] }],
   ["ref-get", { args: ["value"] }],
@@ -1136,6 +1137,21 @@ function combinatorToJson(
     : -1;
   const positional = optionStart === -1 ? items : items.slice(0, optionStart);
   const optionItems = optionStart === -1 ? [] : items.slice(optionStart);
+  if (name === "provide" && positional.length > 2) {
+    // (provide effect A B ...) is (provide (provide effect A) B ...): each layer
+    // wraps the ones before it, so a later layer can serve an earlier one.
+    let provided = combinatorToJson(context, { ...expr, items: [expr.items[0]!, positional[0]!, positional[1]!] }, name, spec);
+    for (const layer of positional.slice(2)) {
+      provided = {
+        kind: "Combinator",
+        name,
+        args: [provided, combinatorArgToJson(context, layer, "layer", name)],
+        effect: context.effect,
+        span: spanJson(context.sourceId, expr),
+      };
+    }
+    return provided;
+  }
   const arity = spec.args.length;
   if (spec.rest ? positional.length < arity : positional.length !== arity) {
     return report(
@@ -1213,6 +1229,9 @@ function combinatorArgToJson(
         span: spanJson(sourceId, expr),
       };
     }
+    case "layer":
+      if (expr._tag === "List" && symName(expr.items[0]) === "implement") return inlineLayerToJson(context, expr);
+      return valueExprToCoreJson(sourceId, expr);
     case "effects":
       if (expr._tag === "Vector") {
         return {
@@ -1232,6 +1251,45 @@ function combinatorArgToJson(
       }
       return report(context, expr, "artifact/effect-body", `${name} expects a vector or map of effects.`);
   }
+}
+
+/**
+ * `(implement Service [:delegate] (define member [params] body...) ...)`, the
+ * inline layer `provide` accepts. Method bodies refer to enclosing bindings as
+ * ordinary `Var` nodes.
+ */
+function inlineLayerToJson(context: BodyContext, expr: Extract<SExpr, { readonly _tag: "List" }>): JsonValue {
+  const { sourceId } = context;
+  const service = symName(expr.items[1]);
+  if (!service) return report(context, expr.items[1] ?? expr, "artifact/layer", "implement expects the name of the service it implements.");
+  const delegate = symName(expr.items[2]) === ":delegate";
+  const methods: JsonValue[] = [];
+  // Methods run later, when the provided effect calls them, so their bodies get their own effect context.
+  const methodContext: BodyContext = { ...context, effect: { kind: "Effect", success: { kind: "Primitive", name: "Unit" }, errors: [], requirements: [] } };
+  for (const method of expr.items.slice(delegate ? 3 : 2)) {
+    // Core normalization may already have rewritten (define m [p] body) to (define m (fn [p] body)).
+    const fn = method._tag === "List" && method.items.length === 3 && method.items[2]?._tag === "List" && symName(method.items[2].items[0]) === "fn" ? method.items[2] : undefined;
+    const paramVector = fn ? fn.items[1] : method._tag === "List" ? method.items[2] : undefined;
+    const bodyForms = fn ? fn.items.slice(2) : method._tag === "List" ? method.items.slice(3) : [];
+    if (method._tag !== "List" || symName(method.items[0]) !== "define" || paramVector?._tag !== "Vector" || bodyForms.length === 0) {
+      return report(context, method, "artifact/layer", "implement members must be (define member [params...] body).");
+    }
+    const methodName = symName(method.items[1]);
+    if (!methodName) return report(context, method.items[1] ?? method, "artifact/layer", "implement members require a member name.");
+    const params: string[] = [];
+    for (const param of paramVector.items) {
+      const paramName = scalarName(param);
+      if (!paramName) return report(context, param, "artifact/layer", "implement member parameters must be symbolic names.");
+      params.push(paramName);
+    }
+    methods.push({
+      name: methodName,
+      params,
+      body: effectBodyFormsToJson(methodContext, bodyForms),
+      span: spanJson(sourceId, method),
+    });
+  }
+  return { kind: "InlineLayer", service, delegate, methods, span: spanJson(sourceId, expr) };
 }
 
 function effectCondToJson(context: BodyContext, expr: Extract<SExpr, { readonly _tag: "List" }>): JsonValue {
