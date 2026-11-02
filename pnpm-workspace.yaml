@@ -8,3 +8,7 @@ overrides:
   "alchemy>@effect/sql-d1": 4.1.1
   "alchemy>@effect/sql-sqlite-do": 4.1.1
   "alchemy>@effect/vitest": 4.1.1
+
+# Alchemy beta.83 still imports effect/Crypto, removed in Effect 4.1.
+patchedDependencies:
+  "alchemy@2.0.0-beta.83": patches/alchemy@2.0.0-beta.83.patch

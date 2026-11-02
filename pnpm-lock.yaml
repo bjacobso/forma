@@ -9,6 +9,11 @@ overrides:
   alchemy>@effect/sql-sqlite-do: 4.1.1
   alchemy>@effect/vitest: 4.1.1
 
+patchedDependencies:
+  alchemy@2.0.0-beta.83:
+    hash: ffb55414118f35b75f3283d4cf768467400d4e4b7c6793d4dd76c1ab6f14d493
+    path: patches/alchemy@2.0.0-beta.83.patch
+
 importers:
 
   .:
@@ -33,7 +38,7 @@ importers:
         version: 25.9.6
       alchemy:
         specifier: 2.0.0-beta.83
-        version: 2.0.0-beta.83(@effect/platform-node@4.1.1(effect@4.1.1)(redis@6.2.1))(@effect/vitest@4.1.1(effect@4.1.1)(vitest@5.0.4(@types/node@25.9.6)(vite@8.2.0(@types/node@25.9.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.5)(yaml@2.9.0))))(@types/node@25.9.6)(@types/react@19.2.18)(effect@4.1.1)(hono@4.11.4)(typescript@6.0.3)(vite@8.2.0(@types/node@25.9.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.5)(yaml@2.9.0))(ws@8.22.0)
+        version: 2.0.0-beta.83(patch_hash=ffb55414118f35b75f3283d4cf768467400d4e4b7c6793d4dd76c1ab6f14d493)(@effect/platform-node@4.1.1(effect@4.1.1)(redis@6.2.1))(@effect/vitest@4.1.1(effect@4.1.1)(vitest@5.0.4(@types/node@25.9.6)(vite@8.2.0(@types/node@25.9.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.5)(yaml@2.9.0))))(@types/node@25.9.6)(@types/react@19.2.18)(effect@4.1.1)(hono@4.11.4)(typescript@6.0.3)(vite@8.2.0(@types/node@25.9.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.5)(yaml@2.9.0))(ws@8.22.0)
       effect:
         specifier: 4.1.1
         version: 4.1.1
@@ -4817,7 +4822,7 @@ snapshots:
 
   '@yuku-toolchain/types@0.8.3': {}
 
-  alchemy@2.0.0-beta.83(@effect/platform-node@4.1.1(effect@4.1.1)(redis@6.2.1))(@effect/vitest@4.1.1(effect@4.1.1)(vitest@5.0.4(@types/node@25.9.6)(vite@8.2.0(@types/node@25.9.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.5)(yaml@2.9.0))))(@types/node@25.9.6)(@types/react@19.2.18)(effect@4.1.1)(hono@4.11.4)(typescript@6.0.3)(vite@8.2.0(@types/node@25.9.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.5)(yaml@2.9.0))(ws@8.22.0):
+  alchemy@2.0.0-beta.83(patch_hash=ffb55414118f35b75f3283d4cf768467400d4e4b7c6793d4dd76c1ab6f14d493)(@effect/platform-node@4.1.1(effect@4.1.1)(redis@6.2.1))(@effect/vitest@4.1.1(effect@4.1.1)(vitest@5.0.4(@types/node@25.9.6)(vite@8.2.0(@types/node@25.9.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.5)(yaml@2.9.0))))(@types/node@25.9.6)(@types/react@19.2.18)(effect@4.1.1)(hono@4.11.4)(typescript@6.0.3)(vite@8.2.0(@types/node@25.9.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.5)(yaml@2.9.0))(ws@8.22.0):
     dependencies:
       '@alchemy.run/cloudflare-runtime': 2.0.0-beta.83(@distilled.cloud/cloudflare@1.0.0-rc.15(effect@4.1.1))(@effect/platform-node@4.1.1(effect@4.1.1)(redis@6.2.1))(@types/node@25.9.6)(effect@4.1.1)(rolldown@1.2.5)(typescript@6.0.3)(vite@8.2.0(@types/node@25.9.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.5)(yaml@2.9.0))
       '@alchemy.run/floci': 2.0.0-beta.83(effect@4.1.1)
