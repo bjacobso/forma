@@ -54,5 +54,7 @@ of commits. Do not add a framework to serve static documentation. Keep
 source links and real built pages. `pnpm check:llms` checks existing docs output.
 
 Do not deploy by hand, publish packages, or merge unless explicitly instructed.
-The existing Deploy workflow deploys validated pushes to `main`, and Changesets
-handles releases. Pull requests do not deploy.
+The Deploy workflow deploys validated pushes to `main`, and Changesets handles
+releases. Same-repository pull requests deploy isolated previews when the
+`preview` environment has Cloudflare credentials; closing the PR destroys its
+preview. Forks never deploy.
