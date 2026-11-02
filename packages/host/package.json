@@ -46,11 +46,14 @@
     "pack:check": "node ../../scripts/pnpm-pack-check.mjs"
   },
   "dependencies": {
-    "@formalang/ts": "workspace:*",
-    "effect": "4.1.1"
+    "@formalang/ts": "workspace:*"
+  },
+  "peerDependencies": {
+    "effect": "^4.1.1"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
+    "effect": "4.1.1",
     "typescript": "^6.0.3",
     "vitest": "5.0.4"
   },

@@ -4,12 +4,13 @@ CodeMirror and React editor integrations for Forma, including syntax highlightin
 diagnostics, completions, and structural editing.
 
 ```sh
-npm install @formalang/editor react react-dom
+npm install @formalang/editor effect@^4.1.1 react react-dom
 ```
 
 Use `@formalang/editor/codemirror` for CodeMirror integrations and
 `@formalang/editor/react` for React components. The package ships compiled ESM
-and TypeScript declarations. React 19 is a peer dependency.
+and TypeScript declarations. Effect `^4.1.1` and React 19 are peer dependencies;
+reuse the application's Effect runtime across Forma libraries.
 
 Forma is pre-alpha. See https://forma-lang.com for documentation and demos.
 

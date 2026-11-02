@@ -46,18 +46,19 @@
     "@codemirror/view": "^6.36.8",
     "@formalang/host": "workspace:*",
     "@lezer/highlight": "^1.2.1",
-    "@lezer/lr": "^1.4.2",
-    "effect": "4.1.1"
+    "@lezer/lr": "^1.4.2"
   },
   "devDependencies": {
     "@lezer/generator": "^1.7.2",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.16",
     "@types/react-dom": "^19.2.3",
+    "effect": "4.1.1",
     "typescript": "^6.0.3",
     "vitest": "5.0.4"
   },
   "peerDependencies": {
+    "effect": "^4.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   }

@@ -175,9 +175,6 @@ importers:
       '@lezer/lr':
         specifier: ^1.4.2
         version: 1.4.10
-      effect:
-        specifier: 4.1.1
-        version: 4.1.1
       react:
         specifier: ^19.0.0
         version: 19.2.8
@@ -197,6 +194,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.4(@types/react@19.2.18)
+      effect:
+        specifier: 4.1.1
+        version: 4.1.1
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -209,13 +209,13 @@ importers:
       '@formalang/ts':
         specifier: workspace:*
         version: link:../ts
-      effect:
-        specifier: 4.1.1
-        version: 4.1.1
     devDependencies:
       '@types/node':
         specifier: ^24.10.1
         version: 24.13.3
+      effect:
+        specifier: 4.1.1
+        version: 4.1.1
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -249,14 +249,13 @@ importers:
         version: 5.0.4(@types/node@24.13.3)(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.5)(yaml@2.9.0))
 
   packages/ts:
-    dependencies:
-      effect:
-        specifier: 4.1.1
-        version: 4.1.1
     devDependencies:
       '@types/node':
         specifier: ^24.10.1
         version: 24.13.3
+      effect:
+        specifier: 4.1.1
+        version: 4.1.1
       fast-check:
         specifier: ^4.9.0
         version: 4.9.0
