@@ -378,7 +378,11 @@ The docs homepage and compiler explorer at `/playground` deploy to
 https://forma-lang.com with Alchemy and Cloudflare Workers. After CI succeeds
 for a push to `main`, the Deploy workflow builds and deploys that validated
 revision, then checks the docs, playground, and legacy workbench redirect.
-The structural workbench is deployed by Foldworks. Pull requests do not deploy.
+The structural workbench is deployed by Foldworks. Same-repository pull requests
+deploy a `pr-<number>` preview on `workers.dev`, with its URL in one updated PR
+comment. Closing the PR destroys its stage and marks the comment as removed.
+Forks never deploy. Deploy and cleanup runs serialize per PR so closing a PR
+cannot race its deployment.
 
 Configure `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in the repository's
 GitHub `production` environment. The token needs Workers Scripts Edit, Account
@@ -389,6 +393,20 @@ alone does not allow binding. The secret must also have the `workers` scope.
 See [Cloudflare's Secrets Store access control](https://developers.cloudflare.com/secrets-store/access-control/).
 Alchemy stores deployment state in Cloudflare, shared by local and GitHub
 deployments.
+
+For previews, configure `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in the
+GitHub `preview` environment too. Give the token the account permissions above;
+previews do not need zone permissions because they never bind custom domains.
+If either secret is absent, the Preview workflow skips deployment and cleanup
+with a notice. Configure the environment to allow same-repository PR branches.
+Keep production credentials in the separate `production` environment.
+
+Alchemy beta.84 uses `@alchemy.run/cloudflare` and the account's default
+`Cloudflare.state()` store, preserving the existing production state. The
+bootstrap command is now `pnpm exec alchemy state bootstrap --backend cloudflare`;
+deployments pass `--yes` so CI can handle a missing or outdated state store.
+The Effect 4.1 crypto compatibility patch and offline deployment checks are
+documented in [patches/README.md](patches/README.md).
 
 Use `pnpm website:build` to build, `pnpm website:plan` to inspect infrastructure
 changes, and `pnpm website:deploy` to deploy locally with Alchemy credentials.

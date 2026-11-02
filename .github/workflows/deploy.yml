@@ -38,7 +38,7 @@ jobs:
           cache: pnpm
       - uses: ./.github/actions/install
       - name: Deploy production
-        run: pnpm website:deploy --yes
+        run: pnpm exec alchemy deploy --stage prod --yes
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -3,12 +3,11 @@ packages:
   - "packages/*"
 
 # Keep Alchemy's used Effect companions pinned to the same tested version.
-# These versions satisfy Alchemy's ^4.0.0 dependency and peer ranges.
+# These versions satisfy Alchemy's ^4.0.5 dependency and peer ranges.
 overrides:
-  "alchemy>@effect/sql-d1": 4.1.1
-  "alchemy>@effect/sql-sqlite-do": 4.1.1
+  "@alchemy.run/cloudflare>@effect/sql-d1": 4.1.1
   "alchemy>@effect/vitest": 4.1.1
 
-# Alchemy beta.83 still imports effect/Crypto, removed in Effect 4.1.
+# Alchemy beta.84 still imports effect/Crypto, removed in Effect 4.1.
 patchedDependencies:
-  "alchemy@2.0.0-beta.83": patches/alchemy@2.0.0-beta.83.patch
+  "alchemy@2.0.0-beta.84": patches/alchemy@2.0.0-beta.84.patch

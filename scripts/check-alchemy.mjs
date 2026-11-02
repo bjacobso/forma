@@ -3,6 +3,9 @@ import { createHash } from "node:crypto";
 import { test } from "node:test";
 import { Effect, Redacted } from "effect";
 import { makeOAuthClient } from "alchemy/Auth/OAuthFlow";
+import { AlchemyContext } from "alchemy/AlchemyContext";
+import * as Contributions from "alchemy/Contributions";
+import { evalStack } from "alchemy/Stack";
 import { PlatformServices } from "alchemy/Util/PlatformServices";
 
 const spec = {
@@ -20,9 +23,49 @@ const run = effect => Effect.runPromise(effect.pipe(Effect.provide(PlatformServi
 // authenticate, or exchange tokens. Authorization URL generation is offline.
 test("the deploy command, Cloudflare provider, and Forma stack imports resolve", async () => {
   await import("alchemy/Cli/commands/deploy");
-  await import("alchemy/Cloudflare");
+  await import("alchemy/Cli/commands/state");
+  await import("@alchemy.run/cloudflare");
   const stack = await import("../alchemy.run.ts");
   assert(Effect.isEffect(stack.default));
+});
+
+test("production and PR stages preserve routes and isolate Workers and domains offline", async t => {
+  const fetch = t.mock.method(globalThis, "fetch", () => { throw new Error("Unexpected network request"); });
+  const { default: definition } = await import("../alchemy.run.ts");
+  for (const stage of ["prod", "pr-123", "pr-456"]) {
+    await Effect.runPromise(evalStack(definition, stack => Effect.sync(() => {
+      assert.equal(stack.name, "forma-lang");
+      assert.equal(stack.stage, stage);
+      const worker = stack.resources.Website;
+      assert.equal(worker.Type, "Cloudflare.Worker");
+      assert.equal(worker.Props.name, stage === "prod" ? "forma-website" : `forma-website-${stage}`);
+      assert.equal(worker.Props.domain, stage === "prod" ? "forma-lang.com" : undefined);
+      assert.equal(worker.Props.workersDev, true);
+      assert.equal(worker.Props.main, "apps/website/src/worker.ts");
+      assert.equal(worker.Props.assets.notFoundHandling, "404-page");
+      assert.deepEqual(worker.Props.assets.runWorkerFirst, ["/playground", "/playground/*", "/about", "/demo", "/demo/*", "/workbench/demo", "/workbench/demo/"]);
+      assert.equal(worker.RemovalPolicy, "destroy");
+    }), { stage }).pipe(
+      Effect.provideService(AlchemyContext, { dotAlchemy: ".alchemy", dev: false, adopt: false }),
+      Effect.provide(PlatformServices),
+    ));
+  }
+  assert.equal(fetch.mock.callCount(), 0);
+});
+
+test("Cloudflare state-store and auth contributions load without remote state access", async t => {
+  const fetch = t.mock.method(globalThis, "fetch", () => { throw new Error("Unexpected network request"); });
+  await run(Effect.gen(function* () {
+    const stores = yield* Contributions.stateStores();
+    const { provider, store } = stores.get("cloudflare");
+    assert.equal(provider.name, "cloudflare");
+    const implementation = yield* store.load;
+    assert.equal(typeof implementation.layer, "function");
+    assert.equal(typeof implementation.lifecycle.bootstrap, "function");
+    assert.equal(typeof implementation.lifecycle.teardown, "function");
+    yield* provider.auth;
+  }));
+  assert.equal(fetch.mock.callCount(), 0);
 });
 
 test("OAuth produces fresh state and a valid S256 PKCE challenge without network access", async t => {
@@ -56,20 +99,18 @@ test("client-secret authorization generates state without PKCE or exposing its s
   assert.equal(url.searchParams.has("client_secret"), false);
 });
 
-test("random generation failures remain OAuth crypto_error failures", async t => {
+test("random generation failures remain typed OAuth crypto failures", async t => {
   t.mock.method(globalThis.crypto, "getRandomValues", () => { throw new Error("random unavailable"); });
   const client = makeOAuthClient({ ...spec, auth: { kind: "pkce" } });
   const error = await run(Effect.flip(client.authorize()));
-  assert.equal(error._tag, "OAuthError");
-  assert.equal(error.error, "crypto_error");
-  assert.match(error.errorDescription, /Secure random generation failed/);
+  assert.equal(error._tag, "OAuthCryptoError");
+  assert.match(error.message, /Secure random generation failed/);
 });
 
-test("PKCE digest failures remain OAuth crypto_error failures", async t => {
+test("PKCE digest failures remain typed OAuth crypto failures", async t => {
   t.mock.method(globalThis.crypto.subtle, "digest", async () => { throw new Error("digest unavailable"); });
   const client = makeOAuthClient({ ...spec, auth: { kind: "pkce" } });
   const error = await run(Effect.flip(client.authorize()));
-  assert.equal(error._tag, "OAuthError");
-  assert.equal(error.error, "crypto_error");
-  assert.match(error.errorDescription, /PKCE digest failed/);
+  assert.equal(error._tag, "OAuthCryptoError");
+  assert.match(error.message, /PKCE digest failed/);
 });
