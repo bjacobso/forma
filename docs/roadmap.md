@@ -52,6 +52,13 @@ Each RFC specifies its own conformance gates. The full
 bounded rollout still excludes arbitrary type-level functions and runtime
 value-dependent type computation.
 
+## Type generics exploration
+
+[RFC 0018](./rfcs/0018-type-generics.md) explores author-facing type generics
+around existing Hindley–Milner inference: callback-driven collection results,
+rigid checking of generic signatures, and consistent module and tooling contracts.
+Its proposed changes are not implemented or scheduled.
+
 ## Deferred
 
 - General-purpose application-language positioning.

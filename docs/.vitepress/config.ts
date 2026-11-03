@@ -51,6 +51,8 @@ export default defineConfig({
         text: "Learn",
         items: [
           { text: "Language guide", link: "/language" },
+          { text: "Structure and interpretation", link: "/structure-and-interpretation" },
+          { text: "Domain modeling", link: "/domain-modeling" },
           { text: "Writing a form", link: "/writing-a-form" },
           { text: "File modules", link: "/modules" },
           { text: "Vision", link: "/vision" },
@@ -72,6 +74,8 @@ export default defineConfig({
             { text: "Preludes", link: "/preludes/" },
             { text: "Vision", link: "/vision" },
             { text: "Language", link: "/language" },
+            { text: "Structure and interpretation", link: "/structure-and-interpretation" },
+            { text: "Domain modeling", link: "/domain-modeling" },
             { text: "Writing a form", link: "/writing-a-form" },
             { text: "Forma for Effect", link: "/effect" },
             { text: "Effect reference", link: "/effect/reference" },
@@ -113,6 +117,7 @@ export default defineConfig({
             { text: "0015: Tests in Forma", link: "/rfcs/0015-tests-in-forma" },
             { text: "0016: Host-call journals", link: "/rfcs/0016-host-call-journals" },
             { text: "0017: Diagnostic catalog", link: "/rfcs/0017-diagnostic-catalog" },
+            { text: "0018: Type generics", link: "/rfcs/0018-type-generics" },
           ],
         },
         {

@@ -23,6 +23,8 @@ app; Forma keeps the language and UI-free language services. A fresh clone uses
 - [Quick start](https://raw.githubusercontent.com/bjacobso/forma/main/README.md): Setup, examples, package layout, and current project status.
 - [TypeScript engine](https://raw.githubusercontent.com/bjacobso/forma/main/packages/ts/README.md): Embedding the reader, evaluator, typechecker, VM, and elaborator.
 - [Language guide](https://raw.githubusercontent.com/bjacobso/forma/main/docs/language.md): Syntax, values, types, macros, effects, and elaboration.
+- [Structure and Interpretation of Forma Programs](https://raw.githubusercontent.com/bjacobso/forma/main/docs/structure-and-interpretation.md): SICP-style introduction covering functions, processes, data abstraction, symbolic data, effects, streams, an interpreter, macros, and typed forms, with examples run on the current engine.
+- [Domain modeling in Forma](https://raw.githubusercontent.com/bjacobso/forma/main/docs/domain-modeling.md): A wholesale ordering workflow designed in the style of *Domain Modeling Made Functional*, with brands, refinements, tagged choices, typed errors, and service requirements, compiled to Effect TypeScript; lists current modeling limits.
 - [File modules](https://raw.githubusercontent.com/bjacobso/forma/main/docs/modules.md): Explicit imports, exports, compile-time form libraries, and project preludes.
 
 ## For agents
