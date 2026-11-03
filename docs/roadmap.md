@@ -59,6 +59,18 @@ around existing Hindley–Milner inference: callback-driven collection results,
 rigid checking of generic signatures, and consistent module and tooling contracts.
 Its proposed changes are not implemented or scheduled.
 
+## Everyday checker gaps
+
+[RFC 0019](./rfcs/0019-everyday-checker-gaps.md) collects gaps found while writing the
+[SICP-style guide](./structure-and-interpretation.md) and the
+[domain modeling guide](./domain-modeling.md). The evaluator, kernel
+typechecker, and Effect checker disagree about some builtins, local
+definitions, zero-argument functions, and match exhaustiveness. Unannotated
+arithmetic infers `Float`. The Effect checker loses constructor types,
+rejects options for optional fields, requires literal callbacks, and accepts
+out-of-range literals. The guides document today's workarounds. The fixes are
+proposed, not implemented or scheduled.
+
 ## Deferred
 
 - General-purpose application-language positioning.

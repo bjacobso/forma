@@ -118,6 +118,7 @@ export default defineConfig({
             { text: "0016: Host-call journals", link: "/rfcs/0016-host-call-journals" },
             { text: "0017: Diagnostic catalog", link: "/rfcs/0017-diagnostic-catalog" },
             { text: "0018: Type generics", link: "/rfcs/0018-type-generics" },
+            { text: "0019: Everyday checker gaps", link: "/rfcs/0019-everyday-checker-gaps" },
           ],
         },
         {

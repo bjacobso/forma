@@ -206,6 +206,12 @@ also reject the code generated with the checker bypassed.
 - Recursion through brands, classes, and errors, `Schema.TaggedClass`, and
   schema transformations.
 - Generic (type-parameterised) operations and functions.
+- A qualified constructor application such as `(Event.Placed {...})` has its
+  tagged type only where that type is expected; bound with `let` or
+  concatenated with other constructors, it widens to a record. An `(Option T)`
+  value can't be assigned to an optional record field, `for-each` requires a
+  literal `fn`, and literals are not checked against refinements at compile
+  time. [RFC 0019](../rfcs/0019-everyday-checker-gaps.md) proposes fixes.
 - Schedule composition beyond `jittered` (`both`, `either`, `while`/`until`
   predicates), `Queue`, `PubSub`, `Deferred`, `Semaphore`, and scoped forks.
 - JavaScript interop such as `Effect.promise`. Host code supplies that

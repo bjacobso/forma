@@ -597,19 +597,26 @@ builds a small one from scratch.
 
 ## What the model can't express yet
 
-Forma is pre-alpha. These limits affect domain modeling today:
+Forma is pre-alpha. These limits affect domain modeling today.
+[RFC 0019](./rfcs/0019-everyday-checker-gaps.md) proposes fixes for the first four.
 
-- **Refinements are checked at decode time, not proven.** `(Bags 0)` and
-  `(Quantity 0)` compile. Use `decode` or a smart constructor for values you
-  haven't checked.
+- **Refinements are checked at decode time, not proven.** `(Bags 0)`,
+  `(Quantity 0)`, and even `-5` declared as `Cents` compile. Use `decode` or a
+  smart constructor for values you haven't checked. The RFC proposes checking
+  literals at compile time; computed values would still be checked at run
+  time.
 - **Construct tagged values where their type is expected.** A tagged value
   bound with `let` loses its union type and is rejected later. That's why
-  `events-for` builds its events inside each branch.
+  `events-for` builds its events inside each branch. Concatenating lists of
+  different constructors fails the same way.
 - **Optional fields can't be copied from an `Option` value.** When one stage's
   record has an `(Option T)` field and the next stage's record has the same
   field, assigning `(get record :field)` directly is rejected. Match on the
   option and build the record in each branch, or keep the field out of later
   stages.
+- **`for-each` needs a literal `fn`.** `(for-each lines price-line)` is
+  rejected, so `price-order` writes `(fn [line] (price-line line))`. `map`
+  already accepts a named function.
 - **Generic operations are not supported** in Effect programs. Every operation
   has concrete types.
 - **Effect programs run as generated TypeScript.** Forma's own evaluator does
