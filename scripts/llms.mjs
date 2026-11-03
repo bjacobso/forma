@@ -30,8 +30,9 @@ for (const match of text.matchAll(/\[[^\]]+\]\(([^)]+)\)/gu)) {
     const local = resolve(root, path);
     if (!local.startsWith(root + sep)) throw new Error(`Invalid source path: ${url}`);
     await access(local);
-    // Linked documentation must also have a real built page.
-    if (path.startsWith("docs/") && path.endsWith(".md")) {
+    // Linked documentation must also have a real built page. RFCs are
+    // repository-only design records and are not built into the site.
+    if (path.startsWith("docs/") && !path.startsWith("docs/rfcs/") && path.endsWith(".md")) {
       await access(resolve(output, path.slice("docs/".length).replace(/\.md$/u, ".html")));
     }
   } else if (url.origin === "https://forma-lang.com") {

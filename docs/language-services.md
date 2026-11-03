@@ -340,7 +340,7 @@ queries. It is the language server's whole implementation.
   expansion of the unchanged documents before the first changed one, so an
   edit re-expands only the edited document and what follows it.
 
-[RFC 0004](./rfcs/0004-one-analysis-architecture.md) describes where this is
+[RFC 0004](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0004-one-analysis-architecture.md) describes where this is
 going: per-form memoization, spans on nodes, a schema-defined IR, and a typed
 core tree.
 

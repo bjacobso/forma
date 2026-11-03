@@ -32,25 +32,44 @@ production-readiness claim.
 
 ## Record row rollout
 
-[RFC 0005](./rfcs/0005-row-operations.md) implements closed-shape `Pick`,
+[RFC 0005](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0005-row-operations.md) implements closed-shape `Pick`,
 `Omit`, and disjoint `Merge`. Its follow-ups are proposals,
 not implemented features or a committed delivery schedule:
 
-1. [Qualified rows (0006)](./rfcs/0006-qualified-rows.md): retain presence,
+1. [Qualified rows (0006)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0006-qualified-rows.md): retain presence,
    absence, and disjointness obligations through generic functions and modules.
-2. [Shared type normalization (0007)](./rfcs/0007-type-normalization.md): make
+2. [Shared type normalization (0007)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0007-type-normalization.md): make
    computed record types usable in contextual coercion, type values, and schemas.
    Closed-shape consumers can progress independently of open-row solving.
-3. [Field/key indices (0009)](./rfcs/0009-field-names-and-row-map.md): represent
+3. [Field/key indices (0009)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0009-field-names-and-row-map.md): represent
    checked selections in generic signatures. Bounded row mapping is a later
    stage and does not block ontology migration.
-4. [Typed form results (0008)](./rfcs/0008-typed-form-results.md): expose validated
+4. [Typed form results (0008)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0008-typed-form-results.md): expose validated
    declaration fields and check declarative result templates once. Migrate
    `query` only after old/new types and artifacts agree; retain `row-of` compatibility.
 
 Each RFC specifies its own conformance gates. The full
 bounded rollout still excludes arbitrary type-level functions and runtime
 value-dependent type computation.
+
+## Type generics exploration
+
+[RFC 0018](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0018-type-generics.md) explores author-facing type generics
+around existing Hindley–Milner inference: callback-driven collection results,
+rigid checking of generic signatures, and consistent module and tooling contracts.
+Its proposed changes are not implemented or scheduled.
+
+## Everyday checker gaps
+
+[RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) collects gaps found while writing the
+[SICP-style guide](./structure-and-interpretation.md) and the
+[domain modeling guide](./domain-modeling.md). The evaluator, kernel
+typechecker, and Effect checker disagree about some builtins, local
+definitions, zero-argument functions, and match exhaustiveness. Unannotated
+arithmetic infers `Float`. The Effect checker loses constructor types,
+rejects options for optional fields, requires literal callbacks, and accepts
+out-of-range literals. The guides document today's workarounds. The fixes are
+proposed, not implemented or scheduled.
 
 ## Deferred
 

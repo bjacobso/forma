@@ -161,9 +161,9 @@ None of this is built into the compiler. The words a rule can use (`send`, `tag?
 <p>Three proposed RFCs would turn checked rules into rehearsed ones. None of them is implemented.</p>
 </div>
 <div class="fh-facts">
-<article><h3>Rule tests</h3><p><a href="/rfcs/0015-tests-in-forma">Tests in Forma</a> would let a rule carry its own examples: a customer is skipped, a new signup is deferred, a Gmail address takes the Gmail lane.</p></article>
-<article><h3>Dry runs</h3><p><a href="/rfcs/0012-checked-evaluation">Checked evaluation</a> pauses each host call with its source span, so a dry run could answer every delivery with "recorded, not sent."</p></article>
-<article><h3>Replay</h3><p><a href="/rfcs/0016-host-call-journals">Host-call journals</a> would record a real send, replay a changed rule against it, and report the first contact who would now get a different email.</p></article>
+<article><h3>Rule tests</h3><p><a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0015-tests-in-forma.md">Tests in Forma</a> would let a rule carry its own examples: a customer is skipped, a new signup is deferred, a Gmail address takes the Gmail lane.</p></article>
+<article><h3>Dry runs</h3><p><a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0012-checked-evaluation.md">Checked evaluation</a> pauses each host call with its source span, so a dry run could answer every delivery with "recorded, not sent."</p></article>
+<article><h3>Replay</h3><p><a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0016-host-call-journals.md">Host-call journals</a> would record a real send, replay a changed rule against it, and report the first contact who would now get a different email.</p></article>
 <article><h3>Open questions</h3><p>Should suppression be a separate, always-checked clause rather than first-match? Where should journey timing and multi-email sequences live? Should templates be checked against the contact schema too?</p></article>
 </div>
 </section>

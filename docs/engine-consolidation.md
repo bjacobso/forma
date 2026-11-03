@@ -43,7 +43,7 @@ checked and updated by TypeScript tests with reviewed diffs.
 ## Remaining follow-ups
 
 - **Analysis reuse.** Per-form memoization, stage 5 of
-  [RFC 0004](./rfcs/0004-one-analysis-architecture.md), is not implemented.
+  [RFC 0004](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0004-one-analysis-architecture.md), is not implemented.
   Warm operations still repeat parsing, expansion, compilation, and inference.
 - **VM bookkeeping.** The VM step counter still uses an Effect `Ref` update per
   opcode (`packages/ts/src/vm/vm.ts`). The experiment below suggests a large
