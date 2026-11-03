@@ -93,7 +93,7 @@ preludes. `@formalang/language-server` projects those queries into standard
 Language Server Protocol requests. It starts domain-neutral and loads only
 preludes explicitly supplied by its consumer. Language services are
 implemented by the TypeScript engine only; see
-[RFC 0004](./rfcs/0004-one-analysis-architecture.md).
+[RFC 0004](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0004-one-analysis-architecture.md).
 
 Structural editors build on a further set of host services: stable node ids,
 per-expression observation, a symbol index, id-addressed edit scripts, an

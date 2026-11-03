@@ -598,7 +598,7 @@ builds a small one from scratch.
 ## What the model can't express yet
 
 Forma is pre-alpha. These limits affect domain modeling today.
-[RFC 0019](./rfcs/0019-everyday-checker-gaps.md) proposes fixes for the first four.
+[RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) proposes fixes for the first four.
 
 - **Refinements are checked at decode time, not proven.** `(Bags 0)`,
   `(Quantity 0)`, and even `-5` declared as `Cents` compile. Use `decode` or a

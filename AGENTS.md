@@ -34,6 +34,8 @@ visual tests, assembled-site browser tests, and the Wrangler deployment dry run.
 - `packages/host/`, `packages/editor/`, `packages/language-server/`: host ABI and editor tooling.
 - `apps/website/`: compiler playground, production Worker, and site tests.
 - `docs/`: VitePress source; `docs/agents.md` generates `/llms.txt` at build time.
+  `docs/rfcs/` holds design RFCs for the repository only: the site excludes them,
+  and site pages link to them on GitHub.
 - `preludes/`, `examples/`, `conformance/`: library vocabulary and behavior fixtures.
 - `scripts/`: checks, surface goldens, and website assembly.
 

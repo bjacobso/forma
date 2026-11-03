@@ -228,7 +228,7 @@ with `let`. Nested `define` inside a function body evaluates, but the
 typechecker does not accept it yet. For now, keep recursive helpers at the top
 level, and use a [file module](./modules.md) to hide them. A module's
 definitions are private unless it lists them in `export`.
-[RFC 0019](./rfcs/0019-everyday-checker-gaps.md) proposes typing internal definitions as a local recursive
+[RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) proposes typing internal definitions as a local recursive
 group, which would let these helpers move inside `square-root`.
 
 > **Exercise 1.1.** `good-enough?` works poorly for very small and very large
@@ -392,7 +392,7 @@ There is one numeric rough edge. When an anonymous function does arithmetic on
 its own parameters, inference currently types those parameters as `Float`. If
 the function has to be `Int -> Int`, name it with a signature, as `inc` and
 `cube` are named above, or ascribe it in place:
-`(: (fn [x y] (+ x y)) (-> Int Int Int))`. [RFC 0019](./rfcs/0019-everyday-checker-gaps.md) proposes numeric
+`(: (fn [x y] (+ x y)) (-> Int Int Int))`. [RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) proposes numeric
 inference that removes this edge.
 
 #### Functions as returned values
@@ -495,7 +495,7 @@ named:
 
 `x.numer` reads the `:numer` field of `x`. `/` always produces a Float, so
 `floor` brings the exact quotient back to an Int. (The kernel has no integer
-division builtin yet. [RFC 0019](./rfcs/0019-everyday-checker-gaps.md) proposes adding `quot`, which Effect
+division builtin yet. [RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) proposes adding `quot`, which Effect
 programs already have.)
 
 Arithmetic is defined only in terms of the constructor and selectors:
@@ -552,7 +552,7 @@ SICP builds every list from pairs and then builds trees from lists. The
 property that lets this work is **closure**: the result of combining things can
 be combined again. Forma's built-in lists don't come with a typed `cons`: the
 evaluator runs `conj` and list `concat`, but the typechecker doesn't accept
-them yet ([RFC 0019](./rfcs/0019-everyday-checker-gaps.md) proposes typing both). So this section builds the
+them yet ([RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) proposes typing both). So this section builds the
 pairs itself and gives them a type. The definition
 says what a sequence is: either the end, or a link with a first element and
 the rest of the sequence.
@@ -773,7 +773,7 @@ warning typecheck/diagnostic: Non-exhaustive match: missing constructor(s) Trian
 The kernel typechecker reports this as a warning. The Effect checker, used in
 chapter 3 and in [domain modeling](./domain-modeling.md), treats a
 non-exhaustive match as an error. Because an unmatched value fails at run time
-with `No pattern matched the value`, [RFC 0019](./rfcs/0019-everyday-checker-gaps.md) proposes making it an error
+with `No pattern matched the value`, [RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) proposes making it an error
 in both.
 
 > **Exercise 2.4.** SICP's message-passing style represents a shape as a
@@ -907,7 +907,7 @@ Three details here are workarounds. The type is called `Flow` because a
 program that declares its own `Stream` type is currently mistaken for an
 Effect program. The tail takes a `Unit` argument because Forma has no type for
 zero-argument functions yet. And the stream is a one-constructor `Tagged` type
-because a recursive generic record alias is rejected. [RFC 0019](./rfcs/0019-everyday-checker-gaps.md) proposes
+because a recursive generic record alias is rejected. [RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) proposes
 fixing all three.
 
 Now try the obvious constructor:
