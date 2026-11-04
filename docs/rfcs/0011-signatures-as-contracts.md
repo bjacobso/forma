@@ -20,6 +20,10 @@ against a binding's parameter type and report mismatches by path. The schema
 is derived from the portable module interface, so it does not depend on which
 engine checked the module.
 
+[RFC 0022](./0022-type-schema-generation.md) amends this proposal. It uses
+the same mapping for a build step that generates schemas and types from
+`type` declarations, and it settles some of the encoding decisions below.
+
 ## Motivation
 
 Forma types are already schemas ([language guide](../language.md#types-are-schemas)).

@@ -528,6 +528,11 @@ Relative imports remain explicit; package imports resolve only through declared
 dependencies. Package resolution and type identity must agree when a graph contains
 multiple versions of the same package.
 
+[RFC 0024](./0024-declaration-and-package-identity.md) proposes the identity
+these manifests and lockfiles would use: per-declaration digests computed
+without source locations, a package revision, and requirements derived from
+resolved references.
+
 The proposed project commands are:
 
 ```sh

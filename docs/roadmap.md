@@ -71,6 +71,34 @@ rejects options for optional fields, requires literal callbacks, and accepts
 out-of-range literals. The guides document today's workarounds. The fixes are
 proposed, not implemented or scheduled.
 
+## Consumer-prelude SDK proposals
+
+Roadmap item 5 asks for a supported way to build a complete typed domain
+language. Two consumers built one outside Forma and rebuilt the same
+machinery. These RFCs propose the parts that belong in Forma. They are
+proposals, not implemented features or a committed schedule:
+
+1. [Portable expression core (0020)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0020-portable-expression-core.md):
+   a typed, total expression IR for `(Expr T)` holes, with three-valued
+   logic, decimals, dates, host-supplied calendars, a reference evaluator,
+   and shared fixtures.
+2. [Printing IR back to source (0021)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-ir-to-source.md):
+   derive each form's inverse from its pattern and projection, with source
+   maps from IR pointers to printed spans and a round-trip gate.
+3. [Schema generation from types (0022)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-type-schema-generation.md):
+   a supported build step from `type` declarations to Effect Schema, plain
+   TypeScript, and JSON Schema, with a freshness check. It amends RFC 0011.
+4. [Reference-check fixtures (0023)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0023-reference-check-fixtures.md):
+   diagnostic fixtures for cross-declaration authoring mistakes, used to
+   measure RFC 0008 and RFC 0019, and the defects they found.
+5. [Declaration and package identity (0024)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0024-declaration-and-package-identity.md):
+   per-declaration digests without source locations, package revisions, and
+   derived requirements, as a follow-up to RFC 0002 stage 3.
+6. [Consumer-prelude SDK survey (0025)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0025-consumer-prelude-sdk.md):
+   dispositions for documentation, citations, scenarios, coverage and
+   digests, and a `Sensitive` type qualifier that allows equality but not
+   ordering, aggregation, or formatting.
+
 ## Deferred
 
 - General-purpose application-language positioning.
