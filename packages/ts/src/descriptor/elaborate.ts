@@ -1,4 +1,5 @@
 import { isKFloat } from "../evaluator/types.js";
+import { irContractId, payloadConstraintsId } from "../artifact/contract-identity.js";
 import { descriptorPayloadContract, descriptorValidatorNames, checkArtifactDescriptor, checkArtifactPayloadContracts, payloadContractsFromSources } from "../artifact/descriptor-contracts.js";
 import { makeArtifactValidatorRegistry } from "../artifact/validator-catalog.js";
 import { typeDefinition } from "../surface/type-alias.js";
@@ -294,6 +295,10 @@ export function elaborateSources(
     const payload = toJsonValue(surface?.ir ? projectContractValue(exit.value as import("../evaluator/types.js").KValue,surface.ir,surface.types) : exit.value);
     const span = locate(loc);
     const contract = payloadContract(form);
+    const constraints = descriptorPayloadContract(form.descriptor, contracts);
+    const contractId = !contract ? undefined
+      : surface?.ir && contract === form.descriptor.produces ? irContractId(contract, surface.types)
+      : payloadConstraintsId(constraints);
     declarations.push({
       formName: form.formName,
       summary: summaryOf(payload, form, name, computedResultType),
@@ -309,7 +314,8 @@ export function elaborateSources(
       origin,
       sourceMap: sourceMapOf(form, payload, span, locate),
       ...(contract ? { payloadContract: contract } : {}),
-      payloadConstraints: descriptorPayloadContract(form.descriptor, contracts),
+      ...(contractId ? { payloadContractId: contractId } : {}),
+      payloadConstraints: constraints,
       validators: descriptorValidatorNames(form.descriptor),
     });
   }
