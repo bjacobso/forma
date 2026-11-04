@@ -23,7 +23,7 @@ Relative compile-time library imports and host-selected project preludes are
 implemented in the TypeScript engine. They were also implemented in the Native
 OCaml engine, which has since been removed; TypeScript is the only engine (see
 [Retiring the OCaml engine](../engine-consolidation.md)). Package imports are
-specified and implemented by [RFC 0018](./0018-packages.md), which replaces the
+specified and implemented by [RFC 0020](./0020-packages.md), which replaces the
 `forma.toml` sketch below; project commands remain proposed.
 
 The examples use the current Effect-value authoring surface.
@@ -523,10 +523,10 @@ configuration remains an open design item.
 
 ## Packages and tooling
 
-[RFC 0018](./0018-packages.md) supersedes this section's manifest and lockfile:
+[RFC 0020](./0020-packages.md) supersedes this section's manifest and lockfile:
 packages use `forma.json`, provider-independent git source maps, committed
 `vendor/` sources, and a verified `forma.lock`. Dependency add/update/verify/vendor
-commands are implemented in RFC 0018; the original project-command sketch follows.
+commands are implemented in RFC 0020; the original project-command sketch follows.
 
 A `forma.toml` manifest identifies the package, source roots, dependencies, and
 entry points. A lockfile records resolved package versions and integrity data.
@@ -545,7 +545,7 @@ forma test
 
 These proposed build/run/test commands define a project CLI. Runner behavior and
 test discovery are not available today; package distribution is implemented by
-RFC 0018's dependency commands.
+RFC 0020's dependency commands.
 
 The module graph also drives editor navigation, completion, rename, and diagnostics.
 Go-to-definition crosses imports and re-exports using resolved identities. Imported

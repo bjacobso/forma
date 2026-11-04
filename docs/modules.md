@@ -140,7 +140,7 @@ including private helper dependencies.
 
 ## Packages
 
-[RFC 0018](./rfcs/0018-packages.md) defines provider-independent packages.
+[RFC 0020](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0020-packages.md) defines provider-independent packages.
 A package declares its public files and dependency source map in `forma.json`:
 
 ```json

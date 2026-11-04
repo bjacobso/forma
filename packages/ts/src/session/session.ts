@@ -50,7 +50,7 @@ export class LanguageSession {
   projects: NonNullable<
     import("../modules/graph.js").ModuleCoreOptions["projects"]
   >;
-  /** Installed packages that bare imports resolve through (RFC 0018). */
+  /** Installed packages that bare imports resolve through (RFC 0020). */
   packages: import("../modules/packages.js").PackageTable | undefined;
 
   readonly preludes = new Map<string, SessionSourceRecord>();

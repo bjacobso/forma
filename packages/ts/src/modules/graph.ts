@@ -211,7 +211,7 @@ export interface ModuleCoreOptions {
     readonly modules?: readonly string[];
   }[];
   readonly projectForModule?: (moduleId: string) => string | undefined;
-  /** Installed packages that bare specifiers resolve through (RFC 0018). */
+  /** Installed packages that bare specifiers resolve through (RFC 0020). */
   readonly packages?: PackageTable;
 }
 export function resolveModuleGraph(

@@ -3,7 +3,7 @@
 "@formalang/host": minor
 ---
 
-Add package imports (RFC 0018). `(import "@acme/flows/ir" [FlowIR])` resolves
+Add package imports (RFC 0020). `(import "@acme/flows/ir" [FlowIR])` resolves
 through the `exports` field of a dependency's `forma.json`.
 Modules may import only packages their own package declares, and package
 modules get location-independent `pkg:<name>/<path>` identities. The compiler

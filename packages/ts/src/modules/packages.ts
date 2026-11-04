@@ -1,5 +1,5 @@
 /**
- * Package resolution (RFC 0018). The host supplies a package table; the
+ * Package resolution (RFC 0020). The host supplies a package table; the
  * compiler maps bare specifiers through it and gives package modules
  * `pkg:<name>/<path>` identities. No filesystem access.
  */
