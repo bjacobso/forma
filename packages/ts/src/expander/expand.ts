@@ -1,4 +1,4 @@
-import { normalizeCoreProgram } from "../surface/core.js";
+import { normalizeCoreProgram, retiredSpellingError } from "../surface/core.js";
 import { Effect } from "effect";
 import type { SExpr, Loc } from "../reader/index.js";
 import { parseManyToSExpr } from "../reader/index.js";
@@ -194,6 +194,9 @@ function expandExpr(
           inlineCompileTimeCalls,
         );
       }
+
+      const retired = retiredSpellingError(expr);
+      if (retired !== undefined) throw retired;
 
       switch (head.name) {
         case "quote":
