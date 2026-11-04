@@ -40,6 +40,7 @@ import type { MakeInferContextOptions } from "../type/context.js";
 import type { TypeEnv } from "../type/substitution.js";
 import { showScheme } from "../type/types.js";
 import { completionsAt, type CompletionItem } from "./completion.js";
+import { searchDefinitions, type SearchQuery, type SearchResult } from "./search.js";
 import {
   analyzeOptions,
   buildPreludeScopes,
@@ -271,6 +272,23 @@ export class AnalysisWorkspace {
       typeOf: (name) => this.#typeOfName(sourceId, name),
       kernel: kernelNames(),
     });
+  }
+
+  /**
+   * Forms and global definitions across preludes and documents, best matches
+   * first, by name, documentation, `:ir` type, and inferred type.
+   */
+  search(query: SearchQuery): readonly SearchResult[] {
+    return searchDefinitions(
+      {
+        descriptors: this.#descriptors(),
+        symbols: this.symbols(),
+        text: (sourceId) => this.text(sourceId),
+        syntax: (sourceId) => this.syntax(sourceId),
+        typeOf: (definition) => this.#typeOfName(definition.sourceId, definition.name),
+      },
+      query,
+    );
   }
 
   /** The definition of the symbol at an offset. */

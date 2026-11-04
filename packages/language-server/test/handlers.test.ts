@@ -17,6 +17,7 @@ import {
   getHover,
   getReferences,
   getSemanticTokens,
+  getWorkspaceSymbols,
   prepareRename,
   rename,
   semanticTokensLegend,
@@ -152,6 +153,17 @@ describe("Forma language server handlers", () => {
       ["f", SymbolKind.Function],
       ["onboarding", SymbolKind.Struct],
     ]);
+  });
+
+  test("workspace symbols search preludes and documents by name, documentation, and IR type", async () => {
+    const { workspace } = await setup("(define steps-taken 1)");
+    const names = (query: string) => getWorkspaceSymbols(workspace, { query }).map((symbol) => symbol.name);
+    expect(names("sequence")).toEqual(["workflow"]);
+    expect(names("produces:WorkflowIR")).toEqual(["workflow"]);
+    expect(names("steps")[0]).toBe("steps-taken");
+    const [workflow] = getWorkspaceSymbols(workspace, { query: "workflow" });
+    expect(workflow).toMatchObject({ kind: SymbolKind.Struct, containerName: "WorkflowIR" });
+    expect(workflow?.location.uri).toMatch(/steps\.lisp$/);
   });
 
   test("semantic tokens use the advertised legend", async () => {
