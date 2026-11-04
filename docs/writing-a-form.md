@@ -45,6 +45,14 @@ refinements. A hole typed with an enum alias such as
 Add `:check` when the syntax needs rules beyond its hole types. The function
 receives a record of the holes and returns a list of diagnostic records.
 
+Record parameter patterns, including `{:keys [...]}`, require every named key.
+A shared check can destructure holes declared by each form that uses it;
+an omitted optional hole is still a key whose value is `nil`. Destructuring a
+hole the form never declares fails with a diagnostic naming the check, form,
+and missing holes, such as `:check shared/check of form a: no hole named extra`.
+To share a check across forms with different holes, accept the whole record
+and use `(get holes :extra)`, which returns `nil` when the key is absent.
+
 ```lisp
 (form (greeting name message {:keys [doc]})
   :types {:name (Declares Greeting) :message String :doc (Option String)}

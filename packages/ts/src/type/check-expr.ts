@@ -82,6 +82,10 @@ export const checkExpr = (env: TypeEnv, expr: CoreExpr, expected: Type): Effect.
     return target;
   }
   const actual=yield* inferExpr(env,expr);
-  yield* assignType(actual,target,originOf(expr,"check"));
+  // An unconstrained parameter gets the literal's base type, just as numeric
+  // and string inference do. Otherwise a lambda's unknown record field can be
+  // fixed to :done before its caller supplies a record with a Keyword field.
+  const base = literal?._tag === "TCon" ? literalBase(literal.name) : undefined;
+  yield* assignType(target._tag === "TVar" && base ? TCon(base) : actual,target,originOf(expr,"check"));
   return target;
 });

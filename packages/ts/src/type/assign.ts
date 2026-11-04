@@ -68,6 +68,18 @@ export const assignType = (actual: Type, expected: Type, origin: Origin): Effect
 export const joinType = (left: Type, right: Type, origin: Origin): Effect.Effect<Type,InferenceError,InferContext> => Effect.gen(function* () {
   const ctx = yield* InferContext, subst = yield* Ref.get(ctx.subst);
   const a = applyType(subst,left), b = applyType(subst,right);
+  // Joining an unknown value with a literal constrains its base type, rather
+  // than requiring every later value of that variable to be that singleton.
+  if (a._tag === "TVar" && b._tag === "TCon" && literalBase(b.name)) {
+    const widened = TCon(literalBase(b.name)!);
+    yield* unify(a,widened,origin);
+    return widened;
+  }
+  if (b._tag === "TVar" && a._tag === "TCon" && literalBase(a.name)) {
+    const widened = TCon(literalBase(a.name)!);
+    yield* unify(b,widened,origin);
+    return widened;
+  }
   const keywordMembers=(t:Type):readonly Type[] | undefined => t._tag === "TCon" && (t.name === "Keyword" || t.name.startsWith(":")) ? [t] : t._tag === "TApp" && t.con._tag === "TCon" && t.con.name === "Union" && t.args.every(member=>keywordMembers(member)) ? t.args.flatMap(member=>keywordMembers(member)!) : undefined;
   const ak=keywordMembers(a), bk=keywordMembers(b);
   if (ak && bk) {

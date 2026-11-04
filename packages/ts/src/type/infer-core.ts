@@ -700,9 +700,15 @@ const inferApp = (
     if (expr.fn._tag === "Var" && !env.has(expr.fn.name) && ctx.builtinScheme(expr.fn.name) && ["+","-","*","/","mod","pow","min","max","abs","sqrt","floor","ceil","round","<","<=",">",">="].includes(expr.fn.name)) {
       const op = expr.fn.name;
       const args: Type[] = [];
-      for (const arg of expr.args) {
+      for (const [index,arg] of expr.args.entries()) {
         const t = yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst),env),arg);
-        yield* assignType(t,op === "mod" ? TCon("Int") : tFloat,originOf(expr,"numeric-argument"));
+        yield* assignType(t,op === "mod" ? TCon("Int") : tFloat,originOf(arg,"numeric-argument")).pipe(
+          Effect.mapError(error => new InferenceError({
+            message: `Argument ${index + 1} to ${op}: ${error.message.replace(/ \(at offset \d+\)$/, "")}`,
+            origin: error.origin,
+            details: error.details,
+          })),
+        );
         args.push(applyType(yield* Ref.get(ctx.subst),t));
       }
       const count=expr.args.length;

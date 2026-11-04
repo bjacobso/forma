@@ -26,7 +26,7 @@ describe("editor analysis around type errors", () => {
     ].join("\n");
     const { result, typeOf, errorTexts } = analyze(source);
     expect(result.success).toBe(false);
-    expect(errorTexts).toEqual(['(+ 1 "x")', '(+ 2 "y")']);
+    expect(errorTexts).toEqual(['"x"', '"y"']);
     expect(typeOf("(* n (+ 1 rate))")).toBe("Float");
     expect(typeOf("(total 100)")).toBe("Float");
     expect(result.resultType).toBeUndefined();
@@ -35,7 +35,7 @@ describe("editor analysis around type errors", () => {
   it("lets later forms use a name whose definition failed", () => {
     const source = '(define broken (+ 1 "x"))\n(define a [broken broken])\n(define b (+ broken 1))';
     const { errorTexts, typeOf } = analyze(source);
-    expect(errorTexts).toEqual(['(+ 1 "x")']);
+    expect(errorTexts).toEqual(['"x"']);
     expect(typeOf("(+ broken 1)")).toBe("Float");
   });
 

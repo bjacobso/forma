@@ -1,4 +1,5 @@
 /** Definition and application validation. Artifact contracts plug into checkForm. */
+import { closestName } from "../diagnostic/closest-name.js";
 import { typeDefinition } from "../surface/type-alias.js";
 import { matchFormSyntax, parseUnifiedForm } from "../surface/form.js";
 import { parseElaborationDescriptor } from "./ElaborationDescriptor.js";
@@ -149,21 +150,7 @@ export function checkDescriptorApplication(form: FormDescriptor, expr:SExpr, sou
   return tail(expr).flatMap(arg=>{
     const name=keywordHead(arg)?.slice(1);
     if (!name || form.slots.some(s=>s.name===name || s.aliases?.includes(name))) return [];
-    const candidate=closestSlot(name,form.slots.flatMap(s=>[s.name,...s.aliases ?? []]));
+    const candidate=closestName(name,form.slots.flatMap(s=>[s.name,...s.aliases ?? []]));
     return [diagnostic(arg,"descriptor/unknown-slot",`Unknown slot ':${name}' in form '${form.name}'.${candidate ? ` Did you mean ':${candidate}'?` : ""}`)];
   });
-}
-
-function closestSlot(name:string, candidates:readonly string[]): string | undefined {
-  const distance = (other:string) => {
-    let row=Array.from({length:other.length+1},(_,i)=>i);
-    for (let i=1;i<=name.length;i++) {
-      const next=[i];
-      for (let j=1;j<=other.length;j++) next[j]=Math.min(next[j-1]!+1,row[j]!+1,row[j-1]!+(name[i-1]===other[j-1] ? 0 : 1));
-      row=next;
-    }
-    return row[other.length]!;
-  };
-  const best=candidates.map(n=>({name:n,distance:distance(n)})).sort((a,b)=>a.distance-b.distance)[0];
-  return best && best.distance<=Math.max(2,Math.floor(Math.max(name.length,best.name.length)/3)) ? best.name : undefined;
 }

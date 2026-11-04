@@ -5,7 +5,7 @@ import { typeCheckDescriptorTree } from "../descriptor/descriptor-tree-check.js"
 import { coerceProgram } from "./coerce.js";
 import { reachableHelpers } from "./helpers.js";
 import { typeSyntaxErrors, retiredNumericTypeErrors, unknownTypeReferences } from "./type-syntax.js";
-import { KernelTypeError } from "../diagnostic/errors.js";
+import { KernelTypeError, type KernelError } from "../diagnostic/errors.js";
 import { KKeyword, KSymbol, mapKey, mapKeyValue, isKKeyword, isKSymbol } from "../evaluator/types.js";
 import { Effect, Layer } from "effect";
 import type { SExpr } from "../reader/types.js";
@@ -69,6 +69,30 @@ const typeName = (e: SExpr | undefined): Type | undefined => name(e) ? {_tag:"TC
 const fieldName = (e: SExpr): string | undefined => name(e)?.replace(/^:/, "");
 const unwrapOption = (t: SExpr): SExpr => head(t) === "Option" && t._tag === "List" ? t.items[1]! : t;
 const arg = (t: SExpr): SExpr | undefined => t._tag === "List" ? t.items[1] : undefined;
+
+/** Resolve a check's first parameter without evaluating its body. */
+function checkParameter(check: SExpr, helpers: readonly SExpr[], seen = new Set<string>()): SExpr | undefined {
+  if (check._tag === "Sym") {
+    if (seen.has(check.name)) return undefined;
+    seen.add(check.name);
+    const definition = helpers.find(e => head(e) === "define" && e._tag === "List" && name(e.items[1]) === check.name);
+    if (definition?._tag !== "List") return undefined;
+    if (definition.items[2]?._tag === "Vector" && definition.items.length > 3) return definition.items[2].items[0];
+    return definition.items[2] ? checkParameter(definition.items[2], helpers, seen) : undefined;
+  }
+  if (["fn", "lambda"].includes(head(check) ?? "") && check._tag === "List" && check.items[1]?._tag === "Vector") return check.items[1].items[0];
+  return undefined;
+}
+
+function missingCheckHoles(check: SExpr, spec: UnifiedForm): readonly string[] {
+  const parameter = checkParameter(check, spec.helpers);
+  if (parameter?._tag !== "Map") return [];
+  return [...new Set(parameter.pairs.flatMap(([key, value]) => {
+    if (name(key) === ":as") return [];
+    if (name(key) === ":keys" && value._tag === "Vector") return value.items.flatMap(key => name(key) ?? []);
+    return name(key)?.startsWith(":") ? [name(key)!.slice(1)] : [];
+  }))].filter(key => !spec.holes.has(key));
+}
 
 export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = new Map(), helpers: readonly SExpr[] = []): FormDescriptor | undefined {
   if (head(e) !== "form" || e._tag !== "List") return undefined;
@@ -408,7 +432,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         }
         return (yield* evaluateExpandedExprs(expanded,{env,builtins,stepLimit:100_000})).value;
       });
-    const invoke = (fn: SExpr) => run(list(fn,[fn,sym(fn,"__holes")]),fn);
+    const invoke = (fn: SExpr): Effect.Effect<KValue, KernelError | ElaborationError> => run(list(fn,[fn,sym(fn,"__holes")]),fn);
     for (const [n,t] of spec.holes) {
       const e = values.get(n), u = unwrapOption(t);
       const repeatedChildren = head(u) === "List";
@@ -541,7 +565,15 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
       }
       const check = spec.options.get(":check");
       if (check) {
-        const extra = yield* invoke(check);
+        const context = `:check ${name(check) ?? "<anonymous>"} of form ${descriptor.name}`;
+        const missing = missingCheckHoles(check, spec);
+        if (missing.length) return yield* Effect.fail(new ElaborationError({
+          message: `${context}: no ${missing.length === 1 ? "hole" : "holes"} named ${missing.join(", ")}`,
+          hookName: descriptor.name, phase: "validate",
+        }));
+        const extra = yield* invoke(check).pipe(Effect.mapError(error => new ElaborationError({
+          message: `${context}: ${error.message}`, hookName: descriptor.name, phase: "validate",
+        })));
         if (!Array.isArray(extra)) throw new ElaborationError({message: ":check must return a list of diagnostics",hookName:descriptor.name,phase:"validate"});
         for (const problem of extra) {
           if (!(problem instanceof Map)) throw new ElaborationError({message:"Each :check diagnostic must be a record",hookName:descriptor.name,phase:"validate"});

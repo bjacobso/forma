@@ -17,8 +17,8 @@ const typeError = (source: string) => {
 
 describe("macro arguments keep their source locations", () => {
   it("reports a type error inside a macro argument where the author wrote it", () => {
-    expect(typeError(`${unless}(my-unless false (+ 1 "x"))`)).toBe('(+ 1 "x")');
-    expect(typeError(`(when true (+ 1 "x"))`)).toBe('(+ 1 "x")');
+    expect(typeError(`${unless}(my-unless false (+ 1 "x"))`)).toBe('"x"');
+    expect(typeError(`(when true (+ 1 "x"))`)).toBe('"x"');
   });
 
   it("types the expressions inside a macro call at their own spans", () => {
