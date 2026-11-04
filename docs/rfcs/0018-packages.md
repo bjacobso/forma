@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Accepted; offline consumption implemented |
+| Status | Accepted; offline consumption and dependency commands implemented |
 | Created | 2026-11-01 |
 | Scope | Provider-independent sources, forma.json, MVS, vendoring, lock verification, exports, identities, host package tables |
 | Direction | Names identify packages; source maps locate them. Commit reviewed dependencies in vendor/ and compile offline |
@@ -108,7 +108,7 @@ Verification checks the manifest hash, full dependency closure, identities,
 requirements, and missing, extra, or edited vendor files. Lock entries not
 reachable from the selected manifests are stale. `forma file` reports
 `module/package-integrity` or `module/package-stale` diagnostics before resolving
-rather than silently accepting edits. `forma verify` is the planned explicit
+rather than silently accepting edits. `forma verify` is the explicit offline
 check command; no compilation command downloads dependencies.
 
 ### Specifiers
@@ -181,6 +181,45 @@ an entry, verifies its lock and dependency closure, and reads only `vendor/`
 and declared relative directories. It never fetches while compiling. Browser
 hosts continue to supply a table directly.
 
+## Dependency commands
+
+Run these from a directory inside a project with a `forma.json`:
+
+```sh
+forma add @acme/flows github.com/acme/flows@v2.1.0
+forma add @me/shared ../shared
+forma update                 # refresh declared refs and local hashes, apply MVS
+forma update @acme/flows      # refresh this name; preserve other locked commits
+forma verify                 # offline: compare the full closure with the lock
+forma vendor                 # restore sources using exact commits from the lock
+```
+
+`update` does not search for the newest semver tag. Tags in the source map are
+explicit minimums; use `add` with a new spec to raise one. Branch refs can move
+when explicitly updated. A named update can also target a transitive dependency.
+Preserved locked packages can still be raised by new transitive minimums.
+
+`add` changes the root dependency map only after successful resolution. Commands
+stage all fetches and files before replacing the vendor tree and lock, verify
+the published result, and restore previous files on failure. A project guard
+prevents simultaneous dependency writers. Compilation and `verify` never fetch.
+
+The Node API exposes `managePackages`, `verifyPackages`, and a `PackageFetcher`
+interface. The default fetcher uses git (with its native credentials) for explicit
+git URLs. For known forges it resolves a full commit, downloads that commit's
+archive, checks archive paths and file types, and falls back to git if the
+endpoint is unavailable. Git and tar executables are required for fetching.
+Tests use local bare git repositories; forge URL mapping is tested without
+network calls.
+
+Relative dependencies work for local projects and local monorepo packages,
+relative to each declaring manifest. Relative dependencies inside remotely
+fetched packages are rejected explicitly: those packages must name git sources
+for their dependencies. Archives and package sources cannot contain symlinks.
+Local edits require `update`; `vendor` checks local files against the existing
+lock and never rewrites them. Tarball URL pins and vanity discovery remain
+undecided.
+
 ## Alternatives considered
 
 - **npm discovery and `package.json` metadata.** Rejected: Forma source packages
@@ -204,7 +243,7 @@ hosts continue to supply a table directly.
    specifiers, package preludes, session configuration, and verified Node
    consumption of `forma.json`, `forma.lock`, and `vendor/` or relative packages.
    No `package.json` discovery remains.
-2. **Dependency commands (planned).** `forma add <name> <spec>`,
+2. **Dependency commands (implemented).** `forma add <name> <spec>`,
    `forma update [name]`, `forma verify`, and lock-based re-materialization.
    A provider adapter fetches known forge archives or uses git; transitive
    resolution applies MVS. Compilation itself remains offline.
