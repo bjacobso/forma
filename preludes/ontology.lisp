@@ -1994,9 +1994,9 @@
           layout]}
     column
     ...)
-  "Declares a view and compiles its layout and reusable definitions through
-   the ViewSpec descriptor tree. Retains optional queries, state, input
-   types, and columns."
+  "Declares a view with query, state, input, and column configuration.
+   Requests layout and reusable-definition compilation through the host's
+   ViewSpec adapter."
   :examples
     [[(view People :layout (rows (heading "People") (text "Welcome")))]]
   :types

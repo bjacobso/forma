@@ -69,7 +69,9 @@ cannot rule out external consumers of the old constant-definition convention,
 so retain `:descriptor-name` as a deprecated compatibility path. No bundled
 component uses it after migration. New form documentation teaches only
 `:extensions`; removal of the compatibility path would require a separate
-breaking change. Old and new extensions retain the same merge ordering when
+breaking change. Standalone metadata keeps its older map-key coercion and
+last-value-wins behavior; direct form maps use the strict constant contract above.
+Old and new extensions retain the same merge ordering when
 the old metadata definition precedes its form.
 
 ## Named property maps without a compiler feature

@@ -11,7 +11,7 @@ export function metadataDescriptor(expression: SExpr): FormDescriptor | undefine
   if (extensions?._tag !== "Map") return;
   // Deprecated form attachment convention. Bundled forms use :extensions directly.
   const descriptorName = value.pairs.find(([key]) => name(key) === ":descriptor-name")?.[1];
-  return { name: descriptorName?._tag === "Str" ? descriptorName.value : name(expression.items[1])!, phase: "meta", identifiers: [], slots: [], bindings: {kind:"none"}, validation:{kind:"none"}, elaboration:{kind:"none"}, resultType:{kind:"none"}, extensions: descriptorConstant(extensions) as Record<string,DescriptorExtensionValue> };
+  return { name: descriptorName?._tag === "Str" ? descriptorName.value : name(expression.items[1])!, phase: "meta", identifiers: [], slots: [], bindings: {kind:"none"}, validation:{kind:"none"}, elaboration:{kind:"none"}, resultType:{kind:"none"}, extensions: descriptorConstant(extensions, true) as Record<string,DescriptorExtensionValue> };
 }
 
 function invalidConstant(expression: SExpr, message: string): never {
@@ -19,19 +19,23 @@ function invalidConstant(expression: SExpr, message: string): never {
 }
 
 /** Parse configuration as data, preserving a useful location on invalid syntax. */
-export function descriptorConstant(expression: SExpr): DescriptorExtensionValue {
+export function descriptorConstant(expression: SExpr, legacyKeys = false): DescriptorExtensionValue {
   if (expression._tag === "Str" || expression._tag === "Num" || expression._tag === "Bool") return expression.value;
   if (expression._tag === "Sym" && expression.name === "nil") return null;
   if (expression._tag === "Sym" && expression.name.startsWith(":")) return expression.name.slice(1);
-  if (expression._tag === "Vector") return expression.items.map(descriptorConstant);
+  if (expression._tag === "Vector") return expression.items.map(item => descriptorConstant(item, legacyKeys));
   if (expression._tag === "Map") {
     const names = new Set<string>();
     return Object.fromEntries(expression.pairs.map(([key, value]) => {
-      const field = key._tag === "Str" ? key.value : key._tag === "Sym" && key.name.startsWith(":") ? key.name.slice(1) : undefined;
+      // Standalone metadata predates form-local extensions: retain its key
+      // coercion and last-value-wins behavior for existing bootstrap consumers.
+      const field = legacyKeys
+        ? name(key)?.replace(/^:/, "") ?? (key._tag === "Str" ? key.value : "")
+        : key._tag === "Str" ? key.value : key._tag === "Sym" && key.name.startsWith(":") ? key.name.slice(1) : undefined;
       if (field === undefined) return invalidConstant(key, "Descriptor configuration map keys must be strings or keywords");
-      if (names.has(field)) return invalidConstant(key, `Duplicate descriptor configuration key ${field}`);
+      if (!legacyKeys && names.has(field)) return invalidConstant(key, `Duplicate descriptor configuration key ${field}`);
       names.add(field);
-      return [field, descriptorConstant(value)];
+      return [field, descriptorConstant(value, legacyKeys)];
     }));
   }
   return invalidConstant(expression, "Descriptor configuration must contain constant values");

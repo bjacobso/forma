@@ -76,9 +76,9 @@ describe("form-local extensions", () => {
   });
 
   test("keeps the deprecated attachment convention working", () => {
-    const legacy = '(define data.metadata \'{:descriptor-name "data" :extensions {:custom {:legacy true}}})\n';
+    const legacy = '(define data.metadata \'{:descriptor-name "data" :extensions {custom {legacy true label "first" :label "last"}}})\n';
     const loaded = bootstrapFromSources("", legacy + definition('{:other {:direct true}}'));
-    expect(loaded.descriptions.get("data")?.extensions).toMatchObject({ custom: { legacy: true }, other: { direct: true } });
+    expect(loaded.descriptions.get("data")?.extensions).toMatchObject({ custom: { legacy: true, label: "last" }, other: { direct: true } });
   });
 
   test("retains metadata and private map macros on imported forms", () => {

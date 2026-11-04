@@ -44,8 +44,8 @@
   (component "text" (named-map content visible bind) []))
 
 (form (rows {:keys [gap visible]} child ...)
-  "Builds a rows container with optional gap and visibility; hosted layouts
-   require children."
+  "Builds a rows container with optional gap and visibility. Its host
+   metadata requests children."
   :examples
     [[(view Example :layout (rows :gap 8 (text "First") (text "Second")))]]
   :extensions
@@ -61,8 +61,8 @@
   (component "rows" (named-map gap visible) child))
 
 (form (columns {:keys [gap visible]} child ...)
-  "Builds a columns container with optional gap and visibility; hosted
-   layouts require children."
+  "Builds a columns container with optional gap and visibility. Its host
+   metadata requests children."
   :examples
     [[(view Example :layout (columns :gap 12 (text "Left") (text "Right")))]]
   :extensions
@@ -553,8 +553,8 @@
   (component "split-pane" (named-map direction sizes visible) child))
 
 (form (for-each {:keys [empty-text visible bind]} child ...)
-  "Builds a repeating container with a required binding in hosted layouts
-   and optional empty text."
+  "Builds a repeating container with optional empty text. Its host metadata
+   requests a binding and children."
   :examples
     [[(view Example
         :state {:items []}

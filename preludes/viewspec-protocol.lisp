@@ -4,135 +4,23 @@
 ; Requires: Core types; ui.lisp and viewspec.lisp supply the associated component descriptors.
 ; Used by: Hosted layout compilation, protocol generation, and snapshot checks.
 ; -----------------------------------------------------------------------------
+; Adapter dispatch and descriptor namespaces read by descriptor-tree-metadata.ts.
+; meta-builtins.ts uses the registry for hosted compilation and validation.
+; Field names and expression/action conventions already live in their consumers.
 (define view-protocol-registry
-  {
-    :extensions
+  {:extensions
+    {:protocol/registry
       {
-        :protocol/registry
-          {
-            :compile-layout-tree-op "view/compile-layout-tree"
-            :hosted-dsl-name "viewspec"
-            :allow-default-component-layout-args true
-            :allow-hosted-dsl-name-layout-args true
-            :component-prop-name-normalization "camel-case"
-            :component-extension "view/component"
-            :component-protocol-extension "view/component-protocol"
-            :component-protocol-prop-name-normalization-field
-              "prop-name-normalization"
-            :component-protocol-type-field-field "type-field"
-            :component-protocol-props-field-field "props-field"
-            :component-protocol-events-field-field "events-field"
-            :component-protocol-children-field-field "children-field"
-            :component-protocol-bind-prop-field-field "bind-prop"
-            :component-protocol-required-bind-value-field-field
-              "required-bind-value"
-            :component-protocol-scalar-fallback-field-field
-              "scalar-fallback-field"
-            :component-protocol-scalar-fallback-kind-field-field
-              "scalar-fallback-kind"
-            :component-protocol-unknown-props-field "unknown-props"
-            :component-compile-field "compile"
-            :component-children-policy-field "children"
-            :component-parents-field "parents"
-            :component-allows-bind-field "allows-bind"
-            :component-json-slots-field "json-slots"
-            :component-node-slots-field "node-slots"
-            :component-expr-props-field "expr-props"
-            :component-unknown-props-field "unknown-props"
-            :component-required-children-field "required-children"
-            :component-required-bind-field "required-bind"
-            :component-field-overrides-field "fields"
-            :component-event-overrides-field "events"
-            :component-positional-prop-field "positional-prop"
-            :component-events-field "events"
-            :component-type-field-field "type-field"
-            :component-events-section-field "events-field"
-            :component-props-section-field "props-field"
-            :component-children-section-field "children-field"
-            :enum-extension "protocol/enum"
-            :action-form-field "form"
-            :action-discriminator-field-field "discriminator-field"
-            :action-tag-field "tag"
-            :action-callbacks-field "callbacks"
-            :action-positional-field "positional"
-            :action-keywords-field "keywords"
-            :action-extension "view/action"
-            :action-string-mechanism "string"
-            :action-expr-mechanism "expr"
-            :action-json-mechanism "json"
-            :action-literal-mechanism "literal"
-            :action-string-list-mechanism "string-list"
-            :expr-op-form-field "form"
-            :expr-op-lowering-field "lowering"
-            :expr-op-name-field "name"
-            :expr-op-operator-field "op"
-            :expr-op-extension "view/expr-op"
-            :expr-get-path-mechanism "get-path"
-            :expr-pipe-call-mechanism "pipe-call"
-            :expr-unary-mechanism "unary"
-            :expr-binary-mechanism "binary"
-            :expr-compare-nil-mechanism "compare-nil"
-            :expr-conditional-mechanism "conditional"
-            :expr-pipe-chain-mechanism "pipe-chain"
-            :expr-literal-object-default-key "value"
-            :expr-json-object-default-key "value"
-            :expr-var-default-source "value"
-            :expr-kind-field "kind"
-            :expr-literal-kind "literal"
-            :expr-literal-value-field "value"
-            :expr-var-kind "var"
-            :expr-var-source-field "source"
-            :expr-var-path-field "path"
-            :expr-unary-kind "unary"
-            :expr-unary-op-field "op"
-            :expr-unary-value-field "value"
-            :expr-binary-kind "binary"
-            :expr-binary-op-field "op"
-            :expr-binary-left-field "left"
-            :expr-binary-right-field "right"
-            :expr-conditional-kind "conditional"
-            :expr-conditional-condition-field "condition"
-            :expr-conditional-then-field "then"
-            :expr-conditional-else-field "else"
-            :expr-pipe-kind "pipe"
-            :expr-pipe-name-field "name"
-            :expr-pipe-value-field "value"
-            :expr-pipe-args-field "args"
-            :expr-compare-nil-operator "==="
-            :layout-alias-form-field "form"
-            :layout-alias-to-field "to"
-            :layout-alias-component-name-field "component-name"
-            :layout-alias-component-name-prop-field "component-name"
-            :layout-alias-extension "view/layout-alias"
-            :layout-alias-default-to "custom"
-            :expr-source-extension "view/expr-source"
-            :expr-source-sigils-field "sigils"
-            :expr-source-enum "ViewExprSource"
-            :action-field-kinds
-              {
-                :string "string"
-                :expr "expr"
-                :json "json"
-                :literal "literal"
-                :string-list "string-list"}
-            :expr-op-lowerings
-              {
-                :get-path "get-path"
-                :pipe-call "pipe-call"
-                :unary "unary"
-                :binary "binary"
-                :compare-nil "compare-nil"
-                :conditional "conditional"
-                :pipe-chain "pipe-chain"}
-            :slot-json-mechanism "json"
-            :slot-value-mechanism "value"
-            :slot-expr-mechanism "expr"
-            :slot-node-list-mechanism "node-list"
-            :slot-compile-kinds
-              {:json "json" :value "value" :expr "expr" :node-list "node-list"}
-            :default-form-slot-kind "node-list"
-            :default-value-slot-kind "value"
-            :default-expr-slot-kind "expr"}}})
+        ; Hosted adapter and descriptor namespaces.
+        :compile-layout-tree-op "view/compile-layout-tree"
+        :hosted-dsl-name "viewspec"
+        :component-extension "view/component"
+        :layout-alias-extension "view/layout-alias"
+        ; Call conventions exposed to registry consumers.
+        :allow-default-component-layout-args true
+        :allow-hosted-dsl-name-layout-args true
+        ; Target for host layout aliases without an explicit destination.
+        :layout-alias-default-to "custom"}}})
 
 (define view-component-protocol
   {
