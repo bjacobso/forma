@@ -15,8 +15,7 @@ export const entitySchemaSource = `(entity Department {:name String})
 `;
 
 /** Verbatim excerpt of `preludes/ontology.lisp`. */
-export const defineEntityDescriptor = `(form
-  (entity name fields {:keys [doc role id-pattern tier]})
+export const defineEntityDescriptor = `(form (entity name fields {:keys [doc role id-pattern tier]})
   "A named record of attributes."
   :types
     {

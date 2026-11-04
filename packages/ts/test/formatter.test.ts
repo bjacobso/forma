@@ -53,3 +53,27 @@ describe("core form layout", () => {
     expect(format(formatted, 1000)).toBe(format(source, 1000));
   });
 });
+
+describe("reader shorthand", () => {
+  test.each([
+    ["(quote value)", "'value\n"],
+    ["(quasiquote (if (unquote test) (do (unquote-splicing body)) nil))", "`(if ~test (do ~@body) nil)\n"],
+    ["(unquote (get value :field))", "~(get value :field)\n"],
+    ["(unquote-splicing values)", "~@values\n"],
+  ])("renders %s with reader prefixes", (source, expected) => {
+    expect(format(source)).toBe(expected);
+    expect(format(expected)).toBe(expected);
+  });
+
+  test.each(["constructor", "toString", "__proto__"])("keeps ordinary unary calls to %s", head => {
+    expect(format(`(${head} value)`)).toBe(`(${head} value)\n`);
+  });
+
+  test("retains nested quotation and comments when wrapped", () => {
+    const source = "(quasiquote (let [(unquote name) (unquote value)] ; expansion\n(if (unquote name) (unquote name) (quasiquote (fallback (unquote name))))))";
+    const formatted = format(source);
+    expect(formatted).toContain("; expansion");
+    expect(format(formatted)).toBe(formatted);
+    expect(format(formatted, 1000)).toBe(format(source, 1000));
+  });
+});

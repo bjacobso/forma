@@ -1,5 +1,4 @@
-(form
-  (entity name fields {:keys [doc role id-pattern tier]})
+(form (entity name fields {:keys [doc role id-pattern tier]})
   "A named record of attributes."
   :types
     {

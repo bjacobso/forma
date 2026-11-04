@@ -1,25 +1,22 @@
 ; viewspec.lisp
 ; -----------------------------------------------------------------------------
-; Hosted ViewSpec prelude for ontology-aware UI forms.
-;
-; Domain-neutral primitives live in ui.lisp. This file contains only forms and
-; aliases whose meaning depends on ontology/runtime concepts.
+; Purpose: Ontology-aware UI components and hosted layout aliases.
+; Requires: ui.lisp; ontology.lisp supplies enclosing view declarations.
+; Used by: Ontology view layouts and downstream host renderers.
 ; -----------------------------------------------------------------------------
-(define
-  entity-browser.metadata
-  (quote
-    {
-      :descriptor-name "entity-browser"
-      :extensions
-        {
-          :view/component
-            {
-              :allows-bind true
-              :compile {:expr-props ["visible" "bind"]}
-              :children "none"
-              :events {:on-row-click "onRowClick"}}}}))
-(form
-  (entity-browser {:keys [title visible bind]})
+(define entity-browser.metadata
+  '{
+     :descriptor-name "entity-browser"
+     :extensions
+       {
+         :view/component
+           {
+             :allows-bind true
+             :compile {:expr-props ["visible" "bind"]}
+             :children "none"
+             :events {:on-row-click "onRowClick"}}}})
+
+(form (entity-browser {:keys [title visible bind]})
   :types
     {
       :title (Option (Expr a))
@@ -27,23 +24,23 @@
       :bind (Option (Expr a))}
   :ir ComponentIR
   (component "entity-browser" {"title" title "visible" visible "bind" bind} []))
-(define
-  action-button.metadata
-  (quote
-    {
-      :descriptor-name "action-button"
-      :extensions
-        {
-          :view/component
-            {
-              :allows-bind false
-              :compile
-                {
-                  :expr-props ["visible"]
-                  :json-slots ["parameters"]
-                  :slot-types {:parameters {:kind "record" :value "unknown"}}}
-              :children "none"
-              :events {:on-click "onClick" :on-success "onSuccess"}}}}))
+
+(define action-button.metadata
+  '{
+     :descriptor-name "action-button"
+     :extensions
+       {
+         :view/component
+           {
+             :allows-bind false
+             :compile
+               {
+                 :expr-props ["visible"]
+                 :json-slots ["parameters"]
+                 :slot-types {:parameters {:kind "record" :value "unknown"}}}
+             :children "none"
+             :events {:on-click "onClick" :on-success "onSuccess"}}}})
+
 (form
   (action-button
     {:keys [label variant action-ref entity-id parameters visible]})
@@ -67,21 +64,20 @@
       "parameters" parameters
       "visible" visible}
     []))
-(define
-  create-entity-button.metadata
-  (quote
-    {
-      :descriptor-name "create-entity-button"
-      :extensions
-        {
-          :view/component
-            {
-              :allows-bind false
-              :compile {:expr-props ["visible"]}
-              :children "none"
-              :events {:on-click "onClick" :on-success "onSuccess"}}}}))
-(form
-  (create-entity-button {:keys [label entity-type variant visible]})
+
+(define create-entity-button.metadata
+  '{
+     :descriptor-name "create-entity-button"
+     :extensions
+       {
+         :view/component
+           {
+             :allows-bind false
+             :compile {:expr-props ["visible"]}
+             :children "none"
+             :events {:on-click "onClick" :on-success "onSuccess"}}}})
+
+(form (create-entity-button {:keys [label entity-type variant visible]})
   :types
     {
       :label (Option (Expr a))
@@ -98,19 +94,19 @@
       "variant" variant
       "visible" visible}
     []))
-(define
-  entity-picker.metadata
-  (quote
-    {
-      :descriptor-name "entity-picker"
-      :extensions
-        {
-          :view/component
-            {
-              :allows-bind false
-              :compile {:expr-props ["visible"]}
-              :children "none"
-              :events {:on-change "onChange"}}}}))
+
+(define entity-picker.metadata
+  '{
+     :descriptor-name "entity-picker"
+     :extensions
+       {
+         :view/component
+           {
+             :allows-bind false
+             :compile {:expr-props ["visible"]}
+             :children "none"
+             :events {:on-change "onChange"}}}})
+
 (form
   (entity-picker
     {:keys [name label description placeholder entity-type visible]})
@@ -133,180 +129,160 @@
       "entity-type" entity-type
       "visible" visible}
     []))
-(define
-  query-console.metadata
-  (quote
-    {
-      :descriptor-name "query-console"
-      :extensions
-        {
-          :view/component
-            {
-              :allows-bind false
-              :compile {:expr-props ["visible"]}
-              :children "none"}}}))
-(form
-  (query-console {:keys [title visible]})
+
+(define query-console.metadata
+  '{
+     :descriptor-name "query-console"
+     :extensions
+       {
+         :view/component
+           {
+             :allows-bind false
+             :compile {:expr-props ["visible"]}
+             :children "none"}}})
+
+(form (query-console {:keys [title visible]})
   :types {:title (Option (Expr a)) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "query-console" {"title" title "visible" visible} []))
-(define
-  view-ref.metadata
-  (quote
-    {
-      :descriptor-name "view-ref"
-      :extensions
-        {
-          :view/component
-            {
-              :allows-bind false
-              :compile
-                {
-                  :expr-props ["visible"]
-                  :json-slots ["input"]
-                  :slot-types {:input {:kind "record" :value "unknown"}}}
-              :children "none"
-              :positional-prop "name"}}}))
-(form
-  (view-ref name {:keys [input visible]})
+
+(define view-ref.metadata
+  '{
+     :descriptor-name "view-ref"
+     :extensions
+       {
+         :view/component
+           {
+             :allows-bind false
+             :compile
+               {
+                 :expr-props ["visible"]
+                 :json-slots ["input"]
+                 :slot-types {:input {:kind "record" :value "unknown"}}}
+             :children "none"
+             :positional-prop "name"}}})
+
+(form (view-ref name {:keys [input visible]})
   :types {:name String :input (Option Json) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "view-ref" {"name" name "input" input "visible" visible} []))
-(define
-  action-form
-  (quote
-    {:extensions {:view/layout-alias {:form "action-form" :to "action-button"}}}))
-(define
-  entity-table
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {:form "entity-table" :component-name "runtime/entity-table"}}}))
-(define
-  entity-detail
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {:form "entity-detail" :component-name "runtime/entity-detail"}}}))
-(define
-  entity-form
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {:form "entity-form" :component-name "runtime/entity-form"}}}))
-(define
-  task-queue
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {:form "task-queue" :component-name "runtime/task-queue"}}}))
-(define
-  task-detail
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {:form "task-detail" :component-name "runtime/task-detail"}}}))
-(define
-  task-summary
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {:form "task-summary" :component-name "runtime/task-summary"}}}))
-(define
-  task-status-editor
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {
-              :form "task-status-editor"
-              :component-name "runtime/task-status-editor"}}}))
-(define
-  task-document-links
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {
-              :form "task-document-links"
-              :component-name "runtime/task-document-links"}}}))
-(define
-  task-metadata
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {:form "task-metadata" :component-name "runtime/task-metadata"}}}))
-(define
-  violation-list
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {:form "violation-list" :component-name "runtime/violation-list"}}}))
-(define
-  violation-detail
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {
-              :form "violation-detail"
-              :component-name "runtime/violation-detail"}}}))
-(define
-  violation-summary
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {
-              :form "violation-summary"
-              :component-name "runtime/violation-summary"}}}))
-(define
-  violation-status-editor
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {
-              :form "violation-status-editor"
-              :component-name "runtime/violation-status-editor"}}}))
-(define
-  violation-related-records
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {
-              :form "violation-related-records"
-              :component-name "runtime/violation-related-records"}}}))
-(define
-  violation-timeline
-  (quote
-    {
-      :extensions
-        {
-          :view/layout-alias
-            {
-              :form "violation-timeline"
-              :component-name "runtime/violation-timeline"}}}))
+
+(define action-form
+  '{:extensions {:view/layout-alias {:form "action-form" :to "action-button"}}})
+
+(define entity-table
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {:form "entity-table" :component-name "runtime/entity-table"}}})
+
+(define entity-detail
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {:form "entity-detail" :component-name "runtime/entity-detail"}}})
+
+(define entity-form
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {:form "entity-form" :component-name "runtime/entity-form"}}})
+
+(define task-queue
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {:form "task-queue" :component-name "runtime/task-queue"}}})
+
+(define task-detail
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {:form "task-detail" :component-name "runtime/task-detail"}}})
+
+(define task-summary
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {:form "task-summary" :component-name "runtime/task-summary"}}})
+
+(define task-status-editor
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {
+             :form "task-status-editor"
+             :component-name "runtime/task-status-editor"}}})
+
+(define task-document-links
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {
+             :form "task-document-links"
+             :component-name "runtime/task-document-links"}}})
+
+(define task-metadata
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {:form "task-metadata" :component-name "runtime/task-metadata"}}})
+
+(define violation-list
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {:form "violation-list" :component-name "runtime/violation-list"}}})
+
+(define violation-detail
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {:form "violation-detail" :component-name "runtime/violation-detail"}}})
+
+(define violation-summary
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {
+             :form "violation-summary"
+             :component-name "runtime/violation-summary"}}})
+
+(define violation-status-editor
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {
+             :form "violation-status-editor"
+             :component-name "runtime/violation-status-editor"}}})
+
+(define violation-related-records
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {
+             :form "violation-related-records"
+             :component-name "runtime/violation-related-records"}}})
+
+(define violation-timeline
+  '{
+     :extensions
+       {
+         :view/layout-alias
+           {
+             :form "violation-timeline"
+             :component-name "runtime/violation-timeline"}}})

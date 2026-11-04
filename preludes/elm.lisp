@@ -1,8 +1,10 @@
-; Elm-style application vocabulary. The optional TypeScript linker lowers the
-; expression holes through the existing Effect checker; neither engine's core
-; knows about messages, commands, update, or Hiccup.
-; The view linker reads these closed vocabularies from the descriptor's types.
-; Attribute keywords derive the target HtmlBuilder method names.
+; elm.lisp
+; -----------------------------------------------------------------------------
+; Purpose: Elm-style message, command, update, view, and application declarations.
+; Requires: compiler.lisp; bootstrap separately from the ontology and HTTP API stacks.
+; Used by: The optional TypeScript Elm linker and its Foldkit prototype examples.
+; -----------------------------------------------------------------------------
+
 (type ElmElementTag (Union :div :span :button))
 (type ElmTextAttribute (Union :class))
 (type ElmMessageAttribute (Union :on-click))

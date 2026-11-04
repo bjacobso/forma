@@ -1,5 +1,10 @@
-; Effect 4 HttpApi vocabulary. Emit hooks return quasiquoted TypeScript
-; expressions; ts/* are target primitives, not HTTP-specific compiler cases.
+; http-api.lisp
+; -----------------------------------------------------------------------------
+; Purpose: Effect HttpApi declarations with quasiquoted TypeScript emit hooks.
+; Requires: compiler.lisp; bootstrap separately from the ontology's older api form.
+; Used by: The optional TypeScript HTTP linker and derived typed builder DSL.
+; -----------------------------------------------------------------------------
+
 (type HttpEndpointIR
   {:kind "HttpEndpoint" :name Symbol :method Keyword :path String
    :params (Option Type) :payload (Option Type) :success Type

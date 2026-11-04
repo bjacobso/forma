@@ -39,6 +39,18 @@ function numberSource(expr: SExpr & { _tag: "Num" }): string {
   return printFloat(expr.value);
 }
 
+/** The reader expands these prefixes to ordinary unary lists. */
+function readerPrefix(expr: SExpr): string | undefined {
+  if (expr._tag !== "List" || expr.items.length !== 2 || expr.items[0]?._tag !== "Sym") return undefined;
+  switch (expr.items[0].name) {
+    case "quote": return "'";
+    case "quasiquote": return "`";
+    case "unquote": return "~";
+    case "unquote-splicing": return "~@";
+    default: return undefined;
+  }
+}
+
 function flat(expr: SExpr): string {
   switch (expr._tag) {
     case "Num":
@@ -52,6 +64,8 @@ function flat(expr: SExpr): string {
     case "Error":
       return `<error: ${expr.message}>`;
     case "List": {
+      const prefix = readerPrefix(expr);
+      if (prefix) return prefix + flat(expr.items[1]!);
       const items = expr.items.map(flat).join(" ");
       return `(${items})`;
     }
@@ -123,6 +137,13 @@ function lines(
       const oneLine = flat(expr);
       if (indent + oneLine.length <= softWrap) {
         return [`${pad}${oneLine}`];
+      }
+
+      const prefix = readerPrefix(expr);
+      if (prefix) {
+        const body = [...lines(expr.items[1]!, indent + prefix.length, softWrap, indentSize, patterns)];
+        body[0] = pad + prefix + body[0]!.slice(indent + prefix.length);
+        return body;
       }
 
       const head = expr.items[0]!;

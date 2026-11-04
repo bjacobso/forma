@@ -1,12 +1,10 @@
-; Email automation rule vocabulary. The optional TypeScript linker lowers a
-; rule through the existing Effect checker; neither engine's core knows about
-; contacts, lanes, or sending.
-; Everything a rule can say is an ordinary typed definition in this file. The
-; linker adds the rule's lanes as EmailLane, passes the rule's contact to
-; predicates, and reads 6h or 2d as hours.
+; email.lisp
+; -----------------------------------------------------------------------------
+; Purpose: Typed email decisions, predicates, and automation-rule declarations.
+; Requires: compiler.lisp; the email linker supplies each rule's EmailLane vocabulary.
+; Used by: The optional TypeScript email linker; scheduling and rate enforcement belong to hosts.
+; -----------------------------------------------------------------------------
 
-; What a rule can see about one recipient. Hosts compute these fields.
-; :due-in maps a journey name to the hours until its next scheduled email.
 (type EmailContact
   {:email String :domain String :tags (List String) :due-in (Map String Int)})
 
