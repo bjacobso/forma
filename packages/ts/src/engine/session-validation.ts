@@ -113,16 +113,20 @@ export function validateSourceForms(
   return { diagnostics, bindings };
 }
 
+/** File modules scope their forms through imports; the module graph checks them, not session descriptors. */
+const isFileModule = (expressions: readonly SExpr[]): boolean =>
+  expressions.some(e => ["import", "export", "export-from"].includes(head(e) ?? ""));
+
 export function validateSourceLoad(session: LanguageSession, sourceId: string, expressions: readonly SExpr[], source: string): SourceValidation {
   try {
-    const hasMetadata = expressions.some(e => ["type", "class", "error", "form", "__form-descriptor"].includes(head(e) ?? ""));
+    const hasMetadata = !isFileModule(expressions) && expressions.some(e => ["type", "class", "error", "form", "__form-descriptor"].includes(head(e) ?? ""));
     const prelude = hasMetadata ? bootstrapFromSources("", "", ...session.orderedSources("prelude").map(s => s.text), source)
       : session.scope.prelude ?? bootstrapFromSources("", "");
     const result = validateSourceForms(sourceId, expressions, prelude);
     const diagnostics = [...result.diagnostics];
     for (const [owner, syntax] of session.parsedSources) {
       if (owner === sourceId) continue;
-      const otherPrelude = syntax.some(e => head(e) === "form" || head(e) === "__form-descriptor")
+      const otherPrelude = !isFileModule(syntax) && syntax.some(e => head(e) === "form" || head(e) === "__form-descriptor")
         ? bootstrapFromSources("", "", ...session.orderedSources("prelude").map(s => s.text), session.sourceText(owner) ?? "") : prelude;
       const other = validateSourceForms(owner, syntax, otherPrelude).bindings;
       for (const binding of result.bindings) {

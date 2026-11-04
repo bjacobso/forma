@@ -2,7 +2,7 @@
 /** Node transports; compiler and session behavior stays in FormaHost. */
 import { readFileSync } from "node:fs";
 import { createInterface } from "node:readline";
-import { readModuleGraph } from "@formalang/ts/node";
+import { readModuleGraph, readNodePackages } from "@formalang/ts/node";
 import { ModuleError, moduleMechanicsDeclarations } from "@formalang/ts/modules";
 import { JsonAbi, type JsonResponse } from "./json-abi.js";
 
@@ -11,10 +11,12 @@ const print = (response: JsonResponse) => process.stdout.write(JSON.stringify(re
 const [command, ...args] = process.argv.slice(2);
 async function file(operation: string, path: string): Promise<JsonResponse> {
   const graph = readModuleGraph(path);
+  const packages = readNodePackages(path);
   const opened = await abi.handleJson('{"op":"openSession"}');
   if (!opened.ok) return opened;
   const { sessionId } = opened.value as {sessionId:string};
   try {
+    if (packages) await abi.host.configureSession({ sessionId, packages: packages.table });
     const loaded = await abi.host.loadSourceBundle({ sessionId, sources: graph.modules.map(m => ({ kind: "source", sourceId: m.id, source: m.source })) });
     if (loaded.diagnostics.some(d => d.severity === "error")) return {ok:false, diagnostics:loaded.diagnostics};
     const request = { sessionId, sourceId: graph.entry };

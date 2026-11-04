@@ -297,6 +297,7 @@ export class TsLanguageHost implements LanguageHost {
   async configureSession(request: ConfigureSessionRequest): Promise<ConfigureSessionResult> {
     const session = this.#requireSession(request.sessionId);
     if (request.projects) session.language.projects = request.projects;
+    if (request.packages) session.language.packages = request.packages;
     if (request.variables) {
       session.language.configurationEnv = session.language.configurationEnv.extend(
         variablesToBindings(request.variables),
