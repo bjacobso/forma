@@ -42,10 +42,15 @@ describe("transactional session loading", () => {
     const { host, sessionId } = await session();
     expect((await host.loadSource({ sessionId, sourceId: "file", source: "(+ future 1)" })).diagnostics).toEqual([]);
     const before = await host.sessionInfo({ sessionId });
-    const bad = await host.loadSource({ sessionId, sourceId: "file", source: "(def x 2)" });
-    expect(bad.diagnostics).toMatchObject([{ code: "surface/invalid-form", span: { sourceId: "file", startOffset: 0, endOffset: 9 } }]);
+    const bad = await host.loadSource({ sessionId, sourceId: "file", source: "(let [{:k v} 1 y] v)" });
+    expect(bad.diagnostics).toMatchObject([{ code: "surface/invalid-form", span: { sourceId: "file", startOffset: 0, endOffset: 20 } }]);
     expect(await host.sessionInfo({ sessionId })).toEqual(before);
     expect((await host.loadSource({ sessionId, sourceId: "quote", source: "'(def x 2)" })).diagnostics).toEqual([]);
+    // A macro in another source may claim a retired spelling, so it is checked by analysis, not on load.
+    expect((await host.loadSource({ sessionId, sourceId: "retired", source: "(def x 2)" })).diagnostics).toEqual([]);
+    expect((await host.typecheck({ sessionId, sourceId: "retired" })).diagnostics).toMatchObject([
+      { code: "surface/invalid-form", message: expect.stringContaining("Use define instead of def"), span: { sourceId: "retired", startOffset: 0, endOffset: 9 } },
+    ]);
   });
 
   it("validates module declarations without resolving forward imports", async () => {

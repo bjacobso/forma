@@ -247,6 +247,45 @@ describe("compile-time module conformance", () => {
         },
       );
     });
+    test(`${host.constructor.name}: Clojure spellings are an ordinary library`, async () => {
+      const read = (name: string) =>
+        readFileSync(resolve(directory, `../../preludes/${name}`), "utf8");
+      await withSources(
+        host,
+        [
+          { sourceId: "kernel.forma", source: read("kernel.forma") },
+          { sourceId: "clojure.forma", source: read("clojure.forma") },
+          {
+            sourceId: "main.forma",
+            source: [
+              '(import "./clojure.forma" [def defn if-let if-not ->])',
+              "(export answer)",
+              "(def base 40)",
+              '(defn add "Add two." [a b] (+ a b))',
+              "(defn pick [o] (if-let [v o] v 0))",
+              "(define answer (if-not false (-> base (add (pick (Some 2)))) 0))",
+            ].join("\n"),
+          },
+        ],
+        async (sessionId) => {
+          const result = await host.moduleGraph({
+            sessionId,
+            sourceId: "main.forma",
+          });
+          expect(result.diagnostics).toEqual([]);
+          expect(result.interfaces.at(-1)?.exports[0]?.data?.value).toBe(42);
+          const unclaimed = await host.moduleGraph({
+            sessionId,
+            sourceId: "unclaimed.forma",
+            source: "(define g 1) (defn f [x] x)",
+          });
+          expect(unclaimed.diagnostics[0]).toMatchObject({
+            code: "surface/invalid-form",
+            message: expect.stringContaining("Use define instead of defn"),
+          });
+        },
+      );
+    });
     test(`${host.constructor.name}: reference checks compare declaration classifications`, async () => {
       const source =
         '(import "./salesforce.forma" [picklist-of selected-price]) (picklist-of Plan []) (selected-price Bad Plan)';
