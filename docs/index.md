@@ -2,7 +2,7 @@
 layout: home
 title: Forma
 titleTemplate: false
-description: Forma is a typed Lisp for domain languages. Preludes define the keywords as library code; the compiler checks programs that use them and emits typed artifacts.
+description: Forma is a programmable type system for Lisp. Preludes define typed forms that take part in checking; the compiler checks the programs that use them and emits typed artifacts.
 sidebar: false
 aside: false
 pageClass: forma-index
@@ -12,10 +12,10 @@ pageClass: forma-index
 
 <header class="fh-hero" aria-labelledby="hero-title">
 <div class="fh-hero__copy">
-<p class="fh-eyebrow">Forma <span>· typed Lisp · pre-alpha</span></p>
-<h1 id="hero-title">A typed Lisp for domain languages.</h1>
-<p class="fh-sub">Define the keywords. Check the programs. Emit the contracts.</p>
-<p class="fh-lead">Forma is a small language with a checked core. A <strong>prelude</strong> teaches it new keywords like <code>entity</code>, <code>endpoint</code>, or <code>rule</code>. Programs written in them get Hindley–Milner types, effect sets, errors at the line you wrote, and plain Effect TypeScript.</p>
+<p class="fh-eyebrow">Forma <span>· programmable types for Lisp · pre-alpha</span></p>
+<h1 id="hero-title">A programmable type system for Lisp.</h1>
+<p class="fh-sub">Define what a well-typed program means for your domain.</p>
+<p class="fh-lead">Forma owns types and elaboration, not syntax or runtime. A <strong>prelude</strong> adds forms like <code>entity</code>, <code>endpoint</code>, or <code>rule</code> that take part in typechecking: they check their arguments against expected types, bring names into scope, and report errors at the line you wrote. Checked programs get Hindley–Milner types, effect sets, typed IR, and plain Effect TypeScript.</p>
 <div class="fh-actions">
 <a class="fh-button fh-button--primary" href="/language">Read the guide</a>
 <a class="fh-button" href="#live">Try it in your browser ↓</a>
@@ -33,9 +33,9 @@ pageClass: forma-index
 </header>
 
 <section class="fh-statement" aria-labelledby="problem-heading">
-<p class="fh-statement__big">An entity is a JSON Schema, an OpenAPI path, a TypeScript interface, and a template nobody owns.</p>
-<p>Every copy drifts, and when something breaks, the error points at generated code instead of the decision someone made. A builder DSL in TypeScript stops the drift, but the model becomes a program you can't review, sandbox, or port. An external DSL needs its own parser, checker, and tooling.</p>
-<h2 id="problem-heading" class="fh-statement__question">What if the domain language were just a library?</h2>
+<p class="fh-statement__big">A macro adds a keyword in an afternoon. It doesn't add a typing rule.</p>
+<p>Lisp makes new syntax cheap and checking expensive. A bad call to a macro fails inside its expansion, at runtime, or in generated code nobody reads. Typed Lisps check programs against rules their authors chose. A domain with rules of its own (every workflow step gets the input it needs, a query sees only its entity's fields, a rule never touches a forbidden capability) still needs its own parser, checker, and tooling.</p>
+<h2 id="problem-heading" class="fh-statement__question">What if the typing rules were a library too?</h2>
 </section>
 
 <section id="live" class="fh-row" aria-labelledby="live-heading">
@@ -57,11 +57,11 @@ pageClass: forma-index
 <section id="how-it-works" class="fh-row" aria-labelledby="library-heading">
 <div class="fh-row__head">
 <p class="fh-row__num">01</p>
-<h2 id="library-heading">Keywords are library code.</h2>
+<h2 id="library-heading">Typing rules are library code.</h2>
 <span class="fh-status is-stored">Stored output in the browser</span>
 </div>
 <div class="fh-row__body">
-<p><code>entity</code> is not built into the compiler. A prelude describes it with <code>form</code>: its slots, the name it binds, its result type, and the hook that constructs its output.</p>
+<p><code>entity</code> is not built into the compiler. A prelude describes it with <code>form</code>: the type of each slot, the name it declares, the names its predicates can see, and the typed output it builds.</p>
 <div class="fh-window">
 <div class="fh-window__bar"><span>preludes/ontology.lisp</span><span>the definition</span></div>
 
@@ -72,7 +72,7 @@ pageClass: forma-index
 <<< @/snippets/home/entities.lisp
 
 </div>
-<p>The elaboration hooks resolve <code>Employee</code>, check that <code>:where</code> is boolean, and project the selected fields into typed IR. <a href="/playground/demo/entities" target="_self">Open this example →</a></p>
+<p>The form resolves <code>Employee</code>, checks <code>:where</code> as a <code>Bool</code> with the entity's fields in scope, and projects the selected fields into typed IR. The projection is checked against the form's declared IR type, so a prelude can't emit a payload its contract doesn't describe. <a href="/playground/demo/entities" target="_self">Open this example →</a></p>
 <p class="fh-row__after">Swap the prelude and you have a different language on the same checked core.</p>
 </div>
 </section>
@@ -146,6 +146,43 @@ pageClass: forma-index
 </div>
 </section>
 
+<section id="lisps" class="fh-row" aria-labelledby="lisps-heading">
+<div class="fh-row__head">
+<p class="fh-row__num">05</p>
+<h2 id="lisps-heading">One kernel. Many Lisps.</h2>
+<span class="fh-status">Direction · RFC 0021 and 0022</span>
+</div>
+<div class="fh-row__body">
+<p>Types, effects, and contracts don't depend on spelling. The plan is to make every surface a library, Forma's own included, and to let a Lisp dialect plug into the same checker through a language adapter. Elaborators may propose terms and types; a small trusted kernel decides what is well typed.</p>
+<p>The first step ships today: Clojure spellings are an ordinary macro library.</p>
+<div class="fh-window">
+<div class="fh-window__bar"><span>main.forma</span><span>spellings from preludes/clojure.forma</span></div>
+
+```lisp
+(import "./clojure.forma" [def defn if-let if-not ->])
+(export answer)
+
+(def base 40)
+(defn add "Add two." [a b] (+ a b))
+(defn pick [o] (if-let [v o] v 0))
+
+(define answer
+  (if-not false (-> base (add (pick (Some 2)))) 0))
+```
+
+</div>
+<p>This changes spelling only: <code>if</code> still takes a <code>Bool</code>, and <code>nil</code> is not <code>None</code>. The rest is proposed:</p>
+<ul class="fh-checklist" aria-label="What is shipped and what is proposed for multiple Lisps">
+<li><span><strong>Typed forms in preludes</strong>Slot types, scope, checks, and IR checked against a declared type.</span><em>engine</em></li>
+<li><span><strong>Clojure spellings as a library</strong><code>defn</code>, <code>if-let</code>, and friends expand to core Forma.</span><em>preludes</em></li>
+<li class="is-planned"><span><strong>A trusted kernel</strong>Re-checks every elaborated program, so a buggy prelude can't make an ill-typed program pass.</span><em><a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md">RFC 0022</a></em></li>
+<li class="is-planned"><span><strong>Bidirectional elaborators</strong>Domain rules that receive expected types and emit checked terms.</span><em><a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md">RFC 0022</a></em></li>
+<li class="is-planned"><span><strong>Languages as libraries</strong>Forma's own surface first, then a Clojure surface over Forma semantics.</span><em><a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md">RFC 0021</a></em></li>
+<li class="is-planned"><span><strong>Existing Lisp code</strong>Declaration files and a gradual boundary for Clojure, then a second dialect on the same kernel.</span><em><a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md">RFC 0022</a></em></li>
+</ul>
+</div>
+</section>
+
 <section id="preludes" class="fh-section" aria-labelledby="preludes-heading">
 <div class="fh-section__split">
 <div>
@@ -200,17 +237,18 @@ pageClass: forma-index
 <div class="fh-section__head">
 <p class="fh-label">Alternatives</p>
 <h2 id="compare-heading">Where Forma fits.</h2>
-<p>Each common approach covers some of this well. Forma's bet is covering all of it in one small language.</p>
+<p>Each approach covers part of this well. Forma's bet is that typing rules belong in libraries, checked by one small core.</p>
 </div>
 <div class="fh-table">
 
-| | New domain forms | Checking | Output | Trade-off |
+| | Who writes the typing rules | Checking | Output | Trade-off |
 | --- | --- | --- | --- | --- |
-| **YAML/JSON + a generator** | No, the format is fixed | Schema validation | Whatever the templates emit | Errors surface in generated code |
-| **Config languages** (CUE, Pkl, Dhall, Nickel) | Functions and schemas, not new forms | Strong, for data | JSON, YAML, and other data | No effect or capability tracking |
-| **Racket `#lang`** | Yes, full language construction | Whatever you build; Typed Racket is separate | Programs on the Racket runtime | Hard to embed in a TypeScript or browser stack |
-| **TypeScript builder DSLs** | Functions and objects | TypeScript's types | Runtime objects in one host | The DSL is the host program, so it's hard to review, sandbox, or port |
-| **Forma** | `form` descriptors in preludes | Hindley–Milner inference, descriptor validation, effect sets | Typed IR (`application/vnd.forma.ir+json`), Effect TypeScript | Pre-alpha, with one generated target so far |
+| **Typed Clojure, Typed Racket, Coalton** | The type system's authors | Static types for Clojure, Racket, or Common Lisp code | Programs on the host runtime | A domain language gets the host's rules, not its own |
+| **Turnstile** | Language authors, as Racket macros | Whatever the rules say; the rules are trusted | Racket programs | Racket only |
+| **Racket `#lang`** | Language authors | Whatever you build | Programs on the Racket runtime | Hard to embed in a TypeScript or browser stack |
+| **Schemas** (Malli, JSON Schema) | Schema authors | Data, at runtime | Validators | Checks values, not the programs that build them |
+| **Config languages** (CUE, Pkl, Dhall, Nickel) | The language's authors | Strong, for data | JSON, YAML, and other data | No new forms, no effect or capability tracking |
+| **Forma** | Prelude authors, as typed forms | Hindley–Milner inference, form checks, effect sets | Typed IR (`application/vnd.forma.ir+json`), Effect TypeScript | Pre-alpha, one Lisp surface and one generated target so far |
 
 </div>
 </section>
@@ -240,9 +278,10 @@ pageClass: forma-index
 <div><dt>There is no published CLI.</dt><dd>You call the engine from your own build script. A consumer-prelude SDK is next on the <a href="/roadmap">roadmap</a>.</dd></div>
 <div><dt>Some browser output is stored.</dt><dd>The playground does not run ontology elaboration yet; those examples show a stored canonical IR golden, originally captured from the retired OCaml engine.</dd></div>
 <div><dt>One generated target.</dt><dd>Effect TypeScript and Effect Schema are generated today. Rust and OCaml generation are research directions, not built.</dd></div>
+<div><dt>One Lisp surface.</dt><dd>Forma's own syntax is the only surface; Clojure spellings are macros over it. The trusted kernel, elaborator API, and dialect adapters are proposals in <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md">RFC 0021</a> and <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md">RFC 0022</a>.</dd></div>
 </dl>
 
-<pre class="fh-ascii fh-ascii--card" v-pre aria-label="Working today: lossless reader and formatter, macros, Hindley–Milner and effect inference, canonical IR, Effect TypeScript and Schema generation, the browser playground and language server, and conformance goldens. Not yet: a published forma CLI, a stable host ABI, a consumer-prelude SDK, and Rust or OCaml code generation.">working today
+<pre class="fh-ascii fh-ascii--card" v-pre aria-label="Working today: lossless reader and formatter, macros, Hindley–Milner and effect inference, canonical IR, Effect TypeScript and Schema generation, the browser playground and language server, and conformance goldens. Not yet: a published forma CLI, a stable host ABI, a consumer-prelude SDK, a trusted kernel and elaborator API, Lisp dialect adapters, and Rust or OCaml code generation.">working today
 <span class="tone-ok">✓</span> reader · formatter · macros
 <span class="tone-ok">✓</span> HM inference · effect inference
 <span class="tone-ok">✓</span> canonical IR
@@ -254,6 +293,8 @@ not yet
 <span class="tone-muted">○</span> published CLI
 <span class="tone-muted">○</span> stable host ABI
 <span class="tone-muted">○</span> consumer-prelude SDK
+<span class="tone-muted">○</span> trusted kernel · elaborators
+<span class="tone-muted">○</span> Lisp dialect adapters
 <span class="tone-muted">○</span> Rust / OCaml codegen</pre>
 
 </div>
@@ -262,7 +303,7 @@ not yet
 <h3>A good fit</h3>
 <ul>
 <li>Your schemas, endpoints, workflows, or policies are spread across files that drift.</li>
-<li>You're building a domain language and want typed extensions, real diagnostics, and inspectable passes instead of a hand-rolled parser.</li>
+<li>You're building a domain language and want its rules checked at compile time, with real diagnostics and inspectable passes, instead of a hand-rolled parser and checker.</li>
 <li>Reviewers need to see what authored code can fail with and what it can touch.</li>
 </ul>
 </div>
@@ -270,6 +311,7 @@ not yet
 <h3>Not a fit yet</h3>
 <ul>
 <li>General application programming. Forma isn't trying to replace Clojure, OCaml, or TypeScript.</li>
+<li>Typechecking an existing Clojure, Racket, or Common Lisp codebase. That is a later, proposed stage.</li>
 <li>Numeric or throughput-critical code.</li>
 <li>Teams that need stable APIs, wire formats, or a CLI today.</li>
 </ul>
@@ -290,7 +332,7 @@ not yet
 <li><a class="no-icon" href="https://schematics.run"><strong>Schematics ↗</strong><em>Let your schemas tell you more.</em><span>Small Effect libraries that pull an app's hidden program out into data.</span></a></li>
 <li><a class="no-icon" href="https://foldworks.dev"><strong>Foldworks ↗</strong><em>Give the machinery a face.</em><span>Components and application primitives for Foldkit.</span></a></li>
 <li><a class="no-icon" href="https://github.com/bjacobso/runfold"><strong>Runfold ↗</strong><em>Work that keeps unfolding.</em><span>Typed programs as data, for durable and inspectable work.</span></a></li>
-<li class="fh-family__here"><div><strong>Forma</strong><em>Little language. Big ideas.</em><span>You are here: a typed Lisp for building domain-specific languages.</span></div></li>
+<li class="fh-family__here"><div><strong>Forma</strong><em>Little language. Big ideas.</em><span>You are here: a programmable type system for Lisp.</span></div></li>
 </ul>
 <a class="fh-family__cta no-icon" href="https://worldvm.com/">Meet the whole family at worldvm.com ↗</a>
 </section>
