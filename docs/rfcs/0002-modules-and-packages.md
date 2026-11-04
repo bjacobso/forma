@@ -524,8 +524,9 @@ configuration remains an open design item.
 ## Packages and tooling
 
 [RFC 0018](./0018-packages.md) supersedes this section's manifest and lockfile:
-packages use the `forma` field of `package.json`, and the host's package manager
-installs and locks them. The original sketch follows.
+packages use `forma.json`, provider-independent git source maps, committed
+`vendor/` sources, and a verified `forma.lock`. Dependency commands are planned
+in RFC 0018; the original project-command sketch follows.
 
 A `forma.toml` manifest identifies the package, source roots, dependencies, and
 entry points. A lockfile records resolved package versions and integrity data.

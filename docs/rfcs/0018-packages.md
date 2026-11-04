@@ -2,78 +2,114 @@
 
 | | |
 | --- | --- |
-| Status | Accepted; stage 1 implemented |
+| Status | Accepted; offline consumption implemented |
 | Created | 2026-11-01 |
-| Scope | Package specifiers, the `forma` manifest field, exports, declared dependencies, package module identity, package preludes, version conflicts, host package tables, the Node adapter |
-| Direction | A package is a directory of file modules with a public export map. The host's package manager installs and locks packages; Forma resolves bare specifiers through a host-supplied table and gives package modules location-independent identities |
+| Scope | Provider-independent sources, forma.json, MVS, vendoring, lock verification, exports, identities, host package tables |
+| Direction | Names identify packages; source maps locate them. Commit reviewed dependencies in vendor/ and compile offline |
 
 ## Summary
 
-`(import "@acme/flows/ir" [FlowIR])` imports from the `@acme/flows` package.
-A package is an npm-style package whose `package.json` has a `forma` field:
+`(import "@acme/flows/ir" [FlowIR])` imports a declared package export.
+Forma dependencies use their own `forma.json`, without npm metadata:
 
 ```json
 {
-  "name": "@acme/flows",
-  "version": "1.2.0",
-  "dependencies": { "@acme/ir": "^1.0.0" },
-  "forma": {
-    "exports": { ".": "./src/index.forma", "./ir": "./src/ir.forma" },
-    "prelude": "./src/prelude.forma"
+  "name": "@me/app",
+  "version": "0.1.0",
+  "exports": { ".": "./src/index.forma" },
+  "prelude": "./src/prelude.forma",
+  "dependencies": {
+    "@acme/flows": "github.com/acme/flows@v2.1.0",
+    "@acme/ir": "gitlab.com/acme/ir@v1.0.0",
+    "@corp/rules": "git+ssh://git.corp.example/rules.git@3f9c2e1",
+    "@me/shared": "../shared"
   }
 }
 ```
 
-Only the subpaths in `forma.exports` can be imported from outside the package.
-A module may import a package only when its own package declares it as a
-dependency. Package modules have identities of the form
-`pkg:@acme/flows/src/ir.forma`, independent of where the package is installed,
-so binding identities, generated names, and contract identities are the same on
-every machine. A graph contains at most one version of each package.
-
-The compiler still never reads the filesystem. A host supplies a package table,
-plain data that browsers and in-memory bundles can construct, and the Node
-adapter builds one from `package.json` files.
-
-This RFC replaces the `forma.toml` and lockfile sketch in
-[RFC 0002](./0002-modules-and-packages.md#packages-and-tooling).
-
-## Motivation
-
-[RFC 0002](./0002-modules-and-packages.md) implemented relative file modules
-and compile-time libraries; bare specifiers fail with `module/package-stage`.
-That blocks the main reason to have modules at all: sharing vocabulary between
-projects. A downstream ontology library vendors `compiler.lisp` and `ontology.lisp`
-and edits its copy because there is no way to import them. A form can now produce an `:ir`
-type another module exports, but only through relative paths inside one tree,
-so two libraries cannot target a type that a third library owns.
-
-Identity is the other half. Module IDs are canonical file paths today. A type
-installed under `/home/a/node_modules/x` and `/srv/b/node_modules/x` has two
-identities, and every name and `contractId` derived from it differs between
-machines.
+Imports contain names, never hosting locations. Dependencies are vendored and
+committed with the consumer. Package module IDs remain `pkg:<name>/<path>`, so
+binding identities and `contractId`s do not depend on a provider, checkout path,
+or version. The compiler receives a plain package table and never accesses the
+filesystem or network. This replaces the original package-manager direction and
+[RFC 0002's sketch](./0002-modules-and-packages.md#packages-and-tooling).
 
 ## Decisions
 
-### Distribution belongs to the host's package manager
+### Manifest and identity
 
-Forma packages are npm packages. npm, pnpm, or yarn install them, resolve version
-ranges, and record integrity in their lockfile. Forma defines no registry,
-lockfile, or version solver. Consumers of Forma already depend on npm packages:
-`@formalang/ts`, downstream libraries, and generated Effect TypeScript all live there.
+`forma.json` requires `name` and `exports`, with optional `version`, `prelude`,
+and `dependencies`. Exports map `"."` or `"./subpath"` to a `.forma` file inside
+the package. A prelude imports exports into the package's own modules, using
+project-prelude rules. Dependencies map declared names to source specs.
 
-### The manifest is the `forma` field of `package.json`
+A dependency key **must equal** the fetched package's own `name`; mismatches
+are `module/package-name`. Coexisting major versions require different names
+such as `@acme/flows` and `@acme/flows2`, with matching names in their respective
+manifests. An arbitrary consumer alias cannot bypass this identity rule. There
+are no Go-style `/v2` import paths.
 
-- `exports` maps `"."` or `"./subpath"` to a `.forma` file inside the package,
-  written as a relative path. It is required; a package with no exports has
-  nothing to import.
-- `prelude` (optional) names a file module whose exports every module of the
-  package imports automatically, using the existing project prelude rules.
-  It applies to the package's own modules, not to its consumers.
+### Provider-independent distribution
 
-A package's Forma dependencies are the names in its `dependencies`,
-`peerDependencies`, and `optionalDependencies` whose own `package.json` has a
-`forma` field. For the root package, `devDependencies` count too.
+| Source spec | Transport |
+| --- | --- |
+| `github.com/owner/repo@ref` | Forge tarball endpoint, with git fallback |
+| `gitlab.com/owner/repo@ref` | Forge tarball endpoint, with git fallback |
+| `codeberg.org/owner/repo@ref` | Forge tarball endpoint, with git fallback |
+| `bitbucket.org/owner/repo@ref` | Forge tarball endpoint, with git fallback |
+| `git+https://…@ref`, `git+ssh://…@ref`, `git+file://…@ref` | git subprocess; git's credentials apply |
+| `./directory`, `../directory` | Local directory, relative to the declaring manifest |
+
+The last `@` separates location from ref, including SSH URLs with a username.
+Refs are exact tags, branches, or commits; semver ranges are not supported.
+No registry, proxy, or checksum database is required. Vendored source is
+committed and reviewed. Tarball URL pins and vanity discovery remain undecided.
+
+### Minimal Version Selection
+
+Each graph contains one version per declared name. Semver git tags are minimum
+requirements: select the highest minimum encountered in the transitive graph,
+including prerelease ordering. This is deterministic MVS, without a solver or
+backtracking to find a compatible release. Transitive requirements encountered
+at lower versions contribute to selection. Different source locations for one
+name conflict. Non-semver refs must agree exactly, including when mixed with
+semver requirements; conflicts report `module/package-version-conflict`.
+Local requirements must identify the same directory.
+
+### Vendoring and the lock
+
+Commit `vendor/<name>/…`, including each package's `forma.json` and all `.forma`
+files, even unimported files. Compilation reads only these files and declared
+relative dependencies. Symlinks are rejected. A local dependency stays in its
+relative directory; its source files are also hashed so edits require a lock
+refresh before compilation.
+
+`forma.lock` is sorted JSON with this versioned shape:
+
+```json
+{
+  "version": 1,
+  "manifest": "<SHA-256 of root forma.json UTF-8 text>",
+  "packages": {
+    "@acme/flows": {
+      "source": "github.com/acme/flows@v2.1.0",
+      "resolved": "v2.1.0",
+      "commit": "<full git commit>",
+      "files": { "forma.json": "<SHA-256>", "src/index.forma": "<SHA-256>" }
+    }
+  }
+}
+```
+
+The selected source spec, resolved ref, commit, and every vendored file hash are
+reviewable. Relative packages use `resolved: "local"` and `commit: null`.
+The root manifest hash detects any manifest edit, including whitespace.
+Verification checks the manifest hash, full dependency closure, identities,
+requirements, and missing, extra, or edited vendor files. Lock entries not
+reachable from the selected manifests are stale. `forma file` reports
+`module/package-integrity` or `module/package-stale` diagnostics before resolving
+rather than silently accepting edits. `forma verify` is the planned explicit
+check command; no compilation command downloads dependencies.
 
 ### Specifiers
 
@@ -102,7 +138,7 @@ come from the host's table before resolution starts.
 
 ### Identity
 
-A module inside an installed package has the ID `pkg:<name>/<path>`, where
+A module inside a dependency package has the ID `pkg:<name>/<path>`, where
 `<path>` is its file path relative to the package root. The version is not part
 of the ID, so a release that leaves a definition unchanged leaves its binding
 identities and `contractId`s unchanged. Because the ID omits the version, a graph
@@ -140,39 +176,44 @@ does not change. In-memory hosts store package files under their `pkg:` IDs;
 `sourceModuleResolver` then works unchanged. Sessions accept the table through
 `configureSession({ packages })`.
 
-The Node adapter (`@formalang/ts/node`) finds the nearest `package.json` above
-the entry file, follows its Forma dependencies with Node's `node_modules` lookup,
-and builds the table before resolving the graph. Reaching a second directory for
-a package name with a different version is `module/package-version-conflict`.
+The Node adapter (`@formalang/ts/node`) finds the nearest `forma.json` above
+an entry, verifies its lock and dependency closure, and reads only `vendor/`
+and declared relative directories. It never fetches while compiling. Browser
+hosts continue to supply a table directly.
 
 ## Alternatives considered
 
-- **`forma.toml` and a Forma lockfile** ([RFC 0002](./0002-modules-and-packages.md#packages-and-tooling)).
-  Forma would need its own version solver, registry protocol, and integrity
-  format, and every consumer would keep two manifests. Rejected while every
-  consumer already uses npm.
-- **Version in the module ID, multiple versions per graph.** Matches npm's
-  nested installs, but every release changes every identity and `contractId`,
-  and two copies of one nominal type can meet in one program. Rejected; a host
-  can still bundle two versions under different package names when needed.
-- **Unrestricted imports of anything installed.** Simpler, but a package could
-  depend on whatever its consumer happened to install. Rejected; declared
-  dependencies are what make a package reusable.
-- **Filesystem paths as package IDs.** Already the case for relative modules;
-  rejected for packages because identity must not depend on install location.
+- **npm discovery and `package.json` metadata.** Rejected: Forma source packages
+  should work without a JavaScript ecosystem or registry, and vendored changes
+  should be visible in the consumer's code review. The JavaScript implementation
+  is still distributed through npm; that does not define Forma dependencies.
+- **Go import-path-as-location.** Rejected: source code should use stable declared
+  names rather than hosting URLs. Moving a repository changes its source map,
+  not module or contract identity. We adopt vendoring and MVS without `/v2` paths.
+- **A dependency solver and version ranges.** Rejected in favor of deterministic
+  highest-minimum selection. There is no compatibility backtracking.
+- **Version or filesystem location in module IDs.** Rejected because either
+  changes identities for unchanged definitions. One version per name avoids
+  multiple copies of nominal types in one program.
+- **Unrestricted imports of fetched files.** Rejected: declared dependencies and
+  explicit exports define the reusable package boundary.
 
 ## Implementation stages
 
-1. **Resolution and identity (implemented).** Package specifiers, the table,
-   the checks above, `pkg:` IDs, package preludes, session `packages`, the Node
-   adapter, and `forma file` commands across packages.
-2. **Language services.** Go-to-definition, hover, and search across package
-   modules in the language server, which needs the Node table in its workspace.
-3. **Distribution of the repository preludes.** Publish reference vocabularies
-   as Forma packages so consumers import them instead of vendoring.
+1. **Offline resolution and identity (implemented).** Host package tables,
+   specifiers, package preludes, session configuration, and verified Node
+   consumption of `forma.json`, `forma.lock`, and `vendor/` or relative packages.
+   No `package.json` discovery remains.
+2. **Dependency commands (planned).** `forma add <name> <spec>`,
+   `forma update [name]`, `forma verify`, and lock-based re-materialization.
+   A provider adapter fetches known forge archives or uses git; transitive
+   resolution applies MVS. Compilation itself remains offline.
+3. **Language services and reference packages (planned).** Cross-package language
+   server navigation and distributing the repository's reference vocabularies.
 
 ## Decisions still required
 
-- Whether package exports should support patterns (`"./forms/*"`).
-- Whether a package can re-export another package's prelude to its consumers.
-- How the website playground, which has no `node_modules`, offers packages.
+- Tarball URL sources with SHA-256 pins.
+- Go-style `<meta name="go-import">` vanity discovery.
+- Export patterns and consumer prelude re-exports.
+- How the website playground obtains a package table and sources.
