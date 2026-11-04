@@ -71,6 +71,18 @@ rejects options for optional fields, requires literal callbacks, and accepts
 out-of-range literals. The guides document today's workarounds. The fixes are
 proposed, not implemented or scheduled.
 
+## Languages as libraries
+
+[RFC 0021](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md)
+proposes moving surface syntax out of the engine. Syntax forms would produce
+code from typed holes, and a language would be a prelude that selects exports,
+hidden core names, and a lexical profile. Forma's own surface would become the
+first language, and Lisp dialects such as a Clojure-shaped surface would be
+others. All of them would share one core, one type language, and one contract.
+Declarative surfaces would be invertible, which makes Lisp emitters such as
+`.cljc` possible. The proposal is staged behind a small first step and an agent
+benchmark. It is not implemented or scheduled.
+
 ## Deferred
 
 - General-purpose application-language positioning.
