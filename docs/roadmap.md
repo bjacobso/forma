@@ -85,6 +85,14 @@ retired spelling such as `defn`, and `preludes/clojure.forma` supplies Clojure
 spellings as an ordinary library. Later stages wait on an agent benchmark and
 are not implemented or scheduled.
 
+The proposed emitter order is Clojure (`.cljc`, reaching the JVM and
+ClojureScript), then Racket, then Scheme, then Common Lisp, whose separate
+function namespace is a semantic difference rather than a spelling.
+[RFC 0022](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md)'s
+"Lisp targets" records what each kernel port must emulate, the semantic gaps,
+and the conformance gate for each. No emitter is implemented, and effectful
+programs would stay TypeScript-only until a target has an effect runtime.
+
 ## A programmable type system
 
 [RFC 0022](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md)
@@ -92,8 +100,11 @@ positions Forma as a programmable type system for Lisp. It proposes a small
 trusted kernel that re-checks elaborated programs, bidirectional elaborators
 that generalize forms, a language adapter protocol for Lisp dialects, and a
 gradual boundary for checking existing Clojure code after a second surface
-exists. Its first stage, the positioning on this site, is done. The kernel,
-elaborators, and adapters are not implemented or scheduled.
+exists. It also proposes backend capabilities, so that portable code would be
+checked against the intersection of the backends a language selects, and it
+records the Lisp target order and gates described above. Its first stage, the
+positioning on this site, is done. The kernel, elaborators, adapters, and
+backends are not implemented or scheduled.
 
 ## Deferred
 

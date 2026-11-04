@@ -183,6 +183,39 @@ pageClass: forma-index
 </div>
 </section>
 
+<section id="targets" class="fh-row" aria-labelledby="targets-heading">
+<div class="fh-row__head">
+<p class="fh-row__num">06</p>
+<h2 id="targets-heading">Emit the Lisp your host already runs.</h2>
+<span class="fh-status">Direction · RFC 0021 stage 6</span>
+</div>
+<div class="fh-row__body">
+<p>A domain language is worth most where its consumers already are. The plan is to write a policy, schema, or workflow once, check it with one kernel, and emit <strong>Clojure, Racket, Scheme, or Common Lisp source</strong> that runs on the host a team already operates: no Forma runtime to install, no second type system to adopt.</p>
+<p>The design makes a declarative surface invertible, so running a Lisp surface backwards over checked core terms is most of an emitter. The rest is a kernel port and a differential run of the conformance corpus.</p>
+<div class="fh-window">
+<div class="fh-window__bar"><span>one checked core, many Lisps</span><span>proposed · RFC 0021</span></div>
+<pre class="fh-ascii" v-pre aria-label="An emitter for a Lisp target is three steps: resugaring checked core terms through the target surface's own templates, a kernel port that implements tagged values, match, Option, records, sets, and Forma's numeric and string semantics including the checked Int range, and differential conformance that runs the conformance corpus on the target and compares it with the TypeScript VM's stored goldens."><span class="fh-ascii__code">core terms</span>  one checked program · one contract
+   │
+   ├─ 1 <b>resugar</b>       core → the target's own spellings
+   ├─ 2 <b>kernel port</b>   tagged values · match · Option · records
+   └─ 3 <b>conformance</b>   the corpus vs. the TypeScript VM goldens</pre>
+</div>
+<div class="fh-table">
+
+| Target | Surface | Emitter | Where it would run |
+| --- | --- | --- | --- |
+| **Clojure** | <span class="fh-status is-live">Shipped</span> as `preludes/clojure.forma` | <span class="fh-status">Proposed · first</span> | The JVM and JavaScript, from one `.cljc` file |
+| **Racket** | <span class="fh-status">Proposed</span> brackets and `#t` are reader switches | <span class="fh-status">Proposed · second</span> | Racket |
+| **Scheme** | <span class="fh-status">Proposed</span> the same reader switches | <span class="fh-status">Proposed · third</span> | R7RS implementations |
+| **Common Lisp** | <span class="fh-status">Proposed</span> last: `funcall` and `#'f` are semantics, not spelling | <span class="fh-status">Proposed · last</span> | ANSI implementations such as SBCL |
+| **All four** | One program, checked once | One kernel port each | Pinned against the TypeScript VM's goldens |
+
+</div>
+<p class="fh-row__after">Check it once. Run it where the work is.</p>
+<p>Only the Clojure spellings library is shipped, and it changes spelling, not semantics. Every emitter here is proposed: effectful programs stay TypeScript-only until a target has an effect runtime, and each back end needs a concrete consumer and a conformance target before it is built. The targets, their semantic gaps, and the gate for each are in <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md">RFC 0021</a> and <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md">RFC 0022</a>.</p>
+</div>
+</section>
+
 <section id="preludes" class="fh-section" aria-labelledby="preludes-heading">
 <div class="fh-section__split">
 <div>
@@ -277,11 +310,11 @@ pageClass: forma-index
 <div><dt>It is pre-alpha research.</dt><dd>Packages are 0.x and change without notice. There are no stable APIs, wire formats, or host ABI yet.</dd></div>
 <div><dt>There is no published CLI.</dt><dd>You call the engine from your own build script. A consumer-prelude SDK is next on the <a href="/roadmap">roadmap</a>.</dd></div>
 <div><dt>Some browser output is stored.</dt><dd>The playground does not run ontology elaboration yet; those examples show a stored canonical IR golden, originally captured from the retired OCaml engine.</dd></div>
-<div><dt>One generated target.</dt><dd>Effect TypeScript and Effect Schema are generated today. Rust and OCaml generation are research directions, not built.</dd></div>
+<div><dt>One generated target.</dt><dd>Effect TypeScript and Effect Schema are generated today. Lisp emitters, starting with <code>.cljc</code>, and Rust and OCaml generation are research directions, not built.</dd></div>
 <div><dt>One Lisp surface.</dt><dd>Forma's own syntax is the only surface; Clojure spellings are macros over it. The trusted kernel, elaborator API, and dialect adapters are proposals in <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md">RFC 0021</a> and <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md">RFC 0022</a>.</dd></div>
 </dl>
 
-<pre class="fh-ascii fh-ascii--card" v-pre aria-label="Working today: lossless reader and formatter, macros, Hindley–Milner and effect inference, canonical IR, Effect TypeScript and Schema generation, the browser playground and language server, and conformance goldens. Not yet: a published forma CLI, a stable host ABI, a consumer-prelude SDK, a trusted kernel and elaborator API, Lisp dialect adapters, and Rust or OCaml code generation.">working today
+<pre class="fh-ascii fh-ascii--card" v-pre aria-label="Working today: lossless reader and formatter, macros, Hindley–Milner and effect inference, canonical IR, Effect TypeScript and Schema generation, the browser playground and language server, and conformance goldens. Not yet: a published forma CLI, a stable host ABI, a consumer-prelude SDK, a trusted kernel and elaborator API, Lisp dialect adapters, emitters for Clojure, Racket, Scheme, and Common Lisp, and Rust or OCaml code generation.">working today
 <span class="tone-ok">✓</span> reader · formatter · macros
 <span class="tone-ok">✓</span> HM inference · effect inference
 <span class="tone-ok">✓</span> canonical IR
@@ -295,6 +328,7 @@ not yet
 <span class="tone-muted">○</span> consumer-prelude SDK
 <span class="tone-muted">○</span> trusted kernel · elaborators
 <span class="tone-muted">○</span> Lisp dialect adapters
+<span class="tone-muted">○</span> Clojure / Racket / Scheme / CL emitters
 <span class="tone-muted">○</span> Rust / OCaml codegen</pre>
 
 </div>

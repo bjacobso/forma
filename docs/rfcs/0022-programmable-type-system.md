@@ -6,7 +6,7 @@
 | Created | 2026-11-04 |
 | Amends | [RFC 0021](./0021-languages-as-libraries.md)'s non-goal "Forma does not attempt to typecheck existing Clojure, Common Lisp, or Racket programs", which becomes a later, gated stage; [Vision](../vision.md)'s description of Forma as a language for hosting DSLs |
 | Depends on | [RFC 0021](./0021-languages-as-libraries.md) for syntax forms, hygiene, language declarations, and lexical profiles; [RFC 0008](./0008-typed-form-results.md) for checking form results once; [RFC 0017](./0017-diagnostic-catalog.md) for stable diagnostic codes |
-| Scope | Positioning, the trusted kernel and its core terms, bidirectional elaborators, the language adapter protocol, language composition, a gradual boundary for existing Lisp code, backend capabilities, type-system profiles |
+| Scope | Positioning, the trusted kernel and its core terms, bidirectional elaborators, the language adapter protocol, language composition, a gradual boundary for existing Lisp code, backend capabilities, Lisp emitter targets, type-system profiles |
 | Direction | Forma owns the semantics of types and elaboration. Surfaces and adapters own syntax; backends own runtimes. Extensions may propose terms and types; a small kernel decides what is well typed |
 
 ## Summary
@@ -321,6 +321,118 @@ SQL, and workflow runtimes are possible targets, and the roadmap rule still
 applies to each: a back end needs a concrete consumer and a conformance
 target.
 
+### Lisp targets
+
+Four Lisps are in scope, each as a surface ([RFC
+0021](./0021-languages-as-libraries.md)) and later as an emitter target.
+None of them is a backend today: Effect TypeScript, Effect Schema, and
+artifact IR are the only targets, and `preludes/clojure.forma` is a macro
+library, not a code generator.
+
+A target needs three things (RFC 0021, "Targets"): **resugaring**, which
+matches checked core terms against the surface's declarative templates;
+a **kernel port**, which implements Forma's primitives in the target; and
+**differential conformance**, which runs the conformance corpus through the
+target and compares observable results with the TypeScript VM's stored
+goldens. Macro phases do not appear in this list: Forma expands and
+elaborates before a backend runs, so an emitted file contains definitions
+and expressions only. Phases are an adapter problem (stage 5), not an
+emitter problem.
+
+| Target | Surface | Emitter | Kernel port must supply | Order |
+| --- | --- | --- | --- | --- |
+| **Clojure** (`.cljc`) | Spellings shipped as a macro library (RFC 0021 stage 0); a checked surface is RFC 0021 stage 5 | Proposed, RFC 0021 stage 6 | Tagged values, `match` dispatch (`clojure.core` has no pattern matcher), `Option`, records, the `Int` range under both JVM `long` and JavaScript numbers, integer division. Vectors, maps, and sets are native | 1 |
+| **Racket** | Proposed; brackets and `#t`/`#f` are lexical switches | Proposed | The `Int` range over unbounded exact integers, `Float` as flonum, Forma's division. `match`, `struct`, immutable hashes, and `racket/set` are in the standard library | 2 |
+| **Scheme** (R7RS) | Proposed; the same lexical switches | Proposed | The same, plus a declared set of SRFIs for hash tables, sets, and pattern matching, which R7RS-small does not define. `define-record-type` is standard | 3 |
+| **Common Lisp** | Proposed, last | Proposed, last | All of the above, plus a mapping from Forma's single namespace onto `funcall` and `#'`, a symbol-case and package scheme, `defstruct` records, and hand-written dispatch: the standard has no immutable map, set, or pattern matcher | 4 |
+
+**Clojure** is first because the reader is already close to it, because
+RFC 0021 stage 0 shipped its spellings, and because one `.cljc` file reaches
+both the JVM and JavaScript. Clojure's other implementations read `.cljc`
+as well, which is how Clojure also reaches the CLR and Dart, but only the JVM
+and ClojureScript are gated. Gate: RFC 0021 stage 6 — a round trip between
+Forma and the Clojure surface, and the conformance corpus matching the
+TypeScript VM's goldens on the JVM and in ClojureScript.
+
+**Racket** is second because it is one implementation whose standard library
+already supplies everything the port needs, so the work is the semantic gaps
+rather than a portability matrix. Gate: the pure conformance corpus, emitted
+to Racket, matches the TypeScript VM's goldens. Because the emitter inverts a
+Racket surface, stage 6's bar applies to that surface as well: it needs no
+kernel change.
+
+**Scheme** is third because the same emitted file must run on more than one
+implementation, and R7RS-small leaves out the data structures the port needs.
+Gate: the corpus passes on two independent R7RS implementations from one
+emitted file, with every SRFI it relies on declared in the backend's
+capabilities.
+
+**Common Lisp** is last because its separate function and value namespaces
+are a semantic difference rather than a spelling, and because its reader
+folds symbol case. Gate: the corpus passes on one ANSI implementation, with
+the namespace mapping, the case and package scheme, and the implementation's
+recursion depth limit pinned by fixtures.
+
+Effectful programs stay TypeScript-only on every one of these until a target
+has an effect runtime, and the roadmap rule applies to each: a back end needs
+a concrete consumer and a conformance target before it is built.
+
+The semantic gaps are the same short list at each target. Forma's semantics
+decide what a program means; the target's defaults do not. Where they differ,
+the port emits explicit code rather than relying on the host.
+
+| Difference | Clojure | Racket | Scheme (R7RS) | Common Lisp |
+| --- | --- | --- | --- | --- |
+| **Falsity** | `nil` and `false`; everything else is true | `#f` only | `#f` only; `'()` is true | `nil` only, and `nil` is also the empty list |
+| **Numbers** | JVM `long` and `double`; ClojureScript has JavaScript numbers only, and `/` on two integers differs between the two | Full tower: exact rationals, bignums, flonums | Tower partly optional; an implementation may support only a limited range of exact numbers | Full tower: bignums, ratios, complex |
+| **Namespaces** | Lisp-1 | Lisp-1 | Lisp-1 | Lisp-2: `#'f`, `funcall`, `flet` |
+| **Macro phases** | `.cljc` macros are Clojure code loaded at compile time | Phase levels and `for-syntax` | `syntax-rules` at expansion | `defmacro` with `eval-when` |
+| **Mutation** | Atoms, refs, vars | `set!`, boxes, mutable vectors | `set!`, mutable strings and vectors | `setf` everywhere; conses and slots are mutable |
+| **Multiple values** | None | `values`, `define-values` | `values`, `call-with-values` | `values`; used throughout the standard library |
+| **Tail calls** | Self and `loop` only, through `recur`; the JVM has no general tail-call elimination | Proper tail calls required | Proper tail calls required | Not required by ANSI; implementation-dependent |
+| **Continuations** | None | `call/cc` and delimited continuations | `call/cc` | Escape only: `block`, `return-from`, `catch`, `throw` |
+
+Most rows are one-way, and that is the point of emitting from a checked core.
+Forma has no mutation, no multiple values, and no first-class continuations,
+so an emitter never needs the target's version of them, and Forma's `nil` is
+an ordinary `Unit` value rather than falsity or absence. An emitter needs only
+to avoid depending on the target's defaults: it tests `Bool` values explicitly
+instead of relying on truthiness, and represents `Option` as a tagged value so
+that `None` is never the host's `nil`, `#f`, or empty list.
+
+Three rows are real work.
+
+- **The numeric tower.** Forma has `Int` and `Float` and checks `Int`
+  arithmetic against the JavaScript safe-integer range. That range fits in a
+  JVM `long`, in a double, and in every target's exact integers, so no port
+  needs bignums. The gap runs the other way: Racket, Scheme, and Common Lisp
+  accept integers Forma rejects, so the port must keep the range check where
+  Forma's semantics require an error. Division is the second trap, because
+  `/` on two integers is a ratio in Racket, Common Lisp, and Clojure on the
+  JVM, and a float in ClojureScript. RFC 0021 leaves open whether the checked
+  range is emulated on wider targets; under this RFC that choice is a
+  declared backend capability (integer width), and portable code is checked
+  against the intersection of the selected backends.
+- **Lisp-1 against Lisp-2.** A Forma value of function type is one name in
+  one namespace. In Common Lisp the emitter must decide, for every
+  occurrence, whether a name appears in operator position, as `#'name`, or
+  under `funcall`, and a Common Lisp *surface* must reject source that
+  relies on a symbol having both a function and a value binding. This is a
+  translation the other three targets do not need, and it is why Common Lisp
+  is last.
+- **Tail calls.** The TypeScript VM reuses frames for tail calls, so
+  unbounded tail recursion is part of the reference behavior the conformance
+  corpus pins. Racket and Scheme guarantee it. Clojure does not: the port has
+  to emit `recur` for self tail calls and a trampoline for mutual recursion.
+  ANSI Common Lisp does not require it at all, so a Common Lisp backend
+  documents the depth it was conformance-tested at on a named implementation
+  instead of claiming the guarantee.
+
+Mutation and multiple values stay inside a port. A kernel port may use local
+mutation or a host function that returns several values to implement a
+primitive; neither becomes visible in a Forma program, and neither is a
+capability a language can request.
+
 ### Profiles
 
 A profile is a named set of kernel rules. Every language selects one.
@@ -354,6 +466,7 @@ its status:
 | Checks existing Clojure code | Stage 5 of this RFC |
 | One kernel, many Lisps | Stage 6 of this RFC |
 | Compiles to several runtimes | A second executable backend with conformance |
+| Emits Clojure, Racket, Scheme, or Common Lisp source | That target's differential conformance passes on a named implementation |
 
 ## Alternatives considered
 
@@ -386,7 +499,7 @@ its status:
 | 4 | A Clojure surface over Forma semantics (RFC 0021 stage 5) and a typed domain language that extends it. | A workflow-style example language with typed steps, its own diagnostics, and generated reference pages. |
 | 5 | A Clojure adapter for existing code: declaration files, `Dynamic`, casts, and a typed subset of `clojure.core`. | A pinned corpus of real open-source namespaces is read, with every unsupported construct reported by name and no false errors in declared, supported code. |
 | 6 | A second dialect adapter (Racket or Scheme). | No kernel changes. Any kernel change it needs is recorded as a defect in stage 1. |
-| 7 | Further profiles and executable backends, each with its own RFC. | A concrete consumer and a conformance target per profile and backend. |
+| 7 | Further profiles and executable backends, each with its own RFC, in the order under "Lisp targets". | A concrete consumer and a conformance target per profile and backend. |
 
 ## Decisions still required
 
@@ -400,6 +513,10 @@ its status:
 - The casting semantics of `Dynamic` at each backend, and whether casts are
   checked by contracts (as in Typed Racket) or by generated validators.
 - Which dialect is second, and which subset of it the stage 6 gate covers.
+  "Lisp targets" proposes Racket.
+- How a Common Lisp surface maps Forma's single namespace: mangled names,
+  `funcall` at every call site, or a rejection of higher-order code it cannot
+  resolve.
 - Whether a language may select more than one backend at once.
 
 ## Related designs
