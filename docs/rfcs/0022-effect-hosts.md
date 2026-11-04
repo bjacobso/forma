@@ -108,9 +108,10 @@ pushed to this repository):
   goroutine with an opcode interpreter, `Gen`/`Await` with panic-based failure,
   a type mapping, `extern :go` with required `:cancel` modes, and two-host
   conformance.
-- `mechanics/effect-go.ts`, a Go runtime prototype of about 2,600 lines with
-  77 tests, and four conformance cases with Go harnesses: `crud-users`,
-  `operational-effects`, `concurrent-workflow`, and `resource-scope`.
+- A generator, `mechanics/effect-go.ts`, and a Go runtime of about 2,600
+  lines with 77 tests in `prototypes/effect-go/`. Four conformance cases have
+  Go harnesses: `crud-users`, `operational-effects`, `concurrent-workflow`,
+  and `resource-scope`.
 - Host-keyed `:emit {:ts … :go …}` hooks for `http-api`, a `go/*` primitive
   set, a host-neutral http-api link step, and a shared `wire-cases.json` run
   against both servers.
