@@ -66,6 +66,11 @@ it; quasiquote supports `~` and `~@` for substitution and splicing.
 A keyword literal keeps its exact type: `:open` has type `:open`. Branches and
 collections of different keywords infer their union. `Keyword` accepts any keyword,
 including ones constructed at runtime.
+When a literal constrains an unresolved function parameter or a value compared
+with it, inference uses the literal's base type (`Keyword` for keywords).
+This lets a lambda compare a `Keyword` record field with `:open` without
+requiring that every record passed to it have exactly `:open` in that field.
+Explicit literal and enum types still restrict the accepted values.
 
 ## Types are schemas
 
@@ -164,6 +169,10 @@ have a discriminator derived from their name and may appear in Effect error sets
 names bind, `_` ignores a value, literals compare values, and capitalized names
 match constructors. Records and vectors destructure their members. `&` captures
 remaining members or elements, and `:as` retains the whole matched value.
+Record patterns, including `{:keys [name]}`, require their named keys to exist;
+missing keys do not bind to `nil`. Use `(get record :name)` when absence should
+return `nil` during evaluation. A statically known record must contain the key
+for typed access; a dictionary lookup has type `(Option V)`.
 
 ```lisp
 (define first-name [{:name name}] name)

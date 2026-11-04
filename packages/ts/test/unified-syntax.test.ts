@@ -74,6 +74,16 @@ describe("unified core surface and runtime semantics", () => {
   test("record constructor patterns destructure their payload", async () => {
     expect(await evaluate('(type Shape (Tagged (Circle {:radius Float}) Point)) (match (Circle {:radius 3}) (Circle {:radius r}) r Point 0)')).toBe(3);
   });
+  test.each([
+    '((fn [{:keys [name extra]}] extra) {:name "ok"})',
+    '(define read [{:keys [name extra]}] extra) (read {:name "ok"})',
+    '(let [{:keys [name extra]} {:name "ok"}] extra)',
+  ])("record patterns require their keys: %s", async source => {
+    await expect(evaluate(source)).rejects.toThrow("No pattern matched the value");
+  });
+  test("match skips record patterns with missing keys", async () => {
+    expect(await evaluate('(match {:name "ok"} {:keys [name extra]} false _ true)')).toBe(true);
+  });
   test("quote returns data without evaluating its datum", async () => {
     expect(await evaluate("'unbound")).toMatchObject({ _tag: 'KSymbol', name: 'unbound' });
   });

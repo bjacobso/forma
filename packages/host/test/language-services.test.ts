@@ -49,7 +49,7 @@ describe("structural editor services on the TypeScript host", () => {
     // Only the broken definition fails; the forms around it are typed.
     expect(typed.errors).toHaveLength(1);
     expect(source.slice(typed.errors[0]!.span!.startOffset, typed.errors[0]!.span!.endOffset)).toBe(
-      '(+ 1 "x")',
+      '"x"',
     );
     expect(typeOf(typed, "(Directory.lookup who)")).toBe("Float");
     expect(typeOf(typed, '(badge "ada")')).toBe("Float");

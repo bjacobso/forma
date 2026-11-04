@@ -3,7 +3,8 @@
  */
 import { Effect, Ref } from "effect";
 import type { Type, Row } from "./types.js";
-import { TRow, REmpty, RExtend, tUnknown, TCon, TApp } from "./types.js";
+import { TRow, REmpty, RExtend, tUnknown, TCon, TApp, flattenRow } from "./types.js";
+import { closestName } from "../diagnostic/closest-name.js";
 import { applyType, applyEnv, type TypeEnv } from "./substitution.js";
 import { assignType } from "./assign.js";
 import { unify } from "./unify.js";
@@ -47,6 +48,16 @@ export const inferRecord = (
 // ---------------------------------------------------------------------------
 // Get (record field access)
 // ---------------------------------------------------------------------------
+
+const displayField = (label: string): string => label.startsWith("\0str:") ? JSON.stringify(label.slice(5)) : label.replace(/^:/, "");
+const recordPath = (expr: CoreExpr): string | undefined => {
+  if (expr._tag === "Var") return expr.name;
+  if (expr._tag === "Get" && !expr.key) {
+    const parent = recordPath(expr.record);
+    if (parent) return `${parent}.${displayField(expr.label)}`;
+  }
+  return undefined;
+};
 
 export const inferGet = (
   env: TypeEnv,
@@ -99,6 +110,20 @@ export const inferGet = (
       const key = TCon(expr.label.startsWith(":") ? expr.label : JSON.stringify(expr.label.startsWith("\0str:") ? expr.label.slice(5) : expr.label));
       yield* assignType(key,resolved.args[0]!,originOf(expr,"map-key"));
       return TApp(TCon("Option"),[resolved.args[1]!]);
+    }
+    if (resolved._tag === "TRow") {
+      const {fields, tail} = flattenRow(resolved.row);
+      if (tail._tag === "REmpty" && !fields.has(expr.label)) {
+        const available = [...fields.keys()].map(displayField).sort();
+        const field = displayField(expr.label);
+        const suggestion = closestName(field, available);
+        return yield* ctx.fail(originOf(expr, "get"), {
+          code: "typecheck/missing-field",
+          message: `${recordPath(expr.record) ?? "Record"} has no field ${field}${suggestion ? ` (did you mean ${suggestion}?)` : ""}; fields: ${available.join(", ") || "(none)"}`,
+          field: expr.label,
+          fields: [...fields.keys()],
+        });
+      }
     }
     // The record type should be { label: resultT | restRow }
     const resultT = yield* ctx.freshTVar;
