@@ -21,10 +21,9 @@ export function bootstrapFromFiles(
   );
 }
 
-import { existsSync, realpathSync } from "node:fs";
-import { dirname, join, resolve, sep } from "node:path";
+import { realpathSync } from "node:fs";
+import { dirname, resolve, sep } from "node:path";
 import {
-  ModuleError,
   relativeModuleId,
   resolveModuleGraph,
   type ModuleGraph,
@@ -33,8 +32,6 @@ import {
 import {
   packageOfModule,
   PACKAGE_ID_PREFIX,
-  type ModulePackage,
-  type PackageTable,
 } from "./modules/packages.js";
 /** Relative file imports between files outside installed packages. */
 export const fileModuleResolver: ModuleResolver = (specifier, importer) => {
@@ -52,94 +49,14 @@ export const fileModuleResolver: ModuleResolver = (specifier, importer) => {
   }
 };
 
-/** Installed Forma packages and the directories they were found in. */
-export interface NodePackages {
-  readonly table: PackageTable;
-  readonly directories: ReadonlyMap<string, string>;
-}
+export { readFormaManifest, readFormaLock, readVendoredPackages } from "./node/package-files.js";
+export type { FormaManifest, FormaLock, LockedPackage, NodePackages } from "./node/package-files.js";
+import { findFormaRoot, packageError, readVendoredPackages, type NodePackages } from "./node/package-files.js";
 
-interface PackageJson {
-  readonly name?: string;
-  readonly version?: string;
-  readonly dependencies?: Record<string, string>;
-  readonly devDependencies?: Record<string, string>;
-  readonly peerDependencies?: Record<string, string>;
-  readonly optionalDependencies?: Record<string, string>;
-  readonly forma?: { readonly exports?: Record<string, string>; readonly prelude?: string };
-}
-
-const readJson = (path: string): PackageJson => JSON.parse(readFileSync(path, "utf8")) as PackageJson;
-const dependencyNames = (manifest: PackageJson, root: boolean): string[] => [
-  ...new Set([
-    ...Object.keys(manifest.dependencies ?? {}),
-    ...Object.keys(manifest.peerDependencies ?? {}),
-    ...Object.keys(manifest.optionalDependencies ?? {}),
-    ...(root ? Object.keys(manifest.devDependencies ?? {}) : []),
-  ]),
-].sort();
-
-/** The nearest directory at or above `start` that contains a package.json. */
-function packageRoot(start: string): string | undefined {
-  for (let dir = start; ; dir = dirname(dir)) {
-    if (existsSync(join(dir, "package.json"))) return dir;
-    if (dirname(dir) === dir) return undefined;
-  }
-}
-
-/** Node's node_modules lookup for `name`, starting at `from`. */
-function installedPackage(name: string, from: string): string | undefined {
-  for (let dir = from; ; dir = dirname(dir)) {
-    const candidate = join(dir, "node_modules", ...name.split("/"));
-    if (existsSync(join(candidate, "package.json"))) return realpathSync(candidate);
-    if (dirname(dir) === dir) return undefined;
-  }
-}
-
-/**
- * Build the package table for the package that contains `entryPath`: its
- * Forma dependencies and theirs, found through node_modules. A dependency is a
- * Forma package when its package.json has a `forma` field. Returns undefined
- * when no package.json encloses the entry.
- */
+/** Read and verify the nearest Forma project's vendored dependency closure. No network. */
 export function readNodePackages(entryPath: string): NodePackages | undefined {
-  const root = packageRoot(dirname(realpathSync(entryPath)));
-  if (!root) return undefined;
-  const packages = new Map<string, ModulePackage>();
-  const directories = new Map<string, string>();
-  const conflict = (name: string, first: string, second: string): never => {
-    throw new ModuleError({
-      code: "module/package-version-conflict",
-      severity: "error",
-      phase: "typecheck",
-      message: `${name} is installed at ${first} and ${second} with different versions; a graph contains one version of each package.`,
-    });
-  };
-  /** The Forma dependencies of the package in `from`, registering each. */
-  const formaDependencies = (manifest: PackageJson, from: string, isRoot: boolean): string[] =>
-    dependencyNames(manifest, isRoot).filter((name) => {
-      const directory = installedPackage(name, from);
-      if (!directory) return false;
-      const dependency = readJson(join(directory, "package.json"));
-      if (!dependency.forma) return false;
-      const known = directories.get(name);
-      if (known !== undefined) {
-        if (known !== directory && packages.get(name)?.version !== dependency.version) conflict(name, known, directory);
-        return true;
-      }
-      directories.set(name, directory);
-      // Register before visiting dependencies so cycles terminate.
-      packages.set(name, { name, version: dependency.version, exports: {} });
-      packages.set(name, {
-        name,
-        ...(dependency.version ? { version: dependency.version } : {}),
-        exports: dependency.forma.exports ?? {},
-        ...(dependency.forma.prelude ? { prelude: dependency.forma.prelude } : {}),
-        dependencies: formaDependencies(dependency, directory, false),
-      });
-      return true;
-    });
-  const dependencies = formaDependencies(readJson(join(root, "package.json")), root, true);
-  return { table: { packages: [...packages.values()], dependencies }, directories };
+  const root = findFormaRoot(dirname(realpathSync(entryPath)));
+  return root === undefined ? undefined : readVendoredPackages(root);
 }
 
 /** Relative imports between files, and files inside installed packages by `pkg:` ID. */
@@ -153,6 +70,8 @@ export function nodeModuleResolver(packages: NodePackages | undefined): ModuleRe
     const path = resolve(directory, id.slice(PACKAGE_ID_PREFIX.length + name.length + 1));
     if (path !== directory && !path.startsWith(directory + sep)) return undefined;
     try {
+      if (!realpathSync(path).startsWith(directory + sep))
+        return packageError("package-integrity", `${path} leaves its package directory.`);
       return { id, source: readFileSync(path, "utf8") };
     } catch (error) {
       if (["ENOENT", "ENOTDIR", "EISDIR"].includes(String((error as { code?: string }).code))) return undefined;

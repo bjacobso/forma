@@ -140,16 +140,15 @@ including private helper dependencies.
 
 ## Packages
 
-[RFC 0018](./rfcs/0018-packages.md) adds package imports. A package is an npm
-package whose `package.json` has a `forma` field listing the files other
-packages may import:
+[RFC 0018](./rfcs/0018-packages.md) defines provider-independent packages.
+A package declares its public files and dependency source map in `forma.json`:
 
 ```json
 {
   "name": "@acme/flows",
   "version": "2.1.0",
-  "dependencies": { "@acme/ir": "^1.0.0" },
-  "forma": { "exports": { ".": "./src/index.forma", "./ir": "./src/ir.forma" } }
+  "exports": { ".": "./src/index.forma", "./ir": "./src/ir.forma" },
+  "dependencies": { "@acme/ir": "gitlab.com/acme/ir@v1.0.0" }
 }
 ```
 
@@ -158,28 +157,34 @@ packages may import:
 (import "@acme/flows/ir" [FlowIR])  ; the "./ir" export
 ```
 
-npm, pnpm, or yarn install packages and lock their versions; Forma reads what
-is installed. A module may import a package only when its own package declares
-it in `dependencies`, `peerDependencies`, or `optionalDependencies` (and, for the
-package being developed, `devDependencies`). Errors are reported at the
-specifier: `module/undeclared-dependency`, `module/package-not-found`,
-`module/package-private` for a subpath missing from `exports`,
-`module/package-escape` for a relative import that leaves its package, and
-`module/specifier` for anything that is neither relative nor a package name.
-An optional `forma.prelude` file gives the package's own modules automatic
-imports, as project preludes do.
+Source specs support known forge locations with `@ref`, explicit
+`git+https://`, `git+ssh://`, or `git+file://` URLs with `@ref`, and relative
+directories. A dependency key must equal the package's own declared name.
+Semver tags use highest-minimum selection across the graph; other refs must
+agree exactly. Coexisting majors need distinct, matching declared names.
 
-Modules inside installed packages have IDs such as `pkg:@acme/flows/src/index.forma`,
-whatever directory they are installed in. Binding identities, generated names,
-and `contractId`s therefore match across machines and do not change between
-releases that leave a definition alone. A graph contains one version of each
-package; the Node adapter reports `module/package-version-conflict` when it finds
-two. Modules of the package being developed keep their file paths.
+Commit dependencies under `vendor/<name>/`, with their manifest and all `.forma`
+files, and commit `forma.lock` with resolved refs, commits, and SHA-256 hashes.
+The Node adapter verifies the entire dependency closure before compiling.
+Relative dependencies stay local and are hashed too. Vendored or local edits,
+missing or extra files, and stale manifests report `module/package-integrity`
+or `module/package-stale`. Fetching and dependency commands are planned;
+offline consumption is implemented. No `package.json` discovery is used.
 
-`forma file <op> entry.forma` and `readModuleGraph` in `@formalang/ts/node`
-find the nearest `package.json` above the entry and follow its Forma
-dependencies through `node_modules`. Other hosts pass a table to
-`configureSession` and store package files under their `pkg:` IDs:
+Modules may import only their declared `dependencies`. Errors at the specifier
+include `module/undeclared-dependency`, `module/package-not-found`,
+`module/package-private`, `module/package-escape`, and `module/specifier`.
+An optional `prelude` gives the package's own modules automatic imports.
+
+Package modules have IDs such as `pkg:@acme/flows/src/index.forma`, independent
+of hosting or checkout location. Binding identities and `contractId`s stay the
+same for unchanged definitions. A graph has one version per name. Modules of
+the package being developed keep file IDs for diagnostics.
+
+`forma file <op> entry.forma` and `readModuleGraph` in `@formalang/ts/node` find
+the nearest `forma.json`, verify `forma.lock`, and read `vendor/` and relative
+dependencies without network access. Other hosts pass a table to
+`configureSession` and store package sources under their `pkg:` IDs:
 
 ```typescript
 await host.configureSession({
@@ -342,5 +347,6 @@ data and global seed IDs in their artifact reference index. That index supplies
 artifact hooks with data; it never supplies functions or lexical bindings to a
 file module. File module interfaces now expose compile-time libraries and checked declaration
 data. Migrating these legacy artifact emit pipelines to those interfaces remains
-follow-up work. Manifests, registries, lockfiles, package imports, project commands,
-and RFC 0003 direct-style effects remain proposals.
+follow-up work. Verified vendored packages and manifests are implemented;
+dependency commands, project build/run commands, and RFC 0003 direct-style
+effects remain proposals.

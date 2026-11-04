@@ -1,7 +1,9 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { describe, expect, test } from "vitest";
+import { sha256 } from "../src/source/sha256.js";
+import { packageFiles } from "../src/node/package-files.js";
 import { readModuleGraph, readNodePackages } from "../src/Node.js";
 import {
   checkModuleGraph,
@@ -126,22 +128,29 @@ describe("Node packages", () => {
   const app = (extra: Record<string, unknown> = {}) => {
     const root = mkdtempSync(join(tmpdir(), "forma-packages-"));
     write(root, {
-      "package.json": { name: "app", dependencies: { "@acme/flows": "^2.0.0", "left-pad": "^1.0.0" }, devDependencies: { "@acme/ir": "^1.0.0" } },
-      "node_modules/left-pad/package.json": { name: "left-pad", version: "1.3.0" },
-      "node_modules/@acme/ir/package.json": { name: "@acme/ir", version: "1.0.0", forma: { exports: { ".": "./ir.forma" } } },
-      "node_modules/@acme/ir/ir.forma": `(export FlowIR) (type FlowIR {:kind "Flow" :steps (List String)})`,
-      "node_modules/@acme/flows/package.json": { name: "@acme/flows", version: "2.1.0", dependencies: { "@acme/ir": "^1.0.0" }, forma: { exports: { ".": "./src/index.forma" } } },
-      "node_modules/@acme/flows/src/index.forma": `(import "@acme/ir" [FlowIR])
+      "forma.json": { name: "app", exports: {}, dependencies: { "@acme/flows": "github.com/acme/flows@v2.1.0", "@acme/ir": "gitlab.com/acme/ir@v1.0.0" } },
+      "vendor/@acme/ir/forma.json": { name: "@acme/ir", version: "1.0.0", exports: { ".": "./ir.forma" } },
+      "vendor/@acme/ir/ir.forma": `(export FlowIR) (type FlowIR {:kind "Flow" :steps (List String)})`,
+      "vendor/@acme/flows/forma.json": { name: "@acme/flows", version: "2.1.0", dependencies: { "@acme/ir": "gitlab.com/acme/ir@v1.0.0" }, exports: { ".": "./src/index.forma" } },
+      "vendor/@acme/flows/src/index.forma": `(import "@acme/ir" [FlowIR])
 (export flow)
 (type FlowDecl Symbol)
 (form (flow name step ...) :types {:name (Declares FlowDecl) :step (List String)} :ir FlowIR {:kind "Flow" :steps step})`,
       "src/main.forma": `(import "@acme/flows" [flow]) (export Onboard) (flow Onboard "collect-i9")`,
       ...extra,
     });
+    write(root, { "forma.lock": {
+      version: 1, manifest: sha256(readFileSync(join(root, "forma.json"), "utf8")),
+      packages: Object.fromEntries(["flows", "ir"].map(name => [`@acme/${name}`, {
+        source: name === "flows" ? "github.com/acme/flows@v2.1.0" : "gitlab.com/acme/ir@v1.0.0",
+        resolved: name === "flows" ? "v2.1.0" : "v1.0.0", commit: "a".repeat(40),
+        files: packageFiles(join(root, "vendor/@acme", name)),
+      }])),
+    } });
     return root;
   };
 
-  test("build the table from package.json files and resolve installed packages by identity", () => {
+  test("build the table from verified vendored manifests and resolve packages by identity", () => {
     const root = app();
     const packages = readNodePackages(join(root, "src/main.forma"))!;
     expect(packages.table).toEqual({
@@ -159,11 +168,39 @@ describe("Node packages", () => {
     expect(elsewhere.modules.at(-1)!.interface.exports[0]!.data?.contractId).toBe(g.modules.at(-1)!.interface.exports[0]!.data?.contractId);
   });
 
-  test("reject two versions of one package", () => {
-    const root = app({
-      "node_modules/@acme/flows/node_modules/@acme/ir/package.json": { name: "@acme/ir", version: "2.0.0", forma: { exports: { ".": "./ir.forma" } } },
-      "node_modules/@acme/flows/node_modules/@acme/ir/ir.forma": "(export FlowIR) (type FlowIR String)",
+  test.each(["edited", "missing", "extra", "stale", "missing-lock", "symlink"])("reject %s dependency state before compiling", kind => {
+    const root = app();
+    const file = join(root, "vendor/@acme/ir/ir.forma");
+    if (kind === "edited") writeFileSync(file, "(export Changed)");
+    if (kind === "missing") rmSync(file);
+    if (kind === "extra") writeFileSync(join(root, "vendor/extra.txt"), "extra");
+    if (kind === "stale") write(root, { "forma.json": { name: "app", exports: {} } });
+    if (kind === "missing-lock") rmSync(join(root, "forma.lock"));
+    if (kind === "symlink") { rmSync(file); symlinkSync(join(root, "src/main.forma"), file); }
+    expect(failure(() => readModuleGraph(join(root, "src/main.forma"))).code).toBe(
+      ["stale", "missing-lock"].includes(kind) ? "module/package-stale" : "module/package-integrity",
+    );
+  });
+
+  test("reject identity mismatches even with matching file hashes", () => {
+    const root = app({ "vendor/@acme/ir/forma.json": { name: "wrong", exports: {} } });
+    expect(failure(() => readNodePackages(join(root, "src/main.forma")))).toMatchObject({ code: "module/package-name" });
+  });
+
+  test("relative dependencies stay local and package.json discovery is gone", () => {
+    const root = mkdtempSync(join(tmpdir(), "forma-local-"));
+    write(root, {
+      "forma.json": { name: "app", exports: {}, dependencies: { util: "./util" } },
+      "util/forma.json": { name: "util", exports: { ".": "index.forma" } },
+      "util/index.forma": "(export answer) (define answer 42)",
+      "main.forma": '(import "util" [answer])',
     });
-    expect(failure(() => readModuleGraph(join(root, "src/main.forma")))).toMatchObject({ code: "module/package-version-conflict" });
+    write(root, { "forma.lock": { version: 1, manifest: sha256(readFileSync(join(root, "forma.json"), "utf8")),
+      packages: { util: { source: "./util", resolved: "local", commit: null, files: packageFiles(join(root, "util")) } } } });
+    expect(readNodePackages(join(root, "main.forma"))!.directories.get("util")).toBe(join(root, "util"));
+    expect(checkModuleGraph(readModuleGraph(join(root, "main.forma"))).diagnostics).toEqual([]);
+    rmSync(join(root, "forma.json"));
+    write(root, { "package.json": { forma: { exports: {} } } });
+    expect(readNodePackages(join(root, "main.forma"))).toBeUndefined();
   });
 });
