@@ -90,3 +90,8 @@ export function readModuleGraph(entryPath: string): ModuleGraph {
     packages ? { packages: packages.table } : {},
   );
 }
+
+export { managePackages, verifyPackages } from "./node/package-manager.js";
+export type { PackageCommand, PackageCommandOptions } from "./node/package-manager.js";
+export { gitSource, defaultPackageFetcher } from "./node/package-fetch.js";
+export type { GitSource, PackageFetcher } from "./node/package-fetch.js";

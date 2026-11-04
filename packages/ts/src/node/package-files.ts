@@ -71,17 +71,24 @@ export function safeFile(path: string): boolean {
   return !!path && !path.includes("\\") && !path.includes("\0") &&
     path.split("/").every(part => part !== "" && part !== "." && part !== "..");
 }
+function hashPackageFile(path: string): string {
+  try {
+    // Reject invalid UTF-8 rather than hashing replacement characters. The
+    // existing text SHA-256 then hashes exactly the bytes committed to vendor.
+    return sha256(new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(readFileSync(path)));
+  } catch (error) { return packageError("package-integrity", `Cannot hash UTF-8 package file ${path}: ${String(error)}`); }
+}
 /** No symlinks: neither hashing nor resolution may read outside a package. */
 export function packageFiles(directory: string, vendored = false): Record<string, string> {
   const files: Record<string, string> = Object.create(null);
   const visit = (dir: string, prefix: string) => {
     for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name < b.name ? -1 : 1)) {
-      if ([".git", "node_modules", "vendor"].includes(entry.name) && !vendored) continue;
+      if (!vendored && ([".git", "node_modules", "vendor"].includes(entry.name) || entry.name.startsWith(".forma-stage-"))) continue;
       const path = prefix + entry.name;
       if (entry.isSymbolicLink()) return packageError("package-integrity", `Symlink ${join(dir, entry.name)} is not a package file.`);
       if (entry.isDirectory()) visit(join(dir, entry.name), path + "/");
       else if (entry.isFile() && (vendored || path === "forma.json" || path.endsWith(".forma")))
-        files[path] = sha256(readFileSync(join(directory, path), "utf8"));
+        files[path] = hashPackageFile(join(directory, path));
       else if (vendored) return packageError("package-integrity", `Unsupported file ${path}.`);
     }
   };
@@ -169,14 +176,14 @@ export function readVendoredPackages(root: string): NodePackages {
 }
 
 /** Strict semver tags, including prereleases; ranges are deliberately unsupported. */
-export function semver(ref: string): readonly [number, number, number, readonly string[]] | undefined {
+export function semver(ref: string): readonly [bigint, bigint, bigint, readonly string[]] | undefined {
   const match = /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.exec(ref);
   if (!match || match[4]?.split(".").some(p => /^\d+$/.test(p) && p.length > 1 && p.startsWith("0"))) return undefined;
-  return [Number(match[1]), Number(match[2]), Number(match[3]), match[4]?.split(".") ?? []];
+  return [BigInt(match[1]!), BigInt(match[2]!), BigInt(match[3]!), match[4]?.split(".") ?? []];
 }
 export function compareVersions(a: string, b: string): number {
   const x = semver(a)!, y = semver(b)!;
-  for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return (x[i] as number) - (y[i] as number);
+  for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return (x[i] as bigint) < (y[i] as bigint) ? -1 : 1;
   const xp = x[3], yp = y[3];
   if (!xp.length || !yp.length) return xp.length ? -1 : yp.length ? 1 : 0;
   for (let i = 0; i < Math.max(xp.length, yp.length); i++) {
@@ -184,7 +191,7 @@ export function compareVersions(a: string, b: string): number {
     if (u === undefined || v === undefined) return u === undefined ? -1 : 1;
     if (u === v) continue;
     const un = /^\d+$/.test(u), vn = /^\d+$/.test(v);
-    return un && vn ? Number(u) - Number(v) : un !== vn ? (un ? -1 : 1) : u < v ? -1 : 1;
+    return un && vn ? (BigInt(u) < BigInt(v) ? -1 : 1) : un !== vn ? (un ? -1 : 1) : u < v ? -1 : 1;
   }
   return 0;
 }

@@ -168,8 +168,26 @@ files, and commit `forma.lock` with resolved refs, commits, and SHA-256 hashes.
 The Node adapter verifies the entire dependency closure before compiling.
 Relative dependencies stay local and are hashed too. Vendored or local edits,
 missing or extra files, and stale manifests report `module/package-integrity`
-or `module/package-stale`. Fetching and dependency commands are planned;
-offline consumption is implemented. No `package.json` discovery is used.
+or `module/package-stale`. No `package.json` discovery is used.
+
+With a `forma.json` in the project, use the dependency commands:
+
+```sh
+forma add @acme/flows github.com/acme/flows@v2.1.0
+forma add @me/shared ../shared
+forma update                 # refresh declared refs and local hashes
+forma update @acme/flows      # preserve unrelated locked commits
+forma verify                 # offline integrity and staleness check
+forma vendor                 # restore exact locked commits, even if refs moved
+```
+
+`update` applies highest-minimum selection; it does not search for newer tags.
+Use `add` with a new spec to raise a minimum. `add` and `update` stage a complete
+result before changing the project. Git and tar executables are required for
+fetching. Git URLs use git credentials; known forges use commit-pinned archives
+with git fallback. Relative dependencies work for local monorepos; fetched
+packages must declare git sources for their dependencies. `vendor` checks local
+files without changing them, so refresh local edits with `update`.
 
 Modules may import only their declared `dependencies`. Errors at the specifier
 include `module/undeclared-dependency`, `module/package-not-found`,
@@ -348,5 +366,5 @@ artifact hooks with data; it never supplies functions or lexical bindings to a
 file module. File module interfaces now expose compile-time libraries and checked declaration
 data. Migrating these legacy artifact emit pipelines to those interfaces remains
 follow-up work. Verified vendored packages and manifests are implemented;
-dependency commands, project build/run commands, and RFC 0003 direct-style
-effects remain proposals.
+dependency commands are implemented. Project build/run commands and RFC 0003
+direct-style effects remain proposals.

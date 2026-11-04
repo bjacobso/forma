@@ -525,8 +525,8 @@ configuration remains an open design item.
 
 [RFC 0018](./0018-packages.md) supersedes this section's manifest and lockfile:
 packages use `forma.json`, provider-independent git source maps, committed
-`vendor/` sources, and a verified `forma.lock`. Dependency commands are planned
-in RFC 0018; the original project-command sketch follows.
+`vendor/` sources, and a verified `forma.lock`. Dependency add/update/verify/vendor
+commands are implemented in RFC 0018; the original project-command sketch follows.
 
 A `forma.toml` manifest identifies the package, source roots, dependencies, and
 entry points. A lockfile records resolved package versions and integrity data.
@@ -543,8 +543,9 @@ forma run src/main.forma
 forma test
 ```
 
-These define a project CLI. Runner behavior, test discovery, and
-package distribution are part of the project model and are not available today.
+These proposed build/run/test commands define a project CLI. Runner behavior and
+test discovery are not available today; package distribution is implemented by
+RFC 0018's dependency commands.
 
 The module graph also drives editor navigation, completion, rename, and diagnostics.
 Go-to-definition crosses imports and re-exports using resolved identities. Imported

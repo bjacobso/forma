@@ -77,4 +77,33 @@ describe("packages through the host", () => {
     writeFileSync(join(root, "vendor/@acme/ir/ir.forma"), "edited");
     expect(run("typecheck")).toMatchObject({ ok: false, diagnostics: [{ code: "module/package-integrity" }] });
   }, 30_000);
+
+  test("dependency commands add local packages, verify offline, and refresh local edits", () => {
+    const root = mkdtempSync(join(tmpdir(), "forma-cli-dependencies-"));
+    const files: Record<string, unknown> = {
+      "forma.json": { name: "app", exports: {} },
+      "local/flows/forma.json": { name: "@acme/flows", exports: { ".": "index.forma" }, dependencies: { "@acme/ir": "../ir" } },
+      "local/flows/index.forma": flowsSource,
+      "local/ir/forma.json": { name: "@acme/ir", exports: { ".": "ir.forma" } },
+      "local/ir/ir.forma": irSource,
+      "main.forma": mainSource,
+    };
+    for (const [path, content] of Object.entries(files)) {
+      mkdirSync(dirname(join(root, path)), { recursive: true });
+      writeFileSync(join(root, path), typeof content === "string" ? content : JSON.stringify(content));
+    }
+    const run = (...args: string[]) => {
+      const result = spawnSync(process.execPath, [cli, ...args], { cwd: root, encoding: "utf8", timeout: 20_000 });
+      return { status: result.status, ...JSON.parse(result.stdout) };
+    };
+    expect(run("add", "@acme/flows", "./local/flows")).toMatchObject({ status: 0, ok: true });
+    expect(run("verify")).toMatchObject({ status: 0, ok: true, value: { packages: ["@acme/flows", "@acme/ir"] } });
+    expect(run("file", "typecheck", "main.forma")).toMatchObject({ status: 0, ok: true, diagnostics: [] });
+    writeFileSync(join(root, "local/ir/ir.forma"), irSource + "\n; local edit\n");
+    expect(run("verify")).toMatchObject({ status: 1, ok: false, diagnostics: [{ code: "module/package-integrity" }] });
+    expect(run("update", "@acme/ir")).toMatchObject({ status: 0, ok: true });
+    expect(run("vendor")).toMatchObject({ status: 0, ok: true });
+    expect(run("verify")).toMatchObject({ status: 0, ok: true });
+  }, 60_000);
+
 });
