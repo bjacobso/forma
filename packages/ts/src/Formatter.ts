@@ -70,6 +70,32 @@ function flat(expr: SExpr): string {
   }
 }
 
+/** Render alternating names/patterns and values without separating short pairs. */
+function pairLines(
+  items: readonly SExpr[],
+  indent: number,
+  softWrap: number,
+  indentSize: number,
+  patterns: ReadonlyMap<string, readonly SExpr[]>,
+): string[] {
+  const result: string[] = [];
+  const width = Math.max(0, ...items.filter((_, i) => i % 2 === 0).map(item => flat(item).length));
+  for (let i = 0; i < items.length; i += 2) {
+    const key = items[i]!, value = items[i + 1];
+    if (!value) {
+      result.push(...lines(key, indent, softWrap, indentSize, patterns));
+      continue;
+    }
+    const inline = `${" ".repeat(indent)}${flat(key).padEnd(width)} ${flat(value)}`;
+    if (inline.length <= softWrap) result.push(inline);
+    else {
+      result.push(...lines(key, indent, softWrap, indentSize, patterns));
+      result.push(...lines(value, indent + indentSize, softWrap, indentSize, patterns));
+    }
+  }
+  return result;
+}
+
 function lines(
   expr: SExpr,
   indent: number,
@@ -100,7 +126,10 @@ function lines(
       }
 
       const head = expr.items[0]!;
-      const pattern = head._tag === "Sym" ? patterns.get(head.name) : undefined;
+      // A domain may itself define a `form` component. A list pattern still
+      // identifies a core descriptor declaration rather than that application.
+      const declaration = head._tag === "Sym" && head.name === "form" && expr.items[1]?._tag === "List";
+      const pattern = head._tag === "Sym" && !declaration ? patterns.get(head.name) : undefined;
       if (pattern) {
         let positional = 0;
         for (let i = 0; i < pattern.length; i++) {
@@ -122,8 +151,46 @@ function lines(
         result[result.length - 1] += ")";
         return result;
       }
-      const result: string[] = [`${pad}(${flat(head)}`];
-      for (let i = 1; i < expr.items.length; i++) result.push(...lines(expr.items[i]!, indent + indentSize, softWrap, indentSize, patterns));
+      const name = head._tag === "Sym" ? head.name : "";
+      const childIndent = indent + indentSize;
+      let header = `${pad}(${flat(head)}`, cursor = 1;
+      // These are core syntax layouts. Domain declarations use descriptors above.
+      const headerItems = name === "define" ? (expr.items[2]?._tag === "Vector" ? 2 : 1)
+        : ["macro", "fn", "type", "form", "if", "when", "unless", "match", "case"].includes(name) ? 1 : 0;
+      while (cursor <= headerItems && expr.items[cursor]) {
+        const item = flat(expr.items[cursor]!);
+        if (header.length + 1 + item.length > softWrap) break;
+        header += ` ${item}`;
+        cursor++;
+      }
+      const result: string[] = [header];
+      if (["let", "loop", "do!"].includes(name) && expr.items[1]?._tag === "Vector") {
+        const bindings = expr.items[1];
+        const inline = flat(bindings);
+        if (header.length + 1 + inline.length <= softWrap) result[0] += ` ${inline}`;
+        else {
+          // Start the vector beside the head and align subsequent binding names.
+          const bindingIndent = header.length + 2;
+          const pairs = pairLines(bindings.items, bindingIndent, softWrap, indentSize, patterns);
+          if (pairs.length) {
+            result[0] += ` [${pairs[0]!.slice(bindingIndent)}`;
+            result.push(...pairs.slice(1));
+            result[result.length - 1] += "]";
+          } else result[0] += " []";
+        }
+        cursor = 2;
+      }
+      if (name === "cond" || (["match", "case"].includes(name) && cursor === 2)) {
+        result.push(...pairLines(expr.items.slice(cursor), childIndent, softWrap, indentSize, patterns));
+      } else {
+        for (; cursor < expr.items.length; cursor++) {
+          const item = expr.items[cursor]!;
+          if (name === "form" && item._tag === "Sym" && item.name.startsWith(":") && expr.items[cursor + 1]) {
+            result.push(...pairLines(expr.items.slice(cursor, cursor + 2), childIndent, softWrap, indentSize, patterns));
+            cursor++;
+          } else result.push(...lines(item, childIndent, softWrap, indentSize, patterns));
+        }
+      }
       result[result.length - 1] += ")";
       return result;
     }
