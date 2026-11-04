@@ -4,10 +4,21 @@
       "id": "surface-error",
       "load": {
         "sourceId": "bad.forma",
-        "source": "(def x 1)"
+        "source": "(let [{:k v} 1 y] v)"
       },
       "expected": {
         "ok": false,
+        "located": true
+      }
+    },
+    {
+      "id": "retired-spelling-deferred",
+      "load": {
+        "sourceId": "retired.forma",
+        "source": "(def x 1)"
+      },
+      "expected": {
+        "ok": true,
         "located": true
       }
     },

@@ -17,7 +17,9 @@ replacement and deletion of declarations, and restoration after invalid edits.
 located surface errors, checked preludes, and unchanged values after a failed
 prelude replacement due to typing or a descriptor payload metacheck. It pins
 whether a load succeeded and whether its diagnostics are located, not HM
-diagnostic codes.
+diagnostic codes. A retired spelling such as `(def x 1)` loads: a macro in
+another source may claim it ([RFC 0021](../../docs/rfcs/0021-languages-as-libraries.md),
+stage 0), so analysis reports it, as it reports unresolved references.
 The direct TypeScript elaborator reports missing schema references with
 `elaborate/hole-type`; the OCaml artifact path reported
 `elaborate/unknown-reference`.

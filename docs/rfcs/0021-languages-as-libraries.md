@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Proposed; stage 0 implemented |
 | Created | 2026-11-04 |
 | Amends | [RFC 0001](./0001-unified-syntax.md)'s single canonical surface and its three-form meta layer (`type`, `form`, `macro`); its one type language and one option syntax are unchanged |
 | Depends on | [RFC 0008](./0008-typed-form-results.md) for checking declarative templates once; [RFC 0017](./0017-diagnostic-catalog.md) for stable codes on surface diagnostics |

@@ -50,6 +50,14 @@ export const sexprListQ: BuiltinFn = (args) => {
   return Effect.succeed(Array.isArray(v) || isKSExpr(v) && ["List","Vector"].includes(v.expr._tag));
 };
 
+/** True for a vector literal, such as a parameter or binding vector. */
+export const sexprVectorQ: BuiltinFn = (args) => {
+  if (args.length !== 1)
+    return Effect.fail(new ArityError({ name: "sexpr-vector?", expected: 1, got: args.length }));
+  const v = args[0]!;
+  return Effect.succeed(isKSExpr(v) && v.expr._tag === "Vector");
+};
+
 export const sexprItems: BuiltinFn = (args) => {
   if (args.length !== 1)
     return Effect.fail(new ArityError({ name: "sexpr-items", expected: 1, got: args.length }));
@@ -78,6 +86,7 @@ export const sexprSymName: BuiltinFn = (args) => {
 export const macroBuiltins: Record<string, BuiltinFn> = {
   gensym,
   "sexpr-list?": sexprListQ,
+  "sexpr-vector?": sexprVectorQ,
   "sexpr-items": sexprItems,
   "sexpr-sym-name": sexprSymName,
 };

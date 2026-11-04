@@ -329,6 +329,16 @@ export function analyzeLsp(
 
 function asInferenceError(error: unknown): InferenceError {
   if (error instanceof InferenceError) return error;
+  // Surface errors carry the author's location and code; keep both.
+  if (error instanceof Error && "loc" in error) {
+    const loc = error.loc as { start: number; end: number };
+    const details = (error as { details?: Record<string, unknown> }).details;
+    return new InferenceError({
+      message: error.message,
+      origin: { nodeId: `surface:${loc.start}`, kind: "surface", span: { start: loc.start, end: loc.end } },
+      details: { code: "surface/invalid-form", ...details },
+    });
+  }
   return new InferenceError({ message: error instanceof Error ? error.message : String(error) });
 }
 
