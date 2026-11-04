@@ -1,9 +1,16 @@
 # Vision
 
-Forma is a small, homoiconic, macro-first programming language for hosting
-domain-specific languages. Its purpose is to turn concise, reviewable source
-into checked values and portable artifacts without baking any particular
-domain into the compiler.
+Forma is a programmable type system for Lisp. It owns the meaning of types
+and elaboration, and lets libraries define what a well-typed program means for
+their domain. Today it is one small, homoiconic, macro-first language whose
+checker preludes extend. Its purpose is to turn concise, reviewable source into
+checked values and portable artifacts without baking any particular domain
+into the compiler.
+
+[RFC 0022](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md)
+proposes the rest of that direction: a small trusted kernel that checks every
+elaborated program, bidirectional elaborators, and adapters that let other Lisp
+dialects use the same checker. None of those are implemented yet.
 
 Three ideas define the project:
 
