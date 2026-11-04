@@ -141,3 +141,55 @@ test("project prelude exports use ordinary resolution and do not leak across pro
   expect(checkModuleGraph(g).diagnostics).toEqual([]);
   expect(g.modules.at(-1)!.interface.exports[0]!.data?.value).toEqual([42, 7]);
 });
+
+describe("forms that produce an imported IR type", () => {
+  const sources = (retries: string) => [
+    {
+      id: "p/ir.forma",
+      source: `(export FlowIR StepIR)
+(type StepIR {:name String :retries Int})
+(type FlowIR {:kind "Flow" :steps (List StepIR)})`,
+    },
+    {
+      id: "p/flow.forma",
+      source: `(import "./ir.forma" [FlowIR])
+(export flow)
+(type FlowDecl Symbol)
+(form (flow name step ...) :types {:name (Declares FlowDecl) :step (List String)} :ir FlowIR
+  {:kind "Flow" :steps (map (fn [n] {:name n :retries 0}) step)})`,
+    },
+    {
+      id: "p/process.forma",
+      source: `(import "./ir.forma" [FlowIR])
+(export process)
+(type ProcessDecl Symbol)
+(form (process name step ...) :types {:name (Declares ProcessDecl) :step (List String)} :ir FlowIR
+  {:kind "Flow" :steps (map (fn [n] {:name n :retries ${retries}}) step)})`,
+    },
+    {
+      id: "p/main.forma",
+      source: `(import "./flow.forma" [flow])
+(import "./process.forma" [process])
+(export Onboard Offboard)
+(flow Onboard "collect-i9")
+(process Offboard "revoke-access")`,
+    },
+  ];
+  const resolve = (retries: string) => {
+    const all = sources(retries);
+    return resolveModuleGraph(all.at(-1)!, sourceModuleResolver(all));
+  };
+
+  test("type-check, check payloads against the imported definitions, and share a contract identity", () => {
+    const g = resolve("1");
+    expect(checkModuleGraph(g).diagnostics).toEqual([]);
+    const [onboard, offboard] = g.modules.at(-1)!.interface.exports.map((binding) => binding.data);
+    expect(onboard?.value).toMatchObject({ record: expect.arrayContaining([[{ keyword: ":data" }, expect.anything()]]) });
+    expect(onboard?.contractId).toMatch(/^[a-f0-9]{64}$/);
+    expect(offboard?.contractId).toBe(onboard?.contractId);
+  });
+
+  test("reject a payload that breaks a type the IR type reaches", () => {
+    expect(() => resolve('"none"')).toThrow("payload.steps[0].retries must be Int");
+  });
+});

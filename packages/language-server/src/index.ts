@@ -8,3 +8,4 @@ export { getReferences } from "./handlers/references.js";
 export { prepareRename, rename } from "./handlers/rename.js";
 export { getSemanticTokens, semanticTokensLegend } from "./handlers/semantic-tokens.js";
 export { getDocumentSymbols } from "./handlers/symbols.js";
+export { getWorkspaceSymbols } from "./handlers/workspace-symbols.js";

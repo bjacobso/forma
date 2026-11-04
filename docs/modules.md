@@ -97,6 +97,14 @@ Exported types carry public schema syntax. Declaration and data interfaces carry
 compile-time schemes separately from runtime schemes; classification does not
 manufacture a runtime constructor.
 
+A form's `:ir` type can be one another module exports, so forms with different
+syntax in different libraries can produce the same IR. The imported type brings
+the definitions it refers to under their resolved identities, and payloads are
+checked against them; an exported type that reaches a private type is rejected
+with `module/private-type`. Each declaration's data records `contractId`, a
+SHA-256 identity of its `:ir` type and every type that type reaches. Two
+declarations that produce the same imported type share it.
+
 The complete [Stripe → Salesforce fixture](https://github.com/bjacobso/forma/tree/main/conformance/compile-time-modules)
 uses `billing/prices` to derive picklist entries and checks imported references
 at their authored spans. Data provenance contains paths into the elaborated
@@ -129,6 +137,92 @@ Pure projections can retain `RuntimeExpr` syntax describing a future `update!`;
 they do not invoke it. Executable Effects still require the existing explicit
 runner. Graph requests rebuild compile-time interfaces from current sources,
 including private helper dependencies.
+
+## Packages
+
+[RFC 0020](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0020-packages.md) defines provider-independent packages.
+A package declares its public files and dependency source map in `forma.json`:
+
+```json
+{
+  "name": "@acme/flows",
+  "version": "2.1.0",
+  "exports": { ".": "./src/index.forma", "./ir": "./src/ir.forma" },
+  "dependencies": { "@acme/ir": "gitlab.com/acme/ir@v1.0.0" }
+}
+```
+
+```lisp
+(import "@acme/flows" [flow])       ; the "." export
+(import "@acme/flows/ir" [FlowIR])  ; the "./ir" export
+```
+
+Source specs support known forge locations with `@ref`, explicit
+`git+https://`, `git+ssh://`, or `git+file://` URLs with `@ref`, and relative
+directories. A dependency key must equal the package's own declared name.
+Semver tags use highest-minimum selection across the graph; other refs must
+agree exactly. Coexisting majors need distinct, matching declared names.
+
+Commit dependencies under `vendor/<name>/`, with their manifest and all `.forma`
+files, and commit `forma.lock` with resolved refs, commits, and SHA-256 hashes.
+The Node adapter verifies the entire dependency closure before compiling.
+Relative dependencies stay local and are hashed too. Vendored or local edits,
+missing or extra files, and stale manifests report `module/package-integrity`
+or `module/package-stale`. No `package.json` discovery is used.
+
+With a `forma.json` in the project, use the dependency commands:
+
+```sh
+forma add @acme/flows github.com/acme/flows@v2.1.0
+forma add @me/shared ../shared
+forma update                 # refresh declared refs and local hashes
+forma update @acme/flows      # preserve unrelated locked commits
+forma verify                 # offline integrity and staleness check
+forma vendor                 # restore exact locked commits, even if refs moved
+```
+
+`update` applies highest-minimum selection; it does not search for newer tags.
+Use `add` with a new spec to raise a minimum. `add` and `update` stage a complete
+result before changing the project. Git and tar executables are required for
+fetching. Git URLs use git credentials; known forges use commit-pinned archives
+with git fallback. Relative dependencies work for local monorepos; fetched
+packages must declare git sources for their dependencies. `vendor` checks local
+files without changing them, so refresh local edits with `update`.
+
+Modules may import only their declared `dependencies`. Errors at the specifier
+include `module/undeclared-dependency`, `module/package-not-found`,
+`module/package-private`, `module/package-escape`, and `module/specifier`.
+An optional `prelude` gives the package's own modules automatic imports.
+
+Package modules have IDs such as `pkg:@acme/flows/src/index.forma`, independent
+of hosting or checkout location. Binding identities and `contractId`s stay the
+same for unchanged definitions. A graph has one version per name. Modules of
+the package being developed keep file IDs for diagnostics.
+
+`forma file <op> entry.forma` and `readModuleGraph` in `@formalang/ts/node` find
+the nearest `forma.json`, verify `forma.lock`, and read `vendor/` and relative
+dependencies without network access. Other hosts pass a table to
+`configureSession` and store package sources under their `pkg:` IDs:
+
+```typescript
+await host.configureSession({
+  sessionId,
+  packages: {
+    packages: [
+      { name: "@acme/ir", version: "1.0.0", exports: { ".": "ir.forma" } },
+      { name: "@acme/flows", exports: { ".": "index.forma" }, dependencies: ["@acme/ir"] },
+    ],
+    dependencies: ["@acme/flows"], // what modules outside every package may import
+  },
+});
+await host.loadSourceBundle({ sessionId, sources: [
+  { kind: "source", sourceId: "pkg:@acme/ir/ir.forma", source: irSource },
+  { kind: "source", sourceId: "pkg:@acme/flows/index.forma", source: flowsSource },
+  { kind: "source", sourceId: "main.forma", source: mainSource },
+] });
+```
+
+The language server does not resolve packages yet.
 
 ## Host and browser use
 
@@ -271,5 +365,6 @@ data and global seed IDs in their artifact reference index. That index supplies
 artifact hooks with data; it never supplies functions or lexical bindings to a
 file module. File module interfaces now expose compile-time libraries and checked declaration
 data. Migrating these legacy artifact emit pipelines to those interfaces remains
-follow-up work. Manifests, registries, lockfiles, package imports, project commands,
-and RFC 0003 direct-style effects remain proposals.
+follow-up work. Verified vendored packages and manifests are implemented;
+dependency commands are implemented. Project build/run commands and RFC 0003
+direct-style effects remain proposals.

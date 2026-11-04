@@ -1,3 +1,4 @@
+import { irContractId } from "../artifact/contract-identity.js";
 import { isKFloat } from "../evaluator/types.js";
 import { Effect } from "effect";
 import { Env } from "../Env.js";
@@ -60,6 +61,12 @@ export interface ModuleData {
   readonly provenance: readonly ModuleDataOrigin[];
   readonly scheme?: ModuleTypeScheme;
   readonly contract?: ModuleTypeSyntax;
+  /**
+   * SHA-256 content identity of the `:ir` type and every type it reaches,
+   * named by their resolved identities, so declarations from different forms
+   * that produce the same imported type share it.
+   */
+  readonly contractId?: string;
 }
 export interface ModuleFormMetadata {
   readonly pattern: ModuleTypeSyntax;
@@ -139,14 +146,18 @@ export function isSyntaxHole(type: SExpr): boolean {
       isSyntaxHole(type.items[1]!))
   );
 }
-function localForms(expressions: readonly SExpr[]): readonly FormDescriptor[] {
-  const types = new Map(
-    expressions.flatMap((e) =>
+function localForms(
+  expressions: readonly SExpr[],
+  importedTypes: ReadonlyMap<string, SExpr>,
+): readonly FormDescriptor[] {
+  const types = new Map([
+    ...importedTypes,
+    ...expressions.flatMap((e) =>
       head(e) === "type" && e._tag === "List" && name(e.items[1]) && e.items[2]
         ? [[name(e.items[1])!, e.items[2]] as const]
         : [],
     ),
-  );
+  ]);
   return expressions.flatMap((e) =>
     head(e) === "form" ? [parseUnifiedForm(e, types)!] : [],
   );
@@ -158,8 +169,18 @@ export function discoverFormDeclarations(
   namespaces: ReadonlyMap<string, ResolvedModule>,
   ownerOf: (identity: BindingIdentity) => ResolvedModule | undefined,
 ) {
+  // A form may produce a type another module exports.
+  const importedTypes = new Map(
+    [...imports.values()].flatMap((binding) => {
+      const syntax =
+        binding.kind === "type"
+          ? ownerOf(binding.identity)?.compileTime?.types.get(binding.symbol)
+          : undefined;
+      return syntax ? [[binding.name, syntax] as const] : [];
+    }),
+  );
   const forms = new Map(
-    localForms(expressions).map((d) => [
+    localForms(expressions, importedTypes).map((d) => [
       d.name,
       { descriptor: d, identity: bindings.get(d.name)!.identity },
     ]),
@@ -215,6 +236,14 @@ export function discoverFormDeclarations(
   });
 }
 
+function collectSymbols(expression: SExpr): readonly string[] {
+  if (expression._tag === "Sym") return [expression.name];
+  if (expression._tag === "Map") return expression.pairs.flatMap(([key, value]) => [...collectSymbols(key), ...collectSymbols(value)]);
+  return expression._tag === "List" || expression._tag === "Vector" || expression._tag === "Set"
+    ? expression.items.flatMap(collectSymbols)
+    : [];
+}
+
 /** Per-module lexical closures and demand-driven pure data; no ambient artifact index. */
 export function prepareCompileTimeModule(
   module: ResolvedModule,
@@ -264,8 +293,14 @@ export function prepareCompileTimeModule(
       if (form) forms.set(binding.symbol, form);
       if (binding.kind === "macro" || binding.kind === "form")
         for (const [symbol, form] of owner.forms) forms.set(symbol, form);
-      const type = owner.types.get(binding.symbol);
-      if (type) types.set(binding.symbol, type);
+      // An imported type brings the definitions it refers to, under their own identities.
+      const copyType = (symbol: string): void => {
+        const type = owner.types.get(symbol);
+        if (!type || types.has(symbol)) return;
+        types.set(symbol, type);
+        collectSymbols(type).forEach(copyType);
+      };
+      copyType(binding.symbol);
       const sourceOrigins = owner.origins.get(binding.symbol);
       if (sourceOrigins) origins.set(binding.symbol, sourceOrigins);
     }
@@ -628,10 +663,15 @@ export function prepareCompileTimeModule(
             ? (descriptor?.surface?.types.get(ir.name) ?? ir)
             : ir;
         const contract = payload ? moduleTypeSyntax(payload) : "Any";
+        const contractId =
+          ir?._tag === "Sym" && descriptor?.surface?.types.has(ir.name)
+            ? irContractId(ir.name, descriptor.surface.types)
+            : undefined;
         data = {
           value: moduleDataValue(read(binding.symbol)),
           provenance: origins.get(binding.symbol) ?? [],
           contract,
+          ...(contractId ? { contractId } : {}),
           scheme: {
             parameters: [],
             type: {

@@ -142,6 +142,7 @@ export function checkModuleGraph(
             : unifiedFormProvider(source, expressions);
           const core = lowerProgram(expressions, provider, {
             includePrelude: false,
+            ...(module.compileTime ? { types: module.compileTime.types } : {}),
           });
           const result = yield* Effect.provide(
             inferProgram(

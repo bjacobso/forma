@@ -2,7 +2,7 @@
 /** Node transports; compiler and session behavior stays in FormaHost. */
 import { readFileSync } from "node:fs";
 import { createInterface } from "node:readline";
-import { readModuleGraph } from "@formalang/ts/node";
+import { managePackages, readModuleGraph, readNodePackages, verifyPackages } from "@formalang/ts/node";
 import { ModuleError, moduleMechanicsDeclarations } from "@formalang/ts/modules";
 import { JsonAbi, type JsonResponse } from "./json-abi.js";
 
@@ -11,10 +11,12 @@ const print = (response: JsonResponse) => process.stdout.write(JSON.stringify(re
 const [command, ...args] = process.argv.slice(2);
 async function file(operation: string, path: string): Promise<JsonResponse> {
   const graph = readModuleGraph(path);
+  const packages = readNodePackages(path);
   const opened = await abi.handleJson('{"op":"openSession"}');
   if (!opened.ok) return opened;
   const { sessionId } = opened.value as {sessionId:string};
   try {
+    if (packages) await abi.host.configureSession({ sessionId, packages: packages.table });
     const loaded = await abi.host.loadSourceBundle({ sessionId, sources: graph.modules.map(m => ({ kind: "source", sourceId: m.id, source: m.source })) });
     if (loaded.diagnostics.some(d => d.severity === "error")) return {ok:false, diagnostics:loaded.diagnostics};
     const request = { sessionId, sourceId: graph.entry };
@@ -32,8 +34,17 @@ try {
     for await (const line of createInterface({input:process.stdin, crlfDelay:Infinity})) print(await abi.handleJson(line));
   } else if (command === "version" && args.length === 0) print(await abi.handleJson('{"op":"version"}'));
   else if (command === "file" && args.length === 2 && ["typecheck", "evaluate", "interface", "declarations"].includes(args[0]!)) print(await file(args[0]!, args[1]!));
-  else {
-    process.stderr.write("Usage: forma request ['<json>'] | daemon | file <typecheck|evaluate|interface|declarations> <entry.forma> | version\n");
+  else if (command === "verify" && args.length === 0) {
+    const packages = verifyPackages();
+    print({ ok: true, value: { packages: packages.table.packages.map(pkg => pkg.name) }, diagnostics: [] });
+  } else if (command === "add" && args.length === 2) {
+    print({ ok: true, value: await managePackages({ command: "add", name: args[0]!, source: args[1]! }), diagnostics: [] });
+  } else if (command === "update" && args.length <= 1) {
+    print({ ok: true, value: await managePackages({ command: "update", ...(args[0] ? { name: args[0] } : {}) }), diagnostics: [] });
+  } else if (command === "vendor" && args.length === 0) {
+    print({ ok: true, value: await managePackages({ command: "vendor" }), diagnostics: [] });
+  } else {
+    process.stderr.write("Usage: forma request ['<json>'] | daemon | file <typecheck|evaluate|interface|declarations> <entry.forma> | add <name> <spec> | update [name] | verify | vendor | version\n");
     process.exitCode = 64;
   }
 } catch (error) {

@@ -39,6 +39,7 @@ export interface LanguageSessionOptions {
   readonly id: string;
   readonly env?: Env | undefined;
   readonly projects?: import("../modules/graph.js").ModuleCoreOptions["projects"];
+  readonly packages?: import("../modules/packages.js").PackageTable | undefined;
 }
 
 export class LanguageSession {
@@ -49,6 +50,8 @@ export class LanguageSession {
   projects: NonNullable<
     import("../modules/graph.js").ModuleCoreOptions["projects"]
   >;
+  /** Installed packages that bare imports resolve through (RFC 0020). */
+  packages: import("../modules/packages.js").PackageTable | undefined;
 
   readonly preludes = new Map<string, SessionSourceRecord>();
   readonly sources = new Map<string, SessionSourceRecord>();
@@ -62,6 +65,7 @@ export class LanguageSession {
     this.env = options.env ?? Env.empty();
     this.configurationEnv = this.env;
     this.projects = options.projects ?? [];
+    this.packages = options.packages;
   }
 
   rememberSource(input: SessionSourceInput): SessionSourceRecord {
@@ -163,6 +167,7 @@ export class LanguageSession {
     this.env = Env.empty();
     this.configurationEnv = this.env;
     this.projects = [];
+    this.packages = undefined;
     this.scope = emptyScope;
     this.#nextSourceOrder = 0;
   }

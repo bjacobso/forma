@@ -474,6 +474,7 @@ export function moduleCoreOptions(session?:LanguageSession):import("../modules/g
   return {
     bindings: new Set(session?.configurationEnv.bindingNames() ?? []),
     projects: session?.projects ?? [],
+    ...(session?.packages ? { packages: session.packages } : {}),
   };
 }
 function moduleDiagnostic(error:unknown,phase:DiagnosticPhase,sourceId:string):Diagnostic {

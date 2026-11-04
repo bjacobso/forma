@@ -24,6 +24,8 @@ export class KernelTypeError extends Data.TaggedError("KernelTypeError")<{
   readonly message: string;
   readonly expected: string;
   readonly got: string;
+  /** Structured data for the diagnostic; a string `code` becomes its code. */
+  readonly details?: Readonly<Record<string, unknown>>;
   readonly loc?: Loc;
   readonly macroOrigins?: readonly MacroOrigin[];
   readonly stackTrace?: readonly KernelStackFrame[];
@@ -64,6 +66,7 @@ export function withKernelSourceTrace(error: KernelError, trace: SourceTrace): K
         message: error.message,
         expected: error.expected,
         got: error.got,
+        ...(error.details ? { details: error.details } : {}),
         ...(loc ? { loc } : {}),
         ...(macroOrigins ? { macroOrigins } : {}),
         ...(error.stackTrace ? { stackTrace: error.stackTrace } : {}),

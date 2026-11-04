@@ -65,11 +65,11 @@ Uses include:
 - **Identifiers are not stable.** TypeScript allocates `ts-eval-N` and
   `ts-call-N` from counters on the host instance. Two runs of the same
   program in one host give different identifiers.
-- **Failed resumes differ.** The TypeScript host turns `{ok: false}` into a
-  `KernelTypeError` that keeps only the first diagnostic's message, so the
-  host's code is lost (`ts-host.ts`, pinned by
-  `packages/host/test/conformance.test.ts`). (The since-removed OCaml host
-  kept the code.) The kernel cannot catch the failure.
+- **Failed resumes.** The TypeScript host turns `{ok: false}` into a
+  failed evaluation whose diagnostic has the host's first code and message
+  and carries every host diagnostic in `details.hostDiagnostics` (pinned by
+  `packages/host/test/conformance.test.ts`). The kernel cannot catch the
+  failure.
 - **Callbacks.** Functions passed to a host call can be retained and invoked
   with `callValue`. Each invocation is a new evaluation with its own
   identifier, and it can pause on host calls. Host conformance tests cover
@@ -204,8 +204,8 @@ engine are the same. To make that guarantee hold:
 
 - `gensym` counters are per-evaluation (implemented), so generated
   symbols do not depend on earlier work in the process.
-- TypeScript keeps the host's diagnostics on a failed resume, so a recorded
-  failure replays with the same code.
+- TypeScript keeps the host's diagnostics on a failed resume (implemented),
+  so a recorded failure replays with the same code.
 - The host projects and decodes `JournalValue` losslessly. Float identity,
   map-key kinds, and retained references already round-trip through host
   calls; the journal format must preserve them in files.
@@ -256,10 +256,10 @@ OCaml engine was removed.)
 
 ## Implementation stages and validation
 
-1. **Lossless values and failures.** `JournalValue` projection and decoding,
-   and TypeScript resumes that keep host diagnostics. Per-evaluation `gensym`,
-   map-key kinds, and retained references through host calls are implemented
-   and tested. Remaining tests check that a failed resume keeps its code.
+1. **Lossless values and failures.** `JournalValue` projection and decoding.
+   Per-evaluation `gensym`, map-key kinds, retained references through host
+   calls, and failed resumes that keep the host's code and diagnostics are
+   implemented and tested.
 2. **Recording (TypeScript).** Header, entries, the callback, and the terminal
    journal. Tests record a program with two sequential calls, a failed call,
    and a nested call from a callback, and compare the journals with goldens.

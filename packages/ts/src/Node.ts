@@ -22,13 +22,18 @@ export function bootstrapFromFiles(
 }
 
 import { realpathSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, resolve, sep } from "node:path";
 import {
+  relativeModuleId,
   resolveModuleGraph,
   type ModuleGraph,
   type ModuleResolver,
 } from "./modules/graph.js";
-/** Relative file imports only; project/package resolution is a later stage. */
+import {
+  packageOfModule,
+  PACKAGE_ID_PREFIX,
+} from "./modules/packages.js";
+/** Relative file imports between files outside installed packages. */
 export const fileModuleResolver: ModuleResolver = (specifier, importer) => {
   if (!specifier.startsWith("./") && !specifier.startsWith("../"))
     return undefined;
@@ -43,10 +48,50 @@ export const fileModuleResolver: ModuleResolver = (specifier, importer) => {
     throw error;
   }
 };
+
+export { readFormaManifest, readFormaLock, readVendoredPackages } from "./node/package-files.js";
+export type { FormaManifest, FormaLock, LockedPackage, NodePackages } from "./node/package-files.js";
+import { findFormaRoot, packageError, readVendoredPackages, type NodePackages } from "./node/package-files.js";
+
+/** Read and verify the nearest Forma project's vendored dependency closure. No network. */
+export function readNodePackages(entryPath: string): NodePackages | undefined {
+  const root = findFormaRoot(dirname(realpathSync(entryPath)));
+  return root === undefined ? undefined : readVendoredPackages(root);
+}
+
+/** Relative imports between files, and files inside installed packages by `pkg:` ID. */
+export function nodeModuleResolver(packages: NodePackages | undefined): ModuleResolver {
+  return (specifier, importer) => {
+    if (!importer.startsWith(PACKAGE_ID_PREFIX) || !packages) return fileModuleResolver(specifier, importer);
+    const id = relativeModuleId(specifier, importer);
+    const name = packageOfModule(id);
+    const directory = name === undefined ? undefined : packages.directories.get(name);
+    if (name === undefined || directory === undefined) return undefined;
+    const path = resolve(directory, id.slice(PACKAGE_ID_PREFIX.length + name.length + 1));
+    if (path !== directory && !path.startsWith(directory + sep)) return undefined;
+    try {
+      if (!realpathSync(path).startsWith(directory + sep))
+        return packageError("package-integrity", `${path} leaves its package directory.`);
+      return { id, source: readFileSync(path, "utf8") };
+    } catch (error) {
+      if (["ENOENT", "ENOTDIR", "EISDIR"].includes(String((error as { code?: string }).code))) return undefined;
+      throw error;
+    }
+  };
+}
+
+/** Resolve the graph of a file, with the Forma packages its package depends on. */
 export function readModuleGraph(entryPath: string): ModuleGraph {
   const id = realpathSync(entryPath);
+  const packages = readNodePackages(id);
   return resolveModuleGraph(
     { id, source: readFileSync(id, "utf8") },
-    fileModuleResolver,
+    nodeModuleResolver(packages),
+    packages ? { packages: packages.table } : {},
   );
 }
+
+export { managePackages, verifyPackages } from "./node/package-manager.js";
+export type { PackageCommand, PackageCommandOptions } from "./node/package-manager.js";
+export { gitSource, defaultPackageFetcher } from "./node/package-fetch.js";
+export type { GitSource, PackageFetcher } from "./node/package-fetch.js";
