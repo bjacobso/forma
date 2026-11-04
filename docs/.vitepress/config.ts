@@ -19,7 +19,7 @@ export default defineConfig({
   lang: "en-US",
   title: "Forma",
   titleTemplate: ":title · Forma",
-  description: "A typed language for building domain-specific languages.",
+  description: "A programmable type system for Lisp.",
   cleanUrls: true,
   // RFCs are design records for the repository, not site pages.
   srcExclude: ["rfcs/**"],

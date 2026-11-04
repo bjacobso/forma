@@ -80,8 +80,20 @@ hidden core names, and a lexical profile. Forma's own surface would become the
 first language, and Lisp dialects such as a Clojure-shaped surface would be
 others. All of them would share one core, one type language, and one contract.
 Declarative surfaces would be invertible, which makes Lisp emitters such as
-`.cljc` possible. The proposal is staged behind a small first step and an agent
-benchmark. It is not implemented or scheduled.
+`.cljc` possible. Stage 0 is implemented: a macro in scope may claim a
+retired spelling such as `defn`, and `preludes/clojure.forma` supplies Clojure
+spellings as an ordinary library. Later stages wait on an agent benchmark and
+are not implemented or scheduled.
+
+## A programmable type system
+
+[RFC 0022](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md)
+positions Forma as a programmable type system for Lisp. It proposes a small
+trusted kernel that re-checks elaborated programs, bidirectional elaborators
+that generalize forms, a language adapter protocol for Lisp dialects, and a
+gradual boundary for checking existing Clojure code after a second surface
+exists. Its first stage, the positioning on this site, is done. The kernel,
+elaborators, and adapters are not implemented or scheduled.
 
 ## Deferred
 
