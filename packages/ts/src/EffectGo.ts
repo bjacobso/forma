@@ -1,5 +1,5 @@
 /**
- * Forma → Go: an isolated prototype generator for RFC 0019. It elaborates
+ * Forma → Go: an isolated prototype generator for RFC 0023. It elaborates
  * an Effect program with the same reader, projection, and checker as the
  * Effect TypeScript target, then generates a Go package for the effect-go
  * runtime prototype in `prototypes/effect-go`. TypeScript engine only.

@@ -1,4 +1,4 @@
-// Package bench measures the effect-go runtime against plain Go for RFC 0019.
+// Package bench measures the effect-go runtime against plain Go for RFC 0023.
 //
 //	go test -run '^$' -bench . -benchmem ./bench/
 package bench

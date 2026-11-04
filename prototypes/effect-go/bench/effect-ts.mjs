@@ -1,5 +1,5 @@
 // The effect-go benchmark workloads on Effect-TS (effect@4.0.3, the
-// version Forma generates against), for comparison in RFC 0019.
+// version Forma generates against), for comparison in RFC 0023.
 //
 //   node prototypes/effect-go/bench/effect-ts.mjs
 import { Data, Effect, Fiber } from "effect";

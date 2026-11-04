@@ -3,7 +3,7 @@
 // Effect TypeScript target has, so one program behaves the same on both
 // hosts.
 //
-// This is a prototype for RFC 0019.
+// This is a prototype for RFC 0023.
 package forma
 
 import (

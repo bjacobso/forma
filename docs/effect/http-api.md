@@ -140,7 +140,7 @@ the one described above. The `:go` hook is used only by the isolated effect-go
 prototype (`generateHttpApiGoProgram` in `@formalang/ts/effect-go`), which is
 not a supported target. It builds Go calls with `go/*` primitives, such as
 `go/operation`, `go/zero`, and `go/children`. See
-[RFC 0019](../rfcs/0019-effect-go.md#dsl-preludes-on-a-second-host).
+[RFC 0023](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0023-effect-go.md#dsl-preludes-on-a-second-host).
 
 Builder derivation currently requires projections made from record literals,
 literal values, and hole references. It rejects executable `:check`, `:scope`,

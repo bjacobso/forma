@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Forma source → generated Go → build → run, for RFC 0019.
+// Forma source → generated Go → build → run, for RFC 0023.
 //
 // Generates Go for four Effect conformance programs and the http-api prelude
 // program with the built @formalang/ts/effect-go entry point, writes it to a

@@ -1,6 +1,6 @@
 ; Effect 4 HttpApi vocabulary. Emit hooks are keyed by host: :ts returns
 ; quasiquoted TypeScript and :go quasiquoted Go for the effect-go prototype's
-; httpapi package (RFC 0019). ts/* and go/* are target primitives, not
+; httpapi package (RFC 0023). ts/* and go/* are target primitives, not
 ; HTTP-specific compiler cases.
 (type HttpEndpointIR
   {:kind "HttpEndpoint" :name Symbol :method Keyword :path String

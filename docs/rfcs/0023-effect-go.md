@@ -1,4 +1,4 @@
-# RFC 0019: Effect-Go, a second Effect host
+# RFC 0023: Effect-Go, a second Effect host
 
 | | |
 | --- | --- |
@@ -85,7 +85,7 @@ Implemented on `main`:
   The checker records per-node value and effect types, resolved calls, match
   shapes, record targets, and layer context needs in `CheckInfo`.
 - `generateMechanicsEffectTypeScriptModule` (`effect-typescript.ts`) is the
-  only consumer of that checked IR. It targets `effect@4.0.3`.
+  only consumer of that checked IR. It targets `effect@4.1.1`.
 - `conformance/effect-typescript/` pins positive Effect programs with exact
   TypeScript goldens and harnesses, plus negative cases with exact
   diagnostics. Thirteen positive cases use the core Effect generator; the
@@ -103,7 +103,7 @@ Added on this branch, as a prototype:
 - `prototypes/effect-go/`, a separate Go module: the runtime (`effect/`),
   value helpers (`forma/`), generated goldens with Go harnesses
   (`conformance/`), benchmarks (`bench/`), and an end-to-end demo
-  (`pnpm effect-go:demo`). It is not part of `pnpm check`.
+  (`pnpm effect-go:demo`). Its Go code does not run in `pnpm check`.
 - `packages/ts/test/effect-go.test.ts`, which pins the generated Go as
   goldens in `pnpm check`. It does not need a Go toolchain.
 
@@ -149,7 +149,7 @@ channels and timers. The runtime has no run queue, no yielding, and no
 `async` boundary. A blocking Go call simply blocks that fiber's goroutine.
 
 **Interruption follows Effect 4's rules** (`internal/effect.ts` and
-`internal/core.ts` in effect@4.0.3):
+`internal/core.ts` in effect@4.0.3, unchanged in 4.1.1):
 
 - An interrupt request is delivered at the fiber's next operation while the
   fiber is interruptible, or at once when it is parked in an interruptible
@@ -201,7 +201,8 @@ and every fiber goroutine has an outer recover boundary.
 **Exit and Cause.** `Exit[A]` is a value or a `*Cause`. Effect 4 represents a
 cause as a flat list of reasons (`Fail`, `Die`, `Interrupt`) rather than
 Effect 3's tree with `Sequential` and `Parallel` nodes. The prototype
-follows 4.0.3, the version Forma generates against. Reasons keep their order,
+follows Effect 4: it was ported from 4.0.3, and 4.1.1, which Forma now
+generates against, has the same cause shape. Reasons keep their order,
 and combinations such as a body failure followed by a finalizer failure
 append. This is the first example of [tracking upstream](#tracking-upstream-effect).
 
@@ -304,10 +305,11 @@ Forma's checker rejects it (`reject-impossible-catch`).
 
 ### `extern` for Go
 
-[RFC 0018](#related-designs) proposes `extern` for typed imports of
+The "Effect as the host" proposal ([related designs](#related-designs))
+adds `extern` for typed imports of
 TypeScript exports, such as
 `(extern "./payments.js" (service Payments ...) (: f (-> A B) :export "tsName"))`.
-That RFC is on an unmerged branch. A Go host would add a host key and Go's
+That proposal is on an unmerged branch. A Go host would add a host key and Go's
 export rules:
 
 ```lisp
@@ -428,7 +430,11 @@ The suffix rule should be specified, because generated names are API.
 
 #### Tracking upstream Effect
 
-The runtime ports behaviour from a pinned Effect version, now 4.0.3.
+The runtime ports behaviour from a pinned Effect version: 4.0.3 when the
+prototype was written. While this RFC was in review, the TypeScript target
+moved to 4.1.1. The ported rules are unchanged in 4.1.1, and the
+cross-host `http-api` check passes against it, but nothing enforced that
+check; this is the tracking problem in miniature.
 Effect 4 already differs from Effect 3 in ways the port must choose between:
 causes are flat lists of reasons, `fork` is `forkChild`, and `Effect.interrupt`
 does not mark the fiber interrupted. **Recommendation:**
@@ -661,7 +667,7 @@ non-string path parameters are not.
 
 Measured on the sandbox this RFC was written in: a 4-vCPU Intel Xeon at
 2.5 GHz with a CPU quota of two cores (`GOMAXPROCS=2`), Go 1.25.12, and
-Node 24.22.1 with effect@4.0.3. Go figures are medians of five runs of
+Node 24.22.1 with effect@4.0.3, before the repository moved to 4.1.1. Go figures are medians of five runs of
 `go test -bench . -benchmem ./bench/`. Effect-TS figures are medians of three
 runs of `node bench/effect-ts.mjs`, which implements the same workloads. Each
 workload has 1,000 steps, and the table reports cost per step. The machine
@@ -824,7 +830,7 @@ Reading the table:
    matching, `result`, catch-all arms, generic pure functions, and `config`.
    *Validation:* every positive Effect conformance case except streams
    generates and passes a Go harness.
-4. **`extern :go`** after RFC 0018 lands, with `:cancel` required and
+4. **`extern :go`** after the "Effect as the host" proposal lands, with `:cancel` required and
    negative cases for a missing `:cancel` and for an error outside the
    declared set.
 5. **Preludes on Go.** Host-keyed `:emit`, the `go/*` primitives, the
@@ -868,6 +874,8 @@ Reading the table:
   lower to `effect.LayerSucceed` or `LayerEffect` in Go.
 - [RFC 0016: Host-call journals](./0016-host-call-journals.md): replaying host
   calls would apply to Go externs.
-- RFC 0018: Effect as the host. Proposes `extern` for typed TypeScript
-  imports; under review on an unmerged branch, not yet in this repository.
+- "Effect as the host": a proposal on an unmerged branch for `extern`, typed
+  TypeScript imports. It is not yet in this repository and has no number
+  here; it was drafted as RFC 0018, which `main` has since used for type
+  generics.
 - [Forma for Effect](../effect.md) and the [Effect reference](../effect/reference.md).

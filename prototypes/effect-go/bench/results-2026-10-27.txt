@@ -1,4 +1,4 @@
-# effect-go benchmark run for RFC 0019, 2026-10-27
+# effect-go benchmark run for RFC 0023, 2026-10-27
 # go test -run '^$' -bench . -benchmem -count=5 ./bench/
 goos: linux
 goarch: amd64

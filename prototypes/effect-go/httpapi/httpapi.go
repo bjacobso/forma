@@ -1,5 +1,5 @@
 // Package httpapi serves Forma's http-api prelude on Go's net/http: the Go
-// counterpart of Effect 4's HttpApi for RFC 0019. Generated code builds an
+// counterpart of Effect 4's HttpApi for RFC 0023. Generated code builds an
 // API from the prelude's `:go` emit hooks; Forma's linker has already checked
 // every handler against its endpoint, so this package trusts the wiring.
 //

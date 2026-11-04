@@ -1,9 +1,10 @@
 # effect-go (prototype)
 
-A prototype for [RFC 0019](../../docs/rfcs/0019-effect-go.md): a Go port of
-the semantic core of Effect (effect@4.0.3) and a Forma → Go generator that
+A prototype for [RFC 0023](../../docs/rfcs/0023-effect-go.md): a Go port of
+the semantic core of Effect (ported from effect@4.0.3; the rules it ports are
+unchanged in 4.1.1, which Forma now targets) and a Forma → Go generator that
 reuses Forma's existing mechanics checker. It is **not a supported Forma
-target**. It is not published, not part of `pnpm check`, and its APIs will
+target**. It is not published, its Go code does not run in `pnpm check`, and its APIs will
 change.
 
 ## Run the demo

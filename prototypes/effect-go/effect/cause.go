@@ -8,7 +8,7 @@
 // regions, supervision, scopes and finalizers, memoized layers, and
 // fiber-local references.
 //
-// This is a prototype for RFC 0019. It is not a supported Forma target.
+// This is a prototype for RFC 0023. It is not a supported Forma target.
 package effect
 
 import (
@@ -43,7 +43,8 @@ type Reason struct {
 
 // Cause is why an effect did not succeed. Effect 4 represents a cause as a
 // flat list of reasons rather than Effect 3's tree of sequential and parallel
-// nodes; the prototype follows 4.0.3, the version Forma generates against.
+// nodes; the prototype follows 4.0.3 (unchanged in 4.1.1, which Forma now
+// generates against).
 // Reasons appear in the order they happened.
 type Cause struct {
 	reasons []Reason

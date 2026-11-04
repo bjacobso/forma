@@ -1,4 +1,4 @@
-// Cross-host conformance for the http-api program (RFC 0019).
+// Cross-host conformance for the http-api program (RFC 0023).
 //
 // 1. Differential: every request in wire-cases.json goes to the TypeScript
 //    server generated from program.lisp (the effect-typescript golden) and
