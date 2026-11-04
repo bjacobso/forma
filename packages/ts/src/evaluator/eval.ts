@@ -13,6 +13,7 @@ import { compileProgram, runChunkWithStats } from "../vm/index.js";
 import type { KValue, KMacro, BuiltinFn, KernelOptions, KernelResult } from "./types.js";
 // (runtime type guards used by evaluateCompileTimeExprs are inlined or delegated)
 import { PreludeEnv } from "../expander/prelude.js";
+import { currentGensymCounter, withGensymScope } from "../builtins/macro.js";
 
 import type { EvaluatorRuntime } from "./eval-types.js";
 import { evalExpr, applyKFn, toKernelError } from "./eval-core.js";
@@ -69,7 +70,7 @@ export function evaluate(
   source: string,
   options: KernelOptions,
 ): Effect.Effect<KernelResult, KernelError | ParseError, PreludeEnv> {
-  return Effect.gen(function* () {
+  return withGensymScope(Effect.gen(function* () {
     const frontend = yield* parseAndExpandKernelSource(source, {
       builtins: options.builtins ?? {},
       ...(options.env ? { env: options.env } : {}),
@@ -86,7 +87,7 @@ export function evaluate(
       options.env ?? Env.empty(),
       options,
     );
-  });
+  }));
 }
 
 /**
@@ -104,7 +105,9 @@ export function evaluateExprs(
   exprs: readonly SExpr[],
   options: KernelOptions,
 ): Effect.Effect<KernelResult, KernelError> {
-  return Effect.flatMap(expandExprs(exprs, options), (expanded) => evaluateExpandedExprs(expanded, options));
+  return withGensymScope(
+    Effect.flatMap(expandExprs(exprs, options), (expanded) => evaluateExpandedExprs(expanded, options)),
+  );
 }
 
 /**
@@ -117,12 +120,14 @@ export function expandExprs(
   options: KernelOptions,
 ): Effect.Effect<readonly SExpr[], KernelError> {
   return Effect.gen(function* () {
+    const gensym = yield* currentGensymCounter;
     const frontend = yield* Effect.try({
       try: () =>
         expandKernelExprsSync(exprs, {
           builtins: options.builtins ?? {},
           ...(options.includePrelude === false ? {includePrelude:false} : {}),
           ...(options.env ? { env: options.env } : {}),
+          ...(gensym ? { gensym } : {}),
         }),
       catch: toKernelError,
     });
@@ -139,7 +144,7 @@ export function evaluateExpandedExprs(
   expanded: readonly SExpr[],
   options: KernelOptions,
 ): Effect.Effect<KernelResult, KernelError> {
-  return evaluateExpandedRuntimeExprs(expanded, options.env ?? Env.empty(), options);
+  return withGensymScope(evaluateExpandedRuntimeExprs(expanded, options.env ?? Env.empty(), options));
 }
 
 function evaluateExpandedRuntimeExprs(
@@ -205,7 +210,7 @@ export function evaluateCompileTimeExprs(
   exprs: readonly SExpr[],
   options: KernelOptions,
 ): Effect.Effect<KernelResult, KernelError> {
-  return Effect.gen(function* () {
+  return withGensymScope(Effect.gen(function* () {
     const counter = yield* Ref.make(0);
     const builtins = options.builtins ?? {};
     const baseEnv = options.env ?? Env.empty();
@@ -368,7 +373,7 @@ export function evaluateCompileTimeExprs(
 
     const steps = yield* Ref.get(counter);
     return { value: result, steps, env: currentEnv } satisfies KernelResult;
-  });
+  }));
 }
 
 /** An evaluation whose author-written expressions are observed. */

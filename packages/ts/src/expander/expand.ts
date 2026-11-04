@@ -16,6 +16,7 @@ import {
 } from "../evaluator/source-trace.js";
 import type { BuiltinFn, KMacro, KValue } from "../evaluator/types.js";
 import { isKMacro, isKSExpr } from "../evaluator/types.js";
+import { GensymScope, type GensymCounter } from "../builtins/macro.js";
 
 const DEFAULT_MACRO_STEP_LIMIT = 10_000;
 
@@ -23,6 +24,7 @@ const preludeEnvCache = new WeakMap<Record<string, BuiltinFn>, Env>();
 
 interface ExpandState {
   bindingCounter: number;
+  readonly gensym: GensymCounter;
 }
 
 export interface ExpandProgramOptions {
@@ -49,6 +51,11 @@ export interface ExpandProgramOptions {
    */
   readonly keepMacroDefs?: boolean;
   readonly macroStepLimit?: number;
+  /**
+   * The `gensym` counter to continue. Defaults to a fresh counter, so the
+   * same program expands to the same names however many expansions ran before.
+   */
+  readonly gensym?: GensymCounter;
 }
 
 export interface ExpandProgramResult {
@@ -73,7 +80,7 @@ export function expandProgramSync(
   exprs: readonly SExpr[],
   options: ExpandProgramOptions,
 ): ExpandProgramResult {
-  const state: ExpandState = { bindingCounter: 0 };
+  const state: ExpandState = { bindingCounter: 0, gensym: options.gensym ?? { next: 0 } };
   const macroStepLimit = options.macroStepLimit ?? DEFAULT_MACRO_STEP_LIMIT;
   let macroEnv = makeMacroEnv(options);
   const inlineCompileTimeCalls = options.inlineCompileTimeCalls === true;
@@ -81,7 +88,7 @@ export function expandProgramSync(
 
   for (const expr of normalizeCoreProgram(exprs)) {
     if (isTopLevelDefMacro(expr)) {
-      macroEnv = evalTopLevel(expr, macroEnv, options.builtins, macroStepLimit);
+      macroEnv = evalTopLevel(expr, macroEnv, options.builtins, macroStepLimit, state.gensym);
       if (options.keepMacroDefs === true) {
         expanded.push(expr);
       }
@@ -119,7 +126,7 @@ export function getPreludeEnvSync(builtins: Record<string, BuiltinFn>): Env {
         builtins,
       });
       return result.env;
-    }),
+    }).pipe(Effect.provideService(GensymScope, { next: 0 })),
   );
 
   preludeEnvCache.set(builtins, env);
@@ -131,13 +138,14 @@ function evalTopLevel(
   env: Env,
   builtins: Record<string, BuiltinFn>,
   stepLimit: number,
+  gensym: GensymCounter,
 ): Env {
   return Effect.runSync(
     evaluateCompileTimeExprs([expr], {
       stepLimit,
       builtins,
       env,
-    }),
+    }).pipe(Effect.provideService(GensymScope, gensym)),
   ).env;
 }
 
@@ -171,7 +179,7 @@ function expandExpr(
       const binding = macroEnv.lookup(head.name);
       if (binding !== undefined && isKMacro(binding)) {
         const args = expr.items.slice(1);
-        const result = evaluateMacro(binding, args, builtins, macroStepLimit);
+        const result = evaluateMacro(binding, args, builtins, macroStepLimit, state.gensym);
         const hygienic = binding.name.includes("__forma_")
           ? hygienicExpansion(result, args, state)
           : result;
@@ -229,7 +237,13 @@ function expandExpr(
       }
 
       if (inlineCompileTimeCalls) {
-        const inlined = tryInlineCompileTimeCall(expr, macroEnv, builtins, macroStepLimit);
+        const inlined = tryInlineCompileTimeCall(
+          expr,
+          macroEnv,
+          builtins,
+          macroStepLimit,
+          state.gensym,
+        );
         if (inlined) {
           return expandExpr(
             inlined,
@@ -546,6 +560,7 @@ function tryInlineCompileTimeCall(
   env: Env,
   builtins: Record<string, BuiltinFn>,
   stepLimit: number,
+  gensym: GensymCounter,
 ): SExpr | null {
   const head = expr.items[0];
   if (head?._tag !== "Sym") {
@@ -567,7 +582,7 @@ function tryInlineCompileTimeCall(
         stepLimit,
         builtins,
         env,
-      }),
+      }).pipe(Effect.provideService(GensymScope, gensym)),
     ).value;
 
     return isKSExpr(result) ? result.expr : kValueToSExpr(result);
@@ -679,6 +694,7 @@ function evaluateMacro(
   argExprs: readonly SExpr[],
   builtins: Record<string, BuiltinFn>,
   stepLimit: number,
+  gensym: GensymCounter,
 ): SExpr {
   if (macro.restParam) {
     if (argExprs.length < macro.params.length) {
@@ -713,7 +729,7 @@ function evaluateMacro(
       stepLimit,
       builtins,
       env: macroEnv,
-    }),
+    }).pipe(Effect.provideService(GensymScope, gensym)),
   ).value;
 
   return isKSExpr(result) ? result.expr : kValueToSExpr(result);

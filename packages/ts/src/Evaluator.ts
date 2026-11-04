@@ -29,6 +29,7 @@ export {
 } from "./evaluator/frontend.js";
 export { sourceOriginsOf, sourceTraceOf } from "./evaluator/source-trace.js";
 export { printKValue, printSExpr } from "./evaluator/kvalue-to-source.js";
+export { GensymScope, withGensymScope, type GensymCounter } from "./builtins/macro.js";
 export { kValueToSExpr } from "./evaluator/quasiquote.js";
 
 export type {
