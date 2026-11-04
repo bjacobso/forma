@@ -179,3 +179,43 @@ The Elm, email, and HTTP examples also pass their respective TypeScript linker;
 this checks generation, while the existing conformance suites separately check
 emitted TypeScript and runtime harnesses. Run `pnpm check:preludes` after building
 the engine for just the prelude documentation check.
+
+## Extension metadata
+
+A form can carry constant metadata for editors, hosts, and other consumers. The
+compiler treats namespace names and their contents as data:
+
+```lisp
+(form (greeting name message {:keys [doc]})
+  "Declare a greeting."
+  :extensions {:catalog/display {:label "Greeting" :category :copy
+                                 :fallback nil}}
+  :types {:name (Declares Greeting) :message String :doc (Option String)}
+  :ir GreetingIR
+  {:kind "Greeting" :name name :message message :doc doc})
+```
+
+`:extensions` requires a literal map with string or keyword keys. Values may be
+strings, numbers, Booleans, `nil`, keywords, vectors, or nested literal maps.
+Keywords become strings without their colon, and `nil` becomes null. Calls,
+ordinary symbols, quoted expressions, and duplicate normalized keys are errors
+at their source locations. The parser never evaluates this configuration.
+Explicit namespaces override the same namespace derived from the IR type;
+other derived namespaces are retained. Hole and IR validation still use their
+typed contracts. Imported forms retain their metadata.
+
+Load `compiler.lisp` to use the domain-neutral `named-map` macro in projections:
+
+```lisp
+(let [gap 8 visible false]
+  (named-map gap visible))
+; Produces {"gap" 8 "visible" false}.
+```
+
+Arguments must be distinct identifier symbols. The macro preserves spelling,
+lexical binding, insertion order, and nil-valued entries; no arguments produces
+an empty map. This is a prelude macro for projections and explicit macro
+libraries, rather than an addition to the separate Effect mechanics dialect.
+IR bodies still provide their literal kind fields explicitly. See
+[RFC 0021](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-form-extensions-and-named-maps.md)
+for the design and compatibility policy.

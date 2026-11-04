@@ -4,17 +4,6 @@
 ; Requires: ui.lisp; ontology.lisp supplies enclosing view declarations.
 ; Used by: Ontology view layouts and downstream host renderers.
 ; -----------------------------------------------------------------------------
-(define entity-browser.metadata
-  '{
-     :descriptor-name "entity-browser"
-     :extensions
-       {
-         :view/component
-           {
-             :allows-bind true
-             :compile {:expr-props ["visible" "bind"]}
-             :children "none"
-             :events {:on-row-click "onRowClick"}}}})
 
 (form (entity-browser {:keys [title visible bind]})
   "Builds an ontology entity-browser node with optional title and binding,
@@ -23,29 +12,21 @@
     [[(view Example
         :state {:items []}
         :layout (entity-browser :title "People" :bind $state.items))]]
+  :extensions
+    {
+      :view/component
+        {
+          :allows-bind true
+          :compile {:expr-props ["visible" "bind"]}
+          :children "none"
+          :events {:on-row-click "onRowClick"}}}
   :types
     {
       :title (Option (Expr a))
       :visible (Option (Expr Bool))
       :bind (Option (Expr a))}
   :ir ComponentIR
-  (component "entity-browser" {"title" title "visible" visible "bind" bind} []))
-
-(define action-button.metadata
-  '{
-     :descriptor-name "action-button"
-     :extensions
-       {
-         :view/component
-           {
-             :allows-bind false
-             :compile
-               {
-                 :expr-props ["visible"]
-                 :json-slots ["parameters"]
-                 :slot-types {:parameters {:kind "record" :value "unknown"}}}
-             :children "none"
-             :events {:on-click "onClick" :on-success "onSuccess"}}}})
+  (component "entity-browser" (named-map title visible bind) []))
 
 (form
   (action-button
@@ -56,6 +37,18 @@
     [[(view Example
         :layout
           (action-button :label "Save" :action-ref "save" :parameters {}))]]
+  :extensions
+    {
+      :view/component
+        {
+          :allows-bind false
+          :compile
+            {
+              :expr-props ["visible"]
+              :json-slots ["parameters"]
+              :slot-types {:parameters {:kind "record" :value "unknown"}}}
+          :children "none"
+          :events {:on-click "onClick" :on-success "onSuccess"}}}
   :types
     {
       :label (Option (Expr a))
@@ -66,28 +59,9 @@
       :parameters (Option Json)
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "action-button"
-    {
-      "label" label
-      "variant" variant
-      "action-ref" action-ref
-      "entity-id" entity-id
-      "parameters" parameters
-      "visible" visible}
+  (component "action-button"
+    (named-map label variant action-ref entity-id parameters visible)
     []))
-
-(define create-entity-button.metadata
-  '{
-     :descriptor-name "create-entity-button"
-     :extensions
-       {
-         :view/component
-           {
-             :allows-bind false
-             :compile {:expr-props ["visible"]}
-             :children "none"
-             :events {:on-click "onClick" :on-success "onSuccess"}}}})
 
 (form (create-entity-button {:keys [label entity-type variant visible]})
   "Builds a create-entity-button configuration for a required entity-type
@@ -96,6 +70,14 @@
     [[(view Example
         :layout
           (create-entity-button :entity-type "Person" :label "New person"))]]
+  :extensions
+    {
+      :view/component
+        {
+          :allows-bind false
+          :compile {:expr-props ["visible"]}
+          :children "none"
+          :events {:on-click "onClick" :on-success "onSuccess"}}}
   :types
     {
       :label (Option (Expr a))
@@ -104,26 +86,9 @@
         (Option (Union "default" "destructive" "outline" "secondary" "ghost"))
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "create-entity-button"
-    {
-      "label" label
-      "entity-type" entity-type
-      "variant" variant
-      "visible" visible}
+  (component "create-entity-button"
+    (named-map label entity-type variant visible)
     []))
-
-(define entity-picker.metadata
-  '{
-     :descriptor-name "entity-picker"
-     :extensions
-       {
-         :view/component
-           {
-             :allows-bind false
-             :compile {:expr-props ["visible"]}
-             :children "none"
-             :events {:on-change "onChange"}}}})
 
 (form
   (entity-picker
@@ -133,6 +98,14 @@
   :examples
     [[(view Example
         :layout (entity-picker :name "person" :entity-type "Person"))]]
+  :extensions
+    {
+      :view/component
+        {
+          :allows-bind false
+          :compile {:expr-props ["visible"]}
+          :children "none"
+          :events {:on-change "onChange"}}}
   :types
     {
       :name String
@@ -142,61 +115,43 @@
       :entity-type (Option String)
       :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component
-    "entity-picker"
-    {
-      "name" name
-      "label" label
-      "description" description
-      "placeholder" placeholder
-      "entity-type" entity-type
-      "visible" visible}
+  (component "entity-picker"
+    (named-map name label description placeholder entity-type visible)
     []))
-
-(define query-console.metadata
-  '{
-     :descriptor-name "query-console"
-     :extensions
-       {
-         :view/component
-           {
-             :allows-bind false
-             :compile {:expr-props ["visible"]}
-             :children "none"}}})
 
 (form (query-console {:keys [title visible]})
   "Builds a query-console configuration node with optional title and
    visibility expressions."
   :examples
     [[(view Example :layout (query-console :title "Explore"))]]
+  :extensions
+    {
+      :view/component
+        {:allows-bind false :compile {:expr-props ["visible"]} :children "none"}}
   :types {:title (Option (Expr a)) :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component "query-console" {"title" title "visible" visible} []))
-
-(define view-ref.metadata
-  '{
-     :descriptor-name "view-ref"
-     :extensions
-       {
-         :view/component
-           {
-             :allows-bind false
-             :compile
-               {
-                 :expr-props ["visible"]
-                 :json-slots ["input"]
-                 :slot-types {:input {:kind "record" :value "unknown"}}}
-             :children "none"
-             :positional-prop "name"}}})
+  (component "query-console" (named-map title visible) []))
 
 (form (view-ref name {:keys [input visible]})
   "Builds a reference to a view by string name, with optional JSON input and
    visibility."
   :examples
     [[(view Example :layout (view-ref "People" :input {:page 1}))]]
+  :extensions
+    {
+      :view/component
+        {
+          :allows-bind false
+          :compile
+            {
+              :expr-props ["visible"]
+              :json-slots ["input"]
+              :slot-types {:input {:kind "record" :value "unknown"}}}
+          :children "none"
+          :positional-prop "name"}}
   :types {:name String :input (Option Json) :visible (Option (Expr Bool))}
   :ir ComponentIR
-  (component "view-ref" {"name" name "input" input "visible" visible} []))
+  (component "view-ref" (named-map name input visible) []))
 
 ; Constant host layout alias; the target component is interpreted downstream.
 (define action-form

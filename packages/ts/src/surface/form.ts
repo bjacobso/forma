@@ -1,3 +1,4 @@
+import { descriptorConstant } from "./metadata.js";
 import { formatSExprMany } from "../Formatter.js";
 import {buildDescriptorTreeLayoutAliases,rewriteDescriptorTreeLayoutAliases} from "../descriptor/descriptor-tree-aliases.js";
 import { createMetaBuiltins, type HostedMetaBuiltinsFactory } from "../descriptor/meta-builtins.js";
@@ -124,7 +125,7 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
   while (i < e.items.length - 1) {
     const key = name(e.items[i]);
     if (!key?.startsWith(":")) throw new Error(`form ${formName}: expected a :key value option`);
-    if (![":types", ":ir", ":type", ":scope", ":check", ":examples", ":emit"].includes(key)) throw new Error(`form ${formName}: unknown option ${key}`);
+    if (![":types", ":ir", ":type", ":scope", ":check", ":examples", ":emit", ":extensions"].includes(key)) throw new Error(`form ${formName}: unknown option ${key}`);
     if (options.has(key)) throw new Error(`form ${formName}: duplicate option ${key}`);
     const value = e.items[++i];
     if (!value) throw new Error(`form ${formName}: ${key} needs a value`);
@@ -182,7 +183,14 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
   }
   for (const n of holes.keys()) if (!variables.has(n)) throw new Error(`form ${formName}: type for unknown hole ${n}`);
   const resultType = options.get(":type");
-  const extensions = typeDescriptor(irName, types.get(irName)!, types).extensions;
+  const extensionSyntax = options.get(":extensions");
+  if (extensionSyntax && extensionSyntax._tag !== "Map") {
+    throw Object.assign(new Error(`form ${formName}: :extensions expects a literal map`), { loc: extensionSyntax.loc });
+  }
+  const extensions = {
+    ...typeDescriptor(irName, types.get(irName)!, types).extensions,
+    ...(extensionSyntax ? descriptorConstant(extensionSyntax) as Record<string, DescriptorExtensionValue> : {}),
+  };
   return {
     name: formName, phase: "domain", ...(doc ? { doc } : {}), ...(examples ? { examples } : {}), identifiers, slots,
     bindings: declares ? { kind: "static", rules: identifiers.filter(i => i.declaration).map(i => ({ kind: "declaration" as const, identifier: i.name, type: name(arg(unwrapOption(holes.get(i.name)!)))! })) } : { kind: "none" },

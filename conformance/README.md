@@ -89,3 +89,7 @@ A case that fails after an engine change is a **language regression**, not a
 kernel bug. If a behavior cannot be expressed here without a new builtin, that
 is the Roots-of-Lisp failure the suite exists to catch — see the
 operational-effects section of the [language guide](../docs/language.md).
+
+`form-extensions/` pins form-local constant metadata, unrelated extension
+namespaces, the named-map prelude macro, and metadata on imported forms. Its
+fixtures run in `packages/ts/test/form-extensions.test.ts`.

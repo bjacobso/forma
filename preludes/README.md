@@ -2,7 +2,7 @@
 
 These Lisp sources demonstrate how Forma grows from a small typed core into
 domain-specific languages. `kernel.lisp` supplies general-purpose macros,
-`compiler.lisp` defines the descriptor vocabulary, and the remaining files are
+`compiler.lisp` supplies shared projection helpers and macros, and the remaining files are
 an example domain stack with elaboration and portable artifact protocols.
 
 The conformance fixtures and example corpus load these files as their domain
@@ -73,6 +73,8 @@ Read a form beside its output type and nearby helpers:
   domain examples; Elm, email, and HTTP examples also run their TypeScript linker.
 - `:types` gives the contracts of captured holes. `Syntax` retains author syntax,
   `Expr` checks an expression, and `Declares`/`Refers` describe declaration names.
+- `:extensions` carries literal metadata for consumers alongside the form.
+  `named-map` builds string-keyed property maps from binding names in projections.
 - `:ir` names the contract checked against the projected value.
 - Optional `:check` and `:scope` hooks validate holes and provide expression scope.
 - Optional `:emit` returns syntax for a TypeScript target adapter.

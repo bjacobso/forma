@@ -22,3 +22,19 @@
     (if (contains? values value)
       []
       [(diag/error :slot slot :message (str "Default is not a member: " value))])))
+
+; Build a string-keyed map from distinct binding names, retaining value syntax.
+; (named-map gap visible) expands to {"gap" gap "visible" visible}.
+(macro (named-map names ...)
+  (reduce
+    (fn [result name]
+      (let [key (sexpr-sym-name name)]
+        (if (nil? key)
+          (fail "named-map expects identifier symbols")
+          (if (or (starts-with? key ":") (= key "nil"))
+            (fail "named-map expects identifier symbols")
+            (if (contains? result key)
+              (fail "named-map expects distinct names")
+              (assoc result key name))))))
+    {}
+    names))

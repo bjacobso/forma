@@ -128,7 +128,10 @@ export function elaborateSources(
         if (descriptor.surface && descriptions.has(descriptor.name)) throw new Error(`Form '${descriptor.name}' is already declared`);
         descriptions.register(descriptor);
       }
-    } catch (error) { report(sourceLocator(source,sourceId),"elaborate/form-definition",errorMessage(error),undefined); }
+    } catch (error) {
+      const loc = error && typeof error === "object" && "loc" in error ? error.loc as Loc : undefined;
+      report(sourceLocator(source,sourceId),"elaborate/form-definition",errorMessage(error),loc);
+    }
   }
   const contracts = new Map([...options.prelude.payloadContracts ?? [], ...options.payloadContracts ?? [], ...payloadContractsFromSources(sources.map(s => s.source))]);
   const artifactRegistry = options.validatorRegistry ?? makeArtifactValidatorRegistry();
