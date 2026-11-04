@@ -18,6 +18,10 @@ Before merging, check out its branch and run `pnpm release:check`. A failure
 after the merge leaves `main` with versions that were never published. Read the
 generated changelogs as well: breaking entries start with `**Breaking:**`.
 
+CI runs `pnpm check:changesets` on ordinary pull requests to validate release
+notes before versioning. Version PRs have already consumed those notes, so
+`pnpm check` and `pnpm release:check` do not require pending changesets.
+
 `pnpm release:check` builds and tests the JavaScript packages, checks the
 surface goldens, and installs the packed tarballs in a temporary consumer
 project. The consumer check loads every library export and analyzes a document
