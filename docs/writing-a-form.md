@@ -151,3 +151,31 @@ Actions use the same type syntax: `(: hire (-> Candidate (Action (Id Employee)))
 Their effect bodies use `do!`, `create!`, `update!`, and the other ontology
 operations. Generated Effect TypeScript exposes these operations through the
 `OntologyRuntime` service, so a host supplies their persistence behavior.
+
+## Documentation and examples
+
+Put a docstring immediately after the form pattern. Use `:examples` for a vector
+of programs, each represented by a vector of source forms:
+
+```lisp
+(form (greeting name message {:keys [doc]})
+  "Declare a greeting."
+  :examples [[(greeting welcome "Ada")]]
+  :types {:name (Declares Greeting) :message String :doc (Option String)}
+  :ir GreetingIR
+  {:kind "Greeting" :name name :message message :doc doc})
+```
+
+Programs may include setup declarations before the example application. Source
+strings are also accepted, such as `:examples ["(greeting welcome \"Ada\")"]`.
+These examples are descriptor documentation: defining a form neither evaluates
+them nor captures helpers referenced only by them. Consumers can read the
+source strings through `FormDescriptor.examples` or the registry's `getExamples`.
+
+The repository reference renders each example. `pnpm check` requires a docstring
+and at least one example for every form in a domain prelude, then checks each
+example against that prelude's bootstrap stack. Protocol preludes are exempt.
+The Elm, email, and HTTP examples also pass their respective TypeScript linker;
+this checks generation, while the existing conformance suites separately check
+emitted TypeScript and runtime harnesses. Run `pnpm check:preludes` after building
+the engine for just the prelude documentation check.

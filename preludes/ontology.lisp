@@ -7,6 +7,8 @@
 ; =============================================================================
 ; SECTION 1 — ENTITY SCHEMAS AND SEED DATA
 ; =============================================================================
+; Normalized attribute contract; names are owner-qualified keywords and
+; defaults retain presence separately from null.
 (type EntityFieldIR
   {
     :name Keyword
@@ -60,10 +62,14 @@
     :required Bool
     :doc (Option String)})
 
+; Recognizes the outer Option constructor in authored type syntax.
 (define optional-type? [t] (and (list? t) (= (str (first t)) "Option")))
 
+; Removes Option and field metadata from an attribute's value-type contract.
 (define field-base-type [t] (type/base (if (optional-type? t) (nth t 1) t)))
 
+; Qualifies attribute names and projects required, indexed, description, and
+; default metadata.
 (define fields->ir [owner fields]
   (map
     (fn [[key t]]
@@ -79,6 +85,7 @@
             None)})
     fields))
 
+; Qualifies assignment keys for a declaration's owning schema.
 (define assignments->ir [owner fields]
   (reduce
     (fn [record [key value]]
@@ -86,6 +93,7 @@
     {}
     fields))
 
+; A schema-definition entity selected by the entity form's :tier :meta option.
 (type MetaEntityIR
   {
     :kind "MetaEntity"
@@ -99,6 +107,8 @@
 
 (form (entity name fields {:keys [doc role id-pattern tier]})
   "A named record of attributes."
+  :examples
+    [[(entity Person {:name String :age (Option Int)})]]
   :types
     {
       :name (Declares SchemaDecl)
@@ -118,6 +128,10 @@
 
 (form (relation name source target fields)
   "A typed relation between entities."
+  :examples
+    [[(entity Person {})
+      (entity Team {})
+      (relation Member Person Team {})]]
   :types
     {
       :name (Declares RelationDef)
@@ -132,6 +146,7 @@
     :target target
     :fields (fields->ir name fields)})
 
+; Builds an owner-qualified validation row with field metadata stripped.
 (define seed-row [owner]
   (reduce
     (fn [row key]
@@ -142,6 +157,7 @@
     {}
     (keys (declaration-fields owner))))
 
+; Applies declared defaults before validating a seed or relation assignment.
 (define seed-values [owner fields]
   (let [provided
           (reduce
@@ -162,6 +178,8 @@
       provided
       (keys schema))))
 
+; Produces owner-qualified seed fields, including defaults omitted by the
+; author.
 (define seed-assignments [owner fields]
   (let [values (seed-values owner fields)]
     (reduce
@@ -171,6 +189,9 @@
 
 (form (seed entity id fields)
   "Seed data for an entity."
+  :examples
+    [[(entity Person {:name String})
+      (seed Person "person:ada" {:name "Ada"})]]
   :types
     {
       :entity (Refers SchemaDecl)
@@ -190,6 +211,13 @@
 
 (form (link relation source target fields)
   "A relation instance."
+  :examples
+    [[(entity Person {})
+      (entity Team {})
+      (seed Person "person:ada" {})
+      (seed Team "team:compiler" {})
+      (relation Member Person Team {})
+      (link Member "person:ada" "team:compiler" {})]]
   :types
     {
       :relation (Refers RelationDef)
@@ -221,6 +249,8 @@
 
 (form (attribute name value-type {:keys [doc]})
   "A shared attribute."
+  :examples
+    [[(attribute created-at Float :doc "Creation time in milliseconds")]]
   :types {:name (Declares SchemaDecl) :value-type Type :doc (Option String)}
   :ir SystemAttributeIR
   {
@@ -242,6 +272,7 @@
     :datalog (Option RuntimeExpr)
     :select (List Keyword)})
 
+; Exposes entity attributes under short names for scoped expressions.
 (define entity-fields [entity]
   (let [fields (declaration-fields entity)
         row
@@ -263,6 +294,9 @@
 
 (form (query name {:keys [from where select]})
   "A named read over one entity."
+  :examples
+    [[(entity Person {:name String :age Int})
+      (query adults :from Person :where (>= age 18) :select [name])]]
   :types
     {
       :name (Declares QueryDef)
@@ -294,6 +328,11 @@
     :views (List Symbol)})
 
 (form (workspace name {:keys [title persona subject home views]})
+  "Groups views into a named workspace, with an optional home view, persona,
+   and subject."
+  :examples
+    [[(view Home :layout (text "Welcome"))
+      (workspace People :title "People" :home Home :views [Home])]]
   :types
     {
       :name (Declares WorkspaceDef)
@@ -327,6 +366,10 @@
 (form
   (identity name
     {:keys [kind description member group principal resource resolver]})
+  "Declares a role, group, membership, or contextual role; omitted kind
+   defaults to role. Resolver syntax is retained in the IR."
+  :examples
+    [[(identity Editor :kind :role :description "Edits records")]]
   :types
     {
       :name (Declares IdentityDef)
@@ -363,6 +406,14 @@
 (form
   (permission name
     {:keys [principal action resource effect condition description]})
+  "Declares an allow or deny policy linking an identity, action, and entity
+   schema. Omitted effect defaults to allow."
+  :examples
+    [[(entity Person {})
+      (identity Editor)
+      (: save (Action Unit))
+      (define save nil)
+      (permission CanSave :principal Editor :action save :resource Person)]]
   :types
     {
       :name (Declares PermissionDef)
@@ -388,19 +439,33 @@
 ; =============================================================================
 (type TriggerIR {:kind "Trigger" :triggerKind String :entity Symbol})
 
+; Child-form category for process triggers; the namespace selects on-create,
+; on-update, or on-delete.
 (type process-trigger TriggerIR)
 
 (form (process-trigger/on-create entity)
+  "Describes an entity creation trigger for a process."
+  :examples
+    [[(entity Person {})
+      (process Review :trigger (on-create Person) (node review))]]
   :types {:entity (Refers SchemaDecl)}
   :ir TriggerIR
   {:kind "Trigger" :triggerKind "on-create" :entity entity})
 
 (form (process-trigger/on-update entity)
+  "Describes an entity update trigger for a process."
+  :examples
+    [[(entity Person {})
+      (process Review :trigger (on-update Person) (node review))]]
   :types {:entity (Refers SchemaDecl)}
   :ir TriggerIR
   {:kind "Trigger" :triggerKind "on-update" :entity entity})
 
 (form (process-trigger/on-delete entity)
+  "Describes an entity deletion trigger for a process."
+  :examples
+    [[(entity Person {})
+      (process Review :trigger (on-delete Person) (node review))]]
   :types {:entity (Refers SchemaDecl)}
   :ir TriggerIR
   {:kind "Trigger" :triggerKind "on-delete" :entity entity})
@@ -420,14 +485,23 @@
 (type ProcessEdgeIR
   {:kind "Edge" :from Symbol :to Symbol :guard (Option RuntimeExpr)})
 
+; Child-form category for the mixed node and edge children of a process.
 (type process-child (Union ProcessNodeIR ProcessEdgeIR))
 
+; Retains named expressions as runtimeSource entries rather than evaluating
+; them.
 (define expression-entries [fields]
   (map (fn [[key value]] {:name (keyword/name key) :expr value}) (or fields [])))
 
+; Builds a named declaration reference only when an optional name is present.
 (define reference [kind name] (if (nil? name) nil {:kind kind :name name}))
 
 (form (process-child/node id {:keys [action join fan-out input]})
+  "Adds a named process node with an optional action, join policy, fan-out
+   policy, and captured input expressions."
+  :examples
+    [[(entity Person {})
+      (process Review :trigger (on-create Person) (node review))]]
   :types
     {
       :id Symbol
@@ -446,6 +520,14 @@
     :inputs (expression-entries input)})
 
 (form (process-child/edge from to {:keys [guard]})
+  "Connects two process node identifiers, optionally guarded by a Boolean
+   expression."
+  :examples
+    [[(entity Person {})
+      (process Review
+        :trigger (on-create Person)
+        (node review)
+        (edge start review))]]
   :types {:from Symbol :to Symbol :guard (Option (Expr Bool))}
   :ir ProcessEdgeIR
   {:kind "Edge" :from from :to to :guard guard})
@@ -459,15 +541,18 @@
     :nodes (List ProcessNodeIR)
     :edges (List ProcessEdgeIR)})
 
+; Selects projected child records by their literal IR kind.
 (define children-of-kind [kind children]
   (filter (fn [child] (= child.kind kind)) children))
 
+; Deduplicates a sequence while retaining its first-seen order.
 (define unique-values [values]
   (reduce
     (fn [unique value] (if (contains? unique value) unique (conj unique value)))
     []
     values))
 
+; Tests directed reachability with a visited set to terminate on cycles.
 (define graph/reachable? [edges from to visited]
   (if (= from to)
     true
@@ -483,6 +568,7 @@
         false
         edges))))
 
+; Reports edges that close a dependency cycle.
 (define graph/cycle-diagnostics [edges]
   (reduce
     (fn [diagnostics edge]
@@ -497,6 +583,8 @@
     []
     edges))
 
+; Checks node uniqueness, edge endpoints (including the virtual start node),
+; and graph cycles.
 (define process/check [children]
   (let [nodes      (map (fn [node] node.id) (children-of-kind "Node" children))
         edges      (children-of-kind "Edge" children)
@@ -521,6 +609,14 @@
       edges)))
 
 (form (process name {:keys [description trigger]} child ...)
+  "Declares a triggered graph of action nodes and edges. Checks duplicate
+   node identifiers, unresolved edge endpoints, and dependency cycles."
+  :examples
+    [[(entity Person {})
+      (process Review
+        :trigger (on-create Person)
+        (node review)
+        (edge start review))]]
   :types
     {
       :name (Declares ProcessDef)
@@ -543,9 +639,19 @@
 ; =============================================================================
 (type DocumentOptionIR {:kind "Option" :value String :label String})
 
+; Child-form category for stored option values and labels.
 (type document-option DocumentOptionIR)
 
 (form (document-option/option value label)
+  "Pairs a stored string value with its display label for a document field
+   or locale override."
+  :examples
+    [[(document Profile
+        (page
+          details
+          :assignee
+          author
+          (select :profile/color "Color" (option "blue" "Blue"))))]]
   :types {:value String :label String}
   :ir DocumentOptionIR
   {:kind "Option" :value value :label label})
@@ -558,6 +664,7 @@
     :transform (Option String)
     :cardinality (Option String)})
 
+; Finds a declared field by its full name or final path segment.
 (define binding/key [owner field]
   (first
     (filter
@@ -569,6 +676,7 @@
             field)))
       (keys (declaration-fields owner)))))
 
+; Rejects an unknown attribute binding; absent bindings need no check.
 (define binding/check [binding]
   (if (nil? binding)
     []
@@ -583,6 +691,8 @@
             :slot :bind
             :message (str "Unknown entity attribute " binding)}]))))
 
+; Projects an entity attribute reference, retaining absent transform and
+; cardinality as optional values.
 (define attribute-binding [binding transform cardinality]
   (if (nil? binding)
     nil
@@ -608,6 +718,7 @@
     :binding (Option AttributeBindingIR)
     :options (List DocumentOptionIR)})
 
+; Child-form category for document input fields and static content.
 (type document-field DocumentFieldIR)
 
 (form
@@ -615,6 +726,12 @@
     {:keys [description required bind transform cardinality]}
     option
     ...)
+  "Adds a text field at a keyword path, with optional description, required
+   flag, attribute binding, transform, cardinality, and option children.
+   Checks that a binding names a declared attribute."
+  :examples
+    [[(document Profile
+        (page details :assignee author (text :profile/value "Value")))]]
   :types
     {
       :path Keyword
@@ -644,6 +761,12 @@
     {:keys [description required bind transform cardinality]}
     option
     ...)
+  "Adds a date field at a keyword path, with optional description, required
+   flag, attribute binding, transform, cardinality, and option children.
+   Checks that a binding names a declared attribute."
+  :examples
+    [[(document Profile
+        (page details :assignee author (date :profile/value "Value")))]]
   :types
     {
       :path Keyword
@@ -673,6 +796,12 @@
     {:keys [description required bind transform cardinality]}
     option
     ...)
+  "Adds a number field at a keyword path, with optional description,
+   required flag, attribute binding, transform, cardinality, and option
+   children. Checks that a binding names a declared attribute."
+  :examples
+    [[(document Profile
+        (page details :assignee author (number :profile/value "Value")))]]
   :types
     {
       :path Keyword
@@ -702,6 +831,12 @@
     {:keys [description required bind transform cardinality]}
     option
     ...)
+  "Adds a checkbox field at a keyword path, with optional description,
+   required flag, attribute binding, transform, cardinality, and option
+   children. Checks that a binding names a declared attribute."
+  :examples
+    [[(document Profile
+        (page details :assignee author (checkbox :profile/value "Value")))]]
   :types
     {
       :path Keyword
@@ -731,6 +866,12 @@
     {:keys [description required bind transform cardinality]}
     option
     ...)
+  "Adds a select field at a keyword path, with optional description,
+   required flag, attribute binding, transform, cardinality, and option
+   children. Checks that a binding names a declared attribute."
+  :examples
+    [[(document Profile
+        (page details :assignee author (select :profile/value "Value")))]]
   :types
     {
       :path Keyword
@@ -760,6 +901,12 @@
     {:keys [description required bind transform cardinality]}
     option
     ...)
+  "Adds a textarea field at a keyword path, with optional description,
+   required flag, attribute binding, transform, cardinality, and option
+   children. Checks that a binding names a declared attribute."
+  :examples
+    [[(document Profile
+        (page details :assignee author (textarea :profile/value "Value")))]]
   :types
     {
       :path Keyword
@@ -789,6 +936,12 @@
     {:keys [description required bind transform cardinality]}
     option
     ...)
+  "Adds a signature field at a keyword path, with optional description,
+   required flag, attribute binding, transform, cardinality, and option
+   children. Checks that a binding names a declared attribute."
+  :examples
+    [[(document Profile
+        (page details :assignee author (signature :profile/value "Value")))]]
   :types
     {
       :path Keyword
@@ -818,6 +971,12 @@
     {:keys [description required bind transform cardinality]}
     option
     ...)
+  "Adds a file field at a keyword path, with optional description, required
+   flag, attribute binding, transform, cardinality, and option children.
+   Checks that a binding names a declared attribute."
+  :examples
+    [[(document Profile
+        (page details :assignee author (file :profile/value "Value")))]]
   :types
     {
       :path Keyword
@@ -847,6 +1006,12 @@
     {:keys [description required bind transform cardinality]}
     option
     ...)
+  "Adds a email field at a keyword path, with optional description, required
+   flag, attribute binding, transform, cardinality, and option children.
+   Checks that a binding names a declared attribute."
+  :examples
+    [[(document Profile
+        (page details :assignee author (email :profile/value "Value")))]]
   :types
     {
       :path Keyword
@@ -876,6 +1041,12 @@
     {:keys [description required bind transform cardinality]}
     option
     ...)
+  "Adds a phone field at a keyword path, with optional description, required
+   flag, attribute binding, transform, cardinality, and option children.
+   Checks that a binding names a declared attribute."
+  :examples
+    [[(document Profile
+        (page details :assignee author (phone :profile/value "Value")))]]
   :types
     {
       :path Keyword
@@ -905,6 +1076,12 @@
     {:keys [description required bind transform cardinality]}
     option
     ...)
+  "Adds a radio field at a keyword path, with optional description, required
+   flag, attribute binding, transform, cardinality, and option children.
+   Checks that a binding names a declared attribute."
+  :examples
+    [[(document Profile
+        (page details :assignee author (radio :profile/value "Value")))]]
   :types
     {
       :path Keyword
@@ -934,6 +1111,12 @@
     {:keys [description required bind transform cardinality]}
     option
     ...)
+  "Adds a hidden field at a keyword path, with optional description,
+   required flag, attribute binding, transform, cardinality, and option
+   children. Checks that a binding names a declared attribute."
+  :examples
+    [[(document Profile
+        (page details :assignee author (hidden :profile/value "Value")))]]
   :types
     {
       :path Keyword
@@ -959,6 +1142,11 @@
     :options option})
 
 (form (document-field/content path content)
+  "Adds static string content at a document path, without an input binding
+   or options."
+  :examples
+    [[(document Profile
+        (page details :assignee author (content :profile/intro "Welcome")))]]
   :types {:path Keyword :content String}
   :ir DocumentFieldIR
   {
@@ -977,9 +1165,23 @@
     :entity (Option Symbol)
     :entityRef (Option {:kind "Entity" :name Symbol})})
 
+; Child-form category for page completion actions.
 (type document-completion DocumentCompletionIR)
 
 (form (document-completion/completion action {:keys [entity]})
+  "Names the action to invoke on page completion, with an optional entity
+   reference."
+  :examples
+    [[(: save (Action Unit))
+      (define save nil)
+      (document Profile
+        (page
+          details
+          :assignee
+          author
+          :completion
+          (completion save)
+          (text :profile/name "Name")))]]
   :types {:action (Refers ActionDef) :entity (Option (Refers SchemaDecl))}
   :ir DocumentCompletionIR
   {
@@ -999,6 +1201,7 @@
     :completion (Option DocumentCompletionIR)
     :fields (List DocumentFieldIR)})
 
+; Child-form category for assigned pages within a document.
 (type document-page DocumentPageIR)
 
 (form
@@ -1006,6 +1209,11 @@
     {:keys [assignee description depends-on completion]}
     child
     ...)
+  "Groups document fields under a section identifier and assignee, with
+   optional dependencies and a completion action."
+  :examples
+    [[(document Profile
+        (page details :assignee author (text :profile/name "Name")))]]
   :types
     {
       :name Symbol
@@ -1024,6 +1232,8 @@
     :completion completion
     :fields child})
 
+; Checks unique section identifiers and field paths, dependency targets, and
+; dependency cycles.
 (define document/check [pages]
   (let [sections   (map (fn [page] page.sectionId) pages)
         fields
@@ -1063,6 +1273,11 @@
     :pages (List DocumentPageIR)})
 
 (form (document name {:keys [description]} page ...)
+  "Declares a document of assigned pages. Checks duplicate section
+   identifiers and field paths, unknown dependencies, and dependency cycles."
+  :examples
+    [[(document Profile
+        (page details :assignee author (text :profile/name "Name")))]]
   :types
     {
       :name (Declares DocumentDef)
@@ -1095,6 +1310,10 @@
     {
       :keys
         [title description document sections default-assignee guidance scope]})
+  "Declares typed task inputs and a title, with optional document sections,
+   assignment, guidance, and scope metadata."
+  :examples
+    [[(task Review {:person String} :title "Review person")]]
   :types
     {
       :name (Declares TaskDef)
@@ -1151,20 +1370,37 @@
     :description (Option String)
     :options (List DocumentOptionIR)})
 
+; Child-form category for role, section, and field locale overrides.
 (type document-locale-child
   (Union DocumentRoleLocaleIR DocumentSectionLocaleIR DocumentFieldLocaleIR))
 
 (form (document-locale-child/role name {:keys [label description]})
+  "Overrides a document role's label and description in a locale."
+  :examples
+    [[(document Profile
+        (page details :assignee author (text :profile/name "Name")))
+      (document-locale Profile "fr" (role author :label "Auteur"))]]
   :types {:name Symbol :label (Option String) :description (Option String)}
   :ir DocumentRoleLocaleIR
   {:kind "Role" :name name :label label :description description})
 
 (form (document-locale-child/section name {:keys [label description]})
+  "Overrides a document section's label and description in a locale."
+  :examples
+    [[(document Profile
+        (page details :assignee author (text :profile/name "Name")))
+      (document-locale Profile "fr" (section details :label "Détails"))]]
   :types {:name Symbol :label (Option String) :description (Option String)}
   :ir DocumentSectionLocaleIR
   {:kind "Section" :name name :label label :description description})
 
 (form (document-locale-child/field path {:keys [label description]} option ...)
+  "Overrides a document field's label, description, and option labels at its
+   path."
+  :examples
+    [[(document Profile
+        (page details :assignee author (text :profile/name "Name")))
+      (document-locale Profile "fr" (field :profile/name :label "Nom"))]]
   :types
     {
       :path Keyword
@@ -1189,6 +1425,7 @@
     :sections (List DocumentSectionLocaleIR)
     :fields (List DocumentFieldLocaleIR)})
 
+; Reads an option directly from captured declaration syntax.
 (define document/raw-option [items key]
   (if (empty? items)
     nil
@@ -1196,6 +1433,8 @@
       (nth items 1)
       (document/raw-option (rest items) key))))
 
+; Checks locale references against the source document's authored roles,
+; sections, and field paths.
 (define document/locale-check [document children]
   (let [pages    (declaration-hole document :page)
         sections (map (fn [page] (nth page 1)) pages)
@@ -1228,6 +1467,12 @@
       children)))
 
 (form (document-locale document locale child ...)
+  "Adds locale overrides for a document. Checks that referenced roles,
+   sections, and field paths exist in the source document."
+  :examples
+    [[(document Profile
+        (page details :assignee author (text :profile/name "Name")))
+      (document-locale Profile "fr" (field :profile/name :label "Nom"))]]
   :type DocumentLocaleDef
   :types
     {
@@ -1254,6 +1499,11 @@
     :defaultLocale (Option String)})
 
 (form (document-localized document locales {:keys [default-locale]})
+  "Lists a document's supported locales and optional default. Checks that
+   the default belongs to the locale list."
+  :examples
+    [[(document Profile)
+      (document-localized Profile ["en" "fr"] :default-locale "en")]]
   :type DocumentLocalizedDef
   :types
     {
@@ -1282,18 +1532,30 @@
 ; =============================================================================
 (type PdfSetIR {:kind "Set" :pdfField String :value Json})
 
+; Child-form category for PDF field assignments within a case.
 (type pdf-set PdfSetIR)
 
 (form (pdf-set/set field value)
+  "Assigns a JSON value to a named PDF field within a switch case."
+  :examples
+    [[(pdf-mapping ProfilePdf
+        :template-blob "profile.pdf"
+        (switch :profile/color (case "blue" (set "Blue" true))))]]
   :types {:field String :value Json}
   :ir PdfSetIR
   {:kind "Set" :pdfField field :value value})
 
 (type PdfCaseIR {:kind "Case" :when String :assignments (List PdfSetIR)})
 
+; Child-form category for string cases within a PDF switch.
 (type pdf-case PdfCaseIR)
 
 (form (pdf-case/case value assignment ...)
+  "Groups PDF field assignments for one string match value."
+  :examples
+    [[(pdf-mapping ProfilePdf
+        :template-blob "profile.pdf"
+        (switch :profile/color (case "blue" (set "Blue" true))))]]
   :types {:value String :assignment (List pdf-set)}
   :ir PdfCaseIR
   {:kind "Case" :when value :assignments assignment})
@@ -1312,19 +1574,38 @@
 
 (type PdfMappingEntryIR (Union PdfDirectIR PdfComputedIR PdfSwitchIR))
 
+; Child-form category for direct, computed, and switch PDF mappings.
 (type pdf-entry PdfMappingEntryIR)
 
 (form (pdf-entry/direct source field {:keys [transform]})
+  "Maps a document keyword path to a PDF field, retaining an optional
+   transform symbol."
+  :examples
+    [[(pdf-mapping ProfilePdf
+        :template-blob "profile.pdf"
+        (direct :profile/name "Name"))]]
   :types {:source Keyword :field String :transform (Option Symbol)}
   :ir PdfDirectIR
   {:kind "Direct" :source source :pdfField field :transform transform})
 
 (form (pdf-entry/computed expression field {:keys [transform]})
+  "Maps captured expression syntax to a PDF field, retaining an optional
+   transform symbol."
+  :examples
+    [[(pdf-mapping ProfilePdf
+        :template-blob "profile.pdf"
+        (computed (str "Hello") "Greeting"))]]
   :types {:expression Syntax :field String :transform (Option Symbol)}
   :ir PdfComputedIR
   {:kind "Computed" :expr expression :pdfField field :transform transform})
 
 (form (pdf-entry/switch source case ...)
+  "Selects PDF assignments by matching a source keyword path against string
+   cases."
+  :examples
+    [[(pdf-mapping ProfilePdf
+        :template-blob "profile.pdf"
+        (switch :profile/color (case "blue" (set "Blue" true))))]]
   :types {:source Keyword :case (List pdf-case)}
   :ir PdfSwitchIR
   {:kind "Switch" :source source :cases case})
@@ -1355,6 +1636,12 @@
           document]}
     mapping
     ...)
+  "Declares a PDF template mapping with direct, computed, or switch entries
+   and an optional source document."
+  :examples
+    [[(pdf-mapping ProfilePdf
+        :template-blob "profile.pdf"
+        (direct :profile/name "Name"))]]
   :types
     {
       :name (Declares PdfMappingDef)
@@ -1393,9 +1680,22 @@
     :autoInvoke Bool
     :inputs (List ResolutionInputIR)})
 
+; Child-form category for constraint resolutions and role assignments.
 (type constraint-child (Union ResolutionIR ConstraintTaskAssignmentIR))
 
 (form (constraint-child/resolution label action {:keys [auto input]})
+  "Describes an action that can resolve a constraint, with optional
+   automatic invocation and captured parameter expressions."
+  :examples
+    [[(entity Person {:age Int})
+      (: fix-age (Action Unit))
+      (define fix-age nil)
+      (constraint Adult
+        :entity Person
+        :severity :error
+        :when (< age 18)
+        :message "Must be an adult"
+        (resolution "Fix age" fix-age))]]
   :types
     {
       :label String
@@ -1424,6 +1724,16 @@
     :body (Option RuntimeExpr)})
 
 (form (constraint-child/assigns-task-to role {:keys [priority title body]})
+  "Adds a role assignment with optional priority and scoped title and body
+   expressions to a constraint."
+  :examples
+    [[(entity Person {:age Int})
+      (constraint Adult
+        :entity Person
+        :severity :error
+        :when (< age 18)
+        :message "Must be an adult"
+        (assigns-task-to reviewer :title "Review age"))]]
   :types
     {
       :role Symbol
@@ -1433,12 +1743,16 @@
   :ir ConstraintTaskAssignmentIR
   {:kind "TaskAssignment" :role role :priority priority :title title :body body})
 
+; Combines scope records, letting the right-hand record override an existing
+; name.
 (define scope/merge [left right]
   (reduce
     (fn [scope [key type]] (assoc scope key type))
     left
     (meta/entries right)))
 
+; Infers Datalog variable bindings from attribute clauses, excluding not and
+; not-join scopes.
 (define datalog/scope [query]
   (let [items (sexpr-items query)]
     (if (or (= (str (first items)) "not") (= (str (first items)) "not-join"))
@@ -1484,6 +1798,15 @@
     {:keys [entity severity description category when query message]}
     child
     ...)
+  "Declares an entity constraint with a severity and message. Requires
+   exactly one of a Boolean condition or captured query syntax."
+  :examples
+    [[(entity Person {:age Int})
+      (constraint Adult
+        :entity Person
+        :severity :error
+        :when (< age 18)
+        :message "Must be an adult")]]
   :types
     {
       :name (Declares ConstraintDef)
@@ -1541,6 +1864,12 @@
     :mergePolicy String})
 
 (form (query-preset name query defaults {:keys [merge-policy]})
+  "Declares captured default arguments for a query. Caller values override
+   defaults unless preset-overrides is selected."
+  :examples
+    [[(entity Person {:name String})
+      (query people :from Person)
+      (query-preset named people {:name "Ada"})]]
   :types
     {
       :name (Declares QueryPresetDef)
@@ -1557,6 +1886,11 @@
     :mergePolicy (keyword/name (or merge-policy :caller-overrides))})
 
 (form (datalog-query name expression)
+  "Declares a query from captured Datalog syntax, using the wildcard source
+   and an empty field selection in QueryIR."
+  :examples
+    [[(datalog-query people
+        {:find [?person] :where [[?person :person/name ?name]]})]]
   :types {:name (Declares QueryDef) :expression Syntax}
   :ir QueryIR
   {:kind "Query" :name name :from '* :datalog expression :select []})
@@ -1568,9 +1902,16 @@
 (type ViewColumnIR
   {:name Keyword :label (Option String) :expr (Option RuntimeExpr)})
 
+; Child-form category for optional view column descriptors.
 (type view-column ViewColumnIR)
 
 (form (view-column/column name {:keys [label expr]})
+  "Adds a keyword-named view column with an optional label and captured
+   expression."
+  :examples
+    [[(view People
+        :layout (text "People")
+        (column :person/name :label "Name"))]]
   :types {:name Keyword :label (Option String) :expr (Option Syntax)}
   :ir ViewColumnIR
   {:name name :label label :expr expr})
@@ -1600,6 +1941,7 @@
     :root (Option Json)
     :layout (Option Json)})
 
+; Preserves absence while converting a captured record into an ordinary map.
 (define optional-record [entries]
   (if (nil? entries)
     nil
@@ -1608,6 +1950,8 @@
       {}
       entries)))
 
+; Turns a field/direction pair into a sort record; an omitted direction
+; defaults to asc.
 (define view/sort [sort]
   (if (nil? sort)
     nil
@@ -1615,6 +1959,7 @@
       :field (keyword (first sort))
       :direction (keyword/name (or (nth sort 1) :asc))}))
 
+; Compiles each named layout definition through the ViewSpec descriptor tree.
 (define view/defs [defs state queries input]
   (if (nil? defs)
     nil
@@ -1649,6 +1994,11 @@
           layout]}
     column
     ...)
+  "Declares a view and compiles its layout and reusable definitions through
+   the ViewSpec descriptor tree. Retains optional queries, state, input
+   types, and columns."
+  :examples
+    [[(view People :layout (rows (heading "People") (text "Welcome")))]]
   :types
     {
       :name (Declares ViewDef)
@@ -1711,13 +2061,22 @@
     :returns Type
     :do RuntimeExpr})
 
+; Capability-bearing result of typed ontology actions; normalization targets
+; the internal __action form.
 (type (Action a) (Effect a [] [OntologyRuntime]))
 
+; Builds the checked action body's effect contract from its return type.
 (define action/effect [result] `(Effect ~result [] [OntologyRuntime]))
 
 (form
   (__action name fields returns effect body checked entities relations documents
     calls)
+  "Internal target of typed Action definitions. Checks the body in the
+   declared input and capability scope, then projects inputs, return type,
+   and captured body to ActionIR."
+  :examples
+    [[(: save (Action Unit))
+      (define save nil)]]
   :types
     {
       :name (Declares ActionDef)
@@ -1750,6 +2109,8 @@
     :returns returns
     :do body})
 
+; Reifies an entity field row, optionally wrapping every base field type in
+; Option.
 (define action/record [entity optional]
   (reduce
     (fn [record key]
@@ -1761,11 +2122,15 @@
     {}
     (keys (declaration-fields entity))))
 
+; Reifies an entity-valued input as its field row plus a typed id; other types
+; pass through.
 (define action/input-type [type]
   (if (not (empty? (declaration-fields type)))
     `~(assoc (action/record type false) :id (list 'Id type))
     `~type))
 
+; Constructs the body scope from input fields and referenced entities,
+; relations, and actions.
 (define action/scope [fields entities relations calls]
   (let [inputs
           (reduce
@@ -1840,6 +2205,7 @@
       inputs
       entities)))
 
+; Finds a keyword option in captured syntax without evaluating it.
 (define syntax-option [syntax key]
   (let [state
           (reduce
@@ -1853,6 +2219,8 @@
             syntax)]
     state.value))
 
+; Exposes each node action return type under outputs.node.action; nodes
+; without actions return Unit.
 (define process/scope [children]
   {
     :outputs
@@ -1886,11 +2254,20 @@
     :errors (List Type)
     :openapi (Option Json)})
 
+; Child-form category for the ontology API; distinct from http-api.lisp's
+; Effect vocabulary.
 (type http-endpoint HttpEndpointIR)
 
 (form
   (http-endpoint/endpoint name
     {:keys [method path payload query headers success errors openapi]})
+  "Describes an ontology HTTP endpoint with an uppercase method and checked
+   request and response type syntax. This is separate from the Effect
+   HttpApi prelude."
+  :examples
+    [[(type Response {:name String})
+      (api People
+        (endpoint list :method :get :path "/people" :success Response))]]
   :types
     {
       :name Symbol
@@ -1915,8 +2292,12 @@
     :errors (or errors [])
     :openapi openapi})
 
+; Validates builtin, named, record, and supported composite HTTP schema
+; syntax.
 (: http/type-check (-> Any (List Any)))
 
+; Validates builtin, named, record, and supported composite HTTP schema
+; syntax.
 (define http/type-check [t]
   (if (symbol? t)
     (if
@@ -1952,9 +2333,13 @@
               :message (str "Unsupported HTTP type " t)}])
         []))))
 
+; Extracts brace-delimited path parameter names from an ontology endpoint
+; path.
 (define http/path-parameters [path]
   (map (fn [part] (first (split part "}"))) (rest (split path "{"))))
 
+; Checks duplicate endpoint names, path parameters, and all request and
+; response schemas.
 (define http/api-check [path-params endpoints]
   (let [declared (map (fn [[key t]] (keyword/name key)) (or path-params []))
         names    (map (fn [endpoint] endpoint.name) endpoints)
@@ -2021,6 +2406,12 @@
     :openapi (Option Json)})
 
 (form (api name {:keys [path-params openapi]} endpoint ...)
+  "Declares an ontology HTTP API. Checks endpoint names, path parameters,
+   and success and error type references."
+  :examples
+    [[(type Response {:name String})
+      (api People
+        (endpoint list :method :get :path "/people" :success Response))]]
   :types
     {
       :name (Declares HttpApiDecl)

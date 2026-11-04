@@ -14,7 +14,7 @@ function readForms(source) {
       skip();while(source[at]!==close){if(at>=source.length)throw new Error('Unclosed form');items.push(read());skip();}at++;
       return{start,end:at,kind:c,items};
     }
-    if(c==='"'){while(at<source.length){if(source[at++]==='\\')at++;else if(source[at-1]==='"')break;}return{start,end:at,value:JSON.parse(source.slice(start,at))};}
+    if(c==='"'){while(at<source.length){if(source[at++]==='\\')at++;else if(source[at-1]==='"')break;}return{start,end:at,value:JSON.parse(source.slice(start,at).replace(/\n/g,'\\n').replace(/\r/g,'\\r').replace(/\t/g,'\\t'))};}
     if(['\'', '`', '~'].includes(c)){if(source[at]==='@')at++;const value=read();return{start,end:value.end,kind:'quote',items:[value]};}
     while(at<source.length && !/[\s,()\[\]{};]/.test(source[at]))at++;
     return{start,end:at,value:source.slice(start,at)};

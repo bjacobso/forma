@@ -7,10 +7,14 @@
 ; =============================================================================
 ; SECTION 1 — COMPONENT PROJECTION
 ; =============================================================================
+; Portable component configuration, not a renderer: string name, JSON
+; properties, and projected children.
 (type ComponentIR {:component String :props Json :children (List Json)})
 
+; Child-form category shared by all UI and ViewSpec component forms.
 (type component ComponentIR)
 
+; Constructs configuration without interpreting renderer behavior.
 (define component [name props children]
   {:component name :props props :children children})
 
@@ -30,6 +34,10 @@
              :positional-prop "content"}}})
 
 (form (text content {:keys [visible bind]})
+  "Builds a text configuration node from content or a binding expression; it
+   accepts no children."
+  :examples
+    [[(view Example :layout (text "Hello"))]]
   :types
     {
       :content (Option (Expr a))
@@ -50,6 +58,10 @@
              :children "any"}}})
 
 (form (rows {:keys [gap visible]} child ...)
+  "Builds a rows container with optional gap and visibility; hosted layouts
+   require children."
+  :examples
+    [[(view Example :layout (rows :gap 8 (text "First") (text "Second")))]]
   :types
     {:gap (Option Float) :visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
@@ -67,6 +79,10 @@
              :children "any"}}})
 
 (form (columns {:keys [gap visible]} child ...)
+  "Builds a columns container with optional gap and visibility; hosted
+   layouts require children."
+  :examples
+    [[(view Example :layout (columns :gap 12 (text "Left") (text "Right")))]]
   :types
     {:gap (Option Float) :visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
@@ -92,6 +108,10 @@
     {:keys [title description subject-mode action footer visible]}
     child
     ...)
+  "Builds a card container with title and description expressions and
+   optional action and footer nodes."
+  :examples
+    [[(view Example :layout (card :title "Profile" (text "Ada")))]]
   :types
     {
       :title (Option (Expr a))
@@ -125,6 +145,9 @@
              :children "any"}}})
 
 (form (item-group {:keys [visible bind]} child ...)
+  "Groups item nodes, optionally binding the group to an expression."
+  :examples
+    [[(view Example :layout (item-group (item :title "Compiler")))]]
   :types
     {
       :visible (Option (Expr Bool))
@@ -152,6 +175,10 @@
         [variant size icon title description value badge badge-variant visible]}
     child
     ...)
+  "Builds an item node with optional icon, text, value, badge, and nested
+   content."
+  :examples
+    [[(view Example :layout (item :title "Compiler" :description "Ready"))]]
   :types
     {
       :variant (Option (Union "default" "outline" "muted"))
@@ -195,6 +222,10 @@
 
 (form
   (button label {:keys [variant size disabled button-type visible]} child ...)
+  "Builds a button node with a label expression, variant, size, disabled
+   expression, and optional children."
+  :examples
+    [[(view Example :layout (button "Save" :variant "default"))]]
   :types
     {
       :label (Option (Expr a))
@@ -230,6 +261,10 @@
              :children "none"}}})
 
 (form (progress {:keys [value label hint visible bind]})
+  "Builds a progress node with value, label, and hint expressions or a
+   binding."
+  :examples
+    [[(view Example :layout (progress :value 50 :label "Halfway"))]]
   :types
     {
       :value (Option (Expr a))
@@ -255,6 +290,10 @@
              :compile {:required-children true}}}})
 
 (form (workflow-strip {:keys [title description visible]} child ...)
+  "Groups workflow-step nodes under optional title and description
+   expressions."
+  :examples
+    [[(view Example :layout (workflow-strip (workflow-step :label "Review")))]]
   :types
     {
       :title (Option (Expr a))
@@ -276,6 +315,12 @@
            {:allows-bind false :children "none" :parents ["workflow-strip"]}}})
 
 (form (workflow-step {:keys [label description status icon visible]})
+  "Builds one workflow step with a required label expression and optional
+   description, status, and icon."
+  :examples
+    [[(view Example
+        :layout
+          (workflow-strip (workflow-step :label "Review" :status "pending")))]]
   :types
     {
       :label (Expr a)
@@ -306,6 +351,11 @@
              :children "any"}}})
 
 (form (empty-state {:keys [icon title description visible]} child ...)
+  "Builds an empty-state container with optional icon, title, description,
+   and child nodes."
+  :examples
+    [[(view Example
+        :layout (empty-state :title "No records" (button "Create")))]]
   :types
     {
       :icon (Option String)
@@ -332,6 +382,10 @@
              :positional-prop "content"}}})
 
 (form (badge content {:keys [variant dot dot-color visible]})
+  "Builds a badge node from a content expression and optional variant and
+   dot configuration."
+  :examples
+    [[(view Example :layout (badge "Ready" :variant "secondary"))]]
   :types
     {
       :content (Option (Expr a))
@@ -362,6 +416,10 @@
              :children "none"}}})
 
 (form (avatar {:keys [src alt fallback size visible]})
+  "Builds an avatar node with source, alternative text, fallback
+   expressions, and optional size."
+  :examples
+    [[(view Example :layout (avatar :fallback "AJ" :alt "Ada"))]]
   :types
     {
       :src (Option (Expr a))
@@ -388,6 +446,9 @@
              :positional-prop "content"}}})
 
 (form (kbd content {:keys [visible]})
+  "Builds a keyboard-hint node from a content expression."
+  :examples
+    [[(view Example :layout (kbd "Enter"))]]
   :types {:content (Option (Expr a)) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "kbd" {"content" content "visible" visible} []))
@@ -404,6 +465,9 @@
              :children "none"}}})
 
 (form (spinner {:keys [label size visible]})
+  "Builds a spinner node with an optional label expression and size."
+  :examples
+    [[(view Example :layout (spinner :label "Loading"))]]
   :types
     {
       :label (Option (Expr a))
@@ -424,6 +488,9 @@
              :children "none"}}})
 
 (form (separator {:keys [orientation visible]})
+  "Builds a separator node with optional horizontal or vertical orientation."
+  :examples
+    [[(view Example :layout (separator :orientation "vertical"))]]
   :types
     {
       :orientation (Option (Union "horizontal" "vertical"))
@@ -446,6 +513,10 @@
              :children ["only" ["tab-panel"]]}}})
 
 (form (tabs {:keys [visible]} child ...)
+  "Builds a container whose children must be tab-panel nodes."
+  :examples
+    [[(view Example
+        :layout (tabs (tab-panel :label "Overview" (text "Hello"))))]]
   :types {:visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "tabs" {"visible" visible} child))
@@ -475,6 +546,10 @@
              :parents ["tabs"]}}})
 
 (form (tab-panel {:keys [label visible]} child ...)
+  "Builds a labeled panel that belongs inside tabs and contains child nodes."
+  :examples
+    [[(view Example
+        :layout (tabs (tab-panel :label "Overview" (text "Hello"))))]]
   :types
     {
       :label (Option (Expr a))
@@ -495,6 +570,14 @@
              :children ["only" ["accordion-item"]]}}})
 
 (form (accordion {:keys [mode visible]} child ...)
+  "Builds an accordion of accordion-item children, with single or multiple
+   expansion mode."
+  :examples
+    [[(view Example
+        :layout
+          (accordion
+            :mode "single"
+            (accordion-item :title "Details" (text "Hello"))))]]
   :types
     {
       :mode (Option (Union "single" "multiple"))
@@ -516,6 +599,11 @@
              :parents ["accordion"]}}})
 
 (form (accordion-item {:keys [title default-open visible]} child ...)
+  "Builds an accordion section with optional title and default-open
+   configuration and nested content."
+  :examples
+    [[(view Example
+        :layout (accordion (accordion-item :title "Details" (text "Hello"))))]]
   :types
     {
       :title (Option (Expr a))
@@ -540,6 +628,9 @@
              :children "any"}}})
 
 (form (grid {:keys [columns visible]} child ...)
+  "Builds a grid container with an optional column count and child nodes."
+  :examples
+    [[(view Example :layout (grid :columns 2 (text "First") (text "Second")))]]
   :types
     {
       :columns (Option Float)
@@ -560,6 +651,9 @@
              :children "any"}}})
 
 (form (aspect-ratio {:keys [ratio visible]} child ...)
+  "Builds a container with an optional numeric aspect ratio and child nodes."
+  :examples
+    [[(view Example :layout (aspect-ratio :ratio 1.5 (text "Preview")))]]
   :types
     {
       :ratio (Option Float)
@@ -580,6 +674,9 @@
              :children "none"}}})
 
 (form (spacer {:keys [height visible]})
+  "Builds a spacer node with optional numeric height."
+  :examples
+    [[(view Example :layout (spacer :height 16))]]
   :types {:height (Option Float) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "spacer" {"height" height "visible" visible} []))
@@ -601,6 +698,12 @@
              :children "any"}}})
 
 (form (split-pane {:keys [direction sizes visible]} child ...)
+  "Builds a split-pane container with optional direction and JSON sizes
+   configuration."
+  :examples
+    [[(view Example
+        :layout
+          (split-pane :direction "horizontal" (text "Left") (text "Right")))]]
   :types
     {
       :direction (Option (Union "horizontal" "vertical"))
@@ -629,6 +732,12 @@
              :children "any"}}})
 
 (form (for-each {:keys [empty-text visible bind]} child ...)
+  "Builds a repeating container with a required binding in hosted layouts
+   and optional empty text."
+  :examples
+    [[(view Example
+        :state {:items []}
+        :layout (for-each :bind $state.items (text "Item")))]]
   :types
     {
       :empty-text (Option String)
@@ -653,6 +762,11 @@
              :children ["only" ["case" "else"]]}}})
 
 (form (condition {:keys [visible]} child ...)
+  "Builds a conditional container restricted to case and else children."
+  :examples
+    [[(view Example
+        :layout
+          (condition (case :when true (text "Ready")) (else (text "Waiting"))))]]
   :types {:visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "condition" {"visible" visible} child))
@@ -674,6 +788,10 @@
              :parents ["condition"]}}})
 
 (form (case {:keys [when visible]} child ...)
+  "Builds a conditional branch with a required when expression and child
+   nodes, inside condition."
+  :examples
+    [[(view Example :layout (condition (case :when true (text "Ready"))))]]
   :types {:when (Expr a) :visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "case" {"when" when "visible" visible} child))
@@ -691,6 +809,13 @@
              :parents ["condition"]}}})
 
 (form (else {:keys [visible]} child ...)
+  "Builds the fallback branch of a condition container."
+  :examples
+    [[(view Example
+        :layout
+          (condition
+            (case :when false (text "Ready"))
+            (else (text "Waiting"))))]]
   :types {:visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "else" {"visible" visible} child))
@@ -708,6 +833,10 @@
              :positional-prop "name"}}})
 
 (form (slot name {:keys [visible bind]} child ...)
+  "Builds a named or unnamed layout slot with optional binding and fallback
+   child nodes."
+  :examples
+    [[(view Example :layout (slot "body" (text "Fallback")))]]
   :types
     {
       :name (Option String)
@@ -730,6 +859,10 @@
              :positional-prop "name"}}})
 
 (form (use name {:keys [overrides visible]} child ...)
+  "Refers to a reusable layout definition by string name, with optional JSON
+   overrides and child nodes."
+  :examples
+    [[(view Example :defs {:greeting (text "Hello")} :layout (use "greeting"))]]
   :types
     {
       :name String
@@ -754,6 +887,10 @@
              :children "any"}}})
 
 (form (tooltip {:keys [content side visible]} child ...)
+  "Builds a tooltip wrapper with a required content expression, optional
+   side, and child nodes."
+  :examples
+    [[(view Example :layout (tooltip :content "Save changes" (button "Save")))]]
   :types
     {
       :content (Expr a)
@@ -779,6 +916,11 @@
              :children "any"}}})
 
 (form (popover {:keys [trigger title description side align visible]} child ...)
+  "Builds a popover with a required trigger node, optional heading and
+   placement, and child nodes."
+  :examples
+    [[(view Example
+        :layout (popover :trigger (button "Open") (text "Details")))]]
   :types
     {
       :trigger Syntax
@@ -816,6 +958,11 @@
              :children "any"}}})
 
 (form (hover-card {:keys [trigger side align visible]} child ...)
+  "Builds a hover-card with a required trigger node, optional placement, and
+   child nodes."
+  :examples
+    [[(view Example
+        :layout (hover-card :trigger (text "More") (text "Details")))]]
   :types
     {
       :trigger Syntax
@@ -842,6 +989,11 @@
              :events {:on-open-change "onOpenChange"}}}})
 
 (form (dialog {:keys [dialog-id title description visible]} child ...)
+  "Builds a dialog identified by a string, with optional title and
+   description expressions and child nodes."
+  :examples
+    [[(view Example
+        :layout (dialog :dialog-id "confirm" :title "Confirm" (button "OK")))]]
   :types
     {
       :dialog-id String
@@ -890,6 +1042,12 @@
 (form
   (table
     {:keys [columns filters page-size default-sort empty-state visible bind]})
+  "Builds a table configuration node with optional columns, filters, paging,
+   sorting, empty state, and binding."
+  :examples
+    [[(view Example
+        :state {:items []}
+        :layout (table :bind $state.items :columns ["name"]))]]
   :types
     {
       :columns (Option Json)
@@ -933,6 +1091,12 @@
     {:keys [id-key parent-id-key label-key default-expanded visible bind]}
     child
     ...)
+  "Builds a tree configuration with optional identifier, parent, and label
+   keys, expansion data, binding, and child nodes."
+  :examples
+    [[(view Example
+        :state {:items []}
+        :layout (tree :bind $state.items :id-key "id" :label-key "name"))]]
   :types
     {
       :id-key (Option String)
@@ -970,6 +1134,12 @@
              :children "none"}}})
 
 (form (metric {:keys [label value value-key visible bind]})
+  "Builds a metric node with optional label, value expression, value key,
+   and binding."
+  :examples
+    [[(view Example
+        :state {:value 7}
+        :layout (metric :bind $state.value :label "Count"))]]
   :types
     {
       :label (Option (Expr a))
@@ -1004,6 +1174,13 @@
              :children "none"}}})
 
 (form (chart {:keys [title chart-type category-key series visible bind]})
+  "Builds a chart configuration with optional chart type, category key,
+   series data, title, and binding."
+  :examples
+    [[(view Example
+        :state {:items []}
+        :layout
+          (chart :chart-type "bar" :bind $state.items :category-key "name"))]]
   :types
     {
       :title (Option (Expr a))
@@ -1041,6 +1218,10 @@
              :positional-prop "content"}}})
 
 (form (markdown content {:keys [visible bind]})
+  "Builds a Markdown configuration node from content or a binding
+   expression; it accepts no children."
+  :examples
+    [[(view Example :layout (markdown "# Hello"))]]
   :types
     {
       :content (Option (Expr a))
@@ -1061,6 +1242,11 @@
              :children "any"}}})
 
 (form (stat-group {:keys [gap visible]} child ...)
+  "Groups statistic nodes with optional gap and visibility configuration."
+  :examples
+    [[(view Example
+        :state {:value 7}
+        :layout (stat-group (metric :bind $state.value :label "Count")))]]
   :types
     {:gap (Option Float) :visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
@@ -1079,6 +1265,9 @@
              :positional-prop "text"}}})
 
 (form (heading text {:keys [level visible]})
+  "Builds a heading node from a text expression and optional numeric level."
+  :examples
+    [[(view Example :layout (heading "Overview" :level 2))]]
   :types
     {
       :text (Option (Expr a))
@@ -1099,6 +1288,9 @@
              :children "none"}}})
 
 (form (divider {:keys [visible]})
+  "Builds a divider node with optional visibility."
+  :examples
+    [[(view Example :layout (divider))]]
   :types {:visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "divider" {"visible" visible} []))
@@ -1117,6 +1309,10 @@
              :positional-prop "message"}}})
 
 (form (alert message {:keys [variant visible]})
+  "Builds an alert configuration node with a required message expression and
+   optional variant and visibility."
+  :examples
+    [[(view Example :layout (alert "Check your details" :variant "warning"))]]
   :types
     {
       :message (Expr a)
@@ -1141,6 +1337,10 @@
              :events {:on-submit "onSubmit"}}}})
 
 (form (form {:keys [title description visible]} child ...)
+  "Builds a UI form container with optional title and description
+   expressions and child nodes."
+  :examples
+    [[(view Example :layout (form :title "Profile" (input :name "name")))]]
   :types
     {
       :title (Option (Expr a))
@@ -1165,6 +1365,9 @@
              :children "any"}}})
 
 (form (button-group {:keys [orientation visible]} child ...)
+  "Groups button nodes with optional orientation."
+  :examples
+    [[(view Example :layout (button-group (button "Save") (button "Cancel")))]]
   :types
     {
       :orientation (Option (Union "horizontal" "vertical"))
@@ -1185,6 +1388,10 @@
              :children ["only" ["breadcrumb-item"]]}}})
 
 (form (breadcrumb {:keys [visible]} child ...)
+  "Builds a breadcrumb container restricted to breadcrumb-item children."
+  :examples
+    [[(view Example
+        :layout (breadcrumb (breadcrumb-item :label "Home" :href "/")))]]
   :types {:visible (Option (Expr Bool)) :child (List component)}
   :ir ComponentIR
   (component "breadcrumb" {"visible" visible} child))
@@ -1203,6 +1410,11 @@
              :events {:on-click "onClick"}}}})
 
 (form (breadcrumb-item {:keys [label href current visible]})
+  "Builds a breadcrumb entry with a required label expression and optional
+   link and current-item marker."
+  :examples
+    [[(view Example
+        :layout (breadcrumb (breadcrumb-item :label "Home" :href "/")))]]
   :types
     {
       :label (Expr a)
@@ -1244,6 +1456,11 @@
           prefix
           suffix
           visible]})
+  "Builds a named input configuration with optional default value, label,
+   description, placeholder, input type, prefix, and suffix."
+  :examples
+    [[(view Example
+        :layout (input :name "email" :label "Email" :input-type "email"))]]
   :types
     {
       :name String
@@ -1285,6 +1502,10 @@
 
 (form
   (textarea {:keys [name default-value label description placeholder visible]})
+  "Builds a named multiline input configuration with optional default value,
+   label, description, and placeholder."
+  :examples
+    [[(view Example :layout (textarea :name "notes" :label "Notes"))]]
   :types
     {
       :name String
@@ -1318,6 +1539,11 @@
              :events {:on-change "onChange"}}}})
 
 (form (checkbox {:keys [name default-value label description visible]})
+  "Builds a named checkbox configuration with optional default value, label,
+   and description expressions."
+  :examples
+    [[(view Example
+        :layout (checkbox :name "active" :label "Active" :default-value true))]]
   :types
     {
       :name String
@@ -1349,6 +1575,10 @@
              :events {:on-change "onChange"}}}})
 
 (form (switch {:keys [name default-value label description visible]})
+  "Builds a named switch configuration with optional default value, label,
+   and description expressions."
+  :examples
+    [[(view Example :layout (switch :name "enabled" :label "Enabled"))]]
   :types
     {
       :name String
@@ -1391,6 +1621,12 @@
     {:keys [name default-value label description placeholder options visible]}
     child
     ...)
+  "Builds a named select configuration with optional JSON options or
+   select-option children."
+  :examples
+    [[(view Example
+        :layout
+          (select :name "color" (select-option :value "blue" :label "Blue")))]]
   :types
     {
       :name String
@@ -1435,6 +1671,12 @@
              :parents ["select"]}}})
 
 (form (select-option {:keys [value label visible]})
+  "Builds a string-valued option with an optional label expression, inside
+   select."
+  :examples
+    [[(view Example
+        :layout
+          (select :name "color" (select-option :value "blue" :label "Blue")))]]
   :types {:value String :label (Option (Expr a)) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "select-option" {"value" value "label" label "visible" visible} []))
@@ -1463,6 +1705,14 @@
     {:keys [name default-value label description options visible]}
     child
     ...)
+  "Builds a named radio-group configuration with optional JSON options or
+   radio-option children."
+  :examples
+    [[(view Example
+        :layout
+          (radio-group
+            :name "color"
+            (radio-option :value "blue" :label "Blue")))]]
   :types
     {
       :name String
@@ -1505,6 +1755,14 @@
              :parents ["radio-group"]}}})
 
 (form (radio-option {:keys [value label visible]})
+  "Builds a string-valued option with an optional label expression, inside
+   radio-group."
+  :examples
+    [[(view Example
+        :layout
+          (radio-group
+            :name "color"
+            (radio-option :value "blue" :label "Blue")))]]
   :types {:value String :label (Option (Expr a)) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "radio-option" {"value" value "label" label "visible" visible} []))
@@ -1526,6 +1784,10 @@
 
 (form
   (slider {:keys [name default-value label description min max step visible]})
+  "Builds a named slider configuration with optional default value, numeric
+   minimum, maximum, and step."
+  :examples
+    [[(view Example :layout (slider :name "volume" :min 0 :max 100 :step 1))]]
   :types
     {
       :name String
@@ -1569,6 +1831,15 @@
              :events {:on-change "onChange"}}}})
 
 (form (toggle-group {:keys [name default-value mode variant options visible]})
+  "Builds a named toggle-group configuration with optional default value,
+   mode, variant, and JSON options."
+  :examples
+    [[(view Example
+        :layout
+          (toggle-group
+            :name "mode"
+            :mode "single"
+            :options ["compact" "full"]))]]
   :types
     {
       :name String
@@ -1604,6 +1875,9 @@
              :children "none"}}})
 
 (form (skeleton {:keys [lines visible]})
+  "Builds a skeleton configuration node with an optional line count."
+  :examples
+    [[(view Example :layout (skeleton :lines 3))]]
   :types {:lines (Option Float) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "skeleton" {"lines" lines "visible" visible} []))
@@ -1621,6 +1895,10 @@
              :positional-prop "content"}}})
 
 (form (raw-html content {:keys [visible]})
+  "Captures a required content expression in a raw-html configuration node;
+   interpretation belongs to the host."
+  :examples
+    [[(view Example :layout (raw-html "<strong>Hello</strong>"))]]
   :types {:content (Expr a) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "raw-html" {"content" content "visible" visible} []))
@@ -1638,6 +1916,10 @@
              :positional-prop "content"}}})
 
 (form (raw-css content {:keys [visible]})
+  "Captures a required content expression in a raw-css configuration node;
+   interpretation belongs to the host."
+  :examples
+    [[(view Example :layout (raw-css "body { color: navy; }"))]]
   :types {:content (Expr a) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "raw-css" {"content" content "visible" visible} []))
@@ -1655,6 +1937,10 @@
              :positional-prop "code"}}})
 
 (form (raw-js code {:keys [visible]})
+  "Captures a required code expression in a raw-js configuration node;
+   execution belongs to the host."
+  :examples
+    [[(view Example :layout (raw-js "console.log('hello')"))]]
   :types {:code (Expr a) :visible (Option (Expr Bool))}
   :ir ComponentIR
   (component "raw-js" {"code" code "visible" visible} []))
@@ -1676,6 +1962,15 @@
              :children "any"}}})
 
 (form (custom {:keys [component-name props visible]} child ...)
+  "Builds a host component configuration by string name, with optional JSON
+   properties and child nodes."
+  :examples
+    [[(view Example
+        :layout
+          (custom
+            :component-name "host/greeting"
+            :props {:message "Hello"}
+            (text "Fallback")))]]
   :types
     {
       :component-name String
@@ -1691,7 +1986,10 @@
 ; =============================================================================
 ; SECTION 10 — LAYOUT ALIASES
 ; =============================================================================
+; Layout alias for use; this is constant host metadata rather than a callable
+; form.
 (define component-ref
   '{:extensions {:view/layout-alias {:form "component-ref" :to "view-ref"}}})
 
+; Layout alias for condition; distinct from the kernel cond macro.
 (define cond '{:extensions {:view/layout-alias {:form "cond" :to "condition"}}})

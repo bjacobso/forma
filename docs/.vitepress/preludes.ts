@@ -149,6 +149,7 @@ export interface Entry {
   readonly pattern?: string;
   readonly signature?: string;
   readonly doc?: string;
+  readonly examples?: readonly string[];
   readonly slots?: readonly Slot[];
   readonly ir?: string;
   readonly emits?: boolean;
@@ -265,6 +266,19 @@ function stringValue(node: Node | undefined): string | undefined {
   return node.text.slice(1, -1).replace(/\\"/gu, "\"").replace(/\\n/gu, "\n");
 }
 
+// Each program vector contains ordinary source forms, retained as documentation.
+function examplesOf(node: Node | undefined, source: string): string[] | undefined {
+  if (node?.kind !== "vector") return undefined;
+  return node.children.map(example => {
+    if (example.kind === "string") return stringValue(example) ?? "";
+    if (example.kind !== "vector") return "";
+    return example.children.map(form => {
+      const column = form.start - source.lastIndexOf("\n", form.start - 1) - 1;
+      return form.text.split("\n").map((line, i) => i ? line.slice(Math.min(column, line.search(/\S|$/u))) : line).join("\n");
+    }).join("\n");
+  });
+}
+
 function joinDoc(lines: readonly string[]): string | undefined {
   const text = lines.join(" ").replace(/\s+/gu, " ").trim();
   return text || undefined;
@@ -360,6 +374,7 @@ function extract(file: string, source: string): { header: string[]; entries: Ent
           id: idFor("form", name),
           pattern: pattern?.text.replace(/\s+/gu, " ").replace(/\( /gu, "(") ?? name,
           doc: docstring ?? doc,
+          examples: examplesOf(option(form.children, ":examples"), source),
           slots: slotsOf(option(form.children, ":types")),
           ir: option(form.children, ":ir")?.text,
           emits: option(form.children, ":emit") !== undefined,
@@ -547,6 +562,9 @@ function renderEntry(prelude: Prelude, entry: Entry): string {
     const ir = [entry.ir && `produces <code>${escape(entry.ir)}</code>`, entry.emits && "has a TypeScript <code>:emit</code> hook"]
       .filter(Boolean).join(" · ");
     if (ir) parts.push(`<p class="fp-ir" v-pre>${ir.charAt(0).toUpperCase()}${ir.slice(1)}</p>`);
+  }
+  if (entry.examples?.length) {
+    parts.push(`<p class="fp-ir" v-pre>Example</p>\n\n${entry.examples.map(fence).join("\n\n")}\n`);
   }
   if (entry.kind === "function") {
     parts.push(`<pre class="fp-sig" v-pre>${escape(entry.signature ?? entry.pattern ?? entry.name)}</pre>`);
