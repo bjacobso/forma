@@ -1,8 +1,9 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
+import { createHash } from "node:crypto";
 import { JsonAbi } from "../src/json-abi.js";
 
 const cli = resolve(import.meta.dirname, "../dist/cli.mjs");
@@ -41,20 +42,30 @@ describe("packages through the host", () => {
     });
   });
 
-  test("the forma CLI checks a file against its installed packages", () => {
+  test("the forma CLI checks a file against its verified vendored packages", () => {
     const root = mkdtempSync(join(tmpdir(), "forma-cli-packages-"));
     const files: Record<string, unknown> = {
-      "package.json": { name: "app", dependencies: { "@acme/flows": "^2.0.0" } },
-      "node_modules/@acme/ir/package.json": { name: "@acme/ir", version: "1.0.0", forma: { exports: { ".": "./ir.forma" } } },
-      "node_modules/@acme/ir/ir.forma": irSource,
-      "node_modules/@acme/flows/package.json": { name: "@acme/flows", version: "2.1.0", dependencies: { "@acme/ir": "^1.0.0" }, forma: { exports: { ".": "./index.forma" } } },
-      "node_modules/@acme/flows/index.forma": flowsSource,
+      "forma.json": { name: "app", exports: {}, dependencies: { "@acme/flows": "github.com/acme/flows@v2.1.0" } },
+      "vendor/@acme/ir/forma.json": { name: "@acme/ir", version: "1.0.0", exports: { ".": "./ir.forma" } },
+      "vendor/@acme/ir/ir.forma": irSource,
+      "vendor/@acme/flows/forma.json": { name: "@acme/flows", version: "2.1.0", dependencies: { "@acme/ir": "gitlab.com/acme/ir@v1.0.0" }, exports: { ".": "./index.forma" } },
+      "vendor/@acme/flows/index.forma": flowsSource,
       "src/main.forma": mainSource,
     };
     for (const [path, content] of Object.entries(files)) {
       mkdirSync(dirname(join(root, path)), { recursive: true });
       writeFileSync(join(root, path), typeof content === "string" ? content : JSON.stringify(content));
     }
+    const hash = (text: string) => createHash("sha256").update(text).digest("hex");
+    writeFileSync(join(root, "forma.lock"), JSON.stringify({ version: 1,
+      manifest: hash(readFileSync(join(root, "forma.json"), "utf8")),
+      packages: Object.fromEntries(["flows", "ir"].map(name => [`@acme/${name}`, {
+        source: name === "flows" ? "github.com/acme/flows@v2.1.0" : "gitlab.com/acme/ir@v1.0.0",
+        resolved: name === "flows" ? "v2.1.0" : "v1.0.0", commit: "a".repeat(40),
+        files: Object.fromEntries(Object.keys(files).filter(path => path.startsWith(`vendor/@acme/${name}/`))
+          .map(path => [path.slice(`vendor/@acme/${name}/`.length), hash(readFileSync(join(root, path), "utf8"))])),
+      }])),
+    }));
     const run = (operation: string) => {
       const result = spawnSync(process.execPath, [cli, "file", operation, join(root, "src/main.forma")], { encoding: "utf8", timeout: 20_000 });
       return JSON.parse(result.stdout);
@@ -63,5 +74,7 @@ describe("packages through the host", () => {
     const interfaces = run("interface");
     expect(interfaces).toMatchObject({ ok: true });
     expect(interfaces.value.interfaces.at(-1).exports[0].data.contractId).toMatch(/^[a-f0-9]{64}$/);
-  });
+    writeFileSync(join(root, "vendor/@acme/ir/ir.forma"), "edited");
+    expect(run("typecheck")).toMatchObject({ ok: false, diagnostics: [{ code: "module/package-integrity" }] });
+  }, 30_000);
 });
