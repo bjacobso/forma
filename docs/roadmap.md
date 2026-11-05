@@ -95,6 +95,16 @@ gradual boundary for checking existing Clojure code after a second surface
 exists. Its first stage, the positioning on this site, is done. The kernel,
 elaborators, and adapters are not implemented or scheduled.
 
+## Effect hosts
+
+[RFC 0022](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-effect-hosts.md)
+proposes one host-neutral lowering between the Effect checker and its code
+generators, so that each host is a naming and type profile, a printer, and a
+runtime kernel that passes shared, data-driven conformance scenarios. It uses
+that shape for a Rust target that emits async Rust, with closed error sets as
+generated enums, and for the existing Go prototype. The proposal is not
+implemented or scheduled, and a Rust host still needs a concrete consumer.
+
 ## Deferred
 
 - General-purpose application-language positioning.
