@@ -1,12 +1,12 @@
-; Email automation rule vocabulary. The optional TypeScript linker lowers a
-; rule through the existing Effect checker; neither engine's core knows about
-; contacts, lanes, or sending.
-; Everything a rule can say is an ordinary typed definition in this file. The
-; linker adds the rule's lanes as EmailLane, passes the rule's contact to
-; predicates, and reads 6h or 2d as hours.
+; email.lisp
+; -----------------------------------------------------------------------------
+; Purpose: Typed email decisions, predicates, and automation-rule declarations.
+; Requires: compiler.lisp; the email linker supplies each rule's EmailLane vocabulary.
+; Used by: The optional TypeScript email linker; scheduling and rate enforcement belong to hosts.
+; -----------------------------------------------------------------------------
 
-; What a rule can see about one recipient. Hosts compute these fields.
-; :due-in maps a journey name to the hours until its next scheduled email.
+; Host-supplied recipient facts; due-in maps journey names to hours until
+; their next scheduled email.
 (type EmailContact
   {:email String :domain String :tags (List String) :due-in (Map String Int)})
 
@@ -14,12 +14,15 @@
 (type EmailDecision
   (Tagged (Send {:lane EmailLane}) (Defer {:hours Int}) (Skip {:reason String})))
 
+; Returns a Send decision; delivery happens in the host's checked operation.
 (: send (-> EmailLane EmailDecision))
 (define send [lane] (Send {:lane lane}))
 
+; Returns a Defer decision measured in hours.
 (: defer (-> Int EmailDecision))
 (define defer [hours] (Defer {:hours hours}))
 
+; Returns a Skip decision retaining the author's reason.
 (: skip (-> String EmailDecision))
 (define skip [reason] (Skip {:reason reason}))
 
@@ -27,9 +30,12 @@
 (: tag? (-> EmailContact String Bool))
 (define tag? [contact tag] (includes? contact.tags tag))
 
+; Tests the recipient's domain for exact string equality.
 (: domain? (-> EmailContact String Bool))
 (define domain? [contact domain] (= contact.domain domain))
 
+; Tests whether a known journey is due within the supplied hours; an absent
+; journey returns false.
 (: due? (-> EmailContact String Int Bool))
 (define due? [contact journey hours]
   (match (get contact.due-in journey)
@@ -40,6 +46,13 @@
   {:kind "EmailRule" :name String :lanes RuntimeExpr :clauses (List RuntimeExpr)})
 
 (form (rule name lanes clause ...)
+  "Declares an email rule with lane configuration and decision clauses. The
+   email linker checks predicates and decisions and lowers the rule to
+   Effect code."
+  :examples
+    [[(rule "welcome" (lanes (lane "default" :per-hour 100))
+        (when (tag? "customer") (skip "Already a customer"))
+        (send "default"))]]
   :types {:name String :lanes Syntax :clause (List Syntax)}
   :ir EmailRuleIR
   :emit (fn [ir]

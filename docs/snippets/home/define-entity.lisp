@@ -1,6 +1,7 @@
-(form
-  (entity name fields {:keys [doc role id-pattern tier]})
+(form (entity name fields {:keys [doc role id-pattern tier]})
   "A named record of attributes."
+  :examples
+    [[(entity Person {:name String :age (Option Int)})]]
   :types
     {
       :name (Declares SchemaDecl)

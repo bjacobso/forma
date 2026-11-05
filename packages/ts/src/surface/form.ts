@@ -1,3 +1,5 @@
+import { descriptorConstant } from "./metadata.js";
+import { formatSExprMany } from "../Formatter.js";
 import {buildDescriptorTreeLayoutAliases,rewriteDescriptorTreeLayoutAliases} from "../descriptor/descriptor-tree-aliases.js";
 import { createMetaBuiltins, type HostedMetaBuiltinsFactory } from "../descriptor/meta-builtins.js";
 import { datum, syntaxForDatum } from "./datum.js";
@@ -38,6 +40,24 @@ export interface UnifiedForm {
   readonly ir?: SExpr;
   readonly helpers: readonly SExpr[];
   readonly types: ReadonlyMap<string,SExpr>;
+}
+
+/** Documentation and constant metadata do not belong to the executable closure. */
+export function formHookExpressions(spec: Pick<UnifiedForm, "body" | "options">): readonly SExpr[] {
+  return [spec.body, ...[...spec.options].filter(([key]) => key !== ":examples" && key !== ":extensions").map(([, value]) => value)];
+}
+
+function formExamples(value: SExpr | undefined, formName: string): readonly string[] | undefined {
+  if (!value) return undefined;
+  const invalid = (at: SExpr): never => {
+    throw Object.assign(new Error(`form ${formName}: :examples expects a vector of nonempty program vectors or source strings`), { loc: at.loc });
+  };
+  if (value._tag !== "Vector") return invalid(value);
+  return value.items.map(example => {
+    if (example._tag === "Str" && example.value.trim()) return example.value.trim();
+    if (example._tag === "Vector" && example.items.length) return formatSExprMany(example.items).trimEnd();
+    return invalid(example);
+  });
 }
 
 const typeSyntax = (value: KValue, template: SExpr): SExpr => {
@@ -105,13 +125,14 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
   while (i < e.items.length - 1) {
     const key = name(e.items[i]);
     if (!key?.startsWith(":")) throw new Error(`form ${formName}: expected a :key value option`);
-    if (![":types", ":ir", ":type", ":scope", ":check", ":examples", ":emit"].includes(key)) throw new Error(`form ${formName}: unknown option ${key}`);
+    if (![":types", ":ir", ":type", ":scope", ":check", ":examples", ":emit", ":extensions"].includes(key)) throw new Error(`form ${formName}: unknown option ${key}`);
     if (options.has(key)) throw new Error(`form ${formName}: duplicate option ${key}`);
     const value = e.items[++i];
     if (!value) throw new Error(`form ${formName}: ${key} needs a value`);
     options.set(key, value);
     i++;
   }
+  const examples = formExamples(options.get(":examples"), formName);
   const holeTypes = options.get(":types");
   const irName = name(options.get(":ir"));
   const body = e.items[i];
@@ -162,16 +183,23 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
   }
   for (const n of holes.keys()) if (!variables.has(n)) throw new Error(`form ${formName}: type for unknown hole ${n}`);
   const resultType = options.get(":type");
-  const extensions = typeDescriptor(irName, types.get(irName)!, types).extensions;
+  const extensionSyntax = options.get(":extensions");
+  if (extensionSyntax && extensionSyntax._tag !== "Map") {
+    throw Object.assign(new Error(`form ${formName}: :extensions expects a literal map`), { loc: extensionSyntax.loc });
+  }
+  const extensions = {
+    ...typeDescriptor(irName, types.get(irName)!, types).extensions,
+    ...(extensionSyntax ? descriptorConstant(extensionSyntax) as Record<string, DescriptorExtensionValue> : {}),
+  };
   return {
-    name: formName, phase: "domain", ...(doc ? { doc } : {}), identifiers, slots,
+    name: formName, phase: "domain", ...(doc ? { doc } : {}), ...(examples ? { examples } : {}), identifiers, slots,
     bindings: declares ? { kind: "static", rules: identifiers.filter(i => i.declaration).map(i => ({ kind: "declaration" as const, identifier: i.name, type: name(arg(unwrapOption(holes.get(i.name)!)))! })) } : { kind: "none" },
     validation: { kind: "hook", fn: `form/${formName}/validate` },
     elaboration: { kind: "hook", fn: `form/${formName}/construct` },
     resultType: head(resultType) === "fn" ? {kind:"hook",fn:`form/${formName}/result-type`} : { kind: "constant", type: name(resultType) ?? declares ?? "Unit" },
     produces: irName, ...(extensions ? {extensions} : {}),
     completionShape: `(${formName} ${patterns.map(p => name(p) ?? "options").join(" ")})`,
-    surface: { pattern: patterns, holes, options, body, helpers:reachableHelpers([body,...options.values()],helpers,new Set(holes.keys())), types, ...(types.has(irName) ? { ir: types.get(irName)! } : {}) },
+    surface: { pattern: patterns, holes, options, body, helpers:reachableHelpers(formHookExpressions({body, options}),helpers,new Set(holes.keys())), types, ...(types.has(irName) ? { ir: types.get(irName)! } : {}) },
   };
 }
 

@@ -1,5 +1,10 @@
-; Effect 4 HttpApi vocabulary. Emit hooks return quasiquoted TypeScript
-; expressions; ts/* are target primitives, not HTTP-specific compiler cases.
+; http-api.lisp
+; -----------------------------------------------------------------------------
+; Purpose: Effect HttpApi declarations with quasiquoted TypeScript emit hooks.
+; Requires: compiler.lisp; bootstrap separately from the ontology's older api form.
+; Used by: The optional TypeScript HTTP linker and derived typed builder DSL.
+; -----------------------------------------------------------------------------
+
 (type HttpEndpointIR
   {:kind "HttpEndpoint" :name Symbol :method Keyword :path String
    :params (Option Type) :payload (Option Type) :success Type
@@ -12,6 +17,12 @@
 
 (form (endpoint name method path {:keys [params payload success errors]})
   "An HTTP endpoint with checked request and response schemas."
+  :examples
+    [[(: health (-> {} (Effect String)))
+      (define health [request] "ok")
+      (api Health
+        (group system (endpoint health :get "/health" :success String)))
+      (handle Health system (handler health health))]]
   :types {:name (Declares EndpointDecl)
           :method (Union :get :post :put :patch :delete)
           :path String :params (Option Type) :payload (Option Type)
@@ -30,6 +41,14 @@
    :params params :payload payload :success success :errors errors})
 
 (form (group name endpoint ...)
+  "Groups checked endpoint declarations into an Effect HttpApiGroup and
+   emits its chained add calls."
+  :examples
+    [[(: health (-> {} (Effect String)))
+      (define health [request] "ok")
+      (api Health
+        (group system (endpoint health :get "/health" :success String)))
+      (handle Health system (handler health health))]]
   :types {:name (Declares GroupDecl) :endpoint (List endpoint)}
   :ir HttpGroupIR
   :emit (fn [ir]
@@ -38,6 +57,14 @@
   {:kind "HttpGroup" :name name :endpoints endpoint})
 
 (form (api name group ...)
+  "Groups checked HTTP groups into an Effect HttpApi and emits its chained
+   add calls."
+  :examples
+    [[(: health (-> {} (Effect String)))
+      (define health [request] "ok")
+      (api Health
+        (group system (endpoint health :get "/health" :success String)))
+      (handle Health system (handler health health))]]
   :types {:name (Declares ApiDecl) :group (List group)}
   :ir HttpApiIR
   :emit (fn [ir]
@@ -48,6 +75,14 @@
 ; Handlers reuse ordinary checked Forma operations. The linker checks each
 ; operation against the endpoint's success, request, and closed error set.
 (form (handler endpoint operation)
+  "Links an endpoint name to an ordinary operation. The HTTP linker checks
+   the operation against request, success, and error schemas."
+  :examples
+    [[(: health (-> {} (Effect String)))
+      (define health [request] "ok")
+      (api Health
+        (group system (endpoint health :get "/health" :success String)))
+      (handle Health system (handler health health))]]
   :types {:endpoint Symbol :operation Symbol}
   :ir HttpHandlerIR
   :emit (fn [ir]
@@ -55,6 +90,14 @@
   {:kind "HttpHandler" :endpoint endpoint :operation operation})
 
 (form (handle api group handler ...)
+  "Registers a group's handlers against a declared Effect HttpApi through
+   HttpApiBuilder.group."
+  :examples
+    [[(: health (-> {} (Effect String)))
+      (define health [request] "ok")
+      (api Health
+        (group system (endpoint health :get "/health" :success String)))
+      (handle Health system (handler health health))]]
   :types {:api (Refers ApiDecl) :group Symbol :handler (List handler)}
   :ir HttpHandleIR
   :emit (fn [ir]

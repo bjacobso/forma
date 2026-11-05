@@ -1,11 +1,10 @@
 ; system.lisp
 ; -----------------------------------------------------------------------------
-; Unified platform self-description.
-;
-; This file is the canonical intrinsic catalog for cross-cutting system
-; attributes, bootstrap schema entities, platform metadata entities, and
-; runtime-owned record types.
+; Purpose: Intrinsic system attributes, meta-schema entities, and runtime-owned record types.
+; Requires: compiler.lisp and ontology.lisp; generated ontology-ir.lisp describes the wire contracts.
+; Used by: Hosts and tests that opt into the platform self-description catalog.
 ; -----------------------------------------------------------------------------
+
 ; =============================================================================
 ; SECTION 1 — SYSTEM ATTRIBUTES
 ; =============================================================================

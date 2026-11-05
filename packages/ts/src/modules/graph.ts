@@ -954,7 +954,12 @@ export function resolveModuleGraph(
           ]);
         const previous = resolvingTemplate;
         resolvingTemplate = true;
-        const body = items.slice(2).map((v) => walk(v, local));
+        const body = items.slice(2).map((v, i) => {
+          const previous = items[i + 1];
+          // Documentation programs and literal metadata retain authored names.
+          if (h === "form" && previous?._tag === "Sym" && [":examples", ":extensions"].includes(previous.name)) return v;
+          return walk(v, local);
+        });
         resolvingTemplate = previous;
         return {
           ...e,

@@ -2,7 +2,7 @@
 
 These Lisp sources demonstrate how Forma grows from a small typed core into
 domain-specific languages. `kernel.lisp` supplies general-purpose macros,
-`compiler.lisp` defines the descriptor vocabulary, and the remaining files are
+`compiler.lisp` supplies shared projection helpers and macros, and the remaining files are
 an example domain stack with elaboration and portable artifact protocols.
 
 The conformance fixtures and example corpus load these files as their domain
@@ -37,3 +37,55 @@ signatures from `(: name type)`, and documentation from docstrings and the
 comments directly above each definition. Catalog titles and maturity labels
 live in `docs/.vitepress/preludes.ts`; a new file appears as uncatalogued until
 it has an entry there.
+
+## Loading and dependencies
+
+Arrows show the order in which a host can assemble the libraries. Dashed arrows
+are optional protocol inputs. `ontology-ir.lisp` is generated from the types in
+`ontology.lisp`; it is useful for schema generation, rather than a second copy
+of the domain implementation.
+
+```mermaid
+flowchart LR
+  kernel --> compiler
+  compiler --> ontologyIR[ontology-ir: generated contracts]
+  ontologyIR -. optional contracts .-> ontology
+  compiler --> ontology
+  ontology --> system
+  compiler --> ui
+  ui --> viewspec
+  ontology --> viewspec
+  ontologyIR --> protocols[query / action / content / canonical-runtime protocols]
+  ui --> viewProtocol[viewspec-protocol]
+  viewspec --> viewProtocol
+  compiler --> isolated[elm / email / http-api: separate stacks]
+```
+
+The shipped `bootstrapOntologyPreludes()` order is `compiler → ontology → ui →
+viewspec`. Kernel macros are available through the macro evaluator. That helper
+loads neither the generated `ontology-ir` contracts nor the opt-in `system`
+catalog. Protocol generation assembles the contracts it needs separately.
+`kernel.forma` serves explicit file-module imports; the remaining `.lisp`
+libraries still use descriptor bootstrap. Each file's header names its purpose,
+requirements, and consumers.
+
+## How to read a prelude
+
+Read a form beside its output type and nearby helpers:
+
+- The pattern names positional holes, `{:keys [...]}` options, and repeated
+  children ending in `...`; child category aliases select their local vocabulary.
+- A docstring describes the current projection. `:examples` contains program
+  vectors (or source strings) rendered in the reference. `pnpm check` checks all
+  domain examples; Elm, email, and HTTP examples also run their TypeScript linker.
+- `:types` gives the contracts of captured holes. `Syntax` retains author syntax,
+  `Expr` checks an expression, and `Declares`/`Refers` describe declaration names.
+- `:extensions` carries literal metadata for consumers alongside the form.
+  `named-map` builds string-keyed property maps from binding names in projections.
+- `:ir` names the contract checked against the projected value.
+- Optional `:check` and `:scope` hooks validate holes and provide expression scope.
+- Optional `:emit` returns syntax for a TypeScript target adapter.
+- The final body computes the IR using ordinary definitions and core forms.
+
+See [Writing a form](../docs/writing-a-form.md) for the complete authoring guide,
+including source-located diagnostics and the limits of each contract.

@@ -19,6 +19,8 @@ test("generates prelude reference pages from their sources", async ({ page }) =>
   const rule = page.locator(".fp-entry").filter({ has: page.locator("#form-rule") });
   await expect(rule.locator("h3")).toContainText("(rule name lanes clause ...)");
   await expect(rule.locator(".fp-slots")).toContainText("(List Syntax)");
+  await expect(rule).toContainText("Declares an email rule");
+  await expect(rule.locator("div[class*='language-lisp']")).toContainText('(rule "welcome"');
   const tag = page.locator(".fp-entry").filter({ has: page.locator("#fn-tag") });
   await expect(tag).toContainText("(: tag? (-> EmailContact String Bool))");
   await expect(tag).toContainText("Predicates take the contact first; rules omit it.");
@@ -27,6 +29,8 @@ test("generates prelude reference pages from their sources", async ({ page }) =>
   await expect(frame.getByRole("status")).toHaveText("0 errors · 0 warnings");
 
   await page.goto("/preludes/ontology");
+  const query = page.locator(".fp-entry").filter({ has: page.locator("#form-query") });
+  await expect(query.locator("div[class*='language-lisp']")).toContainText("(query adults");
   await expect(page.locator("#examples")).toBeVisible();
   await expect(page.locator(".fp-catalog li").first()).toBeVisible();
   expect(errors).toEqual([]);

@@ -15,7 +15,7 @@ import { head, name } from "../surface/effect.js";
 import type { SExpr } from "../reader/types.js";
 import { reachableHelpers } from "../surface/helpers.js";
 import { patternBindings } from "../surface/members.js";
-import { unifiedFormHooks } from "../surface/form.js";
+import { formHookExpressions, unifiedFormHooks } from "../surface/form.js";
 import { parsePrelude, type MetaFnDecl, type MetaFnKind } from "./meta-fn-decl.js";
 import { FormDescriptorRegistry } from "./FormDescriptorRegistry.js";
 import { ElaborationRegistry } from "./ElaborationRegistry.js";
@@ -125,7 +125,7 @@ export function bootstrapFromSources(
   const allHelpers = [...compiler.helpers, ...domain.helpers, ...additional.flatMap(prelude => prelude.helpers)];
   for (const descriptor of descriptions.list()) if (descriptor.surface) {
     const spec = descriptor.surface;
-    descriptions.register({...descriptor, surface: {...spec, helpers: reachableHelpers([spec.body, ...spec.options.values()], allHelpers, new Set(spec.holes.keys()))}});
+    descriptions.register({...descriptor, surface: {...spec, helpers: reachableHelpers(formHookExpressions(spec), allHelpers, new Set(spec.holes.keys()))}});
   }
 
 
@@ -264,7 +264,7 @@ function parseHostedDsls(
     for (const source of hostedDsl.sources) for (const e of toSExprMany(parse(source).redTree)) { const definition=typeDefinition(e); if (definition) typeDefinitions.set(...definition); }
     const parsedSources = hostedDsl.sources.map((source) => parsePrelude(source, typeDefinitions));
     const allHelpers = parsedSources.flatMap(parsed => parsed.helpers);
-    const descriptors = parsedSources.flatMap((parsed) => parsed.forms).map(descriptor => descriptor.surface ? {...descriptor, surface: {...descriptor.surface, helpers: reachableHelpers([descriptor.surface.body, ...descriptor.surface.options.values()], allHelpers, new Set(descriptor.surface.holes.keys()))}} : descriptor);
+    const descriptors = parsedSources.flatMap((parsed) => parsed.forms).map(descriptor => descriptor.surface ? {...descriptor, surface: {...descriptor.surface, helpers: reachableHelpers(formHookExpressions(descriptor.surface), allHelpers, new Set(descriptor.surface.holes.keys()))}} : descriptor);
     const metaFns = parsedSources.flatMap((parsed) => parsed.metaFns);
     const elaborations = parsedSources.flatMap((parsed) => parsed.elaborations);
     registrations.set(hostedDsl.name, {

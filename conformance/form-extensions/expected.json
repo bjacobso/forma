@@ -1,0 +1,15 @@
+{
+  "extensions": {
+    "label": {
+      "category": "copy",
+      "fallback": null,
+      "flags": [true, false],
+      "details": {"rank": 2}
+    },
+    "release": {"channel": "stable", "targets": ["browser", "node"]}
+  },
+  "payloads": [
+    {"kind": "Label", "name": "Welcome", "props": {"text": "Hello", "enabled": false, "note": null}},
+    {"kind": "Release", "name": "Stable", "version": "1.0"}
+  ]
+}

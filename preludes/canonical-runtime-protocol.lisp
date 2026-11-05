@@ -1,49 +1,49 @@
 ; canonical-runtime-protocol.lisp
 ; -----------------------------------------------------------------------------
-; Hosted CanonicalRuntime protocol descriptors.
+; Purpose: Hosted canonical runtime wire contracts.
+; Requires: Core types; generation combines the domain and other protocol contracts.
+; Used by: Canonical runtime protocol and schema generation.
 ; -----------------------------------------------------------------------------
 (type Span {:sourceId String :startOffset Float :endOffset Float})
-(type
-  CanonicalExpr
-  (Union
-    Unit
-    Bool
-    Float
-    String
-    (List CanonicalExpr)
-    (Map String CanonicalExpr)))
+
+(type CanonicalExpr
+  (Union Unit Bool Float String (List CanonicalExpr) (Map String CanonicalExpr)))
+
 (type CanonicalRuntimeExpr {:kind "raw-expr" :expr CanonicalExpr})
-(type
-  CanonicalRuntimeActionInput
+
+(type CanonicalRuntimeActionInput
   {:name String :entityRef CanonicalDeclarationRef})
+
 (type CanonicalRuntimeFieldValue {:field String :value CanonicalExpr})
+
 (type CanonicalRuntimeEmitStep {:kind "emit" :event CanonicalExpr})
-(type
-  CanonicalRuntimeSetFieldStep
+
+(type CanonicalRuntimeSetFieldStep
   {:kind "set-field" :targetBinding String :field String :value CanonicalExpr})
-(type
-  CanonicalRuntimeCreateEntityStep
+
+(type CanonicalRuntimeCreateEntityStep
   {
     :kind "create-entity"
     :entityName String
     :assignments (List CanonicalRuntimeFieldValue)})
-(type
-  CanonicalRuntimeLinkRecordsStep
+
+(type CanonicalRuntimeLinkRecordsStep
   {
     :kind "link-records"
     :sourceBinding String
     :targetBinding String
     :relation String})
-(type
-  CanonicalRuntimeCallActionStep
+
+(type CanonicalRuntimeCallActionStep
   {
     :kind "call-action"
     :actionRef CanonicalDeclarationRef
     :entityArguments (List String)
     :arguments (List CanonicalRuntimeFieldValue)})
+
 (type CanonicalRuntimeEvalStep {:kind "eval" :expr CanonicalRuntimeExpr})
-(type
-  CanonicalRuntimeActionStep
+
+(type CanonicalRuntimeActionStep
   (Union
     CanonicalRuntimeEmitStep
     CanonicalRuntimeSetFieldStep
@@ -51,8 +51,8 @@
     CanonicalRuntimeLinkRecordsStep
     CanonicalRuntimeCallActionStep
     CanonicalRuntimeEvalStep))
-(type
-  CanonicalRuntimeAction
+
+(type CanonicalRuntimeAction
   {
     :kind "RuntimeAction"
     :name String
@@ -60,8 +60,8 @@
     :declaredReturnType CanonicalExpr
     :steps (List CanonicalRuntimeActionStep)
     :loc (Option Span)})
-(define
-  protocol
+
+(define protocol
   {
     :name "CanonicalRuntime"
     :imports
