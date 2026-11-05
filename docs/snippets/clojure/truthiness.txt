@@ -1,0 +1,2 @@
+truthiness.forma:7:7 error typecheck/type-mismatch
+  Cannot unify Option<Int> with Bool

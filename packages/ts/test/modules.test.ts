@@ -52,6 +52,23 @@ describe("isolated file modules", () => {
       declaration: "value",
     });
   });
+  test("an imported macro does not shadow the arrow in a type annotation", () => {
+    const sugar = {
+      id: "src/sugar.forma",
+      source: "(export ->) (macro (-> value forms ...) value)",
+    };
+    expect(
+      checked(
+        [
+          '(import "./sugar.forma" [->])',
+          "(export total)",
+          "(: total (-> Int Int))",
+          "(define total [n] (-> n (+ 1)))",
+        ].join("\n"),
+        [sugar],
+      ).diagnostics,
+    ).toEqual([]);
+  });
   test("brands from different files remain nominal", () => {
     const a = {
       id: "src/a.forma",

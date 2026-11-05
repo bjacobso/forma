@@ -1,0 +1,2 @@
+(: quote-for (-> Int (Option Int) String))
+(: receipt String)   ; = "4400 cents"

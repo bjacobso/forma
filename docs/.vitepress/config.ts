@@ -37,6 +37,8 @@ export default defineConfig({
       dark: "github-dark-high-contrast",
     },
     languages: ["json", "lisp", "scheme", "sh", "ts"],
+    // `.forma` modules are Forma source; highlight them as the Lisp they are.
+    languageAlias: { forma: "lisp" },
   },
   transformPageData(pageData) {
     // Generated prelude pages carry their metadata as route params.
@@ -56,13 +58,14 @@ export default defineConfig({
           { text: "Structure and interpretation", link: "/structure-and-interpretation" },
           { text: "Domain modeling", link: "/domain-modeling" },
           { text: "Writing a form", link: "/writing-a-form" },
+          { text: "Clojure spellings", link: "/clojure" },
           { text: "File modules", link: "/modules" },
           { text: "Vision", link: "/vision" },
           { text: "Architecture", link: "/architecture" },
           { text: "Roadmap", link: "/roadmap" },
         ],
       },
-      { text: "Preludes", link: "/preludes/", activeMatch: "^/(preludes|effect|elm|email)" },
+      { text: "Preludes", link: "/preludes/", activeMatch: "^/(preludes|effect|elm|email|clojure)" },
       { text: "Examples", link: "/playground/demo", target: "_self", rel: "" },
       { text: "Workbench (Foldworks)", link: FORMA_WORKBENCH_URL, target: "_self", rel: "" },
       { text: "Playground", link: "/playground", target: "_self", rel: "" },
@@ -85,6 +88,7 @@ export default defineConfig({
             { text: "Forma for Elm-style apps", link: "/elm" },
             { text: "Elm prototype reference", link: "/elm/reference" },
             { text: "Forma for email automation", link: "/email" },
+            { text: "Clojure spellings", link: "/clojure" },
           ],
         },
         {
