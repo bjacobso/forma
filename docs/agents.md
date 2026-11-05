@@ -1,6 +1,6 @@
 # Forma
 
-> Forma is a pre-alpha typed, homoiconic Lisp for building domain-specific languages and portable artifacts. Install the TypeScript engine with `pnpm add @formalang/ts`, or try the browser playground at https://forma-lang.com/playground.
+> Forma is a pre-alpha programmable type system for Lisp: a typed, homoiconic Lisp whose preludes define typed forms for domain-specific languages and portable artifacts. Install the TypeScript engine with `pnpm add @formalang/ts`, or try the browser playground at https://forma-lang.com/playground.
 
 APIs, package boundaries, syntax, and artifact formats are still evolving.
 The TypeScript host includes a source-built `forma` JSON CLI and daemon, with

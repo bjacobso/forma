@@ -217,5 +217,5 @@ lexical binding, insertion order, and nil-valued entries; no arguments produces
 an empty map. This is a prelude macro for projections and explicit macro
 libraries, rather than an addition to the separate Effect mechanics dialect.
 IR bodies still provide their literal kind fields explicitly. See
-[RFC 0021](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-form-extensions-and-named-maps.md)
+[RFC 0023](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0023-form-extensions-and-named-maps.md)
 for the design and compatibility policy.

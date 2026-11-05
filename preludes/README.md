@@ -15,6 +15,13 @@ paths, and the language server loads none by default.
 `kernel.forma` is an ordinary exported macro library for file modules. It is
 regenerated from `kernel.lisp` by the same command above. File modules explicitly
 import it or select it as a project prelude; they do not inherit the legacy stack.
+`clojure.forma` is a hand-written file-module library of Clojure spellings
+(`def`, `defn`, `defn-`, `if-let`, `when-let`, `if-not`, `when-not`, `comment`,
+and kernel threading) that expand to core Forma, as a first step of
+[RFC 0021](../docs/rfcs/0021-languages-as-libraries.md). It changes spelling
+only: types, `nil`, and numbers keep Forma's semantics. `defn` takes one
+parameter vector and drops a docstring.
+
 The remaining `.lisp` libraries use the existing descriptor bootstrap APIs and
 have not yet migrated to ordinary modules. Protocol preludes are also inputs to
 generation and snapshot tests.

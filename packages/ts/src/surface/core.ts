@@ -9,6 +9,23 @@ import { head, name, sym, list, vector } from "./effect.js";
 
 const call = (e: SExpr, h: string, ...args: SExpr[]) => copySourceTrace(e, list(e, [sym(e, h), ...args]));
 
+/**
+ * Spellings from other Lisps and earlier Forma that the core surface does not
+ * define. They are reported only when no macro in scope claims the name, so a
+ * library can supply them (RFC 0021, stage 0).
+ */
+export const RETIRED_SPELLINGS: ReadonlyMap<string, string> = new Map([
+  ["def", "define"], ["defn", "define"], ["defmacro", "macro"], ["lambda", "fn"], ["let*", "let"],
+]);
+
+/** The diagnostic for a retired spelling that is still a call head after expansion. */
+export function retiredSpellingError(e: SExpr): Error | undefined {
+  const h = head(e);
+  const replacement = h === undefined ? undefined : RETIRED_SPELLINGS.get(h);
+  if (replacement === undefined) return undefined;
+  return Object.assign(new Error(`Use ${replacement} instead of ${h}`), { loc: e.loc, details: { code: "surface/invalid-form" } });
+}
+
 /** Surface sugar common to expansion, inference and evaluation. */
 export function normalizeCoreProgram(exprs: readonly SExpr[], coerce = true): readonly SExpr[] {
   const resolved = resolveConstructors(exprs.map(e => {
@@ -37,8 +54,6 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
   if (e._tag !== "List") return e;
   const h = head(e);
   if (h === "quote" || h === "quasiquote" || h === "__schema" || h === "__sum-type") return e;
-  const obsolete = new Map([["def","define"],["defn","define"],["defmacro","macro"],["lambda","fn"],["let*","let"]]);
-  if (h && obsolete.has(h)) throw new Error(`Use ${obsolete.get(h)} instead of ${h}`);
   if (h === ":" && e.items.length === 3) {
     const errors = typeSyntaxErrors(e.items[2]!, schemaMetadata);
     if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:e.items[2]!.loc, details:{code:"surface/invalid-form"}});
@@ -106,7 +121,7 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
   if (h === "define" && e.items[1]?._tag === "Sym" && e.items[2]?._tag === "Vector" && e.items.length >= 4) {
     return call(e, "define", e.items[1], normalizeCore(call(e, "fn", e.items[2], ...e.items.slice(3))));
   }
-  if ((h === "fn" || h === "lambda") && e.items[1]?._tag === "Vector") {
+  if (h === "fn" && e.items[1]?._tag === "Vector") {
     const params = e.items[1];
     const patterns: [SExpr,SExpr][] = [];
     const plain = params.items.map((p,i) => {

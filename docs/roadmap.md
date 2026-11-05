@@ -71,6 +71,40 @@ rejects options for optional fields, requires literal callbacks, and accepts
 out-of-range literals. The guides document today's workarounds. The fixes are
 proposed, not implemented or scheduled.
 
+## Languages as libraries
+
+[RFC 0021](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md)
+proposes moving surface syntax out of the engine. Syntax forms would produce
+code from typed holes, and a language would be a prelude that selects exports,
+hidden core names, and a lexical profile. Forma's own surface would become the
+first language, and Lisp dialects such as a Clojure-shaped surface would be
+others. All of them would share one core, one type language, and one contract.
+Declarative surfaces would be invertible, which makes Lisp emitters such as
+`.cljc` possible. Stage 0 is implemented: a macro in scope may claim a
+retired spelling such as `defn`, and `preludes/clojure.forma` supplies Clojure
+spellings as an ordinary library. Later stages wait on an agent benchmark and
+are not implemented or scheduled.
+
+## A programmable type system
+
+[RFC 0022](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md)
+positions Forma as a programmable type system for Lisp. It proposes a small
+trusted kernel that re-checks elaborated programs, bidirectional elaborators
+that generalize forms, a language adapter protocol for Lisp dialects, and a
+gradual boundary for checking existing Clojure code after a second surface
+exists. Its first stage, the positioning on this site, is done. The kernel,
+elaborators, and adapters are not implemented or scheduled.
+
+## Effect hosts
+
+[RFC 0022](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-effect-hosts.md)
+proposes one host-neutral lowering between the Effect checker and its code
+generators, so that each host is a naming and type profile, a printer, and a
+runtime kernel that passes shared, data-driven conformance scenarios. It uses
+that shape for a Rust target that emits async Rust, with closed error sets as
+generated enums, and for the existing Go prototype. The proposal is not
+implemented or scheduled, and a Rust host still needs a concrete consumer.
+
 ## Deferred
 
 - General-purpose application-language positioning.

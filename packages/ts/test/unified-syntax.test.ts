@@ -65,6 +65,18 @@ describe("unified core surface and runtime semantics", () => {
     expect(await evaluate(source)).toEqual([7, 0]);
     expect(await Effect.runPromise(Type.inferSourceStr(source))).toBe('List<Int>');
   });
+  test("retired spellings are rejected only when no macro claims them", async () => {
+    await expect(evaluate("(defn f [x] x) (f 1)")).rejects.toThrow("Use define instead of defn");
+    await expect(evaluate("(define g (lambda [x] x))")).rejects.toThrow("Use fn instead of lambda");
+    await expect(Effect.runPromise(Type.inferSourceStr("(defn f [x] x)"))).rejects.toThrow("Use define instead of defn");
+    const claimed = "(macro (defn name params body ...) `(define ~name (fn ~params ~@body))) (defn twice [x] (* x 2)) (twice 21)";
+    expect(await evaluate(claimed)).toBe(42);
+    expect(await Effect.runPromise(Type.inferSourceStr(claimed))).toBe("Float");
+  });
+  test("sexpr-vector? tells a parameter vector from other syntax", async () => {
+    const source = '(macro (kind x) (if (sexpr-vector? x) "vector" "other")) [(kind [a]) (kind (a)) (kind "a")]';
+    expect(await evaluate(source)).toEqual(["vector", "other", "other"]);
+  });
   test("obsolete type declarations are rejected", async () => {
     await expect(evaluate('(define-type (Maybe a) (Some a) (None))')).rejects.toThrow("define-type");
   });

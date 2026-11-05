@@ -1,4 +1,4 @@
-# RFC 0021: Form-local extension metadata and named maps
+# RFC 0023: Form-local extension metadata and named maps
 
 | | |
 | --- | --- |
