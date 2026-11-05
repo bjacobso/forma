@@ -637,6 +637,11 @@ export function resolveModuleGraph(
         binding = visible.get(root);
         suffix = n.slice(root.length);
       }
+      // A compile-time binding cannot name a type. In type position its name
+      // still means the core spelling, so importing a `->` macro leaves the
+      // arrow in `(: f (-> Int Int))` alone.
+      if (binding && type && (binding.kind === "macro" || binding.kind === "form"))
+        return e;
       if (binding) {
         if (
           suffix &&

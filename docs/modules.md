@@ -57,7 +57,8 @@ primitive/container types, and the current Effect-value authoring forms. `type`,
 `class`, `error`, `service`, `layer`, and `do!` remain built in. Kernel sugar can be
 imported from `preludes/kernel.forma`; it is not automatically loaded into file
 modules. `preludes/clojure.forma` is a second such library with Clojure
-spellings such as `defn` and `if-let`. A macro in scope may claim a retired
+spellings such as `defn` and `if-let`, described in
+[Clojure spellings](./clojure.md). A macro in scope may claim a retired
 spelling (`def`, `defn`, `defmacro`, `lambda`, `let*`); an unclaimed one reports
 `surface/invalid-form` with its replacement, such as `Use define instead of defn`.
 Explicitly configured host variables remain available. Source-loading and legacy

@@ -20,7 +20,9 @@ import it or select it as a project prelude; they do not inherit the legacy stac
 and kernel threading) that expand to core Forma, as a first step of
 [RFC 0021](../docs/rfcs/0021-languages-as-libraries.md). It changes spelling
 only: types, `nil`, and numbers keep Forma's semantics. `defn` takes one
-parameter vector and drops a docstring.
+parameter vector and drops a docstring. `conformance/clojure-spellings/`
+pins what it does and what it refuses, and the [Clojure spellings
+guide](../docs/clojure.md) is generated from those fixtures.
 
 The remaining `.lisp` libraries use the existing descriptor bootstrap APIs and
 have not yet migrated to ordinary modules. Protocol preludes are also inputs to

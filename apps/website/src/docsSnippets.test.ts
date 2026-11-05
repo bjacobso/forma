@@ -7,6 +7,7 @@ import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 import { homeSnippetDir, homeSnippets, elmPageSnippets, elmSnippetDir, emailPageSnippets, emailSnippetDir } from "./docsSnippets";
 import { effectPageSnippets, effectSnippetDir, typecheck } from "./effectPageSnippets";
+import { clojurePageSnippets, clojureSnippetDir } from "./clojurePageSnippets";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const snippetDir = resolve(repoRoot, homeSnippetDir);
@@ -34,6 +35,40 @@ describe("docs homepage snippets", () => {
   });
 
 
+});
+
+describe("docs /clojure page snippets", () => {
+  const snippets = clojurePageSnippets();
+  const dir = resolve(repoRoot, clojureSnippetDir);
+
+  if (update) {
+    mkdirSync(dir, { recursive: true });
+    for (const [name, content] of Object.entries(snippets)) {
+      writeFileSync(resolve(dir, name), content);
+    }
+  }
+
+  test("contain exactly the generated files", () => {
+    expect(readdirSync(dir).sort()).toEqual(Object.keys(snippets).sort());
+  });
+
+  test.each(Object.keys(snippets))("%s matches engine output", (name) => {
+    expect(
+      readFileSync(resolve(dir, name), "utf8"),
+      "Run `pnpm --filter @formalang/website snippets:home` to regenerate.",
+    ).toBe(snippets[name]);
+  });
+
+  test("the page shows every generated snippet and the fixture sources", () => {
+    const page = readFileSync(resolve(repoRoot, "docs/clojure.md"), "utf8");
+    for (const name of Object.keys(snippets)) {
+      expect(page).toContain(`snippets/clojure/${name}`);
+    }
+    // The page shows the fixtures themselves, so neither can drift alone.
+    expect(page).toContain("conformance/clojure-spellings/orders.forma");
+    expect(page).toContain("conformance/clojure-spellings\"");
+    expect(page).toContain("@/../preludes/clojure.forma");
+  });
 });
 
 describe("docs /effect page snippets", () => {

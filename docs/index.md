@@ -154,7 +154,7 @@ pageClass: forma-index
 </div>
 <div class="fh-row__body">
 <p>Types, effects, and contracts don't depend on spelling. The plan is to make every surface a library, Forma's own included, and to let a Lisp dialect plug into the same checker through a language adapter. Elaborators may propose terms and types; a small trusted kernel decides what is well typed.</p>
-<p>The first step ships today: Clojure spellings are an ordinary macro library.</p>
+<p>The first step ships today: Clojure spellings are an ordinary macro library. <a href="/clojure">See what it does, and what it refuses →</a></p>
 <div class="fh-window">
 <div class="fh-window__bar"><span>main.forma</span><span>spellings from preludes/clojure.forma</span></div>
 
@@ -174,7 +174,7 @@ pageClass: forma-index
 <p>This changes spelling only: <code>if</code> still takes a <code>Bool</code>, and <code>nil</code> is not <code>None</code>. The rest is proposed:</p>
 <ul class="fh-checklist" aria-label="What is shipped and what is proposed for multiple Lisps">
 <li><span><strong>Typed forms in preludes</strong>Slot types, scope, checks, and IR checked against a declared type.</span><em>engine</em></li>
-<li><span><strong>Clojure spellings as a library</strong><code>defn</code>, <code>if-let</code>, and friends expand to core Forma.</span><em>preludes</em></li>
+<li><span><strong>Clojure spellings as a library</strong><code>defn</code>, <code>if-let</code>, and friends expand to core Forma. <a href="/clojure">The guide</a> shows a checked example.</span><em>preludes</em></li>
 <li class="is-planned"><span><strong>A trusted kernel</strong>Re-checks every elaborated program, so a buggy prelude can't make an ill-typed program pass.</span><em><a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md">RFC 0022</a></em></li>
 <li class="is-planned"><span><strong>Bidirectional elaborators</strong>Domain rules that receive expected types and emit checked terms.</span><em><a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md">RFC 0022</a></em></li>
 <li class="is-planned"><span><strong>Languages as libraries</strong>Forma's own surface first, then a Clojure surface over Forma semantics.</span><em><a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md">RFC 0021</a></em></li>
@@ -204,7 +204,7 @@ pageClass: forma-index
 
 | Target | Surface | Emitter | Where it would run |
 | --- | --- | --- | --- |
-| **Clojure** | <span class="fh-status is-live">Shipped</span> as `preludes/clojure.forma` | <span class="fh-status">Proposed · first</span> | The JVM and JavaScript, from one `.cljc` file |
+| **Clojure** | <span class="fh-status is-live">Shipped</span> as [`preludes/clojure.forma`](/clojure) | <span class="fh-status">Proposed · first</span> | The JVM and JavaScript, from one `.cljc` file |
 | **Racket** | <span class="fh-status">Proposed</span> brackets and `#t` are reader switches | <span class="fh-status">Proposed · second</span> | Racket |
 | **Scheme** | <span class="fh-status">Proposed</span> the same reader switches | <span class="fh-status">Proposed · third</span> | R7RS implementations |
 | **Common Lisp** | <span class="fh-status">Proposed</span> last: `funcall` and `#'f` are semantics, not spelling | <span class="fh-status">Proposed · last</span> | ANSI implementations such as SBCL |
