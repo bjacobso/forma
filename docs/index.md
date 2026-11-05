@@ -35,6 +35,7 @@ pageClass: forma-index
 <section class="fh-statement" aria-labelledby="problem-heading">
 <p class="fh-statement__big">A macro adds a keyword in an afternoon. It doesn't add a typing rule.</p>
 <p>Lisp makes new syntax cheap and checking expensive. A bad call to a macro fails inside its expansion, at runtime, or in generated code nobody reads. Typed Lisps check programs against rules their authors chose. A domain with rules of its own (every workflow step gets the input it needs, a query sees only its entity's fields, a rule never touches a forbidden capability) still needs its own parser, checker, and tooling.</p>
+<p>That is the old Lisp curse: every team ends up with a language only its authors understand. Coding agents make new code cheap in every language, so the curse is spreading. Forma doesn't try to stop teams from building their own languages. It makes those languages agree on what a well-typed program is, so a private language still has a contract someone else can check.</p>
 <h2 id="problem-heading" class="fh-statement__question">What if the typing rules were a library too?</h2>
 </section>
 
@@ -154,21 +155,16 @@ pageClass: forma-index
 </div>
 <div class="fh-row__body">
 <p>Types, effects, and contracts don't depend on spelling. The plan is to make every surface a library, Forma's own included, and to let a Lisp dialect plug into the same checker through a language adapter. Elaborators may propose terms and types; a small trusted kernel decides what is well typed.</p>
-<p>The first step ships today: Clojure spellings are an ordinary macro library. <a href="/clojure">See what it does, and what it refuses →</a></p>
-<div class="fh-window">
-<div class="fh-window__bar"><span>main.forma</span><span>spellings from preludes/clojure.forma</span></div>
+<p>The first step ships today: Clojure spellings are an ordinary macro library. Part of the reason is practical: coding agents write <code>defn</code>, <code>if-let</code>, and <code>-&gt;</code> out of habit, and a library can accept those spellings where the engine used to reject them. We haven't yet measured whether that reduces repair rounds. <a href="/clojure">See what it does, and what it refuses →</a></p>
+<div class="fh-window fh-window--tabs">
 
-```lisp
-(import "./clojure.forma" [def defn if-let if-not ->])
-(export answer)
+::: code-group
 
-(def base 40)
-(defn add "Add two." [a b] (+ a b))
-(defn pick [o] (if-let [v o] v 0))
+<<< @/snippets/clojure/orders.excerpt.forma [orders.forma]
 
-(define answer
-  (if-not false (-> base (add (pick (Some 2)))) 0))
-```
+<<< @/snippets/clojure/orders.checked.txt [checked interface]
+
+:::
 
 </div>
 <p>This changes spelling only: <code>if</code> still takes a <code>Bool</code>, and <code>nil</code> is not <code>None</code>. The rest is proposed:</p>
@@ -339,6 +335,7 @@ not yet
 <li>Your schemas, endpoints, workflows, or policies are spread across files that drift.</li>
 <li>You're building a domain language and want its rules checked at compile time, with real diagnostics and inspectable passes, instead of a hand-rolled parser and checker.</li>
 <li>Reviewers need to see what authored code can fail with and what it can touch.</li>
+<li>Agents write more of your domain code than people read, and you'd rather review a checked contract than every generated line.</li>
 </ul>
 </div>
 <div class="fh-list fh-list--no">

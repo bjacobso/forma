@@ -118,10 +118,10 @@ export default defineConfig({
     },
     outline: { level: [2, 3], label: "On this page" },
     socialLinks: [
-      { icon: "github", link: "https://github.com/bjacobso/forma-lang" },
+      { icon: "github", link: "https://github.com/bjacobso/forma" },
     ],
     editLink: {
-      pattern: "https://github.com/bjacobso/forma-lang/edit/main/docs/:path",
+      pattern: "https://github.com/bjacobso/forma/edit/main/docs/:path",
       text: "Edit this page",
     },
     lastUpdated: { text: "Last updated" },

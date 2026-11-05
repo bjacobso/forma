@@ -5,7 +5,7 @@ export const playgroundDescription =
   "Run Forma's compiler in your browser: domain keywords, inferred effect contracts, and generated targets, one pass at a time.";
 
 export const aboutDescription =
-  "Forma is a typed Lisp where domain keywords are library code, effects are part of the type, and output is a typed artifact.";
+  "Forma is a programmable type system for Lisp: domain keywords are library code, effects are part of the type, and output is a typed artifact.";
 
 export const galleryDescription =
   "Forma examples: domain keywords, effect contracts, and generated targets, then the checked core language underneath.";
