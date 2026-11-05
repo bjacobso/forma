@@ -293,6 +293,12 @@ type. The generator passes the reference, or eta-expands it if the TypeScript
 shape differs. The diagnostic for an incompatible reference reports the
 expected and actual function types instead of asking for a literal `fn`.
 
+[RFC 0023](./0023-effect-polymorphism.md) moves `for-each` and other
+pass-through combinators into a signature table in its stage 3. This section
+must land first, so that moving a combinator does not change which programs
+are accepted. Named operations are already accepted as arguments to user
+operations whose parameter is a function type.
+
 ### 11. Refinements check literals (E5)
 
 When a literal is checked against a refined type, whether directly, through a

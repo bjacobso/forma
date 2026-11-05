@@ -68,6 +68,18 @@ The language tracks failures and requirements statically, but target backends
 do not need native algebraic-effect support. Explicit IR operations allow a
 host to use promises, an effect library, a state machine, or native handlers.
 
+## Effects are polymorphic by sets, not continuations
+
+Higher-order code needs to pass its callbacks' errors and requirements
+through; it does not need to capture or resume continuations. Capabilities,
+test doubles, and record-and-replay all work with handlers that resume once,
+which lower to service implementations on every host. Forma therefore keeps
+`perform`, `resume`, and multi-shot handlers out of the language, and
+[RFC 0023](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0023-effect-polymorphism.md)
+proposes set variables in signatures instead. The variables are solved at
+each call, so operation boundaries, artifacts, and generated code still see
+closed sets. The proposal is not implemented.
+
 ## Artifacts cross a typed boundary
 
 Artifact envelopes, declarations, summaries, and validation are typed before

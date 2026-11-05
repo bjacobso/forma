@@ -105,6 +105,17 @@ that shape for a Rust target that emits async Rust, with closed error sets as
 generated enums, and for the existing Go prototype. The proposal is not
 implemented or scheduled, and a Rust host still needs a concrete consumer.
 
+## Effect polymorphism
+
+[RFC 0023](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0023-effect-polymorphism.md)
+proposes error-set and requirement-set variables in Effect signatures, so
+that user-written higher-order operations, such as wrappers and reusable test
+doubles, pass their callbacks' effects through without over-approximating
+them. Built-in combinators would become signatures with the same notation.
+It does not add continuations. The proposal is not implemented; its third
+stage depends on the named-callback fix in
+[RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md).
+
 ## Deferred
 
 - General-purpose application-language positioning.
