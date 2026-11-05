@@ -1,0 +1,124 @@
+# effect-go benchmark run for RFC 0023, 2026-10-27
+# go test -run '^$' -bench . -benchmem -count=5 ./bench/
+goos: linux
+goarch: amd64
+pkg: github.com/bjacobso/forma/prototypes/effect-go/bench
+cpu: Intel(R) Xeon(R) Processor @ 2.50GHz
+BenchmarkChainPlainGo-2                  	  717280	      1801 ns/op	       0 B/op	       0 allocs/op
+BenchmarkChainPlainGo-2                  	  692689	      2128 ns/op	       0 B/op	       0 allocs/op
+BenchmarkChainPlainGo-2                  	  557188	      1833 ns/op	       0 B/op	       0 allocs/op
+BenchmarkChainPlainGo-2                  	  724468	      1854 ns/op	       0 B/op	       0 allocs/op
+BenchmarkChainPlainGo-2                  	  624592	      1908 ns/op	       0 B/op	       0 allocs/op
+BenchmarkChainFlatMap-2                  	    6832	    174101 ns/op	  176344 B/op	    2759 allocs/op
+BenchmarkChainFlatMap-2                  	    5601	    181305 ns/op	  176345 B/op	    2759 allocs/op
+BenchmarkChainFlatMap-2                  	    7548	    276090 ns/op	  176344 B/op	    2759 allocs/op
+BenchmarkChainFlatMap-2                  	    4874	    226095 ns/op	  176344 B/op	    2759 allocs/op
+BenchmarkChainFlatMap-2                  	    6996	    191377 ns/op	  176344 B/op	    2759 allocs/op
+BenchmarkChainFlatMapBuildAndRun-2       	    3343	    325779 ns/op	  200360 B/op	    3760 allocs/op
+BenchmarkChainFlatMapBuildAndRun-2       	    3853	    318489 ns/op	  200360 B/op	    3760 allocs/op
+BenchmarkChainFlatMapBuildAndRun-2       	    4674	    248292 ns/op	  200360 B/op	    3760 allocs/op
+BenchmarkChainFlatMapBuildAndRun-2       	    5421	    224517 ns/op	  200360 B/op	    3760 allocs/op
+BenchmarkChainFlatMapBuildAndRun-2       	    6252	    256401 ns/op	  200360 B/op	    3760 allocs/op
+BenchmarkChainGenAwaitSync-2             	   10000	    117815 ns/op	   30376 B/op	    2750 allocs/op
+BenchmarkChainGenAwaitSync-2             	   10000	    115385 ns/op	   30376 B/op	    2750 allocs/op
+BenchmarkChainGenAwaitSync-2             	   10000	    124032 ns/op	   30376 B/op	    2750 allocs/op
+BenchmarkChainGenAwaitSync-2             	   10000	    123757 ns/op	   30376 B/op	    2750 allocs/op
+BenchmarkChainGenAwaitSync-2             	    8994	    139511 ns/op	   30376 B/op	    2750 allocs/op
+BenchmarkChainGenAwaitOperation-2        	   10000	    118926 ns/op	   30368 B/op	    2749 allocs/op
+BenchmarkChainGenAwaitOperation-2        	   10000	    129835 ns/op	   30368 B/op	    2749 allocs/op
+BenchmarkChainGenAwaitOperation-2        	   10000	    124643 ns/op	   30368 B/op	    2749 allocs/op
+BenchmarkChainGenAwaitOperation-2        	   10000	    105257 ns/op	   30368 B/op	    2749 allocs/op
+BenchmarkChainGenAwaitOperation-2        	   10000	    119792 ns/op	   30368 B/op	    2749 allocs/op
+BenchmarkFanOutGoroutines-2              	    2336	    727952 ns/op	   80438 B/op	    2002 allocs/op
+BenchmarkFanOutGoroutines-2              	    1464	    764461 ns/op	   80213 B/op	    2002 allocs/op
+BenchmarkFanOutGoroutines-2              	    1384	    807417 ns/op	   80217 B/op	    2002 allocs/op
+BenchmarkFanOutGoroutines-2              	    1502	    789888 ns/op	   80208 B/op	    2002 allocs/op
+BenchmarkFanOutGoroutines-2              	    1345	    789522 ns/op	   80208 B/op	    2002 allocs/op
+BenchmarkFanOutGoroutinesWithContext-2   	    2250	    818215 ns/op	  112808 B/op	    2006 allocs/op
+BenchmarkFanOutGoroutinesWithContext-2   	    1344	    801942 ns/op	  112800 B/op	    2006 allocs/op
+BenchmarkFanOutGoroutinesWithContext-2   	    1447	    811431 ns/op	  112800 B/op	    2006 allocs/op
+BenchmarkFanOutGoroutinesWithContext-2   	    1137	    895382 ns/op	  112801 B/op	    2006 allocs/op
+BenchmarkFanOutGoroutinesWithContext-2   	    1393	    776312 ns/op	  112800 B/op	    2006 allocs/op
+BenchmarkFanOutForkJoin-2                	     397	   3112006 ns/op	  595022 B/op	   12898 allocs/op
+BenchmarkFanOutForkJoin-2                	     331	   3337580 ns/op	  594782 B/op	   12899 allocs/op
+BenchmarkFanOutForkJoin-2                	     394	   3233759 ns/op	  593273 B/op	   12893 allocs/op
+BenchmarkFanOutForkJoin-2                	     310	   3535194 ns/op	  589626 B/op	   12898 allocs/op
+BenchmarkFanOutForkJoin-2                	     319	   3451585 ns/op	  591977 B/op	   12895 allocs/op
+BenchmarkFanOutForEachUnbounded-2        	     369	   3605102 ns/op	  675869 B/op	    8911 allocs/op
+BenchmarkFanOutForEachUnbounded-2        	     331	   3312581 ns/op	  678030 B/op	    8908 allocs/op
+BenchmarkFanOutForEachUnbounded-2        	     344	   3208472 ns/op	  678081 B/op	    8907 allocs/op
+BenchmarkFanOutForEachUnbounded-2        	     351	   3362175 ns/op	  676659 B/op	    8907 allocs/op
+BenchmarkFanOutForEachUnbounded-2        	     328	   3321063 ns/op	  677169 B/op	    8912 allocs/op
+BenchmarkFanOutForEach16-2               	    3656	    467837 ns/op	   74728 B/op	    2988 allocs/op
+BenchmarkFanOutForEach16-2               	    2523	    472348 ns/op	   74728 B/op	    2988 allocs/op
+BenchmarkFanOutForEach16-2               	    1747	    582696 ns/op	   74731 B/op	    2988 allocs/op
+BenchmarkFanOutForEach16-2               	    3700	    333357 ns/op	   74728 B/op	    2988 allocs/op
+BenchmarkFanOutForEach16-2               	    3657	    326272 ns/op	   74728 B/op	    2988 allocs/op
+BenchmarkPureHandWrittenGo-2             	 2137720	       516.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPureHandWrittenGo-2             	 2377664	       505.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPureHandWrittenGo-2             	 2479849	       482.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPureHandWrittenGo-2             	 2490106	       503.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPureHandWrittenGo-2             	 2424315	       487.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPureGeneratedGo-2               	  671226	      1873 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPureGeneratedGo-2               	  599599	      1857 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPureGeneratedGo-2               	  607951	      2183 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPureGeneratedGo-2               	  622699	      1857 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPureGeneratedGo-2               	  666396	      1964 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPureGeneratedInsideEffect-2     	  487750	      2269 ns/op	     408 B/op	       4 allocs/op
+BenchmarkPureGeneratedInsideEffect-2     	  531852	      2283 ns/op	     408 B/op	       4 allocs/op
+BenchmarkPureGeneratedInsideEffect-2     	  522068	      2226 ns/op	     408 B/op	       4 allocs/op
+BenchmarkPureGeneratedInsideEffect-2     	  518110	      2308 ns/op	     408 B/op	       4 allocs/op
+BenchmarkPureGeneratedInsideEffect-2     	  533698	      2357 ns/op	     408 B/op	       4 allocs/op
+BenchmarkPureInterpreted-2               	    6451	    181528 ns/op	  186314 B/op	    3005 allocs/op
+BenchmarkPureInterpreted-2               	    7093	    174594 ns/op	  186312 B/op	    3005 allocs/op
+BenchmarkPureInterpreted-2               	    7143	    182265 ns/op	  186312 B/op	    3005 allocs/op
+BenchmarkPureInterpreted-2               	    6631	    181271 ns/op	  186312 B/op	    3005 allocs/op
+BenchmarkPureInterpreted-2               	    6349	    175861 ns/op	  186312 B/op	    3005 allocs/op
+BenchmarkFailurePlainGo-2                	   15393	     78010 ns/op	       0 B/op	       0 allocs/op
+BenchmarkFailurePlainGo-2                	   15340	     78130 ns/op	       0 B/op	       0 allocs/op
+BenchmarkFailurePlainGo-2                	   13618	     85467 ns/op	       0 B/op	       0 allocs/op
+BenchmarkFailurePlainGo-2                	   14982	     79353 ns/op	       0 B/op	       0 allocs/op
+BenchmarkFailurePlainGo-2                	   15080	     78974 ns/op	       0 B/op	       0 allocs/op
+BenchmarkFailureGenAwaitCatchTag-2       	    1683	    737616 ns/op	  192408 B/op	    6004 allocs/op
+BenchmarkFailureGenAwaitCatchTag-2       	    1689	    716611 ns/op	  192408 B/op	    6004 allocs/op
+BenchmarkFailureGenAwaitCatchTag-2       	    1560	    756628 ns/op	  192408 B/op	    6004 allocs/op
+BenchmarkFailureGenAwaitCatchTag-2       	    1723	    704210 ns/op	  192408 B/op	    6004 allocs/op
+BenchmarkFailureGenAwaitCatchTag-2       	    1690	    705623 ns/op	  192408 B/op	    6004 allocs/op
+BenchmarkFailureFlatMapCatchTag-2        	    5043	    254753 ns/op	   80408 B/op	    2004 allocs/op
+BenchmarkFailureFlatMapCatchTag-2        	    4982	    241476 ns/op	   80408 B/op	    2004 allocs/op
+BenchmarkFailureFlatMapCatchTag-2        	    4809	    249263 ns/op	   80408 B/op	    2004 allocs/op
+BenchmarkFailureFlatMapCatchTag-2        	    4699	    254039 ns/op	   80408 B/op	    2004 allocs/op
+BenchmarkFailureFlatMapCatchTag-2        	    4808	    250285 ns/op	   80408 B/op	    2004 allocs/op
+BenchmarkFailureTry-2                    	   12944	     92675 ns/op	     408 B/op	       4 allocs/op
+BenchmarkFailureTry-2                    	   12880	     94559 ns/op	     408 B/op	       4 allocs/op
+BenchmarkFailureTry-2                    	   10000	    108402 ns/op	     408 B/op	       4 allocs/op
+BenchmarkFailureTry-2                    	   12753	     93913 ns/op	     408 B/op	       4 allocs/op
+BenchmarkFailureTry-2                    	   12853	     93358 ns/op	     408 B/op	       4 allocs/op
+PASS
+ok  	github.com/bjacobso/forma/prototypes/effect-go/bench	109.832s
+
+# node bench/effect-ts.mjs (three runs)
+node v24.22.1, 1000 steps per op
+ChainFlatMap                     83.9 µs/op     83.9 ns/step
+ChainGen                        164.9 µs/op    164.9 ns/step
+FanOutForkJoin                 1733.9 µs/op   1733.9 ns/step
+FanOutForEachUnbounded          318.6 µs/op    318.6 ns/step
+FanOutForEach16                 311.9 µs/op    311.9 ns/step
+FailureGenCatchTag            12647.3 µs/op  12647.3 ns/step
+PureHandWritten                   0.9 µs/op      0.9 ns/step
+node v24.22.1, 1000 steps per op
+ChainFlatMap                    101.1 µs/op    101.1 ns/step
+ChainGen                        164.5 µs/op    164.5 ns/step
+FanOutForkJoin                 1674.3 µs/op   1674.3 ns/step
+FanOutForEachUnbounded          317.5 µs/op    317.5 ns/step
+FanOutForEach16                 316.7 µs/op    316.7 ns/step
+FailureGenCatchTag            13023.5 µs/op  13023.5 ns/step
+PureHandWritten                   1.2 µs/op      1.2 ns/step
+node v24.22.1, 1000 steps per op
+ChainFlatMap                     90.3 µs/op     90.3 ns/step
+ChainGen                        167.9 µs/op    167.9 ns/step
+FanOutForkJoin                 1686.1 µs/op   1686.1 ns/step
+FanOutForEachUnbounded          345.7 µs/op    345.7 ns/step
+FanOutForEach16                 332.0 µs/op    332.0 ns/step
+FailureGenCatchTag            14482.9 µs/op  14482.9 ns/step
+PureHandWritten                   1.1 µs/op      1.1 ns/step

@@ -23,7 +23,7 @@
     "surfaces": "pnpm --filter @formalang/ts build && pnpm --filter @formalang/host build && node scripts/check-surfaces.mjs",
     "surfaces:test": "node --test scripts/surfaces/*.test.mjs && pnpm surfaces",
     "test:visual": "pnpm --filter @formalang/website test:visual",
-    "typecheck": "tsc --noEmit -p tsconfig.alchemy.json && tsc --noEmit -p conformance/effect-typescript/tsconfig.json && turbo run typecheck --filter=@formalang/ts --filter=@formalang/host --filter=@formalang/editor --filter=@formalang/language-server --filter=@formalang/website",
+    "typecheck": "tsc --noEmit -p tsconfig.alchemy.json && tsc --noEmit -p conformance/effect-typescript/tsconfig.json && tsc --noEmit -p prototypes/effect-go/tsconfig.json && turbo run typecheck --filter=@formalang/ts --filter=@formalang/host --filter=@formalang/editor --filter=@formalang/language-server --filter=@formalang/website",
     "check": "pnpm check:branding && pnpm check:alchemy && pnpm typecheck && pnpm test:js && pnpm docs:build",
     "check:branding": "bash scripts/check-branding.sh",
     "check:changesets": "changeset status",
@@ -33,7 +33,8 @@
     "website:plan": "alchemy plan --stage prod",
     "website:deploy": "alchemy deploy --stage prod",
     "website:dry-run": "pnpm --filter @formalang/website exec wrangler deploy --dry-run",
-    "test:site": "pnpm --filter @formalang/website test:site"
+    "test:site": "pnpm --filter @formalang/website test:site",
+    "effect-go:demo": "pnpm --filter @formalang/ts build && node prototypes/effect-go/scripts/demo.mjs"
   },
   "devDependencies": {
     "@alchemy.run/cloudflare": "2.0.0-beta.84",
