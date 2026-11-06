@@ -1,8 +1,15 @@
 # Forma
 
-Forma is a typed, homoiconic Lisp for building domain-specific languages. A
-Forma program can evaluate to a value or elaborate into a typed description
-that another system validates, reviews, and executes.
+Forma is a programmable type system for Lisp. Preludes define typed forms
+such as `entity`, `endpoint`, or `rule` that take part in checking, and one
+checker decides what a well-typed program means for that domain. A Forma
+program can evaluate to a value or elaborate into a typed description that
+another system validates, reviews, and executes.
+
+Lisp makes a new keyword cheap and a new typing rule expensive, so every team
+ends up with a language only its authors understand. Forma lets those
+languages multiply and makes them agree underneath: one type language, one
+effect system, and one contract format.
 
 > [!IMPORTANT]
 > Forma is a pre-alpha research project. The implementation is real and tested,
@@ -17,24 +24,6 @@ The documentation site can be started locally with `pnpm docs:dev`. Use
 `pnpm docs:build` to produce the static site in `dist-docs/`. Homepage code
 samples in `docs/snippets/home/` are generated from real engine output; run
 `pnpm --filter @formalang/website snippets:home` after changing them.
-
-## Structural workbench
-
-The structural Forma workbench lives in [Foldworks](https://foldworks.dev),
-which composes Forma's language service with its outline, source editor,
-inspector, history, and agent surfaces. Forma itself has no Foldworks
-dependencies. The homepage's source-first live compiler and
-`@formalang/editor` remain here.
-
-The outline is the program: each row is a Forma form, with observed values,
-inferred types, and diagnostics. The Foldworks app owns selection, focus,
-undo history, proposal review, and capability approval UI.
-
-![Forma workbench outline, now hosted by Foldworks](docs/images/workbench/outline.png)
-
-See the [workbench guide](docs/workbench.md) and [workbench vision](docs/workbench-vision.md).
-The old [workbench URL](https://forma-lang.com/workbench/demo/) redirects to the
-Foldworks-hosted app. It is no longer built or installed as part of Forma.
 
 ## Forma at a glance
 
@@ -88,6 +77,11 @@ Type errors remain attached to author-written source:
 - **Inspectable compilation.** Intermediate forms are a supported product
   surface, not a hidden implementation detail. The browser demos expose each
   pass from source text to target output.
+- **One kernel, many spellings.** Clojure spellings (`defn`, `if-let`, `->`)
+  are an ordinary macro library over Forma's semantics, and
+  [RFC 0021](docs/rfcs/0021-languages-as-libraries.md) proposes making every
+  surface a library. Coding agents write those idioms out of habit; whether
+  accepting them reduces repair rounds has not been measured yet.
 - **One embeddable engine.** The TypeScript/Effect implementation runs in Node,
   browsers, the language server, and the host's JSON CLI. Conformance fixtures
   and stored goldens pin its behavior.
@@ -319,9 +313,7 @@ pnpm dev
 The website and live compiler demos run at the Vite URL printed by `pnpm dev`.
 The frozen install is the complete setup, with no sibling checkout or link step.
 Run `pnpm check` to verify the JavaScript workspace and docs. See
-[AGENTS.md](AGENTS.md) for contributor commands. The structural workbench is
-owned and hosted by Foldworks; the playground and homepage live compiler stay
-in this repository.
+[AGENTS.md](AGENTS.md) for contributor commands.
 There is currently no published `forma` CLI. Pre-1.0 packages such as
 `@formalang/ts` are published to npm under the `@formalang` scope; otherwise
 work from this repository, where `@formalang/host` builds a `forma` JSON CLI
@@ -338,9 +330,16 @@ work from this repository, where `@formalang/host` builds a `forma` JSON CLI
   the current architecture.
 - [Language services](docs/language-services.md) describes node identity,
   observation, edit scripts, and the outline codec for structural editors.
-- [The outline is the program](docs/workbench-vision.md) describes a
-  structural Forma IDE, and [Workbench](docs/workbench.md) designs it on those
-  services and Foldworks.
+- [Writing a form](docs/writing-a-form.md) shows how a prelude defines typed
+  domain vocabulary, and the [prelude catalog](https://forma-lang.com/preludes/)
+  is generated from the prelude sources.
+- [File modules](docs/modules.md) covers imports, exports, and offline packages
+  through `forma.json`, a verified `forma.lock`, and committed vendor sources.
+- [Clojure spellings](docs/clojure.md) shows a checked Clojure-spelled example,
+  the errors it refuses to paper over, and its limits.
+- [Structure and Interpretation of Forma Programs](docs/structure-and-interpretation.md)
+  and [Domain modeling in Forma](docs/domain-modeling.md) are longer guides
+  with examples run on the current engine.
 - [Roadmap](docs/roadmap.md) tracks the path from the research implementation
   toward a stable language platform.
 - [Examples](examples/README.md) contains reviewable domain programs embedded
@@ -367,7 +366,18 @@ work from this repository, where `@formalang/host` builds a `forma` JSON CLI
 ## Project status
 
 Forma is pre-alpha. Expect APIs, package boundaries, syntax, and artifact
-contracts to change while the language model is validated. Public packages use
+contracts to change while the language model is validated.
+
+Working today: the lossless reader and formatter, typed macros, Hindley–Milner
+and effect inference, refined contracts, canonical IR with payload contract
+identities, file modules and offline packages, Effect TypeScript and Effect
+Schema generation, the browser playground, the language server, and
+conformance goldens. Not built yet: a published CLI, a stable host ABI, a
+consumer-prelude SDK, the trusted kernel and elaborators
+([RFC 0022](docs/rfcs/0022-programmable-type-system.md)), Lisp dialect adapters
+and emitters ([RFC 0021](docs/rfcs/0021-languages-as-libraries.md)), Go and
+Rust Effect hosts ([Effect hosts](docs/rfcs/0022-effect-hosts.md)), and
+effect-polymorphic signatures ([RFC 0023](docs/rfcs/0023-effect-polymorphism.md)). Public packages use
 the `@formalang` npm scope. Changesets manages version PRs and the Release
 workflow publishes validated packages after those PRs merge. First publication
 and npm trusted-publisher setup are described in [Publishing](docs/publishing.md).

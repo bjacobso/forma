@@ -3,7 +3,6 @@ import { resolve } from "node:path";
 import { defineConfig, type DefaultTheme } from "vitepress";
 
 import { groupTitles, loadPreludes, type PreludeGroup } from "./preludes.ts";
-import { FORMA_WORKBENCH_URL } from "../../apps/website/src/lib/workbenchLocation.ts";
 
 const preludeSidebar: DefaultTheme.SidebarItem[] = [
   { text: "Preludes", items: [{ text: "Catalog", link: "/preludes/" }] },
@@ -67,7 +66,6 @@ export default defineConfig({
       },
       { text: "Preludes", link: "/preludes/", activeMatch: "^/(preludes|effect|elm|email|clojure)" },
       { text: "Examples", link: "/playground/demo", target: "_self", rel: "" },
-      { text: "Workbench (Foldworks)", link: FORMA_WORKBENCH_URL, target: "_self", rel: "" },
       { text: "Playground", link: "/playground", target: "_self", rel: "" },
     ],
     sidebar: {
@@ -99,8 +97,6 @@ export default defineConfig({
             { text: "Retiring the OCaml engine", link: "/engine-consolidation" },
             { text: "Language services", link: "/language-services" },
             { text: "File modules", link: "/modules" },
-            { text: "Workbench vision", link: "/workbench-vision" },
-            { text: "Workbench", link: "/workbench" },
           ],
         },
         {
@@ -118,10 +114,10 @@ export default defineConfig({
     },
     outline: { level: [2, 3], label: "On this page" },
     socialLinks: [
-      { icon: "github", link: "https://github.com/bjacobso/forma-lang" },
+      { icon: "github", link: "https://github.com/bjacobso/forma" },
     ],
     editLink: {
-      pattern: "https://github.com/bjacobso/forma-lang/edit/main/docs/:path",
+      pattern: "https://github.com/bjacobso/forma/edit/main/docs/:path",
       text: "Edit this page",
     },
     lastUpdated: { text: "Last updated" },

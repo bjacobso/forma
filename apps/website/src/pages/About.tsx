@@ -13,7 +13,7 @@ export function About() {
     <main className="about-page">
       <header className="about-hero">
         <a className="back-link" href="/">Home</a>
-        <h1>A typed Lisp for building domain languages.</h1>
+        <h1>A programmable type system for Lisp.</h1>
         <p>
           Define keywords like <code>define-entity</code> in a prelude. Forma checks the
           programs that use them, keeps diagnostics on the author's source, and emits typed
@@ -76,7 +76,7 @@ export function About() {
         <span>Research project. APIs unstable.</span>
         <nav>
           <Link to="/demo">Demo gallery</Link>
-          <a href="https://github.com/bjacobso/forma-lang" rel="noreferrer" target="_blank">
+          <a href="https://github.com/bjacobso/forma" rel="noreferrer" target="_blank">
             GitHub
           </a>
         </nav>

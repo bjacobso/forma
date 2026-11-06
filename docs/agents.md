@@ -6,7 +6,7 @@ APIs, package boundaries, syntax, and artifact formats are still evolving.
 The TypeScript host includes a source-built `forma` JSON CLI and daemon, with
 filesystem module commands described in [File modules](https://forma-lang.com/modules).
 The TypeScript engine is the only implementation; it also powers the browser
-tools, language server, and the Foldworks-hosted workbench. The earlier OCaml engine was removed.
+tools and language server. The earlier OCaml engine was removed.
 Conformance fixtures and reviewed stored goldens pin implemented behavior.
 The TypeScript engine distinguishes Int and Float, including integral Float
 literals and results; Int arithmetic checks the JavaScript safe integer range.
@@ -14,8 +14,7 @@ Effect generation, canonical artifact validation, host/CLI checks, and workspace
 analysis share mechanics semantic checks for supported explicit Effect
 declarations. Low-level HM inference remains separate; language-server file
 import resolution and complete mechanics editor parity are unfinished.
-Forma has no Foldworks dependencies. Foldworks owns the structural workbench
-app; Forma keeps the language and UI-free language services. A fresh clone uses
+A fresh clone uses
 `pnpm install --frozen-lockfile` without a sibling checkout or link step.
 
 ## Getting started
@@ -42,7 +41,6 @@ app; Forma keeps the language and UI-free language services. A fresh clone uses
 
 ## Optional
 
-- [Workbench](https://raw.githubusercontent.com/bjacobso/forma/main/docs/workbench.md): Foldworks-hosted structural editing, the language/service boundary, and current limits.
 - [Conformance](https://raw.githubusercontent.com/bjacobso/forma/main/conformance/README.md): Fixtures and stored goldens that pin implemented engine behavior.
 - [Retiring the OCaml engine](https://raw.githubusercontent.com/bjacobso/forma/main/docs/engine-consolidation.md): Why TypeScript is the only engine, the 2026-10-06 engine benchmarks, and remaining performance follow-ups.
 - [Roadmap](https://raw.githubusercontent.com/bjacobso/forma/main/docs/roadmap.md): Current foundation and planned work; planned features are not compatibility promises.

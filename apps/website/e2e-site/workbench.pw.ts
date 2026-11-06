@@ -1,17 +1,15 @@
 import { expect, test } from "@playwright/test";
 import { FORMA_WORKBENCH_URL } from "../src/lib/workbenchLocation";
 
-test("links to the Foldworks-hosted workbench while keeping the Forma guide", async ({ page }) => {
+test("keeps the workbench out of the homepage and navigation while its guide stays reachable", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator(".fh-examples").getByRole("link", { name: /Open the workbench/ }))
-    .toContainText("Foldworks");
+  await expect(page.locator(".fh-examples").getByRole("link", { name: /workbench/i })).toHaveCount(0);
   await expect(page.getByRole("navigation", { name: "Main Navigation" })
-    .getByRole("link", { name: "Workbench (Foldworks)", exact: true })).toHaveAttribute("href", FORMA_WORKBENCH_URL);
+    .getByRole("link", { name: "Workbench (Foldworks)", exact: true })).toHaveCount(0);
   await page.goto("/playground/demo");
-  const demo = page.getByRole("link").filter({ has: page.getByRole("heading", { name: "Forma Workbench", exact: true }) });
-  await expect(demo).toHaveAttribute("href", FORMA_WORKBENCH_URL);
+  await expect(page.getByRole("heading", { name: "Forma Workbench", exact: true })).toHaveCount(0);
   await expect(page.getByRole("navigation", { name: "Main navigation" })
-    .getByRole("link", { name: "Workbench (Foldworks)", exact: true })).toHaveAttribute("href", FORMA_WORKBENCH_URL);
+    .getByRole("link", { name: "Workbench (Foldworks)", exact: true })).toHaveCount(0);
   await page.goto("/workbench");
   await expect(page.getByRole("heading", { name: "The Forma workbench in Foldworks", level: 1 })).toBeVisible();
   await expect(page.getByRole("link", { name: "Open the workbench in Foldworks", exact: true }))

@@ -18,8 +18,9 @@ export function Home() {
           <span className="eyebrow">Forma playground</span>
           <h1>Watch a domain language compile.</h1>
           <p>
-            Forma is a typed Lisp for building your own domain language. Each example takes one
-            program through the compiler and shows every pass, from source text to typed output.
+            Forma is a programmable type system for Lisp: preludes define domain keywords, and one
+            checker decides what a well-typed program means. Each example takes one program through
+            the compiler and shows every pass, from source text to typed output.
           </p>
           <div className="hero-actions">
             <Link className="primary-action" to="/demo/entities">
