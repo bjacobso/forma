@@ -181,6 +181,9 @@ example, `map` with a pure callback is pure, while a sequential `map` with an
 effectful callback propagates its effects and preserves element order. Parallel
 traversal remains an explicit library operation. The syntax for open effect rows
 requires a separate decision; the compiler model must support them.
+[RFC 0023](./0023-effect-polymorphism.md) proposes that decision for signatures:
+error-set and requirement-set variables that are solved at each call, so every
+call result and operation boundary stays closed.
 
 An absent function signature means infer its input types, result, requirements,
 and failures. This applies to local and exported functions. An explicit signature
@@ -284,6 +287,8 @@ remains as documented until this proposal is implemented.
 ## Decisions still required
 
 - The exact syntax and inference rules for open requirement and failure rows.
+  [RFC 0023](./0023-effect-polymorphism.md) proposes set variables and
+  `without` in signatures; this RFC adopts that notation if both are accepted.
 - Whether `suspend` is useful enough to add as a convenience macro later.
 - Whether a distinct first-class computation type is needed beyond function values.
 - Library contracts for retry, providers, resources, and task operations.

@@ -225,6 +225,11 @@ retain independent element types while also quantifying the callback's effect
 row. A pure callback produces a pure traversal; an effectful callback cannot
 silently produce a pure function. Traversal remains sequential and preserves
 element order. Parallel traversal needs an explicit operation.
+[RFC 0023](./0023-effect-polymorphism.md) proposes the notation for Effect
+signatures, for example
+`(-> (List a) (-> a (Effect b [e] [r])) (Effect (List b) [e] [r]))` for
+`for-each`. It uses the same rank-one, per-call instantiation as type
+variables here.
 
 ## Modules, tooling, and runtime boundaries
 
@@ -307,4 +312,6 @@ not implement any stage.
   shape preservation, and typeclass design outside this initial contract.
 - **Effect integration.** Decide the public notation for generic callback
   effects with RFC 0003; do not assign purity merely because an element-type
-  signature omitted effect syntax.
+  signature omitted effect syntax. [RFC 0023](./0023-effect-polymorphism.md)
+  proposes set variables for Effect signatures; an explicit-quantifier
+  decision here should cover them too.

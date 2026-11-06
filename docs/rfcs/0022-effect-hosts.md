@@ -231,6 +231,7 @@ A profile is data plus a few functions:
 | Overrides | — | `:go-name` | `:rust-name` |
 | Type mapping | `typeTs` | `goType` | `rustType` |
 | Supported nodes | All | The set the Go printer implements | The set the Rust printer implements |
+| Effect polymorphism ([RFC 0023](./0023-effect-polymorphism.md)) | Generic `E` and `R` parameters; `without` as `Exclude` | Erased into `error` and the context interface | Generic context; error-set encoding undecided |
 
 The naming rules for each host are specified and pinned by tests, because
 generated names are API. The support set is how the lowering reports
@@ -575,6 +576,9 @@ A Rust host needs a concrete consumer, which this RFC does not yet name.
 
 - Whether a Rust consumer exists. That decides stages 4–7.
 - Whether equal error sets share one generated Rust enum.
+- How Rust encodes an error-set variable from
+  [RFC 0023](./0023-effect-polymorphism.md): a generic `E` with `From`
+  bounds for the errors an operation adds, or a generated generic enum.
 - Whether the Rust printer uses generic context bounds (proposed) or a
   concrete generated context type at each call site.
 - Whether the lowering's support check reports `<host>/unsupported` or one
@@ -597,6 +601,9 @@ A Rust host needs a concrete consumer, which this RFC does not yet name.
   and replay, which externs on new hosts would follow.
 - [RFC 0018: Type generics and collection inference](./0018-type-generics.md):
   generic function types, which the Rust printer would map to Rust generics.
+- [RFC 0023: Effect-polymorphic signatures](./0023-effect-polymorphism.md):
+  error-set and requirement-set variables, which each host profile must
+  support or reject before printing.
 - [RFC 0021: Languages as libraries](./0021-languages-as-libraries.md):
   kernel ports and differential conformance for Lisp targets.
 - [Forma for Effect](../effect.md) and the [Effect reference](../effect/reference.md).
