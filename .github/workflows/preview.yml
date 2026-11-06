@@ -60,7 +60,8 @@ jobs:
         if: steps.credentials.outputs.available == 'true' && github.event.action != 'closed'
         run: |
           pnpm exec alchemy deploy --stage "$STAGE" --yes
-          pnpm exec alchemy state read "forma-lang/$STAGE/output" --backend cloudflare --log-level none > "$RUNNER_TEMP/preview-output.json"
+          pnpm exec alchemy state read "forma-lang/$STAGE/output" --backend cloudflare --log-level none > "$RUNNER_TEMP/preview-output.txt"
+          node scripts/preview-output.mjs "$RUNNER_TEMP/preview-output.txt" > "$RUNNER_TEMP/preview-output.json"
 
       - name: Destroy closed PR preview
         if: steps.credentials.outputs.available == 'true' && github.event.action == 'closed'
