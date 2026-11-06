@@ -46,7 +46,7 @@ const bad = forma("declarations", "tests/fixtures/register-bad.forma");
 t("bad register is rejected with vendor/active-without-review",
   !bad.ok && bad.diagnostics.some((d) => d.code === "vendor/active-without-review"), msgs(bad));
 
-// 4. Pinned silent traps (these assert CURRENT behaviour, which is surprising)
+// 4. Former silent traps and findings, now asserting the corrected behaviour (REPORT.md, "Fix status").
 const illTyped = forma("evaluate", "tests/traps/evaluate-skips-typecheck.forma");
 t("FIXED T1: `file evaluate` typechecks first and refuses an ill-typed program",
   !illTyped.ok && illTyped.value?.pass === "typecheck" && !forma("typecheck", "tests/traps/evaluate-skips-typecheck.forma").ok);
@@ -61,7 +61,7 @@ t("FIXED F4: imported fns (inner lambda, Int arithmetic) are callable from a for
   msgs(forma("declarations", "tests/traps/hook-import/use.forma")));
 const vendors = good.value.filter((d) => d.summary?.kind === "FormApplication" && d.payload?.kind === "Vendor");
 t("FIXED F3: register's own vendor IR is listed by `file declarations`",
-  vendors.length === 4 && vendors.find((d) => d.payload.name === "cobalt-crm")?.payload.blockers.length === 4,
+  vendors.length === 4 && vendors.find((d) => d.payload.name === "cobalt-crm")?.payload.blockers.includes("no security review on file"),
   JSON.stringify(vendors.map((d) => d.payload.name)));
 t("FIXED F8: every diagnostic carries a line and column",
   bad.diagnostics.every((d) => d.span?.startLine > 0 && d.span?.startColumn > 0), JSON.stringify(bad.diagnostics.map((d) => d.span)));

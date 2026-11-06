@@ -31,33 +31,30 @@
 (define ex [who why on] {:approved-by who :reason why :approved-on on})
 
 (type Case {:name String :ok Bool})
-;; Two monomorphic helpers: a generic `is` used inside the `cases` define is
-;; instantiated only once by the checker (see REPORT.md, silent traps).
-(: is (-> String Bool Bool Case))
+;; One generic helper, instantiated at Bool and at (List String) below.
+(: is (-> String a a Case))
 (define is [name actual expected] {:name name :ok (= actual expected)})
-(: is-list (-> String (List String) (List String) Case))
-(define is-list [name actual expected] {:name name :ok (= actual expected)})
 
 (define cases
   [;; Rule 1: customer-data vendor needs questionnaire + (SOC2 or exception)
    (is "complete review with current SOC 2 activates" (can-activate? base today) true)
-   (is-list "no review on file blocks" (activation-blockers (v true false false None) today)
+   (is "no review on file blocks" (activation-blockers (v true false false None) today)
        ["no security review on file"])
-   (is-list "questionnaire incomplete blocks"
+   (is "questionnaire incomplete blocks"
        (activation-blockers (v true false false (Some (r 900 false (Some 800) None))) today)
        ["security questionnaire incomplete"])
-   (is-list "neither SOC 2 nor exception blocks"
+   (is "neither SOC 2 nor exception blocks"
        (activation-blockers (v true false false (Some (r 900 true None None))) today)
        ["no current SOC 2 Type II report and no valid CISO exception"])
    (is "CISO exception substitutes for SOC 2"
        (can-activate? (v true false false (Some (r 900 true None (Some ciso-ex)))) today) true)
    (is "contract signature uses the same gate"
        (can-sign-contract? (v true false false None) today) false)
-   (is-list "vendor not touching customer data needs no review"
+   (is "vendor not touching customer data needs no review"
        (activation-blockers (v false false false None) today) [])
    ;; Rule 2: reviews expire after 12 months (365 days)
    (is "review on day 364 still current" (can-activate? (v true false false (Some (r 636 true (Some 900) None))) today) true)
-   (is-list "review exactly 365 days old is expired"
+   (is "review exactly 365 days old is expired"
        (activation-blockers (v true false false (Some (r 635 true (Some 900) None))) today)
        ["security review expired or not yet valid"])
    (is "SOC 2 report older than 12 months is not current"
@@ -65,13 +62,13 @@
    (is "future-dated review is not valid"
        (security-review-complete? (v true false false (Some (r 1001 true (Some 900) None))) today) false)
    ;; Rule 3: high-risk vendors also need a DPA
-   (is-list "high-risk vendor without DPA blocks"
+   (is "high-risk vendor without DPA blocks"
        (activation-blockers (v true true false (Some soc2-review)) today)
        ["high-risk vendor has no data processing agreement"])
    (is "high-risk vendor with DPA activates" (can-activate? (v true true true (Some soc2-review)) today) true)
-   (is-list "personal-data processing implies review even if flag says no customer data"
+   (is "personal-data processing implies review even if flag says no customer data"
        (activation-blockers (v false true true None) today) ["no security review on file"])
-   (is-list "all blockers reported together"
+   (is "all blockers reported together"
        (activation-blockers (v true true false (Some (r 100 false None None))) today)
        ["security review expired or not yet valid" "security questionnaire incomplete"
         "no current SOC 2 Type II report and no valid CISO exception"
@@ -79,6 +76,7 @@
    ;; Rule 4: exceptions: CISO only, reason required, 6 months (182 days)
    (is "exception from non-CISO is invalid" (exception-valid? (ex :security-analyst "ok" 950) today) false)
    (is "exception without reason is invalid" (exception-valid? (ex :ciso "" 950) today) false)
+   (is "exception with a blank reason is invalid" (exception-valid? (ex :ciso "  " 950) today) false)
    (is "exception at day 181 valid" (exception-valid? (ex :ciso "audit" 819) today) true)
    (is "exception at day 182 expired" (exception-valid? (ex :ciso "audit" 818) today) false)
    (is "expired exception no longer substitutes for SOC 2"
