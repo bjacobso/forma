@@ -49,7 +49,7 @@ t("bad register is rejected with vendor/active-without-review",
 // 4. Pinned silent traps (these assert CURRENT behaviour, which is surprising)
 t("TRAP: `file evaluate` runs an ill-typed program", forma("evaluate", "tests/traps/evaluate-skips-typecheck.forma").ok
   && !forma("typecheck", "tests/traps/evaluate-skips-typecheck.forma").ok);
-t("TRAP: bad register reports only the first of 3 violations", bad.diagnostics.length === 1, String(bad.diagnostics.length));
+t("FIXED T4: bad register reports all 3 violations", bad.diagnostics.length === 3, String(bad.diagnostics.length));
 t("FIXED T2: generic fn used in two top-level defines typechecks", forma("typecheck", "tests/traps/generic-across-defines.forma").ok);
 t("FIXED T3: implicit Some-wrapping works for an imported record type", forma("typecheck", "tests/traps/imported-option-wrap.forma").ok);
 const wrapped = forma("evaluate", "tests/traps/imported-option-wrap.forma");

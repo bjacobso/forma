@@ -290,9 +290,9 @@ export function checkModuleGraph(
     );
   } catch (error) {
     diagnostics.push(
-      error instanceof ModuleError
-        ? error.diagnostic
-        : diagnosticFromUnknown(error, "typecheck", current?.id ?? graph.entry),
+      ...(error instanceof ModuleError
+        ? error.diagnostics
+        : [diagnosticFromUnknown(error, "typecheck", current?.id ?? graph.entry)]),
     );
   }
   if (routing) {

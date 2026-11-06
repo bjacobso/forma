@@ -216,7 +216,7 @@ describe("compile-time module conformance", () => {
         },
       );
     });
-    test(`${host.constructor.name}: form checks call imported helpers that use macros and inner functions`, async () => {
+    test(`${host.constructor.name}: form checks call imported helpers and report every failing application`, async () => {
       const dir = resolve(directory, "hook-imports");
       const fixture = (sourceId: string, source = readFileSync(resolve(dir, sourceId), "utf8")) =>
         ({ sourceId, source, kind: "source" as const });
@@ -230,10 +230,11 @@ describe("compile-time module conformance", () => {
           expect(JSON.stringify(ledger.interfaces.at(-1)?.exports[0]?.data?.value)).toMatch(/due\D{0,30}31/);
           const over = fixture("over.forma").source;
           const rejected = await host.moduleGraph({ sessionId, sourceId: "over.forma", source: over });
-          expect(rejected.diagnostics[0]).toMatchObject({
+          // Every failing application is reported, each at its own hole.
+          expect(rejected.diagnostics).toMatchObject(["250", "900"].map((amount) => ({
             code: "spend/over-limit",
-            span: { sourceId: "over.forma", startOffset: over.indexOf("250"), endOffset: over.indexOf("250") + 3 },
-          });
+            span: { sourceId: "over.forma", startOffset: over.indexOf(amount), endOffset: over.indexOf(amount) + 3 },
+          })));
         },
       );
     });

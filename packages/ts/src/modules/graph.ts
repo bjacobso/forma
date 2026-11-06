@@ -101,8 +101,16 @@ export interface ModuleGraph {
   readonly modules: readonly ResolvedModule[];
 }
 export class ModuleError extends Error {
-  constructor(readonly diagnostic: Diagnostic) {
+  /** `diagnostic` is the first; `related` holds further independent errors,
+   * such as other form applications whose :check also failed. */
+  constructor(
+    readonly diagnostic: Diagnostic,
+    readonly related: readonly Diagnostic[] = [],
+  ) {
     super(diagnostic.message);
+  }
+  get diagnostics(): readonly Diagnostic[] {
+    return [this.diagnostic, ...this.related];
   }
 }
 export function normalizeModuleId(path: string): string {

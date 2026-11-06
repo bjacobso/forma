@@ -434,11 +434,9 @@ export class TsLanguageHost implements LanguageHost {
       return {
         entry: request.sourceId,
         interfaces: [],
-        diagnostics: [
-          error instanceof Modules.ModuleError
-            ? error.diagnostic
-            : Engine.diagnosticFromUnknown(error, "typecheck", request.sourceId),
-        ],
+        diagnostics: error instanceof Modules.ModuleError
+          ? [...error.diagnostics]
+          : [Engine.diagnosticFromUnknown(error, "typecheck", request.sourceId)],
       };
     }
   }
@@ -452,11 +450,9 @@ export class TsLanguageHost implements LanguageHost {
         interfaces: [],
         declarations: [],
         modules: [],
-        diagnostics: [
-          error instanceof Modules.ModuleError
-            ? error.diagnostic
-            : Engine.diagnosticFromUnknown(error, "emit", request.sourceId),
-        ],
+        diagnostics: error instanceof Modules.ModuleError
+          ? [...error.diagnostics]
+          : [Engine.diagnosticFromUnknown(error, "emit", request.sourceId)],
       };
     }
   }
@@ -855,9 +851,9 @@ export class TsLanguageHost implements LanguageHost {
           errors: [], diagnostics: checked.diagnostics,
         };
       } catch (error) {
-        const diagnostic = error instanceof Modules.ModuleError ? error.diagnostic
-          : Engine.diagnosticFromUnknown(error, "typecheck", sourceId);
-        return { sourceId, success: false, parse, typedSpans: [], errors: [], diagnostics: [diagnostic] };
+        const diagnostics = error instanceof Modules.ModuleError ? [...error.diagnostics]
+          : [Engine.diagnosticFromUnknown(error, "typecheck", sourceId)];
+        return { sourceId, success: false, parse, typedSpans: [], errors: [], diagnostics };
       }
     }
     const inferOptions = Engine.typeInferOptions({
@@ -1108,7 +1104,7 @@ export class TsLanguageHost implements LanguageHost {
     const sourceId = request.sourceId ?? "session";
     let expressions:readonly Reader.SExpr[];
     try {const prepared=await Engine.prepareModuleImports({session:session.language,sourceId,source,env,stepLimit:request.stepLimit ?? session.defaultStepLimit},sourceId,source,env);expressions=prepared.expressions;env=prepared.env;}
-    catch(error) {return {status:"failed",diagnostics:[error instanceof Modules.ModuleError ? error.diagnostic : Engine.diagnosticFromUnknown(error,"evaluate",sourceId)]};}
+    catch(error) {return {status:"failed",diagnostics:error instanceof Modules.ModuleError ? [...error.diagnostics] : [Engine.diagnosticFromUnknown(error,"evaluate",sourceId)]};}
     const evaluationId = `ts-eval-${this.#nextEvaluationId++}`;
     const evaluation = createPendingEvaluation(session, evaluationId, sourceId);
     const builtins = {

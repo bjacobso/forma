@@ -1,3 +1,4 @@
+import type { Diagnostic } from "../diagnostic/diagnostic.js";
 import { irContractId } from "../artifact/contract-identity.js";
 import { isKFloat } from "../evaluator/types.js";
 import { Effect } from "effect";
@@ -580,14 +581,19 @@ export function prepareCompileTimeModule(
         const checked = Effect.runSync(
           hooks.find((h) => h.kind === "validate")!.execute(input),
         );
-        if (checked.kind === "validate")
-          for (const problem of checked.diagnostics)
-            if (problem.severity === "error")
-              fail(
-                { ...expression, loc: problem.loc ?? expression.loc },
-                problem.code ?? "elaborate/form-check",
-                problem.message,
-              );
+        if (checked.kind === "validate") {
+          // Report every error this application's checks found, not only the first.
+          const errors = checked.diagnostics
+            .filter((problem) => problem.severity === "error")
+            .map((problem): Diagnostic => ({
+              code: problem.code ?? "elaborate/form-check",
+              message: problem.message,
+              severity: "error",
+              phase: "elaborate",
+              span: spanOf({ ...expression, loc: problem.loc ?? expression.loc }),
+            }));
+          if (errors.length) throw new ModuleError(errors[0]!, errors.slice(1));
+        }
         const result = Effect.runSync(
           hooks.find((h) => h.kind === "construct")!.execute(input),
         );
@@ -637,6 +643,19 @@ export function prepareCompileTimeModule(
       demanding.pop();
     }
   }
+  // Each form application is checked independently, so collect the errors of
+  // all of them before failing; one author run then reports every violation.
+  const applicationErrors: Diagnostic[] = [];
+  const checkApplication = (symbol: string): void => {
+    try {
+      read(symbol);
+    } catch (error) {
+      if (!(error instanceof ModuleError) || !applications.has(symbol)) throw error;
+      for (const diagnostic of error.diagnostics)
+        if (!applicationErrors.some((seen) => JSON.stringify(seen) === JSON.stringify(diagnostic)))
+          applicationErrors.push(diagnostic);
+    }
+  };
   module.expressions.forEach((expression, index) => {
     if (
       forms.has(head(expression) ?? "") &&
@@ -644,7 +663,7 @@ export function prepareCompileTimeModule(
     ) {
       const symbol = `@application_${index}`;
       applications.set(symbol, expression);
-      read(symbol);
+      checkApplication(symbol);
     }
   });
   const enrich = (binding: ModuleBinding): ModuleBinding => {
@@ -742,7 +761,9 @@ export function prepareCompileTimeModule(
     };
   };
   for (const binding of module.bindings.values())
-    if (binding.declaration) read(binding.symbol);
+    if (binding.declaration) checkApplication(binding.symbol);
+  if (applicationErrors.length)
+    throw new ModuleError(applicationErrors[0]!, applicationErrors.slice(1));
   return {
     ...module,
     compileTime: state,

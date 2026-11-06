@@ -48,6 +48,6 @@ try {
     process.exitCode = 64;
   }
 } catch (error) {
-  print({ ok: false, diagnostics: error instanceof ModuleError ? [error.diagnostic] : [{ code: (error as NodeJS.ErrnoException).code ? "io/error" : "internal/error", severity: "error", message: String(error) }] });
+  print({ ok: false, diagnostics: error instanceof ModuleError ? error.diagnostics : [{ code: (error as NodeJS.ErrnoException).code ? "io/error" : "internal/error", severity: "error", message: String(error) }] });
   process.exitCode = 1;
 }
