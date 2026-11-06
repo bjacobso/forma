@@ -263,6 +263,26 @@ same position:
 
 No other part of this RFC depends on RFC 0003.
 
+### Relation to effect-polymorphic signatures
+
+This RFC needs no set variables, and `implement` stays valid only inside
+`provide`. [RFC 0023](./0023-effect-polymorphism.md) lets an ordinary
+operation contain that `provide` and declare what it discharges, so a test
+double written once can be applied to many programs:
+
+```lisp
+(: with-declining-payments
+  (-> (Effect a [e] [r]) (Effect a [e PaymentDeclined] [(without r Payments.charge)])))
+(define with-declining-payments [program]
+  (provide program
+    (implement Payments :delegate
+      (define charge [customer cents]
+        (fail (PaymentDeclined {:reason "card expired"}))))))
+```
+
+A delegating `implement` discharges only the members it defines, which is why
+the signature removes `Payments.charge` and not `Payments`.
+
 ## Alternatives considered
 
 - **Reinstate `handle` with tail-resumptive clauses.** The semantics would be
