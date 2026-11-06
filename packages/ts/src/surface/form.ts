@@ -11,6 +11,7 @@ import { KernelTypeError, type KernelError } from "../diagnostic/errors.js";
 import { KKeyword, KSymbol, mapKey, mapKeyValue, isKKeyword, isKSymbol } from "../evaluator/types.js";
 import { Effect, Layer } from "effect";
 import type { SExpr } from "../reader/types.js";
+import { authorNames, failureLocation } from "../diagnostic/diagnostic.js";
 import type { FormDescriptor, IdentifierSpec, SlotSpec, DescriptorExtensionValue } from "../descriptor/FormDescriptor.js";
 import { ElaborationError, type ElaborationHook, type HookInput } from "../descriptor/ElaborationHook.js";
 import { SimpleNormalizedSlots, type SlotValue } from "../descriptor/NormalizedSlots.js";
@@ -359,7 +360,10 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
   if (!spec) return [];
   const execute = (input: HookInput, kind: "construct" | "validate" | "result-type") => Effect.gen(function* () {
     const values = matchFormSyntax(spec, input.rawExpr);
-    let env = linked?.environment() ?? Env.empty();
+    // Bind holes in a fresh frame: `bind` copies the innermost frame, and a
+    // linked module's innermost frame is a mutable slot (such as an imported
+    // helper) that may be filled only after the hook starts.
+    let env = (linked?.environment() ?? Env.empty()).extend({});
     const converted = new Map<string,KValue>();
     const childDiagnostics: Diagnostic[] = [];
     for (const [n,t] of spec.holes) {
@@ -593,14 +597,14 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
       }
       const check = spec.options.get(":check");
       if (check) {
-        const context = `:check ${name(check) ?? "<anonymous>"} of form ${descriptor.name}`;
+        const context = `:check ${authorNames(name(check) ?? "<anonymous>")} of form ${authorNames(descriptor.name)}`;
         const missing = missingCheckHoles(check, spec);
         if (missing.length) return yield* Effect.fail(new ElaborationError({
           message: `${context}: no ${missing.length === 1 ? "hole" : "holes"} named ${missing.join(", ")}`,
           hookName: descriptor.name, phase: "validate",
         }));
         const extra = yield* invoke(check).pipe(Effect.mapError(error => new ElaborationError({
-          message: `${context}: ${error.message}`, hookName: descriptor.name, phase: "validate",
+          message: `${context}: ${authorNames(error.message)}${failureLocation(error)}`, hookName: descriptor.name, phase: "validate",
         })));
         if (!Array.isArray(extra)) throw new ElaborationError({message: ":check must return a list of diagnostics",hookName:descriptor.name,phase:"validate"});
         for (const problem of extra) {

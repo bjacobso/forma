@@ -60,6 +60,7 @@ export function expandKernelExprsSync(
     ...(options.keepMacroDefs === true ? { keepMacroDefs: true } : {}),
     ...(options.macroStepLimit !== undefined ? { macroStepLimit: options.macroStepLimit } : {}),
     ...(options.gensym ? { gensym: options.gensym } : {}),
+    ...(options.contextTypes ? { contextTypes: options.contextTypes } : {}),
   });
 
   return {

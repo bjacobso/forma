@@ -296,6 +296,15 @@ forma file evaluate path/to/main.forma
 forma file declarations path/to/main.forma
 ```
 
+`file evaluate` typechecks the graph first and returns the typecheck response,
+without evaluating, when the check fails; `file evaluate --unchecked` skips the
+check. `file declarations` elaborates forms and lists declarations, followed by
+one `FormApplication` entry per form application with its IR as plain JSON.
+File commands exit 1 when `ok` is false, and every located diagnostic carries
+1-based `startLine`, `startColumn`, `endLine` and `endColumn`. `forma help`
+lists the commands. [Authoring your own program](./authoring.md) walks through
+these commands for a new project.
+
 `daemon` reads one JSON object per line and writes one response per line. Sessions
 persist across requests, which run in input order. Every response has `ok` and
 `diagnostics`, and successful operations expose their host projection in `value`.

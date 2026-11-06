@@ -4,15 +4,9 @@
 ;;
 ;; Forma has no date type (see REPORT.md), so every date is an Int day number
 ;; (days since an arbitrary epoch). "12 months" = 365 days, "6 months" = 182 days.
-;; Kernel `and`/`or`/`not` are macros imported from preludes/kernel.forma. An
-;; imported function that uses them is nil when called from a form :check
-;; (REPORT.md, silent traps), so this module defines plain Bool functions.
-(: no (-> Bool Bool))
-(define no [b] (if b false true))
-(: both (-> Bool Bool Bool))
-(define both [a b] (if a b false))
-(: either (-> Bool Bool Bool))
-(define either [a b] (if a true b))
+;; Kernel `and`/`or`/`not` are macros that file modules import from
+;; preludes/kernel.forma.
+(import "../../../preludes/kernel.forma" [and or not])
 (export Role Exception Review Vendor
         review-validity-days exception-validity-days
         requires-review? high-risk? review-current? soc2-current? exception-valid?
@@ -49,7 +43,7 @@
 ;; Processing customer personal data is a way of touching customer data.
 (: requires-review? (-> Vendor Bool))
 (define requires-review? [vendor]
-  (either vendor.touches-customer-data vendor.processes-customer-personal-data))
+  (or vendor.touches-customer-data vendor.processes-customer-personal-data))
 
 (: high-risk? (-> Vendor Bool))
 (define high-risk? [vendor] vendor.processes-customer-personal-data)
@@ -57,7 +51,7 @@
 ;; Valid from the completion day up to, not including, completion + 365.
 (: within? (-> Int Int Int Bool))
 (define within? [start days today]
-  (both (>= today start) (< today (+ start days))))
+  (and (>= today start) (< today (+ start days))))
 
 (: review-current? (-> Review Int Bool))
 (define review-current? [review today]
@@ -72,8 +66,8 @@
 
 (: exception-valid? (-> Exception Int Bool))
 (define exception-valid? [ex today]
-  (both (= ex.approved-by :ciso)
-       (both (no (= ex.reason ""))
+  (and (= ex.approved-by :ciso)
+       (and (not (= (trim ex.reason) ""))
             (within? ex.approved-on exception-validity-days today))))
 
 (: has-valid-exception? (-> Review Int Bool))
@@ -88,11 +82,11 @@
 (define review-blockers [review today]
   (map (fn [c] c.reason)
        (filter (fn [c] c.failed)
-               [{:failed (no (review-current? review today))
+               [{:failed (not (review-current? review today))
                  :reason "security review expired or not yet valid"}
-                {:failed (no review.questionnaire-complete)
+                {:failed (not review.questionnaire-complete)
                  :reason "security questionnaire incomplete"}
-                {:failed (no (either (soc2-current? review today)
+                {:failed (not (or (soc2-current? review today)
                                   (has-valid-exception? review today)))
                  :reason "no current SOC 2 Type II report and no valid CISO exception"}])))
 
@@ -104,8 +98,6 @@
 
 ;; Brief: "Procurement must not mark a vendor active while its review is
 ;; incomplete or expired." Returns every reason activation is blocked.
-;; Brief: "Procurement must not mark a vendor active while its review is
-;; incomplete or expired." Returns every reason activation is blocked.
 ;; (Lists cannot be appended in checked code yet, so each rule is one Check.)
 (: activation-blockers (-> Vendor Int (List String)))
 (define activation-blockers [vendor today]
@@ -115,19 +107,19 @@
                    [{:failed (match vendor.review (Some _) false None true)
                      :reason "no security review on file"}
                     {:failed (match vendor.review
-                               (Some review) (no (review-current? review today))
+                               (Some review) (not (review-current? review today))
                                None false)
                      :reason "security review expired or not yet valid"}
                     {:failed (match vendor.review
-                               (Some review) (no review.questionnaire-complete)
+                               (Some review) (not review.questionnaire-complete)
                                None false)
                      :reason "security questionnaire incomplete"}
                     {:failed (match vendor.review
-                               (Some review) (no (either (soc2-current? review today)
+                               (Some review) (not (or (soc2-current? review today)
                                                       (has-valid-exception? review today)))
                                None false)
                      :reason "no current SOC 2 Type II report and no valid CISO exception"}
-                    {:failed (both (high-risk? vendor) (no vendor.dpa-on-file))
+                    {:failed (and (high-risk? vendor) (not vendor.dpa-on-file))
                      :reason "high-risk vendor has no data processing agreement"}]))
       []))
 

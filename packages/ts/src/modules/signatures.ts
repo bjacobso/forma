@@ -1,3 +1,4 @@
+import { authorNames } from "../diagnostic/diagnostic.js";
 import { headSym, type SExpr } from "../reader/types.js";
 import { flattenRow, type Scheme, type Type } from "../type/types.js";
 import type { TypeEnv } from "../type/substitution.js";
@@ -45,6 +46,10 @@ export function schemeSyntax(scheme: Scheme, e: SExpr, target = true): SExpr {
     items: [sym(name), ...items],
     loc: e.loc,
   });
+  const definedName = (): string => {
+    const defined = e._tag === "List" ? e.items[1] : undefined;
+    return defined?._tag === "Sym" ? authorNames(defined.name) : "This definition";
+  };
   const quantified = new Set([
     ...scheme.tvars,
     ...scheme.rvars,
@@ -71,7 +76,7 @@ export function schemeSyntax(scheme: Scheme, e: SExpr, target = true): SExpr {
             if (target)
               throw Object.assign(
                 new Error(
-                  "Effect TypeScript does not support inferred variadic function exports yet.",
+                  `${definedName()} has an inferred variadic function type, which declarations and generated code cannot represent yet. Give it a signature with fixed parameters.`,
                 ),
                 { loc: e.loc },
               );
@@ -85,7 +90,7 @@ export function schemeSyntax(scheme: Scheme, e: SExpr, target = true): SExpr {
         if (target)
           throw Object.assign(
             new Error(
-              "Effect TypeScript does not support inferred variadic function exports yet.",
+              `${definedName()} has an inferred variadic function type, which declarations and generated code cannot represent yet. Give it a signature with fixed parameters.`,
             ),
             { loc: e.loc },
           );
@@ -95,7 +100,7 @@ export function schemeSyntax(scheme: Scheme, e: SExpr, target = true): SExpr {
         if (target && tail._tag !== "REmpty")
           throw Object.assign(
             new Error(
-              "Effect TypeScript does not support inferred open-row exports yet; supply a closed signature.",
+              `${definedName()} has an inferred open record type, which declarations and generated code cannot represent yet. Give it a signature whose records list every field, such as (: ${definedName()} (-> {:id String} Bool)).`,
             ),
             { loc: e.loc },
           );

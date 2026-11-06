@@ -6,13 +6,13 @@ import { head, name, list, sym } from "./effect.js";
 type TypeBindings = ReadonlyMap<string, SExpr>;
 
 /** Insert the Option constructors required by a record's contextual type. */
-export function coerceProgram(exprs: readonly SExpr[], externalTypes: ReadonlyMap<string,SExpr> = new Map()): readonly SExpr[] {
+export function coerceProgram(exprs: readonly SExpr[], externalTypes: ReadonlyMap<string,SExpr> = new Map(), contextTypes: readonly SExpr[] = []): readonly SExpr[] {
   const aliases = new Map<string, SExpr>();
   const signatures = new Map<string, SExpr>(externalTypes);
   const constructors = new Map<string, readonly SExpr[]>();
   const definitions = new Map<string, SExpr>();
   const resolving = new Set<string>();
-  for (const expr of exprs) {
+  for (const expr of [...contextTypes, ...exprs]) {
     if (expr._tag !== "List") continue;
     if (head(expr) === "__record-type" && expr.items[1]?._tag === "Sym" && expr.items[2]) {
       constructors.set(expr.items[1].name, [expr.items[2]]);

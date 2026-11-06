@@ -253,7 +253,7 @@ export function expand(request: ExpandRequest): ExpandResult {
       sourceId,
       pass: "expand",
       ast: [],
-      diagnostics: [moduleDiagnostic(error, "expand", sourceId)],
+      diagnostics: moduleDiagnostics(error, "expand", sourceId),
     };
   }
 }
@@ -286,7 +286,7 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
       const display = moduleResultDisplay(checked, graph.entry);
       return { sourceId, pass:"typecheck", display, type:typeProjection(display), diagnostics:checked.diagnostics };
     } catch (error) {
-      return { sourceId, pass:"typecheck", diagnostics:[moduleDiagnostic(error,"typecheck",sourceId)] };
+      return { sourceId, pass:"typecheck", diagnostics:moduleDiagnostics(error, "typecheck",sourceId) };
     }
   }
   if (source === undefined) {
@@ -452,7 +452,7 @@ export async function evaluateInSession(
     const { result,collector } = await cached.runtime.evaluate(graph,request.stepLimit,request.observe);
     return { sourceId, pass:"evaluate", value:result.value, env:result.env, printed:Evaluator.printKValue(result.value), steps:result.steps, diagnostics:[], ...(collector ? {observations:observationReport(collector)} : {}) };
   } catch (error) {
-    return { sourceId, pass:"evaluate", value:null, diagnostics:[moduleDiagnostic(error,"evaluate",sourceId)] };
+    return { sourceId, pass:"evaluate", value:null, diagnostics:moduleDiagnostics(error, "evaluate",sourceId) };
   }
 }
 
@@ -476,6 +476,9 @@ export function moduleCoreOptions(session?:LanguageSession):import("../modules/g
     projects: session?.projects ?? [],
     ...(session?.packages ? { packages: session.packages } : {}),
   };
+}
+function moduleDiagnostics(error:unknown,phase:DiagnosticPhase,sourceId:string):Diagnostic[] {
+  return error instanceof Error && "diagnostics" in error ? [...(error as {diagnostics:readonly Diagnostic[]}).diagnostics] : [moduleDiagnostic(error,phase,sourceId)];
 }
 function moduleDiagnostic(error:unknown,phase:DiagnosticPhase,sourceId:string):Diagnostic {
   return error instanceof Error && "diagnostic" in error ? (error as {diagnostic:Diagnostic}).diagnostic : diagnosticFromUnknown(error,phase,sourceId);

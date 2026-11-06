@@ -43,16 +43,33 @@ export function moduleMechanicsDeclarations(graph: ModuleGraph): {
 } {
   const check = checkModuleGraph(graph);
   if (!check.ok) return { declarations: [], diagnostics: check.diagnostics };
-  const enriched = graph.modules.map((m) => {
-    const expanded = m.compileTime?.expand(m.expressions) ?? m.expressions;
+  let enriched;
+  try {
+    enriched = graph.modules.map((m) => {
+      const expanded = m.compileTime?.expand(m.expressions) ?? m.expressions;
+      return {
+        ...m,
+        expressions: inferredModuleSignatures(
+          { ...m, expressions: expanded },
+          check.environments.get(m.id)!,
+        ),
+      };
+    });
+  } catch (error) {
+    // An inferred type the declarations cannot represent is the author's to fix.
+    const loc = (error as { loc?: { sourceId?: string; start: number; end: number; line: number; col: number } }).loc;
+    if (!loc) throw error;
     return {
-      ...m,
-      expressions: inferredModuleSignatures(
-        { ...m, expressions: expanded },
-        check.environments.get(m.id)!,
-      ),
+      declarations: [],
+      diagnostics: [{
+        code: "module/unrepresentable-signature",
+        severity: "error",
+        phase: "elaborate",
+        message: error instanceof Error ? error.message : String(error),
+        span: { sourceId: loc.sourceId ?? graph.entry, startOffset: loc.start, endOffset: loc.end, startLine: loc.line, startColumn: loc.col },
+      }],
     };
-  });
+  }
   const expressions = enriched.flatMap((m) => m.expressions);
   const normalized = normalizeEffectProgram(expressions, true, true);
   const declarations: PackageableDeclaration[] = [],

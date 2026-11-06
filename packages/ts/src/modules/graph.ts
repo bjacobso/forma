@@ -101,8 +101,16 @@ export interface ModuleGraph {
   readonly modules: readonly ResolvedModule[];
 }
 export class ModuleError extends Error {
-  constructor(readonly diagnostic: Diagnostic) {
+  /** `diagnostic` is the first; `related` holds further independent errors,
+   * such as other form applications whose :check also failed. */
+  constructor(
+    readonly diagnostic: Diagnostic,
+    readonly related: readonly Diagnostic[] = [],
+  ) {
     super(diagnostic.message);
+  }
+  get diagnostics(): readonly Diagnostic[] {
+    return [this.diagnostic, ...this.related];
   }
 }
 export function normalizeModuleId(path: string): string {
@@ -691,7 +699,7 @@ export function resolveModuleGraph(
           id,
           e,
           "module/unimported-sugar",
-          `Import ${n} from a library or select a project prelude.`,
+          `${n} is kernel sugar, which file modules must import: add (import "<path to forma>/preludes/kernel.forma" [${n}]) with a path relative to this file, or select a project prelude that provides it. The kernel library exports not, when, unless, cond, and, or, -> and ->>.`,
         );
       if (n.includes("__forma_"))
         fail(

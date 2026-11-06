@@ -76,6 +76,8 @@ export interface LowerProgramOptions {
   readonly includePrelude?: boolean | undefined;
   /** Types visible to the program's forms besides its own, such as imported `:ir` types. */
   readonly types?: ReadonlyMap<string, SExpr> | undefined;
+  /** Type declarations from other modules, used for implicit `Some`/`None` filling. */
+  readonly contextTypes?: readonly SExpr[] | undefined;
 }
 
 /**
@@ -110,6 +112,7 @@ export function lowerProgram(
     builtins: defaultBuiltins,
     ...(options.includePrelude === false ? {includePrelude:false} : {}),
     ...(options.macroEnv ? { env: options.macroEnv } : {}),
+    ...(options.contextTypes?.length ? { contextTypes: options.contextTypes } : {}),
   }).expanded;
 
   try {

@@ -619,6 +619,9 @@ Forma is pre-alpha. These limits affect domain modeling today.
   already accepts a named function.
 - **Generic operations are not supported** in Effect programs. Every operation
   has concrete types.
+- **There is no date or time type.** Model dates as `Int` day numbers and do
+  calendar arithmetic, such as month lengths, in the host. See
+  [Authoring your own program](./authoring.md#modelling-time).
 - **Effect programs run as generated TypeScript.** Forma's own evaluator does
   not execute them. Run them with Effect, as the
   [Effect TypeScript conformance suite](https://github.com/bjacobso/forma/tree/main/conformance/effect-typescript)

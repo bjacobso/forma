@@ -5,12 +5,12 @@
         :status "active" :as-of 1000
         :touches-customer-data true :processes-customer-personal-data false :dpa-on-file false
         :reviewed-on 600 :questionnaire-complete true :soc2-issued-on 900
-        :exception-by "" :exception-on -1)
+        :exception-by "" :exception-reason "" :exception-on -1)
 (vendor no-dpa :status "active" :as-of 1000
         :touches-customer-data true :processes-customer-personal-data true :dpa-on-file false
         :reviewed-on 900 :questionnaire-complete true :soc2-issued-on 900
-        :exception-by "" :exception-on -1)
+        :exception-by "" :exception-reason "" :exception-on -1)
 (vendor analyst-exception :status "active" :as-of 1000
         :touches-customer-data true :processes-customer-personal-data false :dpa-on-file false
         :reviewed-on 900 :questionnaire-complete true :soc2-issued-on -1
-        :exception-by "security-analyst" :exception-on 950)
+        :exception-by "security-analyst" :exception-reason "audit scheduled" :exception-on 950)

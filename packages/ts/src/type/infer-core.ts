@@ -37,6 +37,7 @@ import { InferContext } from "./context.js";
 import type { Origin } from "./errors.js";
 import { InferenceError } from "./errors.js";
 import type { CoreExpr, TypeExpr } from "./core-expr.js";
+import { CLet } from "./core-expr.js";
 import { instantiate, instantiateWithConstraints } from "./scheme-ops.js";
 import { emitAmbientEffect, withAmbientEffectScope } from "./effect-helpers.js";
 import { inferLet } from "./infer-binding.js";
@@ -643,12 +644,35 @@ const sameLiteral = (member: string, literal: string): boolean => {
   try { return !member.startsWith(":") && JSON.parse(member) === JSON.parse(literal); } catch { return false; }
 };
 
+/** Whether `expr` mentions any of `names` as a variable (shadowing ignored). */
+function mentionsAny(expr: unknown, names: ReadonlySet<string>): boolean {
+  if (Array.isArray(expr)) return expr.some((item) => mentionsAny(item, names));
+  if (expr === null || typeof expr !== "object") return false;
+  const node = expr as { readonly _tag?: unknown; readonly name?: unknown };
+  if (node._tag === "Var" && typeof node.name === "string" && names.has(node.name)) return true;
+  return Object.entries(expr).some(([key, value]) => key !== "span" && mentionsAny(value, names));
+}
+
 const inferApp = (
   env: TypeEnv,
   expr: CoreExpr & { _tag: "App" },
 ): Effect.Effect<Type, InferenceError, InferContext> =>
   Effect.gen(function* () {
     const ctx = yield* InferContext;
+
+    // An immediately applied `fn`, as macros such as `or` produce, types like
+    // `let`: its parameters take their arguments' types, so `((fn [y] (+ y 1)) n)`
+    // stays Int for an Int `n` instead of widening `y` to Float first.
+    const lambda = expr.fn;
+    if (lambda._tag === "Lam" && !lambda.restParam && lambda.params.length > 0 && lambda.params.length === expr.args.length) {
+      const names = new Set(lambda.params.map((param) => param.name));
+      // A lambda argument is typed better from its use in the body, as before.
+      if (names.size === lambda.params.length && !expr.args.some((arg) => arg._tag === "Lam" || mentionsAny(arg, names))) {
+        return yield* inferExpr(env, CLet(expr.span, lambda.params.map((param, index) => ({
+          id: param.id, span: param.span, name: param.name, expr: expr.args[index]!,
+        })), lambda.body));
+      }
+    }
 
     if (expr.fn._tag === "Var" && !env.has(expr.fn.name) && ctx.builtinScheme(expr.fn.name) && ["=","!="].includes(expr.fn.name) && expr.args.length === 2) {
       const left=yield* inferExpr(env,expr.args[0]!), right=yield* inferExpr(env,expr.args[1]!);

@@ -420,3 +420,28 @@ for (const host of hosts)
       await host.closeSession({ sessionId });
     }
   });
+
+for (const host of hosts)
+  test(`${host.name}: imported record types fill optional fields and allow field access`, async () => {
+    const dir = resolve(fixture, "imported-records");
+    const { sessionId } = await host.openSession();
+    try {
+      expect(
+        (
+          await host.loadSource({
+            sessionId,
+            sourceId: "shapes.forma",
+            source: readFileSync(resolve(dir, "shapes.forma"), "utf8"),
+          })
+        ).diagnostics,
+      ).toEqual([]);
+      const source = readFileSync(resolve(dir, "main.forma"), "utf8");
+      const checked = await host.typecheck({ sessionId, sourceId: "main.forma", source });
+      expect(checked.diagnostics).toEqual([]);
+      expect(
+        await host.evaluateInSession({ sessionId, sourceId: "main.forma", source }),
+      ).toMatchObject({ status: "completed", result: { printed: "[7 -1 4]" } });
+    } finally {
+      await host.closeSession({ sessionId });
+    }
+  });

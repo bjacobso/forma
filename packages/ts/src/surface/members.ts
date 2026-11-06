@@ -9,6 +9,11 @@ export function patternBindings(e: SExpr | undefined): readonly string[] {
   if (e._tag === "Map") return e.pairs.flatMap(([,v]) => patternBindings(v));
   return [];
 }
+/** A resolved module value binding (`name__forma_<module>_d<n>`). Module
+ * resolution only renames declarations, and a lowercase declaration is a value,
+ * so its members are record fields even when its definition is checked or
+ * evaluated in another batch. */
+const moduleValue = (root: string): boolean => /^[a-z_$]/.test(root) && root.includes("__forma_");
 /** Only lexical values use record access. Nominal members stay qualified symbols. */
 export function lowerMembers(e: SExpr, bound: ReadonlySet<string>): SExpr {
   return copySourceTrace(e, lowerMembersInner(e, bound));
@@ -17,7 +22,7 @@ export function lowerMembers(e: SExpr, bound: ReadonlySet<string>): SExpr {
 function lowerMembersInner(e: SExpr, bound: ReadonlySet<string>): SExpr {
   if (e._tag === "Sym") {
     const [root,...fields] = e.name.split(".");
-    return fields.length && bound.has(root!) ? fields.reduce((r,f)=>list(e,[sym(e,"get"),r,sym(e,`:${f}`)]),sym(e,root!)) : e;
+    return fields.length && (bound.has(root!) || moduleValue(root!)) ? fields.reduce((r,f)=>list(e,[sym(e,"get"),r,sym(e,`:${f}`)]),sym(e,root!)) : e;
   }
   if (e._tag === "Map") {
     const pairs = e.pairs.map(([k,v])=>[k,lowerMembers(v,bound)] as const);

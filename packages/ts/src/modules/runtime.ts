@@ -17,6 +17,11 @@ export interface ModuleInstance {
   readonly result: KernelResult;
   readonly collector?: ObservationCollector;
 }
+/** Type declarations of the graph's other modules; resolved names are unique. */
+const contextTypes = (graph: ModuleGraph, moduleId: string): readonly SExpr[] =>
+  graph.modules.flatMap((m) =>
+    m.id === moduleId ? [] : m.expressions.filter((e) => headSym(e) === "type"),
+  );
 const definition = (e: SExpr): boolean =>
   [
     "define",
@@ -117,6 +122,7 @@ export class ModuleRuntime {
       const result = await Effect.runPromise(
         evaluateExprs(module.expressions.filter(definition), {
           env,
+          contextTypes: contextTypes(graph, module.id),
           builtins: defaultBuiltins,
           includePrelude: false,
           stepLimit,
@@ -200,6 +206,10 @@ export class ModuleRuntime {
       ? await Effect.runPromise(
           evaluateExprs(expressions, {
             env: instance.result.env,
+            contextTypes: [
+              ...contextTypes(graph, entry.id),
+              ...entry.expressions.filter((e) => headSym(e) === "type"),
+            ],
             builtins: defaultBuiltins,
             includePrelude: false,
             stepLimit,

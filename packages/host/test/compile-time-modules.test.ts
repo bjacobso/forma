@@ -216,6 +216,42 @@ describe("compile-time module conformance", () => {
         },
       );
     });
+    test(`${host.constructor.name}: form checks call imported helpers and report every failing application`, async () => {
+      const dir = resolve(directory, "hook-imports");
+      const fixture = (sourceId: string, source = readFileSync(resolve(dir, sourceId), "utf8")) =>
+        ({ sourceId, source, kind: "source" as const });
+      const kernel = fixture("../../../preludes/kernel.forma", readFileSync(resolve(directory, "../../preludes/kernel.forma"), "utf8"));
+      await withSources(
+        host,
+        [kernel, fixture("rules.forma"), fixture("forms.forma")],
+        async (sessionId) => {
+          const ledger = await host.moduleGraph({ sessionId, sourceId: "ledger.forma", source: fixture("ledger.forma").source });
+          expect(ledger.diagnostics).toEqual([]);
+          expect(JSON.stringify(ledger.interfaces.at(-1)?.exports[0]?.data?.value)).toMatch(/due\D{0,30}31/);
+          const over = fixture("over.forma").source;
+          const rejected = await host.moduleGraph({ sessionId, sourceId: "over.forma", source: over });
+          // A helper that fails at run time is reported at the application,
+          // naming the helper and its location in author terms.
+          const broken = '(import "./rules.forma" [limit]) (export bad) (define bad [x] ((first x) limit))';
+          const caller = '(import "./forms-broken.forma" [spend]) (spend tea 1 1)';
+          await host.loadSource({ sessionId, sourceId: "helpers.forma", source: broken });
+          await host.loadSource({ sessionId, sourceId: "forms-broken.forma", source: fixture("forms.forma").source
+            .replace('(import "./rules.forma" [next-day within-limit?])', '(import "./rules.forma" [next-day within-limit?]) (import "./helpers.forma" [bad])')
+            .replace("(within-limit? (get h :amount))", "(bad [(get h :amount)])") });
+          const failed = await host.moduleGraph({ sessionId, sourceId: "caller.forma", source: caller });
+          expect(failed.diagnostics).toMatchObject([{
+            code: "elaborate/hook-failed",
+            span: { sourceId: "caller.forma", startOffset: caller.indexOf("(spend tea") },
+          }]);
+          expect(failed.diagnostics[0]!.message).toMatch(/^:check <anonymous> of form spend: Cannot call Int as function \(in bad, helpers\.forma line 1, column \d+\)$/);
+          // Every failing application is reported, each at its own hole.
+          expect(rejected.diagnostics).toMatchObject(["250", "900"].map((amount) => ({
+            code: "spend/over-limit",
+            span: { sourceId: "over.forma", startOffset: over.indexOf(amount), endOffset: over.indexOf(amount) + 3 },
+          })));
+        },
+      );
+    });
     test(`${host.constructor.name}: kernel sugar is an ordinary dependency`, async () => {
       const kernel = readFileSync(
         resolve(directory, "../../preludes/kernel.forma"),

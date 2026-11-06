@@ -177,6 +177,8 @@ export interface KernelOptions {
   readonly env?: Env;
   /** Receives the value of every observed expression. */
   readonly observer?: KernelObserver;
+  /** Type declarations from other modules, used for implicit `Some`/`None` filling. */
+  readonly contextTypes?: readonly SExpr[];
 }
 
 /**

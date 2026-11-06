@@ -140,8 +140,16 @@ export function checkModuleGraph(
           const provider = module.compileTime
             ? moduleFormProvider(module.compileTime)
             : unifiedFormProvider(source, expressions);
+          // Mangled type names are unique across the graph, so every other
+          // module's type declarations can inform implicit Option filling.
+          const contextTypes = graph.modules.flatMap((owner) =>
+            owner.id === module.id
+              ? []
+              : owner.expressions.filter((e) => e._tag === "List" && e.items[0]?._tag === "Sym" && e.items[0].name === "type"),
+          );
           const core = lowerProgram(expressions, provider, {
             includePrelude: false,
+            contextTypes,
             ...(module.compileTime ? { types: module.compileTime.types } : {}),
           });
           const result = yield* Effect.provide(
@@ -282,9 +290,9 @@ export function checkModuleGraph(
     );
   } catch (error) {
     diagnostics.push(
-      error instanceof ModuleError
-        ? error.diagnostic
-        : diagnosticFromUnknown(error, "typecheck", current?.id ?? graph.entry),
+      ...(error instanceof ModuleError
+        ? error.diagnostics
+        : [diagnosticFromUnknown(error, "typecheck", current?.id ?? graph.entry)]),
     );
   }
   if (routing) {
