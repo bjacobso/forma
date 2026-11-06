@@ -1,0 +1,56 @@
+;; A small vendor-register language. Source: the trial brief.
+;; `vendor` declares a vendor; its :check restates src/policy.forma so that
+;; "Procurement must not mark a vendor active while its review is incomplete
+;; or expired" is enforced as an authoring diagnostic at the `:status` option.
+(import "../../../preludes/kernel.forma" [and not])
+(export vendor VendorIR VendorStatus)
+
+(type VendorStatus (Union "proposed" "active" "offboarded"))
+(type VendorIR
+  {:kind "Vendor" :name Symbol :status VendorStatus :as-of Int
+   :blockers (List String)})
+
+;; The policy gate is restated locally: calling src/policy.forma from a form
+;; :check fails at elaboration (REPORT.md, findings F4/F5).
+(type Facts {:as-of Int :touches-customer-data Bool :processes-customer-personal-data Bool
+              :dpa-on-file Bool :reviewed-on Int :questionnaire-complete Bool
+              :soc2-issued-on Int :exception-by String :exception-on Int})
+(: fresh? (-> Int Int Int Bool))
+(define fresh? [start days today]
+  ;; Sentinel -1 = "not on file". Optional holes arrive in hooks as nil or the
+  ;; plain value, which the checker cannot type here (REPORT.md, F6).
+  (if (< start 0) false (if (>= today start) (< today (+ start days)) false)))
+(: hook-blockers (-> Facts (List String)))
+(define hook-blockers [h]
+  (let [today (get h :as-of)
+        needs (if (get h :touches-customer-data) true (get h :processes-customer-personal-data))
+        ex-ok (if (= (get h :exception-by) "ciso") (fresh? (get h :exception-on) 182 today) false)]
+    (if needs
+      (filter (fn [m] (not (= m "")))
+        [(if (fresh? (get h :reviewed-on) 365 today) "" "security review missing, expired or not yet valid")
+         (if (get h :questionnaire-complete) "" "security questionnaire incomplete")
+         (if (if (fresh? (get h :soc2-issued-on) 365 today) true ex-ok) "" "no current SOC 2 Type II report and no valid CISO exception")
+         (if (if (get h :processes-customer-personal-data) (not (get h :dpa-on-file)) false) "high-risk vendor has no data processing agreement" "")])
+      [])))
+
+(form (vendor name {:keys [status as-of touches-customer-data processes-customer-personal-data
+                           dpa-on-file reviewed-on questionnaire-complete soc2-issued-on
+                           exception-by exception-on]})
+  "Declare a vendor in the register. :as-of is the Int day the status is asserted."
+  :examples [[(vendor acme :status "proposed" :as-of 1000 :touches-customer-data false
+                     :processes-customer-personal-data false :dpa-on-file false
+                     :questionnaire-complete false :reviewed-on -1 :soc2-issued-on -1
+                     :exception-by "" :exception-on -1)]]
+  :types {:name (Declares VendorDecl) :status VendorStatus :as-of Int
+          :touches-customer-data Bool :processes-customer-personal-data Bool
+          :dpa-on-file Bool :reviewed-on Int :questionnaire-complete Bool
+          :soc2-issued-on Int :exception-by String :exception-on Int}
+  :ir VendorIR
+  :check (fn [h]
+    (let [blockers (hook-blockers
+                     {:as-of (get h :as-of) :touches-customer-data (get h :touches-customer-data) :processes-customer-personal-data (get h :processes-customer-personal-data) :dpa-on-file (get h :dpa-on-file) :reviewed-on (get h :reviewed-on) :questionnaire-complete (get h :questionnaire-complete) :soc2-issued-on (get h :soc2-issued-on) :exception-by (get h :exception-by) :exception-on (get h :exception-on)})]
+      (if (and (= (get h :status) "active") (not (empty? blockers)))
+        [{:severity :error :code "vendor/active-without-review" :slot :status
+          :message (str "Cannot mark vendor active: " blockers)}]
+        [])))
+  {:kind "Vendor" :name name :status status :as-of as-of :blockers (hook-blockers {:as-of as-of :touches-customer-data touches-customer-data :processes-customer-personal-data processes-customer-personal-data :dpa-on-file dpa-on-file :reviewed-on reviewed-on :questionnaire-complete questionnaire-complete :soc2-issued-on soc2-issued-on :exception-by exception-by :exception-on exception-on})})
