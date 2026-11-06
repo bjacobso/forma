@@ -699,7 +699,7 @@ export function resolveModuleGraph(
           id,
           e,
           "module/unimported-sugar",
-          `${n} is kernel sugar, which file modules must import: add (import "<path to forma>/preludes/kernel.forma" [${n}]) with a path relative to this file, or select a project prelude that provides it. The kernel library exports when, unless, cond, and, or, not, -> and ->>.`,
+          `${n} is kernel sugar, which file modules must import: add (import "<path to forma>/preludes/kernel.forma" [${n}]) with a path relative to this file, or select a project prelude that provides it. The kernel library exports not, when, unless, cond, and, or, -> and ->>.`,
         );
       if (n.includes("__forma_"))
         fail(
