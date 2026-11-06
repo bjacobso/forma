@@ -24,7 +24,14 @@ metadata. CI validates it with a dry run and browser tests of the assembled
 site. The Deploy workflow publishes validated pushes to `main`.
 
 Open `/playground/custom` to build a DSL with separate prelude and example
-editors. The compiler elaborates the example against that prelude in a worker
+editors in a full-window workspace. Drag the divider (or use its arrow keys)
+to resize the editor and inspector. Both files can be shown together on large
+screens; file tabs switch between them on smaller screens. Inspector tabs show
+typed IR, each file's syntax tree, registered form definitions, clickable source
+maps, and compiler timings/provenance. **New playground** opens a blank workspace
+in a new tab, preserving the current draft.
+
+The compiler elaborates the example against that prelude in a worker
 and displays diagnostics and typed IR. **Share playground** saves both files
 and the title in R2 and copies a short `/playground/p/<id>` URL. Anyone with
 the link can load the snapshot and edit a copy without an account. Sharing

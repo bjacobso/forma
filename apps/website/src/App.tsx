@@ -19,9 +19,10 @@ const DemoPipeline = lazy(() =>
 
 export function App() {
   const location = useLocation();
+  const customPlayground = location.pathname === "/custom" || location.pathname.startsWith("/p/");
   return (
     <>
-      {!location.pathname.startsWith("/embed/") ? <SiteHeader /> : null}
+      {!location.pathname.startsWith("/embed/") && !customPlayground ? <SiteHeader /> : null}
       <Suspense fallback={<main className="route-loading">Loading...</main>}>
         <Routes>
           <Route element={<Home />} path="/" />

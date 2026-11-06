@@ -9,6 +9,26 @@ test("a cold shared link loads a custom prelude and editable example", async ({ 
   await expect(page.getByRole("region", { name: "Compiler output" })).toContainText('"kind": "Task"');
   await expect(page.getByRole("region", { name: "Compiler output" })).toContainText("No diagnostics.");
   await expect(page.locator(".cm-lintRange-error")).toHaveCount(0);
+  const workspace = await page.getByRole("main").boundingBox();
+  expect(workspace?.width).toBeGreaterThan(1400);
+  expect(workspace?.height).toBeLessThanOrEqual(950);
+  const inspector = await page.getByRole("region", { name: "Compiler output" }).boundingBox();
+  expect(inspector!.y + inspector!.height).toBeLessThan(950);
+  const divider = page.getByRole("separator", { name: "Resize editors" });
+  await divider.focus();
+  await divider.press("ArrowRight");
+  await expect(divider).toHaveAttribute("aria-valuenow", "66");
+  await expect(page.getByRole("textbox", { name: "Example source", exact: true })).toHaveText(demo.source);
+  await page.getByRole("tab", { name: "Forms", exact: true }).click();
+  await expect(page.getByRole("tabpanel")).toContainText("workflow");
+  await page.getByRole("tab", { name: "Syntax tree", exact: true }).click();
+  await expect(page.getByRole("tabpanel")).toContainText("workflow");
+  await page.getByRole("tab", { name: "Source maps", exact: true }).click();
+  await page.locator(".studio-mapping button").first().click();
+  await expect(page.getByRole("textbox", { name: "Example source", exact: true })).toBeFocused();
+  await page.getByRole("tab", { name: "Debug", exact: true }).click();
+  await expect(page.getByRole("tabpanel")).toContainText("Load prelude");
+  await page.getByRole("tab", { name: "Typed IR", exact: true }).click();
   const source = page.getByRole("textbox", { name: "Example source", exact: true });
   await source.fill('(workflow shared (step check 42))');
   await expect(page.locator(".diagnostic-error")).toBeVisible();
@@ -17,6 +37,7 @@ test("a cold shared link loads a custom prelude and editable example", async ({ 
   await expect(page.getByRole("region", { name: "Compiler output" })).toContainText("No diagnostics.");
   await page.getByRole("button", { name: "Share playground" }).click();
   await expect(page).toHaveURL(/\/playground\/p\/[a-f0-9]{32}$/);
+  await expect(page.getByRole("textbox", { name: "Share link" })).toHaveValue(page.url());
   const sharedUrl = page.url();
   const metadata = await (await page.request.get(sharedUrl)).text();
   expect(metadata).toContain('<meta property="og:title" content="My shared workflow - Forma" />');
@@ -27,6 +48,31 @@ test("a cold shared link loads a custom prelude and editable example", async ({ 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: "../../.context/prelude-share-mobile.png", fullPage: true });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test("new playgrounds open without losing the draft and edits create independent share links", async ({ page }) => {
+  await page.goto("/playground/custom");
+  await page.getByRole("textbox", { name: "Example title" }).fill("Keep this draft");
+  const opened = page.waitForEvent("popup");
+  await page.getByRole("link", { name: "New playground" }).click();
+  const fresh = await opened;
+  await expect(fresh.getByRole("textbox", { name: "Example title" })).toHaveValue("Untitled playground");
+  await expect(page.getByRole("textbox", { name: "Example title" })).toHaveValue("Keep this draft");
+  await fresh.getByRole("textbox", { name: "Example title" }).fill("A new language");
+  await fresh.getByRole("textbox", { name: "Prelude source", exact: true }).fill(defaultPreludeDemo.prelude);
+  await fresh.getByRole("textbox", { name: "Example source", exact: true }).fill('(workflow first (step check "process.check"))');
+  await expect(fresh.getByRole("region", { name: "Compiler output" })).toContainText('"name": "first"');
+  await fresh.getByRole("button", { name: "Share playground" }).click();
+  await expect(fresh).toHaveURL(/\/playground\/p\/[a-f0-9]{32}$/);
+  const original = fresh.url();
+  await fresh.getByRole("textbox", { name: "Example source", exact: true }).fill('(workflow second (step check "process.check"))');
+  await expect(fresh.getByText("Unshared changes", { exact: true })).toBeVisible();
+  await fresh.getByRole("button", { name: "Share playground" }).click();
+  await expect(fresh).not.toHaveURL(original);
+  await fresh.reload();
+  await expect(fresh.getByRole("region", { name: "Compiler output" })).toContainText('"name": "second"');
+  await page.goto(original);
+  await expect(page.getByRole("region", { name: "Compiler output" })).toContainText('"name": "first"');
 });
 
 test("missing saved playgrounds return 404", async ({ request }) => {
