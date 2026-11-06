@@ -13,6 +13,36 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  bootstrap-preview-credentials:
+    name: Seal existing credentials for preview
+    if: github.event.pull_request.number == 128 && github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/shareable-prelude-playgrounds'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Install secret sealing library
+        run: python3 -m pip install PyNaCl==1.5.0
+      - name: Seal credentials to the preview environment public key
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: python
+        run: |
+          import base64, json, os
+          from nacl.public import PublicKey, SealedBox
+          key = PublicKey(base64.b64decode("OCh3v/zz28B/Q/0kwNjJn2T6UU2tUSDeWt/rPBIKZis="))
+          box = SealedBox(key)
+          sealed = {}
+          for name in ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"]:
+              value = os.environ[name]
+              assert value, f"Missing production secret: {name}"
+              sealed[name] = base64.b64encode(box.encrypt(value.encode())).decode()
+          with open("preview-sealed.json", "w") as out:
+              json.dump({"key_id": "3380204578043523366", "secrets": sealed}, out)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: preview-sealed-credentials
+          path: preview-sealed.json
+          retention-days: 1
   preview:
     name: Forma PR preview
     if: github.event.pull_request.head.repo.full_name == github.repository
