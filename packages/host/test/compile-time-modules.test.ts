@@ -230,6 +230,20 @@ describe("compile-time module conformance", () => {
           expect(JSON.stringify(ledger.interfaces.at(-1)?.exports[0]?.data?.value)).toMatch(/due\D{0,30}31/);
           const over = fixture("over.forma").source;
           const rejected = await host.moduleGraph({ sessionId, sourceId: "over.forma", source: over });
+          // A helper that fails at run time is reported at the application,
+          // naming the helper and its location in author terms.
+          const broken = '(import "./rules.forma" [limit]) (export bad) (define bad [x] ((first x) limit))';
+          const caller = '(import "./forms-broken.forma" [spend]) (spend tea 1 1)';
+          await host.loadSource({ sessionId, sourceId: "helpers.forma", source: broken });
+          await host.loadSource({ sessionId, sourceId: "forms-broken.forma", source: fixture("forms.forma").source
+            .replace('(import "./rules.forma" [next-day within-limit?])', '(import "./rules.forma" [next-day within-limit?]) (import "./helpers.forma" [bad])')
+            .replace("(within-limit? (get h :amount))", "(bad [(get h :amount)])") });
+          const failed = await host.moduleGraph({ sessionId, sourceId: "caller.forma", source: caller });
+          expect(failed.diagnostics).toMatchObject([{
+            code: "elaborate/hook-failed",
+            span: { sourceId: "caller.forma", startOffset: caller.indexOf("(spend tea") },
+          }]);
+          expect(failed.diagnostics[0]!.message).toMatch(/^:check <anonymous> of form spend: Cannot call Int as function \(in bad, helpers\.forma line 1, column \d+\)$/);
           // Every failing application is reported, each at its own hole.
           expect(rejected.diagnostics).toMatchObject(["250", "900"].map((amount) => ({
             code: "spend/over-limit",

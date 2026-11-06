@@ -788,6 +788,11 @@ export class TsLanguageHost implements LanguageHost {
     return { released };
   }
 
+  /** The text of a source loaded in a session, for locating diagnostics. */
+  sessionSourceText(sessionId: string, sourceId: string): string | undefined {
+    return this.#sessions.get(sessionId)?.language.sourceText(sourceId);
+  }
+
   async sessionInfo(request: SessionInfoRequest): Promise<SessionInfoResult> {
     const session = this.#requireSession(request.sessionId);
     return {

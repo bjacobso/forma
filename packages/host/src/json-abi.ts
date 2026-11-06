@@ -1,4 +1,5 @@
 /** JSON boundary for process embeddings. One host instance owns daemon sessions. */
+import { locateResponse } from "./diagnostic-locations.js";
 import { Schema } from "effect";
 import * as Engine from "@formalang/ts/engine";
 import type { TypeSchemeExpr, ValueProjection } from "./types.js";
@@ -89,7 +90,8 @@ export const JsonRequest = Schema.Union([
   ...(["moduleGraph", "linkEffectModules"] as const).map(op => operation(op, { ...session, sourceId: id, source: optionalString, projects })),
 ]);
 export type JsonRequest = typeof JsonRequest.Type;
-const span = Schema.Struct({ sourceId: Schema.String, startOffset: Schema.Number, endOffset: Schema.Number });
+const span = Schema.Struct({ sourceId: Schema.String, startOffset: Schema.Number, endOffset: Schema.Number,
+  startLine: Schema.optional(Schema.Number), startColumn: Schema.optional(Schema.Number), endLine: Schema.optional(Schema.Number), endColumn: Schema.optional(Schema.Number) });
 export const JsonDiagnostic = Schema.Struct({
   code: Schema.String, severity: Schema.Literals(["error", "warning", "info"]), message: Schema.String,
   phase: Schema.optional(Schema.String), span: Schema.optional(span), details: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
@@ -126,7 +128,12 @@ export class JsonAbi {
     if ("sessionId" in request && request.sessionId) {
       if (!this.sessions.has(request.sessionId)) return errorResponse("abi/unknown-session", `Unknown session ${request.sessionId}. Open a session first.`);
     }
-    try { return Schema.decodeUnknownSync(JsonResponse)(await this.dispatch(request)); }
+    const inline = "source" in request && typeof request.source === "string" ? request.source : undefined;
+    const sessionId = "sessionId" in request && typeof request.sessionId === "string" ? request.sessionId : undefined;
+    // An inline source is the request's only unsaved text; session sources are looked up by id.
+    const sourceText = (sourceId: string): string | undefined =>
+      (sessionId ? this.host.sessionSourceText(sessionId, sourceId) : undefined) ?? inline;
+    try { return Schema.decodeUnknownSync(JsonResponse)(locateResponse(await this.dispatch(request), sourceText)); }
     catch (error) { return errorResponse("internal/error", `Internal error while handling ${op}: ${String(error)}`); }
   }
 
