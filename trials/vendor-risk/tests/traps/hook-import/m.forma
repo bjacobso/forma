@@ -1,0 +1,7 @@
+(export f g k)
+(: g (-> Int Int))
+(define g [x] (+ x 1))
+(: f (-> Int Int))
+(define f [x] (g x))
+(: k (-> Int Int))
+(define k [x] ((fn [y] (+ y 1)) x))
