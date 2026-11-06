@@ -31,6 +31,12 @@ typed IR, each file's syntax tree, registered form definitions, clickable source
 maps, and compiler timings/provenance. **New playground** opens a blank workspace
 in a new tab, preserving the current draft.
 
+The custom workspace defaults to the homepage's charcoal colors with brighter
+syntax highlighting; its appearance selector remembers a light/dark preference.
+While edits validate, the inspector keeps its previous result visible and faded
+with a validation message. New results update the existing editor in place,
+preserving its scroll position. Reduced-motion preferences disable the fade.
+
 The compiler elaborates the example against that prelude in a worker
 and displays diagnostics and typed IR. **Share playground** saves both files
 and the title in R2 and copies a short `/playground/p/<id>` URL. Anyone with

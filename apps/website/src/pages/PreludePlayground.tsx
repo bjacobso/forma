@@ -10,7 +10,6 @@ import type { RunResult } from "../engine/protocol";
 import { useDocumentMeta } from "../lib/documentMeta";
 import { decodePreludeDemo, defaultPreludeDemo, type PreludeDemo } from "../lib/preludeShare";
 import { MAX_SNAPSHOT_BYTES, readSnapshot } from "../lib/playgroundSnapshot";
-import { useTheme } from "../lib/theme";
 
 export function PreludePlayground() {
   const { snapshotId } = useParams();
@@ -42,11 +41,12 @@ const inspectorTabs: readonly { id: InspectorTab; label: string }[] = [
 ];
 
 function PreludeEditor({ initialDemo, saved }: { readonly initialDemo?: PreludeDemo; readonly saved: boolean }) {
-  const { theme, setTheme } = useTheme();
+  const [theme, setTheme] = useState<"light" | "dark">(() => localStorage.getItem("forma-playground-appearance") === "light" ? "light" : "dark");
   const [initialHash] = useState(() => window.location.hash);
   const [original] = useState(() => initialDemo ?? decodePreludeDemo(initialHash) ?? defaultPreludeDemo);
   const [demo, setDemo] = useState(original);
   const [result, setResult] = useState<RunResult | null>(null);
+  const [validating, setValidating] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [shareStatus, setShareStatus] = useState("");
   const [saving, setSaving] = useState(false);
@@ -68,17 +68,20 @@ function PreludeEditor({ initialDemo, saved }: { readonly initialDemo?: PreludeD
     // Each edit cancels the previous worker, including a nonterminating hook.
     const client = new EngineClient();
     let active = true;
-    setResult(null);
+    setValidating(true);
     setError(null);
     const timer = window.setTimeout(() => {
       void client.run(demo.source, ["typecheck"], "example.forma", undefined, demo.prelude)
-        .then(value => { if (active) setResult(value); })
-        .catch((reason: unknown) => { if (active) setError(reason instanceof Error ? reason.message : String(reason)); });
+        .then(value => { if (active) { setResult(value); setValidating(false); } })
+        .catch((reason: unknown) => { if (active) { setError(reason instanceof Error ? reason.message : String(reason)); setValidating(false); } });
     }, 300);
     return () => { active = false; window.clearTimeout(timer); client.dispose(); };
   }, [demo.prelude, demo.source]);
 
-  const edit = (next: PreludeDemo) => { setDemo(next); setShareStatus(""); setReveal(null); };
+  const edit = (next: PreludeDemo) => {
+    if (next.source !== demo.source || next.prelude !== demo.prelude) { setValidating(true); setError(null); }
+    setDemo(next); setShareStatus(""); setReveal(null);
+  };
   const copyLink = async (url: string) => {
     try { await navigator.clipboard.writeText(url); setShareStatus("Link copied. Anyone with it can open this snapshot."); }
     catch { setShareStatus("Snapshot saved. Select and copy the share link below."); }
@@ -105,7 +108,7 @@ function PreludeEditor({ initialDemo, saved }: { readonly initialDemo?: PreludeD
   };
   const syntax = file === "prelude" ? debug?.preludeSyntax : passOf(result?.passResults ?? [], "parse");
 
-  return <main className="prelude-playground live-workbench" aria-label="Forma playground">
+  return <main className="prelude-playground live-workbench" data-theme={theme} aria-label="Forma playground">
     <header className="studio-toolbar">
       <a className="studio-brand" href="/">(forma)</a>
       <h1>Playground</h1>
@@ -115,7 +118,7 @@ function PreludeEditor({ initialDemo, saved }: { readonly initialDemo?: PreludeD
         <a href="/playground/custom?new=1" target="_blank" rel="noopener noreferrer">New playground ↗</a>
         <button type="button" onClick={() => { edit(original); }}>Reset</button>
         <button className="studio-share" type="button" disabled={saving || !demo.title.trim()} onClick={() => void share()}>{saving ? "Saving…" : "Share playground"}</button>
-        <label className="studio-theme">Theme<select aria-label="Playground appearance" value={theme} onChange={event => setTheme(event.target.value as "light" | "dark")}><option value="light">Light</option><option value="dark">Dark</option></select></label>
+        <label className="studio-theme">Theme<select aria-label="Playground appearance" value={theme} onChange={event => { const next = event.target.value as "light" | "dark"; setTheme(next); localStorage.setItem("forma-playground-appearance", next); }}><option value="light">Light</option><option value="dark">Dark</option></select></label>
       </div>
     </header>
     <div className="studio-share-bar">
@@ -133,7 +136,7 @@ function PreludeEditor({ initialDemo, saved }: { readonly initialDemo?: PreludeD
         <div className={`studio-editors ${bothFiles ? "studio-editors-both" : ""}`}>
           {(["prelude", "source"] as const).map(key => <section key={key} id={key === "prelude" ? "prelude-editor" : "example-editor"} className={`studio-file ${file === key ? "studio-file-active" : ""}`} aria-label={key === "prelude" ? "Prelude" : "Example"}>
             <div className="studio-file-heading">{key === "prelude" ? "prelude.forma" : "example.forma"}<span>Editable</span></div>
-            <WorkbenchEditor ariaLabel={key === "prelude" ? "Prelude source" : "Example source"} source={key === "prelude" ? demo.prelude : demo.source} mode={theme} palette="forma" reveal={reveal?.file === key ? reveal.span : null} onInspect={() => {}} diagnostics={diagnostics.filter(d => key === "prelude" ? d.span?.sourceId === "prelude.forma" : d.span?.sourceId !== "prelude.forma")} onChange={value => edit({ ...demo, [key]: value })} />
+            <WorkbenchEditor ariaLabel={key === "prelude" ? "Prelude source" : "Example source"} source={key === "prelude" ? demo.prelude : demo.source} mode={theme} palette="ocean" reveal={reveal?.file === key ? reveal.span : null} onInspect={() => {}} diagnostics={validating || error ? [] : diagnostics.filter(d => key === "prelude" ? d.span?.sourceId === "prelude.forma" : d.span?.sourceId !== "prelude.forma")} onChange={value => edit({ ...demo, [key]: value })} />
           </section>)}
         </div>
       </section>
@@ -143,19 +146,23 @@ function PreludeEditor({ initialDemo, saved }: { readonly initialDemo?: PreludeD
         onPointerMove={event => { if (!event.currentTarget.hasPointerCapture(event.pointerId)) return; const bounds = event.currentTarget.parentElement!.getBoundingClientRect(); setSplit(Math.max(40, Math.min(78, 100 * (event.clientX - bounds.left) / bounds.width))); }} />
       <section className="studio-inspector" aria-label="Compiler output">
         <div className="workbench-tabs" role="tablist" aria-label="Inspector views">{inspectorTabs.map(item => <button key={item.id} id={`inspector-${item.id}`} type="button" role="tab" aria-selected={tab === item.id} aria-controls="studio-output" onClick={() => setTab(item.id)}>{item.label}</button>)}</div>
-        <div className="studio-output" id="studio-output" role="tabpanel" aria-labelledby={`inspector-${tab}`}>
-          {error ? <p role="alert">{error}</p> : !result ? <p className="workbench-empty">Checking prelude and example…</p>
-            : tab === "ir" ? <><p className="studio-output-note">{errors ? "Partial output. Fix the diagnostics below." : "No diagnostics. Typed output from your example."}</p><TargetCodeView code={JSON.stringify(result.declarations ?? [], null, 2)} language="json" /></>
+        <div className="studio-validation" data-validating={validating} role="status">{validating ? `Validating…${result ? " showing previous result" : ""}` : error ? `Validation failed${result ? " · previous result shown" : ""}` : "Validated · results match the current source"}</div>
+        {error ? <p className="studio-validation-error" role="alert">{error}</p> : null}
+        <div className="studio-output" id="studio-output" role="tabpanel" aria-busy={validating} aria-labelledby={`inspector-${tab}`}>
+          <div className="studio-output-snapshot" data-stale={Boolean(result && (validating || error))} inert={Boolean(result && (validating || error))}>
+          {!result ? <p className="workbench-empty">{error ? "No previous result is available." : "Checking prelude and example…"}</p>
+            : tab === "ir" ? <><p className="studio-output-note">{errors ? "Partial output. Fix the diagnostics below." : "No diagnostics. Typed output from your example."}</p><TargetCodeView code={JSON.stringify(result.declarations ?? [], null, 2)} language="json" mode={theme} palette="ocean" /></>
             : tab === "syntax" ? <><p className="studio-output-note">Reading {file === "prelude" ? "prelude.forma" : "example.forma"}. Select a node to reveal its source.</p><SExprTree ast={syntax?.ast ?? []} selectedSpan={reveal?.file === file ? reveal.span : null} onSelectSpan={span => { if (span) setReveal({ file, span }); }} /></>
-            : tab === "forms" ? <><p className="studio-output-note">Form definitions loaded from your prelude.</p>{debug?.forms.map(form => <details className="studio-form" key={form.name}><summary>{form.name}</summary><TargetCodeView code={JSON.stringify(form.definition, null, 2)} language="json" /></details>)}</>
+            : tab === "forms" ? <><p className="studio-output-note">Form definitions loaded from your prelude.</p>{debug?.forms.map(form => <details className="studio-form" key={form.name}><summary>{form.name}</summary><TargetCodeView code={JSON.stringify(form.definition, null, 2)} language="json" mode={theme} palette="ocean" /></details>)}</>
             : tab === "maps" ? <><p className="studio-output-note">Select a payload path to reveal the authored source.</p>{debug?.declarations.map((declaration, index) => <article className="studio-mapping" key={index}><h2>{declaration.name} <code>{declaration.resultType}</code></h2>{declaration.sourceMap.map((entry, entryIndex) => <button type="button" key={entryIndex} onClick={() => revealSpan(entry.span)}><code>{entry.path || "/"}</code><span>{entry.span.startOffset}:{entry.span.endOffset}</span></button>)}</article>)}{!debug?.declarations.length ? <p className="workbench-empty">No declarations to map.</p> : null}</>
-            : <><p className="studio-output-note">Measured compiler stages and declaration provenance. This playground elaborates forms; it does not execute a workflow runtime.</p><dl className="studio-timings">{debug?.timings.map(timing => <div key={timing.phase}><dt>{timing.phase}</dt><dd>{timing.durationMs.toFixed(1)} ms</dd></div>)}</dl><details className="studio-form"><summary>Complete debug data</summary><TargetCodeView code={JSON.stringify(debug, null, 2) ?? "{}"} language="json" /></details></>}
+            : <><p className="studio-output-note">Measured compiler stages and declaration provenance. This playground elaborates forms; it does not execute a workflow runtime.</p><dl className="studio-timings">{debug?.timings.map(timing => <div key={timing.phase}><dt>{timing.phase}</dt><dd>{timing.durationMs.toFixed(1)} ms</dd></div>)}</dl><details className="studio-form"><summary>Complete debug data</summary><TargetCodeView code={JSON.stringify(debug, null, 2) ?? "{}"} language="json" mode={theme} palette="ocean" /></details></>}
+          </div>
         </div>
       </section>
     </div>
     <section className="studio-problems" aria-label="Compiler diagnostics">
-      <div className="studio-problems-heading"><strong>Problems</strong><span>{error ? "Compiler unavailable" : !result ? "Checking…" : `${errors} ${errors === 1 ? "error" : "errors"} · ${warnings} warnings`}</span><span>{debug?.timings.map(timing => `${timing.phase} ${Math.round(timing.durationMs)} ms`).join(" · ")}</span></div>
-      <div className="studio-problems-list"><DiagnosticList diagnostics={diagnostics} />{diagnostics.filter(d => d.span).map((diagnostic, index) => <button className="studio-reveal" key={index} type="button" onClick={() => revealSpan(diagnostic.span!)}>Reveal {diagnostic.span!.sourceId}:{diagnostic.span!.startOffset}</button>)}</div>
+      <div className="studio-problems-heading"><strong>Problems</strong><span>{validating ? "Validating…" : error ? "Compiler unavailable" : `${errors} ${errors === 1 ? "error" : "errors"} · ${warnings} warnings`}</span><span>{debug?.timings.map(timing => `${timing.phase} ${Math.round(timing.durationMs)} ms`).join(" · ")}</span></div>
+      <div className="studio-problems-list" data-stale={validating || Boolean(error)}><DiagnosticList diagnostics={diagnostics} />{diagnostics.filter(d => d.span).map((diagnostic, index) => <button className="studio-reveal" key={index} type="button" disabled={validating || Boolean(error)} onClick={() => revealSpan(diagnostic.span!)}>Reveal {diagnostic.span!.sourceId}:{diagnostic.span!.startOffset}</button>)}</div>
     </section>
     <footer className="studio-footer"><span>Runs in your browser · Prelude → example → typed IR</span><span>Share saves a snapshot; edit and share again to create a new link.</span></footer>
   </main>;
