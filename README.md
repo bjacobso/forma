@@ -318,6 +318,8 @@ There is currently no published `forma` CLI. Pre-1.0 packages such as
 `@formalang/ts` are published to npm under the `@formalang` scope; otherwise
 work from this repository, where `@formalang/host` builds a `forma` JSON CLI
 (`node packages/host/dist/cli.mjs`).
+To write and run your own files, follow
+[Authoring your own program](docs/authoring.md).
 
 ## Documentation and examples
 
@@ -326,6 +328,8 @@ work from this repository, where `@formalang/host` builds a `forma` JSON CLI
   and tooling.
 - [Language guide](docs/language.md) introduces execution, types, effects, and
   elaboration.
+- [Authoring your own program](docs/authoring.md) shows how to check, run, and
+  elaborate your own files with the `forma` CLI, and lists the builtins.
 - [Design decisions](docs/design-decisions.md) records the constraints behind
   the current architecture.
 - [Language services](docs/language-services.md) describes node identity,

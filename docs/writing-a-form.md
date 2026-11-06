@@ -53,6 +53,16 @@ and missing holes, such as `:check shared/check of form a: no hole named extra`.
 To share a check across forms with different holes, accept the whole record
 and use `(get holes :extra)`, which returns `nil` when the key is absent.
 
+Hooks receive plain runtime values, not `Option` values: an `(Option T)` hole is
+`nil` when omitted and the bare value when supplied. Test it in the hook with
+`(= (get holes :doc) nil)`; matching it against `Some`/`None` fails at run time,
+and a typed helper that compares a parameter with `nil` infers that parameter
+as `Unit`. A check may call helpers defined in the form's module and helpers
+that module imports. If a hook fails while running, the module reports
+`elaborate/hook-failed` at the form application, and every failing application
+is reported in one run. See [Authoring your own program](./authoring.md) for
+the file commands that elaborate forms and list their IR.
+
 ```lisp
 (form (greeting name message {:keys [doc]})
   :types {:name (Declares Greeting) :message String :doc (Option String)}

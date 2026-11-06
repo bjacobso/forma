@@ -55,7 +55,9 @@ forma version
 
 `request` handles one JSON request, given as an argument or on stdin. `file`
 reads a module graph from an entry file and runs `typecheck`, `evaluate`,
-`interface`, or `declarations` on it. Each command prints one JSON response.
+`interface`, or `declarations` on it. `file evaluate` typechecks first unless
+given `--unchecked`. Each command prints one JSON response; file commands exit
+1 when it is not `ok`. `forma help` lists the commands.
 The daemon accepts one JSON request per line, preserves sessions, and continues
 serving after request errors. `@formalang/host/json-abi` exports the boundary
 schemas and dispatcher. See [File modules](https://forma-lang.com/modules) for
