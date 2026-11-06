@@ -32,7 +32,7 @@
     "check:changesets": "changeset status",
     "check:alchemy": "node --test scripts/check-alchemy.mjs",
     "check:llms": "node scripts/llms.mjs",
-    "website:build": "pnpm docs:build && turbo run build --filter=@formalang/website && node scripts/assemble-website.mjs && node scripts/llms.mjs dist-site",
+    "website:build": "turbo run build --filter=@formalang/website && pnpm docs:build && node scripts/assemble-website.mjs && node scripts/llms.mjs dist-site",
     "website:plan": "alchemy plan --stage prod",
     "website:deploy": "alchemy deploy --stage prod",
     "website:dry-run": "pnpm --filter @formalang/website exec wrangler deploy --dry-run",
