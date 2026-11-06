@@ -1,0 +1,11 @@
+{
+  "normalized": {
+    "diagnostics": [],
+    "type": "Bool"
+  },
+  "success": true,
+  "expectation": {
+    "kind": "success",
+    "allowDiagnostics": true
+  }
+}

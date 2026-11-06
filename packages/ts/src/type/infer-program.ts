@@ -30,6 +30,73 @@ import {
 import { Scheme, mono } from "./types.js";
 
 // ---------------------------------------------------------------------------
+// Binding groups
+// ---------------------------------------------------------------------------
+
+/** Collect the names in `names` that `expr` mentions as variables. Shadowing
+ * is ignored, so the result can only over-approximate the dependencies. */
+function referencedNames(expr: unknown, names: ReadonlySet<string>, found: Set<string>): Set<string> {
+  if (Array.isArray(expr)) {
+    for (const item of expr) referencedNames(item, names, found);
+  } else if (expr !== null && typeof expr === "object") {
+    const node = expr as { readonly _tag?: unknown; readonly name?: unknown };
+    if (node._tag === "Var" && typeof node.name === "string" && names.has(node.name)) found.add(node.name);
+    if (node._tag === "LQuoted") return found;
+    for (const [key, value] of Object.entries(expr)) {
+      if (key !== "span" && key !== "signature") referencedNames(value, names, found);
+    }
+  }
+  return found;
+}
+
+/**
+ * Order a run of top-level definitions into strongly connected components,
+ * dependencies first (Tarjan). Each component is typed and generalized before
+ * the next, so a generic function stays generic in every later definition.
+ */
+export function definitionComponents<D extends { readonly name: string; readonly expr: CoreExpr }>(
+  defs: readonly D[],
+): D[][] {
+  const byName = new Map<string, number>();
+  defs.forEach((def, index) => byName.set(def.name, index));
+  const names = new Set(byName.keys());
+  const edges = defs.map((def) =>
+    [...referencedNames(def.expr, names, new Set())].map((name) => byName.get(name)!),
+  );
+  const index: number[] = Array(defs.length).fill(-1);
+  const low: number[] = Array(defs.length).fill(0);
+  const onStack: boolean[] = Array(defs.length).fill(false);
+  const stack: number[] = [];
+  const components: D[][] = [];
+  let counter = 0;
+  const visit = (v: number): void => {
+    index[v] = low[v] = counter++;
+    stack.push(v);
+    onStack[v] = true;
+    for (const w of edges[v]!) {
+      if (index[w] === -1) {
+        visit(w);
+        low[v] = Math.min(low[v]!, low[w]!);
+      } else if (onStack[w]) {
+        low[v] = Math.min(low[v]!, index[w]!);
+      }
+    }
+    if (low[v] === index[v]) {
+      const members: number[] = [];
+      let w: number;
+      do {
+        w = stack.pop()!;
+        onStack[w] = false;
+        members.push(w);
+      } while (w !== v);
+      components.push(members.sort((a, b) => a - b).map((m) => defs[m]!));
+    }
+  };
+  for (let v = 0; v < defs.length; v++) if (index[v] === -1) visit(v);
+  return components;
+}
+
+// ---------------------------------------------------------------------------
 // inferProgram
 // ---------------------------------------------------------------------------
 
@@ -127,78 +194,85 @@ export const inferProgram = (
               defGroup.push(exprs[++exprIndex]! as CoreExpr & { _tag: "Def" });
             }
 
-            const seedEnv = new Map(envN);
-            for (const defExpr of defGroup) {
-              if (defExpr.signature) {
-                const tvarMap = new Map<string, Type>();
-                const rvarMap = new Map<string, Row>();
-                const sigT = yield* typeExprToType(defExpr.signature, tvarMap, rvarMap);
-                seedEnv.set(defExpr.name, mono(sigT));
-              } else if (!seedEnv.has(defExpr.name)) {
-                seedEnv.set(defExpr.name, mono(yield* ctx.freshTVar));
-              }
-            }
-
-            const inferredDefs: Array<{ name: string; type: Type; pendingStart: number }> = [];
-            const failedNames: string[] = [];
-            for (const defExpr of defGroup) {
-              const pendingStart = (yield* Ref.get(ctx.pendingConstraints)).length;
-              const inferDef = withAmbientEffectScope(inferExpr(seedEnv, defExpr));
-              let defT: Type;
-              if (options.onFormError === undefined) {
-                defT = (yield* inferDef).value;
-              } else {
-                // One definition that does not type leaves the rest of its group typed.
-                const substBefore = yield* Ref.get(ctx.subst);
-                const pendingBeforeDef = yield* Ref.get(ctx.pendingConstraints);
-                const attempt = yield* Effect.result(inferDef);
-                if (attempt._tag === "Failure") {
-                  yield* options.onFormError(attempt.failure);
-                  yield* Ref.set(ctx.subst, substBefore);
-                  yield* Ref.set(ctx.pendingConstraints, pendingBeforeDef);
-                  failedNames.push(defExpr.name);
-                  continue;
+            // Split the run of definitions into binding groups so each name is
+            // generalized before the definitions that use it are typed.
+            const lastDefType = new Map<string, Type>();
+            for (const component of definitionComponents(defGroup)) {
+              const seedEnv = new Map(applyEnv(yield* Ref.get(ctx.subst), env));
+              for (const defExpr of component) {
+                if (defExpr.signature) {
+                  const tvarMap = new Map<string, Type>();
+                  const rvarMap = new Map<string, Row>();
+                  const sigT = yield* typeExprToType(defExpr.signature, tvarMap, rvarMap);
+                  seedEnv.set(defExpr.name, mono(sigT));
+                } else if (!seedEnv.has(defExpr.name)) {
+                  seedEnv.set(defExpr.name, mono(yield* ctx.freshTVar));
                 }
-                defT = attempt.success.value;
               }
-              const sAfterDef = yield* Ref.get(ctx.subst);
-              const boundType = applyType(sAfterDef, defT);
-              inferredDefs.push({
-                name: defExpr.name,
-                type: boundType,
-                pendingStart,
-              });
-              lastType = boundType;
-            }
 
-            const sAfter = yield* Ref.get(ctx.subst);
-            const pending = yield* Ref.get(ctx.pendingConstraints);
-            const normalizedPending = pending.map((pendingConstraint) => ({
-              ...pendingConstraint,
-              constraint: {
-                className: pendingConstraint.constraint.className,
-                args: pendingConstraint.constraint.args.map((arg) => applyType(sAfter, arg)),
-              },
-            }));
-            yield* Ref.set(ctx.pendingConstraints, normalizedPending);
+              const inferredDefs: Array<{ name: string; type: Type; pendingStart: number }> = [];
+              const failedNames: string[] = [];
+              for (const defExpr of component) {
+                const pendingStart = (yield* Ref.get(ctx.pendingConstraints)).length;
+                const inferDef = withAmbientEffectScope(inferExpr(seedEnv, defExpr));
+                let defT: Type;
+                if (options.onFormError === undefined) {
+                  defT = (yield* inferDef).value;
+                } else {
+                  // One definition that does not type leaves the rest of its group typed.
+                  const substBefore = yield* Ref.get(ctx.subst);
+                  const pendingBeforeDef = yield* Ref.get(ctx.pendingConstraints);
+                  const attempt = yield* Effect.result(inferDef);
+                  if (attempt._tag === "Failure") {
+                    yield* options.onFormError(attempt.failure);
+                    yield* Ref.set(ctx.subst, substBefore);
+                    yield* Ref.set(ctx.pendingConstraints, pendingBeforeDef);
+                    failedNames.push(defExpr.name);
+                    continue;
+                  }
+                  defT = attempt.success.value;
+                }
+                const sAfterDef = yield* Ref.get(ctx.subst);
+                const boundType = applyType(sAfterDef, defT);
+                inferredDefs.push({
+                  name: defExpr.name,
+                  type: boundType,
+                  pendingStart,
+                });
+              }
 
-            const baseGenEnv = applyEnv(sAfter, env);
-            const schemes = new Map<string, import("./types.js").Scheme>();
-            for (const inferredDef of inferredDefs) {
-              schemes.set(
-                inferredDef.name,
-                yield* generalizeBinding(baseGenEnv, inferredDef.type, inferredDef.pendingStart),
-              );
-            }
+              const sAfter = yield* Ref.get(ctx.subst);
+              const pending = yield* Ref.get(ctx.pendingConstraints);
+              const normalizedPending = pending.map((pendingConstraint) => ({
+                ...pendingConstraint,
+                constraint: {
+                  className: pendingConstraint.constraint.className,
+                  args: pendingConstraint.constraint.args.map((arg) => applyType(sAfter, arg)),
+                },
+              }));
+              yield* Ref.set(ctx.pendingConstraints, normalizedPending);
 
-            const updatedEnv = new Map(baseGenEnv);
-            for (const [name, scheme] of schemes) {
-              updatedEnv.set(name, scheme);
+              const baseGenEnv = applyEnv(sAfter, env);
+              const schemes = new Map<string, import("./types.js").Scheme>();
+              for (const inferredDef of inferredDefs) {
+                schemes.set(
+                  inferredDef.name,
+                  yield* generalizeBinding(baseGenEnv, inferredDef.type, inferredDef.pendingStart),
+                );
+              }
+
+              const updatedEnv = new Map(baseGenEnv);
+              for (const [name, scheme] of schemes) {
+                updatedEnv.set(name, scheme);
+              }
+              for (const name of failedNames) {
+                updatedEnv.set(name, yield* unknownScheme);
+              }
+              env = updatedEnv;
+              for (const inferredDef of inferredDefs) lastDefType.set(inferredDef.name, inferredDef.type);
             }
-            for (const name of failedNames) {
-              updatedEnv.set(name, yield* unknownScheme);
-            }
-            env = updatedEnv;
+            const finalType = lastDefType.get(defGroup[defGroup.length - 1]!.name);
+            if (finalType) lastType = finalType;
             rawExprIndex += defGroup.length - 1;
           } else if (expr._tag === "DSLForm" && dslProvider && rawExprs) {
             // Find the corresponding raw SExpr for this DSLForm

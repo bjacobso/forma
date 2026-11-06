@@ -50,7 +50,7 @@ t("bad register is rejected with vendor/active-without-review",
 t("TRAP: `file evaluate` runs an ill-typed program", forma("evaluate", "tests/traps/evaluate-skips-typecheck.forma").ok
   && !forma("typecheck", "tests/traps/evaluate-skips-typecheck.forma").ok);
 t("TRAP: bad register reports only the first of 3 violations", bad.diagnostics.length === 1, String(bad.diagnostics.length));
-t("TRAP: generic fn used in two top-level defines is rejected", !forma("typecheck", "tests/traps/generic-across-defines.forma").ok);
+t("FIXED T2: generic fn used in two top-level defines typechecks", forma("typecheck", "tests/traps/generic-across-defines.forma").ok);
 t("TRAP: implicit Some-wrapping fails for an imported record type", !forma("typecheck", "tests/traps/imported-option-wrap.forma").ok);
 t("TRAP: imported fn with inner lambda is nil inside a form :check",
   /Cannot call nil/.test(msgs(forma("declarations", "tests/traps/hook-import/use.forma"))));
