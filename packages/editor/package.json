@@ -1,6 +1,6 @@
 {
   "name": "@formalang/editor",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Forma editor: CodeMirror + React editor integration for the Forma language (via @formalang/host).",
   "license": "MIT",
   "publishConfig": { "access": "public" },
