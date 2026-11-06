@@ -56,6 +56,11 @@ export interface ExpandProgramOptions {
    * same program expands to the same names however many expansions ran before.
    */
   readonly gensym?: GensymCounter;
+  /**
+   * Type declarations visible to the program but defined elsewhere, such as
+   * imported record types. They inform implicit `Some`/`None` filling only.
+   */
+  readonly contextTypes?: readonly SExpr[];
 }
 
 export interface ExpandProgramResult {
@@ -86,7 +91,7 @@ export function expandProgramSync(
   const inlineCompileTimeCalls = options.inlineCompileTimeCalls === true;
   const expanded: SExpr[] = [];
 
-  for (const expr of normalizeCoreProgram(exprs)) {
+  for (const expr of normalizeCoreProgram(exprs, true, options.contextTypes)) {
     if (isTopLevelDefMacro(expr)) {
       macroEnv = evalTopLevel(expr, macroEnv, options.builtins, macroStepLimit, state.gensym);
       if (options.keepMacroDefs === true) {

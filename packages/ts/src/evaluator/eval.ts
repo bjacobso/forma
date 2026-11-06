@@ -128,6 +128,7 @@ export function expandExprs(
           ...(options.includePrelude === false ? {includePrelude:false} : {}),
           ...(options.env ? { env: options.env } : {}),
           ...(gensym ? { gensym } : {}),
+          ...(options.contextTypes?.length ? { contextTypes: options.contextTypes } : {}),
         }),
       catch: toKernelError,
     });

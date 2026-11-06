@@ -27,12 +27,15 @@ export function retiredSpellingError(e: SExpr): Error | undefined {
 }
 
 /** Surface sugar common to expansion, inference and evaluation. */
-export function normalizeCoreProgram(exprs: readonly SExpr[], coerce = true): readonly SExpr[] {
+export function normalizeCoreProgram(exprs: readonly SExpr[], coerce = true, contextTypes: readonly SExpr[] = []): readonly SExpr[] {
   const resolved = resolveConstructors(exprs.map(e => {
     try { return normalizeCore(lowerMembers(e,moduleBindings(exprs)), true); }
     catch (error) { if (error instanceof Error && !("loc" in error)) Object.assign(error, {loc: e.loc}); throw error; }
   }));
-  return coerce ? coerceProgram(resolved) : resolved;
+  if (!coerce) return resolved;
+  // Imported type declarations only describe shapes; malformed ones are reported by their own module.
+  const context = contextTypes.flatMap(e => { try { return [normalizeCore(e, true)]; } catch { return []; } });
+  return coerceProgram(resolved, new Map(), context);
 }
 
 function normalizeCore(e: SExpr, top = false): SExpr {
