@@ -13,6 +13,7 @@ export function SiteHeader() {
         <a href="/language">Learn</a>
         <a href="/preludes/">Preludes</a>
         <NavLink to="/demo">Examples</NavLink>
+        <NavLink to="/custom">Your DSL</NavLink>
         <NavLink className="site-nav-cta" end to="/">Playground</NavLink>
       </nav>
       <ThemeToggle />

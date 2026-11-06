@@ -3,6 +3,7 @@ import type { PassName } from "@formalang/ts/engine";
 import { generateEmailProgram } from "@formalang/ts/email";
 import { generateEffectProgram } from "@formalang/ts/mechanics";
 import { compileEffectDemo } from "./effectCompiler";
+import { compilePreludeDemo } from "./preludeCompiler";
 import {
   hasErrors,
   serializablePassResult,
@@ -19,6 +20,10 @@ ctx.onmessage = (event: MessageEvent<RunRequest>) => {
 
 async function run(request: RunRequest): Promise<void> {
   try {
+    if (request.prelude !== undefined) {
+      post({ kind: "result", result: compilePreludeDemo(request) });
+      return;
+    }
     if (request.dialect) {
       post({ kind: "result", result: compileEffectDemo(request, request.dialect === "email" ? generateEmailProgram : generateEffectProgram) });
       return;

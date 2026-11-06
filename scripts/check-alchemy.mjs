@@ -45,6 +45,13 @@ test("production and PR stages preserve routes and isolate Workers and domains o
       assert.equal(worker.Props.assets.notFoundHandling, "404-page");
       assert.deepEqual(worker.Props.assets.runWorkerFirst, ["/playground", "/playground/*", "/about", "/demo", "/demo/*", "/workbench/demo", "/workbench/demo/"]);
       assert.equal(worker.RemovalPolicy, "destroy");
+      const playgrounds = stack.resources.Playgrounds;
+      assert.equal(playgrounds.Type, "Cloudflare.R2.Bucket");
+      assert.equal(playgrounds.Props.name, stage === "prod" ? "forma-playgrounds" : `forma-playgrounds-${stage}`);
+      assert.equal(playgrounds.Props.forceDestroy, stage !== "prod");
+      assert.equal(playgrounds.RemovalPolicy, stage === "prod" ? "retain" : "destroy");
+      assert.equal(worker.Props.env.PLAYGROUNDS, playgrounds);
+      assert.equal(worker.Props.env.PLAYGROUND_WRITES.simple.limit, 10);
     }), { stage }).pipe(
       Effect.provideService(AlchemyContext, { dotAlchemy: ".alchemy", dev: false, adopt: false }),
       Effect.provide(PlatformServices),

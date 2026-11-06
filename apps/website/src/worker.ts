@@ -1,8 +1,9 @@
 import { aboutDescription, galleryDescription, plainText, playgroundDescription } from "./lib/siteCopy";
 import { getPipeline } from "./pipelines";
 import { FORMA_WORKBENCH_URL } from "./lib/workbenchLocation";
+import { loadPlayground, playgroundApi, type PlaygroundEnv } from "./playgroundStore";
 
-interface Env {
+interface Env extends PlaygroundEnv {
   readonly ASSETS: {
     fetch(request: Request): Promise<Response>;
   };
@@ -16,6 +17,11 @@ interface RouteMeta {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const requestUrl = new URL(request.url);
+    if (requestUrl.pathname === "/playground/api/playgrounds" || requestUrl.pathname.startsWith("/playground/api/playgrounds/")) {
+      try { return await playgroundApi(request, env); }
+      catch { return Response.json({ error: "Playground storage is temporarily unavailable." }, { status: 503 }); }
+    }
     if (request.method !== "GET" && request.method !== "HEAD") {
       return env.ASSETS.fetch(request);
     }
@@ -33,7 +39,15 @@ export default {
     const pathname = url.pathname === "/playground" ? "/" : url.pathname.startsWith("/playground/")
       ? url.pathname.slice("/playground".length)
       : null;
-    const meta = pathname === null ? null : metaForPath(pathname);
+    let meta = pathname === null ? null : metaForPath(pathname);
+    const sharedId = pathname?.match(/^\/p\/([a-f0-9]{32})$/)?.[1];
+    if (pathname?.startsWith("/p/")) {
+      try {
+        const demo = sharedId ? await loadPlayground(env, sharedId) : null;
+        if (!demo) return new Response("Playground not found.", { status: 404 });
+        meta = { title: `${demo.title} - Forma`, description: "Explore this language: edit its prelude and example, and inspect the typed IR in your browser.", path: pathname };
+      } catch { return new Response("Playground storage is temporarily unavailable.", { status: 503 }); }
+    }
     if (!meta) {
       return env.ASSETS.fetch(request);
     }
@@ -53,6 +67,9 @@ export default {
 };
 
 function metaForPath(pathname: string): RouteMeta | null {
+  if (pathname === "/custom") {
+    return { title: "Build and share a Forma DSL", description: "Define a prelude, try an example, and share your language in a live playground.", path: pathname };
+  }
   if (pathname === "/") {
     return {
       title: "Forma Playground",

@@ -3,6 +3,8 @@
   "name": "forma-website",
   "compatibility_date": "2026-06-10",
   "main": "./src/worker.ts",
+  "r2_buckets": [{ "binding": "PLAYGROUNDS", "bucket_name": "forma-playgrounds" }],
+  "ratelimits": [{ "name": "PLAYGROUND_WRITES", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }],
   "assets": {
     "binding": "ASSETS",
     "directory": "../../dist-site",

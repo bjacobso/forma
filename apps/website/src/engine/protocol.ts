@@ -26,6 +26,7 @@ export interface RunRequest {
   readonly source: string;
   readonly passes: readonly EnginePassName[];
   readonly dialect?: EngineDialect;
+  readonly prelude?: string;
 }
 
 export interface RunResult {

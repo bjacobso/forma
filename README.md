@@ -400,8 +400,8 @@ cannot race its deployment.
 
 Configure `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in the repository's
 GitHub `production` environment. The token needs Workers Scripts Edit, Account
-Settings Read, and Secrets Store Edit on the deployment account; Zone Read and
-Workers Routes Edit on `forma-lang.com`. Secrets Store Edit is required to bind
+Settings Read, Workers R2 Storage Edit, and Secrets Store Edit on the deployment
+account; Zone Read and Workers Routes Edit on `forma-lang.com`. Secrets Store Edit is required to bind
 Alchemy's state-store secret to a temporary Worker when CI authenticates; Read
 alone does not allow binding. The secret must also have the `workers` scope.
 See [Cloudflare's Secrets Store access control](https://developers.cloudflare.com/secrets-store/access-control/).

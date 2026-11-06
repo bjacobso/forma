@@ -78,6 +78,15 @@ describe("forma website worker metadata", () => {
     );
   });
 
+  test("serves a cold custom playground with social metadata", async () => {
+    const env = mockEnv();
+    const response = await worker.fetch(new Request("https://forma-lang.com/playground/custom"), env);
+    const html = await response.text();
+    expect(response.status).toBe(200);
+    expect(html).toContain('<meta property="og:title" content="Build and share a Forma DSL" />');
+    expect(env.ASSETS.fetch).toHaveBeenCalledWith(expect.objectContaining({ url: "https://forma-lang.com/playground/" }));
+  });
+
   test("passes non-document routes through to assets", async () => {
     const env = mockEnv(new Response("asset"));
 

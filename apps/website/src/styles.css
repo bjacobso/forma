@@ -819,6 +819,13 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--forma-blue); ou
   --wb-accent: #93b4ff;
   --wb-error: #fca5a5;
 }
+.prelude-editors { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin: 20px 0; }
+.prelude-editors > section { min-width: 0; }
+.prelude-playground .pane { min-height: 0; }
+.prelude-title { display: grid; gap: 8px; max-width: 640px; }
+.prelude-title input { font: inherit; color: inherit; background: transparent; border: 1px solid var(--forma-line); border-radius: 6px; padding: 10px; }
+.prelude-result pre { padding: 20px; overflow: auto; max-height: 500px; }
+@media (max-width: 760px) { .prelude-editors { grid-template-columns: 1fr; } }
 .workbench-page { width: min(1280px, calc(100% - 40px)); padding: 32px 0 64px; }
 .workbench-embed-page { width: 100%; margin: 0; }
 .live-workbench-embedded { border-radius: 0; border: 0; }
