@@ -6,6 +6,9 @@
   "private": true,
   "license": "MIT",
   "packageManager": "pnpm@10.20.0",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "changeset": "changeset",
     "release:version": "changeset version && pnpm install --lockfile-only --no-frozen-lockfile",
