@@ -9,7 +9,7 @@ import { editorAppearance, lispSupport, structuralKeymap, type SyntaxPalette } f
 import type { Diagnostic } from "../engine/protocol";
 import type { SpanRange } from "../lib/artifacts";
 
-export function WorkbenchEditor({ source, onChange, onInspect, diagnostics, mode, palette, reveal, focusOnReveal = true }: {
+export function WorkbenchEditor({ source, onChange, onInspect, diagnostics, mode, palette, reveal, focusOnReveal = true, ariaLabel = "Forma source" }: {
   source: string;
   onChange: (source: string) => void;
   onInspect: (offset: number) => void;
@@ -18,6 +18,7 @@ export function WorkbenchEditor({ source, onChange, onInspect, diagnostics, mode
   palette: SyntaxPalette;
   reveal: SpanRange | null;
   focusOnReveal?: boolean;
+  ariaLabel?: string;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
@@ -32,7 +33,7 @@ export function WorkbenchEditor({ source, onChange, onInspect, diagnostics, mode
         history(), bracketMatching(), closeBrackets(), lineNumbers(), foldGutter({ openText: "−", closedText: "+" }),
         keymap.of([...defaultKeymap, ...historyKeymap]), structuralKeymap,
         EditorView.lineWrapping,
-        EditorView.contentAttributes.of({ "aria-label": "Forma source", spellcheck: "false" }),
+        EditorView.contentAttributes.of({ "aria-label": ariaLabel, spellcheck: "false" }),
         EditorView.updateListener.of(update => {
           if (update.docChanged) callbacks.current.onChange(update.state.doc.toString());
           if (update.selectionSet || update.docChanged) callbacks.current.onInspect(update.state.selection.main.head);

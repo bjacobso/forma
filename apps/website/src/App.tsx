@@ -7,6 +7,9 @@ import { Home } from "./pages/Home";
 const About = lazy(() =>
   import("./pages/About").then((module) => ({ default: module.About })),
 );
+const PreludePlayground = lazy(() =>
+  import("./pages/PreludePlayground").then((module) => ({ default: module.PreludePlayground })),
+);
 const DemoGallery = lazy(() =>
   import("./pages/DemoGallery").then((module) => ({ default: module.DemoGallery })),
 );
@@ -16,12 +19,15 @@ const DemoPipeline = lazy(() =>
 
 export function App() {
   const location = useLocation();
+  const customPlayground = location.pathname === "/custom" || location.pathname.startsWith("/p/");
   return (
     <>
-      {!location.pathname.startsWith("/embed/") ? <SiteHeader /> : null}
+      {!location.pathname.startsWith("/embed/") && !customPlayground ? <SiteHeader /> : null}
       <Suspense fallback={<main className="route-loading">Loading...</main>}>
         <Routes>
           <Route element={<Home />} path="/" />
+          <Route element={<PreludePlayground />} path="/custom" />
+          <Route element={<PreludePlayground />} path="/p/:snapshotId" />
           <Route element={<WorkbenchPage embedded />} path="/embed/:exampleId" />
           <Route element={<WorkbenchPage />} path="/live/:exampleId" />
           <Route element={<About />} path="/about" />

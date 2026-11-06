@@ -26,6 +26,7 @@ export interface RunRequest {
   readonly source: string;
   readonly passes: readonly EnginePassName[];
   readonly dialect?: EngineDialect;
+  readonly prelude?: string;
 }
 
 export interface RunResult {
@@ -36,6 +37,17 @@ export interface RunResult {
   readonly stoppedAt?: EnginePassName | undefined;
   readonly generatedCode?: string;
   readonly declarations?: unknown;
+  readonly preludeDebug?: {
+    readonly preludeSyntax: ParseResult;
+    readonly forms: readonly { readonly name: string; readonly definition: unknown }[];
+    readonly declarations: readonly {
+      readonly name: string;
+      readonly resultType: string;
+      readonly origin: unknown;
+      readonly sourceMap: readonly { readonly path: string; readonly span: Span }[];
+    }[];
+    readonly timings: readonly { readonly phase: string; readonly durationMs: number }[];
+  };
   readonly contracts?: readonly { readonly name: string; readonly declared: string; readonly inferred: string }[];
 }
 
