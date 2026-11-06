@@ -141,6 +141,37 @@ describe("JSON process ABI", () => {
         expect(result.status,result.stderr).toBe(0);
         expect(JSON.parse(result.stdout),result.stdout).toMatchObject({ok:true});
       }
+      // evaluate typechecks first unless --unchecked; failures exit 1 with located diagnostics.
+      writeFileSync(join(dir,"main.forma"),'(import "./lib.forma" [identity])\n(= :high (identity "high"))');
+      const refused = spawnSync(process.execPath,[cli,"file","evaluate",join(dir,"main.forma")],{encoding:"utf8"});
+      expect(refused.status).toBe(1);
+      expect(JSON.parse(refused.stdout)).toMatchObject({ok:false,value:{pass:"typecheck"},diagnostics:[{code:"typecheck/type-mismatch",span:{startLine:2,startColumn:1}}]});
+      expect(JSON.parse(refused.stdout).diagnostics[0].message).not.toMatch(/at offset|__forma_/);
+      const unchecked = spawnSync(process.execPath,[cli,"file","evaluate","--unchecked",join(dir,"main.forma")],{encoding:"utf8"});
+      expect(JSON.parse(unchecked.stdout)).toMatchObject({ok:true,value:{result:{printed:"false"}}});
+      // declarations lists each form application's IR with author names.
+      writeFileSync(join(dir,"forms.forma"),'(export note NoteIR) (type NoteIR {:kind "Note" :name Symbol :text String}) (form (note name text) "A note." :types {:name (Declares NoteDecl) :text String} :ir NoteIR {:kind "Note" :name name :text text})');
+      writeFileSync(join(dir,"main.forma"),'(import "./forms.forma" [note]) (note hello "hi")');
+      const declared = spawnSync(process.execPath,[cli,"file","declarations",join(dir,"main.forma")],{encoding:"utf8"});
+      expect(JSON.parse(declared.stdout).value).toContainEqual(expect.objectContaining({
+        summary:{kind:"FormApplication",form:"note",name:"hello",moduleId:join(dir,"main.forma")},
+        payload:{kind:"Note",name:"hello",text:"hi"},
+      }));
+      // Author-facing wording for an open-row export and for unimported kernel sugar.
+      writeFileSync(join(dir,"main.forma"),'(export p)\n(define p [r] (= (get r :a) 1))');
+      const open = JSON.parse(spawnSync(process.execPath,[cli,"file","declarations",join(dir,"main.forma")],{encoding:"utf8"}).stdout);
+      expect(open).toMatchObject({ok:false,diagnostics:[{code:"module/unrepresentable-signature",span:{startLine:2,startColumn:1}}]});
+      expect(open.diagnostics[0].message).toMatch(/^p has an inferred open record type/);
+      writeFileSync(join(dir,"main.forma"),'(and true false)');
+      const sugar = JSON.parse(spawnSync(process.execPath,[cli,"file","typecheck",join(dir,"main.forma")],{encoding:"utf8"}).stdout);
+      expect(sugar).toMatchObject({ok:false,diagnostics:[{code:"module/unimported-sugar"}]});
+      expect(sugar.diagnostics[0].message).toContain("preludes/kernel.forma");
+      for (const help of [["help"],["--help"],["file","--help"]]) {
+        const shown = spawnSync(process.execPath,[cli,...help],{encoding:"utf8"});
+        expect(shown.status).toBe(0);
+        expect(shown.stdout).toContain("file evaluate [--unchecked]");
+      }
+      expect(spawnSync(process.execPath,[cli,"bogus"],{encoding:"utf8"}).status).toBe(64);
       writeFileSync(join(dir,"main.forma"),'(import "./missing.forma" [nope])');
       const failed = spawnSync(process.execPath,[cli,"file","typecheck",join(dir,"main.forma")],{encoding:"utf8"});
       expect(JSON.parse(failed.stdout)).toMatchObject({ok:false,diagnostics:[{span:{sourceId:join(dir,"main.forma")}}]});

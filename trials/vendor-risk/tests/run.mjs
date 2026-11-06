@@ -47,8 +47,9 @@ t("bad register is rejected with vendor/active-without-review",
   !bad.ok && bad.diagnostics.some((d) => d.code === "vendor/active-without-review"), msgs(bad));
 
 // 4. Pinned silent traps (these assert CURRENT behaviour, which is surprising)
-t("TRAP: `file evaluate` runs an ill-typed program", forma("evaluate", "tests/traps/evaluate-skips-typecheck.forma").ok
-  && !forma("typecheck", "tests/traps/evaluate-skips-typecheck.forma").ok);
+const illTyped = forma("evaluate", "tests/traps/evaluate-skips-typecheck.forma");
+t("FIXED T1: `file evaluate` typechecks first and refuses an ill-typed program",
+  !illTyped.ok && illTyped.value?.pass === "typecheck" && !forma("typecheck", "tests/traps/evaluate-skips-typecheck.forma").ok);
 t("FIXED T4: bad register reports all 3 violations", bad.diagnostics.length === 3, String(bad.diagnostics.length));
 t("FIXED T2: generic fn used in two top-level defines typechecks", forma("typecheck", "tests/traps/generic-across-defines.forma").ok);
 t("FIXED T3: implicit Some-wrapping works for an imported record type", forma("typecheck", "tests/traps/imported-option-wrap.forma").ok);
@@ -58,8 +59,12 @@ t("FIXED F10: dot access on an imported-typed binding evaluates, with Some/None 
 t("FIXED F4: imported fns (inner lambda, Int arithmetic) are callable from a form :check",
   forma("typecheck", "tests/traps/hook-import/m.forma").ok && forma("declarations", "tests/traps/hook-import/use.forma").ok,
   msgs(forma("declarations", "tests/traps/hook-import/use.forma")));
-t("TRAP: register's own vendor IR is absent from `file declarations`",
-  !good.value.some((d) => d.payload?.kind === "Vendor"));
+const vendors = good.value.filter((d) => d.summary?.kind === "FormApplication" && d.payload?.kind === "Vendor");
+t("FIXED F3: register's own vendor IR is listed by `file declarations`",
+  vendors.length === 4 && vendors.find((d) => d.payload.name === "cobalt-crm")?.payload.blockers.length === 4,
+  JSON.stringify(vendors.map((d) => d.payload.name)));
+t("FIXED F8: every diagnostic carries a line and column",
+  bad.diagnostics.every((d) => d.span?.startLine > 0 && d.span?.startColumn > 0), JSON.stringify(bad.diagnostics.map((d) => d.span)));
 
 console.log(failed ? `\n${failed} failed` : "\nall passed");
 process.exit(failed ? 1 : 0);

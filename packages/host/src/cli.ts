@@ -3,13 +3,72 @@
 import { readFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { managePackages, readModuleGraph, readNodePackages, verifyPackages } from "@formalang/ts/node";
-import { ModuleError, moduleMechanicsDeclarations } from "@formalang/ts/modules";
+import { ModuleError, moduleMechanicsDeclarations, type ModuleGraph } from "@formalang/ts/modules";
+import { isKFloat, isKKeyword, isKSymbol, mapKeyValue, type KValue } from "@formalang/ts/evaluator";
 import { JsonAbi, type JsonResponse } from "./json-abi.js";
+import { authorNames, locateResponse } from "./diagnostic-locations.js";
 
 const abi = new JsonAbi();
-const print = (response: JsonResponse) => process.stdout.write(JSON.stringify(response) + "\n");
+/** File sources are on disk, keyed by absolute path, so every diagnostic can carry a line and column. */
+const fileText = (sourceId: string): string | undefined => {
+  try { return sourceId.startsWith("/") ? readFileSync(sourceId, "utf8") : undefined; } catch { return undefined; }
+};
+const print = (response: JsonResponse) => {
+  if (command === "file") response = locateResponse(response, fileText);
+  process.stdout.write(JSON.stringify(response) + "\n");
+  // A file command that reports errors fails the process, so scripts can rely on it.
+  if (command === "file" && !response.ok) process.exitCode = 1;
+};
 const [command, ...args] = process.argv.slice(2);
-async function file(operation: string, path: string): Promise<JsonResponse> {
+const usage = `Usage: forma <command>
+
+  file typecheck <entry.forma>          Typecheck a module graph.
+  file evaluate [--unchecked] <entry.forma>
+                                        Typecheck, then evaluate the entry's final expressions.
+                                        --unchecked skips the typecheck.
+  file declarations <entry.forma>       Elaborate forms and list declarations, including
+                                        each form application's IR (kind FormApplication).
+  file interface <entry.forma>          Print the module graph's interfaces.
+  request ['<json>']                    Handle one JSON request (argument or stdin).
+  daemon                                Handle one JSON request per stdin line.
+  add <name> <spec> | update [name] | verify | vendor
+                                        Manage packages.
+  version                               Print the version.
+  help                                  Print this help.
+
+Every command prints one JSON object per response with "ok" and "diagnostics".
+File commands exit with status 1 when "ok" is false.
+`;
+
+/** Plain JSON for elaborated IR: records become objects keyed without the leading ':'. */
+function plain(value: KValue): unknown {
+  if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
+  if (isKFloat(value)) return Number.isFinite(value.value) ? value.value : String(value.value);
+  if (isKSymbol(value)) return authorNames(value.name);
+  if (isKKeyword(value)) return value.name;
+  if (Array.isArray(value)) return value.map(plain);
+  if (value instanceof Map)
+    return Object.fromEntries([...value].map(([key, v]) => [String(mapKeyValue(key)).replace(/^:/, ""), plain(v)]));
+  return String(value);
+}
+
+/** Each module's form applications, after the mechanics declarations. */
+function formApplications(graph: ModuleGraph) {
+  return graph.modules.flatMap((module) =>
+    (module.compileTime?.elaborated() ?? []).map((application) => ({
+      summary: {
+        kind: "FormApplication",
+        form: application.form,
+        ...(application.name ? { name: application.name } : {}),
+        moduleId: module.id,
+      },
+      payload: plain(application.ir),
+      span: application.span,
+    })),
+  );
+}
+
+async function file(operation: string, path: string, unchecked = false): Promise<JsonResponse> {
   const graph = readModuleGraph(path);
   const packages = readNodePackages(path);
   const opened = await abi.handleJson('{"op":"openSession"}');
@@ -21,10 +80,18 @@ async function file(operation: string, path: string): Promise<JsonResponse> {
     if (loaded.diagnostics.some(d => d.severity === "error")) return {ok:false, diagnostics:loaded.diagnostics};
     const request = { sessionId, sourceId: graph.entry };
     if (operation === "typecheck") return await abi.handleJson(JSON.stringify({ op: "typecheck", ...request }));
-    if (operation === "evaluate") return await abi.handleJson(JSON.stringify({ op: "evaluateInSession", ...request }));
+    if (operation === "evaluate") {
+      // Evaluation does not typecheck by itself; an ill-typed program is not run.
+      if (!unchecked) {
+        const checked = await abi.handleJson(JSON.stringify({ op: "typecheck", ...request }));
+        if (!checked.ok) return checked;
+      }
+      return await abi.handleJson(JSON.stringify({ op: "evaluateInSession", ...request }));
+    }
     if (operation === "interface") return await abi.handleJson(JSON.stringify({ op: "moduleGraph", ...request }));
     const result = moduleMechanicsDeclarations(graph);
-    return { ok: !result.diagnostics.some(d => d.severity === "error"), value: result.declarations, diagnostics: result.diagnostics };
+    const ok = !result.diagnostics.some(d => d.severity === "error");
+    return { ok, value: ok ? [...result.declarations, ...formApplications(graph)] : result.declarations, diagnostics: result.diagnostics };
   } finally { await abi.handleJson(JSON.stringify({op:"closeSession",sessionId})); }
 }
 
@@ -33,6 +100,8 @@ try {
   else if (command === "daemon" && args.length === 0) {
     for await (const line of createInterface({input:process.stdin, crlfDelay:Infinity})) print(await abi.handleJson(line));
   } else if (command === "version" && args.length === 0) print(await abi.handleJson('{"op":"version"}'));
+  else if (command === "help" || command === "--help" || command === "-h" || (args.length === 1 && (args[0] === "--help" || args[0] === "-h"))) process.stdout.write(usage);
+  else if (command === "file" && args.length === 3 && args[0] === "evaluate" && args[1] === "--unchecked") print(await file("evaluate", args[2]!, true));
   else if (command === "file" && args.length === 2 && ["typecheck", "evaluate", "interface", "declarations"].includes(args[0]!)) print(await file(args[0]!, args[1]!));
   else if (command === "verify" && args.length === 0) {
     const packages = verifyPackages();
@@ -44,10 +113,10 @@ try {
   } else if (command === "vendor" && args.length === 0) {
     print({ ok: true, value: await managePackages({ command: "vendor" }), diagnostics: [] });
   } else {
-    process.stderr.write("Usage: forma request ['<json>'] | daemon | file <typecheck|evaluate|interface|declarations> <entry.forma> | add <name> <spec> | update [name] | verify | vendor | version\n");
+    process.stderr.write(usage);
     process.exitCode = 64;
   }
 } catch (error) {
-  print({ ok: false, diagnostics: error instanceof ModuleError ? error.diagnostics : [{ code: (error as NodeJS.ErrnoException).code ? "io/error" : "internal/error", severity: "error", message: String(error) }] });
+  print({ ok: false, diagnostics: error instanceof ModuleError ? [...error.diagnostics] : [{ code: (error as NodeJS.ErrnoException).code ? "io/error" : "internal/error", severity: "error", message: String(error) }] });
   process.exitCode = 1;
 }
