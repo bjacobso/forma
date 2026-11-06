@@ -50,7 +50,7 @@ pageClass: forma-index
 </div>
 <div class="fh-row__wide fh-hero__demo">
 
-<WorkbenchEmbed example="contracts" file="log.forma" title="Live contract workbench: edit, infer, and generate Effect TypeScript" />
+<WorkbenchEmbed example="contracts" file="log.forma" title="Live contract compiler: edit, infer, and generate Effect TypeScript" />
 
 </div>
 </section>
@@ -74,6 +74,7 @@ pageClass: forma-index
 
 </div>
 <p>The form resolves <code>Employee</code>, checks <code>:where</code> as a <code>Bool</code> with the entity's fields in scope, and projects the selected fields into typed IR. The projection is checked against the form's declared IR type, so a prelude can't emit a payload its contract doesn't describe. <a href="/playground/demo/entities" target="_self">Open this example →</a></p>
+<p>Each declaration in the artifact also records a content identity for its payload contract: a hash of the IR type and every type it reaches. Two forms with different syntax that build the same IR share an identity, and a consumer can reject a payload built against another definition.</p>
 <p class="fh-row__after">Swap the prelude and you have a different language on the same checked core.</p>
 </div>
 </section>
@@ -132,18 +133,18 @@ pageClass: forma-index
 <h2 id="ambition-heading">One descriptor. Every tool.</h2>
 </div>
 <div class="fh-row__body">
-<p>A form's descriptor already teaches the compiler its checks, the structural workbench its slots, and this site its <a href="/preludes/">reference pages</a>. The same program can be source, an outline, or a domain view.</p>
+<p>A form's descriptor already teaches the compiler its checks, the language server its hover and search, and this site its <a href="/preludes/">reference pages</a>. Nobody maintains a second description of the keyword for tooling.</p>
 <div class="fh-window">
 <div class="fh-window__bar"><span>one descriptor, many readers</span></div>
-<pre class="fh-ascii" v-pre aria-label="A prelude form descriptor is read by the compiler for slot checks, types, and effect sets; by editor tooling for diagnostics, hover, and slot placeholders; by this site for generated reference pages; and by code generation for typed IR and Effect TypeScript."><span class="fh-ascii__code">(form (rule name lanes clause ...) …)</span>
+<pre class="fh-ascii" v-pre aria-label="A prelude form descriptor is read by the compiler for slot checks, types, and effect sets; by the language server for diagnostics, hover, and workspace search; by this site for generated reference pages; and by code generation for typed IR and Effect TypeScript."><span class="fh-ascii__code">(form (rule name lanes clause ...) …)</span>
    │
    ├─ <b>compiler</b>    slot checks · HM types · effect sets
-   ├─ <b>editor</b>      diagnostics · hover · slot placeholders
+   ├─ <b>editor</b>      diagnostics · hover · search by IR type
    ├─ <b>reference</b>   generated prelude pages
    └─ <b>artifacts</b>   typed IR · Effect TypeScript</pre>
 </div>
 <p class="fh-row__after">A new language should feel as supported as a built-in one.</p>
-<p>The structural workbench edits an onboarding workflow as rows and as source at the same time, with live values and types, descriptor placeholders, and assistant proposals you review as tree diffs. <a href="/workbench-vision">Read the workbench vision →</a></p>
+<p>Workspace search ranks forms and definitions by their names and documentation, and filters by the IR type they produce. An author or a coding agent can ask which form builds an <code>Endpoint</code> instead of grepping preludes; the language server answers the same query as <code>workspace/symbol</code>.</p>
 </div>
 </section>
 
@@ -155,7 +156,7 @@ pageClass: forma-index
 </div>
 <div class="fh-row__body">
 <p>Types, effects, and contracts don't depend on spelling. The plan is to make every surface a library, Forma's own included, and to let a Lisp dialect plug into the same checker through a language adapter. Elaborators may propose terms and types; a small trusted kernel decides what is well typed.</p>
-<p>The first step ships today: Clojure spellings are an ordinary macro library. Part of the reason is practical: coding agents write <code>defn</code>, <code>if-let</code>, and <code>-&gt;</code> out of habit, and a library can accept those spellings where the engine used to reject them. We haven't yet measured whether that reduces repair rounds. <a href="/clojure">See what it does, and what it refuses →</a></p>
+<p>The first step ships today: Clojure spellings are an ordinary macro library. Part of the reason is practical: coding agents write <code>defn</code>, <code>if-let</code>, and <code>-&gt;</code> out of habit, and a library can accept those spellings where the engine used to reject them. We haven't yet measured whether that reduces repair rounds; the later stages of RFC 0021 wait on that benchmark. <a href="/clojure">See what it does, and what it refuses →</a></p>
 <div class="fh-window fh-window--tabs">
 
 ::: code-group
@@ -239,7 +240,9 @@ pageClass: forma-index
 <li><span><strong>Checked programs</strong>Slot types, Hindley–Milner inference, and effect sets for every use of a form.</span><em>engine</em></li>
 <li><span><strong>Generated reference</strong>Forms, slots, types, and signatures with their doc comments, built from the source.</span><em>this site</em></li>
 <li><span><strong>Live playground</strong>The browser compiler runs prelude vocabularies such as email rules and Elm commands.</span><em>@formalang/ts</em></li>
-<li><span><strong>Editor support</strong>Diagnostics and hover in the language server; slot placeholders in the workbench.</span><em>LSP · workbench</em></li>
+<li><span><strong>Refined contracts</strong><code>:pattern</code>, <code>:min-length</code>, <code>:min</code>, and <code>:max</code> on IR fields, checked where the author wrote them and generated as Schema filters.</span><em>engine</em></li>
+<li><span><strong>Modules and packages</strong>Explicit imports and exports, <code>forma.json</code>, a verified <code>forma.lock</code>, and committed vendor sources. <a href="/modules">File modules</a></span><em>engine</em></li>
+<li><span><strong>Editor support</strong>Diagnostics, hover, and workspace search by name, documentation, or IR type.</span><em>language server</em></li>
 <li class="is-planned"><span><strong>Diagnostic catalog</strong>Stable codes with an explanation page for each.</span><em>RFC 0017</em></li>
 <li class="is-planned"><span><strong>Tests in Forma</strong>Example programs that assert their own results.</span><em>RFC 0015</em></li>
 <li class="is-planned"><span><strong>Consumer-prelude SDK</strong>Packaging, checking, and documenting a prelude outside this repository.</span><em>roadmap</em></li>
@@ -257,7 +260,7 @@ pageClass: forma-index
 <a href="/playground/demo/entities" target="_self"><span>Domain languages</span><strong>Keywords are library code</strong><small>A prelude defines <code>entity</code>; the source elaborates into typed IR.</small><b>Open example →</b></a>
 <a href="/playground/demo/contracts" target="_self"><span>Domain languages</span><strong>The type says what code can do</strong><small>Drop a capability from the signature and watch the typechecker reject it.</small><b>Open example →</b></a>
 <a href="/playground/demo/full-pipeline" target="_self"><span>The core language</span><strong>The complete pipeline</strong><small>Read, expand, typecheck, eval, and a live JSON target for one program.</small><b>Open example →</b></a>
-<a href="/workbench/demo/" target="_self"><span>Structural editing</span><strong>The outline is the program</strong><small>Open the Foldworks-hosted Forma workbench for live values and types, a source pane, and reviewable assistant proposals.</small><b>Open the workbench →</b></a>
+<a href="/clojure"><span>Lisp surfaces</span><strong>Clojure spellings, checked</strong><small><code>defn</code>, <code>if-let</code>, and <code>-&gt;</code> come from a library, and the guide shows the errors it refuses to paper over.</small><b>Read the guide →</b></a>
 </div>
 <a class="fh-link" href="/playground/demo" target="_self">All examples →</a>
 </section>
@@ -289,7 +292,7 @@ pageClass: forma-index
 <p>One TypeScript engine runs behind a JSON host ABI in Node, the browser, and editor tooling, and stored fixtures pin its behavior.</p>
 </div>
 <div class="fh-facts">
-<article><h3>TypeScript engine</h3><p><code>@formalang/ts</code> on npm. Runs in Node and in the browser; the workbench above runs it in a Web Worker.</p></article>
+<article><h3>TypeScript engine</h3><p><code>@formalang/ts</code> on npm. Runs in Node and in the browser; the live compiler above runs it in a Web Worker.</p></article>
 <article><h3>Host and CLI</h3><p><code>@formalang/host</code> wraps the engine in a JSON host ABI, with a source-built <code>forma</code> JSON CLI and daemon.</p></article>
 <article><h3>Conformance</h3><p>Fixtures and reviewed goldens pin parsing, typing, evaluation, and IR output, and CI checks the engine against them.</p></article>
 <article><h3>Editor tooling</h3><p>A language server plus CodeMirror and React components for diagnostics, hover, and structural editing.</p></article>
@@ -305,15 +308,17 @@ pageClass: forma-index
 <dl class="fh-notes">
 <div><dt>It is pre-alpha research.</dt><dd>Packages are 0.x and change without notice. There are no stable APIs, wire formats, or host ABI yet.</dd></div>
 <div><dt>There is no published CLI.</dt><dd>You call the engine from your own build script. A consumer-prelude SDK is next on the <a href="/roadmap">roadmap</a>.</dd></div>
-<div><dt>Some browser output is stored.</dt><dd>The playground does not run ontology elaboration yet; those examples show a stored canonical IR golden, originally captured from the retired OCaml engine.</dd></div>
-<div><dt>One generated target.</dt><dd>Effect TypeScript and Effect Schema are generated today. Lisp emitters, starting with <code>.cljc</code>, and Rust and OCaml generation are research directions, not built.</dd></div>
+<div><dt>Some browser output is stored.</dt><dd>The playground does not run ontology elaboration yet; those examples show a stored canonical IR golden that CI checks against the TypeScript engine.</dd></div>
+<div><dt>One generated target.</dt><dd>Effect TypeScript and Effect Schema are generated today. Lisp emitters, starting with <code>.cljc</code>, and Go and Rust Effect hosts are proposals in <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md">RFC 0021</a> and the <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-effect-hosts.md">Effect hosts RFC</a>, not built.</dd></div>
 <div><dt>One Lisp surface.</dt><dd>Forma's own syntax is the only surface; Clojure spellings are macros over it. The trusted kernel, elaborator API, and dialect adapters are proposals in <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md">RFC 0021</a> and <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md">RFC 0022</a>.</dd></div>
 </dl>
 
-<pre class="fh-ascii fh-ascii--card" v-pre aria-label="Working today: lossless reader and formatter, macros, Hindley–Milner and effect inference, canonical IR, Effect TypeScript and Schema generation, the browser playground and language server, and conformance goldens. Not yet: a published forma CLI, a stable host ABI, a consumer-prelude SDK, a trusted kernel and elaborator API, Lisp dialect adapters, emitters for Clojure, Racket, Scheme, and Common Lisp, and Rust or OCaml code generation.">working today
+<pre class="fh-ascii fh-ascii--card" v-pre aria-label="Working today: lossless reader and formatter, macros, Hindley–Milner and effect inference, refined contracts, canonical IR with contract identities, file modules and offline packages, Effect TypeScript and Schema generation, the browser playground and language server, and conformance goldens. Not yet: a published forma CLI, a stable host ABI, a consumer-prelude SDK, a trusted kernel and elaborator API, Lisp dialect adapters, emitters for Clojure, Racket, Scheme, and Common Lisp, Go and Rust Effect hosts, and effect-polymorphic signatures.">working today
 <span class="tone-ok">✓</span> reader · formatter · macros
 <span class="tone-ok">✓</span> HM inference · effect inference
-<span class="tone-ok">✓</span> canonical IR
+<span class="tone-ok">✓</span> refined contracts
+<span class="tone-ok">✓</span> canonical IR · contract identity
+<span class="tone-ok">✓</span> file modules · offline packages
 <span class="tone-ok">✓</span> Effect TypeScript + Schema
 <span class="tone-ok">✓</span> playground · language server
 <span class="tone-ok">✓</span> conformance goldens
@@ -325,7 +330,8 @@ not yet
 <span class="tone-muted">○</span> trusted kernel · elaborators
 <span class="tone-muted">○</span> Lisp dialect adapters
 <span class="tone-muted">○</span> Clojure / Racket / Scheme / CL emitters
-<span class="tone-muted">○</span> Rust / OCaml codegen</pre>
+<span class="tone-muted">○</span> Go / Rust Effect hosts
+<span class="tone-muted">○</span> effect-polymorphic signatures</pre>
 
 </div>
 <div class="fh-columns">

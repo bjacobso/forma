@@ -3,7 +3,7 @@ import { useData } from "vitepress";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 
 const props = withDefaults(defineProps<{ example?: string; broken?: boolean; title?: string; file?: string }>(), {
-  example: "contracts", broken: false, title: "Live Forma workbench", file: "",
+  example: "contracts", broken: false, title: "Live Forma compiler", file: "",
 });
 const { isDark } = useData();
 const frame = ref<HTMLIFrameElement>();
@@ -34,6 +34,6 @@ onUnmounted(() => window.removeEventListener("message", receive));
       <iframe ref="frame" :src="`/playground/embed/${props.example}${props.broken ? '?broken=1' : ''}`"
         :title="props.title" :style="{ height: `${height}px` }" loading="lazy" @load="syncTheme" />
     </div>
-    <a class="fh-live-embed__fallback" :href="`/playground/live/${props.example}`" target="_self">Open this workbench in its own page ↗</a>
+    <a class="fh-live-embed__fallback" :href="`/playground/live/${props.example}`" target="_self">Open this example in its own page ↗</a>
   </div>
 </template>
