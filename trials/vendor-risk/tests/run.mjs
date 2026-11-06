@@ -55,8 +55,9 @@ t("FIXED T3: implicit Some-wrapping works for an imported record type", forma("t
 const wrapped = forma("evaluate", "tests/traps/imported-option-wrap.forma");
 t("FIXED F10: dot access on an imported-typed binding evaluates, with Some/None filled",
   printed(wrapped) === '[{:_tag "Some" :value 2} {:_tag "None"}]', printed(wrapped) ?? msgs(wrapped));
-t("TRAP: imported fn with inner lambda is nil inside a form :check",
-  /Cannot call nil/.test(msgs(forma("declarations", "tests/traps/hook-import/use.forma"))));
+t("FIXED F4: imported fns (inner lambda, Int arithmetic) are callable from a form :check",
+  forma("typecheck", "tests/traps/hook-import/m.forma").ok && forma("declarations", "tests/traps/hook-import/use.forma").ok,
+  msgs(forma("declarations", "tests/traps/hook-import/use.forma")));
 t("TRAP: register's own vendor IR is absent from `file declarations`",
   !good.value.some((d) => d.payload?.kind === "Vendor"));
 

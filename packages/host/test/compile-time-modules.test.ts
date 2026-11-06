@@ -216,6 +216,27 @@ describe("compile-time module conformance", () => {
         },
       );
     });
+    test(`${host.constructor.name}: form checks call imported helpers that use macros and inner functions`, async () => {
+      const dir = resolve(directory, "hook-imports");
+      const fixture = (sourceId: string, source = readFileSync(resolve(dir, sourceId), "utf8")) =>
+        ({ sourceId, source, kind: "source" as const });
+      const kernel = fixture("../../../preludes/kernel.forma", readFileSync(resolve(directory, "../../preludes/kernel.forma"), "utf8"));
+      await withSources(
+        host,
+        [kernel, fixture("rules.forma"), fixture("forms.forma")],
+        async (sessionId) => {
+          const ledger = await host.moduleGraph({ sessionId, sourceId: "ledger.forma", source: fixture("ledger.forma").source });
+          expect(ledger.diagnostics).toEqual([]);
+          expect(JSON.stringify(ledger.interfaces.at(-1)?.exports[0]?.data?.value)).toMatch(/due\D{0,30}31/);
+          const over = fixture("over.forma").source;
+          const rejected = await host.moduleGraph({ sessionId, sourceId: "over.forma", source: over });
+          expect(rejected.diagnostics[0]).toMatchObject({
+            code: "spend/over-limit",
+            span: { sourceId: "over.forma", startOffset: over.indexOf("250"), endOffset: over.indexOf("250") + 3 },
+          });
+        },
+      );
+    });
     test(`${host.constructor.name}: kernel sugar is an ordinary dependency`, async () => {
       const kernel = readFileSync(
         resolve(directory, "../../preludes/kernel.forma"),

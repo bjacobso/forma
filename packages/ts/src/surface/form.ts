@@ -359,7 +359,10 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
   if (!spec) return [];
   const execute = (input: HookInput, kind: "construct" | "validate" | "result-type") => Effect.gen(function* () {
     const values = matchFormSyntax(spec, input.rawExpr);
-    let env = linked?.environment() ?? Env.empty();
+    // Bind holes in a fresh frame: `bind` copies the innermost frame, and a
+    // linked module's innermost frame is a mutable slot (such as an imported
+    // helper) that may be filled only after the hook starts.
+    let env = (linked?.environment() ?? Env.empty()).extend({});
     const converted = new Map<string,KValue>();
     const childDiagnostics: Diagnostic[] = [];
     for (const [n,t] of spec.holes) {
