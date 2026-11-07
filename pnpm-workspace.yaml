@@ -1,6 +1,7 @@
 packages:
   - "apps/*"
   - "packages/*"
+  - "examples/smithers"
 
 # Keep Alchemy's used Effect companions pinned to the same tested version.
 # These versions satisfy Alchemy's ^4.0.5 dependency and peer ranges.
