@@ -117,7 +117,7 @@ function PreludeEditor({ initialDemo, saved }: { readonly initialDemo?: PreludeD
       <label className="studio-title">Example title<input aria-label="Example title" value={demo.title} maxLength={160} onChange={event => edit({ ...demo, title: event.target.value })} /></label>
       <span className="studio-save-state">{unshared ? "Unshared changes" : "Saved snapshot"}</span>
       <div className="studio-actions">
-        <a href="/playground/custom?example=smithers">Smithers example</a>
+        <a href="/playground/custom?example=smithers" target="_blank" rel="noopener noreferrer">Smithers example</a>
         <a href="/playground/custom?new=1" target="_blank" rel="noopener noreferrer">New playground ↗</a>
         <button type="button" onClick={() => { edit(original); }}>Reset</button>
         <button className="studio-share" type="button" disabled={saving || !demo.title.trim()} onClick={() => void share()}>{saving ? "Saving…" : "Share playground"}</button>
