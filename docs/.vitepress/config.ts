@@ -88,6 +88,7 @@ export default defineConfig({
             { text: "Forma for Elm-style apps", link: "/elm" },
             { text: "Elm prototype reference", link: "/elm/reference" },
             { text: "Forma for email automation", link: "/email" },
+            { text: "Smithers workflow DSL", link: "/smithers" },
             { text: "Clojure spellings", link: "/clojure" },
           ],
         },

@@ -10,11 +10,13 @@ import type { RunResult } from "../engine/protocol";
 import { useDocumentMeta } from "../lib/documentMeta";
 import { decodePreludeDemo, defaultPreludeDemo, type PreludeDemo } from "../lib/preludeShare";
 import { MAX_SNAPSHOT_BYTES, readSnapshot } from "../lib/playgroundSnapshot";
+import { smithersPreludeDemo } from "../lib/smithersDemo";
 
 export function PreludePlayground() {
   const { snapshotId } = useParams();
   const [search] = useSearchParams();
   const blank = search.get("new") === "1";
+  const smithers = search.get("example") === "smithers";
   const [loaded, setLoaded] = useState<{ id: string; demo: PreludeDemo } | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   useEffect(() => {
@@ -30,7 +32,7 @@ export function PreludePlayground() {
     return () => controller.abort();
   }, [snapshotId]);
   if (snapshotId && loaded?.id !== snapshotId) return <main className="demo-page"><p role={loadError ? "alert" : "status"}>{loadError ?? "Loading shared playground…"}</p></main>;
-  return <PreludeEditor key={snapshotId ?? (blank ? "new" : "custom")} initialDemo={snapshotId ? loaded!.demo : blank ? { title: "Untitled playground", prelude: "", source: "" } : undefined} saved={Boolean(snapshotId)} />;
+  return <PreludeEditor key={snapshotId ?? (blank ? "new" : smithers ? "smithers" : "custom")} initialDemo={snapshotId ? loaded!.demo : blank ? { title: "Untitled playground", prelude: "", source: "" } : smithers ? smithersPreludeDemo : undefined} saved={Boolean(snapshotId)} />;
 }
 
 type InspectorTab = "ir" | "syntax" | "forms" | "maps" | "debug";
@@ -115,6 +117,7 @@ function PreludeEditor({ initialDemo, saved }: { readonly initialDemo?: PreludeD
       <label className="studio-title">Example title<input aria-label="Example title" value={demo.title} maxLength={160} onChange={event => edit({ ...demo, title: event.target.value })} /></label>
       <span className="studio-save-state">{unshared ? "Unshared changes" : "Saved snapshot"}</span>
       <div className="studio-actions">
+        <a href="/playground/custom?example=smithers">Smithers example</a>
         <a href="/playground/custom?new=1" target="_blank" rel="noopener noreferrer">New playground ↗</a>
         <button type="button" onClick={() => { edit(original); }}>Reset</button>
         <button className="studio-share" type="button" disabled={saving || !demo.title.trim()} onClick={() => void share()}>{saving ? "Saving…" : "Share playground"}</button>

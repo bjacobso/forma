@@ -1,0 +1,17 @@
+{
+  "name": "@formalang/example-smithers",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "demo": "node demo.ts"
+  },
+  "dependencies": {
+    "@formalang/ts": "workspace:*",
+    "@smthrs/engine": "1.0.0-rc.16",
+    "@smthrs/flow": "1.0.0-rc.16",
+    "@smthrs/plan": "1.0.0-rc.16",
+    "effect": "4.0.5"
+  }
+}

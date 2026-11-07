@@ -145,6 +145,24 @@ importers:
         specifier: ^4.54.0
         version: 4.118.0(@cloudflare/workers-types@5.20261101.1)
 
+  examples/smithers:
+    dependencies:
+      '@formalang/ts':
+        specifier: workspace:*
+        version: link:../../packages/ts
+      '@smthrs/engine':
+        specifier: 1.0.0-rc.16
+        version: 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/flow':
+        specifier: 1.0.0-rc.16
+        version: 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/plan':
+        specifier: 1.0.0-rc.16
+        version: 1.0.0-rc.16(effect@4.0.5)
+      effect:
+        specifier: 4.0.5
+        version: 4.0.5
+
   packages/editor:
     dependencies:
       '@codemirror/autocomplete':
@@ -1448,6 +1466,70 @@ packages:
     resolution: {integrity: sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw==}
     engines: {node: '>=18'}
 
+  '@smthrs/canonical@1.0.0-rc.16':
+    resolution: {integrity: sha512-IHKAvLG674J5sWJcR+FICeYpUiJMcjS3ji67pFU2uuoRzniDp8HD7aKKkH5LPM+vE0KP55qm+DzxNWqSfLSQJQ==}
+    engines: {node: '>=22.19.0'}
+    peerDependencies:
+      effect: 4.0.5
+
+  '@smthrs/capability@1.0.0-rc.16':
+    resolution: {integrity: sha512-HvWSv6e16EEGBy9wpcdWcJTqN6WJyUAZoS982GmeFx23SCqPLCMXFoPxy2w1GOupcOdRGmPfpFF4XTh2//KzOw==}
+    engines: {node: '>=22.19.0'}
+    peerDependencies:
+      effect: 4.0.5
+
+  '@smthrs/crypto@1.0.0-rc.16':
+    resolution: {integrity: sha512-/qFbCVzfaGtZuSaNdWlRQKEGf9A6aga9Tg9Dl6lQKDSsqqaEardiEl5w1eVg8I7CZ4Ob1Zbsvn6jXdcDowJESw==}
+    engines: {node: '>=22.19.0'}
+    peerDependencies:
+      effect: 4.0.5
+
+  '@smthrs/database@1.0.0-rc.16':
+    resolution: {integrity: sha512-Wel9TSjjHC3d8VQ7OFH1U2729o62dWKgoSKyRwjmjdsPfuDfJXlfs+py+CQHnYbzEW00nuyTqIqa4yJ63GrsPg==}
+    engines: {node: '>=22.19.0'}
+    peerDependencies:
+      '@effect/sql-pg': '*'
+      '@effect/sql-sqlite-bun': 4.0.5
+      '@effect/sql-sqlite-node': '*'
+      effect: 4.0.5
+    peerDependenciesMeta:
+      '@effect/sql-pg':
+        optional: true
+      '@effect/sql-sqlite-bun':
+        optional: true
+      '@effect/sql-sqlite-node':
+        optional: true
+
+  '@smthrs/engine@1.0.0-rc.16':
+    resolution: {integrity: sha512-G65+EW9gw/kAW+ovYcFIP/OYqNhvgIU5R3w+JFLJ/Se+GgG1Bpifezpe3ZYYTLJTjxSDDL6Z7F3nZO7gGX3KAA==}
+    engines: {node: '>=22.19.0'}
+    peerDependencies:
+      effect: 4.0.5
+
+  '@smthrs/flow@1.0.0-rc.16':
+    resolution: {integrity: sha512-B/tqRmQCTP2sHTU+NIjsy9RhV8Z2RU4I5SRVD0WClIOhniilkwW3nlPloJ+duiNw667Xtb87iZSYcD99FMFN3g==}
+    engines: {node: '>=22.19.0'}
+    peerDependencies:
+      effect: 4.0.5
+
+  '@smthrs/journal@1.0.0-rc.16':
+    resolution: {integrity: sha512-QWY8oKqhrGRbCUalUPBMfw50jfxEqEWQioyHI2Kkh0zyq+v0tdX8BNgQEz+KRWSpldp/raWLMsPF61AkDSTDLw==}
+    engines: {node: '>=22.19.0'}
+    peerDependencies:
+      effect: 4.0.5
+
+  '@smthrs/keys@1.0.0-rc.16':
+    resolution: {integrity: sha512-XmuvJam3XfdfSXzB5vfQ9xP8jKsbr/abvVno3qZEuiODZe99YwM069CecUjFpVjFbE/VeBVYvF0CcdxJMXQIjQ==}
+    engines: {node: '>=22.19.0'}
+    peerDependencies:
+      effect: 4.0.5
+
+  '@smthrs/plan@1.0.0-rc.16':
+    resolution: {integrity: sha512-P+t1oZ3D5mmnSCGDkkZRzycWRgU4jnzMQaAcoaGBQaAGi87TmREUWlvflpCmpT1bPywuxn5ZAupcn9mDZLhQig==}
+    engines: {node: '>=22.19.0'}
+    peerDependencies:
+      effect: 4.0.5
+
   '@speed-highlight/core@1.2.23':
     resolution: {integrity: sha512-iRoq6i6JDJP6Mt2A5JaPvzw0pgYHH6k92ij+yXiTrB7T2y9N789aWE3EHWj/5ztlJBokcCBja3iYLVdu5wgnkg==}
 
@@ -2016,6 +2098,9 @@ packages:
     peerDependenciesMeta:
       oxc-resolver:
         optional: true
+
+  effect@4.0.5:
+    resolution: {integrity: sha512-BY4/28NlpOd99yzmV741xbVGmp+1U7tks4oB7F/Png64bTa5tm5eCA6W0RiXsnuLDDoJpjfVSo4Dnq4BZb/89Q==}
 
   effect@4.1.1:
     resolution: {integrity: sha512-XYu65BrcmNqu5i7PPvP4dqL+R5ma37zIsfuSPjcn78mog+6e5PkilNg7Xo+pBpjXJYlWEIpH4j91tMrfW05CMw==}
@@ -3906,6 +3991,69 @@ snapshots:
 
   '@sindresorhus/is@7.2.0': {}
 
+  '@smthrs/canonical@1.0.0-rc.16(effect@4.0.5)':
+    dependencies:
+      effect: 4.0.5
+
+  '@smthrs/capability@1.0.0-rc.16(effect@4.0.5)':
+    dependencies:
+      '@smthrs/canonical': 1.0.0-rc.16(effect@4.0.5)
+      effect: 4.0.5
+
+  '@smthrs/crypto@1.0.0-rc.16(effect@4.0.5)':
+    dependencies:
+      effect: 4.0.5
+
+  '@smthrs/database@1.0.0-rc.16(effect@4.0.5)':
+    dependencies:
+      effect: 4.0.5
+
+  '@smthrs/engine@1.0.0-rc.16(effect@4.0.5)':
+    dependencies:
+      '@smthrs/canonical': 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/capability': 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/crypto': 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/flow': 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/journal': 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/keys': 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/plan': 1.0.0-rc.16(effect@4.0.5)
+      effect: 4.0.5
+    transitivePeerDependencies:
+      - '@effect/sql-pg'
+      - '@effect/sql-sqlite-bun'
+      - '@effect/sql-sqlite-node'
+
+  '@smthrs/flow@1.0.0-rc.16(effect@4.0.5)':
+    dependencies:
+      '@smthrs/canonical': 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/capability': 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/crypto': 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/keys': 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/plan': 1.0.0-rc.16(effect@4.0.5)
+      effect: 4.0.5
+
+  '@smthrs/journal@1.0.0-rc.16(effect@4.0.5)':
+    dependencies:
+      '@smthrs/database': 1.0.0-rc.16(effect@4.0.5)
+      effect: 4.0.5
+    transitivePeerDependencies:
+      - '@effect/sql-pg'
+      - '@effect/sql-sqlite-bun'
+      - '@effect/sql-sqlite-node'
+
+  '@smthrs/keys@1.0.0-rc.16(effect@4.0.5)':
+    dependencies:
+      '@smthrs/canonical': 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/crypto': 1.0.0-rc.16(effect@4.0.5)
+      effect: 4.0.5
+
+  '@smthrs/plan@1.0.0-rc.16(effect@4.0.5)':
+    dependencies:
+      '@smthrs/canonical': 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/crypto': 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/keys': 1.0.0-rc.16(effect@4.0.5)
+      effect: 4.0.5
+
   '@speed-highlight/core@1.2.23': {}
 
   '@tailwindcss/node@4.3.3':
@@ -4319,6 +4467,8 @@ snapshots:
       dequal: 2.0.3
 
   dts-resolver@3.0.0: {}
+
+  effect@4.0.5: {}
 
   effect@4.1.1: {}
 

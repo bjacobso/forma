@@ -1,0 +1,66 @@
+;; Executable with runtime.ts and demo.ts. The playground shows the checked plan.
+;; Handlers in demo.ts are deterministic fixtures: no model calls or GitHub writes.
+;; Edit a result path, remove a capability, or replace a Bool with a String.
+
+(action implement
+  :payload {:issue String} :success {:revision String :summary String} :error String
+  :tier "sealed" :capabilities ["fs:read:**"] :reads [] :writes []
+  :attempts 2 :timeout-ms 600000 :version "implement/v1")
+(action test-patch
+  :payload {:revision String} :success {:passed Bool} :error String
+  :tier "sealed" :capabilities ["fs:read:**"] :reads [] :writes []
+  :attempts 2 :timeout-ms 120000 :version "tests/v1")
+(action review-patch
+  :payload {:revision String} :success {:approved Bool} :error String
+  :tier "sealed" :capabilities ["fs:read:**"] :reads [] :writes []
+  :attempts 2 :timeout-ms 300000 :version "review/v1")
+(action publish-patch
+  :payload {:revision String} :success String :error String
+  :tier "irreversible" :capabilities ["net:post:https://api.github.com/**"]
+  :reads [] :writes [] :attempts 2 :timeout-ms 30000
+  :version "publish/v1" :key "publish-by-revision")
+(action deployment-status
+  :payload {:revision String} :success {:done Bool :value String} :error Never
+  :tier "sealed" :capabilities [] :reads [] :writes []
+  :attempts 1 :timeout-ms 10000 :version "deployment/v1")
+
+;; Child flows have their own execution identity and typed boundary.
+(workflow describe-release
+  :payload {:url String} :success String :error Json
+  :capabilities [] :reads [] :writes [] :tier "sealed"
+  :deadline-ms 60000 :max-rounds 1 :return description
+  (value description {:op "concat" :args ["Released: " {:get ["input" "url"]}]}))
+
+(workflow resolve-issue
+  :payload {:issue String} :success String :error Json
+  :capabilities ["fs:read:**" "net:post:https://api.github.com/**"]
+  :reads [] :writes [] :tier "irreversible"
+  :deadline-ms 86400000 :max-rounds 10 :return outcome
+
+  (step patch implement {:issue {:get ["input" "issue"]}})
+
+  ;; These share the patch result and execute concurrently.
+  (step tests test-patch {:revision {:get ["patch" "revision"]}})
+  (step review review-patch {:revision {:get ["patch" "revision"]}})
+  (all checks [tests review])
+  (value passed {:op "and" :args
+    [{:get ["checks" "tests" "passed"]} {:get ["checks" "review" "approved"]}]})
+
+  ;; A sequence is a success barrier. The question opens after the checks.
+  (ask question Bool "Publish this tested and reviewed patch?" :timeout-ms 3600000)
+  (sequence approved [checks question])
+  (value rejected false)
+  (branch decision passed approved rejected)
+
+  ;; Both arms exist in the plan; only the selected arm executes.
+  (step published publish-patch {:revision {:get ["patch" "revision"]}})
+  (poll deployment deployment-status {:revision {:get ["patch" "revision"]}}
+    :every-ms 10 :max-attempts 5)
+  (sequence live [published deployment])
+  (child description describe-release {:url {:get ["live"]}})
+  (value declined "No release: checks failed or approval was declined.")
+  (branch release decision description declined)
+
+  ;; Recovery catches typed failures. Defects and cancellation still propagate.
+  (value fallback "Release failed; inspect the run before retrying.")
+  (recover outcome release fallback))

@@ -37,6 +37,7 @@ A fresh clone uses
 - [Elm prototype reference](https://raw.githubusercontent.com/bjacobso/forma/main/docs/elm/reference.md): Isolated prelude generator, supported forms, mounting, and current limits.
 - [Forma for email automation](https://raw.githubusercontent.com/bjacobso/forma/main/docs/email.md): Email rule prelude prototype with closed lanes, first-match decisions, pure rules, and typed delivery recovery; scheduling, rate enforcement, and dry runs are not implemented.
 - [Clojure spellings](https://raw.githubusercontent.com/bjacobso/forma/main/docs/clojure.md): `preludes/clojure.forma`, a shipped macro library giving Forma modules Clojure spellings (`def`, `defn`, `if-let`, threading) over Forma semantics; keyword access, set and function literals, multi-arity `defn`, and any Clojure surface, adapter, or emitter are not implemented.
+- [Smithers workflow DSL](https://raw.githubusercontent.com/bjacobso/forma/main/docs/smithers.md): Executable example of a checked Forma workflow prelude targeting native Smithers actions, flows, approvals, joins, waits, polling, and host integrations; local fixtures use a volatile memory engine, and the browser displays IR rather than executing workflows.
 - [Effect reference](https://raw.githubusercontent.com/bjacobso/forma/main/docs/effect/reference.md): Supported schemas, services, errors, resources, and operations.
 - [Language services](https://raw.githubusercontent.com/bjacobso/forma/main/docs/language-services.md): Analysis, node identity, observations, and structural edit scripts.
 

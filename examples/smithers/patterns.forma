@@ -1,0 +1,33 @@
+;; Load alongside example.forma with the same prelude. These are ordinary flows,
+;; not special compiler nodes. Host fixtures for these actions live in the test.
+(action draft
+  :payload {:issue String :attempt Int} :success String :error Never
+  :tier "sealed" :capabilities [] :reads [] :writes []
+  :attempts 1 :timeout-ms 1000 :version "draft/v1")
+(action critique
+  :payload {:text String :attempt Int} :success Bool :error Never
+  :tier "sealed" :capabilities [] :reads [] :writes []
+  :attempts 1 :timeout-ms 1000 :version "critique/v1")
+
+;; Review loop: a typed decision plus a bounded handoff to the next round.
+(workflow review-loop
+  :payload {:issue String :attempt Int} :success String :error Json
+  :capabilities [] :reads [] :writes [] :tier "sealed"
+  :deadline-ms 10000 :max-rounds 3 :return result
+  (step proposal draft {:issue {:get ["input" "issue"]} :attempt {:get ["input" "attempt"]}})
+  (step accepted critique {:text {:get ["proposal"]} :attempt {:get ["input" "attempt"]}})
+  (handoff retry review-loop
+    {:issue {:get ["input" "issue"]} :attempt {:op "add" :args [{:get ["input" "attempt"]} 1]}})
+  (branch result accepted proposal retry))
+
+;; Map/reduce over a fixed plan: fan out, then reduce the collected values.
+;; Runtime-sized fanout is a native-flow integration, not this static graph form.
+(workflow compare-proposals
+  :payload {:issue String} :success String :error Never
+  :capabilities [] :reads [] :writes [] :tier "sealed"
+  :deadline-ms 10000 :max-rounds 1 :return report
+  (step first draft {:issue {:get ["input" "issue"]} :attempt 1})
+  (step second draft {:issue {:get ["input" "issue"]} :attempt 2})
+  (all proposals [first second])
+  (value report {:op "concat" :args
+    [{:get ["proposals" "first"]} " | " {:get ["proposals" "second"]}]}))

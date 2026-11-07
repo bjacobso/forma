@@ -1,0 +1,379 @@
+;; Smithers workflow frontend. Pure declarations; runtime.ts targets @smthrs/flow.
+;; Expressions are JSON data: {:get ["node" "field"]} or {:op "eq" :args [...]}.
+;; Nodes are lazy: only the returned graph and its dependencies execute.
+(type Tier (Union "sealed" "compensable" "irreversible"))
+(type ActionIR
+  {:kind "Action" :name Symbol :payload Type :success Type :error Type
+   :tier Tier :capabilities (List String) :reads (List String) :writes (List String)
+   :attempts (Int :min 1 :max 1000) :timeout-ms (Int :min 1 :max 9007199254740991)
+   :version String :key (Option String) :schemas Json})
+(form (action name {:keys [payload success error tier capabilities reads writes attempts timeout-ms version key]})
+  :types {:name (Declares Action) :payload Type :success Type :error Type
+          :tier Tier :capabilities (List String) :reads (List String) :writes (List String)
+          :attempts (Int :min 1 :max 1000) :timeout-ms (Int :min 1 :max 9007199254740991)
+          :version String :key (Option String)}
+  :ir ActionIR
+  :check (fn [h]
+    (concat (wf-schema-errors h)
+      (if (and (= h.tier "irreversible") (> h.attempts 1) (= h.key nil))
+      [{:severity :error :code "workflow/idempotency"
+        :message "Retrying an irreversible action requires :key." :slot :key}]
+      [])))
+  {:kind "Action" :name name :payload payload :success success :error error
+   :tier tier :capabilities capabilities :reads reads :writes writes
+   :attempts attempts :timeout-ms timeout-ms :version version :key key
+   :schemas {:payload (wf-schema payload 0) :success (wf-schema success 0) :error (wf-schema error 0)}})
+
+(type StepIR {:kind "step" :name Symbol :data Json})
+(form (step name action args)
+  :types {:name (Declares Node) :action (Refers Action) :args Json}
+  :ir StepIR
+  {:kind "step" :name name :data {:target action :args (wf-data args)}})
+
+(type ChildIR {:kind "child" :name Symbol :data Json})
+(form (child name workflow args)
+  :types {:name (Declares Node) :workflow (Refers Workflow) :args Json}
+  :ir ChildIR
+  {:kind "child" :name name :data {:target workflow :args (wf-data args)}})
+
+(type HandoffIR {:kind "handoff" :name Symbol :data Json})
+(form (handoff name workflow args)
+  :types {:name (Declares Node) :workflow (Refers Workflow) :args Json}
+  :ir HandoffIR
+  {:kind "handoff" :name name :data {:target workflow :args (wf-data args)}})
+
+(type ValueIR {:kind "value" :name Symbol :data Json})
+(form (value name expression)
+  :types {:name (Declares Node) :expression Json}
+  :ir ValueIR
+  {:kind "value" :name name :data {:expression (wf-data expression)}})
+
+(type AllIR {:kind "all" :name Symbol :data Json})
+(form (all name members)
+  :types {:name (Declares Node) :members (List Symbol :min-length 1)}
+  :ir AllIR
+  {:kind "all" :name name :data {:members members}})
+
+(type RaceIR {:kind "race" :name Symbol :data Json})
+(form (race name members)
+  :types {:name (Declares Node) :members (List Symbol :min-length 1)}
+  :ir RaceIR
+  {:kind "race" :name name :data {:members members}})
+
+(type AnyIR {:kind "any" :name Symbol :data Json})
+(form (any name members)
+  :types {:name (Declares Node) :members (List Symbol :min-length 1)}
+  :ir AnyIR
+  {:kind "any" :name name :data {:members members}})
+
+(type SequenceIR {:kind "sequence" :name Symbol :data Json})
+(form (sequence name members)
+  :types {:name (Declares Node) :members (List Symbol :min-length 1)}
+  :ir SequenceIR
+  {:kind "sequence" :name name :data {:members members}})
+
+(type QuorumIR {:kind "quorum" :name Symbol :data Json})
+(form (quorum name count members)
+  :types {:name (Declares Node) :count (Int :min 1) :members (List Symbol :min-length 1)}
+  :ir QuorumIR
+  {:kind "quorum" :name name :data {:count count :members members}})
+
+(type BranchIR {:kind "branch" :name Symbol :data Json})
+(form (branch name condition yes no)
+  :types {:name (Declares Node) :condition Symbol :yes Symbol :no Symbol}
+  :ir BranchIR
+  {:kind "branch" :name name :data {:condition condition :yes yes :no no}})
+
+(type RecoverIR {:kind "recover" :name Symbol :data Json})
+(form (recover name attempt fallback)
+  :types {:name (Declares Node) :attempt Symbol :fallback Symbol}
+  :ir RecoverIR
+  {:kind "recover" :name name :data {:attempt attempt :fallback fallback}})
+
+(type FailIR {:kind "fail" :name Symbol :data Json})
+(form (fail name error)
+  :types {:name (Declares Node) :error Json}
+  :ir FailIR
+  {:kind "fail" :name name :data {:expression (wf-data error)}})
+
+(type SleepIR {:kind "sleep" :name Symbol :data Json})
+(form (sleep name millis)
+  :types {:name (Declares Node) :millis (Int :min 0 :max 9007199254740991)}
+  :ir SleepIR
+  {:kind "sleep" :name name :data {:millis millis}})
+
+(type WaitIR {:kind "wait" :name Symbol :data Json})
+(form (wait name schema)
+  :types {:name (Declares Node) :schema Type}
+  :ir WaitIR
+  :check (fn [h] (if (wf-codec-valid (wf-schema h.schema 0)) []
+    [{:severity :error :code "workflow/schema" :message "Unsupported wait schema." :slot :schema}]))
+  {:kind "wait" :name name :data {:schema schema :codec (wf-schema schema 0)}})
+
+(type AskIR {:kind "ask" :name Symbol :data Json})
+(form (ask name schema prompt {:keys [timeout-ms]})
+  :types {:name (Declares Node) :schema Type :prompt String :timeout-ms (Int :min 1 :max 9007199254740991)}
+  :ir AskIR
+  :check (fn [h] (if (wf-human-codec-valid (wf-schema h.schema 0)) []
+    [{:severity :error :code "workflow/schema" :message "Unsupported human answer schema." :slot :schema}]))
+  {:kind "ask" :name name :data {:schema schema :codec (wf-schema schema 0) :prompt prompt :timeout-ms timeout-ms}})
+
+(type PollIR {:kind "poll" :name Symbol :data Json})
+(form (poll name action args {:keys [every-ms max-attempts]})
+  :types {:name (Declares Node) :action (Refers Action) :args Json :every-ms (Int :min 0 :max 9007199254740991) :max-attempts (Int :min 1 :max 1000)}
+  :ir PollIR
+  {:kind "poll" :name name :data {:target action :args (wf-data args) :every-ms every-ms :max-attempts max-attempts}})
+
+(type node (Union StepIR ChildIR HandoffIR ValueIR AllIR RaceIR AnyIR SequenceIR QuorumIR BranchIR RecoverIR FailIR SleepIR WaitIR AskIR PollIR))
+
+;; The host can supply native Smithers patterns, queue workers, external jobs,
+;; or prompt-backed flows through this typed boundary. No handler source is eval'd.
+(type NativeFlowIR
+  {:kind "NativeFlow" :name Symbol :payload Type :success Type :error Type
+   :capabilities (List String) :schemas Json})
+(form (native-flow name {:keys [payload success error capabilities]})
+  :types {:name (Declares Workflow) :payload Type :success Type :error Type :capabilities (List String)}
+  :ir NativeFlowIR
+  :check wf-schema-errors
+  {:kind "NativeFlow" :name name :payload payload :success success :error error
+   :capabilities capabilities
+   :schemas {:payload (wf-schema payload 0) :success (wf-schema success 0) :error (wf-schema error 0)}})
+
+;; Json holes preserve literal strings with a reader marker. Normalize those
+;; once at the boundary; expression maps remain ordinary portable JSON.
+(define wf-data [v]
+  (if (map? v)
+    (if (= (path v "$forma.runtimeExpr") "string-literal") (path v "value")
+      (reduce (fn [out key] (assoc out key (wf-data (path v key)))) {} (keys v)))
+    (if (list? v) (map wf-data v) v)))
+
+;; The same checks run in the browser and in the executable example.
+(define wf-expand-to [t depth]
+  (if (> depth 20) 'Unsupported
+    (if (symbol? t)
+      (let [definition (type-definition t)]
+        (if (= definition nil) t (wf-expand-to definition (+ depth 1))))
+      t)))
+(define wf-expand [t] (wf-expand-to t 0))
+
+;; A tagged schema encoding preserves the difference between String and "String".
+;; Recursive schemas are deliberately refused rather than expanded forever.
+(define wf-schema [t depth]
+  (if (> depth 20) {:tag "unsupported"}
+    (let [e (wf-expand t) next (+ depth 1)]
+      (if (map? e)
+        {:tag "record" :fields
+          (reduce (fn [out key] (assoc out key (wf-schema (path e key) next))) {} (keys e))}
+      (if (string? e) {:tag "literal" :value e}
+      (if (boolean? e) {:tag "literal" :value e}
+      (if (number? e) {:tag "literal" :value e}
+      (if (list? e)
+        (if (= (first e) 'Union) {:tag "union" :members (map (fn [item] (wf-schema item next)) (rest e))}
+        (if (= (first e) 'List) {:tag "list" :item (wf-schema (nth e 1) next)}
+        (if (= (first e) 'Option) {:tag "option" :item (wf-schema (nth e 1) next)}
+          {:tag "unsupported"})))
+        {:tag (str e)}))))))))
+
+(define wf-codec-valid [codec]
+  (let [tag (path codec :tag)]
+    (if (= tag "record") (every? wf-codec-valid (vals (path codec :fields)))
+    (if (= tag "union")
+      (and (not (empty? (path codec :members))) (every? wf-codec-valid (path codec :members)))
+    (if (or (= tag "list") (= tag "option")) (wf-codec-valid (path codec :item))
+      (contains? ["String" "Int" "Float" "Bool" "Json" "Unit" "Never" "literal"] tag))))))
+
+(define wf-schema-errors [h]
+  (concat
+    (if (map? (wf-expand h.payload)) []
+      [{:severity :error :code "workflow/schema" :message "Payload must be a record type." :slot :payload}])
+    (flat-map (fn [slot]
+      (if (wf-codec-valid (wf-schema (path h slot) 0)) []
+        [{:severity :error :code "workflow/schema"
+          :message "Supported schemas: primitives, records, List, Option, literal Union, and nonrecursive aliases." :slot slot}]))
+      [:payload :success :error])))
+
+(define wf-human-codec-valid [codec]
+  (let [tag (path codec :tag)]
+    (if (= tag "record") (every? wf-human-codec-valid (vals (path codec :fields)))
+    (if (= tag "union")
+      (and (not (empty? (path codec :members)))
+        (every? (fn [member] (= (path member :tag) "literal")) (path codec :members)))
+    (if (or (= tag "list") (= tag "option")) (wf-human-codec-valid (path codec :item))
+      (contains? ["String" "Int" "Float" "Bool" "Json" "Unit" "literal"] tag))))))
+
+(define wf-compatible [actual expected]
+  (let [a (wf-expand actual) e (wf-expand expected)]
+    (if (= e 'Json) true
+    (if (= a 'Never) true
+    (if (= a e) true
+    (if (and (= e 'String) (string? a)) true
+    (if (and (= e 'Float) (= a 'Int)) true
+    (if (and (list? a) (= (first a) 'Union))
+      (every? (fn [member] (wf-compatible member e)) (rest a))
+    (if (and (list? e) (= (first e) 'Union))
+      (some (fn [member] (wf-compatible a member)) (rest e))
+    (if (and (map? a) (map? e))
+      (and (= (count (keys a)) (count (keys e)))
+        (every? (fn [key] (wf-compatible (path a key) (path e key))) (keys e)))
+    (if (and (list? e) (= (first e) 'List) (list? a) (= (first a) 'List))
+      (wf-compatible (nth a 1) (nth e 1))
+    (if (and (list? e) (= (first e) 'Option))
+      (or (= a 'Unit) (wf-compatible a (nth e 1)))
+    false))))))))))))
+
+(define wf-union [types]
+  (if (empty? types) 'Never
+    (if (every? (fn [t] (= t (first types))) types) (first types)
+      (concat ['Union] types))))
+
+(define wf-get-type [types reference]
+  (reduce (fn [t field] (path (wf-expand t) field))
+    (path types (first reference)) (rest reference)))
+
+(define wf-infer [expression types]
+  (if (map? expression)
+    (if (not (= (path expression "get") nil))
+      (wf-get-type types (path expression "get"))
+      (if (not (= (path expression "op") nil))
+        (let [op (path expression "op")
+              args (map (fn [arg] (wf-infer arg types)) (path expression "args"))]
+          (if (= op "eq")
+            (if (and (= (count args) 2)
+                     (or (wf-compatible (first args) (nth args 1))
+                         (wf-compatible (nth args 1) (first args)))) 'Bool nil)
+          (if (= op "and")
+            (if (every? (fn [t] (= t 'Bool)) args) 'Bool nil)
+          (if (= op "concat")
+            (if (every? (fn [t] (wf-compatible t 'String)) args) 'String nil)
+          (if (= op "add")
+            (if (every? (fn [t] (= t 'Int)) args) 'Int nil)
+          nil)))))
+        (reduce (fn [out key] (assoc out key (wf-infer (path expression key) types)))
+          {} (keys expression))))
+    (if (list? expression)
+      ['List (wf-union (map (fn [item] (wf-infer item types)) expression))]
+    (if (string? expression) expression
+    (if (boolean? expression) 'Bool
+    (if (number? expression) (if (= (mod expression 1) 0) 'Int 'Float)
+    'Unit))))))
+
+(define wf-references [expression]
+  (if (map? expression)
+    (if (not (= (path expression "get") nil)) [(first (path expression "get"))]
+      (flat-map wf-references (vals expression)))
+    (if (list? expression) (flat-map wf-references expression) [])))
+
+(define wf-expression-valid [expression types]
+  (if (map? expression)
+    (if (not (= (path expression "get") nil))
+      (let [reference (path expression "get")]
+        (and (= (count (keys expression)) 1) (list? reference)
+          (not (empty? reference)) (every? (fn [segment] (string? segment)) reference)
+          (not (= (wf-get-type types reference) nil))))
+      (if (not (= (path expression "op") nil))
+        (and (= (count (keys expression)) 2) (list? (path expression "args"))
+          (every? (fn [arg] (wf-expression-valid arg types)) (path expression "args"))
+          (not (= (wf-infer expression types) nil)))
+        (every? (fn [v] (wf-expression-valid v types)) (vals expression))))
+    (if (list? expression)
+      (every? (fn [v] (wf-expression-valid v types)) expression) true)))
+
+(define wf-node-dependencies [n]
+  (let [d n.data k n.kind]
+    (concat (wf-references (path d :args)) (wf-references (path d :expression))
+      (if (not (= (path d :members) nil)) (map (fn [member] (str member)) d.members) [])
+      (if (= k "branch") [(str d.condition) (str d.yes) (str d.no)] [])
+      (if (= k "recover") [(str d.attempt) (str d.fallback)] []))))
+
+(define wf-node-type [n types]
+  (let [d n.data k n.kind]
+    (if (= k "step") (declaration-hole d.target :success)
+    (if (or (= k "child") (= k "handoff")) (declaration-hole d.target :success)
+    (if (= k "poll") (path (wf-expand (declaration-hole d.target :success)) :value)
+    (if (= k "value") (wf-infer d.expression types)
+    (if (= k "fail") 'Never
+    (if (= k "sleep") 'Unit
+    (if (or (= k "wait") (= k "ask")) d.schema
+    (if (= k "all")
+      (reduce (fn [out member] (assoc out (str member) (path types (str member)))) {} d.members)
+    (if (= k "sequence") (path types (str (nth d.members (- (count d.members) 1))))
+    (if (= k "branch") (wf-union [(path types (str d.yes)) (path types (str d.no))])
+    (if (= k "recover") (wf-union [(path types (str d.attempt)) (path types (str d.fallback))])
+    (if (= k "quorum") 'Json
+      (wf-union (map (fn [member] (path types (str member))) d.members))))))))))))))))
+
+(define wf-node-error [n types failures]
+  (let [d n.data k n.kind
+        dependencies (if (= k "recover") [(str d.fallback)] (wf-node-dependencies n))
+        own (if (contains? ["step" "child" "handoff"] k) (declaration-hole d.target :error)
+              (if (= k "fail") (wf-infer d.expression types)
+                (if (contains? ["sleep" "wait" "ask" "poll"] k) 'Json 'Never)))]
+    (wf-union (concat [own] (map (fn [name] (path failures name)) dependencies)))))
+
+(define wf-error [index code message]
+  {:severity :error :code code :message message :at [:node index]})
+
+(define wf-check [h]
+  (let [checked
+    (reduce
+      (fn [state n]
+        (let [d n.data k n.kind name (str n.name) index state.index
+              inferred (wf-node-type n state.types)
+              invoked (contains? ["step" "child" "handoff" "poll"] k)
+              payload (if invoked (declaration-hole d.target :payload) nil)
+              required (if invoked (declaration-hole d.target :capabilities) [])]
+          {:index (+ index 1)
+           :types (assoc state.types name inferred)
+           :failures (assoc state.failures name (wf-node-error n state.types state.failures))
+           :errors (concat state.errors
+             (if (contains? state.types name)
+               [(wf-error index "workflow/duplicate-node" (str "Duplicate or reserved node: " name))] [])
+             (flat-map (fn [dependency]
+               (if (contains? state.types dependency) []
+                 [(wf-error index "workflow/dependency"
+                   (str name " references a node not yet declared: " dependency))]))
+               (wf-node-dependencies n))
+             (if (and invoked (not (wf-compatible (wf-infer d.args state.types) payload)))
+               [(wf-error index "workflow/payload" (str "Payload does not match " d.target))] [])
+             (if (and invoked (not (contains? h.capabilities "*")))
+               (flat-map (fn [capability]
+                 (if (contains? h.capabilities capability) []
+                   [(wf-error index "workflow/capability" (str "Missing capability grant: " capability))])) required) [])
+             (if (and (= k "branch") (not (= (path state.types (str d.condition)) 'Bool)))
+               [(wf-error index "workflow/condition" "A branch condition must produce Bool.")] [])
+             (if (and (= k "quorum") (> d.count (count d.members)))
+               [(wf-error index "workflow/quorum" "Quorum exceeds its member count.")] [])
+             (if (= k "poll")
+               (let [result (wf-expand (declaration-hole d.target :success))]
+                 (if (and (= (path result :done) 'Bool) (not (= (path result :value) nil))
+                          (= (wf-expand (declaration-hole d.target :error)) 'Never)) []
+                   [(wf-error index "workflow/poll" "A poll action must return {:done Bool :value T} and declare :error Never.")])) [])
+             (if (or (= inferred nil)
+                     (not (wf-expression-valid (path d :args) state.types))
+                     (not (wf-expression-valid (path d :expression) state.types)))
+               [(wf-error index "workflow/expression" "Invalid expression, result path, or operator arguments.")] []))}))
+      {:index 0 :types (assoc {} "input" h.payload) :failures (assoc {} "input" 'Never) :errors []} h.node)]
+    (concat (wf-schema-errors h) checked.errors
+      (if (contains? checked.types (str h.return)) []
+        [{:severity :error :code "workflow/return" :message "Unknown return node." :slot :return}])
+      (if (wf-compatible (path checked.types (str h.return)) h.success) []
+        [{:severity :error :code "workflow/result" :message "Return node does not match :success." :slot :return}])
+      (if (wf-compatible (path checked.failures (str h.return)) h.error) []
+        [{:severity :error :code "workflow/error" :message "Unhandled typed failures exceed :error. Recover them or widen the error type." :slot :error}]))))
+
+(type WorkflowIR
+  {:kind "Workflow" :name Symbol :payload Type :success Type :error Type
+   :capabilities (List String) :reads (List String) :writes (List String) :tier Tier
+   :deadline-ms (Int :min 1 :max 9007199254740991)
+   :max-rounds (Int :min 1 :max 1000) :return Symbol :nodes (List node) :schemas Json})
+(form (workflow name {:keys [payload success error capabilities reads writes tier deadline-ms max-rounds return]} node ...)
+  :types {:name (Declares Workflow) :payload Type :success Type :error Type
+          :capabilities (List String) :reads (List String) :writes (List String) :tier Tier
+          :deadline-ms (Int :min 1 :max 9007199254740991)
+          :max-rounds (Int :min 1 :max 1000) :return Symbol :node (List node)}
+  :ir WorkflowIR
+  :check wf-check
+  {:kind "Workflow" :name name :payload payload :success success :error error
+   :capabilities capabilities :reads reads :writes writes :tier tier
+   :deadline-ms deadline-ms :max-rounds max-rounds :return return :nodes node
+   :schemas {:payload (wf-schema payload 0) :success (wf-schema success 0) :error (wf-schema error 0)}})
