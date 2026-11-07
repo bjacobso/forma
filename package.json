@@ -22,7 +22,7 @@
     "docs:dev": "vitepress dev docs",
     "docs:preview": "vitepress preview docs",
     "test": "pnpm test:js",
-    "test:js": "turbo run test --filter=@formalang/ts --filter=@formalang/host --filter=@formalang/editor --filter=@formalang/language-server --filter=@formalang/website --filter=@formalang/example-smithers && pnpm surfaces:test",
+    "test:js": "turbo run test --filter=@formalang/ts --filter=@formalang/host --filter=@formalang/editor --filter=@formalang/language-server --filter=@formalang/website && pnpm --filter @formalang/example-smithers test && pnpm surfaces:test",
     "surfaces": "pnpm --filter @formalang/ts build && pnpm --filter @formalang/host build && node scripts/check-surfaces.mjs",
     "surfaces:test": "node --test scripts/surfaces/*.test.mjs && pnpm surfaces",
     "test:visual": "pnpm --filter @formalang/website test:visual",
