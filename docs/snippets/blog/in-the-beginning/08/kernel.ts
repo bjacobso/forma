@@ -89,17 +89,23 @@ export const elaborate = (prelude: Prelude, program: Sexp): Elab =>
 
     // #region generalize
     // The unknowns in a type, except the scheme's own variables.
+    // Own variables are skipped before anything is resolved: a
+    // prelude's variable 0 is not this run's variable 0.
     const unknowns = (t: Type, own: ReadonlyArray<number>) => {
       const found = new Set<number>();
-      const walk = (t: Type): void => {
-        if (t._tag === "TVar" && own.includes(t.id)) return;
+      const walk = (t: Type, own: ReadonlyArray<number>): void => {
+        if (t._tag === "TFun") {
+          const inner = [...t.params, t.result];
+          if (t.rest) inner.push(t.rest);
+          return inner.forEach((i) => walk(i, own));
+        }
+        if (t._tag !== "TVar" || own.includes(t.id)) return;
         const r = resolve(t);
+        // A solved variable's answer uses only this run's numbers.
         if (r._tag === "TVar") found.add(r.id);
-        if (r._tag !== "TFun") return;
-        [...r.params, r.result, ...(r.rest ? [r.rest] : [])]
-          .forEach(walk);
+        else walk(r, []);
       };
-      walk(t);
+      walk(t, own);
       return found;
     };
 

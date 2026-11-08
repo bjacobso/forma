@@ -121,16 +121,19 @@ export const elaborate = (
     };
     // #endregion root
 
-    // The unknowns in a type, except the scheme's own variables.
+    // Part 8's unknowns, for this post's types.
     const unknowns = (t: Type, own: ReadonlyArray<number>) => {
       const found = new Set<number>();
-      const walk = (t: Type): void => {
-        if (t._tag === "TVar" && own.includes(t.id)) return;
+      const walk = (t: Type, own: ReadonlyArray<number>): void => {
+        if (t._tag !== "TVar") {
+          return children(t).forEach((i) => walk(i, own));
+        }
+        if (own.includes(t.id)) return;
         const r = resolve(t);
         if (r._tag === "TVar") found.add(r.id);
-        children(r).forEach(walk);
+        else walk(r, []);
       };
-      walk(t);
+      walk(t, own);
       return found;
     };
 

@@ -521,7 +521,8 @@ describe("blog: The Prelude Is the Language", () => {
     expect(type(standard, "(let ((id (lambda (x) x))) id)")).toBe("('a) -> 'a");
     expect(type(standard, "(lambda (y) (let ((z y)) (+ z 1)))")).toBe("(Num) -> Num");
     expect(rejected(standard, "(lambda (y) (let ((z y)) (+ z (z 1))))")).toContain("expected Num, got (Num) -> 'a");
-    expect(rejected(standard, "(lambda (f) (+ (f 1) (f 'a)))")).toContain("expected Num, got Data");
+    expect(rejected(standard, "(lambda (f) (+ (f 1) (f 'a)))")).toContain("expected Num, got Data");    // A solved variable of this run must not be confused with a prelude scheme's own variable.
+    expect(type(standard, "(let ((ap (lambda (f x) (f x))))\n  (let ((n (ap (lambda (y) y) 1)))\n    (ap (lambda (y) y) 'a)))")).toBe("Data");
   });
 
   test("twice is a function whose errors land at the call", () => {
@@ -632,7 +633,7 @@ describe("blog: Effects Are Part of the Type", () => {
     expect(page).toContain(twice("twice"));
     expect(type(twice("(twice print 1)"))).toBe("Num ! {Output}");
     expect(type(twice("(twice (lambda (n) (* n 3)) 1)"))).toBe("Num");
-    expect(type("(let ((id (lambda (x) x))) ((id id) 1))")).toBe("Num");
+    expect(type("(let ((id (lambda (x) x))) ((id id) 1))")).toBe("Num");    expect(type(twice("(do (twice print 1) (twice print 'a))"))).toBe("Data ! {Output}");
   });
 
   test("when has type Unit, and do runs in order", async () => {
