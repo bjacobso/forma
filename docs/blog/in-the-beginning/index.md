@@ -57,7 +57,7 @@ definitions. Introduce parsing, validation, and structured diagnostics.
 
 *A program is data with a shape.*
 
-### 03 · Errors Are Not Exceptions <Badge type="info" text="Coming" />
+### 03 · [Errors Are Not Exceptions](./03-errors-are-not-exceptions)
 
 Implement evaluation as `Effect<Value, EvalError, Environment>`. Show how
 explicit failure changes interpreter design.

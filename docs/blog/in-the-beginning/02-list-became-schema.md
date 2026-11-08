@@ -255,8 +255,8 @@ checker.
 First, the evaluator should stop throwing. Errors became data in the parser,
 and the runtime deserves the same treatment.
 
-**Next:** Part 3, *Errors Are Not Exceptions*. A language runtime should
-know how it can fail.
+**Next:** [Part 3, *Errors Are Not Exceptions*](/blog/in-the-beginning/03-errors-are-not-exceptions).
+A language runtime should know how it can fail.
 
 <p class="blog-source">The code in this post lives in
 <a href="https://github.com/bjacobso/forma/tree/main/docs/snippets/blog/in-the-beginning/02"><code>docs/snippets/blog/in-the-beginning/02</code></a>

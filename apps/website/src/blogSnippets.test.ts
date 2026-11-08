@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { Effect, Schema } from "effect";
-import { describe, expect, test } from "vitest";
+import { Cause, Effect, Exit, Schema } from "effect";
+import { describe, expect, expectTypeOf, test } from "vitest";
 import { evaluate, read, show } from "../../../docs/snippets/blog/in-the-beginning/01/lisp.ts";
 import { expand, operators, sumTo } from "../../../docs/snippets/blog/in-the-beginning/01/programs.ts";
 import { run } from "../../../docs/snippets/blog/in-the-beginning/01/schema.ts";
@@ -9,6 +9,11 @@ import { display, evaluate as evaluate2 } from "../../../docs/snippets/blog/in-t
 import { ExprFromSexp, parse } from "../../../docs/snippets/blog/in-the-beginning/02/expr.ts";
 import { read as read2, render } from "../../../docs/snippets/blog/in-the-beginning/02/read.ts";
 import { show as show2 } from "../../../docs/snippets/blog/in-the-beginning/02/sexp.ts";
+import type { Diagnostic } from "../../../docs/snippets/blog/in-the-beginning/02/read.ts";
+import { display as display3, type Value } from "../../../docs/snippets/blog/in-the-beginning/03/environment.ts";
+import type { NotCallable, NotANumber, UnboundName } from "../../../docs/snippets/blog/in-the-beginning/03/errors.ts";
+import { buggy, lenient } from "../../../docs/snippets/blog/in-the-beginning/03/handle.ts";
+import { report, run as run3 } from "../../../docs/snippets/blog/in-the-beginning/03/run.ts";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const lisp = (source: string) => show(evaluate(read(source)));
@@ -110,5 +115,56 @@ describe("blog: And the List Became Schema", () => {
     expect(run2("(quote (+ 1 2))")).toBe("(+ 1 2)");
     expect(() => run2("(+ 1 (quote x))")).toThrow("+ expects numbers, got x");
     expect(() => run2("x")).toThrow("x is not defined");
+  });
+});
+
+describe("blog: Errors Are Not Exceptions", () => {
+  const page = readFileSync(resolve(repoRoot, "docs/blog/in-the-beginning/03-errors-are-not-exceptions.md"), "utf8");
+  const value = (source: string) => display3(Effect.runSync(run3(source)));
+  const failure = (source: string) => Effect.runSync(Effect.flip(run3(source)));
+  const reported = (source: string) => report(source, failure(source));
+
+  test("the page includes every snippet file", () => {
+    for (const file of ["errors.ts", "environment.ts", "evaluate.ts", "run.ts", "handle.ts"]) {
+      expect(page).toContain(`@/snippets/blog/in-the-beginning/03/${file}`);
+    }
+  });
+
+  test("programs that work", () => {
+    expect(value("(+ 1 2)")).toBe("3");
+    expect(value("(/ 10 4)")).toBe("2.5");
+    expect(value("(* 2 pi)")).toBe("6.283185307179586");
+    expect(value("+")).toBe("#<primitive +>");
+  });
+
+  test("runtime failures are tagged data that point at the source", () => {
+    expect(reported("(+ 1 (quote x))")).toBe("error: + expects numbers, got x\n1 | (+ 1 (quote x))\n  |      ^^^^^^^^^");
+    expect(reported("(/ 10 (+ 2 -2))")).toBe("error: division by zero\n1 | (/ 10 (+ 2 -2))\n  |       ^^^^^^^^");
+    expect(reported("(* 2 (pi 3))")).toBe("error: pi is not a function\n1 | (* 2 (pi 3))\n  |       ^^");
+    expect(reported("(+ 1 y)")).toBe("error: y is not defined\n1 | (+ 1 y)\n  |      ^");
+    expect(JSON.parse(JSON.stringify(failure("(+ 1 (quote x))")))).toEqual({
+      _tag: "NotANumber",
+      op: "+",
+      got: "x",
+      span: { start: 5, end: 14 },
+    });
+    expect(failure("(+ (/ 1 0) y)")).toMatchObject({ _tag: "DivByZero" });
+  });
+
+  test("a host recovers from one failure and the type drops it", () => {
+    expect(display3(Effect.runSync(lenient("(+ 1 (/ 1 0))")))).toBe("Infinity");
+    expectTypeOf(lenient).returns.toEqualTypeOf<
+      Effect.Effect<Value, Diagnostic | UnboundName | NotCallable | NotANumber>
+    >();
+  });
+
+  test("an interpreter bug is a defect, not an EvalError", () => {
+    const exit = Effect.runSyncExit(run3("(+ 1 (oops))", buggy));
+    expect(Exit.isFailure(exit)).toBe(true);
+    if (Exit.isFailure(exit)) {
+      expect(Cause.hasDies(exit.cause)).toBe(true);
+      expect(Cause.hasFails(exit.cause)).toBe(false);
+      expect(String(Cause.squash(exit.cause))).toBe("Error: index out of range");
+    }
   });
 });
