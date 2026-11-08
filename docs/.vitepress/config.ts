@@ -14,6 +14,29 @@ const preludeSidebar: DefaultTheme.SidebarItem[] = [
   })),
 ];
 
+// Unpublished parts are listed without links so the series shows its whole arc.
+const blogSidebar: DefaultTheme.SidebarItem[] = [
+  { text: "Blog", items: [{ text: "All posts", link: "/blog/" }] },
+  {
+    text: "In the Beginning Was the Schema",
+    items: [
+      { text: "About the series", link: "/blog/in-the-beginning/" },
+      { text: "01 · In the Beginning Was the List", link: "/blog/in-the-beginning/01-the-list" },
+      { text: "02 · And the List Became Schema" },
+      { text: "03 · Errors Are Not Exceptions" },
+      { text: "04 · The Environment Is Not the World" },
+      { text: "05 · Types Before Execution" },
+      { text: "06 · The Interpreter Becomes a Compiler" },
+      { text: "07 · Macros Are Programs About Programs" },
+      { text: "08 · The Prelude Is the Language" },
+      { text: "09 · Effects Are Part of the Type" },
+      { text: "10 · One Program, Many Interpretations" },
+      { text: "11 · The Agent Can Read the Language" },
+      { text: "12 · Let There Be Languages" },
+    ],
+  },
+];
+
 export default defineConfig({
   lang: "en-US",
   title: "Forma",
@@ -66,11 +89,13 @@ export default defineConfig({
         ],
       },
       { text: "Preludes", link: "/preludes/", activeMatch: "^/(preludes|effect|elm|email|clojure)" },
+      { text: "Blog", link: "/blog/", activeMatch: "^/blog/" },
       { text: "Examples", link: "/playground/demo", target: "_self", rel: "" },
       { text: "Playground", link: "/playground", target: "_self", rel: "" },
     ],
     sidebar: {
       "/preludes/": preludeSidebar,
+      "/blog/": blogSidebar,
       "/": [
         {
           text: "Start",
