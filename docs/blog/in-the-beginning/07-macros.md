@@ -331,8 +331,8 @@ That's a different kind of extension: not a rewrite that runs before the
 checker, but a form that takes part in checking. It's the idea Forma is
 built around, and the subject of the next post.
 
-**Next:** Part 8, *The Prelude Is the Language*. A small kernel, many
-languages.
+**Next:** [Part 8, *The Prelude Is the Language*](/blog/in-the-beginning/08-prelude-is-the-language).
+A small kernel, many languages.
 
 <p class="blog-source">The code in this post lives in
 <a href="https://github.com/bjacobso/forma/tree/main/docs/snippets/blog/in-the-beginning/07"><code>docs/snippets/blog/in-the-beginning/07</code></a>

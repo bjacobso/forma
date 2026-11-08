@@ -96,10 +96,10 @@ Explain why Lisp's homoiconicity is useful but not enough on its own.
 
 *The compiler can be extended in its own language.*
 
-### 08 · The Prelude Is the Language <Badge type="info" text="Coming" />
+### 08 · [The Prelude Is the Language](./08-prelude-is-the-language)
 
-Build `if`, `let`, `when`, `match`, and domain-specific constructs through
-typed elaborators instead of growing the compiler.
+Build `lambda`, `let`, `if`, `match`, and a small pricing language as typed
+forms in a prelude, on a kernel that knows only numbers, names, and calls.
 
 *A small kernel, many languages.*
 
@@ -110,8 +110,8 @@ Give the language capabilities, execution, and real-world applications.
 ### 09 · Effects Are Part of the Type <Badge type="info" text="Coming" />
 
 Add effectful computations and distinguish pure values from operations that
-require capabilities. Model typed errors, asynchronous operations, and
-resource requirements.
+require capabilities, which gives forms like `when` a type. Model typed
+errors, asynchronous operations, and resource requirements.
 
 *The type describes not only the result, but what the computation demands.*
 

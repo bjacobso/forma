@@ -28,7 +28,7 @@ const blogSidebar: DefaultTheme.SidebarItem[] = [
       { text: "05 · Types Before Execution", link: "/blog/in-the-beginning/05-types-before-execution" },
       { text: "06 · The Interpreter Becomes a Compiler", link: "/blog/in-the-beginning/06-interpreter-becomes-compiler" },
       { text: "07 · Macros Are Programs About Programs", link: "/blog/in-the-beginning/07-macros" },
-      { text: "08 · The Prelude Is the Language" },
+      { text: "08 · The Prelude Is the Language", link: "/blog/in-the-beginning/08-prelude-is-the-language" },
       { text: "09 · Effects Are Part of the Type" },
       { text: "10 · One Program, Many Interpretations" },
       { text: "11 · The Agent Can Read the Language" },

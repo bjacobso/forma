@@ -34,6 +34,15 @@ import {
   typeOf as typeOf6,
 } from "../../../docs/snippets/blog/in-the-beginning/06/run.ts";
 import { report as report7, run as run7, expansion } from "../../../docs/snippets/blog/in-the-beginning/07/run.ts";
+import { standard } from "../../../docs/snippets/blog/in-the-beginning/08/prelude.ts";
+import { combined, pricing } from "../../../docs/snippets/blog/in-the-beginning/08/pricing.ts";
+import {
+  compile as compile8,
+  report as report8,
+  run as run8,
+  typeOf as typeOf8,
+} from "../../../docs/snippets/blog/in-the-beginning/08/run.ts";
+import type { Prelude } from "../../../docs/snippets/blog/in-the-beginning/08/kernel.ts";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const lisp = (source: string) => show(evaluate(read(source)));
@@ -454,5 +463,127 @@ describe("blog: Macros Are Programs About Programs", () => {
   test("the try-it program", () => {
     const source = "\n(defmacro -> ((x) x)\n  ((x (f &rest args) &rest steps) `(-> (,f ,x ,@args) ,@steps)))\n(-> 5 (+ 1) (* 2))";
     expect(expand(source)).toBe("(* (+ 5 1) 2)");
+  });
+});
+
+describe("blog: The Prelude Is the Language", () => {
+  const page = readFileSync(resolve(repoRoot, "docs/blog/in-the-beginning/08-prelude-is-the-language.md"), "utf8");
+  const exec = (prelude: Prelude, source: string) => {
+    const { lines, output } = recordedOutput();
+    const effect = run8(prelude, source).pipe(Effect.provideService(Output, output));
+    return { exit: Effect.runSyncExit(effect), effect, lines };
+  };
+  const value = (prelude: Prelude, source: string) => {
+    const { exit } = exec(prelude, source);
+    if (Exit.isFailure(exit)) throw new Error(String(exit.cause));
+    return display6(exit.value);
+  };
+  const type = (prelude: Prelude, source: string) => Effect.runSync(typeOf8(prelude, source));
+  const rejected = (prelude: Prelude, source: string) =>
+    report8(source, Effect.runSync(Effect.flip(exec(prelude, source).effect)));
+  const myLet = "(defmacro my-let\n  ((((name value)) body) `((lambda (,name) ,body) ,value)))\n\n(my-let ((id (lambda (x) x))) ((id id) 1))";
+  const twice = "(let ((twice (lambda (f x) (f (f x)))))\n  twice)";
+  const badTwice = "(let ((twice (lambda (f x) (f (f x)))))\n  (twice (lambda (a b) a) 1))";
+  const idId = "(let ((id (lambda (x) x)))\n  ((id id) 1))";
+  const size = "(let ((size (lambda (n)\n              (match n (0 'none) (1 'one) (_ 'many)))))\n  (size 1))";
+  const priced = "(price 200\n  (discount 25)\n  (tax 10))";
+  const sale = "(let ((sale (lambda (amount) (price amount (discount 25)))))\n  (sale 80))";
+
+  test("the page includes every snippet file and program", () => {
+    for (const file of ["kernel.ts", "prelude.ts", "pricing.ts", "run.ts"]) {
+      expect(page).toContain(`@/snippets/blog/in-the-beginning/08/${file}`);
+    }
+    for (const program of [myLet, twice, badTwice.split("\n")[1]!, idId, size, priced, sale]) {
+      expect(page).toContain(program);
+    }
+  });
+
+  test("lambda and quote are prelude forms, and locals shadow forms", () => {
+    expect(value(standard, "((lambda (x) (* x x)) 4)")).toBe("16");
+    expect(value(standard, "'(a b)")).toBe("(a b)");
+    expect(value(standard, "((lambda (if) (if 7)) (lambda (n) (* n 2)))")).toBe("14");
+    expect(rejected(standard, "if")).toBe("error: if is a form, so it can only be called\n1 | if\n  | ^^");
+  });
+
+  test("let generalizes, and a let macro cannot", () => {
+    expect(rejected(standard, myLet)).toBe(
+      "error: infinite type: 'a = ('a) -> 'b\n4 | (my-let ((id (lambda (x) x))) ((id id) 1))\n  |                                 ^^",
+    );
+    expect(value(standard, idId)).toBe("1");
+    expect(type(standard, "(let ((id (lambda (x) x))) id)")).toBe("('a) -> 'a");
+    expect(type(standard, "(lambda (y) (let ((z y)) (+ z 1)))")).toBe("(Num) -> Num");
+    expect(rejected(standard, "(lambda (y) (let ((z y)) (+ z (z 1))))")).toContain("expected Num, got (Num) -> 'a");
+    expect(rejected(standard, "(lambda (f) (+ (f 1) (f 'a)))")).toContain("expected Num, got Data");
+  });
+
+  test("twice is a function whose errors land at the call", () => {
+    expect(type(standard, twice)).toBe("(('a) -> 'a, 'a) -> 'a");
+    expect(rejected(standard, badTwice)).toBe(
+      "error: expected ('a) -> 'a, got ('b, 'c) -> 'b\n2 |   (twice (lambda (a b) a) 1))\n  |          ^^^^^^^^^^^^^^^^",
+    );
+  });
+
+  test("if elaborates to core with choose and thunks", () => {
+    expect(showCore(Effect.runSync(compile8(standard, "(if 1 2 3)")))).toBe(
+      [
+        "call : Num",
+        "  call : () -> Num",
+        "    local choose @0.8 : (Num, () -> Num, () -> Num) -> () -> Num",
+        "    lit 1 : Num",
+        "    lambda () : () -> Num",
+        "      lit 2 : Num",
+        "    lambda () : () -> Num",
+        "      lit 3 : Num",
+      ].join("\n"),
+    );
+    const printed = exec(standard, "(if 0 (print 1) (print 2))");
+    expect(Exit.isSuccess(printed.exit) && printed.exit.value).toBe(2);
+    expect(printed.lines).toEqual(["2"]);
+    expect(rejected(standard, "(if 1 2 'a)")).toBe("error: expected Num, got Data\n1 | (if 1 2 'a)\n  |         ^^");
+    expect(rejected(standard, "(if 'a 1 2)")).toBe("error: expected Num, got Data\n1 | (if 'a 1 2)\n  |     ^^");
+    expect(value(standard, "((lambda (choose) (if 1 2 3)) 5)")).toBe("2");
+    expect(value(standard, "(if (< 1 2) 10 20)")).toBe("10");
+  });
+
+  test("match checks its cases", () => {
+    expect(value(standard, size)).toBe("one");
+    expect(value(standard, "(match 7 (0 'none) (1 'one) (_ 'many))")).toBe("many");
+    expect(rejected(standard, "(match 2 (0 'none) (1 'one))")).toBe(
+      "error: match needs a last (_ result) case\n1 | (match 2 (0 'none) (1 'one))\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    );
+    expect(rejected(standard, "(match 2 (0 'none) (1 2) (_ 'many))")).toBe(
+      "error: expected Data, got Num\n1 | (match 2 (0 'none) (1 2) (_ 'many))\n  |                       ^",
+    );
+  });
+
+  test("a pricing language on the same kernel", () => {
+    expect(value(pricing, priced)).toBe("165");
+    expect(type(pricing, "(price 200 (discount 25) (tax 10))")).toBe("Num");
+    expect(rejected(pricing, "(price 200 (discount 120))")).toBe(
+      "error: a percentage is between 0 and 100\n1 | (price 200 (discount 120))\n  |                      ^^^",
+    );
+    expect(rejected(pricing, "(price 200 (coupon 5))")).toBe(
+      "error: expected (discount n) or (tax n)\n1 | (price 200 (coupon 5))\n  |            ^^^^^^^^^^",
+    );
+    expect(rejected(pricing, "(tax 8)")).toBe("error: tax only makes sense inside price\n1 | (tax 8)\n  | ^^^^^^^");
+    expect(rejected(pricing, "(lambda (x) x)")).toContain("error: lambda is not defined");
+    expect(rejected(pricing, "(price 'a (tax 1))")).toBe("error: quote is not defined\n1 | (price 'a (tax 1))\n  |        ^");
+    expect(value(combined, sale)).toBe("60");
+    expect(value(combined, "(let ((rate 10)) (price 200 (tax rate)))")).toBe("220");
+  });
+
+  test("every diagnostic on the page is the compiler's", () => {
+    const cases: Array<[Prelude, string]> = [
+      [standard, myLet],
+      [standard, badTwice],
+      [standard, "(if 1 2 'a)"],
+      [standard, "(if 'a 1 2)"],
+      [standard, "(match 2 (0 'none) (1 'one))"],
+      [standard, "(match 2 (0 'none) (1 2) (_ 'many))"],
+      [pricing, "(price 200 (discount 120))"],
+      [pricing, "(price 200 (coupon 5))"],
+      [pricing, "(tax 8)"],
+    ];
+    for (const [prelude, source] of cases) expect(page).toContain(rejected(prelude, source));
   });
 });
