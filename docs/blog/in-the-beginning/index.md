@@ -75,7 +75,7 @@ lexical environment from the host interpreter's dependency environment.
 
 Give the language types, interpretation, and the ability to extend itself.
 
-### 05 · Types Before Execution <Badge type="info" text="Coming" />
+### 05 · [Types Before Execution](./05-types-before-execution)
 
 Build a type-checking judgment, inference for simple expressions, function
 types, and type errors. Use Schema to represent and validate type structures.

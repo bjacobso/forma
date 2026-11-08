@@ -22,6 +22,11 @@ typed, extensible language for building other languages.
 
 <ul class="blog-posts">
 <li>
+<a href="/blog/in-the-beginning/05-types-before-execution"><span class="blog-posts__part">Part 05</span> Types Before Execution</a>
+<p>Represent types with Effect Schema, infer them with unification, and reject ill-typed programs before they run.</p>
+<time datetime="2026-11-08">November 8, 2026</time>
+</li>
+<li>
 <a href="/blog/in-the-beginning/04-environment-is-not-the-world"><span class="blog-posts__part">Part 04</span> The Environment Is Not the World</a>
 <p>Add lambda, closures, and lexical scope, and separate the names a program defines from the capabilities a host grants through Effect services.</p>
 <time datetime="2026-11-08">November 8, 2026</time>

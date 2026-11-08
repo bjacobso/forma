@@ -231,8 +231,8 @@ interpreter, not from the program. The interpreter knows a program *might*
 print; it doesn't know which programs do. Making a program's own type say
 which capabilities it needs is Part 9's job.
 
-**Next:** Part 5, *Types Before Execution*. `(+ 1 "hello")` should be a
-type error before evaluation.
+**Next:** [Part 5, *Types Before Execution*](/blog/in-the-beginning/05-types-before-execution).
+`(+ 1 "hello")` should be a type error before evaluation.
 
 <p class="blog-source">The code in this post lives in
 <a href="https://github.com/bjacobso/forma/tree/main/docs/snippets/blog/in-the-beginning/04"><code>docs/snippets/blog/in-the-beginning/04</code></a>

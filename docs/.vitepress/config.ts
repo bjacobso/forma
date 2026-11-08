@@ -25,7 +25,7 @@ const blogSidebar: DefaultTheme.SidebarItem[] = [
       { text: "02 · And the List Became Schema", link: "/blog/in-the-beginning/02-list-became-schema" },
       { text: "03 · Errors Are Not Exceptions", link: "/blog/in-the-beginning/03-errors-are-not-exceptions" },
       { text: "04 · The Environment Is Not the World", link: "/blog/in-the-beginning/04-environment-is-not-the-world" },
-      { text: "05 · Types Before Execution" },
+      { text: "05 · Types Before Execution", link: "/blog/in-the-beginning/05-types-before-execution" },
       { text: "06 · The Interpreter Becomes a Compiler" },
       { text: "07 · Macros Are Programs About Programs" },
       { text: "08 · The Prelude Is the Language" },

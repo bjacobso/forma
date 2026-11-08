@@ -20,6 +20,8 @@ import { type Failure as Failure4, report as report4, run as run4 } from "../../
 import { display as display4, type Value as Value4 } from "../../../docs/snippets/blog/in-the-beginning/04/scope.ts";
 import { called } from "../../../docs/snippets/blog/in-the-beginning/04/services.ts";
 import { quiet } from "../../../docs/snippets/blog/in-the-beginning/04/worlds.ts";
+import { report as report5, run as run5, typeOf } from "../../../docs/snippets/blog/in-the-beginning/05/run.ts";
+import { Type } from "../../../docs/snippets/blog/in-the-beginning/05/types.ts";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const lisp = (source: string) => show(evaluate(read(source)));
@@ -222,5 +224,70 @@ describe("blog: The Environment Is Not the World", () => {
     expect(reported("((lambda (x) (+ x 1)) (quote a))")).toBe(
       "error: + expects numbers, got a\n1 | ((lambda (x) (+ x 1)) (quote a))\n  |                 ^",
     );
+  });
+});
+
+describe("blog: Types Before Execution", () => {
+  const page = readFileSync(resolve(repoRoot, "docs/blog/in-the-beginning/05-types-before-execution.md"), "utf8");
+  const type = (source: string) => Effect.runSync(typeOf(source));
+  const rejected = (source: string) => report5(source, Effect.runSync(Effect.flip(typeOf(source))));
+  const exec = (source: string) => {
+    const { lines, output } = recordedOutput();
+    const program = run5(source).pipe(Effect.provideService(Output, output));
+    return { exit: Effect.runSyncExit(program), lines, program };
+  };
+
+  test("the page includes every snippet file", () => {
+    for (const file of ["types.ts", "check.ts", "errors.ts", "run.ts"]) {
+      expect(page).toContain(`@/snippets/blog/in-the-beginning/05/${file}`);
+    }
+  });
+
+  test("types are data with a schema", () => {
+    const numToNum = { _tag: "TFun", params: [{ _tag: "TNum" }], rest: null, result: { _tag: "TNum" } };
+    expect(Schema.decodeUnknownSync(Type)(numToNum)).toEqual(numToNum);
+    const bad = { ...numToNum, params: [{ _tag: "Num" }] };
+    const error = Effect.runSync(Effect.flip(Schema.decodeUnknownEffect(Type)(bad)));
+    expect(error.message.endsWith('\n  at ["params"][0]')).toBe(true);
+  });
+
+  test("the checker infers the types the post lists", () => {
+    expect(type("(lambda (x) (+ x 1))")).toBe("(Num) -> Num");
+    expect(type("(lambda (x) x)")).toBe("('a) -> 'a");
+    expect(type("(lambda (f x) (f (f x)))")).toBe("(('a) -> 'a, 'a) -> 'a");
+    expect(type("(lambda (f g x) (f (g x)))")).toBe("(('a) -> 'b, ('c) -> 'a, 'c) -> 'b");
+    expect(type("+")).toBe("(Num...) -> Num");
+    expect(type("(print (quote hi))")).toBe("Data");
+    expect(type("((lambda (f) (f 1 2)) +)")).toBe("Num");
+    expect(type("(/ 1 0)")).toBe("Num");
+  });
+
+  test("ill-typed programs are rejected at the source of the mistake", () => {
+    expect(rejected("((lambda (x) (+ x 1)) (quote a))")).toBe(
+      "error: expected Num, got Data\n1 | ((lambda (x) (+ x 1)) (quote a))\n  |                       ^^^^^^^^^",
+    );
+    expect(rejected("(+ 1 (quote hello))")).toBe("error: expected Num, got Data\n1 | (+ 1 (quote hello))\n  |      ^^^^^^^^^^^^^");
+    expect(rejected("(5 1)")).toBe("error: expected a function, got Num\n1 | (5 1)\n  |  ^");
+    expect(rejected("(print 1 2)")).toBe("error: expected 1 argument, got 2\n1 | (print 1 2)\n  | ^^^^^^^^^^^");
+    expect(rejected("(lambda (x) (x x))")).toBe("error: infinite type: 'a = ('a) -> 'b\n1 | (lambda (x) (x x))\n  |              ^");
+    expect(rejected("(+ 1 y)")).toMatch(/^error: y is not defined\n/);
+  });
+
+  test("checking happens before anything runs", () => {
+    const failed = exec("(+ (print 1) (quote x))");
+    expect(Exit.isFailure(failed.exit)).toBe(true);
+    expect(failed.lines).toEqual([]);
+    const ok = exec("(+ (print 1) (print 2))");
+    expect(Exit.isSuccess(ok.exit) && ok.exit.value).toBe(3);
+    expect(ok.lines).toEqual(["1", "2"]);
+    expect(Effect.runSync(Effect.flip(exec("(/ 1 0)").program))).toMatchObject({ _tag: "DivByZero" });
+  });
+
+  test("the checker rejects some programs that would run", () => {
+    const selfApply = "((lambda (id) ((id id) 1)) (lambda (x) x))";
+    const { output } = recordedOutput();
+    expect(display4(Effect.runSync(run4(selfApply).pipe(Effect.provideService(Output, output))))).toBe("1");
+    expect(rejected(selfApply)).toMatch(/^error: infinite type: 'a = \('a\) -> 'b\n/);
+    expect(rejected("(lambda (f) (+ (f 1) (f (quote a))))")).toMatch(/^error: expected Num, got Data\n/);
   });
 });
