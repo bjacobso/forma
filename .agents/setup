@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo_root"
+
+echo "[setup] Installing pinned toolchain"
+SECONDS=0
+export PATH="$HOME/.local/bin:$PATH"
+if ! command -v mise >/dev/null 2>&1; then
+  curl --fail --silent --show-error --location https://mise.run | sh
+fi
+mise trust "$repo_root/mise.toml"
+mise install
+eval "$(mise env --shell bash)"
+echo "[setup] Toolchain ready in ${SECONDS}s: Node $(node --version), pnpm $(pnpm --version)"
+
+# Amp and supervised services start in separate non-interactive login shells.
+# Export the complete mise environment there, scoped to this checkout.
+profile_marker="# Forma orb toolchain"
+if ! grep -Fqx "$profile_marker" "$HOME/.bash_profile" 2>/dev/null; then
+  cat >> "$HOME/.bash_profile" <<EOF
+
+$profile_marker
+if [[ "\$PWD" == "$repo_root" || "\$PWD" == "$repo_root/"* ]]; then
+  eval "\$("$(command -v mise)" env --shell bash --cd "$repo_root")"
+fi
+EOF
+fi
+
+echo "[setup] Installing locked workspace dependencies"
+SECONDS=0
+pnpm install --frozen-lockfile
+echo "[setup] Dependencies ready in ${SECONDS}s"
+
+echo "[setup] Installing Playwright Chromium"
+SECONDS=0
+pnpm --filter @formalang/website exec playwright install chromium
+chromium="$(pnpm --filter @formalang/website exec node --input-type=module -e 'import { chromium } from "@playwright/test"; console.log(chromium.executablePath())')"
+# Avoid apt updates on warm snapshots; install system libraries only if missing.
+if ldd "$chromium" | grep 'not found' >/dev/null; then
+  pnpm --filter @formalang/website exec playwright install-deps chromium
+fi
+pnpm --filter @formalang/website exec node --input-type=module -e '
+  import { chromium } from "@playwright/test";
+  const browser = await chromium.launch();
+  await browser.close();
+'
+echo "[setup] Chromium ready in ${SECONDS}s"
