@@ -16,7 +16,13 @@ const preludeSidebar: DefaultTheme.SidebarItem[] = [
 
 // Unpublished parts are listed without links so the series shows its whole arc.
 const blogSidebar: DefaultTheme.SidebarItem[] = [
-  { text: "Blog", items: [{ text: "All posts", link: "/blog/" }] },
+  {
+    text: "Blog",
+    items: [
+      { text: "All posts", link: "/blog/" },
+      { text: "The Reader Is the Bottleneck", link: "/blog/reader-is-the-bottleneck" },
+    ],
+  },
   {
     text: "From Lists to Languages",
     items: [
