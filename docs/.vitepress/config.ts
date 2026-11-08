@@ -30,7 +30,7 @@ const blogSidebar: DefaultTheme.SidebarItem[] = [
       { text: "07 · Macros Are Programs About Programs", link: "/blog/in-the-beginning/07-macros" },
       { text: "08 · The Prelude Is the Language", link: "/blog/in-the-beginning/08-prelude-is-the-language" },
       { text: "09 · Effects Are Part of the Type", link: "/blog/in-the-beginning/09-effects-are-part-of-the-type" },
-      { text: "10 · One Program, Many Interpretations" },
+      { text: "10 · One Program, Many Interpretations", link: "/blog/in-the-beginning/10-many-interpretations" },
       { text: "11 · The Agent Can Read the Language" },
       { text: "12 · Let There Be Languages" },
     ],

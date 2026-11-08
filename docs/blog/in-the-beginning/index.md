@@ -115,7 +115,7 @@ errors, asynchronous operations, and what a host must provide.
 
 *The type describes not only the result, but what the computation demands.*
 
-### 10 · One Program, Many Interpretations <Badge type="info" text="Coming" />
+### 10 · [One Program, Many Interpretations](./10-many-interpretations)
 
 Build an evaluator, formatter, analyzer, and documentation generator over
 shared typed representations. Schema enables structural inspection; Effect

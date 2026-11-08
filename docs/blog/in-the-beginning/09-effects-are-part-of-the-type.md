@@ -324,8 +324,8 @@ asks what else can be built over the same typed representation: a
 formatter, an analyzer, and documentation, each another interpretation
 of one tree.
 
-**Next:** Part 10, *One Program, Many Interpretations*. Programs become
-things we can reason about, not just execute.
+**Next:** [Part 10, *One Program, Many Interpretations*](/blog/in-the-beginning/10-many-interpretations).
+Programs become things we can reason about, not just execute.
 
 <p class="blog-source">The code in this post lives in
 <a href="https://github.com/bjacobso/forma/tree/main/docs/snippets/blog/in-the-beginning/09"><code>docs/snippets/blog/in-the-beginning/09</code></a>

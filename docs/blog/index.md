@@ -22,6 +22,11 @@ typed, extensible language for building other languages.
 
 <ul class="blog-posts">
 <li>
+<a href="/blog/in-the-beginning/10-many-interpretations"><span class="blog-posts__part">Part 10</span> One Program, Many Interpretations</a>
+<p>Build a formatter, an analyzer, hover, and checked documentation over the language's typed representations, and combine them into one report with Effect.</p>
+<time datetime="2026-11-08">November 8, 2026</time>
+</li>
+<li>
 <a href="/blog/in-the-beginning/09-effects-are-part-of-the-type"><span class="blog-posts__part">Part 09</span> Effects Are Part of the Type</a>
 <p>Give function types a row of effects, add when, catch, and race, and let a host reject a program that needs a capability it doesn't have, before it runs.</p>
 <time datetime="2026-11-08">November 8, 2026</time>

@@ -44,6 +44,12 @@ import {
 } from "../../../docs/snippets/blog/in-the-beginning/08/run.ts";
 import type { Prelude } from "../../../docs/snippets/blog/in-the-beginning/08/kernel.ts";
 import { standard as standard9 } from "../../../docs/snippets/blog/in-the-beginning/09/prelude.ts";
+import { analyze, type Finding, typeAt } from "../../../docs/snippets/blog/in-the-beginning/10/analyze.ts";
+import { FormDoc, standardDocs } from "../../../docs/snippets/blog/in-the-beginning/10/describe.ts";
+import { document } from "../../../docs/snippets/blog/in-the-beginning/10/document.ts";
+import { format } from "../../../docs/snippets/blog/in-the-beginning/10/format.ts";
+import { inspect, type Report, ReportJson } from "../../../docs/snippets/blog/in-the-beginning/10/inspect.ts";
+import { readAll } from "../../../docs/snippets/blog/in-the-beginning/07/read.ts";
 import {
   compile as compile9,
   report as report9,
@@ -686,5 +692,121 @@ describe("blog: Effects Are Part of the Type", () => {
       ["(do (print 1) (sleep 10))", ["Output", "DivByZero"]],
     ];
     for (const [source, allowed] of cases) expect(page).toContain(rejected(source, allowed));
+  });
+});
+
+describe("blog: One Program, Many Interpretations", () => {
+  const page = readFileSync(resolve(repoRoot, "docs/blog/in-the-beginning/10-many-interpretations.md"), "utf8");
+  const fmt = (source: string, width?: number) => Effect.runSync(format(source, standardDocs, width));
+  const tree = (source: string) => Effect.runSync(readAll(source)).map(show2).join("\n");
+  const checked = (source: string) => Effect.runSync(compile9(standard9, source)).core;
+  const findings = (source: string) => Effect.runSync(analyze({ prelude: standard9, core: checked(source) }));
+  const shown = (source: string) => findings(source).map((f) => render(source, f).replace(/^error/, f.severity));
+  const crammed =
+    "(let ((twice (lambda (f x)\n  (f (f x))))) (do (print\n    (twice print 1)) (when (< 1 2)\n  (print 2)) (catch (/ 1 0) 0)))";
+  const hovered = "(let ((twice (lambda (f x) (f (f x)))))\n  (twice print 1))";
+
+  test("the page includes every snippet file", () => {
+    for (const file of ["describe.ts", "format.ts", "analyze.ts", "document.ts", "inspect.ts"]) {
+      expect(page).toContain(`@/snippets/blog/in-the-beginning/10/${file}`);
+    }
+  });
+
+  test("descriptions are decoded", () => {
+    const bad = Effect.runSync(Effect.flip(Schema.decodeUnknownEffect(FormDoc)({ syntax: "x", summary: "y", head: 1.5, examples: [] })));
+    expect(bad.message).toBe('Expected an integer\n  at ["head"]');
+  });
+
+  test("the formatter lays out by description and round-trips", () => {
+    const formatted = fmt(crammed, 40);
+    expect(formatted).toBe(
+      [
+        "(let ((twice (lambda (f x) (f (f x)))))",
+        "  (do",
+        "    (print (twice print 1))",
+        "    (when (< 1 2) (print 2))",
+        "    (catch (/ 1 0) 0)))",
+      ].join("\n"),
+    );
+    expect(page).toContain(crammed);
+    expect(page).toContain(formatted);
+    const sources = [
+      crammed,
+      hovered,
+      "(defmacro -> ((x) x) ((x (f &rest args) &rest steps) `(-> (,f ,x ,@args) ,@steps)))\n(-> 5 (+ 1) (* 2))",
+      "(let ((size (lambda (n) (if (< n 1) 'none (if (< n 2) 'one 'many))))) (size 1))",
+      "(race (do (sleep 50) (print 1)) (do (sleep 5) (print 2)))",
+      "(+ 1 'a)",
+    ];
+    for (const width of [60, 30, 12]) {
+      for (const source of sources) {
+        const out = fmt(source, width);
+        expect(tree(out)).toBe(tree(source));
+        expect(fmt(out, width)).toBe(out);
+      }
+    }
+    expect(fmt("(quasiquote (a (unquote b) (unquote-splicing c)))")).toBe("`(a ,b ,@c)");
+  });
+
+  test("analyzers report unused parameters and discarded pure values", () => {
+    const expected: Array<[string, string[]]> = [
+      ["(let ((x 1) (y 2)) (+ y 1))", ["warning: x is never used\n1 | (let ((x 1) (y 2)) (+ y 1))\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^"]],
+      [
+        "(do (+ 1 2) (print 3))",
+        ["warning: this value is discarded, and computing it does nothing\n1 | (do (+ 1 2) (print 3))\n  |     ^^^^^^^"],
+      ],
+      ["(when 1 2)", ["warning: this value is discarded, and computing it does nothing\n1 | (when 1 2)\n  |         ^"]],
+      ["(do (print 1) 2)", []],
+      ["(do (/ 1 2) 3)", []],
+      ["(let ((f (lambda (n) (* n 2)))) (do (f 1) (print 2)))", []],
+      ["(lambda (n) (do (+ n 1) (print n)))", ["warning: this value is discarded, and computing it does nothing\n1 | (lambda (n) (do (+ n 1) (print n)))\n  |                 ^^^^^^^"]],
+    ];
+    for (const [source, warnings] of expected) {
+      expect(shown(source)).toEqual(warnings);
+      for (const warning of warnings) if (!source.startsWith("(lambda")) expect(page).toContain(warning);
+    }
+  });
+
+  test("hover shows the type at a position", () => {
+    const core = checked(hovered);
+    expect(typeAt(core, hovered.indexOf("(lambda") + 1)).toBe("(('a) -> 'a ! 'b, 'a) -> 'a ! 'b");
+    expect(typeAt(core, hovered.indexOf("(twice print") + 1)).toBe("((Num) -> Num ! {Output | 'a}, Num) -> Num ! {Output | 'a}");
+    expect(page).toContain(hovered);
+    const plus = "(do (+ 1 2) (print 3))";
+    expect(typeAt(checked(plus), plus.indexOf("+"))).toBe("(Num...) -> Num ! {Output}");
+  });
+
+  test("documentation is generated, and stale examples fail", () => {
+    const reference = Effect.runSync(document(standard9, standardDocs));
+    expect(reference).toContain("### `(if test yes no)`\n\nyes unless test is 0, then no. Both have one type.\n\n    (if (< 1 2) 10 20) : Num");
+    expect(reference).toContain("- `print : ('a) -> 'a ! {Output}`\n\n- `sleep : (Num) -> Unit ! {Async}`");
+    expect(page).toContain("- `print : ('a) -> 'a ! {Output}`\n\n- `sleep : (Num) -> Unit ! {Async}`");
+    const wrong = { ...standardDocs, if: { ...standardDocs.if!, examples: [{ source: "(if 1 2 3)", type: "Data" }] } };
+    expect(Effect.runSync(Effect.flip(document(standard9, wrong))).message).toBe("if: (if 1 2 3) is documented as Data, but checks as Num");
+    const { when: _, ...missing } = standardDocs;
+    expect(Effect.runSync(Effect.flip(document(standard9, missing))).message).toBe("when: has no description");
+  });
+
+  test("inspect combines the tools into one report", () => {
+    const report = (source: string) => Effect.runSync(inspect(standard9, standardDocs, source));
+    expectTypeOf(inspect).returns.toEqualTypeOf<Effect.Effect<Report>>();
+    const json = Effect.runSync(Schema.encodeEffect(ReportJson)(report("(let ((x 1)) (do 0 (print 2)))")));
+    expect(JSON.parse(json)).toEqual({
+      formatted: "(let ((x 1)) (do 0 (print 2)))",
+      type: "Num ! {Output}",
+      findings: [
+        { severity: "warning", message: "x is never used", span: { start: 0, end: 30 } },
+        { severity: "warning", message: "this value is discarded, and computing it does nothing", span: { start: 17, end: 18 } },
+      ],
+    });
+    expect(report("(+ 1 'a)")).toEqual({
+      formatted: "(+ 1 'a)",
+      type: null,
+      findings: [{ severity: "error", message: "expected Num, got Data", span: { start: 5, end: 7 } }],
+    });
+    const unread = report("(+ 1");
+    expect(unread.formatted).toBeNull();
+    expect(unread.findings.map((f: Finding) => f.message)).toEqual(["this ( is never closed"]);
+    expect(report("(do (+ 1 2) (print 3))").findings[0]?.message).toBe("this value is discarded, and computing it does nothing");
   });
 });
