@@ -1,0 +1,11 @@
+; Example-local unary RPC contract emission, not a shipped RPC compiler.
+(type RpcIR {:kind "Rpc" :name String :payload Type :success Type :error Type})
+(form (rpc name {:keys [payload success error]})
+  :types {:name String :payload Type :success Type :error Type}
+  :ir RpcIR
+  :emit (fn [ir]
+    `(Rpc.make ~(get ir :name)
+       {:payload ~(ts/schema (get ir :payload))
+        :success ~(ts/schema (get ir :success))
+        :error ~(ts/schema (get ir :error))}))
+  {:kind "Rpc" :name name :payload payload :success success :error error})
