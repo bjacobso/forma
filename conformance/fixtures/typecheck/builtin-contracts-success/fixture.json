@@ -1,0 +1,9 @@
+{
+  "name": "Checked runtime builtin contracts",
+  "category": "typecheck",
+  "sourceId": "parity/typecheck-builtin-contracts-success",
+  "source": { "file": "source.lisp" },
+  "operation": { "kind": "typecheck" },
+  "comparison": { "mode": "type" },
+  "expected": { "file": "expected.json" }
+}

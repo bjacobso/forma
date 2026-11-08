@@ -113,6 +113,8 @@ export const builtins: ReadonlyMap<string, readonly BuiltinOverload[]> = new Map
   ["empty?", [{ params: [array(v(0))], result: tBool, emit: ([a]) => `${receiver(a)}.length === 0`, prec: Precedence.Equality }]],
   ["map", [{ params: [fn([v(0)], v(1)), array(v(0))], result: array(v(1)), emit: ([f, xs]) => call(`${receiver(xs)}.map`, f) }]],
   ["filter", [{ params: [fn([v(0)], tBool), array(v(0))], result: array(v(0)), emit: ([f, xs]) => call(`${receiver(xs)}.filter`, f) }]],
+  ["reverse", [{ params: [array(v(0))], result: array(v(0)), emit: ([xs]) => `[...${receiver(xs)}].reverse()` }]],
+  ["sqrt", [{ params: [tNumber], result: tNumber, emit: ([x]) => call("Math.sqrt", x) }]],
   [
     "reduce",
     [
@@ -138,7 +140,6 @@ export const builtins: ReadonlyMap<string, readonly BuiltinOverload[]> = new Map
   [
     "concat",
     [
-      { params: [tString, tString], result: tString, emit: binary("+", Precedence.Additive), prec: Precedence.Additive },
       { params: [array(v(0)), array(v(0))], result: array(v(0)), emit: ([a, b]) => `[...${receiver(a)}, ...${receiver(b)}]` },
     ],
   ],

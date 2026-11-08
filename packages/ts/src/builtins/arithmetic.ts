@@ -41,6 +41,12 @@ export const mod = numericBuiltin("mod", 2, 2, args => {
   if (right === 0) throw new TypeCheckError("mod", "nonzero divisor", "0");
   return checkedInt(left % right, "mod");
 });
+export const quot = numericBuiltin("quot", 2, 2, args => {
+  const left = asInt(args[0]!, "quot"), right = asInt(args[1]!, "quot");
+  if (right === 0) throw new TypeCheckError("quot", "nonzero divisor", "0");
+  return checkedInt(Math.trunc(left / right), "quot");
+});
+export const sqrt = numericBuiltin("sqrt", 1, 1, args => new KFloat(Math.sqrt(asNumber(args[0]!, "sqrt"))));
 export const abs = numericBuiltin("abs", 1, 1, args => numericResult(Math.abs(asNumber(args[0]!,"abs")), isKFloat(args[0]), "abs"));
 export const min = numericBuiltin("min", 1, undefined, args => fold(args, Infinity, "min", Math.min));
 export const max = numericBuiltin("max", 1, undefined, args => fold(args, -Infinity, "max", Math.max));
@@ -48,4 +54,4 @@ export const round = numericBuiltin("round", 1, 1, args => checkedInt(Math.floor
 export const ceil = numericBuiltin("ceil", 1, 1, args => checkedInt(Math.ceil(asNumber(args[0]!,"ceil")), "ceil"));
 export const floor = numericBuiltin("floor", 1, 1, args => checkedInt(Math.floor(asNumber(args[0]!,"floor")), "floor"));
 
-export const arithmeticBuiltins: Record<string, BuiltinFn> = { "+": add, "-": sub, "*": mul, "/": div, mod, abs, min, max, round, ceil, floor };
+export const arithmeticBuiltins: Record<string, BuiltinFn> = { "+": add, "-": sub, "*": mul, "/": div, mod, quot, sqrt, abs, min, max, round, ceil, floor };

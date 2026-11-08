@@ -106,25 +106,31 @@ program that uses them is rejected with `Unbound variable`, and runs only with
 
 | Area | Checked builtins |
 | --- | --- |
-| Arithmetic | `+ - * /` (variadic), `min max abs`, `mod` (Int), `floor ceil round` (Float → Int) |
+| Arithmetic | `+ - * /` (variadic), `min max abs`, `mod quot` (Int), `sqrt` (Float → Float), `floor ceil round` (Float → Int) |
 | Comparison | `= !=` (any type), `< <= > >=` |
 | Logic | `and`, `or` and `not`, imported from the kernel library |
-| Lists | `count first rest nth map filter` |
+| Lists | `count first rest nth map filter reverse reduce conj concat` |
 | Records and maps | `get assoc dissoc merge keys vals select-keys contains? empty? count` |
-| Strings | `str format concat` (two strings), `trim split starts-with? ends-with? count` |
+| Strings | `str format`, `trim split starts-with? ends-with? count` |
 | Options and results | `Some None Ok Err`, `Option.Some`, `Result.Ok`, `Result.Err` |
 | Symbols and keywords | `sym keyword keyword/name symbol? keyword?` |
 | Other | `fail` (String → Never), `id` |
 
 | Area | Evaluate-only builtins (not checked yet) |
 | --- | --- |
-| Lists | `reduce some every? sort-by group-by distinct flat-map conj into list`, `concat` on lists, `get-in` |
+| Lists | `some every? sort-by group-by distinct flat-map into list get-in` |
 | Strings | `upper lower` |
 | Predicates | `nil? number? string? boolean? map? list? fn?` |
 
-There is no `string/` namespace and no `range`. `concat` on two lists
-evaluates but does not typecheck; build fixed lists with vector literals and
-combine them with `filter` and `map` instead.
+There is no `string/` namespace and no `range`. `concat` combines two lists of
+the same element type; use `str` to concatenate strings. `conj` appends one
+element. `reduce` takes a callback, an initial accumulator, and a list, calling
+the callback with the accumulator first and the element second. `quot` divides
+Ints, truncating toward zero; a zero divisor is a runtime error.
+
+These checked collection signatures describe fully applied calls. Unchecked
+runtime `concat` also accepts zero or more lists and `conj` accepts multiple
+elements; those extra arities are not part of the shared checked contract.
 
 ## Records and Option across modules
 

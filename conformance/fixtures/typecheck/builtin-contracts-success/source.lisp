@@ -1,0 +1,20 @@
+(: checks (-> Int (List Bool)))
+(define checks [unused]
+  (let [xs [3 1 2]
+        reversed (reverse xs)]
+    [(= reversed [2 1 3])
+     (= xs [3 1 2])
+     (= (reverse []) [])
+     (= (sqrt 9.0) 3.0)
+     (= (sqrt 2.25) 1.5)
+     (= (reduce (fn [acc item] (conj acc item)) [] [3 1 2]) [3 1 2])
+     (= (reduce (fn [acc item] (conj acc item)) [7] []) [7])
+     (= (conj [3 1] 2) [3 1 2])
+     (= (conj [] "a") ["a"])
+     (= (concat [3 1] [2 4]) [3 1 2 4])
+     (= (concat [] ["a"]) ["a"])
+     (= (concat ["a"] []) ["a"])
+     (= (quot -7 3) -2)
+     (= (quot 7 -3) -2)
+     (= (quot -7 -3) 2)]))
+(checks 0)

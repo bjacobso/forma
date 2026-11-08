@@ -64,12 +64,15 @@ Its proposed changes are not implemented or scheduled.
 [RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) collects gaps found while writing the
 [SICP-style guide](./structure-and-interpretation.md) and the
 [domain modeling guide](./domain-modeling.md). The evaluator, kernel
-typechecker, and Effect checker disagree about some builtins, local
-definitions, zero-argument functions, and match exhaustiveness. Unannotated
+typechecker, and Effect checker now share checked contracts and cross-pass
+fixtures for `reverse`, `sqrt`, `reduce`, `conj`, list `concat`, and `quot`.
+The builtin inventory records remaining pass-specific names and legacy gaps;
+it does not claim complete builtin parity. Local definitions,
+zero-argument functions, and match exhaustiveness still have gaps. Unannotated
 arithmetic infers `Float`. The Effect checker loses constructor types,
 rejects options for optional fields, requires literal callbacks, and accepts
 out-of-range literals. The guides document today's workarounds. The fixes are
-proposed, not implemented or scheduled.
+otherwise proposed, not implemented or scheduled.
 
 ## Languages as libraries
 

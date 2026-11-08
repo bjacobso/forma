@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Stage 1 implemented for six checked runtime contracts; remaining stages proposed |
 | Created | 2026-11-03 |
 | Scope | Builtin contract parity, numeric inference, local recursion, nullary functions, recursive generic aliases, Effect-name routing, match exhaustiveness, and four Effect checker gaps: constructor types, optional fields, callback references, and refinement literals |
 | Direction | The evaluator, the kernel typechecker, and the Effect checker agree about ordinary programs; a program that one accepts is not silently rejected, retyped, or crashed by another |
@@ -24,6 +24,31 @@ is already clear.
 
 The guides document today's workarounds and link here. When a stage lands, its
 workaround should be removed from the guides in the same change.
+
+### Stage 1 implementation and audit
+
+`reverse`, `sqrt`, `reduce`, `conj`, list `concat`, and `quot` now have the
+contracts in section 1 in HM, the evaluator/VM, and Effect TypeScript.
+`packages/ts/src/builtins/contracts.ts` inventories every name in the three
+registries, links its implementation, scheme, and lowering, and records why
+passes differ. The parity test rejects new unrecorded names or availability
+drift. Legacy entries are an inventory, not a claim of semantic equivalence.
+Cross-pass fixtures pin the six fully applied contracts, accumulator-first
+reduction, append order, non-mutating reversal, and signed truncating division.
+Unchecked variadic `concat` and multi-element `conj` remain runtime extensions;
+partial application and general collection inference are not changed here.
+
+The string audit covered preludes, examples, and conformance sources. The only
+string calls were `string-concat-success` and
+`typeclass-hkt-instance-string-success`; both now use `str` and retain their
+existing type expectations. Prelude calls and the `pure-domain-logic` Effect
+case concatenate lists; examples had no `concat` calls. The HM string scheme
+and Effect string overload have been removed. `concat` is list-only; kernel
+string concatenation uses `str`. No existing surface golden needed changing.
+
+The reproduction tables below describe the pre-stage-1 baseline. Numeric
+generalization remains a separate decision. Nullary-function work in PR #92
+is not included in this slice.
 
 ## Motivation
 
@@ -382,9 +407,6 @@ changes (sections 1, 2, 4, and 7) in a changeset.
 - **Numeric generalization.** Generalize unresolved numeric variables with a
   constraint, or default them to `Int`? If constrained, how does a signature
   write the constraint, and how does it relate to the constraint notation proposed in RFC 0006?
-- **`concat` on strings.** Keep a string overload, or move all string
-  concatenation to `str`? The audit in stage 1 decides how much code is
-  affected.
 - **Exhaustiveness opt-out.** Is `_` enough, or do generated programs need a
   marker for an intentionally partial match?
 - **Reserved names.** If section 6 starts with the interim diagnostic, which
