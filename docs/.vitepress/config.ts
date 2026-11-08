@@ -32,7 +32,7 @@ const blogSidebar: DefaultTheme.SidebarItem[] = [
       { text: "09 · Effects Are Part of the Type", link: "/blog/in-the-beginning/09-effects-are-part-of-the-type" },
       { text: "10 · One Program, Many Interpretations", link: "/blog/in-the-beginning/10-many-interpretations" },
       { text: "11 · The Agent Can Read the Language", link: "/blog/in-the-beginning/11-agent-can-read-the-language" },
-      { text: "12 · Let There Be Languages" },
+      { text: "12 · Let There Be Languages", link: "/blog/in-the-beginning/12-let-there-be-languages" },
     ],
   },
 ];

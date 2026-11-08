@@ -22,6 +22,11 @@ typed, extensible language for building other languages.
 
 <ul class="blog-posts">
 <li>
+<a href="/blog/in-the-beginning/12-let-there-be-languages"><span class="blog-posts__part">Part 12</span> Let There Be Languages</a>
+<p>Declare forms in the language itself, build a vendor-review policy language from them, and run it with Effect services each host provides. The end of the series.</p>
+<time datetime="2026-11-08">November 8, 2026</time>
+</li>
+<li>
 <a href="/blog/in-the-beginning/11-agent-can-read-the-language"><span class="blog-posts__part">Part 11</span> The Agent Can Read the Language</a>
 <p>Give a coding agent schema-described tools instead of a text buffer: reports, types at positions, a rename the checker proves safe, structured replacement, and a sandboxed REPL.</p>
 <time datetime="2026-11-08">November 8, 2026</time>

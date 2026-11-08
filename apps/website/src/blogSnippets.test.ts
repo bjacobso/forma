@@ -53,6 +53,16 @@ import { readAll } from "../../../docs/snippets/blog/in-the-beginning/07/read.ts
 import { replace as replace11 } from "../../../docs/snippets/blog/in-the-beginning/11/edit.ts";
 import { rename } from "../../../docs/snippets/blog/in-the-beginning/11/rename.ts";
 import { call, inMemory, manifest, toolsFor, Workspace } from "../../../docs/snippets/blog/in-the-beginning/11/tools.ts";
+import { Approvals, Directory, unavailable, values as values12 } from "../../../docs/snippets/blog/in-the-beginning/12/capabilities.ts";
+import {
+  dryRun,
+  load as loadLanguage,
+  runPolicy,
+  typeOfPolicy,
+  vendorLanguage,
+  vendorSource,
+} from "../../../docs/snippets/blog/in-the-beginning/12/language.ts";
+import { typecheck as formaTypecheck, evaluate as formaEvaluate } from "@formalang/ts/engine";
 import {
   compile as compile9,
   report as report9,
@@ -913,5 +923,104 @@ describe("blog: The Agent Can Read the Language", () => {
       properties: { at: { type: "integer", description: "A position in the file, counting from 0" }, to: { type: "string" } },
       required: ["at", "to"],
     });
+  });
+});
+
+describe("blog: Let There Be Languages", () => {
+  const page = readFileSync(resolve(repoRoot, "docs/blog/in-the-beginning/12-let-there-be-languages.md"), "utf8");
+  const forma = readFileSync(resolve(repoRoot, "docs/snippets/blog/in-the-beginning/12/vendor.forma"), "utf8");
+  const policy = "(do\n  (vendor acme 70 security)\n  (vendor globex 90 finance)\n  (vendor initech 50 security))";
+  const rejected = (source: string) => report9(source, Effect.runSync(Effect.flip(typeOfPolicy(source))));
+  const loadError = (source: string) =>
+    report9(source, Effect.runSync(Effect.flip(loadLanguage({ forms: standard9.forms, values: values12(unavailable) }, standardDocs, source))));
+
+  test("the page includes every snippet file", () => {
+    for (const file of ["capabilities.ts", "defform.ts", "language.ts", "vendor.lisp", "vendor.forma"]) {
+      expect(page).toContain(`@/snippets/blog/in-the-beginning/12/${file}`);
+    }
+    expect(page).toContain(policy);
+  });
+
+  test("a policy's type says what it will do", () => {
+    expect(Effect.runSync(typeOfPolicy(policy))).toBe("Unit ! {Approvals, Directory}");
+    expect(Effect.runSync(typeOfPolicy("(vendor acme 70 security)"))).toBe("Unit ! {Approvals, Directory}");
+    expect(Effect.runSync(typeOfPolicy("(review security acme)"))).toBe("Unit ! {Approvals}");
+    expect(Effect.runSync(typeOfPolicy("((lambda (x) (vendor acme x security)) 70)"))).toBe("Unit ! {Approvals, Directory}");
+  });
+
+  test("the dry run requests the right approvals", async () => {
+    const requested = await Effect.runPromise(dryRun(policy, new Map([["acme", 80], ["globex", 40]])));
+    expect(requested).toEqual(["security reviews acme", "security reviews initech"]);
+    for (const line of requested) expect(page).toContain(line);
+  });
+
+  test("errors in a call point at the call", () => {
+    const shown = [
+      ["(vendor acme 'high security)", "error: expected Num, got Data\n1 | (vendor acme 'high security)\n  |              ^^^^^"],
+      ["(vendor acme 70)", "error: vendor takes name, limit, and owner\n1 | (vendor acme 70)\n  | ^^^^^^^^^^^^^^^^"],
+      ["(vendor 'acme 70 security)", "error: vendor's name must be a name\n1 | (vendor 'acme 70 security)\n  |         ^^^^^"],
+      [
+        "((lambda (risk) (vendor acme 70 security)) 5)",
+        "error: a local risk hides the risk vendor uses\n1 | ((lambda (risk) (vendor acme 70 security)) 5)\n  |                 ^^^^^^^^^^^^^^^^^^^^^^^^^",
+      ],
+    ] as const;
+    for (const [source, error] of shown) {
+      expect(rejected(source)).toBe(error);
+      expect(page).toContain(error);
+    }
+    expect(rejected("((lambda (when) (vendor acme 70 security)) 5)")).toContain("a local when hides the when vendor uses");
+  });
+
+  test("errors in a template point at the declaration", () => {
+    const unquoted = vendorSource.replace("(risk ',name)", "(risk ,name)");
+    const misspelled = vendorSource.replace("(< ,limit", "(< ,limt");
+    for (const source of [unquoted, misspelled]) {
+      expect(source).not.toBe(vendorSource);
+      expect(page).toContain(loadError(source));
+    }
+    expect(loadError(unquoted)).toBe("error: name is not defined\n7 |   `(when (< ,limit (risk ,name))\n  |                          ^^^^^");
+  });
+
+  test("a host that doesn't allow approvals rejects the policy before it runs", () => {
+    const requested: string[] = [];
+    const host = runPolicy(policy, ["Directory"]).pipe(
+      Effect.provideService(Directory, { risk: () => Effect.succeed(100) }),
+      Effect.provideService(Approvals, { request: (o, v) => Effect.sync(() => void requested.push(`${o} ${v}`)) }),
+      Effect.provideService(Output, recordedOutput().output),
+    );
+    const error = report9(policy, Effect.runSync(Effect.flip(host)));
+    expect(error).toBe("error: unhandled effect: Approvals\n2 |   (vendor acme 70 security)\n  |   ^^^^^^^^^^^^^^^^^^^^^^^^^");
+    expect(page).toContain(error);
+    expect(requested).toEqual([]);
+  });
+
+  test("Part 10 and 11 tools work on the new language", () => {
+    const { prelude, docs } = Effect.runSync(vendorLanguage(unavailable));
+    const reference = Effect.runSync(document(prelude, docs));
+    expect(reference).toContain(
+      "### `(review (owner Name) (vendor Name))`\n\nAsk owner to approve vendor.\n\n### `(vendor (name Name) (limit Num) (owner Name))`\n\nHave owner review name when its risk is over limit.",
+    );
+    expect(reference).toContain("- `risk : (Data) -> Num ! {Directory}`\n\n- `ask : (Data, Data) -> Unit ! {Approvals}`");
+    const tools = toolsFor(prelude, docs);
+    const answers = Effect.runSync(
+      Effect.gen(function* () {
+        const read = JSON.parse(yield* call(tools, "read", "{}"));
+        const evaluated = JSON.parse(yield* call(tools, "evaluate", JSON.stringify({ expression: "(vendor acme 70 security)" })));
+        return { type: read.report.type, error: evaluated.error.message };
+      }).pipe(Effect.provideServiceEffect(Workspace, inMemory(policy))),
+    );
+    expect(answers).toEqual({ type: "Unit ! {Approvals, Directory}", error: "unhandled effect: Directory" });
+  });
+
+  test("the Forma version runs in Forma", async () => {
+    const checked = formaTypecheck({ sourceId: "vendor.forma", source: forma });
+    expect(checked.display).toBe("Bool");
+    expect(checked.diagnostics).toEqual([]);
+    const evaluated = await formaEvaluate({ sourceId: "vendor.forma", source: forma });
+    expect(evaluated.value).toBe(true);
+    const medium = formaTypecheck({ sourceId: "medium.forma", source: forma.replace(":risk :high", ":risk :medium") });
+    expect(medium.diagnostics.map((d) => d.message)).toEqual([expect.stringContaining(":medium is not one of Union<:low, :high>")]);
+    const partial = formaTypecheck({ sourceId: "partial.forma", source: forma.replace("\n    None false))", "))") });
+    expect(partial.diagnostics.map((d) => d.message)).toEqual(["Non-exhaustive match: missing constructor(s) None"]);
   });
 });

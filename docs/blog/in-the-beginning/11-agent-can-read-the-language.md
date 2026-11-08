@@ -295,8 +295,8 @@ The last post puts those pieces to work on something that isn't a
 language demo: a small language for a real job, built with the prelude,
 checked by the kernel, and run with capabilities a host provides.
 
-**Next:** Part 12, *Let There Be Languages*. The final product isn't a
-Lisp. It's a language-building platform.
+**Next:** [Part 12, *Let There Be Languages*](/blog/in-the-beginning/12-let-there-be-languages).
+The final product isn't a Lisp. It's a language-building platform.
 
 <p class="blog-source">The code in this post lives in
 <a href="https://github.com/bjacobso/forma/tree/main/docs/snippets/blog/in-the-beginning/11"><code>docs/snippets/blog/in-the-beginning/11</code></a>

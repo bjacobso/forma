@@ -10,9 +10,10 @@ description: A twelve-part build-in-public series on building a typed Lisp from 
 > Lisp makes programs into data. Schema makes data meaningful. Effect makes
 > meaning executable.
 
-This is a twelve-part series written as the work happens. It starts with a
-tiny Lisp interpreter and ends with a typed, extensible language powered by
-[Effect](https://effect.website) and Schema.
+This is a twelve-part series, written as the work happened. It starts with
+a tiny Lisp interpreter and ends with a typed, extensible language powered
+by [Effect](https://effect.website) and Schema. All twelve parts are
+published; start with [Part 1](./01-the-list).
 
 The goal isn't just to show how to build a Lisp. It's to show why Lisp's
 simplicity, Schema's structural descriptions, and Effect's compositional
@@ -131,10 +132,10 @@ transformations.
 
 *The agent doesn't have to guess what the program means.*
 
-### 12 · Let There Be Languages <Badge type="info" text="Coming" />
+### 12 · [Let There Be Languages](./12-let-there-be-languages)
 
-Build a small domain-specific language with the typed Lisp, its prelude, and
-Effect-backed capabilities. Show a real application, not an interpreter demo.
+Declare forms in the language itself, build a vendor-review policy language
+from them, and run it with Effect services that each host provides.
 
 *The final product isn't a Lisp. It's a language-building platform.*
 

@@ -17,7 +17,7 @@ import {
 } from "./kernel.ts";
 import { data, fun, num, row, type Type, unit } from "./types.ts";
 
-type Inside = (k: Kernel) => Elab;
+export type Inside = (k: Kernel) => Elab;
 
 const call = (k: Kernel, name: string, args: Core[], span: Span) =>
   Effect.flatMap(k.prelude(name, span), (fn) =>
@@ -28,7 +28,7 @@ const call = (k: Kernel, name: string, args: Core[], span: Span) =>
 // A function that the form calls right where it's written. Its body
 // may do what the code around it may do, so an effect it isn't
 // allowed is reported inside the body, where it happens.
-const now = (
+export const now = (
   k: Kernel,
   names: ReadonlyArray<string>,
   schemes: ReadonlyArray<Scheme>,
