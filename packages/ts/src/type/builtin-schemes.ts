@@ -61,7 +61,8 @@ export function builtinScheme(name: string): Scheme | undefined {
     case "min":
     case "max":
       return variadicArith();
-    case "mod": return mono(fnType([tInt, tInt], tInt));
+    case "mod":
+    case "quot": return mono(fnType([tInt, tInt], tInt));
     case "pow":
       return arithBinop();
     case "abs":
@@ -86,9 +87,6 @@ export function builtinScheme(name: string): Scheme | undefined {
     case "format":
     case "str":
       return mono(TVariadic(tUnknown,tStr));
-    case "concat":
-      return mono(fnType([tStr, tStr], tStr));
-
     case "upcase":
     case "downcase":
     case "uppercase":
@@ -148,6 +146,21 @@ export function builtinScheme(name: string): Scheme | undefined {
     case "reverse": {
       const aId = "__rev_a";
       return mkScheme([aId], [], fnType([TApp(tList, [TVar(aId)])], TApp(tList, [TVar(aId)])));
+    }
+    case "concat": {
+      const aId = "__concat_a";
+      const list = TApp(tList, [TVar(aId)]);
+      return mkScheme([aId], [], fnType([list, list], list));
+    }
+    case "conj": {
+      const aId = "__conj_a";
+      const a = TVar(aId);
+      return mkScheme([aId], [], fnType([TApp(tList, [a]), a], TApp(tList, [a])));
+    }
+    case "reduce": {
+      const aId = "__reduce_a", bId = "__reduce_b";
+      const a = TVar(aId), b = TVar(bId);
+      return mkScheme([aId, bId], [], fnType([fnType([b, a], b), b, TApp(tList, [a])], b));
     }
     case "nth": {
       const aId = "__nth_a";

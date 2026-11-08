@@ -130,9 +130,9 @@ Values use ordinary Forma expressions:
 - records `{:id id}` and vectors;
 - `get` and `assoc` for fields, `Map` keys, and classes;
 - `str`, `fn`, `if`, `cond`, `let`, `match`, and `Some`/`None`;
-- arithmetic: `+ - * / quot mod max min abs round floor`;
+- arithmetic: `+ - * / quot mod max min abs sqrt round floor`;
 - comparisons, `and`/`or`/`not`, and `=`/`!=`;
-- collections: `map filter reduce find any? every? count empty? concat conj first sum`;
+- collections: `map filter reduce find any? every? count empty? concat conj reverse first sum`;
 - maps: `keys vals dissoc has-key?`;
 - strings: `join split trim upcase downcase starts-with? ends-with? includes? to-string`;
 - options: `get-or-else is-some is-none`;
@@ -141,6 +141,10 @@ Values use ordinary Forma expressions:
 Getting an `(Option T)` field or a `Map` key produces `(Option T)`. Map
 functions use Effect's `Record` module, which only sees own keys. A builtin
 with one signature can be passed as a function, as in `(map upcase names)`.
+
+`concat` combines two lists; use `str` for strings. `conj` appends one element,
+and `reverse` returns a reversed copy without mutating its input. `reduce`
+passes the accumulator first and the current element second to its callback.
 
 ### Literal types
 

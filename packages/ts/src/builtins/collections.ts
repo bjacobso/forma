@@ -68,6 +68,12 @@ export const rest: BuiltinFn = (args) => {
   return Effect.succeed(coll.slice(1));
 };
 
+export const reverse: BuiltinFn = (args) => {
+  if (args.length !== 1)
+    return Effect.fail(new ArityError({ name: "reverse", expected: 1, got: args.length }));
+  return Effect.succeed([...asList(args[0]!, "reverse")].reverse());
+};
+
 export const count: BuiltinFn = (args) => {
   if (args.length !== 1)
     return Effect.fail(new ArityError({ name: "count", expected: 1, got: args.length }));
@@ -247,6 +253,7 @@ export const collectionBuiltins: Record<string, BuiltinFn> = {
   reduce,
   first,
   rest,
+  reverse,
   count,
   nth,
   conj,

@@ -484,7 +484,7 @@ named:
 (: make-rat (-> Int Int Rat))
 (define make-rat [n d]
   (let [g (gcd n d)]
-    {:numer (floor (/ n g)) :denom (floor (/ d g))}))
+    {:numer (quot n g) :denom (quot d g)}))
 
 (: numer (-> Rat Int))
 (define numer [x] x.numer)
@@ -493,10 +493,9 @@ named:
 (define denom [x] x.denom)
 ```
 
-`x.numer` reads the `:numer` field of `x`. `/` always produces a Float, so
-`floor` brings the exact quotient back to an Int. (The kernel has no integer
-division builtin yet. [RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) proposes adding `quot`, which Effect
-programs already have.)
+`x.numer` reads the `:numer` field of `x`. `quot` divides Ints and truncates
+toward zero. Here the gcd divides both inputs exactly; `/` would instead
+produce a Float.
 
 Arithmetic is defined only in terms of the constructor and selectors:
 
@@ -550,10 +549,10 @@ Square brackets build lists. A list's elements share a type, so `[1 2 3]` is a
 
 SICP builds every list from pairs and then builds trees from lists. The
 property that lets this work is **closure**: the result of combining things can
-be combined again. Forma's built-in lists don't come with a typed `cons`: the
-evaluator runs `conj` and list `concat`, but the typechecker doesn't accept
-them yet ([RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) proposes typing both). So this section builds the
-pairs itself and gives them a type. The definition
+be combined again. Forma's built-in lists support typed `conj` (append an
+element), `concat` (combine two lists), and `reduce` (accumulate a result).
+To study SICP's pair-based representation rather than the built-in list,
+this section builds the pairs itself and gives them a type. The definition
 says what a sequence is: either the end, or a link with a first element and
 the rest of the sequence.
 
