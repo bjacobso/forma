@@ -43,6 +43,14 @@ import {
   typeOf as typeOf8,
 } from "../../../docs/snippets/blog/in-the-beginning/08/run.ts";
 import type { Prelude } from "../../../docs/snippets/blog/in-the-beginning/08/kernel.ts";
+import { standard as standard9 } from "../../../docs/snippets/blog/in-the-beginning/09/prelude.ts";
+import {
+  compile as compile9,
+  report as report9,
+  run as run9,
+  script,
+  typeOf as typeOf9,
+} from "../../../docs/snippets/blog/in-the-beginning/09/run.ts";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const lisp = (source: string) => show(evaluate(read(source)));
@@ -585,5 +593,97 @@ describe("blog: The Prelude Is the Language", () => {
       [pricing, "(tax 8)"],
     ];
     for (const [prelude, source] of cases) expect(page).toContain(rejected(prelude, source));
+  });
+});
+
+describe("blog: Effects Are Part of the Type", () => {
+  const page = readFileSync(resolve(repoRoot, "docs/blog/in-the-beginning/09-effects-are-part-of-the-type.md"), "utf8");
+  const type = (source: string) => Effect.runSync(typeOf9(source));
+  const twice = (body: string) => `(let ((twice (lambda (f x) (f (f x)))))\n  ${body})`;
+  const rejected = (source: string, allowed: ReadonlyArray<string> | null = null) =>
+    report9(source, Effect.runSync(Effect.flip(compile9(standard9, source, allowed))));
+  const run = async (source: string) => {
+    const { lines, output } = recordedOutput();
+    const exit = await Effect.runPromiseExit(run9(standard9, source).pipe(Effect.provideService(Output, output)));
+    if (Exit.isFailure(exit)) throw new Error(String(exit.cause));
+    return { value: display6(exit.value), lines };
+  };
+
+  test("the page includes every snippet file", () => {
+    for (const file of ["types.ts", "solver.ts", "kernel.ts", "prelude.ts", "run.ts"]) {
+      expect(page).toContain(`@/snippets/blog/in-the-beginning/09/${file}`);
+    }
+  });
+
+  test("built-ins say what they do", () => {
+    expect(type("print")).toBe("('a) -> 'a ! {Output}");
+    expect(type("/")).toBe("(Num...) -> Num ! {DivByZero}");
+    expect(type("sleep")).toBe("(Num) -> Unit ! {Async}");
+    expect(type("+")).toBe("(Num...) -> Num");
+    expect(type("recover")).toBe("(() -> 'a ! {DivByZero | 'b}, () -> 'a ! 'b) -> 'a ! 'b");
+    expect(type("fastest")).toBe("(() -> 'a ! 'b, () -> 'a ! 'b) -> 'a ! {Async | 'b}");
+    for (const name of ["print", "/", "sleep", "recover", "fastest"]) expect(page).toContain(type(name));
+  });
+
+  test("calls do their effects, and functions keep them latent", () => {
+    expect(type("(print 1)")).toBe("Num ! {Output}");
+    expect(type("(lambda (x) (print x))")).toBe("('a) -> 'a ! {Output}");
+    expect(type(twice("twice"))).toBe("(('a) -> 'a ! 'b, 'a) -> 'a ! 'b");
+    expect(page).toContain(twice("twice"));
+    expect(type(twice("(twice print 1)"))).toBe("Num ! {Output}");
+    expect(type(twice("(twice (lambda (n) (* n 3)) 1)"))).toBe("Num");
+    expect(type("(let ((id (lambda (x) x))) ((id id) 1))")).toBe("Num");
+  });
+
+  test("when has type Unit, and do runs in order", async () => {
+    expect(type("(when (< 1 2) (print 1))")).toBe("Unit ! {Output}");
+    expect(rejected("(+ 1 (when 1 2))")).toBe("error: expected Num, got Unit\n1 | (+ 1 (when 1 2))\n  |      ^^^^^^^^^^");
+    expect(await run("(when 0 (print 1))")).toEqual({ value: "()", lines: [] });
+    expect(await run("(when 1 (print 1))")).toEqual({ value: "()", lines: ["1"] });
+    expect(await run("(do (print 1) (print 2) 3)")).toEqual({ value: "3", lines: ["1", "2"] });
+  });
+
+  test("catch takes DivByZero out of the type", async () => {
+    expect(type("(catch (/ 1 0) 0)")).toBe("Num");
+    expect(type("(catch (print (/ 1 0)) 0)")).toBe("Num ! {Output}");
+    expect(type("(lambda (f) (catch (f 1) 0))")).toBe("((Num) -> Num ! {DivByZero | 'a}) -> Num ! 'a");
+    expect(await run("(catch (/ 1 0) 0)")).toEqual({ value: "0", lines: [] });
+    expect(await run("(catch (do (print 1) (/ 1 0) (print 2)) 7)")).toEqual({ value: "7", lines: ["1"] });
+  });
+
+  test("race interrupts the slower side", async () => {
+    const source = "(race (do (sleep 50) (print 1))\n      (do (sleep 5) (print 2)))";
+    expect(page).toContain(source);
+    expect(type(source)).toBe("Num ! {Async, Output}");
+    expect(await run(source)).toEqual({ value: "2", lines: ["2"] });
+  });
+
+  test("a host rejects effects it doesn't allow, before running", () => {
+    expect(rejected("(print 1)", [])).toBe("error: unhandled effect: Output\n1 | (print 1)\n  | ^^^^^^^^^");
+    expect(Exit.isSuccess(Effect.runSyncExit(compile9(standard9, "(lambda (x) (print x))", [])))).toBe(true);
+    expect(rejected("(let ((p (lambda (x) (print x)))) (+ 1 (p 2)))", [])).toBe(
+      "error: unhandled effect: Output\n1 | (let ((p (lambda (x) (print x)))) (+ 1 (p 2)))\n  |                                        ^^^^^",
+    );
+    const printed = recordedOutput();
+    const ok = script("(do (print 1) 2)", printed.output);
+    expect(Exit.isSuccess(ok) && display6(ok.value)).toBe("2");
+    expect(printed.lines).toEqual(["1"]);
+    const slept = recordedOutput();
+    const asleep = script("(do (print 1) (sleep 10))", slept.output);
+    expect(Exit.isFailure(asleep)).toBe(true);
+    expect(slept.lines).toEqual([]);
+    expect(rejected("(do (print 1) (sleep 10))", ["Output", "DivByZero"])).toBe(
+      "error: unhandled effect: Async\n1 | (do (print 1) (sleep 10))\n  |               ^^^^^^^^^^",
+    );
+  });
+
+  test("every diagnostic on the page is the compiler's", () => {
+    const cases: Array<[string, ReadonlyArray<string> | null]> = [
+      ["(+ 1 (when 1 2))", null],
+      ["(print 1)", []],
+      ["(let ((p (lambda (x) (print x)))) (+ 1 (p 2)))", []],
+      ["(do (print 1) (sleep 10))", ["Output", "DivByZero"]],
+    ];
+    for (const [source, allowed] of cases) expect(page).toContain(rejected(source, allowed));
   });
 });

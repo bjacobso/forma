@@ -382,8 +382,8 @@ the same as `id`. Nothing in the type says that it prints, or that it
 needs an `Output` service to run. The checker knows what every
 expression returns, and nothing about what it does.
 
-**Next:** Part 9, *Effects Are Part of the Type*. The type describes not
-only the result, but what a computation demands.
+**Next:** [Part 9, *Effects Are Part of the Type*](/blog/in-the-beginning/09-effects-are-part-of-the-type).
+The type describes not only the result, but what a computation demands.
 
 <p class="blog-source">The code in this post lives in
 <a href="https://github.com/bjacobso/forma/tree/main/docs/snippets/blog/in-the-beginning/08"><code>docs/snippets/blog/in-the-beginning/08</code></a>

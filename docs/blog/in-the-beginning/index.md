@@ -107,11 +107,11 @@ forms in a prelude, on a kernel that knows only numbers, names, and calls.
 
 Give the language capabilities, execution, and real-world applications.
 
-### 09 · Effects Are Part of the Type <Badge type="info" text="Coming" />
+### 09 · [Effects Are Part of the Type](./09-effects-are-part-of-the-type)
 
 Add effectful computations and distinguish pure values from operations that
 require capabilities, which gives forms like `when` a type. Model typed
-errors, asynchronous operations, and resource requirements.
+errors, asynchronous operations, and what a host must provide.
 
 *The type describes not only the result, but what the computation demands.*
 
