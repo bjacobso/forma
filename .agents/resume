@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Toolchains, workspace dependencies, and Chromium persist in the snapshot.
+# Forma needs no per-thread authentication or backing services for local work.
+# Keep resume install-free; Amp reruns setup when the project snapshot is stale.

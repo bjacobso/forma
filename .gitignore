@@ -10,6 +10,7 @@ test-results/
 playwright-report/
 .wrangler/
 .alchemy/
+.amp/portals/*
 
 .env
 .env.local
