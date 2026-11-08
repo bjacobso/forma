@@ -209,8 +209,8 @@ in the type.
 
 That's where the combination becomes more than the sum of its parts.
 
-**Next:** Part 2, *And the List Became Schema*. A program is data with a
-shape.
+**Next:** [Part 2, *And the List Became Schema*](/blog/in-the-beginning/02-list-became-schema).
+A program is data with a shape.
 
 <p class="blog-source">The code in this post lives in
 <a href="https://github.com/bjacobso/forma/tree/main/docs/snippets/blog/in-the-beginning/01"><code>docs/snippets/blog/in-the-beginning/01</code></a>

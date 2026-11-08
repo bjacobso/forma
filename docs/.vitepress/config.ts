@@ -22,7 +22,7 @@ const blogSidebar: DefaultTheme.SidebarItem[] = [
     items: [
       { text: "About the series", link: "/blog/in-the-beginning/" },
       { text: "01 · In the Beginning Was the List", link: "/blog/in-the-beginning/01-the-list" },
-      { text: "02 · And the List Became Schema" },
+      { text: "02 · And the List Became Schema", link: "/blog/in-the-beginning/02-list-became-schema" },
       { text: "03 · Errors Are Not Exceptions" },
       { text: "04 · The Environment Is Not the World" },
       { text: "05 · Types Before Execution" },

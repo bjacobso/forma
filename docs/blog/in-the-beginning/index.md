@@ -50,7 +50,7 @@ evaluator. Explain why code-as-data matters more than parentheses.
 
 `(+ 1 2)` → `3`
 
-### 02 · And the List Became Schema <Badge type="info" text="Coming" />
+### 02 · [And the List Became Schema](./02-list-became-schema)
 
 Represent the language's abstract syntax with recursive Effect Schema
 definitions. Introduce parsing, validation, and structured diagnostics.
