@@ -1,11 +1,11 @@
 ---
 title: Macros Are Programs About Programs
-description: Part 7 of In the Beginning Was the Schema. Add quasiquotation and pattern-based macros written in the language, expand them before the compiler, make them hygienic by renaming, and see why homoiconicity alone isn't enough.
+description: Part 7 of From Lists to Languages. Add quasiquotation and pattern-based macros written in the language, expand them before the compiler, make them hygienic by renaming, and see why homoiconicity alone isn't enough.
 ---
 
 # Macros Are Programs About Programs
 
-<p class="blog-meta">Part 07 of <a href="/blog/in-the-beginning/">In the Beginning Was the Schema</a> · Act II, Logos · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 07 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act II, Types and Extension · <time datetime="2026-11-08">November 8, 2026</time></p>
 
 > The compiler can be extended in its own language.
 

@@ -75,7 +75,7 @@ const repoRoot = resolve(import.meta.dirname, "../../..");
 const lisp = (source: string) => show(evaluate(read(source)));
 
 // The blog shows these snippets and quotes their results; keep both honest.
-describe("blog: In the Beginning Was the List", () => {
+describe("blog: Start with a List", () => {
   const page = readFileSync(resolve(repoRoot, "docs/blog/in-the-beginning/01-the-list.md"), "utf8");
 
   test("the page includes every snippet file", () => {
@@ -114,7 +114,7 @@ describe("blog: In the Beginning Was the List", () => {
   });
 });
 
-describe("blog: And the List Became Schema", () => {
+describe("blog: Giving the List a Schema", () => {
   const page = readFileSync(resolve(repoRoot, "docs/blog/in-the-beginning/02-list-became-schema.md"), "utf8");
   const diagnostic = (source: string) => Effect.runSync(Effect.flip(parse(source)));
   const rendered = (source: string) => render(source, diagnostic(source));
@@ -926,7 +926,7 @@ describe("blog: The Agent Can Read the Language", () => {
   });
 });
 
-describe("blog: Let There Be Languages", () => {
+describe("blog: A Language for Building Languages", () => {
   const page = readFileSync(resolve(repoRoot, "docs/blog/in-the-beginning/12-let-there-be-languages.md"), "utf8");
   const forma = readFileSync(resolve(repoRoot, "docs/snippets/blog/in-the-beginning/12/vendor.forma"), "utf8");
   const policy = "(do\n  (vendor acme 70 security)\n  (vendor globex 90 finance)\n  (vendor initech 50 security))";

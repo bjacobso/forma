@@ -1,9 +1,9 @@
 ---
-title: In the Beginning Was the Schema
+title: From Lists to Languages
 description: A twelve-part build-in-public series on building a typed Lisp from first principles with Effect TypeScript. Lisp makes programs into data. Schema makes data meaningful. Effect makes meaning executable.
 ---
 
-# In the Beginning Was the Schema
+# From Lists to Languages
 
 <p class="blog-subtitle">Building a typed Lisp from first principles with Effect TypeScript.</p>
 
@@ -40,18 +40,18 @@ while making its abstractions inspectable and checkable. You don't have to
 buy into a new language to follow along. You build one, and you find out
 why each piece is needed when the previous version breaks.
 
-## Act I · Genesis
+## Act I · Foundations
 
 Give the language form, meaning, and an environment.
 
-### 01 · [In the Beginning Was the List](./01-the-list)
+### 01 · [Start with a List](./01-the-list)
 
 Build the smallest Lisp imaginable: numbers, symbols, lists, and an
 evaluator. Explain why code-as-data matters more than parentheses.
 
 `(+ 1 2)` → `3`
 
-### 02 · [And the List Became Schema](./02-list-became-schema)
+### 02 · [Giving the List a Schema](./02-list-became-schema)
 
 Represent the language's abstract syntax with recursive Effect Schema
 definitions. Introduce parsing, validation, and structured diagnostics.
@@ -72,7 +72,7 @@ lexical environment from the host interpreter's dependency environment.
 
 *Names resolve in scopes. Capabilities resolve through services.*
 
-## Act II · Logos
+## Act II · Types and Extension
 
 Give the language types, interpretation, and the ability to extend itself.
 
@@ -104,7 +104,7 @@ forms in a prelude, on a kernel that knows only numbers, names, and calls.
 
 *A small kernel, many languages.*
 
-## Act III · Praxis
+## Act III · Effects in Practice
 
 Give the language capabilities, execution, and real-world applications.
 
@@ -132,7 +132,7 @@ transformations.
 
 *The agent doesn't have to guess what the program means.*
 
-### 12 · [Let There Be Languages](./12-let-there-be-languages)
+### 12 · [A Language for Building Languages](./12-let-there-be-languages)
 
 Declare forms in the language itself, build a vendor-review policy language
 from them, and run it with Effect services that each host provides.

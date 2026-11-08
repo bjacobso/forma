@@ -1,11 +1,11 @@
 ---
 title: The Environment Is Not the World
-description: Part 4 of In the Beginning Was the Schema. Add lambda, closures, and lexical scope, and separate the names a program defines from the capabilities a host grants through Effect services.
+description: Part 4 of From Lists to Languages. Add lambda, closures, and lexical scope, and separate the names a program defines from the capabilities a host grants through Effect services.
 ---
 
 # The Environment Is Not the World
 
-<p class="blog-meta">Part 04 of <a href="/blog/in-the-beginning/">In the Beginning Was the Schema</a> · Act I, Genesis · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 04 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act I, Foundations · <time datetime="2026-11-08">November 8, 2026</time></p>
 
 > Names resolve in scopes. Capabilities resolve through services.
 
