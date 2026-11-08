@@ -262,8 +262,8 @@ duplicate work or capture the wrong variable.
 The fix is to let programs write those rewrites themselves, in the
 language, safely. That's what macros are for.
 
-**Next:** Part 7, *Macros Are Programs About Programs*. The compiler can be
-extended in its own language.
+**Next:** [Part 7, *Macros Are Programs About Programs*](/blog/in-the-beginning/07-macros).
+The compiler can be extended in its own language.
 
 <p class="blog-source">The code in this post lives in
 <a href="https://github.com/bjacobso/forma/tree/main/docs/snippets/blog/in-the-beginning/06"><code>docs/snippets/blog/in-the-beginning/06</code></a>

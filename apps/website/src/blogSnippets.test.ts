@@ -33,6 +33,7 @@ import {
   run as run6,
   typeOf as typeOf6,
 } from "../../../docs/snippets/blog/in-the-beginning/06/run.ts";
+import { report as report7, run as run7, expansion } from "../../../docs/snippets/blog/in-the-beginning/07/run.ts";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const lisp = (source: string) => show(evaluate(read(source)));
@@ -370,5 +371,88 @@ describe("blog: The Interpreter Becomes a Compiler", () => {
 
     const junk = Effect.runSync(Effect.flip(load('{"_tag":"Lit","value":"1"}')));
     expect(junk.message).toContain('at ["value"]');
+  });
+});
+
+describe("blog: Macros Are Programs About Programs", () => {
+  const page = readFileSync(resolve(repoRoot, "docs/blog/in-the-beginning/07-macros.md"), "utf8");
+  const square = "(defmacro square\n  ((e) `((lambda (x) (* x x)) ,e)))";
+  const letStar =
+    "(defmacro let*\n  ((() body) body)\n  ((((name value) &rest more) body)\n   `((lambda (,name) (let* ,more ,body)) ,value)))";
+  const thread = "(defmacro ->\n  ((x) x)\n  ((x (f &rest args) &rest steps)\n   `(-> (,f ,x ,@args) ,@steps)))";
+  const scale = "(defmacro scale\n  ((k body) `((lambda (factor) (* factor ,body)) ,k)))";
+  const twice = "(defmacro twice\n  ((f x) `(,f (,f ,x))))";
+  const loop = "(defmacro loop\n  ((x) `(loop ,x)))";
+  const program = (macro: string, body: string) => `${macro}\n\n${body}`;
+  const expand = (source: string, hygienic = true) => Effect.runSync(expansion(source, hygienic));
+  const exec = (source: string, hygienic = true) => {
+    const { lines, output } = recordedOutput();
+    const effect = run7(source, hygienic).pipe(Effect.provideService(Output, output));
+    return { exit: Effect.runSyncExit(effect), effect, lines };
+  };
+  const value = (source: string, hygienic = true) => {
+    const { exit } = exec(source, hygienic);
+    if (Exit.isFailure(exit)) throw new Error(String(exit.cause));
+    return display6(exit.value);
+  };
+  const rejected = (source: string) => report7(source, Effect.runSync(Effect.flip(exec(source).effect)));
+
+  test("the page includes every snippet file and macro", () => {
+    for (const file of ["read.ts", "macro.ts", "expand.ts", "run.ts"]) {
+      expect(page).toContain(`@/snippets/blog/in-the-beginning/07/${file}`);
+    }
+    for (const macro of [square, letStar, thread, scale, twice]) expect(page).toContain(macro);
+  });
+
+  test("square runs its argument once and checks its call", () => {
+    const once = exec(program(square, "(square (print 3))"));
+    expect(Exit.isSuccess(once.exit) && once.exit.value).toBe(9);
+    expect(once.lines).toEqual(["3"]);
+    expect(value(program(square, "(+ 1 (square (+ 2 3)))"))).toBe("26");
+    expect(rejected(program(square, "(square 1 2)"))).toBe(
+      "error: no pattern of square matches this call\n4 | (square 1 2)\n  | ^^^^^^^^^^^^",
+    );
+    expect(rejected(program(square, "(square (quote a))"))).toBe(
+      "error: expected Num, got Data\n4 | (square (quote a))\n  |         ^^^^^^^^^",
+    );
+    expect(value(program(square, "'(square x)"))).toBe("(square x)");
+  });
+
+  test("recursive macros expand at compile time", () => {
+    const lets = program(letStar, "(let* ((x 2) (y (* x 10))) (+ x y))");
+    expect(expand(lets)).toBe("((lambda (x) ((lambda (y) (+ x y)) (* x 10))) 2)");
+    expect(value(lets)).toBe("22");
+    const threaded = program(thread, "(-> 5 (+ 1) (* 2))");
+    expect(expand(threaded)).toBe("(* (+ 5 1) 2)");
+    expect(value(threaded)).toBe("12");
+    expect(rejected(program(loop, "(loop 1)"))).toBe("error: loop expands forever\n2 |   ((x) `(loop ,x)))\n  |         ^^^^^^^^^");
+  });
+
+  test("hygiene keeps the macro's binders from capturing the user's names", () => {
+    expect(value(program(scale, "(scale 2 3)"))).toBe("6");
+    const captured = program(scale, "((lambda (factor) (scale 2 factor)) 5)");
+    expect(expand(captured, false)).toBe("((lambda (factor) ((lambda (factor) (* factor factor)) 2)) 5)");
+    expect(value(captured, false)).toBe("4");
+    expect(expand(captured)).toBe("((lambda (factor) ((lambda (factor#1) (* factor#1 factor)) 2)) 5)");
+    expect(value(captured)).toBe("10");
+  });
+
+  test("the half of hygiene the post leaves out", () => {
+    const shadowed = program(scale, "((lambda (*) (scale 2 3)) +)");
+    expect(expand(shadowed)).toBe("((lambda (*) ((lambda (factor#1) (* factor#1 3)) 2)) +)");
+    expect(value(shadowed)).toBe("5");
+    expect(expand(program(square, "((lambda (square) (square 4)) 1)"))).toContain("(lambda (x#1)");
+  });
+
+  test("an ill-typed expansion is reported inside the macro", () => {
+    expect(value(program(twice, "(twice (lambda (n) (* n 3)) 1)"))).toBe("9");
+    const bad = program(twice, "(twice (lambda (a b) a) 1)");
+    expect(expand(bad)).toBe("((lambda (a b) a) ((lambda (a b) a) 1))");
+    expect(rejected(bad)).toBe("error: expected 2 arguments, got 1\n2 |   ((f x) `(,f (,f ,x))))\n  |               ^^^^^^^");
+  });
+
+  test("the try-it program", () => {
+    const source = "\n(defmacro -> ((x) x)\n  ((x (f &rest args) &rest steps) `(-> (,f ,x ,@args) ,@steps)))\n(-> 5 (+ 1) (* 2))";
+    expect(expand(source)).toBe("(* (+ 5 1) 2)");
   });
 });

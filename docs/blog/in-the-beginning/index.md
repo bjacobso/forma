@@ -89,7 +89,7 @@ Make type-checking and execution separate phases.
 
 *Syntax is what you write. Core is what it means.*
 
-### 07 · Macros Are Programs About Programs <Badge type="info" text="Coming" />
+### 07 · [Macros Are Programs About Programs](./07-macros)
 
 Implement quotation, quasiquotation, and hygienic syntax transformation.
 Explain why Lisp's homoiconicity is useful but not enough on its own.

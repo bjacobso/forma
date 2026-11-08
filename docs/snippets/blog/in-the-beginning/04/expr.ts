@@ -140,7 +140,7 @@ export const ExprFromSexp = Sexp.pipe(
   }),
 );
 
-const diagnose = (issue: SchemaIssue.Issue): Diagnostic =>
+export const diagnose = (issue: SchemaIssue.Issue): Diagnostic =>
   "issue" in issue ? diagnose(issue.issue)
   : Schema.decodeUnknownSync(Diagnostic)(
       issue._tag === "InvalidValue" ? issue.annotations : undefined,

@@ -22,6 +22,11 @@ typed, extensible language for building other languages.
 
 <ul class="blog-posts">
 <li>
+<a href="/blog/in-the-beginning/07-macros"><span class="blog-posts__part">Part 07</span> Macros Are Programs About Programs</a>
+<p>Add quasiquotation and pattern-based macros written in the language, make them hygienic by renaming, and see why homoiconicity alone isn't enough.</p>
+<time datetime="2026-11-08">November 8, 2026</time>
+</li>
+<li>
 <a href="/blog/in-the-beginning/06-interpreter-becomes-compiler"><span class="blog-posts__part">Part 06</span> The Interpreter Becomes a Compiler</a>
 <p>Elaborate surface syntax into a small typed core with resolved names, run it with an evaluator that trusts it, and save it as a Schema-checked artifact.</p>
 <time datetime="2026-11-08">November 8, 2026</time>
