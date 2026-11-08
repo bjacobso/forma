@@ -111,6 +111,7 @@ export default defineConfig({
             { text: "Language", link: "/language" },
             { text: "Authoring your own program", link: "/authoring" },
             { text: "Structure and interpretation", link: "/structure-and-interpretation" },
+            { text: "Roots of Lisp crib sheet", link: "/roots-of-lisp" },
             { text: "Domain modeling", link: "/domain-modeling" },
             { text: "Writing a form", link: "/writing-a-form" },
             { text: "Forma for Effect", link: "/effect" },
