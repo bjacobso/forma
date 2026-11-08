@@ -49,6 +49,7 @@ export const read = (source: string): Read => {
     });
 
   return Effect.gen(function* () {
+    position = 0; // an Effect can run more than once
     const program = yield* next();
     const extra = tokens[position];
     if (extra) {

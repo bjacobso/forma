@@ -223,8 +223,8 @@ Names a program defines should resolve in lexical scopes, inside the
 language. Capabilities the host grants should resolve through services,
 outside it. Untangling those two is the next post.
 
-**Next:** Part 4, *The Environment Is Not the World*. Names resolve in
-scopes. Capabilities resolve through services.
+**Next:** [Part 4, *The Environment Is Not the World*](/blog/in-the-beginning/04-environment-is-not-the-world).
+Names resolve in scopes. Capabilities resolve through services.
 
 <p class="blog-source">The code in this post lives in
 <a href="https://github.com/bjacobso/forma/tree/main/docs/snippets/blog/in-the-beginning/03"><code>docs/snippets/blog/in-the-beginning/03</code></a>

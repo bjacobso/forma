@@ -14,6 +14,12 @@ import { display as display3, type Value } from "../../../docs/snippets/blog/in-
 import type { NotCallable, NotANumber, UnboundName } from "../../../docs/snippets/blog/in-the-beginning/03/errors.ts";
 import { buggy, lenient } from "../../../docs/snippets/blog/in-the-beginning/03/handle.ts";
 import { report, run as run3 } from "../../../docs/snippets/blog/in-the-beginning/03/run.ts";
+import { Output, recordedOutput } from "../../../docs/snippets/blog/in-the-beginning/04/capabilities.ts";
+import { dynamic, evaluateWith } from "../../../docs/snippets/blog/in-the-beginning/04/evaluate.ts";
+import { type Failure as Failure4, report as report4, run as run4 } from "../../../docs/snippets/blog/in-the-beginning/04/run.ts";
+import { display as display4, type Value as Value4 } from "../../../docs/snippets/blog/in-the-beginning/04/scope.ts";
+import { called } from "../../../docs/snippets/blog/in-the-beginning/04/services.ts";
+import { quiet } from "../../../docs/snippets/blog/in-the-beginning/04/worlds.ts";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const lisp = (source: string) => show(evaluate(read(source)));
@@ -80,6 +86,8 @@ describe("blog: And the List Became Schema", () => {
     expect(sexp._tag === "List" && sexp.items[1]).toEqual({ _tag: "Num", value: 1, span: { start: 3, end: 4 } });
     expect(rendered("(+ 1 (* 2 3)")).toBe("error: this ( is never closed\n1 | (+ 1 (* 2 3)\n  | ^");
     expect(diagnostic("(+ 1 2))").message).toBe("unexpected )");
+    const once = read2("(+ 1 2)");
+    expect(Effect.runSync(once)).toEqual(Effect.runSync(once));
   });
 
   test("parsing reports meaningless shapes at their source", () => {
@@ -166,5 +174,53 @@ describe("blog: Errors Are Not Exceptions", () => {
       expect(Cause.hasFails(exit.cause)).toBe(false);
       expect(String(Cause.squash(exit.cause))).toBe("Error: index out of range");
     }
+  });
+});
+
+describe("blog: The Environment Is Not the World", () => {
+  const page = readFileSync(resolve(repoRoot, "docs/blog/in-the-beginning/04-environment-is-not-the-world.md"), "utf8");
+  const scoping = "((lambda (x)\n   ((lambda (f)\n      ((lambda (x) (f 0)) 100))\n    (lambda (y) (+ x y))))\n 1)";
+  const exec = (source: string, evaluator?: Parameters<typeof run4>[1]) => {
+    const { lines, output } = recordedOutput();
+    const program = run4(source, evaluator).pipe(Effect.provideService(Output, output));
+    return { exit: Effect.runSyncExit(program), lines, program };
+  };
+  const value = (source: string, evaluator?: Parameters<typeof run4>[1]) => {
+    const { exit } = exec(source, evaluator);
+    if (Exit.isFailure(exit)) throw new Error(String(exit.cause));
+    return display4(exit.value);
+  };
+  const reported = (source: string) => report4(source, Effect.runSync(Effect.flip(exec(source).program)));
+
+  test("the page includes every snippet file", () => {
+    for (const file of ["expr.ts", "errors.ts", "scope.ts", "evaluate.ts", "services.ts", "capabilities.ts", "run.ts", "worlds.ts"]) {
+      expect(page).toContain(`@/snippets/blog/in-the-beginning/04/${file}`);
+    }
+    expect(page).toContain(scoping.replaceAll("\\n", "\n"));
+  });
+
+  test("functions and closures", () => {
+    expect(value("((lambda (x) (* x x)) 7)")).toBe("49");
+    expect(value("(((lambda (n) (lambda (x) (+ x n))) 10) 5)")).toBe("15");
+    expect(value("((lambda (print) (+ print 1)) 41)")).toBe("42");
+    expect(reported("(lambda (x x) x)")).toBe("error: x is already a parameter\n1 | (lambda (x x) x)\n  |            ^");
+    expect(reported("((lambda (x) x) 1 2)")).toMatch(/^error: expected 1 argument, got 2\n/);
+  });
+
+  test("lexical and dynamic scope disagree, and services are dynamic", () => {
+    expect(value(scoping)).toBe("1");
+    expect(value(scoping, evaluateWith(dynamic))).toBe("100");
+    expect(Effect.runSync(called)).toBe(100);
+  });
+
+  test("output is a capability the host provides", () => {
+    expect(quiet()).toEqual({ result: 3, lines: ["1", "2"] });
+    expectTypeOf(run4).returns.toEqualTypeOf<Effect.Effect<Value4, Failure4, Output>>();
+  });
+
+  test("a bad argument still fails only at runtime, inside the body", () => {
+    expect(reported("((lambda (x) (+ x 1)) (quote a))")).toBe(
+      "error: + expects numbers, got a\n1 | ((lambda (x) (+ x 1)) (quote a))\n  |                 ^",
+    );
   });
 });

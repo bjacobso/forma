@@ -64,7 +64,7 @@ explicit failure changes interpreter design.
 
 *A language runtime should know how it can fail.*
 
-### 04 · The Environment Is Not the World <Badge type="info" text="Coming" />
+### 04 · [The Environment Is Not the World](./04-environment-is-not-the-world)
 
 Introduce lexical scope, closures, and Effect services. Distinguish a Lisp's
 lexical environment from the host interpreter's dependency environment.

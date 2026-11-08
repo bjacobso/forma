@@ -22,6 +22,11 @@ typed, extensible language for building other languages.
 
 <ul class="blog-posts">
 <li>
+<a href="/blog/in-the-beginning/04-environment-is-not-the-world"><span class="blog-posts__part">Part 04</span> The Environment Is Not the World</a>
+<p>Add lambda, closures, and lexical scope, and separate the names a program defines from the capabilities a host grants through Effect services.</p>
+<time datetime="2026-11-08">November 8, 2026</time>
+</li>
+<li>
 <a href="/blog/in-the-beginning/03-errors-are-not-exceptions"><span class="blog-posts__part">Part 03</span> Errors Are Not Exceptions</a>
 <p>Rewrite the evaluator as an Effect with named, Schema-backed failures, selective recovery, and a clear line between program errors and interpreter bugs.</p>
 <time datetime="2026-11-08">November 8, 2026</time>

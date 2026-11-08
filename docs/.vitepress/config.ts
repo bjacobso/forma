@@ -24,7 +24,7 @@ const blogSidebar: DefaultTheme.SidebarItem[] = [
       { text: "01 · In the Beginning Was the List", link: "/blog/in-the-beginning/01-the-list" },
       { text: "02 · And the List Became Schema", link: "/blog/in-the-beginning/02-list-became-schema" },
       { text: "03 · Errors Are Not Exceptions", link: "/blog/in-the-beginning/03-errors-are-not-exceptions" },
-      { text: "04 · The Environment Is Not the World" },
+      { text: "04 · The Environment Is Not the World", link: "/blog/in-the-beginning/04-environment-is-not-the-world" },
       { text: "05 · Types Before Execution" },
       { text: "06 · The Interpreter Becomes a Compiler" },
       { text: "07 · Macros Are Programs About Programs" },
