@@ -40,3 +40,13 @@ jobs:
       - run: pnpm website:build
       - run: pnpm website:dry-run
       - run: pnpm test:site
+      - name: Preserve browser traces and Wrangler diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-failure-diagnostics
+          path: |
+            apps/website/test-results/
+            ~/.config/.wrangler/logs/
+          include-hidden-files: true
+          retention-days: 7
