@@ -1,11 +1,11 @@
 ---
-title: In the Beginning Was the List
-description: Part 1 of In the Beginning Was the Schema. Build the smallest Lisp imaginable, numbers, symbols, lists, and an evaluator, and see why code-as-data matters more than parentheses.
+title: Start with a List
+description: Part 1 of From Lists to Languages. Build the smallest Lisp imaginable, numbers, symbols, lists, and an evaluator, and see why code-as-data matters more than parentheses.
 ---
 
-# In the Beginning Was the List
+# Start with a List
 
-<p class="blog-meta">Part 01 of <a href="/blog/in-the-beginning/">In the Beginning Was the Schema</a> · Act I, Genesis · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 01 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act I, Foundations · <time datetime="2026-11-08">November 8, 2026</time></p>
 
 ```lisp
 (+ 1 2) ; => 3
@@ -209,7 +209,7 @@ in the type.
 
 That's where the combination becomes more than the sum of its parts.
 
-**Next:** [Part 2, *And the List Became Schema*](/blog/in-the-beginning/02-list-became-schema).
+**Next:** [Part 2, *Giving the List a Schema*](/blog/in-the-beginning/02-list-became-schema).
 A program is data with a shape.
 
 <p class="blog-source">The code in this post lives in

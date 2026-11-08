@@ -1,11 +1,11 @@
 ---
-title: Let There Be Languages
-description: Part 12 of In the Beginning Was the Schema. Declare forms in the language itself, build a vendor-review policy language from them, run it with Effect services a host provides, and see how the pieces add up to a language-building platform.
+title: A Language for Building Languages
+description: Part 12 of From Lists to Languages. Declare forms in the language itself, build a vendor-review policy language from them, run it with Effect services a host provides, and see how the pieces add up to a language-building platform.
 ---
 
-# Let There Be Languages
+# A Language for Building Languages
 
-<p class="blog-meta">Part 12 of <a href="/blog/in-the-beginning/">In the Beginning Was the Schema</a> · Act III, Praxis · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 12 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act III, Effects in Practice · <time datetime="2026-11-08">November 8, 2026</time></p>
 
 > The final product isn't a Lisp. It's a language-building platform.
 
@@ -308,7 +308,7 @@ a schema; see [Writing a form](/writing-a-form). The
 [language guide](/language) and [roadmap](/roadmap) describe what Forma
 does today, and what it doesn't yet.
 
-## In the end
+## Where it ends up
 
 Lisp gives us the freedom to invent languages. Schema gives those
 languages form. Effect gives them consequences.

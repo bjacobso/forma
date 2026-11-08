@@ -7,7 +7,7 @@ description: Notes from building Forma in public, starting with a twelve-part se
 
 Notes from building Forma in public.
 
-## In the Beginning Was the Schema
+## From Lists to Languages
 
 A twelve-part series on building a typed Lisp from first principles with
 Effect TypeScript. It starts with a fifty-line interpreter and ends with a
@@ -22,7 +22,12 @@ typed, extensible language for building other languages.
 
 <ul class="blog-posts">
 <li>
-<a href="/blog/in-the-beginning/12-let-there-be-languages"><span class="blog-posts__part">Part 12</span> Let There Be Languages</a>
+<a href="/blog/reader-is-the-bottleneck"><span class="blog-posts__part">Essay</span> The Reader Is the Bottleneck</a>
+<p>Machine-written code weakens the old case for macros and strengthens the case for abstractions that come with rules a compiler can check.</p>
+<time datetime="2026-11-08">November 8, 2026</time>
+</li>
+<li>
+<a href="/blog/in-the-beginning/12-let-there-be-languages"><span class="blog-posts__part">Part 12</span> A Language for Building Languages</a>
 <p>Declare forms in the language itself, build a vendor-review policy language from them, and run it with Effect services each host provides. The end of the series.</p>
 <time datetime="2026-11-08">November 8, 2026</time>
 </li>
@@ -72,12 +77,12 @@ typed, extensible language for building other languages.
 <time datetime="2026-11-08">November 8, 2026</time>
 </li>
 <li>
-<a href="/blog/in-the-beginning/02-list-became-schema"><span class="blog-posts__part">Part 02</span> And the List Became Schema</a>
+<a href="/blog/in-the-beginning/02-list-became-schema"><span class="blog-posts__part">Part 02</span> Giving the List a Schema</a>
 <p>Give s-expressions a schema and source spans, and turn parsing into a Schema transformation with structured diagnostics.</p>
 <time datetime="2026-11-08">November 8, 2026</time>
 </li>
 <li>
-<a href="/blog/in-the-beginning/01-the-list"><span class="blog-posts__part">Part 01</span> In the Beginning Was the List</a>
+<a href="/blog/in-the-beginning/01-the-list"><span class="blog-posts__part">Part 01</span> Start with a List</a>
 <p>Build the smallest Lisp imaginable, then see why code-as-data matters more than parentheses.</p>
 <time datetime="2026-11-08">November 8, 2026</time>
 </li>

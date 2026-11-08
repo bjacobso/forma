@@ -1,11 +1,11 @@
 ---
 title: The Prelude Is the Language
-description: Part 8 of In the Beginning Was the Schema. Shrink the compiler to a kernel of numbers, names, and calls; build quote, lambda, a generalizing let, if, and match as typed forms in a prelude; then build a small pricing language on the same kernel.
+description: Part 8 of From Lists to Languages. Shrink the compiler to a kernel of numbers, names, and calls; build quote, lambda, a generalizing let, if, and match as typed forms in a prelude; then build a small pricing language on the same kernel.
 ---
 
 # The Prelude Is the Language
 
-<p class="blog-meta">Part 08 of <a href="/blog/in-the-beginning/">In the Beginning Was the Schema</a> · Act II, Logos · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 08 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act II, Types and Extension · <time datetime="2026-11-08">November 8, 2026</time></p>
 
 > A small kernel, many languages.
 

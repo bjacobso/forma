@@ -1,11 +1,11 @@
 ---
 title: Errors Are Not Exceptions
-description: Part 3 of In the Beginning Was the Schema. Rewrite the evaluator as Effect<Value, EvalError, Environment>, with Schema-backed tagged errors that point at source, selective recovery, and a clear line between program errors and interpreter bugs.
+description: Part 3 of From Lists to Languages. Rewrite the evaluator as Effect<Value, EvalError, Environment>, with Schema-backed tagged errors that point at source, selective recovery, and a clear line between program errors and interpreter bugs.
 ---
 
 # Errors Are Not Exceptions
 
-<p class="blog-meta">Part 03 of <a href="/blog/in-the-beginning/">In the Beginning Was the Schema</a> · Act I, Genesis · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 03 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act I, Foundations · <time datetime="2026-11-08">November 8, 2026</time></p>
 
 > A language runtime should know how it can fail.
 

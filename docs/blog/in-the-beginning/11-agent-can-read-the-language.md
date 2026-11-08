@@ -1,11 +1,11 @@
 ---
 title: The Agent Can Read the Language
-description: Part 11 of In the Beginning Was the Schema. Give a coding agent tools instead of a text buffer, including a report on the file, types at positions, a rename the checker proves safe, structured replacement, and a sandboxed REPL, each with a Schema for its input and output.
+description: Part 11 of From Lists to Languages. Give a coding agent tools instead of a text buffer, including a report on the file, types at positions, a rename the checker proves safe, structured replacement, and a sandboxed REPL, each with a Schema for its input and output.
 ---
 
 # The Agent Can Read the Language
 
-<p class="blog-meta">Part 11 of <a href="/blog/in-the-beginning/">In the Beginning Was the Schema</a> · Act III, Praxis · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 11 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act III, Effects in Practice · <time datetime="2026-11-08">November 8, 2026</time></p>
 
 > The agent doesn't have to guess what the program means.
 
@@ -295,7 +295,7 @@ The last post puts those pieces to work on something that isn't a
 language demo: a small language for a real job, built with the prelude,
 checked by the kernel, and run with capabilities a host provides.
 
-**Next:** [Part 12, *Let There Be Languages*](/blog/in-the-beginning/12-let-there-be-languages).
+**Next:** [Part 12, *A Language for Building Languages*](/blog/in-the-beginning/12-let-there-be-languages).
 The final product isn't a Lisp. It's a language-building platform.
 
 <p class="blog-source">The code in this post lives in
