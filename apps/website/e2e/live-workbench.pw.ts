@@ -13,6 +13,13 @@ test("diagnostics underline authored calls and generated output follows repairs 
   await expect(page.getByRole("status")).toHaveText("1 error · 0 warnings");
   await expect(page.locator(".cm-lintRange-error")).toBeVisible();
   await expect(page.locator(".workbench-contract")).toContainText("PaymentDeclined");
+  await expect(page.locator(".workbench-check-state")).toHaveText("× Check failed");
+  await expect(page.locator(".workbench-diagnostic-meta")).toContainText(/orders\.forma:\d+:\d+/);
+  await expect(page.locator(".workbench-diagnostic-source mark")).not.toBeEmpty();
+  const beforeGuidance = await page.getByRole("textbox", { name: "Forma source" }).innerText();
+  await page.getByText("Example guidance", { exact: false }).click();
+  await expect(page.locator(".workbench-guidance")).toContainText("Authored, not an automatic fix");
+  await expect(page.getByRole("textbox", { name: "Forma source" })).toHaveText(beforeGuidance, { useInnerText: true });
   await page.getByRole("tab", { name: "Effect TypeScript" }).click();
   await expect(page.getByRole("tabpanel")).toContainText("Generation is blocked");
   await page.locator(".workbench-diagnostic").click();
@@ -24,6 +31,27 @@ test("diagnostics underline authored calls and generated output follows repairs 
   await page.getByRole("textbox", { name: "Forma source" }).fill(ordersSource.replace(":shipped", ":shipped :cancelled"));
   await expect(page.getByRole("status")).toHaveText("0 errors · 0 warnings");
   await expect(page.locator(".target-code-view")).toContainText("cancelled");
+  expect(errors).toEqual([]);
+});
+
+test("cursor types annotate real source without becoming editable text or surviving edits", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/playground/embed/inference");
+  const editor = page.getByRole("textbox", { name: "Forma source" });
+  await editor.fill("(+ 20 3)");
+  await editor.press("ControlOrMeta+Home");
+  await expect(page.getByRole("status")).toHaveText("0 errors · 0 warnings");
+  await expect(page.locator(".cm-inferred-type")).toBeVisible();
+  await expect(editor).toHaveText("(+ 20 3)");
+  await expect(page.locator(".workbench-inspection code").last()).toHaveText("Int");
+  await editor.press("ControlOrMeta+a");
+  await editor.press("Backspace");
+  await expect(page.locator(".cm-inferred-type")).toHaveCount(0);
+  await expect(page.locator(".workbench-inspection")).toContainText("Place the cursor");
+  await editor.fill('(+ 20 "oops")');
+  await expect(page.getByRole("status")).toHaveText(/\d+ errors? · 0 warnings/);
+  await expect(page.locator(".cm-inferred-type")).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -76,15 +104,18 @@ test("core examples expose inference, expansion and evaluated values", async ({ 
   await expect(page.getByRole("tabpanel")).toContainText("if");
   await page.getByRole("tab", { name: "Value", exact: true }).click();
   await expect(page.getByRole("tabpanel")).toContainText('"A"');
+  await page.getByRole("tab", { name: "Value", exact: true }).press("ArrowLeft");
+  await expect(page.getByRole("tab", { name: "Expand", exact: true })).toBeFocused();
+  await expect(page.getByRole("tab", { name: "Expand", exact: true })).toHaveAttribute("aria-selected", "true");
   await page.getByRole("button", { name: "Introduce error" }).click();
   await expect(page.getByRole("status")).toHaveText(/\d+ errors? · 0 warnings/);
   await expect(page.locator(".workbench-diagnostic").first()).toBeVisible();
 });
 
 test("mobile workbench stacks source and output without horizontal overflow", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 360, height: 844 });
   await page.goto("/playground/embed/orders?broken=1");
   await expect(page.getByRole("status")).toHaveText("1 error · 0 warnings");
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
   await page.screenshot({ path: `${screenshots}/effect-workbench-mobile.png`, fullPage: true });
 });

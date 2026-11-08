@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Compartment, EditorState } from "@codemirror/state";
-import { EditorView, keymap, lineNumbers } from "@codemirror/view";
+import { Decoration, EditorView, keymap, lineNumbers, WidgetType } from "@codemirror/view";
 import { bracketMatching, foldGutter } from "@codemirror/language";
 import { closeBrackets } from "@codemirror/autocomplete";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
@@ -9,11 +9,25 @@ import { editorAppearance, lispSupport, structuralKeymap, type SyntaxPalette } f
 import type { Diagnostic } from "../engine/protocol";
 import type { SpanRange } from "../lib/artifacts";
 
-export function WorkbenchEditor({ source, onChange, onInspect, diagnostics, mode, palette, reveal, focusOnReveal = true, ariaLabel = "Forma source" }: {
+class InferredType extends WidgetType {
+  constructor(readonly display: string) { super(); }
+  eq(other: InferredType) { return this.display === other.display; }
+  toDOM() {
+    const element = document.createElement("span");
+    element.className = "cm-inferred-type";
+    // Generated text stays out of the editable source; the inspection panel reads the full type.
+    element.dataset.type = `: ${this.display}`;
+    element.setAttribute("aria-hidden", "true");
+    return element;
+  }
+}
+
+export function WorkbenchEditor({ source, onChange, onInspect, diagnostics, inspection, mode, palette, reveal, focusOnReveal = true, ariaLabel = "Forma source" }: {
   source: string;
   onChange: (source: string) => void;
   onInspect: (offset: number) => void;
   diagnostics: readonly Diagnostic[];
+  inspection?: { span: SpanRange; display: string } | undefined;
   mode: "light" | "dark";
   palette: SyntaxPalette;
   reveal: SpanRange | null;
@@ -23,6 +37,7 @@ export function WorkbenchEditor({ source, onChange, onInspect, diagnostics, mode
   const container = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
   const appearance = useRef(new Compartment());
+  const annotation = useRef(new Compartment());
   const callbacks = useRef({ onChange, onInspect });
   callbacks.current = { onChange, onInspect };
   useEffect(() => {
@@ -30,6 +45,7 @@ export function WorkbenchEditor({ source, onChange, onInspect, diagnostics, mode
       parent: container.current!,
       state: EditorState.create({ doc: source, extensions: [
         lispSupport(), appearance.current.of(editorAppearance(mode, palette)),
+        annotation.current.of([]),
         history(), bracketMatching(), closeBrackets(), lineNumbers(), foldGutter({ openText: "−", closedText: "+" }),
         keymap.of([...defaultKeymap, ...historyKeymap]), structuralKeymap,
         EditorView.lineWrapping,
@@ -50,6 +66,14 @@ export function WorkbenchEditor({ source, onChange, onInspect, diagnostics, mode
   useEffect(() => {
     view.current?.dispatch({ effects: appearance.current.reconfigure(editorAppearance(mode, palette)) });
   }, [mode, palette]);
+  useEffect(() => {
+    const editor = view.current;
+    if (!editor) return;
+    editor.dispatch({ effects: annotation.current.reconfigure(inspection ? EditorView.decorations.compute(["doc"], state =>
+      state.doc.toString() === source ? Decoration.set([
+        Decoration.widget({ widget: new InferredType(inspection.display), side: 1 }).range(inspection.span[1]),
+      ]) : Decoration.none) : []) });
+  }, [source, inspection?.span[0], inspection?.span[1], inspection?.display]);
   useEffect(() => {
     const editor = view.current;
     if (!editor) return;

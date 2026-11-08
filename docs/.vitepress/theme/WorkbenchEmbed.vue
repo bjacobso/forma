@@ -24,15 +24,10 @@ onUnmounted(() => window.removeEventListener("message", receive));
 </script>
 
 <template>
-  <div class="fh-live-embed" :class="{ 'fh-live-embed--broken': props.broken }">
+  <div class="fh-live-embed">
     <div class="fh-window">
-      <div class="fh-window__bar" aria-hidden="true">
-        <span class="fh-window__dots"><i /><i /><i /></span>
-        <span>{{ props.file || `${props.example}.forma` }} — live compiler</span>
-        <span class="fh-window__meta">{{ props.broken ? "starts broken" : "runs in your browser" }}</span>
-      </div>
       <iframe ref="frame" :src="`/playground/embed/${props.example}${props.broken ? '?broken=1' : ''}`"
-        :title="props.title" :style="{ height: `${height}px` }" loading="lazy" @load="syncTheme" />
+        :title="props.file ? `${props.title} — ${props.file}` : props.title" :style="{ height: `${height}px` }" loading="lazy" @load="syncTheme" />
     </div>
     <a class="fh-live-embed__fallback" :href="`/playground/live/${props.example}`" target="_self">Open this example in its own page ↗</a>
   </div>
