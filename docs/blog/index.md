@@ -22,6 +22,11 @@ typed, extensible language for building other languages.
 
 <ul class="blog-posts">
 <li>
+<a href="/blog/in-the-beginning/06-interpreter-becomes-compiler"><span class="blog-posts__part">Part 06</span> The Interpreter Becomes a Compiler</a>
+<p>Elaborate surface syntax into a small typed core with resolved names, run it with an evaluator that trusts it, and save it as a Schema-checked artifact.</p>
+<time datetime="2026-11-08">November 8, 2026</time>
+</li>
+<li>
 <a href="/blog/in-the-beginning/05-types-before-execution"><span class="blog-posts__part">Part 05</span> Types Before Execution</a>
 <p>Represent types with Effect Schema, infer them with unification, and reject ill-typed programs before they run.</p>
 <time datetime="2026-11-08">November 8, 2026</time>

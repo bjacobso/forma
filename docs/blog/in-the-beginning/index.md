@@ -82,7 +82,7 @@ types, and type errors. Use Schema to represent and validate type structures.
 
 `(+ 1 "hello")` → a type error before evaluation
 
-### 06 · The Interpreter Becomes a Compiler <Badge type="info" text="Coming" />
+### 06 · [The Interpreter Becomes a Compiler](./06-interpreter-becomes-compiler)
 
 Introduce elaboration: surface syntax becomes a small, typed core language.
 Make type-checking and execution separate phases.

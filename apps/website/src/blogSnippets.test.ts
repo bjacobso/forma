@@ -22,6 +22,17 @@ import { called } from "../../../docs/snippets/blog/in-the-beginning/04/services
 import { quiet } from "../../../docs/snippets/blog/in-the-beginning/04/worlds.ts";
 import { report as report5, run as run5, typeOf } from "../../../docs/snippets/blog/in-the-beginning/05/run.ts";
 import { Type } from "../../../docs/snippets/blog/in-the-beginning/05/types.ts";
+import { showCore } from "../../../docs/snippets/blog/in-the-beginning/06/core.ts";
+import { display as display6, execute, type Value as Value6 } from "../../../docs/snippets/blog/in-the-beginning/06/execute.ts";
+import {
+  build,
+  compile,
+  type Failure as Failure6,
+  load,
+  report as report6,
+  run as run6,
+  typeOf as typeOf6,
+} from "../../../docs/snippets/blog/in-the-beginning/06/run.ts";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const lisp = (source: string) => show(evaluate(read(source)));
@@ -289,5 +300,75 @@ describe("blog: Types Before Execution", () => {
     expect(display4(Effect.runSync(run4(selfApply).pipe(Effect.provideService(Output, output))))).toBe("1");
     expect(rejected(selfApply)).toMatch(/^error: infinite type: 'a = \('a\) -> 'b\n/);
     expect(rejected("(lambda (f) (+ (f 1) (f (quote a))))")).toMatch(/^error: expected Num, got Data\n/);
+  });
+});
+
+describe("blog: The Interpreter Becomes a Compiler", () => {
+  const page = readFileSync(resolve(repoRoot, "docs/blog/in-the-beginning/06-interpreter-becomes-compiler.md"), "utf8");
+  const core = (source: string) => showCore(Effect.runSync(compile(source)));
+  const exec = <A, E>(program: Effect.Effect<A, E, Output>) => {
+    const { lines, output } = recordedOutput();
+    return { exit: Effect.runSyncExit(program.pipe(Effect.provideService(Output, output))), lines };
+  };
+  const value = (source: string) => {
+    const { exit } = exec(run6(source));
+    if (Exit.isFailure(exit)) throw new Error(String(exit.cause));
+    return display6(exit.value);
+  };
+
+  test("the page includes every snippet file and the printed core", () => {
+    for (const file of ["core.ts", "elaborate.ts", "execute.ts", "run.ts"]) {
+      expect(page).toContain(`@/snippets/blog/in-the-beginning/06/${file}`);
+    }
+    for (const source of ["((lambda (x) (+ x 1)) 41)", "(print (quote hi))", "(lambda (f x) (f (f x)))"]) {
+      expect(page).toContain(core(source));
+    }
+    expect(core("((lambda (x) ((lambda (y) x) 2)) 1)")).toContain("local x @1.0 : Num");
+  });
+
+  test("elaboration gives exactly Part 5's types and errors", () => {
+    const programs = [
+      "1", "+", "print", "(lambda (x) (+ x 1))", "(lambda (x) x)", "(lambda (f x) (f (f x)))",
+      "(lambda (f g x) (f (g x)))", "((lambda (f) (f 1 2)) +)", "(print (quote hi))", "(+ 1 (quote hello))",
+      "((lambda (x) (+ x 1)) (quote a))", "(5 1)", "(print 1 2)", "(lambda (x) (x x))", "(+ 1 y)",
+      "((lambda (id) ((id id) 1)) (lambda (x) x))", "(lambda (f) (+ (f 1) (f (quote a))))",
+    ];
+    for (const source of programs) {
+      expect(Effect.runSyncExit(typeOf6(source))).toEqual(Effect.runSyncExit(typeOf(source)));
+    }
+  });
+
+  test("core runs with resolved names and only DivByZero left", () => {
+    const scoping = "((lambda (x)\n   ((lambda (f)\n      ((lambda (x) (f 0)) 100))\n    (lambda (y) (+ x y))))\n 1)";
+    expect(value(scoping)).toBe("1");
+    expect(value("(((lambda (n) (lambda (x) (+ x n))) 10) 5)")).toBe("15");
+    expect(value("((lambda (x) ((lambda (x) x) 2)) 1)")).toBe("2");
+    expect(value("((lambda (x) ((lambda (y) x) 2)) 1)")).toBe("1");
+    const printed = exec(run6("(+ (print 1) (print 2))"));
+    expect(printed.lines).toEqual(["1", "2"]);
+    const divided = exec(Effect.flip(run6("(/ 10 (+ 2 -2))")));
+    expect(Exit.isSuccess(divided.exit) && report6("(/ 10 (+ 2 -2))", divided.exit.value)).toBe(
+      "error: division by zero\n1 | (/ 10 (+ 2 -2))\n  |       ^^^^^^^^",
+    );
+    expectTypeOf(run6).returns.toEqualTypeOf<Effect.Effect<Value6, Failure6, Output>>();
+  });
+
+  test("compiled core is an artifact that runs later, and tampering is a defect", () => {
+    const json = Effect.runSync(build("(+ (print 1) (print 2))"));
+    const loaded = exec(load(json).pipe(Effect.flatMap((c) => execute(c, undefined))));
+    expect(Exit.isSuccess(loaded.exit) && loaded.exit.value).toBe(3);
+    expect(loaded.lines).toEqual(["1", "2"]);
+
+    const tampered = Effect.runSync(build("(+ 1 2)")).replace('"name":"+"', '"name":"pi"');
+    const { exit } = exec(load(tampered).pipe(Effect.flatMap((c) => execute(c, undefined))));
+    expect(Exit.isFailure(exit)).toBe(true);
+    if (Exit.isFailure(exit)) {
+      expect(Cause.hasDies(exit.cause)).toBe(true);
+      expect(Cause.hasFails(exit.cause)).toBe(false);
+      expect(String(Cause.squash(exit.cause))).toBe("Error: ill-typed core: 3.141592653589793 is not a function");
+    }
+
+    const junk = Effect.runSync(Effect.flip(load('{"_tag":"Lit","value":"1"}')));
+    expect(junk.message).toContain('at ["value"]');
   });
 });

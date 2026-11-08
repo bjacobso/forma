@@ -14,7 +14,7 @@ type Check<A> = Effect.Effect<A, CheckError>;
 
 // #region arity
 // The parameter types for a call with n arguments, if n is allowed.
-const paramsFor = (f: TFun, n: number) =>
+export const paramsFor = (f: TFun, n: number) =>
   n === f.params.length || (f.rest && n > f.params.length)
     ? Array.from({ length: n }, (_, i) => f.params[i] ?? f.rest!)
     : undefined;
@@ -23,7 +23,7 @@ const paramsFor = (f: TFun, n: number) =>
 // #region solver
 // One checking run: a supply of fresh type variables, and what has
 // been learned about them so far.
-const makeSolver = () => {
+export const makeSolver = () => {
   const solved = new Map<number, Type>();
   let next = 0;
   const fresh = (): Type => ({ _tag: "TVar", id: next++ });

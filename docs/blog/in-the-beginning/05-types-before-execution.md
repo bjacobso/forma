@@ -279,8 +279,8 @@ The fix is to make checking produce something: a smaller, typed **core**
 language that the evaluator can trust. That's the step that turns the
 interpreter into a compiler.
 
-**Next:** Part 6, *The Interpreter Becomes a Compiler*. Syntax is what you
-write. Core is what it means.
+**Next:** [Part 6, *The Interpreter Becomes a Compiler*](/blog/in-the-beginning/06-interpreter-becomes-compiler).
+Syntax is what you write. Core is what it means.
 
 <p class="blog-source">The code in this post lives in
 <a href="https://github.com/bjacobso/forma/tree/main/docs/snippets/blog/in-the-beginning/05"><code>docs/snippets/blog/in-the-beginning/05</code></a>
