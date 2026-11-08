@@ -123,7 +123,7 @@ enables composable interpretations.
 
 *Programs become things we can reason about, not just execute.*
 
-### 11 · The Agent Can Read the Language <Badge type="info" text="Coming" />
+### 11 · [The Agent Can Read the Language](./11-agent-can-read-the-language)
 
 Expose typed syntax, compiler diagnostics, structured edits, and a REPL to
 coding agents. Compare free-form text editing with AST-aware

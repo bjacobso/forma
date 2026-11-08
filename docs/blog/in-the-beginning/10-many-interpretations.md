@@ -295,8 +295,8 @@ text and finds out whether it worked by running something. It could read
 this report instead, and ask for a type at a position, and make edits that
 are trees, not strings.
 
-**Next:** Part 11, *The Agent Can Read the Language*. The agent doesn't
-have to guess what the program means.
+**Next:** [Part 11, *The Agent Can Read the Language*](/blog/in-the-beginning/11-agent-can-read-the-language).
+The agent doesn't have to guess what the program means.
 
 <p class="blog-source">The code in this post lives in
 <a href="https://github.com/bjacobso/forma/tree/main/docs/snippets/blog/in-the-beginning/10"><code>docs/snippets/blog/in-the-beginning/10</code></a>

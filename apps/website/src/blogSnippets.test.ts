@@ -50,6 +50,9 @@ import { document } from "../../../docs/snippets/blog/in-the-beginning/10/docume
 import { format } from "../../../docs/snippets/blog/in-the-beginning/10/format.ts";
 import { inspect, type Report, ReportJson } from "../../../docs/snippets/blog/in-the-beginning/10/inspect.ts";
 import { readAll } from "../../../docs/snippets/blog/in-the-beginning/07/read.ts";
+import { replace as replace11 } from "../../../docs/snippets/blog/in-the-beginning/11/edit.ts";
+import { rename } from "../../../docs/snippets/blog/in-the-beginning/11/rename.ts";
+import { call, inMemory, manifest, toolsFor, Workspace } from "../../../docs/snippets/blog/in-the-beginning/11/tools.ts";
 import {
   compile as compile9,
   report as report9,
@@ -808,5 +811,107 @@ describe("blog: One Program, Many Interpretations", () => {
     expect(unread.formatted).toBeNull();
     expect(unread.findings.map((f: Finding) => f.message)).toEqual(["this ( is never closed"]);
     expect(report("(do (+ 1 2) (print 3))").findings[0]?.message).toBe("this value is discarded, and computing it does nothing");
+  });
+});
+
+describe("blog: The Agent Can Read the Language", () => {
+  const page = readFileSync(resolve(repoRoot, "docs/blog/in-the-beginning/11-agent-can-read-the-language.md"), "utf8");
+  const opening = "(let ((x 2) (y 5)) (+ x y))";
+  const quoted = "(let ((n 2))\n  (do (print 'n) (* n n)))";
+  const shadowed = "(let ((x 1)) (+ x ((lambda (x) (* x 10)) 3)))";
+  const macro = "(defmacro sq ((e) `((lambda (v) (* v v)) ,e)))\n(let ((v 3)) (sq v))";
+  // The offset of the nth (from 0) occurrence of `word`.
+  const nth = (source: string, word: RegExp, n: number) => [...source.matchAll(word)][n]!.index;
+  const renamed = (source: string, at: number, to: string) => {
+    const result = Effect.runSync(Effect.result(rename(standard9, source, at, to)));
+    return result._tag === "Success" ? result.success : `refused: ${result.failure.message}`;
+  };
+  const value = (source: string) => {
+    const { output } = recordedOutput();
+    return display6(Effect.runSync(run9(standard9, source).pipe(Effect.provideService(Output, output))));
+  };
+
+  test("the page includes every snippet file", () => {
+    for (const file of ["meaning.ts", "rename.ts", "edit.ts", "tools.ts"]) {
+      expect(page).toContain(`@/snippets/blog/in-the-beginning/11/${file}`);
+    }
+  });
+
+  test("a text rename silently changes the answer", () => {
+    expect(value(opening)).toBe("7");
+    const text = opening.replace(/\bx\b/g, "y");
+    expect(text).toBe("(let ((y 2) (y 5)) (+ y y))");
+    expect(value(text)).toBe("10");
+    const { lines, output } = recordedOutput();
+    Effect.runSync(run9(standard9, quoted.replace(/\bn\b/g, "count")).pipe(Effect.provideService(Output, output)));
+    expect(lines).toEqual(["count"]);
+  });
+
+  test("rename asks the checker", () => {
+    expect(renamed(opening, 7, "z")).toBe("(let ((z 2) (y 5)) (+ z y))");
+    expect(renamed(opening, nth(opening, /\bx\b/g, 1), "z")).toBe("(let ((z 2) (y 5)) (+ z y))");
+    expect(renamed(opening, 7, "y")).toBe("refused: renaming x to y would change what the program means");
+    expect(renamed(quoted, nth(quoted, /\bn\b/g, 2), "count")).toBe("(let ((count 2))\n  (do (print 'n) (* count count)))");
+    expect(renamed(quoted, nth(quoted, /\bn\b/g, 1), "count")).toBe("refused: this n is data, not a name");
+    expect(renamed(shadowed, nth(shadowed, /\bx\b/g, 1), "y")).toBe("(let ((y 1)) (+ y ((lambda (x) (* x 10)) 3)))");
+    expect(renamed(shadowed, nth(shadowed, /\bx\b/g, 3), "y")).toBe("(let ((x 1)) (+ x ((lambda (y) (* y 10)) 3)))");
+    expect(renamed("(lambda (x) (+ x 1))", 9, "if")).toBe("(lambda (if) (+ if 1))");
+    expect(renamed("(lambda (x) (if x 1 2))", 9, "if")).toBe("refused: renaming x to if would change what the program means");
+    expect(renamed("(lambda (x) (print x))", 13, "show")).toBe("refused: print belongs to the prelude");
+    expect(renamed(macro, nth(macro, /\bv\b/g, 4), "w")).toBe("(defmacro sq ((e) `((lambda (v) (* v v)) ,e)))\n(let ((w 3)) (sq w))");
+    expect(renamed("(lambda (x) x)", 9, "(a b)")).toBe("refused: (a b) is not a name");
+    for (const program of [opening, quoted, shadowed]) expect(page).toContain(program);
+  });
+
+  test("replace keeps the file readable", () => {
+    const source = "(do (print 1) (+ 1 2))";
+    const replaced = (start: number, end: number, text: string) => {
+      const result = Effect.runSync(Effect.result(replace11(standardDocs, source, { start, end }, text)));
+      return result._tag === "Success" ? result.success : result.failure.message;
+    };
+    expect(replaced(14, 21, "(* 3 4)")).toBe("(do (print 1) (* 3 4))");
+    expect(replaced(14, 20, "x")).toBe("no expression starts and ends there");
+    expect(replaced(14, 21, "(* 3 4")).toBe("this ( is never closed");
+    expect(replaced(14, 21, "1 2")).toBe("the replacement must be one expression");
+  });
+
+  test("the session on the page", () => {
+    const tools = toolsFor(standard9, standardDocs);
+    const session = Effect.gen(function* () {
+      const answers: unknown[] = [];
+      const calls: Array<[string, string]> = [
+        ["read", "{}"],
+        ["type_at", '{"at": 20}'],
+        ["type_at", '{"at": "20"}'],
+        ["rename", '{"at": 7, "to": "y"}'],
+        ["rename", '{"at": 7, "to": "base"}'],
+        ["evaluate", '{"expression": "(do (print 1) (/ 6 2))"}'],
+        ["evaluate", '{"expression": "(sleep 10)"}'],
+        ["evaluate", '{"expression": "(/ 1 0)"}'],
+        ["delete", "{}"],
+      ];
+      for (const [name, json] of calls) answers.push(JSON.parse(yield* call(tools, name, json)));
+      return answers;
+    });
+    const answers = Effect.runSync(session.pipe(Effect.provideServiceEffect(Workspace, inMemory(opening))));
+    const error = (message: string, start = 0, end = 0) => ({ error: { message, span: { start, end } } });
+    const edited = (source: string) => ({ source, report: { formatted: source, type: "Num", findings: [] } });
+    expect(answers).toEqual([
+      edited(opening),
+      { type: "(Num...) -> Num" },
+      error('Expected number\n  at ["at"]'),
+      error("renaming x to y would change what the program means", 7, 8),
+      edited("(let ((base 2) (y 5)) (+ base y))"),
+      { value: "3", printed: ["1"] },
+      error("unhandled effect: Async", 0, 10),
+      error("division by zero", 5, 6),
+      error("no tool named delete"),
+    ]);
+    const input = manifest(tools).find((t) => t.name === "rename")!.input;
+    expect(input).toMatchObject({
+      type: "object",
+      properties: { at: { type: "integer", description: "A position in the file, counting from 0" }, to: { type: "string" } },
+      required: ["at", "to"],
+    });
   });
 });

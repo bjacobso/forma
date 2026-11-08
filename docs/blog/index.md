@@ -22,6 +22,11 @@ typed, extensible language for building other languages.
 
 <ul class="blog-posts">
 <li>
+<a href="/blog/in-the-beginning/11-agent-can-read-the-language"><span class="blog-posts__part">Part 11</span> The Agent Can Read the Language</a>
+<p>Give a coding agent schema-described tools instead of a text buffer: reports, types at positions, a rename the checker proves safe, structured replacement, and a sandboxed REPL.</p>
+<time datetime="2026-11-08">November 8, 2026</time>
+</li>
+<li>
 <a href="/blog/in-the-beginning/10-many-interpretations"><span class="blog-posts__part">Part 10</span> One Program, Many Interpretations</a>
 <p>Build a formatter, an analyzer, hover, and checked documentation over the language's typed representations, and combine them into one report with Effect.</p>
 <time datetime="2026-11-08">November 8, 2026</time>
