@@ -1892,3 +1892,113 @@ body {
 .fh-spread > .fh-spread__story--wide + .fh-pair {
   margin-top: 40px;
 }
+
+/* Blog: post metadata, the post list, and the series architecture stack. */
+
+.vp-doc .blog-meta,
+.vp-doc .blog-subtitle,
+.vp-doc .blog-caption,
+.vp-doc .blog-source {
+  color: var(--vp-c-text-2);
+}
+
+.vp-doc .blog-meta {
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.vp-doc .blog-subtitle {
+  margin-top: 8px;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.vp-doc .blog-caption,
+.vp-doc .blog-source {
+  font-size: 14px;
+}
+
+.vp-doc .blog-source {
+  margin-top: 48px;
+  padding-top: 16px;
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.vp-doc .blog-posts {
+  padding: 0;
+  list-style: none;
+}
+
+.vp-doc .blog-posts li {
+  margin: 0;
+  padding: 20px 0;
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.vp-doc .blog-posts a {
+  font-size: 20px;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.vp-doc .blog-posts__part {
+  margin-right: 8px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--vp-c-text-3);
+}
+
+.vp-doc .blog-posts p {
+  margin: 6px 0;
+}
+
+.vp-doc .blog-posts time {
+  font-size: 14px;
+  color: var(--vp-c-text-3);
+}
+
+.vp-doc .blog-stack {
+  display: grid;
+  gap: 8px;
+  margin: 24px 0 8px;
+}
+
+.vp-doc .blog-stack__layer {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+  align-items: baseline;
+  padding: 14px 18px;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 6px;
+  background: var(--vp-c-bg-elv);
+}
+
+.vp-doc .blog-stack__layer span {
+  color: var(--vp-c-text-2);
+  font-size: 15px;
+}
+
+.vp-doc .blog-stack__clients {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.vp-doc .blog-stack__clients span {
+  padding: 10px;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 620;
+  color: #ffffff;
+  background: var(--vp-button-brand-bg);
+}
+
+@media (max-width: 640px) {
+  .vp-doc .blog-stack__layer {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

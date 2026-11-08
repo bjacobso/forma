@@ -14,6 +14,29 @@ const preludeSidebar: DefaultTheme.SidebarItem[] = [
   })),
 ];
 
+// Unpublished parts are listed without links so the series shows its whole arc.
+const blogSidebar: DefaultTheme.SidebarItem[] = [
+  { text: "Blog", items: [{ text: "All posts", link: "/blog/" }] },
+  {
+    text: "In the Beginning Was the Schema",
+    items: [
+      { text: "About the series", link: "/blog/in-the-beginning/" },
+      { text: "01 · In the Beginning Was the List", link: "/blog/in-the-beginning/01-the-list" },
+      { text: "02 · And the List Became Schema", link: "/blog/in-the-beginning/02-list-became-schema" },
+      { text: "03 · Errors Are Not Exceptions", link: "/blog/in-the-beginning/03-errors-are-not-exceptions" },
+      { text: "04 · The Environment Is Not the World", link: "/blog/in-the-beginning/04-environment-is-not-the-world" },
+      { text: "05 · Types Before Execution", link: "/blog/in-the-beginning/05-types-before-execution" },
+      { text: "06 · The Interpreter Becomes a Compiler", link: "/blog/in-the-beginning/06-interpreter-becomes-compiler" },
+      { text: "07 · Macros Are Programs About Programs", link: "/blog/in-the-beginning/07-macros" },
+      { text: "08 · The Prelude Is the Language", link: "/blog/in-the-beginning/08-prelude-is-the-language" },
+      { text: "09 · Effects Are Part of the Type", link: "/blog/in-the-beginning/09-effects-are-part-of-the-type" },
+      { text: "10 · One Program, Many Interpretations", link: "/blog/in-the-beginning/10-many-interpretations" },
+      { text: "11 · The Agent Can Read the Language", link: "/blog/in-the-beginning/11-agent-can-read-the-language" },
+      { text: "12 · Let There Be Languages", link: "/blog/in-the-beginning/12-let-there-be-languages" },
+    ],
+  },
+];
+
 export default defineConfig({
   lang: "en-US",
   title: "Forma",
@@ -66,11 +89,13 @@ export default defineConfig({
         ],
       },
       { text: "Preludes", link: "/preludes/", activeMatch: "^/(preludes|effect|elm|email|clojure)" },
+      { text: "Blog", link: "/blog/", activeMatch: "^/blog/" },
       { text: "Examples", link: "/playground/demo", target: "_self", rel: "" },
       { text: "Playground", link: "/playground", target: "_self", rel: "" },
     ],
     sidebar: {
       "/preludes/": preludeSidebar,
+      "/blog/": blogSidebar,
       "/": [
         {
           text: "Start",
