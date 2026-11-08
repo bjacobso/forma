@@ -1,0 +1,36 @@
+{
+  "base": [
+    {
+      "name": "asymmetric",
+      "input": { "id": "u_17", "cursor": "page/93" },
+      "expected": { "id": { "raw": "u_17" }, "cursor": { "raw": "page/93" } }
+    },
+    {
+      "name": "unicode",
+      "input": { "id": "雪🦀", "cursor": "é/مرحبا" },
+      "expected": { "id": { "raw": "雪🦀" }, "cursor": { "raw": "é/مرحبا" } }
+    },
+    {
+      "name": "empty-and-escapes",
+      "input": { "id": "", "cursor": "quote\"\n\\\u0000" },
+      "expected": { "id": { "raw": "" }, "cursor": { "raw": "quote\"\n\\\u0000" } }
+    }
+  ],
+  "changed": [
+    {
+      "name": "rename-and-add",
+      "input": { "account_id": "acct-42", "cursor": "page/7", "label": "primary" },
+      "expected": { "account_id": { "raw": "acct-42" }, "cursor": { "raw": "page/7" }, "label": { "raw": "primary" } }
+    },
+    {
+      "name": "unicode-after-change",
+      "input": { "account_id": "東京", "cursor": "👩🏽‍💻", "label": "é≠é" },
+      "expected": { "account_id": { "raw": "東京" }, "cursor": { "raw": "👩🏽‍💻" }, "label": { "raw": "é≠é" } }
+    },
+    {
+      "name": "empty-after-change",
+      "input": { "account_id": "", "cursor": "not-empty", "label": "" },
+      "expected": { "account_id": { "raw": "" }, "cursor": { "raw": "not-empty" }, "label": { "raw": "" } }
+    }
+  ]
+}

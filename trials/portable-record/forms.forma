@@ -1,0 +1,8 @@
+;; The enum checks the supported field type at the author's hole.
+;; Name portability and duplicate fields are checked by the generator.
+(type FieldIR {:name String :type (Union "string")})
+(type RecordIR {:kind "WrapRecord" :name Symbol :fields (List FieldIR)})
+(form (wrap-record name fields)
+  :types {:name (Declares Record) :fields (List {:name String :type (Union "string")})}
+  :ir RecordIR
+  {:kind "WrapRecord" :name name :fields fields})

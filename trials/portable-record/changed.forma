@@ -1,0 +1,5 @@
+;; Rename id and add label; the transformation is unchanged.
+(wrap-record Query
+  [{:name "account_id" :type "string"}
+   {:name "cursor" :type "string"}
+   {:name "label" :type "string"}])
