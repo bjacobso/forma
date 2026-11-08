@@ -2,7 +2,7 @@
 layout: home
 title: Forma
 titleTemplate: false
-description: Forma is a programmable type system for Lisp. Preludes define typed forms that take part in checking; the compiler checks the programs that use them and emits typed artifacts.
+description: Forma is a pre-alpha toolkit for building typed domain languages. Define domain vocabulary and checks, elaborate programs into checked data, and connect that data to interpreters or code generators.
 sidebar: false
 aside: false
 pageClass: forma-index
@@ -10,49 +10,36 @@ pageClass: forma-index
 
 <div class="forma-home">
 
-<header class="fh-hero" aria-labelledby="hero-title">
+<header class="fh-hero fh-hero--compact" aria-labelledby="hero-title">
 <div class="fh-hero__copy">
-<p class="fh-eyebrow">Forma <span>· programmable types for Lisp · pre-alpha</span></p>
-<h1 id="hero-title">A programmable type system for Lisp.</h1>
-<p class="fh-sub">Define what a well-typed program means for your domain.</p>
-<p class="fh-lead">Forma owns types and elaboration, not syntax or runtime. A <strong>prelude</strong> adds forms like <code>entity</code>, <code>endpoint</code>, or <code>rule</code> that take part in typechecking: they check their arguments against expected types, bring names into scope, and report errors at the line you wrote. Checked programs get Hindley–Milner types, effect sets, typed IR, and plain Effect TypeScript.</p>
+<p class="fh-eyebrow">Forma <span>· typed domain languages · pre-alpha</span></p>
+<h1 id="hero-title">Define a domain.<br>Give it meaning.</h1>
+<p class="fh-lead">Forma is a pre-alpha toolkit for building typed domain languages. Define domain vocabulary and checks, elaborate programs into checked data, and connect that data to interpreters or code generators.</p>
+<p class="fh-caption">Built on a typed Lisp core. Today: the TypeScript engine, canonical artifacts and Effect TypeScript generation. Your application supplies domain-specific interpretation.</p>
 <div class="fh-actions">
-<a class="fh-button fh-button--primary" href="/language">Read the guide</a>
-<a class="fh-button" href="#live">Try it in your browser ↓</a>
+<a class="fh-button fh-button--primary" href="#live">Try the live compiler ↓</a>
+<a class="fh-button" href="/writing-a-form">Write your first form</a>
 </div>
 </div>
-<div class="fh-hero__side">
-<div class="fh-window">
-<div class="fh-window__bar"><span class="fh-window__dots" aria-hidden="true"><i></i><i></i><i></i></span><span>warmup.lisp</span><span>vocabulary from preludes/email.lisp</span></div>
 
-<<< @/snippets/email/rule.lisp
+<HomepageStories />
 
-<div class="fh-window__foot">read → expand → <b>infer</b> → elaborate → emit</div>
-</div>
-</div>
 </header>
+
+<section id="live" class="fh-live" aria-label="Live contract compiler">
+<div class="fh-hero__demo">
+
+<WorkbenchEmbed example="contracts" file="log.forma" title="Live contract compiler: edit, infer, and generate Effect TypeScript" />
+
+</div>
+<p class="fh-caption">The real compiler runs in your browser. Try <strong>Introduce error</strong> to remove <code>Console.print</code> from the signature, then <strong>Reset</strong> to repair it. Open <strong>Effect TypeScript</strong> to inspect generated code, or explore more examples in the <a href="/playground" target="_self">playground</a>.</p>
+</section>
 
 <section class="fh-statement" aria-labelledby="problem-heading">
 <p class="fh-statement__big">A macro adds a keyword in an afternoon. It doesn't add a typing rule.</p>
 <p>Lisp makes new syntax cheap and checking expensive. A bad call to a macro fails inside its expansion, at runtime, or in generated code nobody reads. Typed Lisps check programs against rules their authors chose. A domain with rules of its own (every workflow step gets the input it needs, a query sees only its entity's fields, a rule never touches a forbidden capability) still needs its own parser, checker, and tooling.</p>
 <p>That is the old Lisp curse: every team ends up with a language only its authors understand. Coding agents make new code cheap in every language, so the curse is spreading. Forma doesn't try to stop teams from building their own languages. It makes those languages agree on what a well-typed program is, so a private language still has a contract someone else can check.</p>
 <h2 id="problem-heading" class="fh-statement__question">What if the typing rules were a library too?</h2>
-</section>
-
-<section id="live" class="fh-row" aria-labelledby="live-heading">
-<div class="fh-row__head">
-<p class="fh-row__num">Live</p>
-<h2 id="live-heading">The real compiler, running in this page.</h2>
-</div>
-<div class="fh-row__body">
-<p>Edit real source. <strong>Watch typing</strong> removes a requirement, pauses on the compiler's red underline, and types the repair. Inferred contracts, diagnostics, typed IR, and Effect TypeScript all come from the source in this editor.</p>
-<p>Switch examples to explore inference and macro expansion, or open the <a href="/playground" target="_self">full playground</a>.</p>
-</div>
-<div class="fh-row__wide fh-hero__demo">
-
-<WorkbenchEmbed example="contracts" file="log.forma" title="Live contract compiler: edit, infer, and generate Effect TypeScript" />
-
-</div>
 </section>
 
 <section id="how-it-works" class="fh-row" aria-labelledby="library-heading">
@@ -118,12 +105,7 @@ pageClass: forma-index
 </div>
 <div class="fh-row__body">
 <p>When a generated file fails to compile, the mistake is usually somewhere else: a missing entry in a YAML file three directories away, and the error never mentions it.</p>
-<p>Here the body calls <code>Console.print</code>, but the signature declares no requirements. The Effect checker rejects the operation and points at the call you wrote. Click the problem to jump to its source, then add <code>Console.print</code> to the signature, or press Reset, and generation resumes.</p>
-</div>
-<div class="fh-row__wide">
-
-<WorkbenchEmbed example="contracts" file="log.forma" broken title="A live missing-capability error" />
-
+<p>In the <a href="#live">live compiler above</a>, press <strong>Introduce error</strong>: the body still calls <code>Console.print</code>, but the signature declares no requirements. The Effect checker rejects the operation and points at the call you wrote. Click the problem to jump to its source, then add <code>Console.print</code> to the signature, or press Reset, and generation resumes.</p>
 </div>
 </section>
 
