@@ -4,6 +4,19 @@ import { defineConfig, type DefaultTheme } from "vitepress";
 
 import { groupTitles, loadPreludes, type PreludeGroup } from "./preludes.ts";
 
+// Static samples use the editor's restrained dark syntax palette in both page themes.
+const codeTheme = {
+  name: "forma-code",
+  type: "dark" as const,
+  settings: [
+    { settings: { background: "#111613", foreground: "#eef0ea" } },
+    { scope: ["comment", "punctuation"], settings: { foreground: "#b5bcb4" } },
+    { scope: ["keyword", "storage", "constant.language"], settings: { foreground: "#d2bbef" } },
+    { scope: ["string"], settings: { foreground: "#b0d7b5" } },
+    { scope: ["constant.numeric", "entity.name.function", "entity.name.type", "support", "constant.other"], settings: { foreground: "#9bbaf5" } },
+  ],
+};
+
 const preludeSidebar: DefaultTheme.SidebarItem[] = [
   { text: "Preludes", items: [{ text: "Catalog", link: "/preludes/" }] },
   ...(Object.keys(groupTitles) as PreludeGroup[]).map((group) => ({
@@ -61,8 +74,8 @@ export default defineConfig({
   ],
   markdown: {
     theme: {
-      light: "github-dark-high-contrast",
-      dark: "github-dark-high-contrast",
+      light: codeTheme,
+      dark: codeTheme,
     },
     languages: ["json", "lisp", "scheme", "sh", "ts"],
     // `.forma` modules are Forma source; highlight them as the Lisp they are.

@@ -37,9 +37,9 @@
   --vp-c-default-soft: rgba(29, 38, 33, 0.06);
   --vp-code-bg: rgba(29, 38, 33, 0.06);
   --vp-code-color: #1d2621;
-  --vp-code-block-bg: #1e2622;
-  --vp-code-block-divider-color: rgba(216, 221, 214, 0.18);
-  --vp-code-tab-text-color: #8a948d;
+  --vp-code-block-bg: #111613;
+  --vp-code-block-divider-color: #414a43;
+  --vp-code-tab-text-color: #b5bcb4;
   --vp-code-tab-hover-text-color: #ffffff;
   --vp-code-tab-active-text-color: #ffffff;
   --vp-code-tab-active-bar-color: #7ea6f2;
@@ -79,6 +79,34 @@ body {
 
 .vp-doc :not(pre) > code {
   color: var(--vp-code-color);
+}
+
+/* Static samples and live editors share one quiet code-window vocabulary. */
+.vp-doc div[class*="language-"] {
+  border: 1px solid #414a43;
+  border-radius: 6px;
+}
+
+.vp-doc div[class*="language-"] pre code {
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.vp-doc div[class*="language-"] > span.lang {
+  color: #b5bcb4;
+}
+
+.vp-doc div[class*="language-"] button.copy:focus-visible {
+  opacity: 1;
+  outline: 2px solid #9bbaf5;
+  outline-offset: -3px;
+}
+
+@media (max-width: 640px) {
+  .vp-doc div[class*="language-"] pre code {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
 }
 
 /* Navigation: a quiet wordmark, a few links, and one solid call to action. */
@@ -220,11 +248,11 @@ body {
   --fh-warn: #9a6a12;
   --fh-warn-soft: #f6ecd6;
   --fh-bad: #b4432b;
-  --fh-win-bg: #1e2622;
-  --fh-win-ink: #d8ddd6;
-  --fh-win-muted: #8a948d;
-  --fh-win-line: #2f3a34;
-  --fh-win-accent: #9fc0ff;
+  --fh-win-bg: #111613;
+  --fh-win-ink: #eef0ea;
+  --fh-win-muted: #b5bcb4;
+  --fh-win-line: #414a43;
+  --fh-win-accent: #9bbaf5;
 }
 
 .forma-home {
@@ -242,7 +270,7 @@ body {
   --fh-warn-soft: rgba(227, 181, 91, 0.12);
   --fh-bad: #ef8a6f;
   --fh-win-bg: #111613;
-  --fh-win-line: #252e29;
+  --fh-win-line: #414a43;
 }
 
 /* One strong color. Diagnostics keep a red edge; everything else is blue. */
@@ -303,8 +331,8 @@ body {
 .forma-home > section div[class*="language-"]:not(.fh-window div),
 .forma-home > section .vp-code-group:not(.fh-window div) {
   overflow: hidden;
-  border-radius: 8px !important;
-  box-shadow: 0 24px 48px -32px rgba(29, 38, 33, 0.5);
+  border-radius: 6px !important;
+  box-shadow: none;
 }
 
 .forma-home > section .vp-code-group:not(.fh-window div) div[class*="language-"] {
@@ -464,10 +492,10 @@ body {
 
 .fh-window {
   overflow: hidden;
-  border-radius: 8px;
+  border: 1px solid var(--fh-win-line);
+  border-radius: 6px;
   color: var(--fh-win-ink);
   background: var(--fh-win-bg);
-  box-shadow: 0 24px 48px -32px rgba(29, 38, 33, 0.5);
 }
 
 .fh-window__bar {
@@ -601,10 +629,6 @@ body {
 .fh-live-embed {
   width: 100%;
   min-width: 0;
-}
-
-.fh-live-embed--broken .fh-window {
-  box-shadow: inset 3px 0 0 var(--fh-bad), 0 24px 48px -32px rgba(29, 38, 33, 0.5);
 }
 
 .fh-live-embed iframe {

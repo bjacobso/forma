@@ -69,7 +69,12 @@ export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = 
   }, []);
 
   const stopReplay = () => { pendingErrorReveal.current = false; replay.current++; setPlaying(false); setReplayNote(null); };
-  const replaceSource = (next: string) => { sourceRef.current = next; setSource(next); };
+  const replaceSource = (next: string) => {
+    if (next === sourceRef.current) return;
+    revision.current++;
+    setResult(null); setFailure(null); setStatus("compiling");
+    sourceRef.current = next; setSource(next);
+  };
   const watchTyping = async () => {
     const token = ++replay.current;
     setPlaying(true); setTab("types"); replaceSource(example.source);
@@ -138,18 +143,26 @@ export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = 
     <p className="workbench-prompt">{replayNote ?? example.prompt} <span>You can edit the source at any time.</span></p>
     <div className="workbench-panes">
       <div className="workbench-input">
-        <div className="workbench-file"><span>{example.file}</span><span>Editable</span></div>
-        <WorkbenchEditor source={source} mode={theme} palette={palette} diagnostics={diagnostics} reveal={reveal} focusOnReveal={focusOnReveal} onInspect={setOffset} onChange={next => {
+        <div className="workbench-file"><span>{example.file}</span><span className="workbench-check-state" data-state={status === "compiling" ? "checking" : failure ? "failed" : errors ? "error" : "checked"}>{status === "compiling" ? "Checking…" : failure ? "Unavailable" : errors ? "× Check failed" : "✓ Checked"}</span><span>Editable</span></div>
+        <WorkbenchEditor source={source} mode={theme} palette={palette} diagnostics={diagnostics} inspection={inspected?.span ? { span: [inspected.span.startOffset, inspected.span.endOffset], display: inspected.display } : undefined} reveal={reveal} focusOnReveal={focusOnReveal} onInspect={setOffset} onChange={next => {
           if (next === sourceRef.current) return;
           stopReplay(); replaceSource(next);
         }} />
+        <div className="workbench-inspection" aria-label="Type at cursor" aria-live="polite">
+          <span>At your cursor / hover</span>
+          {inspected?.span ? <><code className="workbench-inspected-source">{source.slice(inspected.span.startOffset, inspected.span.endOffset)}</code><code>{inspected.display}</code></> : <p>Place the cursor in an expression to inspect its inferred type.</p>}
+        </div>
       </div>
       <div className="workbench-output">
-        <div className="workbench-tabs" role="tablist" aria-label="Compiler output">{tabs.map(item => <button id={`tab-${item.id}`} role="tab" aria-selected={activeTab === item.id} aria-controls="workbench-output-panel" key={item.id} type="button" onClick={() => setTab(item.id)}>{item.label}</button>)}</div>
+        <div className="workbench-tabs" role="tablist" aria-label="Compiler output">{tabs.map((item, index) => <button id={`tab-${item.id}`} role="tab" aria-selected={activeTab === item.id} tabIndex={activeTab === item.id ? 0 : -1} aria-controls="workbench-output-panel" key={item.id} type="button" onClick={() => setTab(item.id)} onKeyDown={event => {
+          const next = event.key === "ArrowRight" ? (index + 1) % tabs.length : event.key === "ArrowLeft" ? (index + tabs.length - 1) % tabs.length : event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : null;
+          if (next === null) return;
+          event.preventDefault(); setTab(tabs[next]!.id);
+          event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("button")[next]?.focus();
+        }}>{item.label}</button>)}</div>
         <div className="workbench-output-content" id="workbench-output-panel" role="tabpanel" aria-labelledby={`tab-${activeTab}`}>
           {status === "compiling" ? <p className="workbench-empty">Compiling current source…</p> : failure ? <p className="workbench-empty">{failure}</p> : activeTab === "types" ? <>
             {(result?.contracts?.length ?? 0) > 0 ? result!.contracts!.map(contract => <article className="workbench-contract" key={contract.name}><strong>{contract.name}</strong><span>Declared signature</span><code>{contract.declared}</code><span>Inferred from the body</span><code>{contract.inferred}</code></article>) : <article className="workbench-contract"><span>Inferred from the program</span><code>{types?.display ?? "Type inference is blocked by an earlier diagnostic."}</code></article>}
-            <div className="workbench-inspection"><span>At your cursor / hover</span><code>{inspected?.display ?? "Hover an expression in the source to inspect its type."}</code></div>
             {expressionTypes.length ? <details><summary>{expressionTypes.length} expression types</summary><div className="workbench-type-list">{expressionTypes.map(item => <button key={item.expressionId} type="button" onClick={() => revealSpan(item.span)}><code>{item.span ? source.slice(item.span.startOffset, item.span.endOffset) : `Form ${item.formIndex + 1}`}</code><b>{item.display}</b></button>)}</div></details> : null}
           </> : activeTab === "generated" ? result?.generatedCode ? <TargetCodeView code={result.generatedCode} language="typescript" palette={palette} /> : <p className="workbench-empty">Generation is blocked until the program checks. Fix the diagnostics below.</p>
             : activeTab === "ir" ? <TargetCodeView code={JSON.stringify(result?.declarations ?? [], null, 2)} language="json" palette={palette} />
@@ -161,7 +174,20 @@ export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = 
     </div>
     <div className="workbench-diagnostics" aria-label="Compiler diagnostics">
       <div className="workbench-diagnostic-heading"><strong>Problems</strong><span role="status">{status === "compiling" ? "Checking…" : failure ? "Compiler unavailable" : `${errors} ${errors === 1 ? "error" : "errors"} · ${diagnostics.filter(d => d.severity === "warning").length} warnings`}</span><span>{result ? `${Math.round(result.passResults.reduce((sum, pass) => sum + pass.durationMs, 0))} ms` : ""}</span></div>
-      {diagnostics.map((diagnostic, index) => <button className={`workbench-diagnostic ${diagnostic.severity}`} key={index} type="button" onClick={() => revealSpan(diagnostic.span)}><span>{diagnostic.severity === "error" ? "×" : "!"}</span><div><p>{diagnostic.message}</p><small>{diagnostic.phase} · {diagnostic.code}{diagnostic.span ? ` · ${example.file}:${diagnostic.span.startLine ?? source.slice(0, diagnostic.span.startOffset).split("\n").length}` : ""}</small></div></button>)}
+      {diagnostics.map((diagnostic, index) => {
+        const span = diagnostic.span;
+        const lineStart = span ? source.lastIndexOf("\n", span.startOffset - 1) + 1 : 0;
+        const nextNewline = span ? source.indexOf("\n", span.startOffset) : -1;
+        const lineEnd = nextNewline === -1 ? source.length : nextNewline;
+        const line = span ? source.slice(0, span.startOffset).split("\n").length : null;
+        return <button className={`workbench-diagnostic ${diagnostic.severity}`} key={index} type="button" disabled={!span} onClick={() => revealSpan(span)}>
+          <span className="workbench-diagnostic-meta"><strong>{diagnostic.severity === "error" ? "Error" : diagnostic.severity === "warning" ? "Warning" : "Info"} · {diagnostic.code}</strong><span>{span ? `${example.file}:${line}:${span.startOffset - lineStart + 1}` : "No source location"}</span></span>
+          <span className="workbench-diagnostic-message">{diagnostic.message}</span>
+          {span ? <span className="workbench-diagnostic-source"><span aria-hidden="true">{line}</span><code>{source.slice(lineStart, span.startOffset)}<mark>{source.slice(span.startOffset, Math.min(span.endOffset, lineEnd)) || " "}</mark>{source.slice(Math.max(span.startOffset, Math.min(span.endOffset, lineEnd)), lineEnd)}</code></span> : null}
+          <span className="workbench-diagnostic-action">{diagnostic.phase ? `${diagnostic.phase} · ` : ""}{span ? "Show in source ↗" : "Compiler diagnostic"}</span>
+        </button>;
+      })}
+      {errors > 0 ? <details className="workbench-guidance"><summary>Example guidance <span>Authored, not an automatic fix</span></summary><p>{example.prompt}</p><p>Reset restores the original example; it does not apply a compiler-suggested repair.</p></details> : null}
       {status === "ready" && !diagnostics.length ? <p className="workbench-clean">Program checks. All output above comes from this source.</p> : null}
     </div>
     <footer className="workbench-footer"><span>Runs in your browser · @formalang/ts{example.dialect === "email" ? " · email.lisp prelude · Effect checker" : example.dialect ? " · Effect checker" : ""}</span><a href={FORMA_WORKBENCH_URL} target={embedded ? "_top" : undefined}>Structural workbench in Foldworks ↗</a></footer>
