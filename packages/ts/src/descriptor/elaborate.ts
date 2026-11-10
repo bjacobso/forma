@@ -41,6 +41,7 @@ import { parse } from "../reader/parser.js";
 import { toSExprMany } from "../reader/to-sexpr.js";
 import type { Loc, SExpr } from "../reader/types.js";
 import type { BootstrappedPrelude } from "./bootstrap.js";
+import type { FormDescriptorRegistry } from "./FormDescriptorRegistry.js";
 import type { HookInput } from "./ElaborationHook.js";
 import { normalizeForm, type NormalizedForm } from "./normalize.js";
 import { recognizeForm } from "./recognize.js";
@@ -60,6 +61,16 @@ export interface ElaborateProgramOptions {
   readonly validatorRegistry?: import("../artifact/validator-registry.js").ArtifactValidatorRegistry;
 }
 
+/** Named syntax independent of the construct hook's payload layout.
+ * A scalar hole has one node; list/repeated holes have one per item.
+ * Missing optional holes are omitted. Opaque Syntax retains its full SExpr.
+ */
+export interface DeclarationSyntax {
+  readonly expression: SExpr;
+  readonly span: Span;
+  readonly holes: Readonly<Record<string, readonly DeclarationSyntax[]>>;
+}
+
 /** One top-level form elaborated to a JSON payload. */
 export interface ElaboratedDeclaration extends PackageableDeclaration {
   readonly formName: string;
@@ -67,6 +78,10 @@ export interface ElaboratedDeclaration extends PackageableDeclaration {
   readonly span: Span;
   readonly origin: DeclarationOrigin;
   readonly sourceMap: readonly SourceMapEntry[];
+  /** Original top-level expression before action lowering or expansion. */
+  readonly authored: SExpr;
+  /** Recognized expression and named holes after expansion, not inferred IR. */
+  readonly syntax: DeclarationSyntax;
 }
 
 export interface ElaborateProgramResult {
@@ -174,6 +189,7 @@ export function elaborateSources(
   const declared = new Map<string, string>();
   const forms: {
     readonly form: NormalizedForm;
+    readonly authored: SExpr;
     readonly sourceId: string;
     readonly formIndex: number;
     readonly loc: Loc;
@@ -189,8 +205,9 @@ export function elaborateSources(
     for (const error of parsed.errors) at("parse/syntax", error.message, error.loc);
     if (parsed.errors.length > 0) continue;
 
+    const original = toSExprMany(parsed.redTree);
     let authored: readonly SExpr[];
-    try {authored=lowerActionProgram(toSExprMany(parsed.redTree), new Set(authorForms.flatMap(e => head(e)===":" && e._tag==="List" && surfaceName(e.items[1]) && (head(e.items[2])==="Action" || e.items[2]?._tag==="List" && head(e.items[2])==="->" && head(e.items[2].items.at(-1))==="Action") ? [surfaceName(e.items[1])!] : [])));}
+    try {authored=lowerActionProgram(original, new Set(authorForms.flatMap(e => head(e)===":" && e._tag==="List" && surfaceName(e.items[1]) && (head(e.items[2])==="Action" || e.items[2]?._tag==="List" && head(e.items[2])==="->" && head(e.items[2].items.at(-1))==="Action") ? [surfaceName(e.items[1])!] : [])));}
     catch (error) {at("elaborate/action-definition",errorMessage(error),toSExprMany(parsed.redTree)[0]?.loc);continue;}
     for (const { expr, formIndex, loc, origin } of expandTopLevel(authored, locate, at)) {
       if (["type","form","define",":","do","class","error","service","layer","macro","typeclass","instance"].includes(head(expr) ?? "")) continue;
@@ -246,6 +263,7 @@ export function elaborateSources(
         }
         forms.push({
           form,
+          authored: original[formIndex]!,
           sourceId,
           formIndex,
           loc,
@@ -260,7 +278,7 @@ export function elaborateSources(
   }
 
   const declarations: ElaboratedDeclaration[] = [];
-  for (const { form, sourceId, formIndex, loc, origin, locate, name } of forms) {
+  for (const { form, authored, sourceId, formIndex, loc, origin, locate, name } of forms) {
     const at = report.bind(undefined, locate);
     const details = { form: form.formName, ...(name !== undefined ? { declaration: name } : {}) };
     const input: HookInput = {
@@ -325,6 +343,8 @@ export function elaborateSources(
       span,
       origin,
       sourceMap: sourceMapOf(form, payload, span, locate),
+      authored,
+      syntax: syntaxOf(form.rawExpr, descriptions, locate),
       ...(contract ? { payloadContract: contract } : {}),
       ...(contractId ? { payloadContractId: contractId } : {}),
       payloadConstraints: constraints,
@@ -581,6 +601,25 @@ const sourceMapOf = (
 };
 
 const jsonPointerToken = (key: string): string => key.replaceAll("~", "~0").replaceAll("/", "~1");
+
+/** Reflection alone does not add type checking inside an opaque Syntax hole. */
+const syntaxOf = (expression: SExpr, registry: FormDescriptorRegistry, locate: (loc: Loc) => Span): DeclarationSyntax => {
+  const holes: Record<string, readonly DeclarationSyntax[]> = {};
+  const spec = registry.get(head(expression) ?? "")?.surface;
+  if (spec) {
+    let values: ReadonlyMap<string, SExpr> | undefined;
+    try { values = matchFormSyntax(spec, expression); }
+    catch { /* Syntax may contain arbitrary data, not a valid child application. */ }
+    for (const [name, value] of values ?? []) {
+      let type = spec.holes.get(name);
+      if (head(type) === "Option" && type?._tag === "List") type = type.items[1];
+      const repeated = spec.pattern.some((item, i) => surfaceName(item) === name && surfaceName(spec.pattern[i + 1]) === "...");
+      const items = (repeated || head(type) === "List") && value._tag === "Vector" ? value.items : [value];
+      holes[name] = items.map(item => syntaxOf(item, registry, locate));
+    }
+  }
+  return { expression, span: locate(sourceTraceOf(expression).loc), holes };
+};
 
 /** The descriptor's `(:artifact (:payload (:contract ...)))` extension, if any. */
 const payloadContract = (form: NormalizedForm): string | undefined => {

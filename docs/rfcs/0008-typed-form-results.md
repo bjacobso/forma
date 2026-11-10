@@ -7,6 +7,25 @@
 | Depends on | [RFC 0007](./0007-type-normalization.md) for the bridge; [RFC 0006](./0006-qualified-rows.md) and [RFC 0009](./0009-field-names-and-row-map.md) for generic template checking |
 | Scope | Metadata-to-type reflection, declarative form result types, and compatible prelude migration |
 
+## Authored-syntax prerequisite (FX2, implemented)
+
+The public `ElaboratedDeclaration` now retains `authored` (the original
+top-level S-expression) and `syntax` (`DeclarationSyntax`: recognized
+expression, named-source span, and named hole arrays with recursive child
+syntax). Consumers can obtain exact ordinary hole spans and inspect `Syntax`
+without reparsing or joining to the payload. Repeated/list holes retain one
+node per element; omitted optional holes have no entry. Macro calls remain
+distinct from generated expressions, and generated blame locations are not
+advertised as independently editable syntax.
+
+This is a provenance/reflection prerequisite, not the typed expression core
+or template language proposed below. It makes that later work easier by
+retaining author structure independently of IR projection; it does not infer
+types for children inside arbitrary `Syntax`, implement three-valued logic,
+or change the boundary between metadata and trusted types. Existing payload
+`sourceMap` entries remain partial JSON-pointer mappings, not hole reflection.
+See [authored syntax](../authoring.md#authored-syntax-in-an-embedded-compiler).
+
 ## Problem and outcome
 
 Ontology `query` currently computes its result with an imperative result hook:
