@@ -442,7 +442,7 @@ body {
 
 .fh-hero--compact .fh-hero__copy {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 20px 40px;
   align-items: start;
 }
@@ -453,7 +453,8 @@ body {
 
 .fh-hero--compact h1 {
   max-width: 24ch;
-  font-size: clamp(40px, 4.5vw, 64px);
+  font-size: clamp(30px, 3.2vw, 46px);
+  overflow-wrap: anywhere;
 }
 
 .fh-hero--compact .fh-eyebrow + h1 {
@@ -678,6 +679,12 @@ body {
   width: 100%;
   min-width: 0;
 }
+
+.fh-live-choices { margin-bottom: 16px; }
+.fh-live-choices label { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; }
+.fh-live-choices select { max-width: 100%; padding: 9px 32px 9px 12px; border: 1px solid var(--vp-c-divider); border-radius: 5px; background: var(--vp-c-bg); color: var(--vp-c-text-1); font: inherit; }
+.fh-live-choices select:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 3px; }
+.fh-live-choices p { margin: 8px 0 0 !important; font-size: 14px; color: var(--vp-c-text-2); }
 
 .fh-live-embed iframe {
   display: block;
@@ -1897,7 +1904,7 @@ body {
   }
 
   .fh-hero--compact h1 {
-    font-size: clamp(36px, 8vw, 44px);
+    font-size: clamp(28px, 7vw, 38px);
   }
 
   .fh-hero--compact .fh-lead {

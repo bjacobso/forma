@@ -2,7 +2,7 @@
 layout: home
 title: Forma
 titleTemplate: false
-description: Forma is a pre-alpha toolkit for building typed domain languages. Define domain vocabulary and checks, elaborate programs into checked data, and connect that data to interpreters or code generators.
+description: Forma is a programmable typechecker for Lisp, built for defining and checking domain languages. Define vocabulary and checks in preludes, infer types and effects, and turn checked programs into domain data.
 sidebar: false
 aside: false
 pageClass: forma-index
@@ -12,13 +12,13 @@ pageClass: forma-index
 
 <header class="fh-hero fh-hero--compact" aria-labelledby="hero-title">
 <div class="fh-hero__copy">
-<p class="fh-eyebrow">Forma <span>· typed domain languages · pre-alpha</span></p>
-<h1 id="hero-title">Define a domain.<br>Give it meaning.</h1>
-<p class="fh-lead">Forma is a pre-alpha toolkit for building typed domain languages. Define domain vocabulary and checks, elaborate programs into checked data, and connect that data to interpreters or code generators.</p>
-<p class="fh-caption">Built on a typed Lisp core. Today: the TypeScript engine, canonical artifacts and Effect TypeScript generation. Your application supplies domain-specific interpretation.</p>
+<p class="fh-eyebrow">Forma <span>· programmable types for Lisp · pre-alpha</span></p>
+<h1 id="hero-title">Define your domain.<br>Check its programs.</h1>
+<p class="fh-lead">A programmable typechecker for Lisp, built for defining and checking domain languages.</p>
+<p class="fh-caption">Preludes define vocabulary and checks. Explore type inference, polymorphism and effects, or turn checked domain programs into data for your application to interpret. <a href="#live">Try the live playground below ↓</a></p>
 <div class="fh-actions">
-<a class="fh-button fh-button--primary" href="#live">Try the live compiler ↓</a>
-<a class="fh-button" href="/writing-a-form">Write your first form</a>
+<a class="fh-button fh-button--primary" href="/playground/custom">Build a domain language</a>
+<a class="fh-button" href="/playground/live/inference">Explore the Lisp typechecker</a>
 </div>
 </div>
 
@@ -26,13 +26,13 @@ pageClass: forma-index
 
 </header>
 
-<section id="live" class="fh-live" aria-label="Live contract compiler">
+<section id="live" class="fh-live" aria-label="Live playground">
 <div class="fh-hero__demo">
 
-<WorkbenchEmbed example="contracts" file="log.forma" title="Live contract compiler: edit, infer, and generate Effect TypeScript" />
+<WorkbenchEmbed homepage />
 
 </div>
-<p class="fh-caption">The real compiler runs in your browser. Try <strong>Introduce error</strong> to remove <code>Console.print</code> from the signature, then <strong>Reset</strong> to repair it. Open <strong>Effect TypeScript</strong> to inspect generated code, or explore more examples in the <a href="/playground" target="_self">playground</a>.</p>
+<p class="fh-caption">Unlike the scripted stories above, this runs the real compiler in your browser. Try <strong>Introduce error</strong>, then repair the source or press <strong>Reset</strong>. Switch examples to explore domain data or Effect TypeScript generation; switching starts a fresh demo. Sharing and advanced tools live in the full playground.</p>
 </section>
 
 <section class="fh-statement" aria-labelledby="problem-heading">
@@ -105,7 +105,7 @@ pageClass: forma-index
 </div>
 <div class="fh-row__body">
 <p>When a generated file fails to compile, the mistake is usually somewhere else: a missing entry in a YAML file three directories away, and the error never mentions it.</p>
-<p>In the <a href="#live">live compiler above</a>, press <strong>Introduce error</strong>: the body still calls <code>Console.print</code>, but the signature declares no requirements. The Effect checker rejects the operation and points at the call you wrote. Click the problem to jump to its source, then add <code>Console.print</code> to the signature, or press Reset, and generation resumes.</p>
+<p>In the <a href="#live">live playground above</a>, choose <strong>Explore typed Lisp &amp; effects</strong>, then press <strong>Introduce error</strong>: the body still calls <code>Console.print</code>, but the signature declares no requirements. The Effect checker rejects the operation and points at the call you wrote. Click the problem to jump to its source, then add <code>Console.print</code> to the signature, or press Reset, and generation resumes.</p>
 </div>
 </section>
 

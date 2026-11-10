@@ -28,6 +28,7 @@ export function App() {
           <Route element={<Home />} path="/" />
           <Route element={<PreludePlayground />} path="/custom" />
           <Route element={<PreludePlayground />} path="/p/:snapshotId" />
+          <Route element={<PreludePlayground embedded />} path="/embed/custom" />
           <Route element={<WorkbenchPage embedded />} path="/embed/:exampleId" />
           <Route element={<WorkbenchPage />} path="/live/:exampleId" />
           <Route element={<About />} path="/about" />

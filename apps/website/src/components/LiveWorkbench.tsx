@@ -12,8 +12,8 @@ import { FORMA_WORKBENCH_URL } from "../lib/workbenchLocation";
 const noDiagnostics: readonly Diagnostic[] = [];
 type OutputTab = "types" | "generated" | "read" | "expand" | "value" | "ir";
 
-export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = false, embedded = false }: {
-  initialExample?: string; initiallyBroken?: boolean; embedded?: boolean;
+export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = false, embedded = false, compact = false }: {
+  initialExample?: string; initiallyBroken?: boolean; embedded?: boolean; compact?: boolean;
 }) {
   const initial = workbenchExamples.find(item => item.id === initialExample) ?? workbenchExamples[0]!;
   const [example, setExample] = useState<WorkbenchExample>(initial);
@@ -114,9 +114,9 @@ export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = 
     .sort((a, b) => (a.span!.endOffset - a.span!.startOffset) - (b.span!.endOffset - b.span!.startOffset))[0];
   const tabs: { id: OutputTab; label: string }[] = [
     { id: "types", label: "Inferred types" },
-    ...(example.dialect ? [{ id: "generated" as const, label: "Effect TypeScript" }, { id: "ir" as const, label: "Typed IR" }] : []),
-    { id: "read", label: "Read" },
-    ...(!example.dialect ? [{ id: "expand" as const, label: "Expand" }, { id: "value" as const, label: "Value" }] : []),
+    ...(example.dialect ? [{ id: "generated" as const, label: "Effect TypeScript" }, ...(!compact ? [{ id: "ir" as const, label: "Typed IR" }] : [])] : []),
+    ...(!compact ? [{ id: "read" as const, label: "Read" }] : []),
+    ...(!compact && !example.dialect ? [{ id: "expand" as const, label: "Expand" }, { id: "value" as const, label: "Value" }] : []),
   ];
   const activeTab = tabs.some(item => item.id === tab) ? tab : "types";
   const revealSpan = (span: Diagnostic["span"]) => { if (span) { setFocusOnReveal(true); setReveal([span.startOffset, span.endOffset]); } };
@@ -124,16 +124,16 @@ export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = 
   return <section className={`live-workbench ${embedded ? "live-workbench-embedded" : ""}`} aria-label="Live Forma workbench">
     <header className="workbench-toolbar">
       <div className="workbench-title"><span className={`workbench-dot ${errors || failure ? "has-error" : ""}`} /><strong>Forma workbench</strong><span>Live compiler</span></div>
-      <div className="workbench-settings">
+      {!compact ? <div className="workbench-settings">
         <label>Appearance<select aria-label="Workbench appearance" value={theme} onChange={event => setTheme(event.target.value as "light" | "dark")}><option value="light">Light</option><option value="dark">Dark</option></select></label>
         <label>Syntax<select aria-label="Syntax palette" value={palette} onChange={event => { const next = event.target.value as SyntaxPalette; setPalette(next); localStorage.setItem("forma-syntax-palette", next); }}><option value="forma">Forma</option><option value="ocean">Ocean</option><option value="orchid">Orchid</option></select></label>
-      </div>
+      </div> : null}
     </header>
     <div className="workbench-example-bar">
-      <label>Example<select aria-label="Workbench example" value={example.id} onChange={event => {
+      {!compact ? <label>Example<select aria-label="Workbench example" value={example.id} onChange={event => {
         stopReplay(); const next = workbenchExamples.find(item => item.id === event.target.value)!;
         setExample(next); replaceSource(next.source); setReveal(null); setOffset(0); setTab("types");
-      }}>{workbenchExamples.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
+      }}>{workbenchExamples.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label> : null}
       <div className="workbench-actions">
         {example.source !== example.broken ? <button type="button" onClick={() => { stopReplay(); pendingErrorReveal.current = true; replaceSource(example.broken); setTab("types"); }}>Introduce error</button> : null}
         {example.source !== example.broken ? <button type="button" onClick={() => { if (playing) stopReplay(); else void watchTyping(); }}>{playing ? "Stop typing" : "Watch typing"}</button> : null}
@@ -190,6 +190,6 @@ export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = 
       {errors > 0 ? <details className="workbench-guidance"><summary>Example guidance <span>Authored, not an automatic fix</span></summary><p>{example.prompt}</p><p>Reset restores the original example; it does not apply a compiler-suggested repair.</p></details> : null}
       {status === "ready" && !diagnostics.length ? <p className="workbench-clean">Program checks. All output above comes from this source.</p> : null}
     </div>
-    <footer className="workbench-footer"><span>Runs in your browser · @formalang/ts{example.dialect === "email" ? " · email.lisp prelude · Effect checker" : example.dialect ? " · Effect checker" : ""}</span><a href={FORMA_WORKBENCH_URL} target={embedded ? "_top" : undefined}>Structural workbench in Foldworks ↗</a></footer>
+    <footer className="workbench-footer"><span>Runs in your browser · @formalang/ts{example.dialect === "email" ? " · email.lisp prelude · Effect checker" : example.dialect ? " · Effect checker" : ""}</span>{compact ? <span>Your host supplies execution and authorization.</span> : <a href={FORMA_WORKBENCH_URL} target={embedded ? "_top" : undefined}>Structural workbench in Foldworks ↗</a>}</footer>
   </section>;
 }
