@@ -232,6 +232,44 @@ when you write forms in files:
 `FunctionDef`, ...) are the declarations used for code generation; their names
 are resolved module names.
 
+### Authored syntax in an embedded compiler
+
+`elaborateProgram` and `elaborateSources` from `@formalang/ts/descriptor`
+return `ElaboratedDeclaration`s with `authored` and `syntax`. You do not need
+to parse the source a second time or join nodes by source ID and offset:
+
+```ts
+const declaration = result.declarations[0]!;
+const original = declaration.authored; // Original top-level SExpr.
+const name = declaration.syntax.holes.name?.[0];
+const secondChildValue = declaration.syntax.holes.child?.[1]?.holes.value?.[0];
+// Each node exposes expression (SExpr), span (named source), and holes.
+```
+
+Every named hole is an array: a scalar has one node; a list or repeated hole
+has one per element in source order, including an empty array when supplied
+empty. An omitted optional hole has no entry. Child forms retain their own
+named holes recursively. A `Syntax` hole retains its complete S-expression,
+including nested lists, vectors and map entries; this reflection does not
+make arbitrary syntax typechecked. Legacy descriptor forms without a surface
+hole pattern retain their expression but have no named `holes` entries.
+
+`authored` is the original top-level expression, before action lowering or
+macro expansion. For declarations produced by a macro (including several
+declarations from one call), it is the original call; within a top-level
+`do`, it is that enclosing expression. `syntax.expression` is the recognized
+form after expansion. Generated nodes have call-site blame spans rather than
+an invented editable range; consult `origin` before making source edits.
+Ordinary authored nodes have exact value spans, with their source ID on
+`syntax.span`. S-expression offsets use JavaScript string indices.
+
+`sourceMap` is unchanged: it maps selected **payload JSON-pointer paths** to
+source spans, for example `/fields/0`. It already covers some projected child
+values but is not a complete map of holes: a projection may rename, omit or
+rearrange them. `syntax` is independent of that projection and includes holes
+that do not appear in the payload. All the new data is JSON-serializable and
+is not added to packaged artifact contracts.
+
 ## Modelling time
 
 Forma has no date or time type. Model a date as an `Int` day number (days since

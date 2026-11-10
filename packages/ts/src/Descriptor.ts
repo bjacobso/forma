@@ -221,6 +221,7 @@ export {
   type ElaborateProgramOptions,
   type ElaborateProgramResult,
   type ElaboratedDeclaration,
+  type DeclarationSyntax,
   type ProgramSource,
 } from "./descriptor/elaborate.js";
 

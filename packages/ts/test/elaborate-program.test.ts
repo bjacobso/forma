@@ -3,6 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import {
   ElaborationFailure,
+  bootstrapFromSources,
   declarationDiagnostic,
   elaborateProgram,
   elaborateSources,
@@ -155,6 +156,39 @@ describe("elaborateProgram", () => {
     ]);
   });
 
+  test("retains named nested and repeated hole syntax without reparsing sources", () => {
+    const consumer = bootstrapFromSources("", `
+(type NodeIR {:kind String :name Symbol})
+(form (leaf name value {:keys [doc]})
+  :types {:name (Declares Leaf) :value Syntax :doc (Option String)}
+  :ir NodeIR {:kind "Leaf" :name name})
+(form (root name child ...)
+  :types {:name (Declares Root) :child (List leaf)}
+  :ir NodeIR {:kind "Root" :name name})`);
+    const source = `(root Tree (leaf One {:x [1 2]}) (leaf Two (nested a b) :doc "second"))`;
+    const result = elaborateSources([
+      {sourceId:"empty.forma",source:""},
+      {sourceId:"tree.forma",source},
+    ], {prelude:consumer});
+    expect(result.diagnostics).toEqual([]);
+    const declaration = result.declarations[0]!;
+    expect(declaration.authored).toMatchObject({_tag:"List",items:[{name:"root"},{name:"Tree"},{_tag:"List"},{_tag:"List"}]});
+    const children = declaration.syntax.holes.child!;
+    expect(children).toHaveLength(2);
+    expect(children.map(child => source.slice(child.span.startOffset,child.span.endOffset))).toEqual([
+      "(leaf One {:x [1 2]})", '(leaf Two (nested a b) :doc "second")',
+    ]);
+    const first = children[0]!.holes.value![0]!;
+    const second = children[1]!.holes.value![0]!;
+    expect(first.expression._tag).toBe("Map");
+    expect(first.span.sourceId).toBe("tree.forma");
+    expect(source.slice(first.span.startOffset,first.span.endOffset)).toBe("{:x [1 2]}");
+    expect(source.slice(second.span.startOffset,second.span.endOffset)).toBe("(nested a b)");
+    expect(children[0]!.holes.doc).toBeUndefined();
+    expect(children[1]!.holes.doc![0]!.expression).toMatchObject({_tag:"Str",value:"second"});
+    expect(JSON.parse(JSON.stringify(declaration))).toEqual(declaration);
+  });
+
   test("expands top-level macros defined in the source and records their origin", () => {
     const source = [
       "(macro (named name field)",
@@ -177,6 +211,8 @@ describe("elaborateProgram", () => {
       kind: "expanded",
       macros: [{ macroName: "named", span: person!.span }],
     });
+    expect(person!.authored).toMatchObject({_tag:"List",items:[{name:"named"},{name:"Person"},{name:":person/name"}]});
+    expect(person!.syntax.expression).toMatchObject({_tag:"List",items:[{name:"entity"},{name:"Person"},{_tag:"Map"}]});
     expect(person!.sourceMap.every((entry) => entry.span.startLine === 5)).toBe(true);
   });
 
