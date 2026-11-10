@@ -1,8 +1,8 @@
 # Workshop booking: Forma → Effect HTTP and RPC
 
 An isolated exploration using the root's pinned **Effect 4.1.1** and
-**@effect/platform-node 4.1.1**. No compiler/runtime changes, new dependencies,
-deployment, or Amp workspace settings are needed.
+**@effect/platform-node 4.1.1**, the HTTP API prelude and dedicated RPC prelude.
+No new runtime, dependencies, deployment, or Amp workspace settings are needed.
 
 ## Domain and ownership
 
@@ -17,10 +17,11 @@ Read the files in this order:
    checked `lookup` / `reserve` operations calling that service.
 2. `http.forma`: GET `/workshops/:id`, POST `/reservations`, checked handler links.
 3. `rpc.forma`: the same queries/commands as `GetWorkshop` and `ReserveSeats`.
-4. `rpc-prelude.forma`: **example-local** typed declaration form with a Forma
-   `:emit` hook producing actual `Rpc.make` calls.
-5. `generate.mjs`: existing HTTP compiler plus bounded RPC form elaboration and
-   emission. It assembles these files explicitly, not through Forma module imports.
+4. `../../preludes/rpc.lisp`: the reusable typed RPC prelude, with Forma
+   `:emit` hooks producing native `Rpc.make` and `RpcGroup.make` calls.
+5. `generate.mjs`: the HTTP and RPC host adapters. `schemasFrom` imports shared
+   schemas without a fixed schema list. It assembles sources explicitly, not
+   through Forma module imports.
 6. `generated/http.ts` and `generated/rpc.ts`: reproducible output, saved for
    inspection. HTTP output owns the shared schemas; RPC imports those exact values.
 7. `runtime.ts`: **hand-authored**, explicit native Effect Booking implementation,
@@ -114,11 +115,10 @@ The tests assert this distinction and verify rejected requests leave state intac
   sockets; the walkthrough above was also run against the supervised server.
 - HTTP lowering is the existing shipped spike, not universal HTTP support.
   Its documented middleware, streaming and module-import limits still apply.
-- RPC lowering exists **only in this directory**. The generator has fixed
-  domain imports and one unary group. It checks required form holes and duplicate
-  RPC names; strict TypeScript checks native handler compatibility and unresolved
-  generated schema references. It does not implement a general RPC linker,
-  arbitrary service-method inference, streaming, middleware or package generation.
+- RPC contracts use the dedicated `rpc.lisp` prelude and `@formalang/ts/rpc`
+  adapter, which support named unary groups and checked schemas without changes
+  to mechanics. Native handler registration is still explicit; streaming,
+  middleware and Forma file-module RPC linking are not implemented.
 - Refinements run at transport decoding, not as static proofs of arbitrary Forma
   expressions. Native code calling service methods directly must validate its own
   untrusted input.

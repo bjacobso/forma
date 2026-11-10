@@ -33,6 +33,11 @@ also carry TypeScript emit hooks and derive a typed builder DSL. Bootstrap
 it with `compiler.lisp`, separately from the ontology's older `api` form.
 See [the HTTP API spike](../docs/effect/http-api.md).
 
+`rpc.lisp` defines unary Effect RPC contracts and named groups using the same
+typed forms and emit hooks. `@formalang/ts/rpc` assembles standalone modules or
+imports shared schemas; handlers and transports remain native Effect code.
+See [Prelude-defined RPC](../docs/effect/rpc.md).
+
 The site's [prelude reference](https://forma-lang.com/preludes/) is generated
 from these files when the docs build: forms and slot types from descriptors,
 signatures from `(: name type)`, and documentation from docstrings and the

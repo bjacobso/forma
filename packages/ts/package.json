@@ -112,6 +112,10 @@
       "types": "./dist/HttpApi.d.mts",
       "import": "./dist/HttpApi.mjs"
     },
+    "./rpc": {
+      "types": "./dist/Rpc.d.mts",
+      "import": "./dist/Rpc.mjs"
+    },
     "./descriptor": {
       "types": "./dist/Descriptor.d.mts",
       "import": "./dist/Descriptor.mjs"
