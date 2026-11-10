@@ -24,7 +24,7 @@ export function unifiedFormProvider(
     return parent;
   const definitionErrors = checkDescriptors([{sourceId:"source",source}], {prelude:parent?.descriptorPrelude,checkReferences:false});
   const firstError = definitionErrors[0];
-  if (firstError) throw new InferenceError({message:firstError.message,details:{code:firstError.code},origin:{nodeId:"descriptor",kind:"descriptor",span:{start:firstError.span!.startOffset,end:firstError.span!.endOffset}}});
+  if (firstError) throw new InferenceError({message:firstError.message,details:{...firstError.details,code:firstError.code},help:firstError.help,fix:firstError.fix,origin:{nodeId:"descriptor",kind:"descriptor",span:{start:firstError.span!.startOffset,end:firstError.span!.endOffset}}});
   const local = bootstrapFromSources("", "", ...(parent?.descriptorPrelude?.sources ?? []), source);
   const inherited = parent?.descriptorPrelude;
   if (inherited) {
@@ -105,7 +105,9 @@ export function unifiedFormProvider(
   if (error)
     throw new InferenceError({
       message: error.message,
-      details: { code: error.code },
+      details: { ...error.details, code: error.code },
+      help: error.help,
+      fix: error.fix,
       ...(error.span
         ? {
             origin: {

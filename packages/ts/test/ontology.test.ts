@@ -100,7 +100,7 @@ describe("elaborateOntology", () => {
     );
     expect(ok).toBe(false);
     expect(diagnostics.map((d) => [d.code, formatDiagnostic(d)])).toEqual([
-      ["elaborate/hole-type", "m.lisp:1:25: Unknown type Missing"],
+      ["elaborate/hole-type", "m.lisp:1:29: Unknown type Missing"],
       ["elaborate/hole-type", "m.lisp:2:15: Unknown reference Ghost"],
       ["elaborate/hole-type", "m.lisp:3:16: Unknown reference Nowhere"],
     ]);

@@ -2,12 +2,68 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Catalog, consumer registration, structured form diagnostics and CLI explanation implemented (FX1); later stages below remain proposed |
 | Created | 2026-10-16 |
 | Scope | A shared registry of diagnostic codes, namespace ownership, evaluation codes, stability, generated documentation, `forma explain`, LSP code links, conformance checks |
 | Direction | Every code the engine can report is listed once, owned by a namespace, and checked against the engine's sources and fixtures |
 
-## Summary
+## Implemented consumer contract (FX1)
+
+`@formalang/ts/diagnostic` exports `DiagnosticCatalog`, `diagnosticCatalog`,
+`builtinDiagnosticCatalog`, `DiagnosticDetailsMap`, `Diagnostic<Code>` and
+`hasDiagnosticCode`. The shipped catalog is TypeScript data in
+`packages/ts/src/diagnostic/catalog-data.ts`, so browser and Node consumers use
+the same offline definitions without filesystem access or a generated copy.
+Each entry has a stable code, summary, explanation and stability. Severity
+and phase remain properties of the report, since one code can occur in more
+than one context. Codes and documented detail fields are public API;
+message wording, summaries and explanations may change.
+
+The consumer form paths expose structured names, holes, enum candidates,
+type candidates, references and expected/actual syntax or types. Unknown
+type references retain the offending symbol's span, including inside a
+nested type. `DiagnosticDetailsMap` is open to TypeScript module augmentation
+by consumer preludes. Codes not yet given a specialized entry retain their
+existing `Record<string, unknown>` detail contract rather than inventing
+fields from message text.
+
+Diagnostics gain optional `help` and `fix`. A fix is an atomic list of
+`{span, newText}` edits against the original named sources; hosts must check
+that they are applying it to the source version that produced the diagnostic.
+Form `:check` records accept `:details`, `:help` and
+`:fix [{:at [:hole ...] :new-text "replacement"}]`. Unlike a diagnostic's
+fallback location, a fix must resolve to authored syntax. No fix is applied
+automatically. Suggestions for expanded unknown forms never edit a generated
+template as if it were author source.
+
+Consumers create a catalog per language/project and `register` their entries.
+Registration refuses duplicate codes; it does not replace engine definitions.
+`get`, `list` and `assertKnown` use the same catalog for engine and consumer
+codes. The `mechanics/fail/<ErrorType>` family resolves to `mechanics/fail`;
+the suffix remains owned by the program declaring that error type.
+The source-built `forma explain <code>` command emits the built-in entry as
+JSON, or exits 1 with `abi/unknown-code`. A consumer's own explain command can
+use its extended catalog with no special cases for engine codes.
+
+`pnpm check:diagnostics` is part of `pnpm check`. It scans engine/host source
+codes, finite adapter code templates and bundled prelude codes, and checks
+conformance JSON reports. A regression deliberately removes an emitted code
+and requires the check to reject it; `assertKnown` also rejects an unknown
+runtime report. The scan is approximate, not a claim to evaluate arbitrary
+consumer hook bodies.
+
+This settles the earlier questions about public stability for these codes,
+top-level help/fix fields, per-report severity and shared consumer catalogs.
+Namespace ownership enforcement, automatic assertions at every engine report
+boundary, renaming legacy evaluator codes to `eval/*`/`limit/*`, generated
+explanation pages, the `explainDiagnostic` host ABI operation and LSP code links
+remain proposed. In particular, FX1 preserves existing error codes instead of
+breaking consumers in order to complete the later evaluator migration.
+
+See [the consumer upgrade note](../consumer-upgrade-1317204.md) for adoption
+and the changes since the revision WorldVM vendors.
+
+## Original proposal
 
 Forma diagnostics already have codes such as `typecheck/arity` and
 `module/effect-runtime`, but the codes are string literals scattered through

@@ -1,29 +1,6 @@
 import type { ModuleInterface, LinkedEffectProgram, PackageTable } from "@formalang/ts/modules";
-export interface Span {
-  readonly sourceId: string;
-  readonly startOffset: number;
-  readonly endOffset: number;
-  readonly startLine?: number | undefined;
-  readonly startColumn?: number | undefined;
-  readonly endLine?: number | undefined;
-  readonly endColumn?: number | undefined;
-}
-
-export interface Diagnostic {
-  readonly code: string;
-  readonly severity: "error" | "warning" | "info";
-  readonly message: string;
-  readonly phase?:
-    | "parse"
-    | "expand"
-    | "typecheck"
-    | "evaluate"
-    | "elaborate"
-    | "host-effect"
-    | "emit";
-  readonly span?: Span | undefined;
-  readonly details?: Record<string, unknown> | undefined;
-}
+import type { Diagnostic, Span } from "@formalang/ts/diagnostic";
+export type { Diagnostic, Span } from "@formalang/ts/diagnostic";
 
 export type AstNode =
   | { readonly kind: "nil"; readonly span?: Span | undefined }
@@ -108,7 +85,7 @@ export interface EditorTypedSpan {
   readonly exprTag: string;
 }
 
-export interface EditorAnalysisError {
+export interface EditorAnalysisError extends Pick<Diagnostic, "details" | "help" | "fix"> {
   /** Compiler diagnostic identity, separate from the author source excerpt. */
   readonly diagnosticCode?: string | undefined;
   readonly message: string;

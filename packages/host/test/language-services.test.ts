@@ -6,6 +6,20 @@ import type { EditScript } from "../src/index.js";
 describe("structural editor services on the TypeScript host", () => {
   const host = new TsLanguageHost();
 
+  it("keeps structured form details through editor analysis", async () => {
+    const source = `(type ItemIR {:kind "Item" :name Symbol})
+(form (item name fields)
+  :types {:name (Declares Item) :fields (Record Type)}
+  :ir ItemIR {:kind "Item" :name name})
+(item A {:x Strnig})`;
+    const result = await host.analyzeEditor({sourceId:"world.forma",source});
+    expect(result.success).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({
+      details: expect.objectContaining({form:"item",hole:"fields",name:"Strnig",expected:"Type",actual:"Strnig"}),
+      help: expect.stringContaining("Declare or import"),
+    })]));
+  });
+
   it("advertises the services it implements", async () => {
     const version = await host.version();
     expect(version.capabilities).toEqual(expect.arrayContaining([

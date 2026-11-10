@@ -86,6 +86,25 @@ from a `Syntax` hole keeps its source even when it is a list or vector; use a
 new list or vector to construct a path. Without a resolved `:at`, `:slot` is used,
 then the application span. Child forms keep their own diagnostic codes and spans.
 
+Diagnostic records can also include `:details` (a record of structured values),
+`:help` (author advice), and `:fix` (a list of source replacements):
+
+```lisp
+{:code "greeting/empty" :severity :error :message "Provide a greeting message."
+ :details {:hole "message" :actual ""} :help "Write a non-empty greeting."
+ :at [:message]
+ :fix [{:at [:message] :new-text "\"Hello\""}]}
+```
+
+Each edit requires a `:new-text` string and an `:at` that resolves to authored
+syntax; it never falls back to the whole application. Consumers receive
+`{span, newText}` edits and must apply them atomically against the unchanged
+source version. Forma does not apply them automatically. Register consumer
+codes in a project-local `DiagnosticCatalog` from `@formalang/ts/diagnostic`
+to share explanations with engine codes. Code identifiers and documented
+detail fields are API; message wording is not. See the
+[consumer upgrade note](./consumer-upgrade-1317204.md) for typed TypeScript use.
+
 Checks and projections can reflect on other declarations:
 `(declaration-fields name)` returns a declaration's record fields,
 `(declaration-hole name :hole)` its authored hole,
