@@ -127,7 +127,7 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
   while (i < e.items.length - 1) {
     const key = name(e.items[i]);
     if (!key?.startsWith(":")) throw new Error(`form ${formName}: expected a :key value option`);
-    if (![":types", ":ir", ":type", ":scope", ":check", ":examples", ":emit", ":extensions"].includes(key)) throw new Error(`form ${formName}: unknown option ${key}`);
+    if (![":types", ":ir", ":type", ":infer-fn", ":scope", ":check", ":examples", ":emit", ":extensions"].includes(key)) throw new Error(`form ${formName}: unknown option ${key}`);
     if (options.has(key)) throw new Error(`form ${formName}: duplicate option ${key}`);
     const value = e.items[++i];
     if (!value) throw new Error(`form ${formName}: ${key} needs a value`);
@@ -185,6 +185,9 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
   }
   for (const n of holes.keys()) if (!variables.has(n)) throw new Error(`form ${formName}: type for unknown hole ${n}`);
   const resultType = options.get(":type");
+  const inferHook = options.get(":infer-fn");
+  if (inferHook && (inferHook._tag !== "Sym" || inferHook.name.startsWith(":"))) throw new Error(`form ${formName}: :infer-fn expects a function name`);
+  if (inferHook && resultType) throw new Error(`form ${formName}: choose :type or :infer-fn, not both`);
   const extensionSyntax = options.get(":extensions");
   if (extensionSyntax && extensionSyntax._tag !== "Map") {
     throw Object.assign(new Error(`form ${formName}: :extensions expects a literal map`), { loc: extensionSyntax.loc });
@@ -199,6 +202,7 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
     validation: { kind: "hook", fn: `form/${formName}/validate` },
     elaboration: { kind: "hook", fn: `form/${formName}/construct` },
     resultType: head(resultType) === "fn" ? {kind:"hook",fn:`form/${formName}/result-type`} : { kind: "constant", type: name(resultType) ?? declares ?? "Unit" },
+    ...(inferHook ? {inferHook:name(inferHook)!} : {}),
     produces: irName, ...(extensions ? {extensions} : {}),
     completionShape: `(${formName} ${patterns.map(p => name(p) ?? "options").join(" ")})`,
     surface: { pattern: patterns, holes, options, body, helpers:reachableHelpers(formHookExpressions({body, options}),helpers,new Set(holes.keys())), types, ...(types.has(irName) ? { ir: types.get(irName)! } : {}) },

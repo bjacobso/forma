@@ -478,3 +478,39 @@ Generic/computed types, non-string map keys, `Option` outside record fields,
 unsupported refinements, and types without a JSON data encoding fail with
 diagnostics instead of producing `Unknown`. This is a build step for supplied
 type declarations, not RFC 0011's still-proposed host export/reflection service.
+
+## Argument-dependent form typing
+
+An ordinary `form` can opt into the existing descriptor typing protocol with
+`:infer-fn function-name`. The named function receives a descriptor hook input;
+`meta/positional-arg` exposes authored arguments and `meta/infer-expr-type`
+infers one in the **active** lexical environment and substitution context.
+Return its type metadata directly, or compose the documented meta type values.
+Do not stringify and reparse types: forwarding the metadata preserves nominal
+identity and shared inference variables.
+
+```lisp
+(type TableIR {:kind "Table"})
+(define infer-table [input]
+  (meta/infer-expr-type input (meta/positional-arg input 0)))
+(form (table rows) :types {:rows Syntax} :ir TableIR
+  :infer-fn infer-table {:kind "Table"})
+
+(type Status (Brand Keyword))
+(define lookup [status]
+  (get (get (table {:main {:status status}}) :main) :status))
+(lookup (Status :active)) ; Brand<Status, Keyword>, not Keyword
+```
+
+Load the form and helper as a normal prelude and use `descriptorFormProvider`
+from `@formalang/ts/type`; source-local forms use the same protocol. No runtime
+replacement of `inferExpression` or `childScope` is necessary. The hook owns
+typing the expressions it uses; an unvisited `Syntax` hole remains opaque.
+The example demonstrates a typing contract, not a runtime table implementation:
+runtime lowering and the emitted IR remain the consumer's responsibility.
+
+`:infer-fn` takes a named ordinary one-argument function (or an existing infer
+hook), not a lambda. It is mutually exclusive with `:type`, so there is no
+implicit precedence between syntax-driven result computation and active-context
+inference. Existing `:type` hooks and legacy descriptors keep their behavior.
+This is not RFC 0008's proposed checked result-template language.
