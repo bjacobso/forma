@@ -31,9 +31,17 @@
         "endColumn": 30
       },
       "details": {
-        "form": "workflow",
-        "declaration": "release"
-      }
+        "form": "step",
+        "declaration": "release",
+        "hole": "action",
+        "expected": "Action",
+        "actual": "\"process.tset\"",
+        "candidates": [
+          "\"process.test\"",
+          "\"human.approve\""
+        ]
+      },
+      "help": "Use a value matching the declared type of action."
     },
     "edit": {
       "from": 43,
@@ -80,7 +88,11 @@
       },
       "details": {
         "form": "query",
-        "declaration": "employee-directory"
+        "declaration": "employee-directory",
+        "hole": "where",
+        "expected": "Bool",
+        "actual": "String",
+        "name": "name"
       }
     },
     "edit": {
