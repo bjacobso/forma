@@ -6,7 +6,7 @@ Current source rejects `Number` and `Num`.
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Host services proposed; explicit-source data schema build implemented |
 | Created | 2026-10-09 |
 | Scope | JSON Schema derived from Forma types, documentation on signatures, type-directed JSON decoding, export descriptions through the host |
 | Direction | The portable module interface is the source of truth; JSON Schema is a derived view with explicit unsupported cases |
@@ -239,6 +239,30 @@ For the signature above, `parameters` is
 4. **Engine comparison.** Dropped: the OCaml engine was removed, so there is
    no second `moduleGraph` implementation to compare. Stored goldens for the
    fixture modules pin the TypeScript engine's schemes and contracts.
+
+## Implemented explicit-source build step
+
+The consumer-prelude SDK now provides `generateTypeSchemas(sources)` from
+`/mechanics` and `forma schema <sources...> --out <dir> [--check]`. It prints
+`schema.ts`, `types.ts`, and `schema.json` from the existing target-neutral
+mechanics schema nodes, rather than introducing another checker-tree walker.
+It implements the data mapping above for ordinary closed type declarations,
+including optional fields, recursive and tagged shapes, range/pattern/length
+refinements, and nonempty lists. JSON Schema is emitted directly, without
+loading generated JavaScript. `--check` compares bytes and never writes.
+
+This adopts the useful wire-encoding distinctions of the unmerged #114 schema
+draft without reviving its colliding RFC number: data `Unit` is `null`, while
+Effect operation results remain `void`. Unsupported data encodings fail with
+located diagnostics. The standalone mechanics printer now suspends recursive
+references and writes explicit recursive types; its existing API is retained.
+
+The current entry point accepts an explicit source set and emits all its
+ordinary `type` declarations. Module/export selection, instantiated generics,
+computed/open rows, non-string map keys, extra wire codecs, Markdown output,
+and host `describeExports`/decoding remain proposed. Brand and JSON plain
+types may reference Effect types without a runtime import. This does not
+claim that the host ABI proposals elsewhere in this RFC have shipped.
 
 ## Decisions still required
 

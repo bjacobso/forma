@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 /** Node transports; compiler and session behavior stays in FormaHost. */
-import { readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { managePackages, readModuleGraph, readNodePackages, verifyPackages } from "@formalang/ts/node";
 import { ModuleError, moduleMechanicsDeclarations, type ModuleGraph } from "@formalang/ts/modules";
 import { isKFloat, isKKeyword, isKSymbol, mapKeyValue, type KValue } from "@formalang/ts/evaluator";
 import { diagnosticCatalog } from "@formalang/ts/diagnostic";
+import { generateTypeSchemas } from "@formalang/ts/mechanics";
 import { JsonAbi, type JsonResponse } from "./json-abi.js";
 import { authorNames, locateResponse } from "./diagnostic-locations.js";
 
@@ -30,6 +32,9 @@ const usage = `Usage: forma <command>
   file declarations <entry.forma>       Elaborate forms and list declarations, including
                                         each form application's IR (kind FormApplication).
   file interface <entry.forma>          Print the module graph's interfaces.
+  schema <sources...> --out <dir> [--check]
+                                        Generate data codecs, types, and JSON Schema.
+                                        --check fails on missing or stale output without writing.
   request ['<json>']                    Handle one JSON request (argument or stdin).
   daemon                                Handle one JSON request per stdin line.
   add <name> <spec> | update [name] | verify | vendor
@@ -97,6 +102,30 @@ async function file(operation: string, path: string, unchecked = false): Promise
   } finally { await abi.handleJson(JSON.stringify({op:"closeSession",sessionId})); }
 }
 
+function schemaBuild(args: readonly string[]): JsonResponse {
+  const paths: string[] = [];
+  let out: string | undefined, check = false;
+  for (let index = 0; index < args.length; index++) {
+    const arg = args[index]!;
+    if (arg === "--check") check = true;
+    else if (arg === "--out" && args[index + 1] && !args[index + 1]!.startsWith("--")) out = args[++index];
+    else if (arg.startsWith("-")) throw new Error(`Unknown schema option ${arg}`);
+    else paths.push(arg);
+  }
+  if (!out || !paths.length) throw new Error("schema requires sources and --out <dir>");
+  const result = generateTypeSchemas(paths.map(path => ({sourceId:resolve(path),source:readFileSync(path,"utf8")})));
+  if (!result.ok) return {ok:false,diagnostics:[...result.diagnostics]};
+  const files = Object.entries(result.files).map(([name,text]) => ({path:join(out!,name),text}));
+  if (check) {
+    const diagnostics = files.filter(file => !existsSync(file.path) || readFileSync(file.path,"utf8") !== file.text)
+      .map(file => ({code:"schema/stale",severity:"error" as const,message:`${file.path} is missing or stale; rerun forma schema without --check.`}));
+    return {ok:diagnostics.length === 0,value:{files:files.map(file => file.path)},diagnostics};
+  }
+  mkdirSync(out,{recursive:true});
+  for (const file of files) writeFileSync(file.path,file.text);
+  return {ok:true,value:{files:files.map(file => file.path)},diagnostics:[]};
+}
+
 try {
   if (command === "request" && args.length <= 1) print(await abi.handleJson(args[0] ?? readFileSync(0, "utf8")));
   else if (command === "daemon" && args.length === 0) {
@@ -113,6 +142,11 @@ try {
   else if (command === "help" || command === "--help" || command === "-h" || (args.length === 1 && (args[0] === "--help" || args[0] === "-h"))) process.stdout.write(usage);
   else if (command === "file" && args.length === 3 && args[0] === "evaluate" && args[1] === "--unchecked") print(await file("evaluate", args[2]!, true));
   else if (command === "file" && args.length === 2 && ["typecheck", "evaluate", "interface", "declarations"].includes(args[0]!)) print(await file(args[0]!, args[1]!));
+  else if (command === "schema") {
+    const result = schemaBuild(args);
+    print(result);
+    if (!result.ok) process.exitCode = 1;
+  }
   else if (command === "verify" && args.length === 0) {
     const packages = verifyPackages();
     print({ ok: true, value: { packages: packages.table.packages.map(pkg => pkg.name) }, diagnostics: [] });

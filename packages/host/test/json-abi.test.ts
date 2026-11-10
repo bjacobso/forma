@@ -18,6 +18,26 @@ describe("JSON process ABI", () => {
     expect(unknown.status).toBe(1);
     expect(JSON.parse(unknown.stdout)).toMatchObject({ok:false,diagnostics:[{code:"abi/unknown-code"}]});
   });
+  it("schema builds are deterministic and --check fails without overwriting stale files", () => {
+    const dir = mkdtempSync(join(tmpdir(),"forma-schema-"));
+    try {
+      const source = join(dir,"node.forma"), out = join(dir,"generated");
+      writeFileSync(source,'(type Node {:label (String :min-length 1) :children (List Node)})');
+      const run = (...flags: string[]) => spawnSync(process.execPath,[cli,"schema",source,"--out",out,...flags],{encoding:"utf8"});
+      expect(run().status).toBe(0);
+      const generated = readFileSync(join(out,"schema.ts"),"utf8");
+      expect(run("--check").status).toBe(0);
+      expect(run().status).toBe(0);
+      expect(readFileSync(join(out,"schema.ts"),"utf8")).toBe(generated);
+      writeFileSync(source,'(type Node {:label (String :min-length 2) :children (List Node)})');
+      const stale = run("--check");
+      expect(stale.status).toBe(1);
+      expect(JSON.parse(stale.stdout)).toMatchObject({ok:false,diagnostics:expect.arrayContaining([expect.objectContaining({code:"schema/stale"})])});
+      expect(readFileSync(join(out,"schema.ts"),"utf8")).toBe(generated);
+      expect(run().status).toBe(0);
+      expect(run("--check").status).toBe(0);
+    } finally { rmSync(dir,{recursive:true,force:true}); }
+  },30_000);
 
   const fixtures = JSON.parse(readFileSync(resolve(import.meta.dirname,"../../../conformance/fixtures/host-plumbing.json"),"utf8"));
   for (const fixture of fixtures.cases) {

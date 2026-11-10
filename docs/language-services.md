@@ -433,3 +433,48 @@ workbench, which is now owned by Foldworks. It exports capability reachability
 and `blank`). These functions consume Forma syntax identities and plain source
 facts; they import no UI library. Hosts still own sessions, permissions, and
 presentation. See the [workbench boundary](./workbench.md).
+
+## Data schema build step
+
+Consumer preludes can generate data contracts without walking checker internals:
+
+```ts
+import { generateTypeSchemas } from "@formalang/ts/mechanics";
+
+const result = generateTypeSchemas([
+  { sourceId: "names.forma", source: '(type Name (String :min-length 1))' },
+  { sourceId: "tree.forma", source: '(type Tree {:name Name :children (List Tree)})' },
+]);
+if (result.ok) {
+  // result.files contains schema.ts, types.ts, and schema.json.
+} else {
+  // result.diagnostics carry the original source IDs and offsets.
+}
+```
+
+The Node CLI writes those three deterministic files:
+
+```sh
+forma schema names.forma tree.forma --out generated
+forma schema names.forma tree.forma --out generated --check
+```
+
+`--check` exits with status 1 for missing or stale output and never writes files.
+The caller supplies an explicit source bundle; this command does not resolve
+module imports, choose exports, or generate a Markdown reference. Other forms
+in those sources are ignored. Source order breaks ties after dependency ordering.
+
+This build step emits JSON **data** contracts: `Unit` is `null`, `Float` is
+finite, `Int` is a safe integer, and optional record fields are omitted rather
+than encoded as `None`. The existing Effect-program APIs keep their `Unit` as
+`void`. Lists with `:min-length 1` produce nonempty codecs and tuple types.
+Patterns, ranges, length bounds, literal/general unions, tuples, recursive
+records, tagged unions, named references, brands, and string-keyed maps share
+the mechanics schema representation. `types.ts` has no runtime imports;
+brands and `Json` use type-only Effect references when needed.
+
+JSON Schema targets draft 2020-12, with named contracts under `$defs`.
+Generic/computed types, non-string map keys, `Option` outside record fields,
+unsupported refinements, and types without a JSON data encoding fail with
+diagnostics instead of producing `Unknown`. This is a build step for supplied
+type declarations, not RFC 0011's still-proposed host export/reflection service.
