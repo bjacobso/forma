@@ -15,13 +15,62 @@ export interface Span {
   readonly endColumn?: number | undefined;
 }
 
-export interface Diagnostic {
-  readonly code: string;
+/** An atomic replacement in author source. Apply a fix's edits together. */
+export interface DiagnosticTextEdit {
+  readonly span: Span;
+  readonly newText: string;
+}
+
+/** Open to consumer augmentation; code and detail field meanings are public API. */
+export interface DiagnosticDetailsMap {
+  "ArityError": { readonly name: string; readonly expected: number | string; readonly actual: number };
+  "KernelTypeError": { readonly expected: string; readonly actual: string };
+  "StepLimitExceeded": { readonly limit: number };
+  "typecheck/type-mismatch": { readonly expected?: string; readonly got?: string; readonly actual?: string };
+  "typecheck/unbound-symbol": { readonly name: string; readonly candidates: readonly string[] };
+  "elaborate/unknown-form": { readonly form?: string; readonly name?: string; readonly candidates: readonly string[] };
+  "elaborate/hole-type": HoleDiagnosticDetails;
+  "elaborate/unknown-reference": HoleDiagnosticDetails;
+  "elaborate/reference-type": HoleDiagnosticDetails;
+  "elaborate/duplicate-declaration": { readonly form: string; readonly declaration: string; readonly previousForm: string };
+  "elaborate/unsupported-form": { readonly form: string; readonly candidates: readonly string[] };
+  "elaborate/missing-identifier": HoleDiagnosticDetails;
+  "elaborate/missing-slot": HoleDiagnosticDetails;
+  "elaborate/invalid-slot-value": HoleDiagnosticDetails;
+  "descriptor/unknown-slot": HoleDiagnosticDetails;
+  "descriptor/unresolved-hook": HoleDiagnosticDetails;
+  "descriptor/constructed-by": HoleDiagnosticDetails;
+  "abi/unknown-code": { readonly name: string };
+}
+
+export interface HoleDiagnosticDetails {
+  readonly form: string;
+  readonly declaration?: string;
+  readonly hole?: string;
+  readonly name?: string;
+  readonly candidates?: readonly string[];
+  /** Printed Forma type or syntax, not a message fragment. */
+  readonly expected?: string;
+  readonly actual?: string;
+}
+
+export type DiagnosticDetails<C extends string> = C extends keyof DiagnosticDetailsMap
+  ? DiagnosticDetailsMap[C] : Record<string, unknown>;
+
+export interface Diagnostic<C extends string = string> {
+  readonly code: C;
   readonly severity: "error" | "warning" | "info";
   readonly message: string;
   readonly phase?: DiagnosticPhase;
   readonly span?: Span | undefined;
-  readonly details?: Record<string, unknown> | undefined;
+  readonly details?: DiagnosticDetails<C> | undefined;
+  readonly help?: string | undefined;
+  readonly fix?: readonly DiagnosticTextEdit[] | undefined;
+}
+
+/** Narrow a diagnostic to the detail contract for a known code. */
+export function hasDiagnosticCode<C extends keyof DiagnosticDetailsMap>(diagnostic: Diagnostic, code: C): diagnostic is Diagnostic<C> {
+  return diagnostic.code === code;
 }
 
 export type DiagnosticPhase =
@@ -70,6 +119,12 @@ export function diagnosticFromUnknown(
       origin?: { span?: { start?: number; end?: number } };
       loc?: { sourceId?: string; start?: number; end?: number; line?: number; col?: number };
       details?: Record<string, unknown>;
+      expected?: string | number;
+      got?: string | number;
+      name?: string;
+      limit?: number;
+      help?: string;
+      fix?: readonly DiagnosticTextEdit[];
     };
     const span: Span | undefined = candidate.origin?.span
       ? {
@@ -100,7 +155,15 @@ export function diagnosticFromUnknown(
       message: candidate.message ?? String(error),
       phase,
       ...(span ? { span } : {}),
-      ...(candidate.details ? { details: candidate.details } : {}),
+      details: {
+        ...(candidate.expected !== undefined ? {expected:candidate.expected} : {}),
+        ...(candidate.got !== undefined ? {actual:candidate.got} : {}),
+        ...(candidate._tag === "ArityError" ? {name:candidate.name} : {}),
+        ...(candidate.limit !== undefined ? {limit:candidate.limit} : {}),
+        ...candidate.details,
+      },
+      ...(candidate.help ? {help:candidate.help} : {}),
+      ...(candidate.fix ? {fix:candidate.fix} : {}),
     };
   }
   return {

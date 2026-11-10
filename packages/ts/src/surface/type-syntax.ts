@@ -110,15 +110,17 @@ export function typeSyntaxErrors(expression: SExpr, allowedMetadata: ReadonlySet
   return errors;
 }
 
-/** Resolve names in an authored type against its declaration environment. */
-export function unknownTypeReferences(expression: SExpr, isKnown: (name: string) => boolean): readonly string[] {
-  const primitives = new Set(["String", "Int", "Float", "Bool", "Unit", "Null", "Json", "Any", "Unknown", "Never", "Symbol", "Keyword", "Type", "Syntax", "RuntimeExpr", "Bytes", "DateTime", "Duration", "List", "Option", "Map", "Record", "Union", "Tagged", "Id", "Brand", "Result", "->", "Effect", "Stream", "Layer", "Fiber", "Ref", "RefCell", "Scope", "OntologyRuntime"]);
-  const visit = (expr: SExpr): readonly string[] => {
+export const primitiveTypeNames = ["String", "Int", "Float", "Bool", "Unit", "Null", "Json", "Any", "Unknown", "Never", "Symbol", "Keyword", "Type", "Syntax", "RuntimeExpr", "Bytes", "DateTime", "Duration", "List", "Option", "Map", "Record", "Union", "Tagged", "Id", "Brand", "Result", "->", "Effect", "Stream", "Layer", "Fiber", "Ref", "RefCell", "Scope", "OntologyRuntime"];
+
+/** Resolve names while retaining the exact offending syntax, not message fragments. */
+export function unknownTypeReferences(expression: SExpr, isKnown: (name: string) => boolean): readonly Extract<SExpr, { _tag: "Sym" }>[] {
+  const primitives = new Set(primitiveTypeNames);
+  const visit = (expr: SExpr): readonly Extract<SExpr, { _tag: "Sym" }>[] => {
     const type = splitTypeMetadata(expr).type;
     if (type._tag === "List" && ["Pick", "Omit", "Merge"].includes(head(type) ?? "")) {
       return type.items.slice(1, head(type) === "Merge" ? 3 : 2).flatMap(visit);
     }
-    if (type._tag === "Sym") return type.name.startsWith(":") || /^[a-z]/.test(type.name) || primitives.has(type.name) || isKnown(type.name) ? [] : [`Unknown type ${type.name}`];
+    if (type._tag === "Sym") return type.name.startsWith(":") || /^[a-z]/.test(type.name) || primitives.has(type.name) || isKnown(type.name) ? [] : [type];
     if (type._tag === "Map") return type.pairs.flatMap(([,value]) => visit(value));
     if (type._tag === "List") {
       if (head(type) === "Tagged") return type.items.slice(name(type.items[1]) === ":tag" ? 3 : 1).flatMap(arm => arm._tag === "List" && arm.items[1] ? visit(arm.items[1]) : []);

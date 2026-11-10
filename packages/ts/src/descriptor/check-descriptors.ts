@@ -54,7 +54,7 @@ export function checkDescriptors(sources: readonly DescriptorSource[], options: 
     if (head === "__form-hook" || head === "define") { const name=text(items(e)[1]); if (name) hooks.add(name); }
   }
   for (const source of parsed) {
-    const report = (e: SExpr, code: string, message: string) => diagnostics.push({code,message,severity:"error",phase:"typecheck",span:{sourceId:source.sourceId,startOffset:e.loc.start,endOffset:e.loc.end}});
+    const report = (e: SExpr, code: string, message: string, details?: Record<string, unknown>) => diagnostics.push({code,message,severity:"error",phase:"typecheck",span:{sourceId:source.sourceId,startOffset:e.loc.start,endOffset:e.loc.end},...(details ? {details} : {})});
     for (const expression of source.expressions) {
       const head = headSym(expression);
       if (head !== "__form-descriptor" && head !== "__form-hook" && head !== "form") continue;
@@ -71,17 +71,17 @@ export function checkDescriptors(sources: readonly DescriptorSource[], options: 
         if (name && hookClauses.has(name)) {
           if (values.length !== 1 || !text(values[0])) bad(clause,"descriptor/hook-clause",`${name} expects exactly one hook symbol, string, or keyword.`);
           else if (options.checkReferences !== false && !hooks.has(text(values[0])!) && !options.prelude?.elaboration.hasHook(text(values[0])!) && !options.resolveHook?.(text(values[0])!))
-            report(clause,"descriptor/unresolved-hook",`Descriptor hook ${name} for form '${text(items(expression)[1])}' references unresolved hook '${text(values[0])}'.`);
+            report(clause,"descriptor/unresolved-hook",`Descriptor hook ${name} for form '${text(items(expression)[1])}' references unresolved hook '${text(values[0])}'.`,{form:text(items(expression)[1]),hole:name,name:text(values[0]),candidates:[...hooks]});
         }
         if (name === ":constructed-by") {
           if (!text(values[0])) bad(clause,"descriptor/constructed-by",":constructed-by expects an elaboration symbol, string, or keyword.");
           for (let i=1; i<values.length; i+=2) if (text(values[i]) !== "child" || !text(values[i+1]))
             bad(values[i]!,"descriptor/constructed-by",":constructed-by options must be keyword/value pairs; supported option is :child.");
           if (options.checkReferences !== false && text(values[0]) && !elaborations.has(text(values[0])!))
-            report(clause,"descriptor/constructed-by",`Unknown elaboration '${text(values[0])}'.`);
+            report(clause,"descriptor/constructed-by",`Unknown elaboration '${text(values[0])}'.`,{form:text(items(expression)[1]),name:text(values[0]),candidates:[...elaborations.keys()]});
           else if (options.checkReferences !== false && text(values[0]) && elaborations.has(text(values[0])!)) {
             const child = text(values[2]) ?? text(items(expression)[1])!;
-            if (!elaborationMentionsChild(elaborations.get(text(values[0])!)!,child)) report(clause,"descriptor/constructed-by",`Elaboration '${text(values[0])}' does not project child form '${child}'.`);
+            if (!elaborationMentionsChild(elaborations.get(text(values[0])!)!,child)) report(clause,"descriptor/constructed-by",`Elaboration '${text(values[0])}' does not project child form '${child}'.`,{form:text(items(expression)[1]),name:text(values[0]),hole:child,expected:child});
           }
         }
         if (name === ":extensions") for (const extension of values) {
@@ -110,7 +110,7 @@ export function checkDescriptors(sources: readonly DescriptorSource[], options: 
           const slotNames = new Set(form.slots.map(s=>s.name));
           const identifiers = new Set(form.identifiers.map(i=>i.name));
           const fields = new Set([...slotNames,...identifiers]);
-          const unknown = (name:string, names:ReadonlySet<string>) => { if (!names.has(name)) report(expression,"descriptor/unknown-slot",`Unknown descriptor field '${name}' in form '${form.name}'.`); };
+          const unknown = (name:string, names:ReadonlySet<string>) => { if (!names.has(name)) report(expression,"descriptor/unknown-slot",`Unknown descriptor field '${name}' in form '${form.name}'.`,{form:form.name,hole:name,name,candidates:[...names]}); };
           for (const slot of form.slots) if (slot.typeFrom) unknown(slot.typeFrom,slotNames);
           if (form.bindings.kind === "static" || form.bindings.kind === "composite") for (const rule of form.bindings.rules) {
             if (rule.identifier) unknown(rule.identifier,identifiers);
@@ -142,7 +142,7 @@ export function checkDescriptors(sources: readonly DescriptorSource[], options: 
 
 /** Application structure is checked even when expansion produced the form. */
 export function checkDescriptorApplication(form: FormDescriptor, expr:SExpr, sourceId:string): readonly Diagnostic[] {
-  const diagnostic = (node:SExpr,code:string,message:string):Diagnostic => ({code,message,severity:"error",phase:"typecheck",span:{sourceId,startOffset:node.loc.start,endOffset:node.loc.end}});
+  const diagnostic = (node:SExpr,code:string,message:string,details?:Record<string,unknown>):Diagnostic => ({code,message,severity:"error",phase:"typecheck",span:{sourceId,startOffset:node.loc.start,endOffset:node.loc.end},details:{form:form.name,...details}});
   if (form.surface) {
     try { matchFormSyntax(form.surface,expr);return []; }
     catch (error) { return [diagnostic(expr,"surface/invalid-form",error instanceof Error ? error.message : String(error))]; }
@@ -151,6 +151,6 @@ export function checkDescriptorApplication(form: FormDescriptor, expr:SExpr, sou
     const name=keywordHead(arg)?.slice(1);
     if (!name || form.slots.some(s=>s.name===name || s.aliases?.includes(name))) return [];
     const candidate=closestName(name,form.slots.flatMap(s=>[s.name,...s.aliases ?? []]));
-    return [diagnostic(arg,"descriptor/unknown-slot",`Unknown slot ':${name}' in form '${form.name}'.${candidate ? ` Did you mean ':${candidate}'?` : ""}`)];
+    return [diagnostic(arg,"descriptor/unknown-slot",`Unknown slot ':${name}' in form '${form.name}'.${candidate ? ` Did you mean ':${candidate}'?` : ""}`,{name,hole:name,candidates:form.slots.flatMap(s=>[s.name,...s.aliases ?? []])})];
   });
 }

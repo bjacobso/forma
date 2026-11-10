@@ -5,6 +5,7 @@ import { createInterface } from "node:readline";
 import { managePackages, readModuleGraph, readNodePackages, verifyPackages } from "@formalang/ts/node";
 import { ModuleError, moduleMechanicsDeclarations, type ModuleGraph } from "@formalang/ts/modules";
 import { isKFloat, isKKeyword, isKSymbol, mapKeyValue, type KValue } from "@formalang/ts/evaluator";
+import { diagnosticCatalog } from "@formalang/ts/diagnostic";
 import { JsonAbi, type JsonResponse } from "./json-abi.js";
 import { authorNames, locateResponse } from "./diagnostic-locations.js";
 
@@ -34,6 +35,7 @@ const usage = `Usage: forma <command>
   add <name> <spec> | update [name] | verify | vendor
                                         Manage packages.
   version                               Print the version.
+  explain <code>                        Explain a diagnostic offline.
   help                                  Print this help.
 
 Every command prints one JSON object per response with "ok" and "diagnostics".
@@ -100,6 +102,14 @@ try {
   else if (command === "daemon" && args.length === 0) {
     for await (const line of createInterface({input:process.stdin, crlfDelay:Infinity})) print(await abi.handleJson(line));
   } else if (command === "version" && args.length === 0) print(await abi.handleJson('{"op":"version"}'));
+  else if (command === "explain" && args.length === 1) {
+    const entry = diagnosticCatalog.get(args[0]!);
+    if (entry) print({ok:true,value:entry,diagnostics:[]});
+    else {
+      print({ok:false,diagnostics:[{code:"abi/unknown-code",severity:"error",message:`Unknown diagnostic code ${args[0]}`,details:{name:args[0]}}]});
+      process.exitCode = 1;
+    }
+  }
   else if (command === "help" || command === "--help" || command === "-h" || (args.length === 1 && (args[0] === "--help" || args[0] === "-h"))) process.stdout.write(usage);
   else if (command === "file" && args.length === 3 && args[0] === "evaluate" && args[1] === "--unchecked") print(await file("evaluate", args[2]!, true));
   else if (command === "file" && args.length === 2 && ["typecheck", "evaluate", "interface", "declarations"].includes(args[0]!)) print(await file(args[0]!, args[1]!));

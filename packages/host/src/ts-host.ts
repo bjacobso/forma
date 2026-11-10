@@ -902,6 +902,9 @@ export class TsLanguageHost implements LanguageHost {
       }))],
       errors: lspResult.errors.map((error) => ({
         message: error.message,
+        ...(error.details ? {details:error.details} : {}),
+        ...(error.help ? {help:error.help} : {}),
+        ...(error.fix ? {fix:error.fix} : {}),
         ...(error.span
           ? {
               span: {
@@ -918,6 +921,9 @@ export class TsLanguageHost implements LanguageHost {
         code: diagnostic.code ?? `${diagnostic.source}/diagnostic`,
         severity: diagnostic.severity,
         message: diagnostic.message,
+        ...(diagnostic.details ? {details:diagnostic.details} : {}),
+        ...(diagnostic.help ? {help:diagnostic.help} : {}),
+        ...(diagnostic.fix ? {fix:diagnostic.fix} : {}),
         phase: "typecheck",
         ...(diagnostic.span
           ? {

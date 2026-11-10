@@ -10,6 +10,15 @@ import { TsLanguageHost } from "../src/ts-host.js";
 const cli = resolve(import.meta.dirname, "../dist/cli.mjs");
 const request = (abi: JsonAbi, input: unknown) => abi.handleJson(JSON.stringify(input));
 describe("JSON process ABI", () => {
+  it("explains registered diagnostics offline and fails on unknown codes", () => {
+    const known = spawnSync(process.execPath,[cli,"explain","elaborate/unknown-form"],{encoding:"utf8"});
+    expect(known.status).toBe(0);
+    expect(JSON.parse(known.stdout)).toMatchObject({ok:true,value:{code:"elaborate/unknown-form",summary:expect.any(String),explanation:expect.stringContaining("details.name")}});
+    const unknown = spawnSync(process.execPath,[cli,"explain","world/not-registered"],{encoding:"utf8"});
+    expect(unknown.status).toBe(1);
+    expect(JSON.parse(unknown.stdout)).toMatchObject({ok:false,diagnostics:[{code:"abi/unknown-code"}]});
+  });
+
   const fixtures = JSON.parse(readFileSync(resolve(import.meta.dirname,"../../../conformance/fixtures/host-plumbing.json"),"utf8"));
   for (const fixture of fixtures.cases) {
     it(`shared host fixture: ${fixture.id}`, async () => {

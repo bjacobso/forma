@@ -576,6 +576,8 @@ const inferVar = (
     return yield* ctx.fail(originOf(expr, "var"), {
       message: `Unbound variable: ${expr.name}`,
       code: "typecheck/unbound-symbol",
+      name: expr.name,
+      candidates: [...env.keys()],
     });
   });
 

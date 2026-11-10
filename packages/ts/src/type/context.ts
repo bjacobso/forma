@@ -18,6 +18,7 @@ import { emptySubst, applyType } from "./substitution.js";
 import type { Origin } from "./errors.js";
 import { InferenceError } from "./errors.js";
 import { builtinScheme, type BuiltinSchemeProvider } from "./builtin-schemes.js";
+import type { Diagnostic } from "../diagnostic/diagnostic.js";
 
 // ---------------------------------------------------------------------------
 // Pending constraint for deferred discharge
@@ -38,7 +39,7 @@ export type NodeTypeMap = Map<string, Type>;
 // Diagnostics: non-fatal warnings/errors from DSL form validation
 // ---------------------------------------------------------------------------
 
-export interface InferDiagnostic {
+export interface InferDiagnostic extends Pick<Diagnostic, "details" | "help" | "fix"> {
   readonly code?: string;
   /** Human-readable error or warning message */
   readonly message: string;

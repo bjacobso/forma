@@ -19,7 +19,14 @@ export { ParseError } from "./reader/types.js";
 
 export {
   diagnosticFromUnknown,
+  hasDiagnosticCode,
   type Diagnostic,
+  type DiagnosticDetails,
+  type DiagnosticDetailsMap,
+  type HoleDiagnosticDetails,
+  type DiagnosticTextEdit,
   type DiagnosticPhase,
   type Span,
 } from "./diagnostic/diagnostic.js";
+
+export { DiagnosticCatalog, diagnosticCatalog, builtinDiagnosticCatalog, type DiagnosticCatalogEntry } from "./diagnostic/catalog.js";

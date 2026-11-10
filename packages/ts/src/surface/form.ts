@@ -6,7 +6,7 @@ import { datum, syntaxForDatum } from "./datum.js";
 import { typeCheckDescriptorTree } from "../descriptor/descriptor-tree-check.js";
 import { coerceProgram } from "./coerce.js";
 import { reachableHelpers } from "./helpers.js";
-import { typeSyntaxErrors, retiredNumericTypeErrors, unknownTypeReferences } from "./type-syntax.js";
+import { typeSyntaxErrors, retiredNumericTypeErrors, unknownTypeReferences, primitiveTypeNames } from "./type-syntax.js";
 import { KernelTypeError, type KernelError } from "../diagnostic/errors.js";
 import { KKeyword, KSymbol, mapKey, mapKeyValue, isKKeyword, isKSymbol } from "../evaluator/types.js";
 import { Effect, Layer } from "effect";
@@ -31,6 +31,7 @@ import { contractErrors, typeDescriptor, normalizeContractValue } from "./contra
 import { resolveTypeAlias } from "./type-alias.js";
 import type { FormDescriptorRegistry } from "../descriptor/FormDescriptorRegistry.js";
 import { SimpleSemanticEnvironment } from "../descriptor/SemanticEnvironment.js";
+import { toJsonValue } from "../descriptor/elaborate.js";
 import { namespaceOf, stripTypeMetadata } from "./domain.js";
 
 export interface UnifiedForm {
@@ -537,7 +538,8 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         const problems = linked && !syntaxHole ? contractErrors(converted.get(`:${n}`)!,t,spec.types,n)
           : !validLiteral(e,t,spec.types) ? [enumMembers(u,spec.types) ? `${n} must be one of ${enumMembers(u,spec.types)!.join(", ")}` : `${n} does not match its declared hole type`]
           : literal ? contractErrors(datum(e),t,spec.types,n) : [];
-        for (const message of problems) diagnostics.push({severity:"error",message,loc:e.loc});
+        const holeDetails = { form: descriptor.name, hole: n, expected: formatSExprMany([t]).trim(), actual: formatSExprMany([e]).trim(), ...(name(e) ? { name: name(e)! } : {}), ...(enumMembers(u,spec.types) ? { candidates: enumMembers(u,spec.types)! } : {}) };
+        for (const message of problems) diagnostics.push({severity:"error",message,loc:e.loc,details:holeDetails,help:`Use a value matching the declared type of ${n}.`});
         if (n === "layout" && registry) {
           const keys = (hole: string) => new Set(values.get(hole)?._tag === "Map" ? (values.get(hole) as Extract<SExpr,{_tag:"Map"}>).pairs.flatMap(([key])=>fieldName(key) ?? []) : []);
           const state=values.get("state");
@@ -554,7 +556,11 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
           }
         }
         const typeHoles = name(u) === "Type" ? [e] : head(u) === "Record" && name(arg(u)) === "Type" && e._tag === "Map" ? e.pairs.map(([,v]) => v) : head(u) === "List" && name(arg(u)) === "Type" && e._tag === "Vector" ? e.items : [];
-        for (const syntax of typeHoles) for (const message of [...typeSyntaxErrors(syntax), ...unknownTypeReferences(syntax, n => spec.types.has(n) || input.semanticEnv.getDeclaredNames().has(n) || input.semanticEnv.getFact("type-kind", n) !== undefined)]) diagnostics.push({severity: "error", message, loc: syntax.loc});
+        for (const syntax of typeHoles) {
+          for (const message of typeSyntaxErrors(syntax)) diagnostics.push({severity: "error", message, loc: syntax.loc, details: {...holeDetails, expected: "Type", actual: formatSExprMany([syntax]).trim()} });
+          const candidates = [...new Set([...primitiveTypeNames, ...spec.types.keys(), ...input.semanticEnv.getDeclaredNames().keys()])];
+          for (const unknown of unknownTypeReferences(syntax, n => spec.types.has(n) || input.semanticEnv.getDeclaredNames().has(n) || input.semanticEnv.getFact("type-kind", n) !== undefined)) diagnostics.push({severity:"error",message:`Unknown type ${unknown.name}`,loc:unknown.loc,details:{...holeDetails,name:unknown.name,expected:"Type",actual:unknown.name,candidates},help:"Declare or import the type, or use a type already in scope."});
+        }
         const checkReferences = (value: SExpr, type: SExpr): void => {
           type = unwrapOption(type);
           if (head(type) === "List" && type._tag === "List" && value._tag === "Vector") {
@@ -564,8 +570,8 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
             const declaring = declared ? registry?.get(declared.formName) : undefined;
             const classification = [...(declaring?.surface?.holes.values() ?? [])].find(t => head(t) === "Declares");
             const actual = classification ? typeName(arg(classification)) : input.semanticEnv.getBindingType(value.name) ?? declared?.type;
-            if (!declared && !actual) diagnostics.push({code:linked ? "elaborate/unknown-reference" : "elaborate/hole-type",severity:"error", message:`Unknown reference ${value.name}`, loc:value.loc});
-            else if (actual && name(arg(type)) && (actual._tag !== "TCon" || actual.name !== name(arg(type)))) diagnostics.push({code:linked ? "elaborate/reference-type" : "elaborate/hole-type",severity:"error", message:`${value.name} is ${showType(actual)}, expected ${name(arg(type))}`, loc:value.loc});
+            if (!declared && !actual) diagnostics.push({code:linked ? "elaborate/unknown-reference" : "elaborate/hole-type",severity:"error", message:`Unknown reference ${value.name}`, loc:value.loc,details:{...holeDetails,name:value.name,expected:formatSExprMany([type]).trim(),actual:value.name,candidates:[...input.semanticEnv.getDeclaredNames().keys()]}});
+            else if (actual && name(arg(type)) && (actual._tag !== "TCon" || actual.name !== name(arg(type)))) diagnostics.push({code:linked ? "elaborate/reference-type" : "elaborate/hole-type",severity:"error", message:`${value.name} is ${showType(actual)}, expected ${name(arg(type))}`, loc:value.loc,details:{...holeDetails,name:value.name,expected:name(arg(type))!,actual:showType(actual)}});
           }
         };
         checkReferences(e, u);
@@ -585,13 +591,13 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
             semanticEnv = child;
           }
           const inferred = semanticEnv.inferExpression(checkedExpression);
-          if (inferred._tag === "failure") diagnostics.push({ severity: "error", message: inferred.message, loc: (inferred.span && innermost(e, inferred.span)?.loc) ?? e.loc });
+          if (inferred._tag === "failure") diagnostics.push({ severity: "error", message: inferred.message, loc: (inferred.span && innermost(e, inferred.span)?.loc) ?? e.loc, details: holeDetails });
           else {
             const expectedSyntax = arg(u)!;
             const expected = yield* resolveType(converted.get(`:${name(expectedSyntax)}`) ?? datum(expectedSyntax), e, spec.types);
             const context = yield* makeOwnedInferContext();
             const checked = yield* assignType(inferred.type,expected,{kind:"expression",nodeId:"form-hole",span:{start:e.loc.start,end:e.loc.end}}).pipe(Effect.provide(Layer.succeed(InferContext,context)),Effect.result);
-            if (checked._tag === "Failure") diagnostics.push({severity:"error",message:`${n} expects ${showType(expected)}, found ${showType(inferred.type)}`,loc:e.loc});
+            if (checked._tag === "Failure") diagnostics.push({severity:"error",message:`${n} expects ${showType(expected)}, found ${showType(inferred.type)}`,loc:e.loc,details:{...holeDetails,expected:showType(expected),actual:showType(inferred.type)}});
           }
         }
       }
@@ -617,7 +623,20 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
           // Preserve Syntax datum identity before interpreting a constructed list as a path.
           const at = problem.get(":at") ?? problem.get("at");
           const loc = (at === undefined ? undefined : syntaxForDatum(at)?.loc) ?? (Array.isArray(at) ? locateSyntax(values, at)?.loc : undefined) ?? values.get(slot)?.loc ?? input.loc;
-          diagnostics.push({...(code !== undefined ? {code} : {}),severity:severity as Diagnostic["severity"],message:String(problem.get(":message") ?? problem.get("message") ?? "Form validation failed"),loc});
+          const details = problem.get(":details") ?? problem.get("details");
+          const help = problem.get(":help") ?? problem.get("help");
+          const edits = problem.get(":fix") ?? problem.get("fix");
+          if (details !== undefined && !(details instanceof Map)) throw new ElaborationError({message:"Diagnostic details must be a record",hookName:descriptor.name,phase:"validate"});
+          if (help !== undefined && typeof help !== "string") throw new ElaborationError({message:"Diagnostic help must be a string",hookName:descriptor.name,phase:"validate"});
+          if (edits !== undefined && !Array.isArray(edits)) throw new ElaborationError({message:"Diagnostic fix must be a list of edits",hookName:descriptor.name,phase:"validate"});
+          const fix = Array.isArray(edits) ? edits.map(edit => {
+            const at = edit instanceof Map ? edit.get(":at") ?? edit.get("at") : undefined;
+            const newText = edit instanceof Map ? edit.get(":new-text") ?? edit.get("new-text") : undefined;
+            const loc = at === undefined ? undefined : syntaxForDatum(at)?.loc ?? (Array.isArray(at) ? locateSyntax(values,at)?.loc : undefined);
+            if (!loc || typeof newText !== "string") throw new ElaborationError({message:"Diagnostic edits require authored :at syntax and a :new-text string",hookName:descriptor.name,phase:"validate"});
+            return {loc,newText};
+          }) : undefined;
+          diagnostics.push({...(code !== undefined ? {code} : {}),severity:severity as Diagnostic["severity"],message:String(problem.get(":message") ?? problem.get("message") ?? "Form validation failed"),loc,...(details ? {details:toJsonValue(details) as Record<string,unknown>} : {}),...(typeof help === "string" ? {help} : {}),...(fix ? {fix} : {})});
         }
       }
       return { kind: "validate" as const, diagnostics };

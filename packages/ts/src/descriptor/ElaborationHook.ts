@@ -128,6 +128,9 @@ export interface Diagnostic {
   readonly message: string;
   readonly slot?: string;
   readonly loc?: Loc;
+  readonly details?: Record<string, unknown>;
+  readonly help?: string;
+  readonly fix?: readonly { readonly loc: Loc; readonly newText: string }[];
 }
 
 export type HookOutput =

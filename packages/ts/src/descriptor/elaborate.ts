@@ -34,6 +34,7 @@ import type {
 } from "../artifact/artifact.js";
 import { defaultBuiltins } from "../builtins/index.js";
 import type { Diagnostic, Span } from "../diagnostic/diagnostic.js";
+import { closestName } from "../diagnostic/closest-name.js";
 import { sourceTraceOf } from "../evaluator/source-trace.js";
 import { expandProgramSync } from "../expander/expand.js";
 import { parse } from "../reader/parser.js";
@@ -105,6 +106,7 @@ export function elaborateSources(
     message: string,
     loc: Loc | undefined,
     details?: Record<string, unknown>,
+    advice?: Pick<Diagnostic, "help" | "fix">,
   ): void => {
     diagnostics.push({
       code,
@@ -113,6 +115,7 @@ export function elaborateSources(
       phase: code.startsWith("parse/") ? "parse" : "elaborate",
       ...(loc ? { span: locate(loc) } : {}),
       ...(details ? { details } : {}),
+      ...advice,
     });
   };
 
@@ -194,17 +197,22 @@ export function elaborateSources(
       const recognized = recognizeForm(expr, descriptions);
       if (!recognized) {
         const head = headName(expr);
+        const candidates = descriptions.list().map(d => d.name);
+        const suggestion = head && closestName(head, candidates);
+        const headLoc = origin.kind === "authored" && expr._tag === "List" ? expr.items[0]?.loc : undefined;
         at(
           "elaborate/unknown-form",
           head ? `Unknown form '${head}'` : "Top-level expression is not a recognized form",
           loc,
-          head ? { form: head } : undefined,
+          { ...(head ? { form: head, name: head } : {}), candidates },
+          { help: suggestion ? `Use ${suggestion}, or load a prelude that defines ${head}.` : "Use a registered form, or load the prelude that defines it.", ...(suggestion && headLoc ? {fix:[{span:locate(headLoc),newText:suggestion}]} : {}) },
         );
         continue;
       }
       if (accepted && !accepted.has(recognized.formName)) {
         at("elaborate/unsupported-form", `Form '${recognized.formName}' is not supported here`, loc, {
           form: recognized.formName,
+          candidates: [...accepted],
         });
         continue;
       }
@@ -217,6 +225,7 @@ export function elaborateSources(
             at("elaborate/duplicate-declaration", `'${name}' is already declared by ${previous}`, loc, {
               form: recognized.formName,
               declaration: name,
+              previousForm: previous,
             });
             continue;
           }
@@ -265,13 +274,13 @@ export function elaborateSources(
     };
 
     const problems = staticProblems(form);
-    for (const problem of problems) at(problem.code, problem.message, loc, details);
+    for (const problem of problems) at(problem.code, problem.message, loc, {...details,...problem.details});
     if (problems.length > 0) continue;
 
     if (form.descriptor.surface && form.descriptor.validation.kind === "hook") {
       const checked = Effect.runSyncExit(elaboration.validate(form.descriptor.validation.fn, input));
       if (Exit.isFailure(checked)) { at("elaborate/validation-failed", failureMessage(checked), loc, details); continue; }
-      for (const problem of checked.value) diagnostics.push({code:problem.code ?? "elaborate/hole-type",severity:problem.severity,message:problem.message,phase:"elaborate",span:locate(problem.loc ?? loc),details});
+      for (const problem of checked.value) diagnostics.push({code:problem.code ?? "elaborate/hole-type",severity:problem.severity,message:problem.message,phase:"elaborate",span:locate(problem.loc ?? loc),details:{...details,...problem.details},...(problem.help ? {help:problem.help} : {}),...(problem.fix ? {fix:problem.fix.map(edit=>({span:locate(edit.loc),newText:edit.newText}))} : {})});
       if (checked.value.some(p => p.severity === "error")) continue;
     }
     let computedResultType: string | undefined;
@@ -603,14 +612,15 @@ const declaredName = (form: NormalizedForm): string | undefined => {
  * identifiers, required slots, and `one-of` slot values. Typed validate and
  * infer hooks run in the type checker, not here.
  */
-const staticProblems = (form: NormalizedForm): readonly { code: string; message: string }[] => {
+const staticProblems = (form: NormalizedForm): readonly { code: string; message: string; details: Record<string, unknown> }[] => {
   const { descriptor, formName } = form;
-  const problems: { code: string; message: string }[] = [];
+  const problems: { code: string; message: string; details: Record<string, unknown> }[] = [];
   for (const identifier of descriptor.identifiers) {
     if (!form.identifiers.has(identifier.name)) {
       problems.push({
         code: "elaborate/missing-identifier",
         message: `${formName} is missing its ${identifier.name}`,
+        details: {name:identifier.name,expected:identifier.kind,actual:"missing"},
       });
     }
   }
@@ -624,7 +634,7 @@ const staticProblems = (form: NormalizedForm): readonly { code: string; message:
   ]);
   for (const slot of required) {
     if (!form.slots.has(slot)) {
-      problems.push({ code: "elaborate/missing-slot", message: `${formName} requires :${slot}` });
+      problems.push({ code: "elaborate/missing-slot", message: `${formName} requires :${slot}`,details:{name:slot,hole:slot,expected:"present",actual:"missing"} });
     }
   }
   for (const check of checks) {
@@ -634,6 +644,7 @@ const staticProblems = (form: NormalizedForm): readonly { code: string; message:
       problems.push({
         code: "elaborate/invalid-slot-value",
         message: `${formName} :${check.slot} must be one of ${check.values.join(", ")}`,
+        details: {hole:check.slot,name:value,candidates:check.values,expected:check.values.join(" | "),actual:value},
       });
     }
   }

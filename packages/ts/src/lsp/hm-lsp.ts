@@ -31,6 +31,7 @@ import {
 import { applyType } from "../type/substitution.js";
 import { InferenceError } from "../type/errors.js";
 import type { DSLTypeProvider } from "../type/dsl-provider.js";
+import type { Diagnostic } from "../diagnostic/diagnostic.js";
 
 // ---------------------------------------------------------------------------
 // Types for LSP output
@@ -45,7 +46,7 @@ export interface TypedSpan {
   readonly exprTag: string; // e.g., "Lam", "App", "Var", "Lit"
 }
 
-export interface LspError {
+export interface LspError extends Pick<Diagnostic, "details" | "help" | "fix"> {
   readonly message: string;
   readonly span?: Span | undefined;
   readonly code?: string | undefined;
@@ -273,6 +274,9 @@ export function analyzeLsp(
       message: err.message,
       span: err.origin?.span,
       diagnosticCode: typeof err.details.code === "string" ? err.details.code : "typecheck/type-mismatch",
+      details: err.details,
+      ...(err.help ? {help:err.help} : {}),
+      ...(err.fix ? {fix:err.fix} : {}),
       code: err.origin?.span ? extractCode(source, err.origin.span) : undefined,
     }))];
 

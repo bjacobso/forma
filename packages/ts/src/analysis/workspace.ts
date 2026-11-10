@@ -476,6 +476,9 @@ function analyzeDocument(
       code: error.diagnosticCode ?? "typecheck/type-mismatch",
       severity: "error",
       message: withoutOffset(error.message),
+      ...(error.details ? {details:error.details} : {}),
+      ...(error.help ? {help:error.help} : {}),
+      ...(error.fix ? {fix:error.fix} : {}),
       phase: "typecheck",
       span: {
         sourceId,
@@ -489,6 +492,9 @@ function analyzeDocument(
       code: diagnostic.code ?? `${diagnostic.source}/diagnostic`,
       severity: diagnostic.severity,
       message: diagnostic.message,
+      ...(diagnostic.details ? {details:diagnostic.details} : {}),
+      ...(diagnostic.help ? {help:diagnostic.help} : {}),
+      ...(diagnostic.fix ? {fix:diagnostic.fix} : {}),
       phase: "typecheck",
       span: {
         sourceId,
@@ -601,4 +607,3 @@ function describeForm(descriptor: FormDescriptor): string {
   }
   return lines.join("\n\n");
 }
-

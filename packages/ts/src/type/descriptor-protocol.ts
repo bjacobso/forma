@@ -106,7 +106,7 @@ export function descriptorApplication(
           const field=diagnostic.message.match(/^fields\.([^ ]+) must/);
           const fields=holes.get("fields");
           if (field && fields?._tag === "Map") loc=fields.pairs.find(([key])=>syntaxName(key)?.replace(/^:/,"")===field[1]!.split("/").at(-1))?.[1].loc ?? loc;
-          yield* ctx.addDiagnostic({code:diagnostic.code ?? (field ? "elaborate/form-check" : "typecheck/type-mismatch"),source:"typecheck",severity:diagnostic.severity === "warning" ? "warning" : "error",message:diagnostic.message,span:{start:loc.start,end:loc.end}});
+          yield* ctx.addDiagnostic({code:diagnostic.code ?? (field ? "elaborate/form-check" : "typecheck/type-mismatch"),source:"typecheck",severity:diagnostic.severity === "warning" ? "warning" : "error",message:diagnostic.message,span:{start:loc.start,end:loc.end},...(diagnostic.details ? {details:diagnostic.details} : {}),...(diagnostic.help ? {help:diagnostic.help} : {}),...(diagnostic.fix ? {fix:diagnostic.fix.map(edit=>({newText:edit.newText,span:{sourceId:edit.loc.sourceId ?? raw.loc.sourceId ?? "source",startOffset:edit.loc.start,endOffset:edit.loc.end}}))} : {})});
         }
       }
       if (descriptor.resultType.kind === "hook") return yield* prelude.elaboration.computeResultType(descriptor.resultType.fn,hookInput).pipe(Effect.mapError(e=>new InferenceError({origin:originOf(expr,"descriptor"),message:e.message,details:{code:"typecheck/descriptor-result-type"}})));
@@ -183,7 +183,7 @@ export function descriptorApplication(
       if (result._tag === "Success") yield* ctx.recordType(child.expr.id,result.success);
       if (result._tag === "Failure") {
         yield* Ref.set(ctx.subst, snapshot);
-        yield* ctx.addDiagnostic({code:String(result.failure.details?.["code"] ?? "typecheck/type-mismatch"),source:"typecheck",severity:"error",message:result.failure.message,span:result.failure.origin?.span ?? child.expr.span});
+        yield* ctx.addDiagnostic({code:String(result.failure.details?.["code"] ?? "typecheck/type-mismatch"),source:"typecheck",severity:"error",message:result.failure.message,span:result.failure.origin?.span ?? child.expr.span,details:result.failure.details});
       }
     }
     const typed = (name: string, phase: string) => Effect.gen(function* () {
