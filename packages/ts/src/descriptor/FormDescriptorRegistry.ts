@@ -7,6 +7,7 @@
  */
 
 import type { FormDescriptor, SlotSpec, IdentifierSpec } from "./FormDescriptor.js";
+import { headSym, type SExpr } from "../reader/types.js";
 
 export class FormDescriptorRegistry {
   private readonly descriptors = new Map<string, FormDescriptor>();
@@ -42,6 +43,31 @@ export class FormDescriptorRegistry {
 
   names(): readonly string[] {
     return [...this.descriptors.keys()];
+  }
+
+  /** Forms accepted in a modern surface hole, including IR unions and aliases. */
+  getChildForms(formName: string, holeName: string): readonly FormDescriptor[] {
+    const spec = this.get(formName)?.surface;
+    let type = spec?.holes.get(holeName);
+    if (!spec || !type) return [];
+    if (headSym(type) === "Option" && type._tag === "List") type = type.items[1];
+    const repeated = type && headSym(type) === "List" && type._tag === "List";
+    if (repeated && type?._tag === "List") type = type.items[1];
+    const childName = type?._tag === "Sym" && (repeated || /^[a-z]/.test(type.name)) ? type.name : undefined;
+    if (!childName) return [];
+    const direct = this.get(childName);
+    if (direct?.surface) return [direct];
+    const family = spec.types.get(childName);
+    if (!family) return [];
+    const irMembers = (type: SExpr, seen = new Set<string>()): readonly string[] => {
+      if (type._tag === "Sym" && !seen.has(type.name)) {
+        const alias = spec.types.get(type.name);
+        return alias && alias._tag !== "Map" ? irMembers(alias, new Set([...seen, type.name])) : [type.name];
+      }
+      return headSym(type) === "Union" && type._tag === "List" ? type.items.slice(1).flatMap(t => irMembers(t, seen)) : [];
+    };
+    const members = irMembers(family);
+    return this.list().filter(form => form.surface && members.includes(form.produces ?? ""));
   }
 
   // --- Agent/tooling queries ---

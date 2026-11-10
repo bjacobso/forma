@@ -23,6 +23,44 @@ The services are:
 The symbol index comes before the edit script because scope-aware rename and
 extract depend on it.
 
+## Consumer-prelude introspection and named files
+
+Use the bootstrapped registry instead of scraping prelude text. Existing
+`prelude.descriptions.list()` and `.names()` include every registered form
+(including generated type constructors). A modern form's `surface.holes` is a
+map from hole names to their authored type `SExpr`s; legacy descriptors expose
+`slots` and `identifiers`. `getChildForms(formName, holeName)` lists the modern
+forms accepted in a child hole, resolving optional/repeated children and IR
+families. An ordinary value or opaque `Syntax` hole has no declared children.
+The query uses the same child-family rules as elaboration; it is not an
+expression-completion or lexical-scope service.
+
+The string-based bootstrap signature still works. To keep individual file
+identities, pass named sources rather than concatenating files:
+
+```ts
+import { bootstrapFromSources, ElaborationFailure } from "@formalang/ts/descriptor";
+import { closestName } from "@formalang/ts/diagnostic";
+
+const prelude = bootstrapFromSources([
+  { sourceId: "types.forma", source: typesSource },
+  { sourceId: "entities.forma", source: entitySource },
+  { sourceId: "rules.forma", source: ruleSource },
+]);
+const forms = prelude.descriptions.list();
+const children = prelude.descriptions.getChildForms("rule", "clauses");
+const suggestion = closestName("enitty", prelude.descriptions.names());
+```
+
+Named bootstrap validates definitions and throws `ElaborationFailure` with
+located `diagnostics` for invalid syntax, descriptor definitions, or unresolved
+references. Each diagnostic's `span.sourceId` and offsets address its original
+file, not a virtual concatenation. The named inputs remain available as
+`prelude.sourceInputs`; the existing `prelude.sources` string array is retained.
+`toSExprMany(tree, sourceId)` can also attach an ID to every node when a host
+parses its own named file. No imports, filesystem reads, or module resolution
+are implied by this overload: the caller supplies the complete source bundle.
+
 ## Shared principles
 
 - **Offsets stay the ground truth.** Every record carries a span. Ids are an

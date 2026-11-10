@@ -472,14 +472,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
       const childName = repeatedChildren ? name(arg(u)) : name(u)?.match(/^[a-z]/) ? name(u) : undefined;
       const childForm = childName ? registry?.get(childName) : undefined;
       const family = childName && !childForm?.surface ? spec.types.get(childName) : undefined;
-      const irMembers = (type: SExpr, seen = new Set<string>()): readonly string[] => {
-        const n = name(type);
-        if (n && !seen.has(n)) {
-          const alias = spec.types.get(n);
-          return alias && alias._tag !== "Map" ? irMembers(alias, new Set([...seen, n])) : [n];
-        }
-        return head(type) === "Union" && type._tag === "List" ? type.items.slice(1).flatMap(t => irMembers(t, seen)) : [];
-      };
+      const allowedChildren = registry?.getChildForms(descriptor.name,n) ?? [];
       if (e && childName && (repeatedChildren ? e._tag === "Vector" : e._tag === "List") && registry && (childForm?.surface || family)) {
         let semanticEnv = input.semanticEnv;
         const scopes = spec.options.get(":scope");
@@ -495,9 +488,9 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         const childValues = yield* Effect.forEach(children, original => {
           const childHead = head(original) ?? "";
           const direct = registry.get(childHead);
-          const childDescriptor = family && (!direct?.surface || !irMembers(family).includes(direct.produces ?? "")) ? registry.get(`${childName}/${childHead}`) : direct;
+          const childDescriptor = family && (!direct || !allowedChildren.includes(direct)) ? registry.get(`${childName}/${childHead}`) : direct;
           const child = childDescriptor && original._tag === "List" ? {...original, items: [sym(original.items[0]!, childDescriptor.name), ...original.items.slice(1)]} : original;
-          if (!childDescriptor?.surface || (family ? !irMembers(family).includes(childDescriptor.produces ?? "") : childDescriptor.name !== childName)) return Effect.fail(new ElaborationError({message:`Expected child form ${childName}`,hookName:descriptor.name,phase:"construct"}));
+          if (!childDescriptor?.surface || !allowedChildren.includes(childDescriptor)) return Effect.fail(new ElaborationError({message:`Expected child form ${childName}`,hookName:descriptor.name,phase:"construct"}));
           const normalized = normalizeUnifiedForm(childDescriptor,child);
           const hooks = unifiedFormHooks(childDescriptor,registry,hostedBuiltins,hostedDsls);
           const childInput = {...input,semanticEnv,formName:childDescriptor.name,descriptor:childDescriptor,rawExpr:child,loc:child.loc,identifiers:normalized.identifiers,normalizedSlots:normalized.slots};

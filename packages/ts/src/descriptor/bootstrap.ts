@@ -18,6 +18,8 @@ import { patternBindings } from "../surface/members.js";
 import { formHookExpressions, unifiedFormHooks } from "../surface/form.js";
 import { parsePrelude, type MetaFnDecl, type MetaFnKind } from "./meta-fn-decl.js";
 import { FormDescriptorRegistry } from "./FormDescriptorRegistry.js";
+import { checkDescriptors } from "./check-descriptors.js";
+import { ElaborationFailure, type ProgramSource } from "./elaborate.js";
 import { ElaborationRegistry } from "./ElaborationRegistry.js";
 import { createMetaFnHook } from "./meta-fn-executor.js";
 import { ElaborationDescriptorRegistry } from "./ElaborationDescriptorRegistry.js";
@@ -38,6 +40,8 @@ import type {
 
 export interface BootstrappedPrelude {
   readonly sources?: readonly string[];
+  /** Named bootstrap inputs, retained when extending a prelude. */
+  readonly sourceInputs?: readonly ProgramSource[];
   readonly typingHooks?: ReadonlyMap<string, MetaFnDecl>;
   readonly payloadContracts?: PayloadContracts;
   readonly formBuiltins?: HostedMetaBuiltinsFactory;
@@ -94,13 +98,34 @@ export function bootstrapFromSources(
   compilerSource: string,
   domainSource: string,
   ...additionalSourcesAndOptions: readonly (string | BootstrapOptions)[]
+): BootstrappedPrelude;
+export function bootstrapFromSources(
+  sources: readonly ProgramSource[],
+  options?: BootstrapOptions,
+): BootstrappedPrelude;
+export function bootstrapFromSources(
+  compilerSourceOrSources: string | readonly ProgramSource[],
+  domainSourceOrOptions: string | BootstrapOptions = "",
+  ...additionalSourcesAndOptions: readonly (string | BootstrapOptions)[]
 ): BootstrappedPrelude {
-  const { additionalSources, options } = splitBootstrapInputs(additionalSourcesAndOptions);
+  const sourceInputs = typeof compilerSourceOrSources !== "string" ? compilerSourceOrSources : undefined;
+  const { additionalSources, options } = splitBootstrapInputs(sourceInputs
+    ? [typeof domainSourceOrOptions === "object" ? domainSourceOrOptions : {}]
+    : additionalSourcesAndOptions);
+  const named = sourceInputs ? [...sourceInputs, ...additionalSources.map((source, index) => ({sourceId:`prelude:additional:${index}`,source}))] : undefined;
+  const compilerSource = named ? named[0]?.source ?? "" : compilerSourceOrSources as string;
+  const domainSource = named ? named[1]?.source ?? "" : domainSourceOrOptions as string;
+  const additionalInputs = named?.slice(2) ?? additionalSources.map(source => ({ source, sourceId: undefined }));
+  if (named) {
+    const diagnostics = checkDescriptors(named, { checkReferences: false });
+    if (diagnostics.some(d => d.severity === "error")) throw new ElaborationFailure(diagnostics);
+  }
   const typeDefinitions = new Map<string,SExpr>();
-  for (const source of [compilerSource,domainSource,...additionalSources]) for (const e of toSExprMany(parse(source).redTree)) { const definition=typeDefinition(e); if (definition) typeDefinitions.set(...definition); }
-  const compiler = parsePrelude(compilerSource,typeDefinitions);
-  const domain = parsePrelude(domainSource,typeDefinitions);
-  const additional = additionalSources.map((s) => parsePrelude(s,typeDefinitions));
+  const sources = [compilerSource, domainSource, ...additionalInputs.map(input => input.source)];
+  for (const [index,source] of sources.entries()) for (const e of toSExprMany(parse(source).redTree,named?.[index]?.sourceId)) { const definition=typeDefinition(e); if (definition) typeDefinitions.set(...definition); }
+  const compiler = parsePrelude(compilerSource,typeDefinitions,[],named?.[0]?.sourceId);
+  const domain = parsePrelude(domainSource,typeDefinitions,[],named?.[1]?.sourceId);
+  const additional = additionalInputs.map(({source,sourceId}) => parsePrelude(source,typeDefinitions,[],sourceId));
   const hostedDsls = parseHostedDsls(options.hostedDsls ?? []);
 
   const descriptions = new FormDescriptorRegistry();
@@ -189,14 +214,19 @@ export function bootstrapFromSources(
 
   for (const descriptor of descriptions.list()) for (const hook of unifiedFormHooks(descriptor,descriptions,hostedMetaBuiltins,hostedDsls)) elaboration.registerHook(hook);
   if (options.checkReferences !== false) {
+    if (named) {
+      const diagnostics = checkDescriptors(named, {resolveHook: name => elaboration.hasHook(name)});
+      if (diagnostics.some(d => d.severity === "error")) throw new ElaborationFailure(diagnostics);
+    }
     validateDescriptorReferences({ descriptions, elaboration, elaborationDescriptors });
   }
 
   return {
-    sources: [compilerSource, domainSource, ...additionalSources],
+    sources,
+    ...(named ? {sourceInputs: named} : {}),
     typingHooks: deduped,
     ...(hostedMetaBuiltins ? {formBuiltins: hostedMetaBuiltins} : {}),
-    payloadContracts: payloadContractsFromSources([compilerSource, domainSource, ...additionalSources]),
+    payloadContracts: payloadContractsFromSources(sources),
     descriptions,
     elaboration,
     elaborationDescriptors,
