@@ -279,6 +279,94 @@ packages rather than relying on npm to infer a bin from a two-bin package:
 `npm exec --package=@forma-language/forma --package=effect@4.1.1 -- forma help`.
 Pin the Forma version in release-specific documentation and reproducible CI.
 
+### CLI ownership, installation, and Nix
+
+The CLI lives in this same npm package, not a future `@forma-language/cli`.
+Its implementation stays in the private host workspace; the distribution build
+packages that entry and the LSP launcher and declares both in `bin`:
+
+```json
+{
+  "bin": {
+    "forma": "./dist/cli.mjs",
+    "forma-language-server": "./dist/forma-language-server.mjs"
+  }
+}
+```
+
+These are proposed distribution paths, not existing output paths. The package
+build must produce them with Node shebangs; the LSP launcher must resolve only
+packaged files. Importing the library does not launch either executable.
+
+Installing globally makes both commands available on the shell's `PATH` when
+npm's global bin directory is on it. Installing locally creates
+`node_modules/.bin/forma` and the LSP equivalent; it does not modify the user's
+global `PATH`. Use `npm exec -- forma help`, `pnpm exec forma help`, or `forma`
+inside an npm/pnpm script from that project. A library consumer need not use the
+CLI, and the CLI does not require React or a browser.
+
+Nix can expose the same executable without another npm publication. There are
+two materially different approaches:
+
+1. **Convenience wrapper:** Nix supplies Node and a `forma` wrapper that asks npm
+   to resolve the published package at invocation time. For example, once the
+   proposed 0.5.0 has actually been published, this expression can be used in a
+   Nix configuration where `pkgs` is an imported, pinned Nixpkgs package set:
+
+   ```nix
+   pkgs.writeShellApplication {
+     name = "forma";
+     runtimeInputs = [ pkgs.nodejs_24 ];
+     text = ''
+       exec npm exec --yes \
+         --package=@forma-language/forma@0.5.0 \
+         --package=effect@4.1.1 \
+         -- forma "$@"
+     '';
+   }
+   ```
+
+   Add the resulting derivation to `environment.systemPackages`, Home Manager's
+   `home.packages`, or a development shell's `packages` to put `forma` on that
+   environment's `PATH`. The same pattern can select `forma-language-server`
+   explicitly for an editor's server command. This is not a hermetic Nix package:
+   npm can use the network and a writable cache at runtime, and top-level version
+   pins do not pin every transitive dependency. It is a convenience for interactive
+   use, not the recommended reproducible CI/offline integration. It will not work
+   against the currently unpublished new package.
+
+2. **Reproducible Nix package:** recommend a derivation that installs the exact
+   released npm archive and its locked production dependency closure into the
+   Nix store, then wraps both bins with the pinned Node runtime. Use Nixpkgs'
+   [npm packaging support](https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/javascript.section.md)
+   with fixed-output dependency fetching and a reviewed `package-lock.json`
+   for a small packaging consumer containing exact Forma and Effect versions.
+   The repository uses `pnpm-lock.yaml`; do not pretend `buildNpmPackage` can
+   consume that lock directly, or replace the repository's package manager.
+   The separate Nix packaging lock must include the actual npm archive integrity
+   and complete transitive closure. A custom install phase must retain that
+   consumer's `node_modules` and wrap its installed Forma bins, rather than
+   accidentally packing only the empty consumer project. Skip compiler rebuilding
+   when packaging already-built published output. Pin Nixpkgs, Node, archive
+   integrity, and the dependency-fetch hash; obtain real hashes from the released
+   artifacts rather than publishing placeholder values as a working derivation.
+
+The reproducible derivation should expose `$out/bin/forma` and
+`$out/bin/forma-language-server`, usable via the same Nix profile/system/dev-shell
+mechanisms. A repository flake could later expose `packages.<system>.default` and
+`apps.<system>.forma` for `nix run`; neither a flake nor a Nixpkgs `forma` attribute
+is implemented by this RFC. Nix distribution is an alternative installation
+mechanism for the same product/version, not justification for another npm package.
+
+Before calling Nix support shipped, test the store-installed commands with an
+empty npm cache and networking disabled, using writable temporary project input:
+`forma help`, version, JSON request, file checking and LSP initialization. Runtime
+execution must not download packages or write into the Nix store. Keep ordinary
+compilation and `verify` offline; `add`, `update`, and `vendor` remain explicit
+package-management operations and need their separately declared git/tar tools
+and any network access required by the requested source. The wrapper expression
+above and future derivation are packaging proposals, not tested Nix support today.
+
 An npm alias can replace a dependency name, but cannot reproduce the different
 old roots and subpaths. Do not advertise it as migration. Migrate each consumer
 atomically, remove old package dependencies, regenerate its lock, and check for
