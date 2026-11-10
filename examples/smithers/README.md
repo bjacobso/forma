@@ -76,7 +76,8 @@ Expressions are data. `{:get ["patch" "revision"]}` selects a typed result;
 `{:get ["input" "issue"]}` selects an input. Maps and lists assemble payloads.
 `{:op "eq" :args [a b]}` compares JSON values structurally; `and`, `concat`, and
 `add` operate on booleans, strings, and integers. Operators run after their
-inputs resolve. No author JavaScript is evaluated.
+inputs resolve. A null `get` or `op` field is ordinary record data, matching
+the prelude's expression checks. No author JavaScript is evaluated.
 
 Schemas support `String`, `Int`, `Float`, `Bool`, `Json`, `Unit`, `Never`, records,
 `List`, `Option`, literal unions, and nonrecursive aliases. A tagged wire schema
@@ -119,6 +120,17 @@ other services as appropriate.
 The private example pins `@smthrs/flow`, `@smthrs/plan`, and `@smthrs/engine` to
 `1.0.0-rc.16` and their required `effect@4.0.5`. The rest of Forma keeps its own
 Effect version; only JSON crosses the compiler/adapter boundary.
+
+The root install applies `patches/@smthrs__flow@1.0.0-rc.16.patch` to the private
+runtime dependency. In rc.16, `bindPlanned` adds a success prerequisite to its
+continuation and the interpreter unconditionally joins the producer. This makes
+a race with an unrelated immediate winner wait for the producer instead. The
+patch makes planned bindings demand-driven; explicit `andThen` sequences keep
+their success barriers. A native-only regression and workflow tests cover the
+distinction, shared failures, cancellation, and lazy branch arms. This is a
+local workaround and upstream candidate, not a claim that Smithers has accepted
+or released the change. Remove it only after an upstream release passes these
+regressions without the patch.
 
 This is a workflow frontend and native-runtime integration, not a replacement
 for the Smithers product. Agent harnesses, models, build/toolchain rules,

@@ -1,0 +1,94 @@
+diff --git a/dist/cjs/Graph.js b/dist/cjs/Graph.js
+index e150103889d5dee805f71eb33b20ec74f0f95d97..f670fcd08fd7176adfc2e8c7a15ad3c434c33a04 100644
+--- a/dist/cjs/Graph.js
++++ b/dist/cjs/Graph.js
+@@ -832,7 +832,7 @@ const build = (flowOrNode, payload, options = {}) => {
+             const thenId = `${id}.then`;
+             sequence([
+               () => expand(child(next, thenId, {
+-                prerequisite: first,
++                prerequisite: ast.next === void 0 ? void 0 : first,
+                 // Explicit andThen sequences every descendant, not only the
+                 // result/join node. bindPlanned remains a dependency builder:
+                 // independent members can run while a referenced producer runs.
+diff --git a/dist/cjs/Interpreter.js b/dist/cjs/Interpreter.js
+index c603f9fe956bb9dc7657c2ee1126aaa0c1d9845a..e8c2c1aa9de37b8c37b644234863c6fcbb386c5d 100644
+--- a/dist/cjs/Interpreter.js
++++ b/dist/cjs/Interpreter.js
+@@ -654,8 +654,8 @@ const interpretWithPolicy = (flowOrNode, payload, options, registerReachable) =>
+     function* (node) {
+       const children = sources.get(node.id) ?? [];
+       const ast = node.ast;
+-      if (ast._tag === "AndThen" && ast.next !== void 0) {
+-        yield* settleNode(children[0]);
++      if (ast._tag === "AndThen") {
++        if (ast.next !== void 0) yield* settleNode(children[0]);
+         return yield* settleNode(children[1]);
+       }
+       if (ast._tag === "Branch") {
+diff --git a/dist/esm/Graph.js b/dist/esm/Graph.js
+index e1ab83acb3a4825e49cb2f3e290e3896498ec3b9..503ac27d7d56f87fcdf04d331426056073284c05 100644
+--- a/dist/esm/Graph.js
++++ b/dist/esm/Graph.js
+@@ -1200,7 +1200,7 @@ export const build = (flowOrNode, payload, options = {}) => {
+                         const thenId = `${id}.then`;
+                         sequence([
+                             () => expand(child(next, thenId, {
+-                                prerequisite: first,
++                                prerequisite: ast.next === undefined ? undefined : first,
+                                 // Explicit andThen sequences every descendant, not only the
+                                 // result/join node. bindPlanned remains a dependency builder:
+                                 // independent members can run while a referenced producer runs.
+diff --git a/dist/esm/Interpreter.js b/dist/esm/Interpreter.js
+index 674b0551194c4eff61e8c1ed707d6ddfefd53f53..ea6e6d748461de93daca4eacd262e049ee4bcffa 100644
+--- a/dist/esm/Interpreter.js
++++ b/dist/esm/Interpreter.js
+@@ -903,13 +903,13 @@ const interpretWithPolicy = (flowOrNode, payload, options, registerReachable) =>
+     const compute = Effect.fnUntraced(function* (node) {
+         const children = sources.get(node.id) ?? [];
+         const ast = node.ast;
+-        if (ast._tag === "AndThen" && ast.next !== undefined) {
++        if (ast._tag === "AndThen") {
+             // An explicit sequence is a success boundary for the WHOLE next
+             // subtree. Joining first and then concurrently lets a nested All,
+             // Map, or inline call start effects before its prerequisite settles.
+             // bindPlanned is distinct: it declares data dependencies and can
+             // expose independent work while the producer is still running.
+-            yield* settleNode(children[0]);
++            if (ast.next !== undefined) yield* settleNode(children[0]);
+             return yield* settleNode(children[1]);
+         }
+         if (ast._tag === "Branch") {
+diff --git a/src/Graph.ts b/src/Graph.ts
+index bd2cc74cbec70c4ce05ed6802963d37cebedd29c..5a87c31285319c779bf745ecfbe2d41c7c24ee7c 100644
+--- a/src/Graph.ts
++++ b/src/Graph.ts
+@@ -1557,7 +1557,7 @@ export const build = (
+             sequence([
+               () =>
+                 expand(child(next, thenId, {
+-                  prerequisite: first,
++                  prerequisite: ast.next === undefined ? undefined : first,
+                   // Explicit andThen sequences every descendant, not only the
+                   // result/join node. bindPlanned remains a dependency builder:
+                   // independent members can run while a referenced producer runs.
+diff --git a/src/Interpreter.ts b/src/Interpreter.ts
+index 1091c28cb2f2b41de0b61449c5383ab6260cf029..040a80eea286a3878b17d8f2d31690d3517b406e 100644
+--- a/src/Interpreter.ts
++++ b/src/Interpreter.ts
+@@ -1096,13 +1096,13 @@ const interpretWithPolicy = (
+       function*(node: Graph.GraphNode) {
+         const children = sources.get(node.id) ?? []
+         const ast = node.ast
+-        if (ast._tag === "AndThen" && ast.next !== undefined) {
++        if (ast._tag === "AndThen") {
+           // An explicit sequence is a success boundary for the WHOLE next
+           // subtree. Joining first and then concurrently lets a nested All,
+           // Map, or inline call start effects before its prerequisite settles.
+           // bindPlanned is distinct: it declares data dependencies and can
+           // expose independent work while the producer is still running.
+-          yield* settleNode(children[0]!)
++          if (ast.next !== undefined) yield* settleNode(children[0]!)
+           return yield* settleNode(children[1]!)
+         }
+         if (ast._tag === "Branch") {

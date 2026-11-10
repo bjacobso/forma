@@ -214,7 +214,7 @@
       (some (fn [member] (wf-compatible a member)) (rest e))
     (if (and (map? a) (map? e))
       (and (= (count (keys a)) (count (keys e)))
-        (every? (fn [key] (wf-compatible (path a key) (path e key))) (keys e)))
+        (every? (fn [key] (and (contains? a key) (wf-compatible (path a key) (path e key)))) (keys e)))
     (if (and (list? e) (= (first e) 'List) (list? a) (= (first a) 'List))
       (wf-compatible (nth a 1) (nth e 1))
     (if (and (list? e) (= (first e) 'Option))

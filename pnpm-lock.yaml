@@ -9,6 +9,9 @@ overrides:
   alchemy>@effect/vitest: 4.1.1
 
 patchedDependencies:
+  '@smthrs/flow@1.0.0-rc.16':
+    hash: de6a25777000dead9c1cb2e0690e120920ffcb655f2ba38460574ad051ceb7f3
+    path: patches/@smthrs__flow@1.0.0-rc.16.patch
   alchemy@2.0.0-beta.84:
     hash: 8af14ef9b7d9a9faf9e1c69ca36732c68801444fceb1e17eefc3bccb64d0ecba
     path: patches/alchemy@2.0.0-beta.84.patch
@@ -155,7 +158,7 @@ importers:
         version: 1.0.0-rc.16(effect@4.0.5)
       '@smthrs/flow':
         specifier: 1.0.0-rc.16
-        version: 1.0.0-rc.16(effect@4.0.5)
+        version: 1.0.0-rc.16(patch_hash=de6a25777000dead9c1cb2e0690e120920ffcb655f2ba38460574ad051ceb7f3)(effect@4.0.5)
       '@smthrs/plan':
         specifier: 1.0.0-rc.16
         version: 1.0.0-rc.16(effect@4.0.5)
@@ -4013,7 +4016,7 @@ snapshots:
       '@smthrs/canonical': 1.0.0-rc.16(effect@4.0.5)
       '@smthrs/capability': 1.0.0-rc.16(effect@4.0.5)
       '@smthrs/crypto': 1.0.0-rc.16(effect@4.0.5)
-      '@smthrs/flow': 1.0.0-rc.16(effect@4.0.5)
+      '@smthrs/flow': 1.0.0-rc.16(patch_hash=de6a25777000dead9c1cb2e0690e120920ffcb655f2ba38460574ad051ceb7f3)(effect@4.0.5)
       '@smthrs/journal': 1.0.0-rc.16(effect@4.0.5)
       '@smthrs/keys': 1.0.0-rc.16(effect@4.0.5)
       '@smthrs/plan': 1.0.0-rc.16(effect@4.0.5)
@@ -4023,7 +4026,7 @@ snapshots:
       - '@effect/sql-sqlite-bun'
       - '@effect/sql-sqlite-node'
 
-  '@smthrs/flow@1.0.0-rc.16(effect@4.0.5)':
+  '@smthrs/flow@1.0.0-rc.16(patch_hash=de6a25777000dead9c1cb2e0690e120920ffcb655f2ba38460574ad051ceb7f3)(effect@4.0.5)':
     dependencies:
       '@smthrs/canonical': 1.0.0-rc.16(effect@4.0.5)
       '@smthrs/capability': 1.0.0-rc.16(effect@4.0.5)

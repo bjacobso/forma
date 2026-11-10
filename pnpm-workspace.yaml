@@ -12,3 +12,4 @@ overrides:
 # Alchemy beta.84 still imports effect/Crypto, removed in Effect 4.1.
 patchedDependencies:
   "alchemy@2.0.0-beta.84": patches/alchemy@2.0.0-beta.84.patch
+  "@smthrs/flow@1.0.0-rc.16": patches/@smthrs__flow@1.0.0-rc.16.patch

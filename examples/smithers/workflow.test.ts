@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
-import { Action, DurableDeferred, DurableQueue, ExternalJob, Flow, HumanTask, WaitFor } from "@smthrs/flow";
+import { Action, DurableDeferred, DurableQueue, ExternalJob, Flow, HumanTask, Interpreter, WaitFor } from "@smthrs/flow";
+import { FlowEngine } from "@smthrs/engine";
 import { Node } from "@smthrs/plan";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -107,6 +108,60 @@ test("all members start concurrently", async () => {
   expect(await execute(text, { a: handler("a"), b: handler("b") })).toEqual({ a: "a", b: "b" });
 });
 
+test.each(["all", "race", "any", "quorum"])("%s shares direct and transitive irreversible producers", async join => {
+  for (const members of ["a b", "b c"]) {
+    let calls = 0;
+    const text = (action("produce") + flow(`
+      (step a produce {}) (value b {:get ["a"]}) (value c {:get ["a"]})
+      (${join} out ${join === "quorum" ? "2 " : ""}[${members}])`)).replaceAll(':tier "sealed"', ':tier "irreversible"');
+    const result = await execute(text, { produce: () => Effect.sync(() => `invocation-${++calls}`) });
+    expect(result).toEqual(join === "all" || join === "quorum"
+      ? members === "a b" ? { a: "invocation-1", b: "invocation-1" } : { b: "invocation-1", c: "invocation-1" }
+      : "invocation-1");
+    expect(calls).toBe(1);
+  }
+});
+
+test.each(["race", "any", "quorum"])("%s does not wait for an unrelated shared producer", async join => {
+  const text = action("slow") + flow(`
+    (step producer slow {}) (value a {:get ["producer"]}) (value b {:get ["producer"]})
+    (value fast "fast") (${join} out ${join === "quorum" ? "1 " : ""}[a b fast])`);
+  expect(await execute(text, { slow: () => Effect.never })).toEqual(join === "quorum" ? { fast: "fast" } : "fast");
+});
+
+test("any can recover a shared failure without failing its other members", async () => {
+  let calls = 0;
+  const text = (action("produce", "String") + flow(`
+    (step producer produce {}) (value a {:get ["producer"]}) (value b {:get ["producer"]})
+    (value fallback "recovered") (recover recovered a fallback) (any out [recovered b])`)).replaceAll(':tier "sealed"', ':tier "irreversible"');
+  expect(await execute(text, { produce: () => Effect.suspend(() => { calls++; return Effect.fail("unavailable"); }) })).toBe("recovered");
+  expect(calls).toBe(1);
+});
+
+test.each([false, true])("shared producers stay lazy across branch arms (%s)", async selected => {
+  let calls = 0;
+  const text = (action("produce") + flow(`
+    (step producer produce {}) (value condition ${selected}) (value other "other")
+    (branch a condition producer other) (branch b condition producer other) (all out [a b])`))
+    .replaceAll(':tier "sealed"', ':tier "irreversible"');
+  expect(await execute(text, { produce: () => Effect.sync(() => `invocation-${++calls}`) }))
+    .toEqual(selected ? { a: "invocation-1", b: "invocation-1" } : { a: "other", b: "other" });
+  expect(calls).toBe(selected ? 1 : 0);
+});
+
+test("record checking requires matching keys even for Json fields", async () => {
+  const consume = action("consume").replace(":payload {}", ":payload {:expected Json}");
+  expect(() => compile(prelude, consume + flow('(step out consume {:other 1})'))).toThrow("workflow/payload");
+  expect(() => compile(prelude, flow('(value out {:other 1})', "out", "{:expected Json}"))).toThrow("workflow/result");
+  expect(await execute(consume + flow('(step out consume {:expected nil})'), {
+    consume: payload => Effect.succeed(payload.expected === null ? "null received" : "wrong payload"),
+  })).toBe("null received");
+});
+
+test("null get and op fields remain ordinary JSON data", async () => {
+  expect(await execute(flow('(value out {:get nil :nested [{:op nil}]})'))).toEqual({ get: null, nested: [{ op: null }] });
+});
+
 test.each(["race", "any", "quorum"])("%s uses native early-settling joins", async join => {
   const text = action("fast") + action("slow") + flow(`(step fast fast {}) (step slow slow {}) (${join} out ${join === "quorum" ? "1 " : ""}[fast slow])`);
   let interrupted = false;
@@ -131,6 +186,26 @@ test("sequence waits for success before starting unrelated work", async () => {
     second: () => Effect.sync(() => { expect(order).toEqual(["first"]); order.push("second"); return "second"; }),
   });
   expect(order).toEqual(["first", "second"]);
+});
+
+test("a sequence failure prevents every effect in the next subtree", async () => {
+  let calls = 0;
+  const text = action("later") + flow(`
+    (fail stopped "stop") (step a later {}) (step b later {}) (all joined [a b]) (sequence out [stopped joined])`);
+  await expect(execute(text, { later: () => Effect.sync(() => { calls++; return "unexpected"; }) })).rejects.toBe("stop");
+  expect(calls).toBe(0);
+});
+
+test("native planned bindings leave unrelated race members runnable", async () => {
+  const slow = Action.make("probe/slow", { payload: {}, success: Schema.String, attemptTimeoutMs: 1000 });
+  const native = Flow.make("probe/native", {
+    payload: {}, success: Schema.String,
+    body: () => Node.bindPlanned(slow.call({}), Node.capture({}, reference =>
+      Node.race({ slow: Node.succeed(reference), fast: Node.succeed("fast") }))),
+  });
+  const layer = Layer.mergeAll(Interpreter.layer(native), slow.toLayer(() => Effect.never))
+    .pipe(Layer.provideMerge(Action.layerImplementations), Layer.provideMerge(FlowEngine.layerMemory), Layer.provideMerge(nodeCrypto));
+  expect(await Effect.runPromise(native.execute({}, { executionId: "probe" }).pipe(Effect.timeout(2000), Effect.provide(layer)) as Effect.Effect<string, unknown>)).toBe("fast");
 });
 
 test("native retry and attempt timeouts are enforced", async () => {

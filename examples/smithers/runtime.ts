@@ -14,7 +14,7 @@ type DynamicAction = Action.Declared<any, any, DynamicSchema, DynamicSchema, any
 type DynamicFlow = Flow.Flow<any, any, DynamicSchema, DynamicSchema, any>;
 export type Handler = (payload: Record<string, Json>) => Effect.Effect<Json, Json>;
 export interface NativeBinding { flow: Flow.AnyWithProps; layer?: Layer.Layer<any, never, any> }
-const adapterVersion = "forma-smithers/v1";
+const adapterVersion = "forma-smithers/v2";
 
 function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
@@ -54,11 +54,11 @@ function object(value: Json | undefined): Record<string, Json> {
 export function evaluate(expression: Json, values: Record<string, any>): any {
   if (Array.isArray(expression)) return expression.map(item => evaluate(item, values));
   if (expression === null || typeof expression !== "object") return expression;
-  if ("get" in expression) {
+  if (expression.get != null) {
     const path = expression.get as string[];
     return path.slice(1).reduce((value, field) => value[field], values[path[0]]);
   }
-  if ("op" in expression) {
+  if (expression.op != null) {
     const args = (expression.args as Json[]).map(arg => evaluate(arg, values));
     switch (expression.op) {
       case "eq": return canonical(args[0]) === canonical(args[1]);
@@ -78,7 +78,7 @@ export function evaluate(expression: Json, values: Record<string, any>): any {
 function references(expression: Json): string[] {
   if (Array.isArray(expression)) return expression.flatMap(references);
   if (expression === null || typeof expression !== "object") return [];
-  if ("get" in expression) return [(expression.get as string[])[0]];
+  if (expression.get != null) return [(expression.get as string[])[0]];
   return Object.values(expression).flatMap(references);
 }
 
@@ -161,39 +161,56 @@ export function link(program: Program, handlers: Record<string, Handler>, native
       if (!n) return [];
       const d = n.data;
       const ordinary = [...references(d.args ?? null), ...references(d.expression ?? null)];
-      if (n.kind === "branch") return [d.condition as string];
-      if (n.kind === "recover") return [d.attempt as string];
+      if (n.kind === "branch") return [d.condition as string, d.yes as string, d.no as string];
+      if (n.kind === "recover") return [d.attempt as string, d.fallback as string];
       return [...ordinary, ...(d.members as string[] ?? [])];
     }
-    function ancestors(name: string, found = new Set<string>()): Set<string> {
+    function ancestors(name: string, values: Values, found = new Set<string>()): Set<string> {
+      if (values.has(name)) return found;
       for (const dependency of dependencies(name)) {
         if (!found.has(dependency)) {
           found.add(dependency);
-          ancestors(dependency, found);
+          ancestors(dependency, values, found);
         }
       }
       return found;
     }
-    function withDependencies(names: string[], values: Values, next: (values: Values) => DynamicNode, site: string): DynamicNode {
-      const missing = [...new Set(names)].filter(name => !values.has(name));
-      if (!missing.length) return next(values);
-      if (missing.length === 1) return lower(missing[0], values, (_, updated) => next(updated), site + "/dependency");
-      // Bind shared producers once. bindPlanned is a data dependency, so
-      // unrelated members remain runnable while a shared producer executes.
+    function withShared(names: string[], values: Values, next: (values: Values) => DynamicNode, site: string): DynamicNode {
       const counts = new Map<string, number>();
-      for (const name of missing) for (const dependency of ancestors(name)) {
+      for (const name of new Set(names)) for (const dependency of new Set([name, ...ancestors(name, values)])) {
         counts.set(dependency, (counts.get(dependency) ?? 0) + 1);
       }
-      const shared = flow.nodes.map(n => n.name).filter(name => !values.has(name) && (counts.get(name) ?? 0) > 1);
-      if (shared.length) return withDependencies(shared, values,
-        updated => withDependencies(missing, updated, next, site + "/members"), site + "/shared");
-      const joined = Node.all(Object.fromEntries(missing.map(name =>
-        [name, lower(name, values, done, site + "/member/" + name)])));
-      return Node.bindPlanned(joined, captured(site + "/join", result => {
-        const updated = new Map(values);
-        for (const name of missing) updated.set(name, result[name]);
-        return next(updated);
+      const shared = flow.nodes.find(n => !values.has(n.name) && (counts.get(n.name) ?? 0) > 1);
+      if (!shared) return next(values);
+      const name = shared.name;
+      // Bind a lazy settlement, not an eager success barrier: unrelated race
+      // members can win, and each consumer retains its own recovery boundary.
+      const outcome = Node.catch(Node.map(lower(name, values, done, site + "/producer/" + name),
+        captured(site + "/success/" + name, value => ({ ok: true, value }))), {
+        onFailure: captured(site + "/failure/" + name, error => Node.succeed({ ok: false, error })),
+      });
+      return Node.bindPlanned(outcome, captured(site + "/shared/" + name, result => {
+        const demand = Node.branch(Node.succeed(result), {
+          if: captured(site + "/ok/" + name, (settled: any) => settled.ok === true),
+          then: captured(site + "/value/" + name, (settled: any) => Node.succeed(settled.value)),
+          else: captured(site + "/error/" + name, (settled: any) => Node.fail(settled.error)),
+        });
+        return withShared(names, new Map([...values, [name, demand]]), next, site + "/bound/" + name);
       }));
+    }
+    function withDependencies(names: string[], values: Values, next: (values: Values) => DynamicNode, site: string): DynamicNode {
+      const missing = [...new Set(names)].filter(name => !values.has(name) || Node.isNode(values.get(name)));
+      if (!missing.length) return next(values);
+      if (missing.length === 1) return lower(missing[0], values, (_, updated) => next(updated), site + "/dependency");
+      return withShared(missing, values, ready => {
+        const joined = Node.all(Object.fromEntries(missing.map(name =>
+          [name, lower(name, ready, done, site + "/member/" + name)])));
+        return Node.bindPlanned(joined, captured(site + "/join", result => {
+          const updated = new Map(ready);
+          for (const name of missing) updated.set(name, result[name]);
+          return next(updated);
+        }));
+      }, site);
     }
     function expression(value: Json, values: Values, next: Continue, site: string): DynamicNode {
       return withDependencies(references(value), values, ready => {
@@ -201,7 +218,7 @@ export function link(program: Program, handlers: Record<string, Handler>, native
         // Only operators need a deferred computation on the actual values.
         function hasOperator(value: Json): boolean {
           return Array.isArray(value) ? value.some(hasOperator)
-            : value !== null && typeof value === "object" && ("op" in value || Object.values(value).some(hasOperator));
+            : value !== null && typeof value === "object" && (value.op != null || Object.values(value).some(hasOperator));
         }
         if (!hasOperator(value)) return next(evaluate(value, Object.fromEntries(ready)), ready);
         const inputs = Object.fromEntries([...new Set(references(value))].map(name => [name, ready.get(name)]));
@@ -213,7 +230,10 @@ export function link(program: Program, handlers: Record<string, Handler>, native
       }, site + "/inputs");
     }
     function lower(name: string, values: Values, next: Continue, parentSite: string): DynamicNode {
-      if (values.has(name)) return next(values.get(name), values);
+      if (values.has(name)) {
+        const value = values.get(name);
+        return Node.isNode(value) ? bind(value, name, values, next, parentSite + "/demand/" + name) : next(value, values);
+      }
       const node = definitions.get(name);
       if (!node) throw new Error(`Unknown node: ${flow.name}/${name}`);
       const d = node.data;
@@ -243,18 +263,20 @@ export function link(program: Program, handlers: Record<string, Handler>, native
             settle(Node.succeed(Object.fromEntries(members.map(member => [member, ready.get(member)]))), ready), site);
         }
         case "race": case "any": case "quorum": {
-          const members = Object.fromEntries((d.members as string[]).map(member =>
-            [member, lower(member, values, done, site + "/member/" + member)]));
-          return settle(node.kind === "race" ? Node.race(members)
-            : node.kind === "any" ? Node.any(members) : Node.quorum(d.count as number, members));
+          return withShared(d.members as string[], values, ready => {
+            const members = Object.fromEntries((d.members as string[]).map(member =>
+              [member, lower(member, ready, done, site + "/member/" + member)]));
+            return settle(node.kind === "race" ? Node.race(members)
+              : node.kind === "any" ? Node.any(members) : Node.quorum(d.count as number, members), ready);
+          }, site);
         }
         case "branch": return lower(d.condition as string, values, (condition, ready) =>
-          settle(Node.branch(Node.succeed({ condition, values: Object.fromEntries(ready) } as unknown), {
+          settle(Node.branch(Node.succeed({ condition, values: Object.fromEntries([...ready].filter(([, value]) => !Node.isNode(value))) } as unknown), {
             if: captured(site + "/predicate", (subject: any) => subject.condition === true),
             then: captured(site + "/then", (subject: any) => lower(d.yes as string,
-              new Map([...ready.keys()].map(key => [key, subject.values[key]])), done, site + "/then")),
+              new Map([...ready].map(([key, value]) => [key, Node.isNode(value) ? value : subject.values[key]])), done, site + "/then")),
             else: captured(site + "/else", (subject: any) => lower(d.no as string,
-              new Map([...ready.keys()].map(key => [key, subject.values[key]])), done, site + "/else")),
+              new Map([...ready].map(([key, value]) => [key, Node.isNode(value) ? value : subject.values[key]])), done, site + "/else")),
           }), ready), site + "/condition");
         case "recover": return settle(Node.catch(
           lower(d.attempt as string, values, done, site + "/attempt"), {
