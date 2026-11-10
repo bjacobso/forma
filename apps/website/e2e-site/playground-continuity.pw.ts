@@ -15,6 +15,7 @@ test("validation retains the previous output and scroll position, then updates i
   });
   const source = `(workflow before\n${Array.from({ length: 32 }, (_, index) => `  (step check-${index} "process.check")`).join("\n")})`;
   await page.goto(`/playground/custom${encodePreludeDemo({ ...defaultPreludeDemo, source })}`);
+  await page.getByRole("tab", { name: "JSON", exact: true }).click();
   const output = page.getByRole("tabpanel");
   await expect(output).toHaveAttribute("aria-busy", "false");
   await expect(output).toContainText('"name": "before"');
@@ -55,6 +56,7 @@ test("validation retains the previous output and scroll position, then updates i
 
 test("the playground uses homepage charcoal surfaces and readable syntax in both appearances", async ({ page }, testInfo) => {
   await page.goto(`/playground/custom${encodePreludeDemo({ ...defaultPreludeDemo, source: defaultPreludeDemo.source + '\n;; Numbers and booleans: 42 true' })}`);
+  await page.getByRole("tab", { name: "JSON", exact: true }).click();
   const main = page.getByRole("main");
   const output = page.getByRole("tabpanel");
   await expect(output).toHaveAttribute("aria-busy", "false");

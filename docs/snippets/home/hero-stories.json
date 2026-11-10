@@ -1,0 +1,142 @@
+[
+  {
+    "id": "release",
+    "label": "Release plan",
+    "sourceId": "release.forma",
+    "title": "Give a plan its own vocabulary.",
+    "introduction": "A tiny custom prelude defines workflow, step and a closed set of actions.",
+    "preludeLabel": "release.prelude.forma · excerpt",
+    "preludeExcerpt": "(type Action\n  (Union \"process.test\" \"human.approve\"))\n\n(form (step name action)\n  :types {:name (Declares Step) :action Action}\n  :ir StepIR …)",
+    "prelude": "(type Action (Union \"process.test\" \"human.approve\"))\n\n(type StepIR {:kind \"Step\" :name Symbol :action Action})\n(form (step name action)\n  :types {:name (Declares Step) :action Action}\n  :ir StepIR\n  {:kind \"Step\" :name name :action action})\n\n(type WorkflowIR {:kind \"Workflow\" :name Symbol :steps (List StepIR)})\n(form (workflow name step ...)\n  :types {:name (Declares Workflow) :step (List step)}\n  :ir WorkflowIR\n  {:kind \"Workflow\" :name name :steps step})",
+    "source": "(workflow release\n  (step verify \"process.test\")\n  (step approve \"human.approve\"))",
+    "broken": "(workflow release\n  (step verify \"process.tset\")\n  (step approve \"human.approve\"))",
+    "repairText": "Change process.tset to the allowed action process.test.",
+    "outcome": "A checked release plan, ready for your tooling.",
+    "consumer": "Your application gives these steps meaning. Forma has not run tests, requested approval or scheduled a workflow.",
+    "outputLabel": "Workflow IR",
+    "linkLabel": "Edit this language live",
+    "href": "/playground/custom#demo=N4IgbgpgTgzglgewHYgFwEYA0IAuccA2EaIAggAQDGAFhJQNYQAm5UERAhjBOQA4EcU2XmwIBXJsVQgAFDgCevHqUp5k5GQFUkiJOQA6IEQkoQYMAHQ4zOQwZDUxAW0EWOvY5EMBKb-qT+coo8AMrWvACSAErkwKj0cEgshmEQvHaoSBxOofJOAEYIBOSoHKq65CpqSAC+fkgyAGYIUE4aMOHkWTnkZdX15CUKSjCxmdk8MgAidAJso6m83iV9FVW6Nf6DqHBQ5IvRW2MJSfaLGd08lyvl6qvIdf6BwzwA6i30jQQIAO7Rx4lkiB3lBPt8fhcJvs8oViqgOmlRjIADJwDr7cLRbyPBrNVoaH4fL6-LpQhG8cgWKkDIbBUZxa7TWYcebkEFg37LeGdFFonDkcnYo47Pbs4l-KJHOInIFi8GQnrXbmIgXhOogbAwBBiKCmEgyQmg8WsdgQLgQI4ycnkSBQOCNeT2YymcxWGw+S3W9yeHiGRwuJBuDxQBBeEC+EA1IA",
+    "diagnostic": {
+      "code": "elaborate/hole-type",
+      "severity": "error",
+      "message": "action must be one of \"process.test\", \"human.approve\"",
+      "phase": "elaborate",
+      "span": {
+        "sourceId": "release.forma",
+        "startOffset": 33,
+        "endOffset": 47,
+        "startLine": 2,
+        "startColumn": 16,
+        "endLine": 2,
+        "endColumn": 30
+      },
+      "details": {
+        "form": "workflow",
+        "declaration": "release"
+      }
+    },
+    "edit": {
+      "from": 43,
+      "validEnd": 45,
+      "brokenEnd": 45,
+      "prefix": "(workflow release\n  (step verify \"process.t",
+      "suffix": "t\")\n  (step approve \"human.approve\"))",
+      "repair": "es",
+      "mistake": "se"
+    },
+    "output": "[\n  {\n    \"kind\": \"Workflow\",\n    \"name\": \"release\",\n    \"steps\": [\n      {\n        \"kind\": \"Step\",\n        \"name\": \"verify\",\n        \"action\": \"process.test\"\n      },\n      {\n        \"kind\": \"Step\",\n        \"name\": \"approve\",\n        \"action\": \"human.approve\"\n      }\n    ]\n  }\n]",
+    "outputExcerpt": "[\n  {\n    \"kind\": \"Workflow\",\n    \"name\": \"release\",\n    \"steps\": [\n      {\n        \"kind\": \"Step\",\n        \"name\": \"verify\",\n        \"action\": \"process.test\"\n      },\n      {\n        \"kind\": \"Step\",\n        \"name\": \"approve\",\n        \"action\": \"human.approve\"\n      }\n    ]\n  }\n]"
+  },
+  {
+    "id": "query",
+    "label": "Schema & query",
+    "sourceId": "schema.forma",
+    "title": "Let a schema shape its query language.",
+    "introduction": "The ontology prelude introduces entity fields into a query’s scope and requires a Bool predicate.",
+    "preludeLabel": "ontology.lisp · query excerpt",
+    "preludeExcerpt": "(form (query name {:keys [from where select]})\n  :types {… :from (Refers SchemaDecl)\n    :where (Option (Expr Bool)) …}\n  :scope {:where\n    (fn [{:keys [from]}] (entity-fields from))}\n  :ir QueryIR …)",
+    "prelude": "(form (query name {:keys [from where select]})\n  \"A named read over one entity.\"\n  :examples\n    [[(entity Person {:name String :age Int})\n      (query adults :from Person :where (>= age 18) :select [name])]]\n  :types\n    {\n      :name (Declares QueryDef)\n      :from (Refers SchemaDecl)\n      :where (Option (Expr Bool))\n      :select (Option (List Symbol))}\n  :scope {:where (fn [{:keys [from]}] (entity-fields from))}\n  :type (fn [{:keys [from select]}] (List (row-of from select)))\n  :ir QueryIR\n  {\n    :kind \"Query\"\n    :name name\n    :from from\n    :where where\n    :select (map (fn [field] (keyword from field)) (or select []))})",
+    "source": "(entity Department {:name String})\n\n(entity Employee {:name String\n    :department (Option (Id Department))\n    :active Bool})\n\n(query employee-directory\n  :from Employee\n  :where active\n  :select [name department])",
+    "broken": "(entity Department {:name String})\n\n(entity Employee {:name String\n    :department (Option (Id Department))\n    :active Bool})\n\n(query employee-directory\n  :from Employee\n  :where name\n  :select [name department])",
+    "repairText": "Use active, a Bool field, instead of name, a String field.",
+    "outcome": "A checked query with qualified field names.",
+    "consumer": "Your application interprets the Query IR. This story does not execute SQL, contact a database or return employee records.",
+    "outputLabel": "Query IR",
+    "linkLabel": "Inspect the stored entity example",
+    "href": "/playground/demo/entities",
+    "diagnostic": {
+      "code": "elaborate/hole-type",
+      "severity": "error",
+      "message": "where expects Bool, found String",
+      "phase": "elaborate",
+      "span": {
+        "sourceId": "schema.forma",
+        "startOffset": 180,
+        "endOffset": 184,
+        "startLine": 9,
+        "startColumn": 10,
+        "endLine": 9,
+        "endColumn": 14
+      },
+      "details": {
+        "form": "query",
+        "declaration": "employee-directory"
+      }
+    },
+    "edit": {
+      "from": 180,
+      "validEnd": 185,
+      "brokenEnd": 183,
+      "prefix": "(entity Department {:name String})\n\n(entity Employee {:name String\n    :department (Option (Id Department))\n    :active Bool})\n\n(query employee-directory\n  :from Employee\n  :where ",
+      "suffix": "e\n  :select [name department])",
+      "repair": "activ",
+      "mistake": "nam"
+    },
+    "output": "[\n  {\n    \"kind\": \"Query\",\n    \"name\": \"employee-directory\",\n    \"from\": \"Employee\",\n    \"where\": {\n      \"kind\": \"raw-expr\",\n      \"expr\": \"active\"\n    },\n    \"select\": [\n      \"employee/name\",\n      \"employee/department\"\n    ]\n  }\n]",
+    "outputExcerpt": "[\n  {\n    \"kind\": \"Query\",\n    \"name\": \"employee-directory\",\n    \"from\": \"Employee\",\n    \"where\": {\n      \"kind\": \"raw-expr\",\n      \"expr\": \"active\"\n    },\n    \"select\": [\n      \"employee/name\",\n      \"employee/department\"\n    ]\n  }\n]"
+  },
+  {
+    "id": "effect",
+    "label": "Effect contract",
+    "sourceId": "log.forma",
+    "title": "Make a service requirement explicit.",
+    "introduction": "The supported Effect language tracks the failures and service requirements of an operation.",
+    "preludeLabel": "Effect vocabulary · program excerpt",
+    "preludeExcerpt": "(error ConsoleUnavailable {:message String})\n\n(service Console\n  (: print\n    (-> String\n      (Effect Unit [ConsoleUnavailable] []))))",
+    "prelude": "",
+    "source": "(error ConsoleUnavailable {:message String})\n\n(service Console\n  (: print (-> String (Effect Unit [ConsoleUnavailable] []))))\n\n(: log (-> String (Effect Unit [ConsoleUnavailable] [Console.print])))\n(define log [message]\n  (do! [_ (Console.print message)]\n    (succeed nil)))",
+    "broken": "(error ConsoleUnavailable {:message String})\n\n(service Console\n  (: print (-> String (Effect Unit [ConsoleUnavailable] []))))\n\n(: log (-> String (Effect Unit [ConsoleUnavailable] [])))\n(define log [message]\n  (do! [_ (Console.print message)]\n    (succeed nil)))",
+    "repairText": "Add Console.print to log’s declared requirements. The error points at the call that needs it.",
+    "outcome": "Checked Effect TypeScript, not a promise of every target.",
+    "consumer": "The generated function uses a Console service. Your host supplies its implementation and authorization; this story does not execute it.",
+    "outputLabel": "Effect TypeScript · excerpt",
+    "linkLabel": "Edit this Effect program live",
+    "href": "/playground/live/contracts",
+    "diagnostic": {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/undeclared-requirement",
+      "message": "Operation log requires Console.print, but its signature declares no requirements.",
+      "span": {
+        "sourceId": "log.forma",
+        "startOffset": 217,
+        "endOffset": 240,
+        "startLine": 8,
+        "startColumn": 11,
+        "endLine": 8,
+        "endColumn": 34
+      }
+    },
+    "edit": {
+      "from": 180,
+      "validEnd": 193,
+      "brokenEnd": 180,
+      "prefix": "(error ConsoleUnavailable {:message String})\n\n(service Console\n  (: print (-> String (Effect Unit [ConsoleUnavailable] []))))\n\n(: log (-> String (Effect Unit [ConsoleUnavailable] [",
+      "suffix": "])))\n(define log [message]\n  (do! [_ (Console.print message)]\n    (succeed nil)))",
+      "repair": "Console.print",
+      "mistake": ""
+    },
+    "output": "import { Context, Effect, Schema } from \"effect\";\n\nexport class ConsoleUnavailable extends Schema.TaggedError<ConsoleUnavailable>()(\"ConsoleUnavailable\", {\n  message: Schema.String,\n}) {}\n\nexport class Console extends Context.Service<\n  Console,\n  {\n    readonly print: (arg0: string) => Effect.Effect<void, ConsoleUnavailable>;\n  }\n>()(\"Console\") {}\n\nexport const log = (message: string): Effect.Effect<void, ConsoleUnavailable, Console> =>\n  Effect.gen(function* () {\n    const consoleService = yield* Console;\n    yield* consoleService.print(message);\n    return;\n  });\n",
+    "outputExcerpt": "export const log = (message: string): Effect.Effect<void, ConsoleUnavailable, Console> =>\n  Effect.gen(function* () {\n    const consoleService = yield* Console;\n    yield* consoleService.print(message);\n    return;\n  });\n"
+  }
+]
