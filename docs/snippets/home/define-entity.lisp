@@ -11,6 +11,7 @@
       :id-pattern (Option String)
       :tier (Option (Union :user :meta))}
   :ir EntityDeclarationIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   {
     :kind (if (= tier :meta) "MetaEntity" "Entity")
     :name name

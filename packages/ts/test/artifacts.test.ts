@@ -18,7 +18,38 @@ const sessionWithPreludes = (id = "artifacts") => {
 };
 
 describe("validated artifact boundary", () => {
-  test.each([...fixture("payload-cases.json").cases, ...fixture("summary-cases.json").cases] as { sourceId: string; source: string; expected: { ok: boolean; code?: string; form?: string } }[])("shared OCaml payload case $sourceId", ({ sourceId, source, expected }) => {
+  test.each(["Entity", "Document"])("consumer %s payloads are not owned by bundled validators", kind => {
+    for (const mixed of [false, true]) {
+      const session = mixed ? sessionWithPreludes() : openSession({id:"consumer"});
+      session.rememberSource({kind:"prelude", id:"consumer.forma", text:`
+        (type ConsumerIR {:kind "${kind}" :name Symbol :health Int})
+        (form (consumer name health) :types {:name (Declares Consumer) :health Int}
+          :ir ConsumerIR {:kind "${kind}" :name name :health health})`});
+      session.rememberSource({id:"level.forma",text:"(consumer player 37)"});
+      const result = emit({session});
+      expect(result.ok,JSON.stringify(result)).toBe(true);
+      if (result.ok) expect(result.artifacts[0]!.content.declarations.map(d => d.payload)).toEqual([{kind,name:"player",health:37}]);
+      session.rememberSource({id:"level.forma",text:'(consumer player "bad")'});
+      const invalid = emit({session});
+      expect(invalid.ok).toBe(false);
+      if (!invalid.ok) expect(invalid.diagnostics.some(d => d.code === "elaborate/hole-type" && d.span?.sourceId === "level.forma")).toBe(true);
+    }
+  });
+  test("bundled declarations still select their payload validation at the package boundary", () => {
+    const session = sessionWithPreludes();
+    session.rememberSource({id:"entity.forma",text:"(entity Person {:name String})"});
+    const result = emit({session});
+    expect(result.ok,JSON.stringify(result)).toBe(true);
+    if (!result.ok) return;
+    const declarations = result.artifacts[0]!.content.declarations.map(d => ({...d,payload:{kind:"Entity",name:"Person",fields:42}}));
+    const invalid = validateDeclarations(session,declarations);
+    expect(invalid.ok).toBe(false);
+    if (!invalid.ok) expect(invalid.diagnostics.map(d => d.code)).toContain("artifact/entity-payload");
+  });
+  test.each([...fixture("payload-cases.json").cases, ...fixture("summary-cases.json").cases] as { sourceId: string; source: string; expected: { ok: boolean; code?: string; form?: string } }[])("shared OCaml payload case $sourceId", ({ sourceId, source: input, expected }) => {
+    // The inherited malformed canonical-payload fixtures now opt into that boundary explicitly.
+    const source = expected.code?.endsWith("-payload") && expected.code !== "artifact/descriptor-payload"
+      ? input.replace("(:artifact", "(:artifact (:validators [domain-payload])") : input;
     const session = sessionWithPreludes();
     session.rememberSource({ id: sourceId, text: source });
     const result = emit({ session, sourceId });

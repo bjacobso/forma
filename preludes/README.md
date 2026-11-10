@@ -104,3 +104,19 @@ Read a form beside its output type and nearby helpers:
 
 See [Writing a form](../docs/writing-a-form.md) for the complete authoring guide,
 including source-located diagnostics and the limits of each contract.
+
+## Payload validator ownership
+
+The bundled ontology forms opt into their canonical payload validators with
+`:extensions {:artifact {:validators ["domain-payload"]}}`. A consumer's IR
+kind named `Entity`, `Document`, or `Action` does not opt in by its spelling,
+even when the bundled prelude is loaded alongside it. Its own `:ir` contract
+and hole checks still apply.
+
+Legacy descriptors can request the same boundary with
+`(:extensions (:artifact (:validators [domain-payload])))`. Hosts that build
+`PackageableDeclaration` values directly must include
+`validators: ["domain-payload"]` when they want the bundled domain checks.
+This replaces the old process-wide kind-name match; existing custom validator
+registrations and public function signatures are unchanged. A custom validator
+registry must register `domain-payload` before using the bundled ontology forms.
