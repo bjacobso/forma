@@ -9,7 +9,7 @@ The conformance fixtures and example corpus load these files as their domain
 stack. Applications are not required to use this domain vocabulary: hosts and the language server accept their own prelude
 paths, and the language server loads none by default.
 
-`@formalang/ts/preludes` embeds every file here as a string. Regenerate it with
+`@formalang/ts/preludes` embeds the `.lisp` files here as strings. Regenerate it with
 `pnpm --filter @formalang/ts preludes:generate` after changing a prelude.
 
 `kernel.forma` is an ordinary exported macro library for file modules. It is
@@ -23,6 +23,14 @@ only: types, `nil`, and numbers keep Forma's semantics. `defn` takes one
 parameter vector and drops a docstring. `conformance/clojure-spellings/`
 pins what it does and what it refuses, and the [Clojure spellings
 guide](../docs/clojure.md) is generated from those fixtures.
+
+`routes.forma` is an ordinary file-module macro library demonstrating
+template-derived contracts: `(route post-url ["users" [:id] "posts" [:post]])`
+derives a checked `(-> {:id String :post String} String)` URL builder. It uses
+structured segments, not a route-string parser or first-class type-returning
+function. See the [executable route example](../conformance/routes/README.md)
+for imports, checked errors, runtime behavior, and current limits. Supply this
+`.forma` source through the module resolver; it is not an embedded `.lisp` prelude.
 
 The remaining `.lisp` libraries use the existing descriptor bootstrap APIs and
 have not yet migrated to ordinary modules. Protocol preludes are also inputs to

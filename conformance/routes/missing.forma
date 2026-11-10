@@ -1,0 +1,2 @@
+(import "./valid.forma" [post-url])
+(post-url {:id "alice"})
