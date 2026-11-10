@@ -6,6 +6,7 @@ import {
 } from "@formalang/ts/mechanics";
 import { parseManyToSExpr } from "@formalang/ts/reader";
 import { schemaDeclarationsJson } from "./pipelines/canonicalIr";
+import { homeHeroStories } from "./homeHeroStories";
 import {
   contractSource,
   defineEntityDescriptor,
@@ -24,6 +25,7 @@ export const homeSnippetDir = "docs/snippets/home";
  */
 export function homeSnippets(): Record<string, string> {
   return {
+    "hero-stories.json": `${JSON.stringify(homeHeroStories(), null, 2)}\n`,
     "entities.lisp": entitySchemaSource,
     "entities.ir.json": schemaDeclarationsJson(),
     "define-entity.lisp": `${defineEntityDescriptor}\n`,

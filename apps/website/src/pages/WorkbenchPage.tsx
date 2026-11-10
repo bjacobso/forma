@@ -23,6 +23,6 @@ export function WorkbenchPage({ embedded = false }: { embedded?: boolean }) {
     return () => { observer.disconnect(); window.removeEventListener("message", receive); };
   }, [embedded, setTheme]);
   return <main className={embedded ? "workbench-embed-page" : "workbench-page"}>
-    <LiveWorkbench key={exampleId} initialExample={exampleId} initiallyBroken={search.get("broken") === "1"} embedded={embedded} />
+    <LiveWorkbench key={exampleId} initialExample={exampleId} initiallyBroken={search.get("broken") === "1"} embedded={embedded} compact={embedded && search.get("compact") === "1"} />
   </main>;
 }
