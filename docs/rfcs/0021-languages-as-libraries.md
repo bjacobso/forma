@@ -370,6 +370,22 @@ rounds, later stages should be reconsidered before Stage 1 starts.
 - How a multi-surface project formats files: always in the file's own
   language, or optionally projected.
 
+## Implemented consumer-prelude foundation
+
+Named source bundles are supported by the additive
+`bootstrapFromSources([{sourceId, source}, ...], options?)` overload. Definition
+diagnostics address the supplied file IDs and offsets, rather than a
+concatenated virtual prelude. The existing string signature remains valid.
+`BootstrappedPrelude.sourceInputs` retains the named inputs for extensions;
+`sources` remains a string array for existing consumers.
+
+The registry's existing `list()` and modern `surface.holes` expose forms and
+their hole types. `getChildForms(formName, holeName)` now shares elaboration's
+optional/repeated and IR-family child selection. `closestName` is available
+from `/diagnostic`. These are introspection over today's descriptors, not the
+proposed syntax categories, export visibility, lexical profiles, or a new
+parallel language design.
+
 ## Related designs
 
 Racket's `#lang`, module languages, and the `#%app`, `#%datum`, and `#%top`

@@ -16,6 +16,7 @@ export { InferenceError, type Origin } from "./diagnostic/errors.js";
 
 // Re-export ParseError for convenience
 export { ParseError } from "./reader/types.js";
+export { closestName } from "./diagnostic/closest-name.js";
 
 export {
   diagnosticFromUnknown,
