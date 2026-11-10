@@ -31,12 +31,21 @@ export function generateMechanicsEffectSchemaModule(
     ...brands.map((brand) => ({ name: brand.name, schema: brand.schema as JsonValue })),
     ...schemas,
   ]);
+  const recursive = recursiveSchemaNames(ordered);
   const lines = ['import { Schema } from "effect";', ""];
 
   for (const payload of ordered) {
     const constName = naming.schemaConst(payload.name);
-    lines.push(`export const ${constName} = ${schemaExpressionTs(payload.schema, naming, true)};`);
-    lines.push(`export type ${typeName(payload.name)} = typeof ${constName}.Type;`);
+    const references: SchemaNaming = {schemaConst: name => recursive.has(name)
+      ? `Schema.suspend((): Schema.Codec<${typeName(name)}> => ${naming.schemaConst(name)})`
+      : naming.schemaConst(name)};
+    if (recursive.has(payload.name)) {
+      lines.push(`export type ${typeName(payload.name)} = ${schemaTypeTs(payload.schema)};`);
+      lines.push(`export const ${constName}: Schema.Codec<${typeName(payload.name)}> = ${schemaExpressionTs(payload.schema, references, true)};`);
+    } else {
+      lines.push(`export const ${constName} = ${schemaExpressionTs(payload.schema, references, true)};`);
+      lines.push(`export type ${typeName(payload.name)} = typeof ${constName}.Type;`);
+    }
     lines.push("");
   }
 
@@ -126,8 +135,11 @@ function taggedUnionSchema(schema: Readonly<Record<string, JsonValue>>, naming: 
 }
 
 function annotatedSchema(schema: Readonly<Record<string, JsonValue>>, naming: SchemaNaming, top: boolean): string {
-  const base = schemaExpressionTs(schema["schema"], naming, top);
   const metadata = isRecord(schema["metadata"]) ? schema["metadata"] : {};
+  const inner = schema["schema"];
+  const base = isRecord(inner) && inner["kind"] === "Array" && Number(metadata["min-length"] ?? 0) >= 1
+    ? `Schema.NonEmptyArray(${schemaExpressionTs(inner["item"], naming)})`
+    : schemaExpressionTs(inner, naming, top);
   const annotations: string[] = [];
   let checked = base;
   for (const [key, value] of Object.entries(metadata)) {
@@ -142,6 +154,51 @@ function annotatedSchema(schema: Readonly<Record<string, JsonValue>>, naming: Sc
     if (key === "max") checked = `${checked}.check(Schema.isLessThanOrEqualTo(${Number(value)}))`;
   }
   return annotations.length === 0 ? checked : `${checked}.annotate({ ${annotations.join(", ")} })`;
+}
+
+/** A type-only view of the same mechanics nodes, also used to type recursive codecs. */
+export function schemaTypeTs(schema: JsonValue | undefined): string {
+  if (!isRecord(schema)) return "unknown";
+  switch (schema["kind"]) {
+    case "Primitive":
+      switch (schema["name"]) {
+        case "String": return "string";
+        case "Int": case "Float": return "number";
+        case "Bool": return "boolean";
+        case "Unit": return "void";
+        case "Null": return "null";
+        case "Bytes": return "Uint8Array";
+        case "DateTime": return "Date";
+        case "Json": return 'import("effect").Schema.Json';
+        default: return "unknown";
+      }
+    case "Ref": return typeName(String(schema["name"]));
+    case "Brand": return `(${schemaTypeTs(schema["schema"])} & import("effect").Brand.Brand<${JSON.stringify(schema["name"])}>)`;
+    case "Array": return `ReadonlyArray<${schemaTypeTs(schema["item"])}>`;
+    case "Option": return `import("effect").Option.Option<${schemaTypeTs(schema["item"])}>`;
+    case "Optional": return schemaTypeTs(schema["item"]);
+    case "Struct": return `{ ${arrayItems(schema["fields"]).filter(isRecord).map(field => {
+      let value = field["schema"];
+      while (isRecord(value) && value["kind"] === "Annotated") value = value["schema"];
+      const optional = isRecord(value) && value["kind"] === "Optional";
+      return `readonly ${propertyName(String(field["name"]))}${optional ? "?" : ""}: ${schemaTypeTs(isRecord(value) && optional ? value["item"] : field["schema"])}`;
+    }).join("; ")} }`;
+    case "Literal": return arrayItems(schema["values"]).map(v => JSON.stringify(v)).join(" | ") || "never";
+    case "Tuple": return `readonly [${arrayItems(schema["items"]).map(schemaTypeTs).join(", ")}]`;
+    case "Union": return `(${arrayItems(schema["variants"]).map(schemaTypeTs).join(" | ") || "never"})`;
+    case "TaggedUnion": return `(${arrayItems(schema["variants"]).filter(isRecord).map(variant =>
+      `({ readonly ${propertyName(String(schema["discriminator"] ?? "tag"))}: ${JSON.stringify(variant["tag"])} } & ${schemaTypeTs(variant["schema"])})`).join(" | ") || "never"})`;
+    case "Map": return schema["key"]
+      ? `{ readonly [key in ${schemaTypeTs(schema["key"])}]?: ${schemaTypeTs(schema["value"])} }`
+      : `Readonly<Record<string, ${schemaTypeTs(schema["value"])}>>`;
+    case "Annotated": {
+      const inner = schema["schema"], metadata = schema["metadata"];
+      return isRecord(inner) && inner["kind"] === "Array" && isRecord(metadata) && Number(metadata["min-length"] ?? 0) >= 1
+        ? `readonly [${schemaTypeTs(inner["item"])}, ...(${schemaTypeTs(inner["item"])})[]]`
+        : schemaTypeTs(inner);
+    }
+    default: return "unknown";
+  }
 }
 
 function primitiveSchema(name: JsonValue | undefined): string {
