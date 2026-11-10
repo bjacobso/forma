@@ -9,14 +9,16 @@ import { elaborateProgram } from "../packages/ts/dist/Descriptor.mjs";
 import { bootstrapElmPreludes, generateElmProgram } from "../packages/ts/dist/Elm.mjs";
 import { bootstrapEmailPreludes, generateEmailProgram } from "../packages/ts/dist/Email.mjs";
 import { bootstrapHttpApiPreludes, generateHttpApiProgram } from "../packages/ts/dist/HttpApi.mjs";
+import { bootstrapRpcPreludes, generateRpcProgram } from "../packages/ts/dist/Rpc.mjs";
 
 const ontology = bootstrapOntologyPreludes();
 const stacks = {
   ontology, ui: ontology, viewspec: ontology,
   elm: bootstrapElmPreludes(), email: bootstrapEmailPreludes(),
   "http-api": bootstrapHttpApiPreludes(),
+  rpc: bootstrapRpcPreludes(),
 };
-const linkers = { elm: generateElmProgram, email: generateEmailProgram, "http-api": generateHttpApiProgram };
+const linkers = { elm: generateElmProgram, email: generateEmailProgram, "http-api": generateHttpApiProgram, rpc: generateRpcProgram };
 const parse = source => Effect.runSync(parseManyToSExpr(source));
 const syntax = source => JSON.parse(JSON.stringify(parse(source), (key, value) => key === "loc" ? undefined : value));
 let forms = 0, examples = 0;

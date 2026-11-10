@@ -130,6 +130,7 @@ export default defineConfig({
             { text: "Forma for Effect", link: "/effect" },
             { text: "Effect reference", link: "/effect/reference" },
             { text: "Prelude HTTP API spike", link: "/effect/http-api" },
+            { text: "Prelude-defined RPC", link: "/effect/rpc" },
             { text: "Forma for Elm-style apps", link: "/elm" },
             { text: "Elm prototype reference", link: "/elm/reference" },
             { text: "Forma for email automation", link: "/email" },

@@ -50,6 +50,16 @@ const manifest: Record<string, Manifest> = {
     guide: { text: "Prelude HTTP API spike", link: "/effect/http-api" },
     note: "Bootstrap it with compiler.lisp, separately from the ontology's older api form.",
   },
+  rpc: {
+    title: "Effect RPC",
+    group: "domain",
+    status: "Prototype",
+    tone: "live",
+    order: 2.5,
+    summary: "Unary RPC contracts and named groups that emit native Effect 4 schemas and registrations.",
+    guide: { text: "Prelude-defined RPC", link: "/effect/rpc" },
+    note: "Handlers and transports remain native Effect code. No RPC execution kernel is generated.",
+  },
   elm: {
     title: "Elm-style applications",
     group: "domain",

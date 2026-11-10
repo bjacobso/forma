@@ -1,25 +1,17 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { generateHttpApiProgram } from "../../packages/ts/dist/HttpApi.mjs";
-import { bootstrapFromSources, elaborateProgram } from "../../packages/ts/dist/Descriptor.mjs";
-import { emitFormTypeScript } from "../../packages/ts/dist/DescriptorCodegen.mjs";
+import { generateRpcProgram } from "../../packages/ts/dist/Rpc.mjs";
 
 const read = name => readFileSync(new URL(name, import.meta.url), "utf8");
 export function compile(domain = read("domain.forma"), http = read("http.forma"), rpc = read("rpc.forma")) {
   const result = generateHttpApiProgram(`${domain}\n${http}`, { sourceId: "workshops.forma" });
   if (!result.ok) throw new Error(JSON.stringify(result.diagnostics, null, 2));
-  const prelude = bootstrapFromSources(read("../../preludes/compiler.lisp"), read("rpc-prelude.forma"));
-  const projected = elaborateProgram(`${domain}\n${rpc}`, { prelude, sourceId: "rpc.forma" });
-  const errors = projected.diagnostics.filter(d => d.severity === "error");
-  if (errors.length) throw new Error(JSON.stringify(errors, null, 2));
-  const descriptors = prelude.descriptions.list();
-  const operations = projected.declarations.filter(d => d.formName === "rpc");
-  const names = operations.map(d => d.payload.name);
-  if (new Set(names).size !== names.length) throw new Error("Duplicate RPC operation");
-  const expressions = operations.map(d => emitFormTypeScript(prelude.descriptions.get("rpc"), d.payload, descriptors));
+  const rpcResult = generateRpcProgram(`${domain}\n${rpc}`, { sourceId: "rpc.forma", schemasFrom: "./http.ts" });
+  if (!rpcResult.ok) throw new Error(JSON.stringify(rpcResult.diagnostics, null, 2));
   return {
     "http.ts": result.code,
-    "rpc.ts": `import { Schema } from "effect";\nimport { Rpc, RpcGroup } from "effect/rpc";\nimport * as Domain from "./http.ts";\nconst { WorkshopId, Reserve, Workshop, WorkshopNotFound, NotEnoughSeats } = Domain;\nexport const WorkshopRpc = RpcGroup.make(\n  ${expressions.join(",\n  ")}\n);\n`,
+    "rpc.ts": rpcResult.code,
   };
 }
 

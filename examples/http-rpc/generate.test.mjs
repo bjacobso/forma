@@ -6,6 +6,6 @@ import { compile } from "./generate.mjs";
 const read = name => readFileSync(new URL(name, import.meta.url), "utf8");
 test("bad HTTP links and malformed RPC contracts do not generate", () => {
   assert.throws(() => compile(undefined, read("http.forma").replace("(handler reserve-seats reserve)", "(handler reserve-seats lookup)")), /handler-request/);
-  assert.throws(() => compile(undefined, undefined, '(rpc "Bad" :payload Reserve :success Workshop)'), /error/);
-  assert.throws(() => compile(undefined, undefined, read("rpc.forma") + '\n' + read("rpc.forma")), /Duplicate RPC/);
+  assert.throws(() => compile(undefined, undefined, '(rpc-group Bad (rpc "Bad" :payload Reserve))'), /success/);
+  assert.throws(() => compile(undefined, undefined, read("rpc.forma").replace('"ReserveSeats"', '"GetWorkshop"')), /Duplicate RPC/);
 });
