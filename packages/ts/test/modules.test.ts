@@ -18,6 +18,35 @@ const id = {
   source: "(export identity) (define identity [x] x)",
 };
 describe("isolated file modules", () => {
+  test("incomplete matches reject a module at the author's match span", () => {
+    const source = [
+      "(export Choice choose)",
+      "(type Choice (Tagged (Yes Int) No))",
+      "(: choose (-> Choice Int))",
+      "(define choose [value] (match value (Yes n) n))",
+    ].join("\n");
+    const check = (source: string) => checked('(import "./choice.forma" [choose])', [
+      { id: "src/choice.forma", source },
+    ]);
+    const result = check(source);
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        severity: "error",
+        message: "Non-exhaustive match: missing constructor(s) No",
+        span: expect.objectContaining({
+          sourceId: "src/choice.forma",
+          startOffset: source.indexOf("(match"),
+          endOffset: source.length - 1,
+        }),
+      }),
+    ]);
+    for (const fallback of ["(No) 0", "_ 0"]) {
+      const total = check(source.replace("(Yes n) n)", `(Yes n) n ${fallback})`));
+      expect(total.ok).toBe(true);
+      expect(total.diagnostics).toEqual([]);
+    }
+  });
   test("polymorphic imports instantiate at each use", () => {
     const r = checked(
       '(import "./id.forma" [identity]) (define a (identity 1)) (define b (identity "hello")) b',

@@ -115,6 +115,31 @@ describe("language-host shared ABI", () => {
     }
   });
 
+  it("rejects incomplete matches through the host with author source spans", async () => {
+    const sourceId = "incomplete-match.forma";
+    const source = "(type Choice (Tagged (Yes Int) No))\n(match (Yes 42) (Yes n) n)";
+    const result = await tsHost.typecheck({ sourceId, source });
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "typecheck/diagnostic",
+        phase: "typecheck",
+        severity: "error",
+        message: "Non-exhaustive match: missing constructor(s) No",
+        span: expect.objectContaining({
+          sourceId,
+          startOffset: source.indexOf("(match"),
+          endOffset: source.length,
+        }),
+      }),
+    ]);
+    for (const fallback of ["(No) 0", "_ 0"]) {
+      expect((await tsHost.typecheck({
+        sourceId,
+        source: source.replace("(Yes n) n)", `(Yes n) n ${fallback})`),
+      })).diagnostics).toEqual([]);
+    }
+  });
+
   it("typechecks through the shared TS-backed contract", async () => {
     const result = await tsHost.typecheck({
       sourceId: "typecheck",
