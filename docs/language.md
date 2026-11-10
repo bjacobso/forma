@@ -174,6 +174,10 @@ missing keys do not bind to `nil`. Use `(get record :name)` when absence should
 return `nil` during evaluation. A statically known record must contain the key
 for typed access; a dictionary lookup has type `(Option V)`.
 
+A `match` on a closed tagged type must cover every constructor; missing
+constructors are errors in both the kernel and Effect checkers. Use a final
+`_` arm to explicitly handle the remaining cases.
+
 ```lisp
 (define first-name [{:name name}] name)
 (let [[first & rest] [1 2 3]] first)

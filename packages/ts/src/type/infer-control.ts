@@ -519,7 +519,7 @@ export const inferMatch = (
             yield* ctx.addDiagnostic({
               message: `Non-exhaustive match: missing constructor(s) ${missing.join(", ")}`,
               span: expr.span,
-              severity: "warning",
+              severity: "error",
               source: "hm",
             });
           }
