@@ -501,7 +501,7 @@ const inferEffectDo = (
 
     for (const binding of expr.bindings) {
       const s = yield* Ref.get(ctx.subst);
-      currentEnv = new Map(applyEnv(s, currentEnv));
+      currentEnv = applyEnv(s, currentEnv);
       const bindingType = yield* inferExpr(currentEnv, binding.expr);
       const resolvedBindingType = applyType(yield* Ref.get(ctx.subst), bindingType);
       const parts = operationalEffectParts(resolvedBindingType);

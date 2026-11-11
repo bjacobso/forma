@@ -53,7 +53,7 @@ export const inferLet = (
       }));
       yield* Ref.set(ctx.pendingConstraints, normalizedPending);
       const scheme = yield* generalizeBinding(genEnv, boundType, pendingStart);
-      letEnv = new Map(applyEnv(sAfter, letEnv));
+      letEnv = applyEnv(sAfter, letEnv);
       letEnv.set(binding.name, {...scheme,declaration:binding.expr.span});
     }
 
