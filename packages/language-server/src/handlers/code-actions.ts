@@ -18,6 +18,18 @@ export function getCodeActions(
   const actions: CodeAction[] = [];
   for (const diagnostic of params.context.diagnostics) {
     const data: unknown = diagnostic.data;
+    if (diagnostic.code === "typecheck/hole" && data && typeof data === "object" && "details" in data) {
+      const details = data.details;
+      if (details && typeof details === "object" && "candidates" in details && Array.isArray(details.candidates) &&
+        "name" in details && typeof details.name === "string" && document.getText(diagnostic.range) === details.name) {
+        for (const candidate of details.candidates) {
+          if (typeof candidate !== "string" || !candidate || /[\s()[\]{}"';`]/.test(candidate)) continue;
+          actions.push({ title: `Replace hole with ${candidate}`, kind: CodeActionKind.QuickFix,
+            diagnostics: [diagnostic], edit: {changes: {[document.uri]: [{range: diagnostic.range, newText: candidate}]}} });
+        }
+      }
+      continue;
+    }
     if (!data || typeof data !== "object" || !("fix" in data) || !isFix(data.fix)) continue;
     if (data.fix.some((edit) => edit.span.endOffset > document.getText().length)) continue;
     // Request-context diagnostics and their fix offsets address this document.

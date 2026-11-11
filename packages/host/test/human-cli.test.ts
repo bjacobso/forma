@@ -110,3 +110,16 @@ describe("human CLI", { timeout: 30_000 }, () => {
     expect(help.indexOf("check <")).toBeLessThan(help.indexOf("file typecheck"));
   });
 });
+
+it("checks holes before running and locates unchecked runtime holes", () => {
+  const dir = workspace({"main.lisp": '(: repair (-> Int Int)) (define repair [a] ?todo) (repair 1)'});
+  for (const command of ["check", "run"]) {
+    const result = run(dir, [command, "main.lisp"]);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("typecheck/hole");
+    expect(result.stderr).toContain("Hole ?todo needs Int; candidates: a");
+  }
+  const unchecked = run(dir, ["run", "--unchecked", "main.lisp"]);
+  expect(unchecked.status).toBe(1);
+  expect(unchecked.stderr).toContain("Cannot evaluate hole ?todo");
+});

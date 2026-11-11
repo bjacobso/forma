@@ -111,6 +111,9 @@ export function evalSym(
   runtime: EvaluatorRuntime,
   loc: Loc,
 ): Effect.Effect<KValue, KernelError> {
+  if (name.startsWith("?")) return Effect.fail(new KernelTypeError({
+    message: `Cannot evaluate hole ${name}`, expected: "complete expression", got: "hole", loc,
+  }));
   // Handle keyword symbols (e.g., :foo) as self-evaluating strings
   if (name.startsWith(":")) {
     return Effect.succeed(KKeyword(name));

@@ -55,6 +55,7 @@ import {
 } from "./types.js";
 
 export interface MechanicsCheckDiagnostic {
+  readonly details?: Readonly<Record<string, unknown>>;
   readonly code: string;
   readonly message: string;
   readonly severity: "error" | "warning";
@@ -1782,6 +1783,14 @@ class Checker {
   }
 
   private variable(name: string, scope: Scope, expected: MType | undefined, span: JsonValue | undefined, node?: JsonRecord): MType {
+    if (name.startsWith("?")) {
+      const type = expected ?? tUnknown;
+      const location = toSourceSpan(span);
+      this.diagnostics.push({code:"typecheck/hole", severity:"error",
+        message:`Hole ${name} needs ${showType(type)}`, details:{name, expected:showType(type), candidates:[]},
+        ...(location ? {span:location} : {})});
+      return type;
+    }
     const local = scope.get(name);
     if (local) return local;
     switch (name) {

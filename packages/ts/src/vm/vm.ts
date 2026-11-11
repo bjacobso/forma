@@ -591,6 +591,10 @@ function executeVM(
         case Op.LOAD_GLOBAL: {
           const idx = readU16();
           const val = globals[idx];
+          const hole = runtime.globalNames?.[idx];
+          if (hole?.startsWith("?")) return yield* withStackTrace(new KernelTypeError({
+            message: `Cannot evaluate hole ${hole}`, expected: "complete expression", got: "hole", ...errorContext(),
+          }));
           if (val === undefined && runtime.strictGlobals === true) {
             const name = runtime.globalNames?.[idx] ?? `<global:${idx}>`;
             return yield* withStackTrace(

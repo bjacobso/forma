@@ -18,6 +18,7 @@ import { parseManyToSExpr, type ParseError } from "../reader/index.js";
 import type { Type } from "./types.js";
 import { showType, tNil } from "./types.js";
 import { inferProgram, inferProgramAll } from "./infer.js";
+import { hasHoles } from "./holes.js";
 import { InferContext, makeOwnedInferContext, type NodeTypeMap } from "./context.js";
 import type { BuiltinSchemeProvider } from "./builtin-schemes.js";
 import { InferenceError } from "./errors.js";
@@ -220,12 +221,23 @@ export function inferSource(
     });
     const layer = Layer.succeed(InferContext, ctxService);
 
+    const errors: InferenceError[] = [];
     const result = yield* Effect.provide(
-      inferProgram(coreExprs, undefined, dslProvider, exprs),
+      inferProgram(coreExprs, undefined, dslProvider, exprs, undefined, hasHoles(coreExprs) ? {
+        onFormError: error => Effect.sync(() => void errors.push(error)),
+      } : {}),
       layer,
     );
     const nodeTypes = yield* Ref.get(ctxService.nodeTypes);
     const diagnostics = yield* Ref.get(ctxService.diagnostics);
+    if (errors.length && !diagnostics.some(d => d.code === "typecheck/hole")) return yield* Effect.fail(errors[0]!);
+    for (const error of errors) diagnostics.push({
+      code: typeof error.details.code === "string" ? error.details.code : "typecheck/type-mismatch",
+      message: error.message, severity: "error", source: "hm", details: error.details,
+      ...(error.origin?.span ? {span: error.origin.span} : {}),
+      ...(error.fix ? {fix: error.fix} : {}),
+      ...(error.related ? {related: error.related} : {}),
+    });
 
     // Publish a stable snapshot rather than the operation's mutable builder.
     return { type: result, nodeTypes: new Map(nodeTypes), diagnostics };

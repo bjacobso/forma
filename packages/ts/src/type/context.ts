@@ -53,6 +53,13 @@ export interface InferDiagnostic extends Pick<Diagnostic, "details" | "help" | "
 
 export type DiagnosticList = InferDiagnostic[];
 
+export interface PendingHole {
+  readonly expr: import("./core-expr.js").CoreExpr & { _tag: "Var" };
+  readonly type: Type;
+  readonly env: import("./substitution.js").TypeEnv;
+  readonly globals: ReadonlySet<string>;
+}
+
 /** Information about an algebraic data type */
 export interface ADTInfo {
   /** Type parameters (e.g., ["a"] for Option) */
@@ -96,6 +103,9 @@ export interface AmbientEffectState {
 // ---------------------------------------------------------------------------
 
 export interface InferContextService {
+  /** Expression goals retained until surrounding inference has solved their types. */
+  readonly holes: Ref.Ref<PendingHole[]>;
+  readonly globalNames: Ref.Ref<ReadonlySet<string>>;
   /** Freeze the state after an operation; callers commit it only on success. */
   readonly snapshot: Effect.Effect<InferenceSnapshot>;
   /** Resolve a built-in type scheme for the active inference host. */
@@ -189,6 +199,8 @@ function makeContext(
     const nodeTypes = yield* Ref.make<NodeTypeMap>(new Map());
     const hookNodes = yield* Ref.make<import("./core-expr.js").CoreExpr[]>([]);
     const diagnostics = yield* Ref.make<DiagnosticList>([]);
+    const holes = yield* Ref.make<PendingHole[]>([]);
+    const globalNames = yield* Ref.make<ReadonlySet<string>>(new Set());
     const nominalRecords = yield* Ref.make<Map<string, Type>>(new Map(options.initialState?.nominalRecords));
     const typeAliases = yield* Ref.make<Map<string, TypeExpr>>(new Map(options.initialState?.typeAliases));
     const typeAliasParams = yield* Ref.make<Map<string, readonly string[]>>(new Map(options.initialState?.typeAliasParams));
@@ -213,6 +225,8 @@ function makeContext(
       nodeTypes,
       hookNodes,
       diagnostics,
+      holes,
+      globalNames,
       typeAliases,
       nominalRecords,
       typeAliasParams,

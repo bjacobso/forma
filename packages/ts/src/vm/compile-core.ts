@@ -159,6 +159,11 @@ function compileSymbol(
   context: CompileContext,
   trace: SourceTrace,
 ): void {
+  if (name.startsWith("?")) {
+    emit(chunk, Op.LOAD_GLOBAL, trace);
+    emitU16(chunk, globals.resolve(name), trace);
+    return;
+  }
   // Keywords are self-evaluating strings
   if (name.startsWith(":")) {
     const idx = addConstant(chunk, KKeyword(name));

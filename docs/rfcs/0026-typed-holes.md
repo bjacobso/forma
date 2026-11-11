@@ -2,12 +2,21 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Partially implemented; extended goal metadata and search remain proposed |
 | Created | 2026-11-11 |
 | Depends on | [RFC 0017](./0017-diagnostic-catalog.md) for structured diagnostics/fixes; [RFC 0004](./0004-one-analysis-architecture.md) for workspace parity |
 | Scope | Incomplete expression goals, context inspection, bounded candidate search and source-versioned edits |
 
 ## Problem and current boundary
+
+Stage 1 recognizes `?` and `?name` in executable expressions and reports
+`typecheck/hole` with `name`, `expected`, and up to ten binding `candidates`.
+The main checker infers goals and offers binding replacements through the LSP;
+the Effect checker reports contextual types without candidates. Checked runs
+refuse holes. Revision-scoped goal identities, effect allowances, skeletons,
+application search, and source-versioned edits below remain proposals.
+Existing explicit host unbound-symbol type policies retain precedence for query
+variables; quoted query syntax and descriptor patterns are unchanged.
 
 Forma's typed form “holes” are captured syntax slots, not unfinished terms.
 `type/unified-form-provider.ts` extracts `(Expr T)` slots for checking;

@@ -563,13 +563,24 @@ const inferVar = (
   expr: CoreExpr & { _tag: "Var" },
 ): Effect.Effect<Type, InferenceError, InferContext> =>
   Effect.gen(function* () {
+    const ctx = yield* InferContext;
+    if (expr.name.startsWith("?")) {
+      // Explicit host query-symbol policies predate expression goals.
+      const literal = !env.has(expr.name) ? ctx.unboundSymbolType(expr.name) : undefined;
+      if (literal) return literal;
+      const previous = (yield* Ref.get(ctx.holes)).find(hole => hole.expr.id === expr.id);
+      if (previous) return previous.type;
+      const type = yield* ctx.freshTVar;
+      const globals = yield* Ref.get(ctx.globalNames);
+      yield* Ref.update(ctx.holes, holes => [...holes, { expr, type, env: new Map(env), globals }]);
+      return type;
+    }
     const scheme = env.get(expr.name);
     if (scheme) {
       const t = yield* instantiateWithConstraints(scheme, originOf(expr, "var"));
       return t;
     }
 
-    const ctx = yield* InferContext;
     const bt = ctx.builtinScheme(expr.name);
     if (bt) return yield* instantiate(bt);
 
