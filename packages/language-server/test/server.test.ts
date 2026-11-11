@@ -3,6 +3,8 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import type { CodeAction, Diagnostic, TextEdit } from "vscode-languageserver";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -93,6 +95,8 @@ describe("forma-language-server over stdio", () => {
         renameProvider: { prepareProvider: true },
         documentSymbolProvider: true,
         semanticTokensProvider: { full: true },
+        codeActionProvider: { codeActionKinds: ["quickfix"] },
+        documentFormattingProvider: true,
       },
     });
     client.notify("initialized", {});
@@ -148,5 +152,44 @@ describe("forma-language-server over stdio", () => {
       diagnostics: unknown[];
     };
     expect(published.diagnostics).toEqual([]);
+  }, 30_000);
+
+  test("publishes consumer help and fixes and answers code action requests", async () => {
+    const fixUri = "file:///workspace/roles.lisp";
+    const source = `(type RoleIR {:kind "Role" :name Symbol})
+(form (role name)
+  :types {:name (Declares Role)} :ir RoleIR
+  :check (fn [holes] [{:code "world/role-name" :message "Choose a role name"
+    :details {:name (str (get holes :name))} :help "Use Admin."
+    :at [:name] :fix [{:at [:name] :new-text "Admin"}]}])
+  {:kind "Role" :name name})
+(role Admn)`;
+    client.notify("textDocument/didOpen", {
+      textDocument: { uri: fixUri, languageId: "forma", version: 1, text: source },
+    });
+    const published = await client.notification("textDocument/publishDiagnostics") as { diagnostics: Diagnostic[] };
+    const diagnostic = published.diagnostics.find((item) => item.code === "world/role-name")!;
+    expect(diagnostic.message).toBe("Choose a role name\nhelp: Use Admin.");
+    expect(diagnostic.data).toMatchObject({ details: { name: "Admn" }, fix: [{ newText: "Admin" }] });
+    const response = await client.request("textDocument/codeAction", {
+      textDocument: { uri: fixUri }, range: diagnostic.range, context: { diagnostics: [diagnostic] },
+    });
+    const actions = response["result"] as CodeAction[];
+    expect(actions).toHaveLength(1);
+    expect(actions[0]).toMatchObject({ kind: "quickfix", isPreferred: true });
+    const document = TextDocument.create(fixUri, "forma", 1, source);
+    expect(TextDocument.applyEdits(document, actions[0]!.edit!.changes![fixUri]!)).toBe(source.replace("(role Admn)", "(role Admin)"));
+  }, 30_000);
+
+  test("formats an open document without an environment opt-in", async () => {
+    const formatUri = "file:///workspace/format.lisp";
+    client.notify("textDocument/didOpen", {
+      textDocument: { uri: formatUri, languageId: "forma", version: 1, text: "(define   x   1)" },
+    });
+    await client.notification("textDocument/publishDiagnostics");
+    const response = await client.request("textDocument/formatting", {
+      textDocument: { uri: formatUri }, options: { tabSize: 2, insertSpaces: true },
+    });
+    expect((response["result"] as TextEdit[])[0]?.newText).toBe("(define x 1)\n");
   }, 30_000);
 });
