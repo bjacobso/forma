@@ -65,7 +65,7 @@ describe("Clojure spellings (RFC 0021 stage 0)", () => {
   // macro expansion as an exception instead of a located diagnostic.
   test("a multi-arity defn is rejected without an author diagnostic", () => {
     expect(() => check("multi-arity.forma")).toThrow(
-      expect.objectContaining({ _tag: "ArityError", message: "" }),
+      expect.objectContaining({ _tag: "ArityError", message: "fn expects 2+ arguments, got 0" }),
     );
   });
 

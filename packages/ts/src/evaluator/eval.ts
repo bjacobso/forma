@@ -11,6 +11,7 @@ import type { KernelError } from "../diagnostic/errors.js";
 import { sourceTraceOf } from "./source-trace.js";
 import { compileProgram, runChunkWithStats } from "../vm/index.js";
 import type { KValue, KMacro, BuiltinFn, KernelOptions, KernelResult } from "./types.js";
+import { isKFn } from "./types.js";
 // (runtime type guards used by evaluateCompileTimeExprs are inlined or delegated)
 import { PreludeEnv } from "../expander/prelude.js";
 import { currentGensymCounter, withGensymScope } from "../builtins/macro.js";
@@ -235,6 +236,7 @@ export function evaluateCompileTimeExprs(
         }
         if (head?._tag === "Sym" && head.name === "define") {
           const defGroup: Array<{
+            name: string;
             expr: SExpr;
             set: (value: KValue) => void;
           }> = [];
@@ -286,6 +288,7 @@ export function evaluateCompileTimeExprs(
               break;
             }
             defGroup.push({
+              name: boundName,
               expr: valueExpr,
               set: slot.set,
             });
@@ -293,7 +296,9 @@ export function evaluateCompileTimeExprs(
           }
 
           for (const def of defGroup) {
-            const val = yield* evalExpr(def.expr, defEnv, runtime);
+            const evaluated = yield* evalExpr(def.expr, defEnv, runtime);
+            const directFn = def.expr._tag === "List" && def.expr.items[0]?._tag === "Sym" && def.expr.items[0].name === "fn";
+            const val = isKFn(evaluated) && directFn ? {...evaluated, name: def.name} : evaluated;
             def.set(val);
             result = val;
           }

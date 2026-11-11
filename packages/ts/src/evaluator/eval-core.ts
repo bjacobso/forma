@@ -363,7 +363,7 @@ export function applyKFn(
         if (currentArgs.length < fn.params.length) {
           return yield* Effect.fail(
             new ArityError({
-              name: "lambda",
+              name: fn.name ?? "lambda",
               expected: `${fn.params.length}+`,
               got: currentArgs.length,
             }),
@@ -372,7 +372,7 @@ export function applyKFn(
       } else if (currentArgs.length !== fn.params.length) {
         return yield* Effect.fail(
           new ArityError({
-            name: "lambda",
+            name: fn.name ?? "lambda",
             expected: fn.params.length,
             got: currentArgs.length,
           }),

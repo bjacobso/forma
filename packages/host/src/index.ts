@@ -1,3 +1,4 @@
+export { hostAbiVersion } from "./version.js";
 export type {
   AbortEvaluationRequest,
   AbortEvaluationResult,

@@ -10,6 +10,7 @@ import * as Lsp from "@formalang/ts/lsp";
 import * as Reader from "@formalang/ts/reader";
 import * as Editor from "@formalang/ts/editor";
 import * as Engine from "@formalang/ts/engine";
+import { hostAbiVersion } from "./version.js";
 import * as LanguageSession from "@formalang/ts/session";
 import * as Syntax from "@formalang/ts/syntax";
 import * as VM from "@formalang/ts/vm";
@@ -241,8 +242,8 @@ export class TsLanguageHost implements LanguageHost {
   async version(): Promise<VersionResult> {
     return {
       engine: "forma-typescript",
-      engineVersion: "0.0.0",
-      hostAbiVersion: "0.1.0",
+      engineVersion: Engine.engineVersion,
+      hostAbiVersion,
       sourceLoadSemantics: "validate-and-store",
       capabilities: [
         "parse",
