@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
+import { realpathSync, mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -11,17 +11,17 @@ const cli = resolve(import.meta.dirname, "../dist/cli.mjs");
 const request = (abi: JsonAbi, input: unknown) => abi.handleJson(JSON.stringify(input));
 describe("JSON process ABI", () => {
   it("explains registered diagnostics offline and fails on unknown codes", () => {
-    const known = spawnSync(process.execPath,[cli,"explain","elaborate/unknown-form"],{encoding:"utf8"});
+    const known = spawnSync(process.execPath,[cli,"explain","elaborate/unknown-form","--json"],{encoding:"utf8"});
     expect(known.status).toBe(0);
     expect(JSON.parse(known.stdout)).toMatchObject({ok:true,value:{code:"elaborate/unknown-form",summary:expect.any(String),explanation:expect.stringContaining("details.name")}});
-    const unknown = spawnSync(process.execPath,[cli,"explain","world/not-registered"],{encoding:"utf8"});
+    const unknown = spawnSync(process.execPath,[cli,"explain","world/not-registered","--json"],{encoding:"utf8"});
     expect(unknown.status).toBe(1);
     expect(JSON.parse(unknown.stdout)).toMatchObject({ok:false,diagnostics:[{code:"abi/unknown-code"}]});
-  });
+  },30_000);
   it("schema builds are deterministic and --check fails without overwriting stale files", () => {
-    const dir = mkdtempSync(join(tmpdir(),"forma-schema-"));
+    const dir = realpathSync(mkdtempSync(join(tmpdir(),"forma-schema-")));
     try {
-      const source = join(dir,"node.forma"), out = join(dir,"generated");
+      const source = join(dir,"node.lisp"), out = join(dir,"generated");
       writeFileSync(source,'(type Node {:label (String :min-length 1) :children (List Node)})');
       const run = (...flags: string[]) => spawnSync(process.execPath,[cli,"schema",source,"--out",out,...flags],{encoding:"utf8"});
       expect(run().status).toBe(0);
@@ -64,23 +64,23 @@ describe("JSON process ABI", () => {
     expect(await request(abi,{op:"sessionInfo",sessionId:"missing"})).toMatchObject({ok:false,diagnostics:[{code:"abi/unknown-session"}]});
   });
   it("returns located configuration diagnostics through the boundary and editor host", async () => {
-    const input = {sourceId:"author.forma",source:"external",hostBuiltins:[{name:"external",typeScheme:{kind:"type",name:"Typo"}}]};
-    expect(await request(new JsonAbi(),{op:"typecheck",...input})).toMatchObject({ok:false,diagnostics:[{code:"typecheck/host-builtin",span:{sourceId:"author.forma",startOffset:0,endOffset:8}}]});
+    const input = {sourceId:"author.lisp",source:"external",hostBuiltins:[{name:"external",typeScheme:{kind:"type",name:"Typo"}}]};
+    expect(await request(new JsonAbi(),{op:"typecheck",...input})).toMatchObject({ok:false,diagnostics:[{code:"typecheck/host-builtin",span:{sourceId:"author.lisp",startOffset:0,endOffset:8}}]});
     expect(await new TsLanguageHost().analyzeEditor(input as never)).toMatchObject({success:false,diagnostics:[{code:"typecheck/host-builtin",span:{startOffset:0,endOffset:8}}]});
   });
   it("retains sessions across requests and reports only executed load phases", async () => {
     const abi = new JsonAbi();
     const opened = await request(abi,{op:"openSession"});
     const sessionId = (opened.value as {sessionId:string}).sessionId;
-    const loaded = await request(abi,{op:"loadSource",sessionId,sourceId:"main.forma",source:"42",timings:true});
+    const loaded = await request(abi,{op:"loadSource",sessionId,sourceId:"main.lisp",source:"42",timings:true});
     expect(loaded).toMatchObject({ok:true,value:{formCount:1,timings:{parseMs:expect.any(Number),storeMs:expect.any(Number)}}});
     expect((loaded.value as {timings:unknown}).timings).not.toHaveProperty("typecheckMs");
-    expect(await request(abi,{op:"typecheck",sessionId,sourceId:"main.forma"})).toMatchObject({ok:true});
-    expect(await request(abi,{op:"typecheckCoreTyped",sessionId,sourceId:"main.forma"})).toMatchObject({ok:true,typedCore:expect.any(Array)});
-    const prelude = await request(abi,{op:"loadSource",sessionId,sourceId:"helpers.forma",kind:"prelude",source:"(define answer 42)",timings:true});
+    expect(await request(abi,{op:"typecheck",sessionId,sourceId:"main.lisp"})).toMatchObject({ok:true});
+    expect(await request(abi,{op:"typecheckCoreTyped",sessionId,sourceId:"main.lisp"})).toMatchObject({ok:true,typedCore:expect.any(Array)});
+    const prelude = await request(abi,{op:"loadSource",sessionId,sourceId:"helpers.lisp",kind:"prelude",source:"(define answer 42)",timings:true});
     expect(prelude).toMatchObject({ok:true,value:{timings:{parseMs:expect.any(Number),typecheckMs:expect.any(Number),evalMs:expect.any(Number),metacheckMs:expect.any(Number),storeMs:expect.any(Number)}}});
     const beforeRejectedLoad = await request(abi,{op:"typecheck",sessionId,source:"answer"});
-    const rejected = await request(abi,{op:"loadSource",sessionId,sourceId:"helpers.forma",kind:"prelude",source:'(define answer (+ 1 "bad"))',timings:true});
+    const rejected = await request(abi,{op:"loadSource",sessionId,sourceId:"helpers.lisp",kind:"prelude",source:'(define answer (+ 1 "bad"))',timings:true});
     expect(rejected).toMatchObject({ok:false,value:{timings:{parseMs:expect.any(Number),typecheckMs:expect.any(Number)}}});
     expect((rejected.value as {timings:unknown}).timings).not.toHaveProperty("storeMs");
     expect(await request(abi,{op:"typecheck",sessionId,source:"answer"})).toMatchObject({ok:true,type:beforeRejectedLoad.type});
@@ -133,14 +133,14 @@ describe("JSON process ABI", () => {
     try {
       const { sessionId } = (await send({ op: "openSession" })).value;
       for (const name of ["compiler.lisp", "ontology.lisp"]) expect(await send({ op: "loadSource", sessionId, sourceId: name, kind: "prelude", source: readFileSync(resolve(import.meta.dirname, "../../../preludes", name), "utf8") })).toMatchObject({ ok: true });
-      expect(await send({ op: "loadSource", sessionId, sourceId: "people.forma", source: "(entity Person {:name String})" })).toMatchObject({ ok: true });
-      expect(await send({ op: "emit", sessionId, sourceId: "people.forma" })).toMatchObject({ ok: true, diagnostics: [], value: { artifactCount: 1, artifacts: [{ content: { declarationCount: 1 } }] } });
-      expect(await send({ op: "artifactSummary", sessionId, sourceIds: ["people.forma"] })).toMatchObject({ ok: true, value: { sourceCount: 1, declarationCount: 1, kindCounts: { Entity: 1 } } });
-      expect(await send({ op: "emitMany", sessionId, sourceIds: ["people.forma", "missing"] })).toMatchObject({ ok: false, diagnostics: [{ code: "abi/unknown-source" }], value: { sourceCount: 2, emittedCount: 1, results: [{ sourceId: "people.forma", ok: true }, { sourceId: "missing", ok: false }] } });
+      expect(await send({ op: "loadSource", sessionId, sourceId: "people.lisp", source: "(entity Person {:name String})" })).toMatchObject({ ok: true });
+      expect(await send({ op: "emit", sessionId, sourceId: "people.lisp" })).toMatchObject({ ok: true, diagnostics: [], value: { artifactCount: 1, artifacts: [{ content: { declarationCount: 1 } }] } });
+      expect(await send({ op: "artifactSummary", sessionId, sourceIds: ["people.lisp"] })).toMatchObject({ ok: true, value: { sourceCount: 1, declarationCount: 1, kindCounts: { Entity: 1 } } });
+      expect(await send({ op: "emitMany", sessionId, sourceIds: ["people.lisp", "missing"] })).toMatchObject({ ok: false, diagnostics: [{ code: "abi/unknown-source" }], value: { sourceCount: 2, emittedCount: 1, results: [{ sourceId: "people.lisp", ok: true }, { sourceId: "missing", ok: false }] } });
       expect(await send({ op: "emit", sessionId, backend: "missing" })).toMatchObject({ ok: false, diagnostics: [{ code: "abi/unsupported-backend" }] });
       const before = await send({ op: "sessionInfo", sessionId });
       // Inline emission replaces only the detached snapshot, including on failure.
-      expect(await send({ op: "emit", sessionId, sourceId: "people.forma", source: "(entity Animal {:name String})" })).toMatchObject({ ok: true });
+      expect(await send({ op: "emit", sessionId, sourceId: "people.lisp", source: "(entity Animal {:name String})" })).toMatchObject({ ok: true });
       expect(await send({ op: "emit", sessionId, source: "(entity Broken)" })).toMatchObject({ ok: false });
       expect(await send({ op: "sessionInfo", sessionId })).toEqual(before);
       expect(await send({ op: "artifactSummary", sessionId })).toMatchObject({ ok: true, value: { declarationCount: 1 } });
@@ -161,49 +161,51 @@ describe("JSON process ABI", () => {
   it("accepts requests on stdin and resolves file modules with author diagnostics", () => {
     const result = spawnSync(process.execPath,[cli,"request"],{input:JSON.stringify({op:"parseSummary",source:"1 2"}),encoding:"utf8"});
     expect(JSON.parse(result.stdout)).toMatchObject({ok:true,value:{formCount:2}});
-    const dir = mkdtempSync(join(tmpdir(),"forma-cli-"));
+    const dir = realpathSync(mkdtempSync(join(tmpdir(),"forma-cli-")));
     try {
-      writeFileSync(join(dir,"lib.forma"),'(export identity) (define identity [x] x)');
-      writeFileSync(join(dir,"main.forma"),'(import "./lib.forma" [identity]) (identity 42)');
+      writeFileSync(join(dir,"lib.lisp"),'(export identity) (define identity [x] x)');
+      writeFileSync(join(dir,"main.lisp"),'(import "./lib.lisp" [identity]) (identity 42)');
       for (const operation of ["typecheck","evaluate","interface","declarations"]) {
-        const result = spawnSync(process.execPath,[cli,"file",operation,join(dir,"main.forma")],{encoding:"utf8"});
+        const result = spawnSync(process.execPath,[cli,"file",operation,join(dir,"main.lisp")],{encoding:"utf8"});
         expect(result.status,result.stderr).toBe(0);
         expect(JSON.parse(result.stdout),result.stdout).toMatchObject({ok:true});
       }
       // evaluate typechecks first unless --unchecked; failures exit 1 with located diagnostics.
-      writeFileSync(join(dir,"main.forma"),'(import "./lib.forma" [identity])\n(= :high (identity "high"))');
-      const refused = spawnSync(process.execPath,[cli,"file","evaluate",join(dir,"main.forma")],{encoding:"utf8"});
+      writeFileSync(join(dir,"main.lisp"),'(import "./lib.lisp" [identity])\n(= :high (identity "high"))');
+      const refused = spawnSync(process.execPath,[cli,"file","evaluate",join(dir,"main.lisp")],{encoding:"utf8"});
       expect(refused.status).toBe(1);
       expect(JSON.parse(refused.stdout)).toMatchObject({ok:false,value:{pass:"typecheck"},diagnostics:[{code:"typecheck/type-mismatch",span:{startLine:2,startColumn:1}}]});
+      expect(JSON.parse(refused.stdout).value).not.toHaveProperty("diagnostics");
       expect(JSON.parse(refused.stdout).diagnostics[0].message).not.toMatch(/at offset|__forma_/);
-      const unchecked = spawnSync(process.execPath,[cli,"file","evaluate","--unchecked",join(dir,"main.forma")],{encoding:"utf8"});
+      const unchecked = spawnSync(process.execPath,[cli,"file","evaluate","--unchecked",join(dir,"main.lisp")],{encoding:"utf8"});
       expect(JSON.parse(unchecked.stdout)).toMatchObject({ok:true,value:{result:{printed:"false"}}});
+      expect(JSON.parse(unchecked.stdout).value.result).not.toHaveProperty("diagnostics");
       // declarations lists each form application's IR with author names.
-      writeFileSync(join(dir,"forms.forma"),'(export note NoteIR) (type NoteIR {:kind "Note" :name Symbol :text String}) (form (note name text) "A note." :types {:name (Declares NoteDecl) :text String} :ir NoteIR {:kind "Note" :name name :text text})');
-      writeFileSync(join(dir,"main.forma"),'(import "./forms.forma" [note]) (note hello "hi")');
-      const declared = spawnSync(process.execPath,[cli,"file","declarations",join(dir,"main.forma")],{encoding:"utf8"});
+      writeFileSync(join(dir,"forms.lisp"),'(export note NoteIR) (type NoteIR {:kind "Note" :name Symbol :text String}) (form (note name text) "A note." :types {:name (Declares NoteDecl) :text String} :ir NoteIR {:kind "Note" :name name :text text})');
+      writeFileSync(join(dir,"main.lisp"),'(import "./forms.lisp" [note]) (note hello "hi")');
+      const declared = spawnSync(process.execPath,[cli,"file","declarations",join(dir,"main.lisp")],{encoding:"utf8"});
       expect(JSON.parse(declared.stdout).value).toContainEqual(expect.objectContaining({
-        summary:{kind:"FormApplication",form:"note",name:"hello",moduleId:join(dir,"main.forma")},
+        summary:{kind:"FormApplication",form:"note",name:"hello",moduleId:join(dir,"main.lisp")},
         payload:{kind:"Note",name:"hello",text:"hi"},
       }));
       // Author-facing wording for an open-row export and for unimported kernel sugar.
-      writeFileSync(join(dir,"main.forma"),'(export p)\n(define p [r] (= (get r :a) 1))');
-      const open = JSON.parse(spawnSync(process.execPath,[cli,"file","declarations",join(dir,"main.forma")],{encoding:"utf8"}).stdout);
+      writeFileSync(join(dir,"main.lisp"),'(export p)\n(define p [r] (= (get r :a) 1))');
+      const open = JSON.parse(spawnSync(process.execPath,[cli,"file","declarations",join(dir,"main.lisp")],{encoding:"utf8"}).stdout);
       expect(open).toMatchObject({ok:false,diagnostics:[{code:"module/unrepresentable-signature",span:{startLine:2,startColumn:1}}]});
       expect(open.diagnostics[0].message).toMatch(/^p has an inferred open record type/);
-      writeFileSync(join(dir,"main.forma"),'(and true false)');
-      const sugar = JSON.parse(spawnSync(process.execPath,[cli,"file","typecheck",join(dir,"main.forma")],{encoding:"utf8"}).stdout);
+      writeFileSync(join(dir,"main.lisp"),'(and true false)');
+      const sugar = JSON.parse(spawnSync(process.execPath,[cli,"file","typecheck",join(dir,"main.lisp")],{encoding:"utf8"}).stdout);
       expect(sugar).toMatchObject({ok:false,diagnostics:[{code:"module/unimported-sugar"}]});
-      expect(sugar.diagnostics[0].message).toContain("preludes/kernel.forma");
+      expect(sugar.diagnostics[0].message).toContain("preludes/modules/kernel.lisp");
       for (const help of [["help"],["--help"],["file","--help"]]) {
         const shown = spawnSync(process.execPath,[cli,...help],{encoding:"utf8"});
         expect(shown.status).toBe(0);
         expect(shown.stdout).toContain("file evaluate [--unchecked]");
       }
       expect(spawnSync(process.execPath,[cli,"bogus"],{encoding:"utf8"}).status).toBe(64);
-      writeFileSync(join(dir,"main.forma"),'(import "./missing.forma" [nope])');
-      const failed = spawnSync(process.execPath,[cli,"file","typecheck",join(dir,"main.forma")],{encoding:"utf8"});
-      expect(JSON.parse(failed.stdout)).toMatchObject({ok:false,diagnostics:[{span:{sourceId:join(dir,"main.forma")}}]});
+      writeFileSync(join(dir,"main.lisp"),'(import "./missing.lisp" [nope])');
+      const failed = spawnSync(process.execPath,[cli,"file","typecheck",join(dir,"main.lisp")],{encoding:"utf8"});
+      expect(JSON.parse(failed.stdout)).toMatchObject({ok:false,diagnostics:[{span:{sourceId:join(dir,"main.lisp")}}]});
     } finally { rmSync(dir,{recursive:true,force:true}); }
   }, 30_000);
 });

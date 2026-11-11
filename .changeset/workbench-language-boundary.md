@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": minor
+"@forma-language/forma": minor
 ---
 
 Expose UI-free authoring helpers for capability reachability, REPL declaration

@@ -1,3 +1,4 @@
+import { diagnosticLocator } from "../diagnostic/locations.js";
 import { isKFloat } from "../evaluator/types.js";
 /** Load phases are pure queries over parsed forms; only the host commits their results.
  * Keep form results separate so RFC 0004 stage 5 can memoize them by syntax identity.
@@ -117,7 +118,7 @@ export function validateSourceForms(
 const isFileModule = (expressions: readonly SExpr[]): boolean =>
   expressions.some(e => ["import", "export", "export-from"].includes(head(e) ?? ""));
 
-export function validateSourceLoad(session: LanguageSession, sourceId: string, expressions: readonly SExpr[], source: string): SourceValidation {
+function validateSourceLoadUnlocated(session: LanguageSession, sourceId: string, expressions: readonly SExpr[], source: string): SourceValidation {
   try {
     const hasMetadata = !isFileModule(expressions) && expressions.some(e => ["type", "class", "error", "form", "__form-descriptor"].includes(head(e) ?? ""));
     const prelude = hasMetadata ? bootstrapFromSources("", "", ...session.orderedSources("prelude").map(s => s.text), source)
@@ -145,8 +146,14 @@ export function validateSourceLoad(session: LanguageSession, sourceId: string, e
 export function inferenceDiagnostics(sourceId: string, result: LspResult): readonly Diagnostic[] {
   return [
     ...result.errors.map(error => ({ code: error.diagnosticCode ?? "typecheck/error", severity: "error" as const, message: error.message, phase: "typecheck" as const,
+      ...(error.details ? {details:error.details} : {}),
+      ...(error.help ? {help:error.help} : {}),
+      ...(error.fix ? {fix:error.fix} : {}),
       ...(error.span ? { span: { sourceId, startOffset: error.span.start, endOffset: error.span.end } } : {}) })),
     ...result.diagnostics.map(d => ({ code: d.code ?? "typecheck/diagnostic", severity: d.severity, message: d.message, phase: "typecheck" as const,
+      ...(d.details ? {details:d.details} : {}),
+      ...(d.help ? {help:d.help} : {}),
+      ...(d.fix ? {fix:d.fix} : {}),
       ...(d.span ? { span: { sourceId, startOffset: d.span.start, endOffset: d.span.end } } : {}) })),
   ];
 }
@@ -189,7 +196,7 @@ function descriptorTypingInputs(
 }
 
 /** Rebuild after replacements so neither removed values nor removed schemes survive. */
-export function validatePreludeTypes(
+function validatePreludeTypesUnlocated(
   sources: readonly { readonly sourceId: string; readonly text: string }[],
   options: Pick<TypecheckRequest, "hostBuiltins" | "typePolicy">,
   configurationEnv?: Env,
@@ -252,7 +259,7 @@ function configuredBindingType(env: Env, name: string): Type.Type {
     : typeof value === "boolean" ? Type.tBool : value === null ? Type.tNil : Type.tUnknown;
 }
 
-export function checkReplSubmission(session: LanguageSession, sourceId: string, source: string, options: Pick<TypecheckRequest, "hostBuiltins" | "typePolicy">) {
+function checkReplSubmissionUnlocated(session: LanguageSession, sourceId: string, source: string, options: Pick<TypecheckRequest, "hostBuiltins" | "typePolicy">) {
   // A REPL definition shadows the old scheme, including when its type changes.
   const initialEnv = new Map(session.scope.typeEnv);
   for (const binding of session.configurationEnv.bindingNames()) {
@@ -280,7 +287,7 @@ export function checkReplSubmission(session: LanguageSession, sourceId: string, 
 }
 
 /** Validate the complete candidate prelude before its environment is committed. */
-export function validatePreludeMetacheck(env: Env, sources: readonly DescriptorSource[], prelude: BootstrappedPrelude): readonly Diagnostic[] {
+function validatePreludeMetacheckUnlocated(env: Env, sources: readonly DescriptorSource[], prelude: BootstrappedPrelude): readonly Diagnostic[] {
   const registry = makeArtifactValidatorRegistry();
   const contracts = prelude.payloadContracts ?? new Map();
   const spans = new Map<string, import("../diagnostic/diagnostic.js").Span>();
@@ -311,4 +318,25 @@ export function validatePreludeMetacheck(env: Env, sources: readonly DescriptorS
     return [diagnosticFromUnknown(error, "typecheck", sources.at(-1)?.sourceId ?? "prelude")];
   }
   return diagnostics;
+}
+
+export function validateSourceLoad(...args: Parameters<typeof validateSourceLoadUnlocated>): SourceValidation {
+  const [session, sourceId, , source] = args;
+  const result = validateSourceLoadUnlocated(...args);
+  return { ...result, diagnostics: result.diagnostics.map(diagnosticLocator(id => id === sourceId ? source : session.sourceText(id))) };
+}
+
+export function validatePreludeTypes(...args: Parameters<typeof validatePreludeTypesUnlocated>): ReturnType<typeof validatePreludeTypesUnlocated> {
+  const result = validatePreludeTypesUnlocated(...args);
+  return { ...result, diagnostics: result.diagnostics.map(diagnosticLocator(id => args[0].find(source => source.sourceId === id)?.text)) };
+}
+
+export function checkReplSubmission(...args: Parameters<typeof checkReplSubmissionUnlocated>): ReturnType<typeof checkReplSubmissionUnlocated> {
+  const [session, sourceId, source] = args;
+  const result = checkReplSubmissionUnlocated(...args);
+  return { ...result, diagnostics: result.diagnostics.map(diagnosticLocator(id => id === sourceId ? source : session.sourceText(id))) };
+}
+
+export function validatePreludeMetacheck(...args: Parameters<typeof validatePreludeMetacheckUnlocated>): readonly Diagnostic[] {
+  return validatePreludeMetacheckUnlocated(...args).map(diagnosticLocator(id => args[1].find(source => source.sourceId === id)?.source));
 }

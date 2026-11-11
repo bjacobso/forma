@@ -1,6 +1,5 @@
 ---
-"@formalang/ts": minor
-"@formalang/host": patch
+"@forma-language/forma": minor
 ---
 
 Make expansion and identity reproducible. `gensym` numbers names per expansion

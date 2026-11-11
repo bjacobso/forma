@@ -1,0 +1,5 @@
+(import "./preludes/modules/routes.lisp" [route])
+(export ticket-url home-url sample)
+(route ticket-url ["teams" [:team] "tickets" [:ticket]])
+(route home-url [])
+(define sample (ticket-url {:team "support" :ticket "T-42"}))

@@ -1,66 +1,64 @@
 # Publishing Forma
 
-The public npm packages are `@formalang/ts`, `@formalang/host`,
-`@formalang/editor`, and `@formalang/language-server`. The website and
-workbench apps remain private. The language server runs on `@formalang/ts`.
-There are no native binaries.
+The repository is prepared for one public npm package,
+`@forma-language/forma` at version 0.5.0. It has not been published.
+The engine, host, editor and language-server workspaces keep their internal
+`@formalang/*` names and are private. Existing registry releases remain
+available; no deprecations or registry changes are part of this preparation.
 
-## Normal releases
+## Release preparation
 
-1. Run `pnpm changeset` and commit the release note with the code change.
-2. Merge the change into `main`. Changesets opens or updates a version PR.
-3. Review the version PR, then merge it. The Release workflow validates and
-   packs the packages, publishes through npm trusted publishing, and creates
-   tags and GitHub releases.
+Only `@forma-language/forma` belongs in changesets, including when an
+implementation workspace changes distributed behavior. Pending old-scope notes
+have been retargeted to the facade with their breaking notes preserved.
+Pre-1.0 breaking changes require a minor and explicit migration notes.
+Do not merge the old four-package version PR #14 unchanged.
 
-The version PR is opened with the workflow token, so CI does not run on it.
-Before merging, check out its branch and run `pnpm release:check`. A failure
-after the merge leaves `main` with versions that were never published. Read the
-generated changelogs as well: breaking entries start with `**Breaking:**`.
+Run `pnpm release:check` before release review. It runs the semantic checks and
+packs the single distribution, checks its archive and publish eligibility,
+installs it offline in a clean consumer, imports the exports, checks declaration
+resolution and browser boundaries, and exercises both executables.
+The machine must have the dependency closure in its pnpm store.
 
-CI runs `pnpm check:changesets` on ordinary pull requests to validate release
-notes before versioning. Version PRs have already consumed those notes, so
-`pnpm check` and `pnpm release:check` do not require pending changesets.
+Changesets retains the version-PR and gated pack/publish workflow. Version PRs
+opened with the workflow token do not automatically run CI; check out the
+revision and run the release checks before merging. Private workspaces are
+excluded from versioning and tags. Release automation must never publish an
+intermediate four-package plan.
 
-`pnpm release:check` builds and tests the JavaScript packages, checks the
-surface goldens, and installs the packed tarballs in a temporary consumer
-project. The consumer check loads every library export and analyzes a document
-with the language server's workspace. A release build machine needs only
-Node.js and pnpm.
+## Consumer migration
 
-Forma pins an exact Effect version in its public types. Version 0.2.0 uses
-Effect 3, 0.3.0 uses `effect@4.0.0-rc.112`, and 0.4.0 uses `effect@4.0.3`.
-The development branch targets `effect@4.1.1` for the next release.
-Consumers should install the same version as the Forma release they use, remove
-any Effect 3 alias kept only for Forma, and import `Effect` from `effect`. Keep
-that exact version until Forma and the consumer agree on a later Effect 4
-version.
+After publication, install `@forma-language/forma` and `effect@4.1.1`.
+Effect is a required external peer (`^4.1.1`); 4.1.1 is the tested baseline.
+React and React DOM 19 are optional peers needed only for `/editor/react`.
+CodeMirror/Lezer and LSP dependencies are installed even for language-only use.
 
-## Publishing a new package
+Old engine subpaths move to the new package, with `/editor` renamed to
+`/editor-services`. The new root is curated; replace old namespace-root imports
+with explicit subpaths. Host imports move to `/host` and `/host/<path>`.
+The mixed editor root splits into UI-free `/editor`, `/editor/codemirror` and
+`/editor/react`. Use `/language-server` for the Node library and the
+`forma-language-server --stdio` bin for startup. Source files use `.lisp`;
+`forma.json` and `forma.lock` keep their names. Review the consolidated pending
+notes for language, host, numeric and Effect changes as well as import rewrites.
 
-An npm organization alone does not configure trusted publishing. Publish a new
-package's first version from an authenticated maintainer session, then configure
-its trusted publisher with these exact values:
+Local installs expose `pnpm exec forma help`; global installs require both the
+Forma package and Effect on the global installation. One-shot execution after
+publication selects the bin explicitly:
 
-| Field | Value |
-| --- | --- |
-| Provider | GitHub Actions |
-| Organization or user | `bjacobso` |
-| Repository | `forma` |
-| Workflow filename | `release.yml` |
-| Environment | `npm-publish` |
-| Allowed action | `npm publish` |
+```sh
+npm exec --package=@forma-language/forma@0.5.0 --package=effect@4.1.1 -- forma help
+```
 
-Apply the package's first changeset through the version PR before publishing so
-the published version matches the repository. Validate with `pnpm release:check`,
-then use `pnpm release:publish` from the validated main revision while logged
-in to npm. Complete npm's authentication prompts in the maintainer session.
+## First publication gate
 
-The GitHub publishing job uses OIDC and does not require a persistent npm token.
-Do not enable automatic first publication until the intended scope and package
-contents have been reviewed. The `npm-publish` GitHub environment must match
-the name configured on npm. GitHub Actions must be allowed to create pull
-requests for the version PR step.
+Publication requires separate maintainer authorization. Verify scope ownership,
+name availability and npm's current first-publication procedure before doing it.
+The existing old-scope trusted publishers do not transfer to the new name.
+Configure GitHub OIDC for `bjacobso/forma`, workflow `release.yml`, environment
+`npm-publish`, after the authorized bootstrap. Do not introduce a persistent
+npm token. Do not publish the old workspaces, merge PR #14, change npm settings,
+or deprecate packages as part of local preparation.
 
-See [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) and
-[Changesets automation](https://changesets.dev/guide/automating).
+See [RFC 0025](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0025-single-npm-distribution.md)
+for the complete distribution contract and release acceptance matrix.

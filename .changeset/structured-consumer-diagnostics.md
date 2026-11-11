@@ -1,6 +1,5 @@
 ---
-"@formalang/ts": minor
-"@formalang/host": minor
+"@forma-language/forma": minor
 ---
 
 Add an exported offline diagnostic catalog with stable identifiers, summaries,

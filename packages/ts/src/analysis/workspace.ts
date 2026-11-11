@@ -1,3 +1,4 @@
+import { diagnosticLocator, type LocatedDiagnostic } from "../diagnostic/locations.js";
 /**
  * An analysis workspace: the preludes and documents an editor has open, and
  * every language service over them as a memoized query.
@@ -28,7 +29,6 @@ import { formatLispSource } from "../Formatter.js";
 import { blankBrokenForms } from "../lsp/recovery.js";
 import { analyzeLsp, type LspResult } from "../lsp/hm-lsp.js";
 import { parse, toSExprMany } from "../reader/index.js";
-import { head } from "../surface/effect.js";
 import {
   identifySyntax,
   indexSyntax,
@@ -68,7 +68,7 @@ export interface DocumentAnalysis {
   readonly resultType?: string | undefined;
   /** Typed expressions in document order. */
   readonly typedSpans: readonly TypedSpan[];
-  readonly diagnostics: readonly Diagnostic[];
+  readonly diagnostics: readonly LocatedDiagnostic[];
   /** Types of the document's definitions and everything in scope before it. */
   readonly typeEnv: TypeEnv;
   readonly mechanicsBindingTypes?: ReadonlyMap<string, string>;
@@ -187,7 +187,7 @@ export class AnalysisWorkspace {
     );
   }
 
-  diagnostics(sourceId: string): readonly Diagnostic[] {
+  diagnostics(sourceId: string): readonly LocatedDiagnostic[] {
     return this.analysis(sourceId).diagnostics;
   }
 
@@ -475,7 +475,7 @@ function analyzeDocument(
     diagnostics.push({
       code: error.diagnosticCode ?? "typecheck/type-mismatch",
       severity: "error",
-      message: withoutOffset(error.message),
+      message: error.message,
       ...(error.details ? {details:error.details} : {}),
       ...(error.help ? {help:error.help} : {}),
       ...(error.fix ? {fix:error.fix} : {}),
@@ -503,13 +503,33 @@ function analyzeDocument(
       },
     });
   }
-  if (parsed.errors.length === 0) diagnostics.push(...formDiagnostics(sourceId, text, scope).filter(diagnostic => {
-    if (diagnostic.code === "elaborate/unknown-form") return false;
+  const describedDiagnostics = parsed.errors.length === 0 ? formDiagnostics(sourceId, text, scope).filter(diagnostic => {
+    // Ordinary calls are checked above. Only an unbound form spelling
+    // suggestion adds useful information (and an editor quick fix).
+    if (diagnostic.code === "elaborate/unknown-form") {
+      const name = diagnostic.details?.name;
+      return diagnostic.fix?.length === 1 && typeof name === "string" &&
+        !typeEnv.has(name) && !builtinScheme(name) && !scope.macroEnv?.has(name);
+    }
     return diagnostic.code !== "elaborate/hole-type" || !diagnostics.some(existing =>
       existing.span && diagnostic.span && existing.span.startOffset >= diagnostic.span.startOffset &&
       existing.span.endOffset <= diagnostic.span.endOffset &&
       ["elaborate/form-check", "typecheck/type-mismatch", "typecheck/unbound-symbol"].includes(existing.code));
-  }));
+  }) : [];
+  for (const diagnostic of describedDiagnostics) {
+    if (diagnostic.code !== "elaborate/unknown-form") continue;
+    const headSpan = diagnostic.fix![0]!.span;
+    // The form diagnostic carries the more specific advice for this head.
+    // Retain checker errors for arguments and all other ordinary calls.
+    for (let index = diagnostics.length - 1; index >= 0; index--) {
+      const existing = diagnostics[index]!;
+      if (existing.code === "typecheck/unbound-symbol" &&
+          existing.span?.startOffset === headSpan.startOffset && existing.span.endOffset === headSpan.endOffset) {
+        diagnostics.splice(index, 1);
+      }
+    }
+  }
+  diagnostics.push(...describedDiagnostics);
   return {
     sourceId,
     ...(result.resultTypeString !== undefined ? { resultType: result.resultTypeString } : {}),
@@ -519,7 +539,7 @@ function analyzeDocument(
       type: span.typeString,
       exprTag: span.exprTag,
     }))],
-    diagnostics: dedupe(diagnostics),
+    diagnostics: dedupe(diagnostics).map(diagnosticLocator(() => text)),
     typeEnv,
     ...(result.mechanics ? { mechanicsBindingTypes: result.mechanics.bindingTypes } : {}),
   };
@@ -529,10 +549,6 @@ function analyzeDocument(
 function formDiagnostics(sourceId: string, text: string, scope: Scope): readonly Diagnostic[] {
   const prelude = scope.prelude;
   if (!prelude) return [];
-  const described = toSExprMany(parse(text).redTree).some((expr) =>
-    prelude.descriptions.has(head(expr) ?? ""),
-  );
-  if (!described) return [];
   try {
     return elaborateSources([{ sourceId, source: text }], { prelude }).diagnostics.filter(
       (diagnostic) => diagnostic.span?.sourceId === sourceId && diagnostic.code !== "elaborate/no-construct-hook",
@@ -543,9 +559,6 @@ function formDiagnostics(sourceId: string, text: string, scope: Scope): readonly
 }
 
 
-function withoutOffset(message: string): string {
-  return message.replace(/ \(at offset \d+\)$/, "");
-}
 
 /**
  * One diagnostic per message and span. A diagnostic without a position is
@@ -589,7 +602,7 @@ function isSymbolName(name: string): boolean {
 }
 
 function codeBlock(text: string): string {
-  return `\`\`\`forma\n${text}\n\`\`\``;
+  return `\`\`\`lisp\n${text}\n\`\`\``;
 }
 
 function describeForm(descriptor: FormDescriptor): string {

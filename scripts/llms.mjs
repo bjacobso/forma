@@ -14,7 +14,7 @@ if (process.argv[2] === "--generate") {
 }
 
 const text = await readFile(resolve(output, "llms.txt"), "utf8");
-if (!/^# Forma\n\n> .+pre-alpha.+`pnpm add @formalang\/ts`/u.test(text)) {
+if (!/^# Forma\n\n> .+pre-alpha.+`npm install @forma-language\/forma effect`/u.test(text)) {
   throw new Error("llms.txt needs the Forma H1 and a summary with maturity and installation.");
 }
 const sections = text.split(/^## .+$/mu).slice(1);

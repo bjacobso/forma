@@ -55,9 +55,9 @@ its package and normalized path within that package.
 ```text
 forma.toml
 src/
-  orders.forma
-  checkout.forma
-  main.forma
+  orders.lisp
+  checkout.lisp
+  main.lisp
 ```
 
 ### Definitions and exports
@@ -66,7 +66,7 @@ Definitions are private unless exported. Exports can precede their definitions,
 as signatures do in the [language reference](../language.md).
 
 ```lisp
-;; src/orders.forma
+;; src/orders.lisp
 (export OrderId Order make-order)
 
 (type OrderId (Brand String))
@@ -99,8 +99,8 @@ recover from an ordinary function body.
 Named imports introduce only the requested exports:
 
 ```lisp
-;; src/checkout.forma
-(import "./orders.forma" [OrderId Order])
+;; src/checkout.lisp
+(import "./orders.lisp" [OrderId Order])
 
 (export Payments pay)
 
@@ -118,9 +118,9 @@ Named imports introduce only the requested exports:
 Namespace imports introduce one module alias:
 
 ```lisp
-;; src/main.forma
-(import "./orders.forma" :as orders)
-(import "./checkout.forma" :as checkout)
+;; src/main.lisp
+(import "./orders.lisp" :as orders)
+(import "./checkout.lisp" :as checkout)
 
 (define example
   (orders/make-order (orders/OrderId "order:1") 1200))
@@ -145,8 +145,8 @@ existing `:all` import mode.
 A module can provide a public entry point for several implementation modules:
 
 ```lisp
-(export-from "./orders.forma" [OrderId Order make-order])
-(export-from "./checkout.forma" [Payments pay])
+(export-from "./orders.lisp" [OrderId Order make-order])
+(export-from "./checkout.lisp" [Payments pay])
 ```
 
 Re-exports retain the original declaration identity. Export name collisions are
@@ -454,7 +454,7 @@ Macros and forms are importable library definitions. A domain library can export
 a form while keeping its projection helpers private:
 
 ```lisp
-;; src/greetings.forma
+;; src/greetings.lisp
 (export greeting)
 
 (type GreetingIR
@@ -469,8 +469,8 @@ a form while keeping its projection helpers private:
 ```
 
 ```lisp
-;; src/home.forma
-(import "./greetings.forma" [greeting])
+;; src/home.lisp
+(import "./greetings.lisp" [greeting])
 
 (greeting welcome "Ada")
 ```
@@ -539,7 +539,7 @@ The proposed project commands are:
 ```sh
 forma check
 forma build --target effect-ts
-forma run src/main.forma
+forma run src/main.lisp
 forma test
 ```
 

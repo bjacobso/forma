@@ -11,6 +11,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { fileURLToPath } from "node:url";
 
 import { getCompletions } from "./handlers/completion.js";
+import { getCodeActions } from "./handlers/code-actions.js";
 import { getDefinition } from "./handlers/definition.js";
 import { getDiagnostics } from "./handlers/diagnostics.js";
 import { formatDocument } from "./handlers/formatting.js";
@@ -26,9 +27,6 @@ const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
 
 let workspace: FormaWorkspace | undefined;
-const formattingEnabled = ["1", "true"].includes(
-  process.env["FORMA_LANGUAGE_SERVER_ENABLE_FORMATTING"] ?? "",
-);
 
 connection.onInitialize((params: InitializeParams): InitializeResult => {
   const root =
@@ -53,7 +51,8 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
       documentSymbolProvider: true,
       workspaceSymbolProvider: true,
       semanticTokensProvider: { legend: semanticTokensLegend, full: true },
-      documentFormattingProvider: formattingEnabled,
+      codeActionProvider: { codeActionKinds: ["quickfix"] },
+      documentFormattingProvider: true,
     },
   };
 });
@@ -87,6 +86,7 @@ function handle<P extends { textDocument: { uri: string } }, R>(
 
 connection.onHover(handle(null, getHover));
 connection.onCompletion(handle({ isIncomplete: false, items: [] }, getCompletions));
+connection.onCodeAction(handle([], getCodeActions));
 connection.onDefinition(handle(null, getDefinition));
 connection.onReferences(handle([], getReferences));
 connection.onPrepareRename(handle(null, prepareRename));
@@ -101,7 +101,7 @@ connection.languages.semanticTokens.on(
   handle({ data: [] }, (workspace, document) => getSemanticTokens(workspace, document)),
 );
 connection.onDocumentFormatting(
-  handle([], (workspace, document) => (formattingEnabled ? formatDocument(workspace, document) : [])),
+  handle([], (workspace, document) => formatDocument(workspace, document)),
 );
 
 function publish(changed: readonly TextDocument[]): void {

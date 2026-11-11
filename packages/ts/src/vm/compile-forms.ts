@@ -36,6 +36,7 @@ export function compileFn(
   context: CompileContext,
   trace: SourceTrace,
   compileSExpr: CompileFn,
+  bindingName?: string,
 ): void {
   const paramsExpr = items[1];
   if (!paramsExpr || paramsExpr._tag !== "Vector") {
@@ -63,7 +64,7 @@ export function compileFn(
     paramNames.push(pName);
   }
 
-  const fnName = `<lambda:${trace.loc.line}>`;
+  const fnName = bindingName ?? `<lambda:${trace.loc.line}>`;
   const funcChunk = newChunk(fnName, paramNames.length, restParam !== undefined);
   const childScope = new CompileScope(scope, paramNames.length + (restParam ? 1 : 0));
 
@@ -182,7 +183,11 @@ export function compileLet(
     if (!nameSym || !valExpr) break;
 
     // Compile the value
-    compileSExpr(valExpr, chunk, scope, globals, builtins, context, false, false);
+    if (valExpr._tag === "List" && headSym(valExpr) === "fn" && trySym(nameSym)) {
+      compileFn(valExpr.items, chunk, scope, globals, builtins, context, traceOf(valExpr), compileSExpr, trySym(nameSym));
+    } else {
+      compileSExpr(valExpr, chunk, scope, globals, builtins, context, false, false);
+    }
 
     const letBindName = trySym(nameSym);
     if (letBindName) {
@@ -417,7 +422,11 @@ export function compileDef(
 
   const globalIdx = globals.resolve(globalName);
 
-  compileSExpr(valueExpr, chunk, scope, globals, builtins, context, false, false);
+  if (valueExpr._tag === "List" && headSym(valueExpr) === "fn") {
+    compileFn(valueExpr.items, chunk, scope, globals, builtins, context, traceOf(valueExpr), compileSExpr, globalName);
+  } else {
+    compileSExpr(valueExpr, chunk, scope, globals, builtins, context, false, false);
+  }
 
   emit(chunk, Op.STORE_GLOBAL, trace);
   emitU16(chunk, globalIdx, trace);

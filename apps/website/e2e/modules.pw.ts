@@ -3,11 +3,11 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const sources = [
-  "ids.forma",
-  "log.forma",
-  "identity.forma",
-  "state.forma",
-  "main.forma",
+  "ids.lisp",
+  "log.lisp",
+  "identity.lisp",
+  "state.lisp",
+  "main.lisp",
 ].map((name) => ({
   kind: "source" as const,
   sourceId: name,
@@ -34,20 +34,20 @@ test("the universal browser host resolves isolated modules and links Effect file
         });
         const graph = await host.moduleGraph({
           sessionId,
-          sourceId: "main.forma",
+          sourceId: "main.lisp",
         });
         const linked = await host.linkEffectModules({
           sessionId,
-          sourceId: "main.forma",
+          sourceId: "main.lisp",
         });
         const value = await host.evaluateInSession({
           sessionId,
-          sourceId: "pure.forma",
-          source: '(import "./identity.forma" [identity]) (identity 42)',
+          sourceId: "pure.lisp",
+          source: '(import "./identity.lisp" [identity]) (identity 42)',
         });
         const privateName = await host.evaluateInSession({
           sessionId,
-          sourceId: "pure.forma",
+          sourceId: "pure.lisp",
           source: "identity",
         });
         return {

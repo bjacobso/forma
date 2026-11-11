@@ -1,6 +1,5 @@
 ---
-"@formalang/ts": patch
-"@formalang/host": patch
+"@forma-language/forma": patch
 ---
 
 Analyze imported modules with caller-located types, retain partial editor types,

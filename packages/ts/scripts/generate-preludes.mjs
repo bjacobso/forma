@@ -8,6 +8,7 @@ const preludesDir = resolve(import.meta.dirname, "../../../preludes");
 const output = resolve(import.meta.dirname, "../src/preludes/sources.generated.ts");
 
 export const renderPreludeSources = () => {
+  // File-module libraries in modules/ are deliberately excluded from embedding.
   const names = readdirSync(preludesDir).filter((name) => name.endsWith(".lisp")).sort();
   const entries = names.map(
     (name) => `  ${JSON.stringify(name)}: ${JSON.stringify(readFileSync(resolve(preludesDir, name), "utf8"))},`,
@@ -25,7 +26,7 @@ export const renderPreludeSources = () => {
 if (process.argv[1] === import.meta.filename) {
   writeFileSync(output, renderPreludeSources());
   const kernel = readFileSync(resolve(preludesDir, "kernel.lisp"), "utf8");
-  writeFileSync(resolve(preludesDir, "kernel.forma"),
+  writeFileSync(resolve(preludesDir, "modules/kernel.lisp"),
     "; Generated from kernel.lisp by packages/ts/scripts/generate-preludes.mjs.\n" +
     "(export not when unless cond and or -> ->>)\n\n" + kernel);
   console.log(`Wrote ${output}`);

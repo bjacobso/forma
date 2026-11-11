@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": minor
+"@forma-language/forma": minor
 ---
 
 Let a file module's `form` produce an `:ir` type that another module exports.

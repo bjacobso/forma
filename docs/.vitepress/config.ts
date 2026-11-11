@@ -78,7 +78,7 @@ export default defineConfig({
       dark: codeTheme,
     },
     languages: ["json", "lisp", "scheme", "sh", "ts"],
-    // `.forma` modules are Forma source; highlight them as the Lisp they are.
+    // `.lisp` modules are Forma source; highlight them as the Lisp they are.
     languageAlias: { forma: "lisp" },
   },
   transformPageData(pageData) {
@@ -144,6 +144,7 @@ export default defineConfig({
             { text: "Design decisions", link: "/design-decisions" },
             { text: "Retiring the OCaml engine", link: "/engine-consolidation" },
             { text: "Language services", link: "/language-services" },
+            { text: "Embedding Forma", link: "/embedding" },
             { text: "File modules", link: "/modules" },
           ],
         },

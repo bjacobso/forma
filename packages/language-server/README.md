@@ -3,10 +3,23 @@
 Language Server Protocol support for Forma, backed by the TypeScript engine.
 It provides diagnostics, hover, completion (including the open slots of
 descriptor forms), definitions, references, rename, document symbols,
-workspace symbol search, semantic tokens, and optional document formatting.
+workspace symbol search, semantic tokens, diagnostic quick fixes, and document formatting.
 Workspace symbol search matches names and documentation across preludes and
 documents; `produces:IRType` and `type:TypeName` in the query filter by a
 form's `:ir` type or a definition's inferred type.
+
+Diagnostics append engine help text on a new line prefixed `help: `. LSP has
+no dedicated help field, and `relatedInformation` requires a source location,
+so the message makes this advice visible in ordinary diagnostic displays.
+Structured `details` and atomic `fix` edits are preserved in diagnostic `data`.
+`textDocument/codeAction` offers each supplied fix as one `quickfix`, with all
+edits applied together to the requested document's unchanged source. A sole
+available quick fix is preferred. Only diagnostics supplied by the analysis
+workspace can offer fixes; it currently suppresses unknown-form diagnostics,
+including their misspelled-head suggestions.
+
+Document formatting is enabled by default. It returns a full-document edit
+and declines documents that do not parse.
 
 ```sh
 npm install -g @formalang/language-server
@@ -29,7 +42,6 @@ the editor replaces its file for every document until it is closed.
 Environment variables:
 
 - `FORMA_LANGUAGE_SERVER_PRELUDES` supplies consumer-owned prelude files.
-- `FORMA_LANGUAGE_SERVER_ENABLE_FORMATTING=1` enables document formatting.
 
 ```sh
 pnpm --filter @formalang/language-server test

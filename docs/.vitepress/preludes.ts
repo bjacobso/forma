@@ -37,7 +37,7 @@ const manifest: Record<string, Manifest> = {
     order: 1,
     summary: "Who gets an email, when, and how fast. Closed lanes, one decision per contact, and typed delivery recovery.",
     guide: { text: "Forma for email automation", link: "/email" },
-    embed: { example: "email-rule", file: "warmup.forma", title: "Live email rule: lanes are a closed type" },
+    embed: { example: "email-rule", file: "warmup.lisp", title: "Live email rule: lanes are a closed type" },
     note: "The TypeScript engine checks rules and generates Effect TypeScript. Scheduling, rate enforcement, and dry runs are not implemented.",
   },
   "http-api": {
@@ -68,7 +68,7 @@ const manifest: Record<string, Manifest> = {
     order: 3,
     summary: "Messages, update, commands, and Hiccup views, checked against closed vocabularies and lowered to Foldkit.",
     guide: { text: "Forma for Elm-style apps", link: "/elm" },
-    embed: { example: "elm-command", file: "counter-command.forma", title: "Live Elm command recovery" },
+    embed: { example: "elm-command", file: "counter-command.lisp", title: "Live Elm command recovery" },
     note: "Shared HttpApi client generation remains proposed. See the Elm prototype reference for current limits.",
   },
   ontology: {
@@ -114,7 +114,7 @@ const manifest: Record<string, Manifest> = {
     order: 10,
     summary: "The control-flow and threading sugar every program uses, written as ordinary Forma macros.",
     playground: { text: "Open the pipe operator example", link: "/playground/demo/pipes" },
-    note: "kernel.forma is the same library as an exported file module, regenerated from kernel.lisp.",
+    note: "modules/kernel.lisp is the same library as an exported file module, regenerated from kernel.lisp.",
   },
   compiler: {
     title: "Descriptor helpers",

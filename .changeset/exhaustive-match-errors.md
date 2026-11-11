@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": patch
+"@forma-language/forma": patch
 ---
 
 Reject matches missing constructors of a closed tagged type in the kernel

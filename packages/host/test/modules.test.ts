@@ -7,11 +7,11 @@ import type { LanguageHost } from "../src/types.js";
 const hosts = [new TsLanguageHost()];
 const fixture = resolve(import.meta.dirname, "../../../conformance/modules");
 const sources = [
-  "ids.forma",
-  "log.forma",
-  "identity.forma",
-  "state.forma",
-  "main.forma",
+  "ids.lisp",
+  "log.lisp",
+  "identity.lisp",
+  "state.lisp",
+  "main.lisp",
 ].map((name) => ({
   kind: "source" as const,
   sourceId: name,
@@ -34,12 +34,12 @@ describe("module contracts", () => {
           ).toEqual([]);
           const graph = await host.moduleGraph({
             sessionId,
-            sourceId: "main.forma",
+            sourceId: "main.lisp",
           });
           expect(graph.diagnostics).toEqual([]);
           const linked = await host.linkEffectModules({
             sessionId,
-            sourceId: "main.forma",
+            sourceId: "main.lisp",
           });
           expect(linked.diagnostics).toEqual([]);
           expectModuleGolden(host, fixture, "interfaces-and-linked-modules", {
@@ -60,10 +60,10 @@ describe("module contracts", () => {
           (await host.loadSource({ sessionId, sourceId, source })).diagnostics,
         ).toEqual([]);
       const check = async (source: string) =>
-        await host.typecheck({ sessionId, sourceId: "query.forma", source });
+        await host.typecheck({ sessionId, sourceId: "query.lisp", source });
       try {
         await load(
-          "id.forma",
+          "id.lisp",
           "(export identity) (define identity [x] x) (define secret 42)",
         );
         expect(
@@ -72,63 +72,63 @@ describe("module contracts", () => {
         expect(
           (
             await check(
-              '(import "./id.forma" [identity]) (define a (identity 1)) (identity "text")',
+              '(import "./id.lisp" [identity]) (define a (identity 1)) (identity "text")',
             )
           ).diagnostics,
         ).toEqual([]);
         const evaluated = await host.evaluateInSession({
           sessionId,
-          sourceId: "query.forma",
-          source: '(import "./id.forma" [identity]) (identity "text")',
+          sourceId: "query.lisp",
+          source: '(import "./id.lisp" [identity]) (identity "text")',
         });
         expect(evaluated).toMatchObject({
           status: "completed",
           result: { value: { kind: "string", value: "text" } },
         });
-        await load("barrel.forma", '(export-from "./id.forma" [identity])');
+        await load("barrel.lisp", '(export-from "./id.lisp" [identity])');
         const reexport = await host.moduleGraph({
           sessionId,
-          sourceId: "barrel.forma",
+          sourceId: "barrel.lisp",
         });
         expect(reexport.interfaces.at(-1)?.exports[0]?.identity).toEqual({
-          moduleId: "id.forma",
+          moduleId: "id.lisp",
           declaration: "identity",
         });
         expect(
-          (await check('(import "./id.forma" [secret]) secret')).diagnostics[0],
+          (await check('(import "./id.lisp" [secret]) secret')).diagnostics[0],
         ).toMatchObject({
           code: "module/private-export",
-          span: { sourceId: "query.forma" },
+          span: { sourceId: "query.lisp" },
         });
         await load(
-          "a.forma",
+          "a.lisp",
           '(export Id take Choice) (type Id (Brand String)) (: take (-> Id String)) (define take [id] "ok") (type Choice (Tagged (Yes Int) No))',
         );
-        await load("b.forma", "(export Id) (type Id (Brand String))");
+        await load("b.lisp", "(export Id) (type Id (Brand String))");
         expect(
           (
             await check(
-              '(import "./a.forma" :as a) (import "./b.forma" :as b) (a/take (b/Id "wrong"))',
+              '(import "./a.lisp" :as a) (import "./b.lisp" :as b) (a/take (b/Id "wrong"))',
             )
           ).diagnostics.length,
         ).toBeGreaterThan(0);
         expect(
-          (await check('(import "./a.forma" [Choice]) (Choice.Yes 1)'))
+          (await check('(import "./a.lisp" [Choice]) (Choice.Yes 1)'))
             .diagnostics,
         ).toEqual([]);
         expect(
-          (await check('(import "./a.forma" [Choice]) (Yes 1)')).diagnostics
+          (await check('(import "./a.lisp" [Choice]) (Yes 1)')).diagnostics
             .length,
         ).toBeGreaterThan(0);
-        await load("cycle-a.forma", '(import "./cycle-b.forma" [])');
-        await load("cycle-b.forma", '(import "./cycle-a.forma" [])');
-        const cycle = await check('(import "./cycle-a.forma" [])');
+        await load("cycle-a.lisp", '(import "./cycle-b.lisp" [])');
+        await load("cycle-b.lisp", '(import "./cycle-a.lisp" [])');
+        const cycle = await check('(import "./cycle-a.lisp" [])');
         expect(cycle.diagnostics[0]).toMatchObject({
           code: "module/cycle",
-          span: { sourceId: "cycle-b.forma", startOffset: 8 },
+          span: { sourceId: "cycle-b.lisp", startOffset: 8 },
         });
         expect(cycle.diagnostics[0]?.message).toContain(
-          "query.forma -> cycle-a.forma -> cycle-b.forma -> cycle-a.forma",
+          "query.lisp -> cycle-a.lisp -> cycle-b.lisp -> cycle-a.lisp",
         );
       } finally {
         await host.closeSession({ sessionId });
@@ -144,7 +144,7 @@ for (const host of hosts)
         (
           await host.loadSource({
             sessionId,
-            sourceId: "library.forma",
+            sourceId: "library.lisp",
             source: "(export value) (define value 42) missing-application",
           })
         ).diagnostics,
@@ -153,8 +153,8 @@ for (const host of hosts)
       expect(
         await host.evaluateInSession({
           sessionId,
-          sourceId: "app.forma",
-          source: '(import "./library.forma" [value]) value',
+          sourceId: "app.lisp",
+          source: '(import "./library.lisp" [value]) value',
         }),
       ).toMatchObject({
         status: "completed",
@@ -170,17 +170,17 @@ for (const host of hosts)
       ).toBe("failed");
       const privateType = await host.typecheck({
         sessionId,
-        sourceId: "app.forma",
+        sourceId: "app.lisp",
         source:
           '(export expose) (type Secret (Brand String)) (: expose (-> Secret String)) (define expose [x] "x")',
       });
       expect(privateType.diagnostics[0]).toMatchObject({
         code: "module/private-type",
-        span: { sourceId: "app.forma" },
+        span: { sourceId: "app.lisp" },
       });
       const compileTime = await host.moduleGraph({
         sessionId,
-        sourceId: "app.forma",
+        sourceId: "app.lisp",
         source: "(export m) (macro (m x) x)",
       });
       expect(compileTime.diagnostics).toEqual([]);
@@ -206,14 +206,14 @@ for (const host of hosts)
       });
       await host.loadSource({
         sessionId,
-        sourceId: "helper.forma",
+        sourceId: "helper.lisp",
         source: "(export double) (define double [x] (+ x x))",
       });
       const state = await host.evaluateInSession({
         sessionId,
-        sourceId: "main.forma",
+        sourceId: "main.lisp",
         source:
-          '(import "./helper.forma" [double]) (define secret 99) (host-label (double 21))',
+          '(import "./helper.lisp" [double]) (define secret 99) (host-label (double 21))',
       });
       expect(state).toMatchObject({
         status: "host-call",
@@ -248,13 +248,13 @@ test(
       try {
         await host.loadSource({
           sessionId,
-          sourceId: "functions.forma",
+          sourceId: "functions.lisp",
           source:
             "(export second name rest) (define second [a b] b) (define name [record] record.name) (define rest [& items] items)",
         });
         const result = await host.moduleGraph({
           sessionId,
-          sourceId: "functions.forma",
+          sourceId: "functions.lisp",
         });
         expect(result.diagnostics).toEqual([]);
         expect(
@@ -265,9 +265,9 @@ test(
           (
             await host.typecheck({
               sessionId,
-              sourceId: "main.forma",
+              sourceId: "main.lisp",
               source:
-                '(import "./functions.forma" [name second rest]) (define a (name {:name "Ada" :extra 1})) (define b (name {:name 42})) (define c (second 1 "s")) (rest 1 2 3)',
+                '(import "./functions.lisp" [name second rest]) (define a (name {:name "Ada" :extra 1})) (define b (name {:name 42})) (define c (second 1 "s")) (rest 1 2 3)',
             })
           ).diagnostics,
         ).toEqual([]);
@@ -286,12 +286,12 @@ for (const host of hosts)
         "(type GreetingIR {:text String}) (form (greet text) :types {:text String} :ir GreetingIR {:text text}) (export value) (define value 0) (greet 42)";
       const result = await host.typecheck({
         sessionId,
-        sourceId: "main.forma",
+        sourceId: "main.lisp",
         source,
       });
       expect(result.diagnostics).toHaveLength(1);
       expect(result.diagnostics[0]?.span).toMatchObject({
-        sourceId: "main.forma",
+        sourceId: "main.lisp",
         startOffset: source.indexOf("42"),
         endOffset: source.indexOf("42") + 2,
       });
@@ -308,22 +308,22 @@ for (const host of hosts)
         (
           await host.loadSource({
             sessionId,
-            sourceId: "box.forma",
+            sourceId: "box.lisp",
             source:
               "(export Box) (type (Box a) (Tagged (Full {:value a}) Empty))",
           })
         ).diagnostics,
       ).toEqual([]);
       const source =
-        '(import "./box.forma" [Box]) (define number (Box.Full {:value 1})) (define text (Box.Full {:value "s"})) {:number number :text text}';
+        '(import "./box.lisp" [Box]) (define number (Box.Full {:value 1})) (define text (Box.Full {:value "s"})) {:number number :text text}';
       expect(
-        (await host.typecheck({ sessionId, sourceId: "main.forma", source }))
+        (await host.typecheck({ sessionId, sourceId: "main.lisp", source }))
           .diagnostics,
       ).toEqual([]);
       expect(
         await host.evaluateInSession({
           sessionId,
-          sourceId: "main.forma",
+          sourceId: "main.lisp",
           source,
         }),
       ).toMatchObject({
@@ -353,7 +353,7 @@ for (const host of hosts)
           await host.loadSource({
             sessionId,
             kind: "source",
-            sourceId: "core.forma",
+            sourceId: "core.lisp",
             source: "(export coreIdentity) (define coreIdentity [x] x)",
           })
         ).diagnostics,
@@ -364,8 +364,8 @@ for (const host of hosts)
           {
             id: "app",
             base: "project",
-            prelude: "./core.forma",
-            modules: ["main.forma", "core.forma"],
+            prelude: "./core.lisp",
+            modules: ["main.lisp", "core.lisp"],
           },
         ],
       });
@@ -375,19 +375,19 @@ for (const host of hosts)
         (
           await host.loadSource({
             sessionId,
-            sourceId: "./cache/../main.forma",
+            sourceId: "./cache/../main.lisp",
             source,
           })
         ).diagnostics,
       ).toEqual([]);
       expect(
-        (await host.moduleGraph({ sessionId, sourceId: "main.forma" }))
+        (await host.moduleGraph({ sessionId, sourceId: "main.lisp" }))
           .diagnostics,
       ).toEqual([]);
       expect(
         await host.evaluateInSession({
           sessionId,
-          sourceId: "./main.forma",
+          sourceId: "./main.lisp",
         }),
       ).toMatchObject({
         status: "completed",
@@ -404,17 +404,17 @@ for (const host of hosts)
     try {
       await host.loadSource({
         sessionId,
-        sourceId: "failure.forma",
+        sourceId: "failure.lisp",
         source: '(export explode) (define explode [] (+ 1 "bad"))',
       });
       const result = await host.evaluateInSession({
         sessionId,
-        sourceId: "main.forma",
-        source: '(import "./failure.forma" [explode]) (explode)',
+        sourceId: "main.lisp",
+        source: '(import "./failure.lisp" [explode]) (explode)',
       });
       expect(result).toMatchObject({
         status: "failed",
-        diagnostics: [{ span: { sourceId: "failure.forma" } }],
+        diagnostics: [{ span: { sourceId: "failure.lisp" } }],
       });
     } finally {
       await host.closeSession({ sessionId });
@@ -430,16 +430,16 @@ for (const host of hosts)
         (
           await host.loadSource({
             sessionId,
-            sourceId: "shapes.forma",
-            source: readFileSync(resolve(dir, "shapes.forma"), "utf8"),
+            sourceId: "shapes.lisp",
+            source: readFileSync(resolve(dir, "shapes.lisp"), "utf8"),
           })
         ).diagnostics,
       ).toEqual([]);
-      const source = readFileSync(resolve(dir, "main.forma"), "utf8");
-      const checked = await host.typecheck({ sessionId, sourceId: "main.forma", source });
+      const source = readFileSync(resolve(dir, "main.lisp"), "utf8");
+      const checked = await host.typecheck({ sessionId, sourceId: "main.lisp", source });
       expect(checked.diagnostics).toEqual([]);
       expect(
-        await host.evaluateInSession({ sessionId, sourceId: "main.forma", source }),
+        await host.evaluateInSession({ sessionId, sourceId: "main.lisp", source }),
       ).toMatchObject({ status: "completed", result: { printed: "[7 -1 4]" } });
     } finally {
       await host.closeSession({ sessionId });

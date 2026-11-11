@@ -16,8 +16,8 @@ Forma dependencies use their own `forma.json`, without npm metadata:
 {
   "name": "@me/app",
   "version": "0.1.0",
-  "exports": { ".": "./src/index.forma" },
-  "prelude": "./src/prelude.forma",
+  "exports": { ".": "./src/index.lisp" },
+  "prelude": "./src/prelude.lisp",
   "dependencies": {
     "@acme/flows": "github.com/acme/flows@v2.1.0",
     "@acme/ir": "gitlab.com/acme/ir@v1.0.0",
@@ -39,7 +39,7 @@ filesystem or network. This replaces the original package-manager direction and
 ### Manifest and identity
 
 `forma.json` requires `name` and `exports`, with optional `version`, `prelude`,
-and `dependencies`. Exports map `"."` or `"./subpath"` to a `.forma` file inside
+and `dependencies`. Exports map `"."` or `"./subpath"` to a `.lisp` file inside
 the package. A prelude imports exports into the package's own modules, using
 project-prelude rules. Dependencies map declared names to source specs.
 
@@ -78,7 +78,7 @@ Local requirements must identify the same directory.
 
 ### Vendoring and the lock
 
-Commit `vendor/<name>/…`, including each package's `forma.json` and all `.forma`
+Commit `vendor/<name>/…`, including each package's `forma.json` and all `.lisp`
 files, even unimported files. Compilation reads only these files and declared
 relative dependencies. Symlinks are rejected. A local dependency stays in its
 relative directory; its source files are also hashed so edits require a lock
@@ -95,7 +95,7 @@ refresh before compilation.
       "source": "github.com/acme/flows@v2.1.0",
       "resolved": "v2.1.0",
       "commit": "<full git commit>",
-      "files": { "forma.json": "<SHA-256>", "src/index.forma": "<SHA-256>" }
+      "files": { "forma.json": "<SHA-256>", "src/index.lisp": "<SHA-256>" }
     }
   }
 }
@@ -115,7 +115,7 @@ check command; no compilation command downloads dependencies.
 
 | Specifier | Meaning |
 | --- | --- |
-| `./x.forma`, `../x.forma` | A file relative to the importing module, as today |
+| `./x.lisp`, `../x.lisp` | A file relative to the importing module, as today |
 | `name`, `@scope/name` | The package's `"."` export |
 | `name/sub`, `@scope/name/sub` | The package's `"./sub"` export |
 

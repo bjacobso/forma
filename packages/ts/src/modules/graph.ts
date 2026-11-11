@@ -1,3 +1,4 @@
+import { diagnosticLocator } from "../diagnostic/locations.js";
 import { parse } from "../reader/parser.js";
 import { toSExprMany } from "../reader/to-sexpr.js";
 import { headSym as head, type SExpr } from "../reader/types.js";
@@ -21,6 +22,7 @@ import {
   type PackageTable,
 } from "./packages.js";
 import type { Span } from "../diagnostic/diagnostic.js";
+import { retiredExtensionDiagnostic } from "./retired-extension.js";
 
 /** A resolver is supplied by the host. IDs identify file instances, not contents. */
 export interface ModuleSource {
@@ -222,10 +224,11 @@ export interface ModuleCoreOptions {
   /** Installed packages that bare specifiers resolve through (RFC 0020). */
   readonly packages?: PackageTable;
 }
-export function resolveModuleGraph(
+function resolveModuleGraphUnlocated(
   entry: ModuleSource,
   hostResolver: ModuleResolver,
-  hostCore: ModuleCoreOptions = {},
+  hostCore: ModuleCoreOptions,
+  sources: Map<string, string>,
 ): ModuleGraph {
   let resolver = hostResolver;
   if (hostCore.packages) {
@@ -301,6 +304,7 @@ export function resolveModuleGraph(
     bootstrap.set(project.id, closure);
   }
   const visit = (input: ModuleSource): ResolvedModule => {
+    sources.set(normalizeModuleId(input.id), input.source);
     const id = normalizeModuleId(input.id),
       cached = completed.get(id);
     if (cached) return cached;
@@ -392,6 +396,12 @@ export function resolveModuleGraph(
           "An import or export-from requires a string file specifier.",
         );
       const specifier = e.items[1].value;
+      if (specifier.endsWith(".forma"))
+        throw new ModuleError(retiredExtensionDiagnostic(specifier, {
+          sourceId: id,
+          startOffset: e.items[1].loc.start,
+          endOffset: e.items[1].loc.end,
+        }));
       const relative = specifier.startsWith("./") || specifier.startsWith("../");
       let resolved: ModuleSource | undefined;
       try {
@@ -555,7 +565,7 @@ export function resolveModuleGraph(
           id,
           e,
           "module/directive",
-          `Use (${h} "./file.forma" [names])${h === "import" ? ' or (import "./file.forma" :as alias)' : ""}.`,
+          `Use (${h} "./file.lisp" [names])${h === "import" ? ' or (import "./file.lisp" :as alias)' : ""}.`,
         );
     }
     for (const introduced of discoverFormDeclarations(
@@ -699,7 +709,7 @@ export function resolveModuleGraph(
           id,
           e,
           "module/unimported-sugar",
-          `${n} is kernel sugar, which file modules must import: add (import "<path to forma>/preludes/kernel.forma" [${n}]) with a path relative to this file, or select a project prelude that provides it. The kernel library exports not, when, unless, cond, and, or, -> and ->>.`,
+          `${n} is kernel sugar, which file modules must import: add (import "<path to forma>/preludes/modules/kernel.lisp" [${n}]) with a path relative to this file, or select a project prelude that provides it. The kernel library exports not, when, unless, cond, and, or, -> and ->>.`,
         );
       if (n.includes("__forma_"))
         fail(
@@ -1152,4 +1162,14 @@ export function resolveModuleGraph(
   };
   const root = visit(entry);
   return { entry: root.id, modules: [...completed.values()] };
+}
+
+export function resolveModuleGraph(entry: ModuleSource, hostResolver: ModuleResolver, hostCore: ModuleCoreOptions = {}): ModuleGraph {
+  const sources = new Map<string, string>();
+  try { return resolveModuleGraphUnlocated(entry, hostResolver, hostCore, sources); }
+  catch (error) {
+    if (!(error instanceof ModuleError)) throw error;
+    const locate = diagnosticLocator(id => sources.get(normalizeModuleId(id)));
+    throw new ModuleError(locate(error.diagnostic), error.related.map(locate));
+  }
 }

@@ -1,7 +1,5 @@
 ---
-"@formalang/ts": patch
-"@formalang/host": patch
-"@formalang/editor": patch
+"@forma-language/forma": patch
 ---
 
 Declare Effect as a `^4.1.1` peer dependency so applications can share one

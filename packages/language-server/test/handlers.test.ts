@@ -1,4 +1,4 @@
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, realpath, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -11,6 +11,7 @@ import {
   FormaWorkspace,
   formatDocument,
   getCompletions,
+  getCodeActions,
   getDefinition,
   getDiagnostics,
   getDocumentSymbols,
@@ -21,6 +22,7 @@ import {
   prepareRename,
   rename,
   semanticTokensLegend,
+  toLspDiagnostic,
 } from "../src/index.js";
 
 const PRELUDE = `(macro (defstep name) \`(define ~name {:step true}))
@@ -35,7 +37,7 @@ const PRELUDE = `(macro (defstep name) \`(define ~name {:step true}))
 const uri = "file:///workspace/source.lisp";
 
 async function setup(source: string) {
-  const directory = await mkdtemp(join(tmpdir(), "forma-ls-"));
+  const directory = await realpath(await mkdtemp(join(tmpdir(), "forma-ls-")));
   const preludePath = join(directory, "steps.lisp");
   await writeFile(preludePath, PRELUDE);
   const workspace = new FormaWorkspace({ workspaceRoot: directory, preludePaths: ["steps.lisp"] });
@@ -52,6 +54,53 @@ const position = (document: TextDocument, text: string, delta = 0, nth = 0) => {
 };
 
 describe("Forma language server handlers", () => {
+  test("unknown form diagnostics retain help, details and an applicable quick fix", async () => {
+    const source = '(workflwo onboarding :trigger "hired")';
+    const { workspace, document } = await setup(source);
+    const diagnostics = getDiagnostics(workspace, document).diagnostics;
+    const diagnostic = diagnostics.find((item) => item.code === "elaborate/unknown-form")!;
+    expect(diagnostic.message).toContain("\nhelp: ");
+    expect(diagnostic.message).toContain("workflow");
+    expect(diagnostic.data).toMatchObject({
+      details: { name: "workflwo", candidates: expect.arrayContaining(["workflow"]) },
+      fix: [{ span: { sourceId: uri, startOffset: 1, endOffset: 9 }, newText: "workflow" }],
+    });
+    const actions = getCodeActions(workspace, document, {
+      textDocument: { uri }, range: diagnostic.range, context: { diagnostics },
+    });
+    expect(actions).toHaveLength(1);
+    expect(actions[0]).toMatchObject({ kind: "quickfix", isPreferred: true, diagnostics: [diagnostic] });
+    const corrected = TextDocument.applyEdits(document, actions[0]!.edit!.changes![uri]!);
+    expect(corrected).toBe('(workflow onboarding :trigger "hired")');
+    await workspace.update(TextDocument.create(uri, "forma", 2, corrected));
+    expect(getDiagnostics(workspace, document).diagnostics).toEqual([]);
+  });
+
+  test("quick fixes apply all edits together and honor the requested action kind", async () => {
+    const { workspace, document } = await setup("(define aa 1)\n(+ aa 2)");
+    const diagnostic = toLspDiagnostic(document, {
+      code: "test/rename", severity: "info", message: "Rename aa", help: "Use origin.",
+      fix: [
+        { span: { sourceId: uri, startOffset: 8, endOffset: 10 }, newText: "origin" },
+        { span: { sourceId: uri, startOffset: 17, endOffset: 19 }, newText: "origin" },
+      ],
+    });
+    expect(diagnostic.message).toBe("Rename aa\nhelp: Use origin.");
+    const params = { textDocument: { uri }, range: diagnostic.range, context: { diagnostics: [diagnostic] } };
+    const [action] = getCodeActions(workspace, document, params);
+    expect(action!.edit!.changes![uri]).toHaveLength(2);
+    expect(TextDocument.applyEdits(document, action!.edit!.changes![uri]!)).toBe("(define origin 1)\n(+ origin 2)");
+    expect(getCodeActions(workspace, document, { ...params, context: { ...params.context, only: ["refactor"] } })).toEqual([]);
+    const actions = getCodeActions(workspace, document, { ...params, context: { diagnostics: [diagnostic, diagnostic] } });
+    expect(actions).toHaveLength(2);
+    expect(actions.every((item) => item.isPreferred !== true)).toBe(true);
+    expect(getCodeActions(workspace, document, { ...params, context: { diagnostics: [
+      { ...diagnostic, data: undefined },
+      { ...diagnostic, data: { fix: [] } },
+      { ...diagnostic, data: { fix: [{ newText: "oops" }] } },
+    ] } })).toEqual([]);
+  });
+
   test("diagnostics report parse and type errors at their ranges", async () => {
     const { workspace, document } = await setup('(define ok (+ base 1))\n(+ 1 "nope")\n(define broken');
     const { diagnostics } = getDiagnostics(workspace, document);
@@ -182,6 +231,17 @@ describe("Forma language server handlers", () => {
     const edits = formatDocument(workspace, document);
     expect(edits).toHaveLength(1);
     expect(edits[0]?.newText).toBe("(define x 1)\n");
+  });
+
+  test("formatting preserves comments, strings and reader forms and declines broken input", async () => {
+    const { workspace, document } = await setup('; heading\n(define   x ["a  b" \'foo]) ; trailing\n; ending');
+    const formatted = TextDocument.applyEdits(document, formatDocument(workspace, document));
+    for (const text of ["; heading", '"a  b"', "'foo", "; trailing", "; ending"]) {
+      expect(formatted).toContain(text);
+    }
+    const broken = TextDocument.create(uri, "forma", 2, "(define x");
+    await workspace.update(broken);
+    expect(formatDocument(workspace, broken)).toEqual([]);
   });
 
   test("an open prelude replaces its file for every document", async () => {

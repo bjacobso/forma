@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": minor
+"@forma-language/forma": minor
 ---
 
 Add the isolated `@formalang/ts/email` prototype generator and bundled email rule prelude. A `rule` declares sending lanes and first-match `send`, `defer`, and `skip` decisions over a prelude-defined contact; the linker checks it through the Effect checker and generates Effect TypeScript. Experimental: its API and prelude may change in any minor release.

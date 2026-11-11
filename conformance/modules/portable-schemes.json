@@ -5,7 +5,7 @@
         "constructors": [],
         "identity": {
           "declaration": "name",
-          "moduleId": "functions.forma"
+          "moduleId": "functions.lisp"
         },
         "kind": "value",
         "name": "name",
@@ -31,13 +31,13 @@
             "a0"
           ]
         },
-        "symbol": "name__forma_66756e6374696f6e732e666f726d61_d6e616d65"
+        "symbol": "name__forma_66756e6374696f6e732e6c697370_d6e616d65"
       },
       {
         "constructors": [],
         "identity": {
           "declaration": "rest",
-          "moduleId": "functions.forma"
+          "moduleId": "functions.lisp"
         },
         "kind": "value",
         "name": "rest",
@@ -55,13 +55,13 @@
             ]
           ]
         },
-        "symbol": "rest__forma_66756e6374696f6e732e666f726d61_d72657374"
+        "symbol": "rest__forma_66756e6374696f6e732e6c697370_d72657374"
       },
       {
         "constructors": [],
         "identity": {
           "declaration": "second",
-          "moduleId": "functions.forma"
+          "moduleId": "functions.lisp"
         },
         "kind": "value",
         "name": "second",
@@ -77,9 +77,9 @@
             "a1"
           ]
         },
-        "symbol": "second__forma_66756e6374696f6e732e666f726d61_d7365636f6e64"
+        "symbol": "second__forma_66756e6374696f6e732e6c697370_d7365636f6e64"
       }
     ],
-    "moduleId": "functions.forma"
+    "moduleId": "functions.lisp"
   }
 ]

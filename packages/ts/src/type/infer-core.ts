@@ -1,4 +1,6 @@
 import { collectionOperations, inferCollectionOperation } from "./infer-collections.js";
+import { closestName, nearestNames } from "../diagnostic/closest-name.js";
+import { authorNames } from "../diagnostic/diagnostic.js";
 import { checkExpr } from "./check-expr.js";
 /**
  * Core inference dispatch: inferExpr, inferExprInner (the switch), inferLit, inferVar,
@@ -573,12 +575,18 @@ const inferVar = (
     const hostLiteralType = ctx.unboundSymbolType(expr.name);
     if (hostLiteralType) return hostLiteralType;
 
-    return yield* ctx.fail(originOf(expr, "var"), {
-      message: `Unbound variable: ${expr.name}`,
-      code: "typecheck/unbound-symbol",
-      name: expr.name,
-      candidates: [...env.keys()],
-    });
+    const name = authorNames(expr.name);
+    const ranked = nearestNames(name, [...env.keys()].map(authorNames)
+      .filter(candidate => !candidate.startsWith("__") && !candidate.includes("__forma_") && !/^t\d+$/.test(candidate)));
+    const candidates = ranked.slice(0, 5).map(candidate => candidate.name);
+    const suggestion = closestName(name, candidates);
+    const unambiguous = suggestion && ranked[0]?.distance !== ranked[1]?.distance;
+    return yield* Effect.fail(new InferenceError({
+      message: `Unbound variable: ${name}${suggestion ? ` (did you mean ${suggestion}?)` : ""}`,
+      origin: originOf(expr, "var"),
+      details: {code: "typecheck/unbound-symbol", name, candidates},
+      ...(unambiguous ? {fix: [{span: {sourceId: "", startOffset: expr.span.start, endOffset: expr.span.end}, newText: suggestion}]} : {}),
+    }));
   });
 
 // ---------------------------------------------------------------------------
@@ -730,7 +738,7 @@ const inferApp = (
         const t = yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst),env),arg);
         yield* assignType(t,op === "mod" ? TCon("Int") : tFloat,originOf(arg,"numeric-argument")).pipe(
           Effect.mapError(error => new InferenceError({
-            message: `Argument ${index + 1} to ${op}: ${error.message.replace(/ \(at offset \d+\)$/, "")}`,
+            message: `Argument ${index + 1} to ${op}: ${error.message}`,
             origin: error.origin,
             details: error.details,
           })),

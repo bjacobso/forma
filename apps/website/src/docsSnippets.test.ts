@@ -65,9 +65,9 @@ describe("docs /clojure page snippets", () => {
       expect(page).toContain(`snippets/clojure/${name}`);
     }
     // The page shows the fixtures themselves, so neither can drift alone.
-    expect(page).toContain("conformance/clojure-spellings/orders.forma");
+    expect(page).toContain("conformance/clojure-spellings/orders.lisp");
     expect(page).toContain("conformance/clojure-spellings\"");
-    expect(page).toContain("@/../preludes/clojure.forma");
+    expect(page).toContain("@/../preludes/modules/clojure.lisp");
   });
 });
 
@@ -107,7 +107,7 @@ describe("docs /effect page snippets", () => {
 
   test("the remaining static examples use the generated snippets", () => {
     const page = readFileSync(resolve(repoRoot, "docs/effect.md"), "utf8");
-    for (const name of ["orders.lisp", "strict.lisp", "strict.forma.txt", "strict.tsc.txt", "sizes.md"]) {
+    for (const name of ["orders.lisp", "strict.lisp", "strict.lisp.txt", "strict.tsc.txt", "sizes.md"]) {
       expect(snippets[name]).toBeDefined();
       expect(page).toContain(`snippets/effect/${name}`);
     }

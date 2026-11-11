@@ -1,3 +1,4 @@
+import { diagnosticLocator } from "../diagnostic/locations.js";
 import { Effect, Layer, Ref } from "effect";
 import { inferProgram } from "../type/infer-program.js";
 import {
@@ -421,7 +422,7 @@ export function checkModuleGraph(
   return {
     ok: !diagnostics.some((d) => d.severity === "error"),
     interfaces,
-    diagnostics,
+    diagnostics: diagnostics.map(diagnosticLocator(id => graph.modules.find(module => module.id === id)?.source)),
     environments,
     results,
     typedSpans,

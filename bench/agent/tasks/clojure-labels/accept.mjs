@@ -1,0 +1,2 @@
+import { acceptProgram } from "../../accept-support.mjs";
+export const accept = dir => acceptProgram(dir, "(import \"./main.lisp\" [prefix label labels sample])\n(= [(= prefix \"job\") (= (label \"task\" 0) \"task#0\") (= (labels []) [])\n    (= (labels [9 1]) [\"job#9\" \"job#1\"]) (= sample [\"job#2\" \"job#5\"])]\n   [true true true true true])", [{"source": "(import \"./main.lisp\" [label])\n(label \"x\" \"one\")", "code": "typecheck/type-mismatch"}]);

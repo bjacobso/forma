@@ -1,5 +1,6 @@
 export { FormaWorkspace, type FormaWorkspaceOptions } from "./workspace.js";
 export { getCompletions } from "./handlers/completion.js";
+export { getCodeActions } from "./handlers/code-actions.js";
 export { getDefinition } from "./handlers/definition.js";
 export { getDiagnostics, toLspDiagnostic } from "./handlers/diagnostics.js";
 export { formatDocument } from "./handlers/formatting.js";

@@ -88,7 +88,9 @@ media type is `application/vnd.forma.ir+json`.
 
 ## Compatibility follows publication
 
-The project is pre-alpha and its packages are unpublished. Internal names and
-wire contracts can change together while conformance remains green. Once a
-public release exists, compatibility and migration policy become explicit
-release requirements.
+Forma is pre-alpha, with published 0.x packages under `@formalang`, including
+`@formalang/ts` 0.3.0. The distribution is moving to one public package,
+`@forma-language/forma`, under
+[RFC 0025](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0025-single-npm-distribution.md).
+There is no compatibility promise before 1.0; APIs, package boundaries, and
+wire contracts may change, with migration notes accompanying releases.

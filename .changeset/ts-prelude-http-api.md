@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": minor
+"@forma-language/forma": minor
 ---
 
 Add prelude-defined TypeScript emit hooks and a restricted typed form builder

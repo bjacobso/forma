@@ -2,13 +2,12 @@
 
 This page is for people writing Forma outside this repository's own tests and
 examples. It shows how to write files, check them, run them, elaborate forms,
-and read the results. Forma is pre-alpha: the commands below are the JSON CLI
-from a source checkout, and their output shapes may still change.
+and read the results. Forma is pre-alpha; command behavior and APIs may still change.
 
 ## What you can build
 
 - **Evaluated programs.** Types, pure functions and a final expression. Check
-  them with `file typecheck` and run them with `file evaluate`.
+  them with `forma check` and run them with `forma run`.
 - **Form-based languages.** A module defines `form`s whose `:check` hooks
   report author diagnostics and whose bodies produce typed IR. Other files use
   those forms. `file declarations` elaborates them and lists the IR. See
@@ -18,64 +17,78 @@ from a source checkout, and their output shapes may still change.
 
 ## Setup
 
-Use Node.js 24 and pnpm 10.20. Check with `node --version`: pnpm does not stop
-you from installing with an older Node. There is no published `forma` CLI yet:
-from a source checkout, build `@formalang/host` and run its `dist/cli.mjs`.
+Use Node.js 24. Install the public distribution and its required Effect peer:
+
+```sh
+npm install @forma-language/forma effect
+```
+
+**`@forma-language/forma` is not yet published.** That install command is for
+after publication. For now, use a source checkout with pnpm 10.20:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm --filter @formalang/ts build
-pnpm --filter @formalang/host build
-alias forma="node $PWD/packages/host/dist/cli.mjs"
+pnpm exec turbo run build --filter=@forma-language/forma
+alias forma="node $PWD/packages/forma/dist/cli.mjs"
 forma help
 ```
+
+With a local npm install, use `npx forma` for the commands below; the source
+alias lets you use `forma` directly from any directory in the same shell.
 
 `forma help` lists every command and exits 0. An unknown command prints the same
 text on stderr and exits 64.
 
 ## Your first file
 
-Save this as `main.forma`:
+Save this as `main.lisp`:
 
 ```lisp
-(type Risk (Union :low :high))
-(type Vendor {:name String :risk Risk :reviewed-on (Option Int)})
-
-(: reviewed? (-> Vendor Bool))
-(define reviewed? [vendor]
-  (match vendor.reviewed-on
-    (Some day) (>= day 0)
-    None false))
-
-(: acme Vendor)
-(define acme {:name "Acme" :risk :high :reviewed-on 900})
-
-(reviewed? acme)
+(+ 20 22)
 ```
 
 Check it, then run it:
 
 ```sh
-forma file typecheck main.forma
-forma file evaluate main.forma
+forma check main.lisp
+forma run main.lisp
 ```
 
-`file evaluate` typechecks first. If the check fails, it prints the typecheck
-response (with `"pass":"typecheck"`) and does not run the program. Use
-`forma file evaluate --unchecked main.forma` to run a program without checking
-it, for example while exploring a builtin the checker does not type yet. An
-unchecked run can succeed on a program that the checker rejects.
+The result is `42`. Next, try the standalone
+[project example](https://github.com/bjacobso/forma/tree/main/examples/project),
+with a form library and imported data. To embed a language in a Node app, see
+[Embedding](./embedding.md) and the
+[Node example](https://github.com/bjacobso/forma/tree/main/examples/embed-node).
+Both examples are tested against the packed distribution by `pnpm check:examples`.
 
-Every command prints one JSON object with `ok`, `value` and `diagnostics`:
+`check` typechecks the module graph and renders diagnostics with source excerpts
+on stderr. `run` checks first, then prints the evaluated value on stdout. Both
+exit 0 on success and 1 on failure. Use `forma run main.lisp --unchecked` to run
+without checking, for example while exploring a builtin the checker does not
+type yet. An unchecked run can succeed on a program that the checker rejects.
+
+Add `--json` to `check`, `run`, `fmt` or `explain` for a JSON response on stdout.
+The existing `file typecheck`, `file evaluate`, `file declarations` and
+`file interface` commands remain JSON machine interfaces. Their responses have
+`ok` and `diagnostics`, with `value` when available:
 
 | Command | Useful fields |
 | --- | --- |
-| `file typecheck` | `type` (display string of the final expression) |
-| `file evaluate` | `value.result.printed`, `value.result.value` |
+| `check --json` / `file typecheck` | `type` (display string of the final expression) |
+| `run --json` / `file evaluate` | `value.result.printed`, `value.result.value` |
 | `file declarations` | `value[]`, one entry per declaration (see [Getting the IR](#getting-the-ir)) |
 | `file interface` | `value.interfaces[]`, the exports of every module |
 
-File commands exit with status 0 when `ok` is true and 1 when it is false.
+Format files in place with `forma fmt main.lisp helper.lisp`. For CI,
+`forma fmt main.lisp --check` lists files that would change and exits 1 without
+writing them. `forma explain typecheck/type-mismatch` explains a diagnostic
+offline.
+
+Start a typed, stateful session with `forma repl`. Each successful submission
+prints `value : type` and retains its definitions; failed submissions do not
+commit. `:type <expr>` checks an expression without evaluating it, `:reset`
+clears the session, and `:quit` exits. Repeat `--prelude <file>` to load preludes
+at startup and again after reset. Each submission occupies one input line.
 
 ## Imports in file modules
 
@@ -83,11 +96,11 @@ A file that uses `import` or `export` is a module, and every name it uses must
 be declared in the file, imported, or built in. Import paths are relative to
 the importing file.
 
-The kernel library `preludes/kernel.forma` exports `not`, `when`, `unless`,
+The kernel library `preludes/modules/kernel.lisp` exports `not`, `when`, `unless`,
 `cond`, `and`, `or`, `->` and `->>`. In a file module, import the ones you use:
 
 ```lisp
-(import "../forma/preludes/kernel.forma" [and or not when cond])
+(import "../forma/preludes/modules/kernel.lisp" [and or not when cond])
 ```
 
 Without the import, the checker reports `module/unimported-sugar` and names
@@ -102,7 +115,7 @@ you, so examples written there may need this import in a file.
 The checker accepts the builtins in the first table. The second table lists
 builtins that evaluate but that the checker does not type yet: a checked
 program that uses them is rejected with `Unbound variable`, and runs only with
-`file evaluate --unchecked`.
+`run --unchecked`.
 
 | Area | Checked builtins |
 | --- | --- |
@@ -140,7 +153,7 @@ becomes `None` and a plain value becomes `(Some value)`. This works for record
 types declared in the same file and for imported ones:
 
 ```lisp
-(import "./types.forma" [Vendor])
+(import "./types.lisp" [Vendor])
 (: beacon Vendor)
 (define beacon {:name "Beacon" :risk :low})   ; :reviewed-on is None
 ```
@@ -176,8 +189,8 @@ Forma has no test framework. A practical pattern is a test file whose final
 expression is the list of failing case names:
 
 ```lisp
-(import "../forma/preludes/kernel.forma" [not])
-(import "./policy.forma" [can-activate? acme])
+(import "../forma/preludes/modules/kernel.lisp" [not])
+(import "./policy.lisp" [can-activate? acme])
 (type Case {:name String :ok Bool})
 (: is (-> String a a Case))
 (define is [name actual expected] {:name name :ok (= actual expected)})
@@ -185,8 +198,8 @@ expression is the list of failing case names:
 (map (fn [c] c.name) (filter (fn [c] (not c.ok)) cases))
 ```
 
-Run it with `file evaluate` and treat any result other than `[]` as a failure.
-Because `file evaluate` typechecks first, an ill-typed suite fails instead of
+Run it with `forma run` and treat any result other than `[]` as a failure.
+Because `run` typechecks first, an ill-typed suite fails instead of
 reporting `[]`. To check that the suite can fail, flip one expectation and
 confirm that the case name is reported. The vendor-risk trial in
 [`trials/vendor-risk`](https://github.com/bjacobso/forma/tree/main/trials/vendor-risk)
@@ -222,9 +235,9 @@ when you write forms in files:
 
 ```json
 {"summary": {"kind": "FormApplication", "form": "vendor", "name": "acme",
-             "moduleId": "/path/register.forma"},
+             "moduleId": "/path/register.lisp"},
  "payload": {"kind": "Vendor", "name": "acme", "status": "active", "blockers": []},
- "span": {"sourceId": "/path/register.forma", "startOffset": 120, "endOffset": 410}}
+ "span": {"sourceId": "/path/register.lisp", "startOffset": 120, "endOffset": 410}}
 ```
 
 `payload` is the projection's IR as plain JSON: record keys lose their leading

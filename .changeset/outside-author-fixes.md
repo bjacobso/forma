@@ -1,6 +1,5 @@
 ---
-"@formalang/ts": patch
-"@formalang/host": minor
+"@forma-language/forma": minor
 ---
 
 **Breaking:** `forma file evaluate` now typechecks first and returns the typecheck

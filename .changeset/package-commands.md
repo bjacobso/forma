@@ -1,6 +1,5 @@
 ---
-"@formalang/ts": minor
-"@formalang/host": minor
+"@forma-language/forma": minor
 ---
 
 Add `forma add <name> <spec>`, `forma update [name]`, offline `forma verify`,

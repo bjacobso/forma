@@ -1,0 +1,37 @@
+file://<trial>/node_modules/.pnpm/@forma-language+forma@file+forma-language-forma.tgz_effect@4.1.1/node_modules/@forma-language/forma/dist/dist-DVVxR_1Y.mjs:1
+import{n as e,t}from"./ts-host-BpiY-12K.mjs";import"./default-host-DTthNWX_.mjs";var n=class extends Error{diagnostics;constructor(e){super(`Could not initialize Forma preludes. Inspect diagnostics for details.`),this.diagnostics=e,this.name=`LanguageInitializationError`}};async function r(r={}){let a=new t,{sessionId:o}=await a.openSession(),s=new Map(Object.entries(r.capabilities??{})),c=new Map,l=!1,u=()=>{if(l)throw Error(`Forma language is closed.`)},d=(e,t)=>({ok:!1,diagnostics:[{code:e,severity:`error`,message:t,phase:`evaluate`}]});try{await a.configureSession({sessionId:o,hostBuiltins:[...s].map(([e,t])=>({name:e,arity:t.arity,typeScheme:t.typeScheme??{kind:typeof t.arity==`number`?`function`:`variadic-function`,params:Array.from({length:typeof t.arity==`number`?t.arity:t.arity.min},()=>({kind:`any`})),rest:{kind:`any`},result:{kind:`any`}},handler:{kind:`host-effect`,effect:e}}))});for(let e of r.preludes??[]){let t=await a.loadSource({sessionId:o,sourceId:e.id,source:e.source,kind:`prelude`});if(t.diagnostics.some(e=>e.severity===`error`))throw new n(t.diagnostics)}for(let e of r.preludes??[]){let t=await a.parse({sourceId:e.id,source:e.source});for(let e of t.ast){if(e.kind!==`list`||e.items[0]?.kind!==`symbol`||e.items[0].value!==`form`)continue;let t=e.items[1],n=t?.kind===`list`?t.items[0]:t;if(n?.kind!==`symbol`)continue;let r=await a.formSlots({sessionId:o,source:`(${n.value})`,offset:1});r.form&&c.set(n.value,{name:n.value,identifiers:r.identifiers,slots:r.slots})}}}catch(e){throw await a.closeSession({sessionId:o}),e}let f=async(e,t={})=>{u();let n=await a.typecheck({sessionId:o,source:e,sourceId:t.sourceId??`main.lisp`});return{ok:!n.diagnostics.some(e=>e.severity===`error`),...n.type?{type:n.type}:{},diagnostics:n.diagnostics}};return{check:f,describe(){return u(),{forms:[...c.values()]}},async emit(e,t={}){u();let n={sessionId:o,source:e,sourceId:t.sourceId??`main.lisp`,...t};return a.emit(n)},async run(t,n={}){let r=n.limits?.timeoutMs;if(r!==void 0&&(!Number.isFinite(r)||r<0||r>2147483647))throw RangeError(`timeoutMs must be between 0 and 2147483647 milliseconds.`);let c=await f(t,n);if(!c.ok)return c;let l=r===void 0?1/0:Date.now()+Math.max(0,r),u=()=>Date.now()>=l,p=()=>d(`evaluation/aborted`,`Evaluation exceeded timeoutMs.`);if(u())return p();let m=await a.evaluateInSession({sessionId:o,source:t,sourceId:n.sourceId??`main.lisp`,stepLimit:n.limits?.steps});for(;m.status===`host-call`;){let t=m.call,n=async()=>(await a.abortEvaluation({sessionId:o,evaluationId:t.evaluationId,reason:`Evaluation exceeded timeoutMs.`}),p());if(u())return n();let r=s.get(t.name),c=Promise.resolve().then(async()=>{if(!r)return{ok:!1,diagnostics:d(`host-effect/failed`,`No capability granted for this host call.`).diagnostics};try{let n=await r.handler(...t.args.map(e));return n.ok?{ok:!0,value:n.value}:{ok:!1,diagnostics:n.diagnostics.some(e=>e.severity===`error`)?n.diagnostics:d(`host-effect/failed`,`Capability failed without an error diagnostic.`).diagnostics}}catch{return{ok:!1,diagnostics:d(`host-effect/failed`,`Capability handler threw or rejected.`).diagnostics}}}),f,h=Symbol(`timeout`),g=await Promise.race([c,new Promise(e=>{l!==1/0&&(f=setTimeout(()=>e(h),Math.min(2147483647,Math.max(0,l-Date.now()))))})]);if(f!==void 0&&clearTimeout(f),g===h||u())return n();let _;try{_=g.ok?{ok:!0,value:i(g.value)}:g}catch{_={ok:!1,diagnostics:d(`host-effect/failed`,`Capability returned an invalid JSON value.`).diagnostics}}m=await a.resumeHostCall({sessionId:o,evaluationId:t.evaluationId,callId:t.callId,result:_})}return u()?p():m.status===`failed`?{ok:!1,diagnostics:[...c.diagnostics,...m.diagnostics]}:{ok:!0,value:e(m.result.value),...m.result.printed===void 0?{}:{printed:m.result.printed},...c.type?{type:c.type}:{},diagnostics:[...c.diagnostics,...m.result.diagnostics]}},async close(){l||(l=!0,await a.closeSession({sessionId:o}))}}}function i(e){if(e===null)return{kind:`nil`};if(typeof e==`boolean`)return{kind:`bool`,value:e};if(typeof e==`string`)return{kind:`string`,value:e};if(typeof e==`number`&&Number.isFinite(e))return{kind:Number.isSafeInteger(e)&&!Object.is(e,-0)?`int`:`float`,value:e};if(Array.isArray(e))return{kind:`vector`,items:e.map(i)};if(typeof e==`object`&&(Object.getPrototypeOf(e)===Object.prototype||Object.getPrototypeOf(e)===null))return{kind:`map`,entries:Object.entries(e).map(([e,t])=>({key:{kind:`string`,value:e},value:i(t)}))};throw Error(`Expected a JSON value.`)}export{r as n,n as t};
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+
+n [LanguageInitializationError]: Could not initialize Forma preludes. Inspect diagnostics for details.
+    at r (file://<trial>/node_modules/.pnpm/@forma-language+forma@file+forma-language-forma.tgz_effect@4.1.1/node_modules/@forma-language/forma/dist/dist-DVVxR_1Y.mjs:1:1073)
+    at async file://<trial>/app.mjs:8:14 {
+  diagnostics: [
+    {
+      code: 'typecheck/unbound-symbol',
+      severity: 'error',
+      message: 'Unbound variable: export',
+      phase: 'typecheck',
+      details: {
+        code: 'typecheck/unbound-symbol',
+        name: 'export',
+        candidates: [
+          'nonempty?',
+          'approvable?',
+          'valid-details?',
+          'required-approvals'
+        ]
+      },
+      span: {
+        sourceId: 'policy.lisp',
+        startOffset: 1296,
+        endOffset: 1302,
+        startLine: 33,
+        startColumn: 2,
+        endLine: 33,
+        endColumn: 8
+      }
+    }
+  ]
+}
+
+Node.js v24.13.0

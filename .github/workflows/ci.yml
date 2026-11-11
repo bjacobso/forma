@@ -34,7 +34,19 @@ jobs:
         if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/main'
         run: pnpm check:changesets
       - run: pnpm check
+      - name: Report latency budget
+        continue-on-error: true
+        run: pnpm bench:latency --out scripts/benchmarks/latency-results.json
+      - name: Preserve latency report
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: latency-report
+          path: scripts/benchmarks/latency-results.json
+          retention-days: 30
       - run: pnpm pack:check
+      - run: pnpm check:examples
       - run: pnpm --filter @formalang/website exec playwright install --with-deps chromium
       - run: pnpm test:visual
       - run: pnpm website:build

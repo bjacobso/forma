@@ -43,9 +43,9 @@ import { bootstrapFromSources, ElaborationFailure } from "@formalang/ts/descript
 import { closestName } from "@formalang/ts/diagnostic";
 
 const prelude = bootstrapFromSources([
-  { sourceId: "types.forma", source: typesSource },
-  { sourceId: "entities.forma", source: entitySource },
-  { sourceId: "rules.forma", source: ruleSource },
+  { sourceId: "types.lisp", source: typesSource },
+  { sourceId: "entities.lisp", source: entitySource },
+  { sourceId: "rules.lisp", source: ruleSource },
 ]);
 const forms = prelude.descriptions.list();
 const children = prelude.descriptions.getChildForms("rule", "clauses");
@@ -357,6 +357,20 @@ open documents and answers every service above, plus hover, completion,
 rename, document symbols, search, semantic tokens, and formatting, as
 memoized queries. It is the language server's whole implementation.
 
+The language server appends diagnostic help as `help: ` on a new line so
+editors display it with the message. LSP's `relatedInformation` describes
+locations rather than standalone advice. Diagnostic `data` retains the
+engine's `details` and `fix` edits. `textDocument/codeAction` exposes these
+edits as `quickfix` actions, applying all edits for one diagnostic together
+against the requested document's unchanged source. The only available fix
+is marked preferred. Unknown-form diagnostics are currently filtered out by
+the analysis workspace, so their misspelled-head fixes do not yet reach LSP
+clients.
+
+Document formatting is enabled by default without an environment opt-in.
+The server returns one full-document replacement, or no edits if the source
+is already formatted or does not parse.
+
 - **Search.** `search` ranks forms and global definitions by how many query
   words match their names and documentation, name matches first. A form's
   documentation is its docstring, slot docs, and `:ir` type name; a
@@ -442,8 +456,8 @@ Consumer preludes can generate data contracts without walking checker internals:
 import { generateTypeSchemas } from "@formalang/ts/mechanics";
 
 const result = generateTypeSchemas([
-  { sourceId: "names.forma", source: '(type Name (String :min-length 1))' },
-  { sourceId: "tree.forma", source: '(type Tree {:name Name :children (List Tree)})' },
+  { sourceId: "names.lisp", source: '(type Name (String :min-length 1))' },
+  { sourceId: "tree.lisp", source: '(type Tree {:name Name :children (List Tree)})' },
 ]);
 if (result.ok) {
   // result.files contains schema.ts, types.ts, and schema.json.
@@ -455,8 +469,8 @@ if (result.ok) {
 The Node CLI writes those three deterministic files:
 
 ```sh
-forma schema names.forma tree.forma --out generated
-forma schema names.forma tree.forma --out generated --check
+forma schema names.lisp tree.lisp --out generated
+forma schema names.lisp tree.lisp --out generated --check
 ```
 
 `--check` exits with status 1 for missing or stale output and never writes files.

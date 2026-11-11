@@ -33,7 +33,7 @@ const hoursPerUnit: Readonly<Record<string, number>> = { h: 1, d: 24 };
  * the linker adds the rule's lanes and passes its contact to predicates.
  */
 export function generateEmailProgram(source: string, options: { readonly sourceId?: string } = {}): EmailProgramResult {
-  const sourceId = options.sourceId ?? "rules.forma";
+  const sourceId = options.sourceId ?? "rules.lisp";
   const sourceSpan = sourceLocator(source, sourceId);
   const locate = (loc: SExpr["loc"]) => {
     const prefix = source.slice(0, loc.start);

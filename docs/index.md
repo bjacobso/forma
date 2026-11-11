@@ -143,7 +143,7 @@ pageClass: forma-index
 
 ::: code-group
 
-<<< @/snippets/clojure/orders.excerpt.forma [orders.forma]
+<<< @/snippets/clojure/orders.excerpt.lisp [orders.lisp]
 
 <<< @/snippets/clojure/orders.checked.txt [checked interface]
 
@@ -183,7 +183,7 @@ pageClass: forma-index
 
 | Target | Surface | Emitter | Where it would run |
 | --- | --- | --- | --- |
-| **Clojure** | <span class="fh-status is-live">Shipped</span> as [`preludes/clojure.forma`](/clojure) | <span class="fh-status">Proposed · first</span> | The JVM and JavaScript, from one `.cljc` file |
+| **Clojure** | <span class="fh-status is-live">Shipped</span> as [`preludes/modules/clojure.lisp`](/clojure) | <span class="fh-status">Proposed · first</span> | The JVM and JavaScript, from one `.cljc` file |
 | **Racket** | <span class="fh-status">Proposed</span> brackets and `#t` are reader switches | <span class="fh-status">Proposed · second</span> | Racket |
 | **Scheme** | <span class="fh-status">Proposed</span> the same reader switches | <span class="fh-status">Proposed · third</span> | R7RS implementations |
 | **Common Lisp** | <span class="fh-status">Proposed</span> last: `funcall` and `#'f` are semantics, not spelling | <span class="fh-status">Proposed · last</span> | ANSI implementations such as SBCL |

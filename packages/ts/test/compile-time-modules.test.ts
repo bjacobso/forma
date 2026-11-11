@@ -14,13 +14,13 @@ const fixture = resolve(
   "../../../conformance/compile-time-modules",
 );
 const files = readdirSync(fixture)
-  .filter((name) => name.endsWith(".forma"))
+  .filter((name) => name.endsWith(".lisp"))
   .map((name) => ({
     id: `example/${name}`,
     source: readFileSync(resolve(fixture, name), "utf8"),
   }));
 const graph = (
-  entry = "main.forma",
+  entry = "main.lisp",
   sources: readonly ModuleSource[] = files,
 ) =>
   resolveModuleGraph(
@@ -46,21 +46,21 @@ describe("ordinary compile-time modules", () => {
     expect(
       entry.interface.exports[0]!.data?.provenance.some(
         (origin) =>
-          origin.identity.moduleId === "example/billing.forma" &&
+          origin.identity.moduleId === "example/billing.lisp" &&
           origin.identity.declaration === "Monthly",
       ),
     ).toBe(true);
   });
   test("a broken imported reference points to its authored token", () => {
     try {
-      graph("broken.forma");
+      graph("broken.lisp");
       throw Error("expected failure");
     } catch (error) {
       expect(error).toBeInstanceOf(ModuleError);
       const diagnostic = (error as ModuleError).diagnostic;
-      const source = files.find((s) => s.id === "example/broken.forma")!.source;
+      const source = files.find((s) => s.id === "example/broken.lisp")!.source;
       expect(diagnostic.span).toMatchObject({
-        sourceId: "example/broken.forma",
+        sourceId: "example/broken.lisp",
         startOffset: source.indexOf("billing/Missing"),
         endOffset: source.indexOf("billing/Missing") + "billing/Missing".length,
       });
@@ -68,8 +68,8 @@ describe("ordinary compile-time modules", () => {
   });
   test("private form helpers cannot be imported", () => {
     const entry = {
-      id: "example/private.forma",
-      source: '(import "./stripe.forma" [display-label])',
+      id: "example/private.lisp",
+      source: '(import "./stripe.lisp" [display-label])',
     };
     expect(() =>
       resolveModuleGraph(entry, sourceModuleResolver(files)),
@@ -79,27 +79,27 @@ describe("ordinary compile-time modules", () => {
 
 test("imported macros retain their defining helpers", () => {
   const library = {
-    id: "example/macros.forma",
+    id: "example/macros.lisp",
     source:
       "(export increment) (define helper [x] (+ x 1)) (macro (increment x) `(helper ~x))",
   };
   const main = {
-    id: "example/macro-main.forma",
+    id: "example/macro-main.lisp",
     source:
-      '(import "./macros.forma" [increment]) (define helper [x] "caller") (define answer (increment 41)) (export answer)',
+      '(import "./macros.lisp" [increment]) (define helper [x] "caller") (define answer (increment 41)) (export answer)',
   };
-  const g = graph("macro-main.forma", [library, main]);
+  const g = graph("macro-main.lisp", [library, main]);
   expect(checkModuleGraph(g).diagnostics).toEqual([]);
   expect(g.modules.at(-1)!.interface.exports[0]!.data?.value).toBe(42);
 });
 
 test("form checks report the caller's data hole", () => {
   const main = {
-    id: "example/negative.forma",
-    source: '(import "./stripe.forma" [price]) (price Bad "Bad" -1)',
+    id: "example/negative.lisp",
+    source: '(import "./stripe.lisp" [price]) (price Bad "Bad" -1)',
   };
   try {
-    graph("negative.forma", [...files, main]);
+    graph("negative.lisp", [...files, main]);
     throw Error("expected failure");
   } catch (error) {
     expect((error as ModuleError).diagnostic).toMatchObject({
@@ -115,26 +115,26 @@ test("form checks report the caller's data hole", () => {
 
 test("project prelude exports use ordinary resolution and do not leak across projects", () => {
   const a = {
-    id: "a/prelude.forma",
+    id: "a/prelude.lisp",
     source: "(export answer) (define answer 42)",
   };
   const b = {
-    id: "b/prelude.forma",
+    id: "b/prelude.lisp",
     source: "(export answer) (define answer 7)",
   };
   const library = {
-    id: "b/library.forma",
+    id: "b/library.lisp",
     source: "(export result) (define result answer)",
   };
   const main = {
-    id: "a/main.forma",
+    id: "a/main.lisp",
     source:
-      '(import "../b/library.forma" :as b) (define result [answer b/result]) (export result)',
+      '(import "../b/library.lisp" :as b) (define result [answer b/result]) (export result)',
   };
   const g = resolveModuleGraph(main, sourceModuleResolver([a, b, library]), {
     projects: [
-      { id: "a", base: "a/project", prelude: "./prelude.forma" },
-      { id: "b", base: "b/project", prelude: "./prelude.forma" },
+      { id: "a", base: "a/project", prelude: "./prelude.lisp" },
+      { id: "b", base: "b/project", prelude: "./prelude.lisp" },
     ],
     projectForModule: (id) => id.split("/")[0],
   });
@@ -145,31 +145,31 @@ test("project prelude exports use ordinary resolution and do not leak across pro
 describe("forms that produce an imported IR type", () => {
   const sources = (retries: string) => [
     {
-      id: "p/ir.forma",
+      id: "p/ir.lisp",
       source: `(export FlowIR StepIR)
 (type StepIR {:name String :retries Int})
 (type FlowIR {:kind "Flow" :steps (List StepIR)})`,
     },
     {
-      id: "p/flow.forma",
-      source: `(import "./ir.forma" [FlowIR])
+      id: "p/flow.lisp",
+      source: `(import "./ir.lisp" [FlowIR])
 (export flow)
 (type FlowDecl Symbol)
 (form (flow name step ...) :types {:name (Declares FlowDecl) :step (List String)} :ir FlowIR
   {:kind "Flow" :steps (map (fn [n] {:name n :retries 0}) step)})`,
     },
     {
-      id: "p/process.forma",
-      source: `(import "./ir.forma" [FlowIR])
+      id: "p/process.lisp",
+      source: `(import "./ir.lisp" [FlowIR])
 (export process)
 (type ProcessDecl Symbol)
 (form (process name step ...) :types {:name (Declares ProcessDecl) :step (List String)} :ir FlowIR
   {:kind "Flow" :steps (map (fn [n] {:name n :retries ${retries}}) step)})`,
     },
     {
-      id: "p/main.forma",
-      source: `(import "./flow.forma" [flow])
-(import "./process.forma" [process])
+      id: "p/main.lisp",
+      source: `(import "./flow.lisp" [flow])
+(import "./process.lisp" [process])
 (export Onboard Offboard)
 (flow Onboard "collect-i9")
 (process Offboard "revoke-access")`,

@@ -31,3 +31,6 @@ export {
 } from "./diagnostic/diagnostic.js";
 
 export { DiagnosticCatalog, diagnosticCatalog, builtinDiagnosticCatalog, type DiagnosticCatalogEntry } from "./diagnostic/catalog.js";
+
+export { authorNames } from "./diagnostic/diagnostic.js";
+export { spanLocator, diagnosticLocator, type LocatedSpan, type LocatedDiagnostic } from "./diagnostic/locations.js";

@@ -1,6 +1,5 @@
 ---
-"@formalang/ts": minor
-"@formalang/host": minor
+"@forma-language/forma": minor
 ---
 
 Add RFC 0002 stage 2 compile-time modules. Files can import and export forms and

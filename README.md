@@ -15,6 +15,8 @@ effect system, and one contract format.
 > Forma is a pre-alpha research project. The implementation is real and tested,
 > but its APIs, package boundaries, and wire formats are still evolving.
 
+Forma source files use `.lisp`; project metadata uses `forma.json` and `forma.lock`.
+
 The compiler keeps every stage visible: lossless reading, macro expansion,
 type inference, evaluation, elaboration, and artifact emission. Domain concepts
 arrive through ordinary Forma preludes instead of being built into the language
@@ -60,7 +62,7 @@ Type errors remain attached to author-written source:
 
 ```lisp
 (+ 1 "nope")
-; Type mismatch: Number vs String (at offset 0)
+; Argument 2 to +: Type mismatch: String vs Float
 ```
 
 ## Why Forma
@@ -225,14 +227,14 @@ service declaration.
     order))
 ```
 
-The generator is available through the workspace package's public API.
+The generator is available through the public distribution API.
 `generateEffectProgram` reads, projects, checks, and generates in one call, and
 returns located diagnostics instead of code when the program does not check:
 
 ```ts
-import { generateEffectProgram } from "@formalang/ts/mechanics";
+import { generateEffectProgram } from "@forma-language/forma/mechanics";
 
-const result = generateEffectProgram(source, { sourceId: "checkout.forma" });
+const result = generateEffectProgram(source, { sourceId: "checkout.lisp" });
 
 if (!result.ok) {
   throw new Error(
@@ -302,24 +304,39 @@ it does not emit a placeholder program.
 
 ## Quick start
 
-Forma requires Node.js 24 and pnpm 10.20.
+Use Node.js 24. The public distribution is `@forma-language/forma`, with
+Effect as a required peer. **It is not yet published**; after publication:
+
+```sh
+npm install @forma-language/forma effect
+```
+
+Until then, from a source checkout with pnpm 10.20:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm test
-pnpm dev
+pnpm exec turbo run build --filter=@forma-language/forma
+alias forma="node $PWD/packages/forma/dist/cli.mjs"
 ```
 
-The website and live compiler demos run at the Vite URL printed by `pnpm dev`.
-The frozen install is the complete setup, with no sibling checkout or link step.
-Run `pnpm check` to verify the JavaScript workspace and docs. See
-[AGENTS.md](AGENTS.md) for contributor commands.
-There is currently no published `forma` CLI. Pre-1.0 packages such as
-`@formalang/ts` are published to npm under the `@formalang` scope; otherwise
-work from this repository, where `@formalang/host` builds a `forma` JSON CLI
-(`node packages/host/dist/cli.mjs`).
-To write and run your own files, follow
-[Authoring your own program](docs/authoring.md).
+Save `(+ 20 22)` as `main.lisp`, then check and run it (with an npm local
+install, use `npx forma` in place of `forma`):
+
+```sh
+forma check main.lisp
+forma run main.lisp
+# 42
+```
+
+Continue with [Authoring](docs/authoring.md), the standalone
+[project example](examples/project/README.md), or [Embedding](docs/embedding.md)
+and the [Node app](examples/embed-node/README.md). The experimental embedding
+facade checks and runs programs without Effect imports.
+
+Run `pnpm check:examples` to exercise both examples against a packed tarball
+installed offline in temporary projects. For local demos use `pnpm dev`;
+`pnpm check` verifies the workspace and docs. See [AGENTS.md](AGENTS.md)
+for contributor commands. The frozen install needs no sibling checkout or link step.
 
 ## Documentation and examples
 

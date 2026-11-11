@@ -1,4 +1,5 @@
 import { Data } from "effect";
+import { authorNames } from "./diagnostic.js";
 import type { Loc } from "../reader/index.js";
 import type { MacroOrigin, SourceTrace } from "../evaluator/source-trace.js";
 import type { Span } from "../type/core-expr.js";
@@ -13,12 +14,20 @@ export interface KernelStackFrame {
   readonly macroOrigins?: readonly MacroOrigin[];
 }
 
+interface KernelErrorSource {
+  readonly loc?: Loc;
+  readonly macroOrigins?: readonly MacroOrigin[];
+  readonly stackTrace?: readonly KernelStackFrame[];
+}
+
 export class StepLimitExceeded extends Data.TaggedError("StepLimitExceeded")<{
   readonly limit: number;
   readonly loc?: Loc;
   readonly macroOrigins?: readonly MacroOrigin[];
   readonly stackTrace?: readonly KernelStackFrame[];
-}> {}
+}> {
+  override get message(): string { return `Evaluation exceeded the step limit of ${this.limit}`; }
+}
 
 export class KernelTypeError extends Data.TaggedError("KernelTypeError")<{
   readonly message: string;
@@ -29,7 +38,11 @@ export class KernelTypeError extends Data.TaggedError("KernelTypeError")<{
   readonly loc?: Loc;
   readonly macroOrigins?: readonly MacroOrigin[];
   readonly stackTrace?: readonly KernelStackFrame[];
-}> {}
+}> {
+  constructor(args: KernelErrorSource & {message: string; expected: string; got: string; details?: Readonly<Record<string, unknown>>}) {
+    super({...args, message: args.message.trim() ? args.message : `Expected ${args.expected}, got ${args.got}`});
+  }
+}
 
 export class ArityError extends Data.TaggedError("ArityError")<{
   readonly name: string;
@@ -38,14 +51,20 @@ export class ArityError extends Data.TaggedError("ArityError")<{
   readonly loc?: Loc;
   readonly macroOrigins?: readonly MacroOrigin[];
   readonly stackTrace?: readonly KernelStackFrame[];
-}> {}
+}> {
+  override get message(): string { return `${authorNames(this.name)} expects ${this.expected} arguments, got ${this.got}`; }
+}
 
 export class FailError extends Data.TaggedError("FailError")<{
   readonly message: string;
   readonly loc?: Loc;
   readonly macroOrigins?: readonly MacroOrigin[];
   readonly stackTrace?: readonly KernelStackFrame[];
-}> {}
+}> {
+  constructor(args: KernelErrorSource & {message: string}) {
+    super({...args, message: args.message.trim() ? args.message : "Evaluation failed"});
+  }
+}
 
 export type KernelError = StepLimitExceeded | KernelTypeError | ArityError | FailError;
 
@@ -116,11 +135,7 @@ export class InferenceError extends Error {
     help?: string | undefined;
     fix?: readonly import("./diagnostic.js").DiagnosticTextEdit[] | undefined;
   }) {
-    const msg =
-      opts.origin && opts.origin.span
-        ? `${opts.message} (at offset ${opts.origin.span.start})`
-        : opts.message;
-    super(msg);
+    super(opts.message);
     this.origin = opts.origin;
     this.details = opts.details ?? {};
     this.help = opts.help;

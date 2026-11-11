@@ -32,7 +32,7 @@ production-readiness claim.
    model for the eventual public packages.
 5. Complete the consumer-prelude workflow on the merged FX1–FX4 foundations.
    Active-context typing hooks (PR #150) and validator scoping (PR #151) remain
-   open; the standalone distribution proposal is RFC 0025 in PR #142.
+   open; RFC 0025 is accepted with amendments, with implementation in progress.
 
 ## Record row rollout
 
@@ -89,7 +89,7 @@ first language, and Lisp dialects such as a Clojure-shaped surface would be
 others. All of them would share one core, one type language, and one contract.
 Declarative surfaces would be invertible, which makes Lisp emitters such as
 `.cljc` possible. Stage 0 is implemented: a macro in scope may claim a
-retired spelling such as `defn`, and `preludes/clojure.forma` supplies Clojure
+retired spelling such as `defn`, and `preludes/modules/clojure.lisp` supplies Clojure
 spellings as an ordinary library, with a checked example, its diagnostics, and
 its limits in [Clojure spellings](./clojure.md). Later stages wait on an agent benchmark and
 are not implemented or scheduled.
@@ -201,8 +201,9 @@ can support these ideas are not established by this repository review.
 
 The RFC directory has pre-existing duplicate 0022 and 0023 numbers. Keep those
 filenames stable and use descriptive links. New proposals use unique 0026–0028;
-0024 is occupied and 0025 is reserved by open PR #142. The existing qualified-row
-and host-target designs are extended/referenced, not replaced by parallel RFCs.
+0024 is occupied and 0025 is accepted with amendments; implementation is in
+progress. The existing qualified-row and host-target designs are
+extended/referenced, not replaced by parallel RFCs.
 
 ## Deferred work
 

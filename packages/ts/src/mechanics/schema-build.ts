@@ -1,3 +1,4 @@
+import { diagnosticLocator } from "../diagnostic/locations.js";
 import { Predicate } from "effect";
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
 import type { Diagnostic, Span } from "../diagnostic/diagnostic.js";
@@ -13,7 +14,7 @@ export type TypeSchemaBuild =
   | { readonly ok: false; readonly diagnostics: readonly Diagnostic[] };
 
 /** Generate data codecs and types from an explicit bundle of ordinary `type` declarations. */
-export function generateTypeSchemas(sources: readonly ProgramSource[]): TypeSchemaBuild {
+function generateTypeSchemasUnlocated(sources: readonly ProgramSource[]): TypeSchemaBuild {
   const diagnostics: Diagnostic[] = [];
   const declarations: PackageableDeclaration[] = [];
   for (const {sourceId, source} of sources) {
@@ -180,4 +181,9 @@ function jsonSchema(node: JsonValue, definitions: ReadonlyMap<string,JsonValue>)
     }
   }
   throw new Error(`Unsupported mechanics schema ${node["kind"]}`);
+}
+
+export function generateTypeSchemas(sources: readonly ProgramSource[]): TypeSchemaBuild {
+  const result = generateTypeSchemasUnlocated(sources);
+  return { ...result, diagnostics: result.diagnostics.map(diagnosticLocator(id => sources.find(source => source.sourceId === id)?.source)) };
 }

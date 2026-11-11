@@ -2,12 +2,12 @@
   "moduleEdits": {
     "sources": [
       {
-        "sourceId": "cache/people.forma",
+        "sourceId": "cache/people.lisp",
         "source": "(export value)\n(define value 1)\n(define private 10)"
       },
       {
-        "sourceId": "cache/hiring.forma",
-        "source": "(import \"./people.forma\" [value])\n(+ value 2)"
+        "sourceId": "cache/hiring.lisp",
+        "source": "(import \"./people.lisp\" [value])\n(+ value 2)"
       }
     ],
     "edits": [
@@ -69,13 +69,13 @@
     "data": "(seed Department \"department:platform\" {:name \"Platform\"})\n(seed Employee \"employee:grace\" {:name \"Grace Hopper\" :department \"department:platform\" :active true})",
     "privateBefore": "(export Person)\n(entity Person {:name (Option String)})\n(entity InternalNote {:body (Option String)})",
     "privateAfter": "(export Person)\n(entity Person {:name (Option String)})\n(entity InternalNote {:text (Option String)})",
-    "dependent": "(import \"./people.forma\" :as people)\n(export Candidate)\n(entity Candidate {:person (Option (Id people/Person))})",
+    "dependent": "(import \"./people.lisp\" :as people)\n(export Candidate)\n(entity Candidate {:person (Option (Id people/Person))})",
     "removed": "(+ 1 2)",
     "expectedMissingCode": "elaborate/hole-type",
     "expectedMissingReference": "Employee",
     "moduleBefore": "(export Person)\n(type Person {:name (Option String)})\n(type InternalNote {:body (Option String)})",
     "moduleAfter": "(export Person)\n(type Person {:name (Option String)})\n(type InternalNote {:text (Option String)})",
-    "moduleDependent": "(import \"./people.forma\" :as people)\n(export Candidate)\n(type Candidate {:person (Option (Id people/Person))})",
+    "moduleDependent": "(import \"./people.lisp\" :as people)\n(export Candidate)\n(type Candidate {:person (Option (Id people/Person))})",
     "expectedPrivateFieldBefore": "internal-note/body",
     "expectedPrivateFieldAfter": "internal-note/text"
   }
