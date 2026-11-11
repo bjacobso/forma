@@ -23,7 +23,11 @@ export function retiredSpellingError(e: SExpr): Error | undefined {
   const h = head(e);
   const replacement = h === undefined ? undefined : RETIRED_SPELLINGS.get(h);
   if (replacement === undefined) return undefined;
-  return Object.assign(new Error(`Use ${replacement} instead of ${h}`), { loc: e.loc, details: { code: "surface/invalid-form" } });
+  const headExpr = e._tag === "List" ? e.items[0] : undefined;
+  return Object.assign(new Error(`Use ${replacement} instead of ${h}`), {
+    loc:e.loc,details:{code:"surface/invalid-form"},
+    ...(headExpr && (h !== "defmacro" || e._tag === "List" && e.items[1]?._tag === "List") ? {fix:[{span:{sourceId:headExpr.loc.sourceId ?? "",startOffset:headExpr.loc.start,endOffset:headExpr.loc.end},newText:replacement}]} : {}),
+  });
 }
 
 /** Surface sugar common to expansion, inference and evaluation. */

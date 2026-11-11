@@ -39,7 +39,7 @@ export type NodeTypeMap = Map<string, Type>;
 // Diagnostics: non-fatal warnings/errors from DSL form validation
 // ---------------------------------------------------------------------------
 
-export interface InferDiagnostic extends Pick<Diagnostic, "details" | "help" | "fix"> {
+export interface InferDiagnostic extends Pick<Diagnostic, "details" | "help" | "fix" | "related"> {
   readonly code?: string;
   /** Human-readable error or warning message */
   readonly message: string;

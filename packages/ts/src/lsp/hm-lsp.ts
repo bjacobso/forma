@@ -46,7 +46,7 @@ export interface TypedSpan {
   readonly exprTag: string; // e.g., "Lam", "App", "Var", "Lit"
 }
 
-export interface LspError extends Pick<Diagnostic, "details" | "help" | "fix"> {
+export interface LspError extends Pick<Diagnostic, "details" | "help" | "fix" | "related"> {
   readonly message: string;
   readonly span?: Span | undefined;
   readonly code?: string | undefined;
@@ -276,6 +276,7 @@ export function analyzeLsp(
       diagnosticCode: typeof err.details.code === "string" ? err.details.code : "typecheck/type-mismatch",
       details: err.details,
       ...(err.help ? {help:err.help} : {}),
+      ...(err.related ? {related:err.related.map(note => ({...note,span:{...note.span,sourceId:note.span.sourceId || sourceId}}))} : {}),
       ...(err.fix ? {fix:err.fix.map(edit => ({...edit, span:{...edit.span, sourceId:edit.span.sourceId || sourceId}}))} : {}),
       code: err.origin?.span ? extractCode(source, err.origin.span) : undefined,
     }))];
@@ -338,6 +339,7 @@ function asInferenceError(error: unknown): InferenceError {
     const loc = error.loc as { start: number; end: number };
     const details = (error as { details?: Record<string, unknown> }).details;
     return new InferenceError({
+      ...(error as Error & Pick<Diagnostic,"fix" | "help" | "related">),
       message: error.message,
       origin: { nodeId: `surface:${loc.start}`, kind: "surface", span: { start: loc.start, end: loc.end } },
       details: { code: "surface/invalid-form", ...details },
@@ -399,6 +401,7 @@ function lowerRecovering(
         error.origin?.span
           ? error
           : new InferenceError({
+              ...error,
               message: error.message,
               origin: { span: { start: expr.loc.start, end: expr.loc.end }, kind: "form", nodeId: "form" },
             }),

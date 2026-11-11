@@ -31,6 +31,7 @@ export function freshNodeId(): string {
 // ---------------------------------------------------------------------------
 
 export interface Span {
+  readonly sourceId?: string | undefined;
   readonly start: number;
   readonly end: number;
   readonly macroOrigins?: readonly MacroOrigin[];
@@ -263,6 +264,7 @@ export interface CGet {
   readonly span: Span;
   readonly record: CoreExpr;
   readonly label: string;
+  readonly labelSpan?: Span;
   readonly key?: CoreExpr;
 }
 

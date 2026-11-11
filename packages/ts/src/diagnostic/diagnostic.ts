@@ -65,6 +65,7 @@ export interface Diagnostic<C extends string = string> {
   readonly phase?: DiagnosticPhase;
   readonly span?: Span | undefined;
   readonly details?: DiagnosticDetails<C> | undefined;
+  readonly related?: readonly { readonly span: Span; readonly message: string }[] | undefined;
   readonly help?: string | undefined;
   readonly fix?: readonly DiagnosticTextEdit[] | undefined;
 }
@@ -123,6 +124,7 @@ export function diagnosticFromUnknown(
       got?: string | number;
       name?: string;
       limit?: number;
+      related?: Diagnostic["related"];
       help?: string;
       fix?: readonly DiagnosticTextEdit[];
     };
@@ -162,6 +164,7 @@ export function diagnosticFromUnknown(
         ...(candidate.limit !== undefined ? {limit:candidate.limit} : {}),
         ...candidate.details,
       },
+      ...(candidate.related ? {related:candidate.related.map(note => ({...note,span:{...note.span,sourceId:note.span.sourceId || sourceId}}))} : {}),
       ...(candidate.help ? {help:candidate.help} : {}),
       ...(candidate.fix ? {fix:candidate.fix.map(edit => ({...edit, span: {...edit.span, sourceId: edit.span.sourceId || sourceId}}))} : {}),
     };

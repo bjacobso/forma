@@ -42,11 +42,11 @@ describe("Clojure spellings (RFC 0021 stage 0)", () => {
 
   // Spelling only: each Clojure habit below keeps Forma's meaning instead.
   test.each([
-    ["truthiness.lisp", "Cannot unify Option<Int> with Bool", "coupon"],
-    ["nil-punning.lisp", "Type mismatch: Unit vs Int", "nil"],
+    ["truthiness.lisp", "Expected Bool, found Option<Int>", "coupon"],
+    ["nil-punning.lisp", "Expected Int, found Unit", "nil"],
     [
       "keyword-access.lisp",
-      "Cannot unify :customer with",
+      "found :customer",
       "(:customer order)",
     ],
   ])("%s is rejected at the author's span", (name, message, text) => {

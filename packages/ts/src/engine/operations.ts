@@ -333,6 +333,10 @@ function typecheckUnlocated(request: TypecheckRequest): TypecheckResult {
         code: diagnostic.code ?? "typecheck/diagnostic",
         severity: diagnostic.severity,
         message: diagnostic.message,
+        ...(diagnostic.details ? {details:diagnostic.details} : {}),
+        ...(diagnostic.help ? {help:diagnostic.help} : {}),
+        ...(diagnostic.fix ? {fix:diagnostic.fix} : {}),
+        ...(diagnostic.related ? {related:diagnostic.related} : {}),
         phase: "typecheck",
         ...(diagnostic.span
           ? {

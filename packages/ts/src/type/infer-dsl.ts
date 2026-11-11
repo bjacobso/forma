@@ -85,7 +85,7 @@ export const inferAscribe = (
     const rvarMap = new Map<string, Row>();
     const declaredT = yield* typeExprToType(expr.typeExpr, tvarMap, rvarMap);
 
-    yield* checkExpr(env,expr.expr,declaredT);
+    yield* checkExpr(env,expr.expr,declaredT).pipe(Effect.mapError(error => new InferenceError({...error,message:error.message,related:[...(error.related ?? []),{message:"Expected type declared here",span:{sourceId:expr.typeExpr.span.sourceId ?? "",startOffset:expr.typeExpr.span.start,endOffset:expr.typeExpr.span.end}}]})));
 
     // Return the declared type (after substitution)
     const s = yield* Ref.get(ctx.subst);

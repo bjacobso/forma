@@ -112,6 +112,8 @@ export function applyScheme(s: Subst, scheme: Scheme): Scheme {
     evars: restrict(s.evars, scheme.evars),
   };
   return {
+    ...(scheme.annotation ? {annotation:scheme.annotation} : {}),
+    ...(scheme.declaration ? {declaration:scheme.declaration} : {}),
     tvars: scheme.tvars,
     rvars: scheme.rvars,
     evars: scheme.evars,

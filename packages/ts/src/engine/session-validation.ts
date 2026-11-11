@@ -148,11 +148,13 @@ export function inferenceDiagnostics(sourceId: string, result: LspResult): reado
     ...result.errors.map(error => ({ code: error.diagnosticCode ?? "typecheck/error", severity: "error" as const, message: error.message, phase: "typecheck" as const,
       ...(error.details ? {details:error.details} : {}),
       ...(error.help ? {help:error.help} : {}),
+      ...(error.related ? {related:error.related} : {}),
       ...(error.fix ? {fix:error.fix} : {}),
       ...(error.span ? { span: { sourceId, startOffset: error.span.start, endOffset: error.span.end } } : {}) })),
     ...result.diagnostics.map(d => ({ code: d.code ?? "typecheck/diagnostic", severity: d.severity, message: d.message, phase: "typecheck" as const,
       ...(d.details ? {details:d.details} : {}),
       ...(d.help ? {help:d.help} : {}),
+      ...(d.related ? {related:d.related} : {}),
       ...(d.fix ? {fix:d.fix} : {}),
       ...(d.span ? { span: { sourceId, startOffset: d.span.start, endOffset: d.span.end } } : {}) })),
   ];

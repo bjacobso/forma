@@ -271,3 +271,9 @@ test("Effect diagnostics, hover and definitions use mechanics checking and updat
   expect(diagnostics.map(d => d.code)).toEqual(["mechanics/undeclared-requirement"]);
   expect(diagnostics[0]?.range.start.line).toBe(2);
 });
+
+test("annotated mismatches forward the annotation as related information", async () => {
+  const {workspace,document} = await setup('(: value Float)\n(define value "nope")');
+  const diagnostic = getDiagnostics(workspace,document).diagnostics.find(d => d.code === "typecheck/type-mismatch")!;
+  expect(diagnostic.relatedInformation).toEqual([{message:"Expected type declared here",location:{uri,range:{start:{line:0,character:9},end:{line:0,character:14}}}}]);
+});
