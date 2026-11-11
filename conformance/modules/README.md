@@ -1,5 +1,9 @@
 # Module contracts
 
+`bundled/` checks and runs a two-file graph importing `forma:kernel` without
+host-supplied library files. The CLI assertion lives in
+`packages/host/test/test-cli.test.ts`. `conformance/tests/` uses `forma:test`.
+
 These source fixtures exercise exported identities, brands, tagged constructors,
 polymorphic portable schemes, and linked Effect modules. The host suite in
 `packages/host/test/modules.test.ts` checks TypeScript against the stored

@@ -24,6 +24,7 @@ import {
 } from "./packages.js";
 import type { Span } from "../diagnostic/diagnostic.js";
 import { retiredExtensionDiagnostic } from "./retired-extension.js";
+import { bundledModuleSources } from "./sources.generated.js";
 
 /** A resolver is supplied by the host. IDs identify file instances, not contents. */
 export interface ModuleSource {
@@ -240,6 +241,19 @@ function resolveModuleGraphUnlocated(
       throw new ModuleError({ code: error.code, message: error.message, severity: "error", phase: "typecheck" });
     }
   }
+  // Reserved, runtime-independent sources take precedence over host/package lookup.
+  const externalResolver = resolver;
+  resolver = (specifier, importer) => {
+    const bundled = specifier.startsWith("forma:");
+    const internal = importer.startsWith("forma:") &&
+      (specifier.startsWith("./") || specifier.startsWith("../"));
+    if (!bundled && !internal) return externalResolver(specifier, importer);
+    const name = bundled ? specifier.slice(6) : specifier.slice(2).replace(/\.lisp$/, "");
+    if ((!internal || /^\.\/[a-z]+\.lisp$/.test(specifier)) && Object.hasOwn(bundledModuleSources, name))
+      return { id: `forma:${name}`, source: bundledModuleSources[name as keyof typeof bundledModuleSources] };
+    throw new ModuleResolutionError("module/specifier",
+      `Unknown bundled library ${specifier}. Available libraries: ${Object.keys(bundledModuleSources).map(name => `forma:${name}`).join(", ")}.`);
+  };
   // Each package's own modules use its prelude, through the project mechanism.
   const core: ModuleCoreOptions = hostCore.packages
     ? {
@@ -710,7 +724,7 @@ function resolveModuleGraphUnlocated(
           id,
           e,
           "module/unimported-sugar",
-          `${n} is kernel sugar, which file modules must import: add (import "<path to forma>/preludes/modules/kernel.lisp" [${n}]) with a path relative to this file, or select a project prelude that provides it. The kernel library exports not, when, unless, cond, and, or, -> and ->>.`,
+          `${n} is kernel sugar, which file modules must import: add (import "forma:kernel" [${n}]), or select a project prelude that provides it. The kernel library exports not, when, unless, cond, and, or, -> and ->>.`,
         );
       if (n.includes("__forma_"))
         fail(
