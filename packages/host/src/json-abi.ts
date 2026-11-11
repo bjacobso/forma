@@ -95,6 +95,8 @@ const span = Schema.Struct({ sourceId: Schema.String, startOffset: Schema.Number
 export const JsonDiagnostic = Schema.Struct({
   code: Schema.String, severity: Schema.Literals(["error", "warning", "info"]), message: Schema.String,
   phase: Schema.optional(Schema.String), span: Schema.optional(span), details: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+  help: Schema.optional(Schema.String),
+  fix: Schema.optional(Schema.Array(Schema.Struct({span, newText:Schema.String}))),
 });
 /** Payloads are operation-specific host projections or engine debug trees. */
 export const JsonResponse = Schema.Struct({

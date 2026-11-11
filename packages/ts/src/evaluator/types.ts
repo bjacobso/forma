@@ -115,6 +115,7 @@ export interface KBuiltin {
  * A closure captured from `(fn [params] body)`.
  */
 export interface KFn {
+  readonly name?: string;
   readonly _tag: "KFn";
   readonly params: readonly string[];
   readonly restParam?: string;

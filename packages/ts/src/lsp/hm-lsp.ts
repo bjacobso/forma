@@ -276,7 +276,7 @@ export function analyzeLsp(
       diagnosticCode: typeof err.details.code === "string" ? err.details.code : "typecheck/type-mismatch",
       details: err.details,
       ...(err.help ? {help:err.help} : {}),
-      ...(err.fix ? {fix:err.fix} : {}),
+      ...(err.fix ? {fix:err.fix.map(edit => ({...edit, span:{...edit.span, sourceId:edit.span.sourceId || sourceId}}))} : {}),
       code: err.origin?.span ? extractCode(source, err.origin.span) : undefined,
     }))];
 
@@ -403,6 +403,18 @@ function lowerRecovering(
               origin: { span: { start: expr.loc.start, end: expr.loc.end }, kind: "form", nodeId: "form" },
             }),
       );
+      // Retain the binding for editor recovery while keeping the spelling error.
+      // This happens only after expansion rejected the head, so imported macros
+      // that intentionally claim these spellings keep their normal behavior.
+      if (error.details.code === "surface/invalid-form" && expr._tag === "List" &&
+          expr.items[0]?._tag === "Sym" && ["def", "defn"].includes(expr.items[0].name)) {
+        try {
+          const recovered: SExpr = {...expr, items: [{...expr.items[0], name:"define"}, ...expr.items.slice(1)]};
+          core.push(...lowerProgram([...signatures, recovered], dslProvider, formOptions));
+        } catch {
+          // An independently malformed definition cannot supply a binding.
+        }
+      }
     }
   }
   return { core, errors };

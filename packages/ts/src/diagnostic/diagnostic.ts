@@ -158,12 +158,12 @@ export function diagnosticFromUnknown(
       details: {
         ...(candidate.expected !== undefined ? {expected:candidate.expected} : {}),
         ...(candidate.got !== undefined ? {actual:candidate.got} : {}),
-        ...(candidate._tag === "ArityError" ? {name:candidate.name} : {}),
+        ...(candidate._tag === "ArityError" && candidate.name !== undefined ? {name:authorNames(candidate.name)} : {}),
         ...(candidate.limit !== undefined ? {limit:candidate.limit} : {}),
         ...candidate.details,
       },
       ...(candidate.help ? {help:candidate.help} : {}),
-      ...(candidate.fix ? {fix:candidate.fix} : {}),
+      ...(candidate.fix ? {fix:candidate.fix.map(edit => ({...edit, span: {...edit.span, sourceId: edit.span.sourceId || sourceId}}))} : {}),
     };
   }
   return {
