@@ -15,6 +15,8 @@ effect system, and one contract format.
 > Forma is a pre-alpha research project. The implementation is real and tested,
 > but its APIs, package boundaries, and wire formats are still evolving.
 
+Forma source files use `.lisp`; project metadata uses `forma.json` and `forma.lock`.
+
 The compiler keeps every stage visible: lossless reading, macro expansion,
 type inference, evaluation, elaboration, and artifact emission. Domain concepts
 arrive through ordinary Forma preludes instead of being built into the language
@@ -232,7 +234,7 @@ returns located diagnostics instead of code when the program does not check:
 ```ts
 import { generateEffectProgram } from "@formalang/ts/mechanics";
 
-const result = generateEffectProgram(source, { sourceId: "checkout.forma" });
+const result = generateEffectProgram(source, { sourceId: "checkout.lisp" });
 
 if (!result.ok) {
   throw new Error(

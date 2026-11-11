@@ -4,10 +4,10 @@ import { generateHttpApiProgram } from "../../packages/ts/dist/HttpApi.mjs";
 import { generateRpcProgram } from "../../packages/ts/dist/Rpc.mjs";
 
 const read = name => readFileSync(new URL(name, import.meta.url), "utf8");
-export function compile(domain = read("domain.forma"), http = read("http.forma"), rpc = read("rpc.forma")) {
-  const result = generateHttpApiProgram(`${domain}\n${http}`, { sourceId: "workshops.forma" });
+export function compile(domain = read("domain.lisp"), http = read("http.lisp"), rpc = read("rpc.lisp")) {
+  const result = generateHttpApiProgram(`${domain}\n${http}`, { sourceId: "workshops.lisp" });
   if (!result.ok) throw new Error(JSON.stringify(result.diagnostics, null, 2));
-  const rpcResult = generateRpcProgram(`${domain}\n${rpc}`, { sourceId: "rpc.forma", schemasFrom: "./http.ts" });
+  const rpcResult = generateRpcProgram(`${domain}\n${rpc}`, { sourceId: "rpc.lisp", schemasFrom: "./http.ts" });
   if (!rpcResult.ok) throw new Error(JSON.stringify(rpcResult.diagnostics, null, 2));
   return {
     "http.ts": result.code,

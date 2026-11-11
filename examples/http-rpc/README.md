@@ -13,10 +13,10 @@ missing seats, zero, and more than six seats are rejected before handlers run.
 
 Read the files in this order:
 
-1. `domain.forma`: shared schemas/refinements, errors, Booking service, and the
+1. `domain.lisp`: shared schemas/refinements, errors, Booking service, and the
    checked `lookup` / `reserve` operations calling that service.
-2. `http.forma`: GET `/workshops/:id`, POST `/reservations`, checked handler links.
-3. `rpc.forma`: the same queries/commands as `GetWorkshop` and `ReserveSeats`.
+2. `http.lisp`: GET `/workshops/:id`, POST `/reservations`, checked handler links.
+3. `rpc.lisp`: the same queries/commands as `GetWorkshop` and `ReserveSeats`.
 4. `../../preludes/rpc.lisp`: the reusable typed RPC prelude, with Forma
    `:emit` hooks producing native `Rpc.make` and `RpcGroup.make` calls.
 5. `generate.mjs`: the HTTP and RPC host adapters. `schemasFrom` imports shared
@@ -56,7 +56,7 @@ node examples/http-rpc/server.ts
 
 The check builds the compiler, checks saved generation against sources, strictly
 typechecks generated and native code, and runs contract-negative and transport
-integration tests. To regenerate after editing a `.forma` file:
+integration tests. To regenerate after editing a `.lisp` file:
 
 ```sh
 node examples/http-rpc/generate.mjs

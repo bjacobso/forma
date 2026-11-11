@@ -42,7 +42,7 @@ Every endpoint in a handled group must have exactly one handler.
 ```ts
 import { generateHttpApiProgram } from "@formalang/ts/http-api";
 
-const result = generateHttpApiProgram(source, { sourceId: "shop.forma" });
+const result = generateHttpApiProgram(source, { sourceId: "shop.lisp" });
 if (!result.ok) throw new Error(result.diagnostics.map(d => d.message).join("\n"));
 // Save result.code as shop.ts. It imports Effect, with no Forma runtime.
 ```

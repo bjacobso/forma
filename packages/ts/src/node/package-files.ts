@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { ModuleError } from "../modules/graph.js";
 import { packageTableErrors, splitPackageSpecifier, type ModulePackage, type PackageTable } from "../modules/packages.js";
 import { sha256 } from "../source/sha256.js";
+import { retiredExtensionDiagnostic } from "../modules/retired-extension.js";
 
 export interface FormaManifest {
   readonly name: string;
@@ -55,8 +56,27 @@ export function readFormaManifest(directory: string): FormaManifest {
   const errors = packageTableErrors({ packages: [{ ...manifest, dependencies: Object.keys(manifest.dependencies ?? {}) }] });
   if (errors.length) return packageError("package-manifest", errors.join(" "));
   for (const path of [...Object.values(manifest.exports), ...(manifest.prelude ? [manifest.prelude] : [])]) {
-    if (!safeFile(path.replace(/^\.\//, "")) || !path.endsWith(".forma"))
-      return packageError("package-manifest", `${manifest.name}: exports and prelude must name .forma files inside the package.`);
+    if (path.endsWith(".forma")) {
+      const sourceId = join(directory, "forma.json");
+      const text = readFileSync(sourceId, "utf8");
+      // Locate the export/prelude value, including JSON escapes. The same path
+      // may also occur as a dependency source, which must not receive this edit.
+      let depth = 0, field = "";
+      const token = [...text.matchAll(/"(?:\\.|[^"\\])*"|[{}\[\]]/g)].find(match => {
+        const value = match[0];
+        if (value === "{" || value === "[") { depth++; return false; }
+        if (value === "}" || value === "]") { depth--; return false; }
+        const key = /^\s*:/.test(text.slice(match.index + value.length));
+        if (depth === 1 && key) field = JSON.parse(value);
+        return !key && JSON.parse(value) === path &&
+          (depth === 1 && field === "prelude" || depth === 2 && field === "exports");
+      });
+      if (token) throw new ModuleError(retiredExtensionDiagnostic(path, {
+        sourceId, startOffset: token.index, endOffset: token.index + token[0].length,
+      }));
+    }
+    if (!safeFile(path.replace(/^\.\//, "")) || !path.endsWith(".lisp"))
+      return packageError("package-manifest", `${manifest.name}: exports and prelude must name .lisp files inside the package.`);
   }
   return manifest;
 }
@@ -87,7 +107,7 @@ export function packageFiles(directory: string, vendored = false): Record<string
       const path = prefix + entry.name;
       if (entry.isSymbolicLink()) return packageError("package-integrity", `Symlink ${join(dir, entry.name)} is not a package file.`);
       if (entry.isDirectory()) visit(join(dir, entry.name), path + "/");
-      else if (entry.isFile() && (vendored || path === "forma.json" || path.endsWith(".forma")))
+      else if (entry.isFile() && (vendored || path === "forma.json" || path.endsWith(".lisp")))
         files[path] = hashPackageFile(join(directory, path));
       else if (vendored) return packageError("package-integrity", `Unsupported file ${path}.`);
     }

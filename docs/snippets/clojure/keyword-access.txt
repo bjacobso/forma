@@ -1,2 +1,2 @@
-keyword-access.forma:7:3 error typecheck/type-mismatch
+keyword-access.lisp:7:3 error typecheck/type-mismatch
   Cannot unify :customer with t1 -{e3}-> t2

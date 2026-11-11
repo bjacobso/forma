@@ -51,7 +51,7 @@ import { SimpleSemanticEnvironment } from "./SemanticEnvironment.js";
 export interface ElaborateProgramOptions {
   /** Descriptors and hooks, e.g. from `bootstrapOntologyPreludes()`. */
   readonly prelude: BootstrappedPrelude;
-  /** Identifies the source in spans and diagnostics. Defaults to `"source.forma"`. */
+  /** Identifies the source in spans and diagnostics. Defaults to `"source.lisp"`. */
   readonly sourceId?: string;
   /** Restrict accepted top-level forms. Other recognized forms are reported. */
   readonly forms?: Iterable<string>;
@@ -103,7 +103,7 @@ export function elaborateProgram(
   source: string,
   options: ElaborateProgramOptions,
 ): ElaborateProgramResult {
-  return elaborateSources([{ sourceId: options.sourceId ?? "source.forma", source }], options);
+  return elaborateSources([{ sourceId: options.sourceId ?? "source.lisp", source }], options);
 }
 
 /**

@@ -78,7 +78,7 @@ export default defineConfig({
       dark: codeTheme,
     },
     languages: ["json", "lisp", "scheme", "sh", "ts"],
-    // `.forma` modules are Forma source; highlight them as the Lisp they are.
+    // `.lisp` modules are Forma source; highlight them as the Lisp they are.
     languageAlias: { forma: "lisp" },
   },
   transformPageData(pageData) {

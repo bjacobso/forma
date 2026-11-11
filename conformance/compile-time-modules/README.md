@@ -3,13 +3,13 @@
 This file-based RFC 0002 stage 2 slice runs against the TypeScript host in
 `packages/host/test/compile-time-modules.test.ts`.
 
-- `stripe.forma` exports `price` and its public declaration/payload types. Its
+- `stripe.lisp` exports `price` and its public declaration/payload types. Its
   label helper stays private and executes in its defining scope.
-- `billing.forma` imports the form, declares two prices, and exports their
+- `billing.lisp` imports the form, declares two prices, and exports their
   immutable descriptors as a pure `prices` collection.
-- `salesforce.forma` exports forms that derive picklists and check price references.
-- `main.forma` imports the collection and forms to export a picklist and selection.
-- `broken.forma` pins an unresolved namespace reference at its authored token.
+- `salesforce.lisp` exports forms that derive picklists and check price references.
+- `main.lisp` imports the collection and forms to export a picklist and selection.
+- `broken.lisp` pins an unresolved namespace reference at its authored token.
 
 `interfaces.json` stores the complete portable interfaces. It was captured from
 the retired native OCaml engine and is now a reviewed expectation. The host

@@ -295,7 +295,7 @@ emitting TypeScript that runs without the interpreter.
 This series is Forma's origin story. Here's the vendor example in Forma
 itself, with records, keyword unions, options, and pattern matching:
 
-<<< @/snippets/blog/in-the-beginning/12/vendor.forma{lisp}
+<<< @/snippets/blog/in-the-beginning/12/vendor-types.lisp{lisp}
 
 It type-checks as `Bool` and evaluates to `true`. Change `:risk :high` to
 `:risk :medium` and the checker reports

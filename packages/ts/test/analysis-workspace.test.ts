@@ -68,6 +68,7 @@ describe("AnalysisWorkspace", () => {
     expect(ws.hover("doc.lisp", at(source, "double", 1, 1))?.markdown).toContain(
       "double : Float -> Float",
     );
+    expect(ws.hover("doc.lisp", at(source, "double", 1, 1))?.markdown).toContain("```lisp\n");
     const prelude = ws.hover("doc.lisp", at(source, "base", 1));
     expect(prelude?.markdown).toContain("base : Int");
     expect(prelude?.markdown).toContain("prelude.lisp");

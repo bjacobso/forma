@@ -116,7 +116,7 @@ describe("language-host shared ABI", () => {
   });
 
   it("rejects incomplete matches through the host with author source spans", async () => {
-    const sourceId = "incomplete-match.forma";
+    const sourceId = "incomplete-match.lisp";
     const source = "(type Choice (Tagged (Yes Int) No))\n(match (Yes 42) (Yes n) n)";
     const result = await tsHost.typecheck({ sourceId, source });
     expect(result.diagnostics).toEqual([
@@ -407,12 +407,12 @@ describe("language-host shared ABI", () => {
   it("keeps prior module evaluations private and reuses explicit imports", async () => {
     const {sessionId}=await tsHost.openSession({defaultStepLimit:500});
     try {
-      await tsHost.loadSource({sessionId,sourceId:"value.forma",source:'(export gatewaySessionValue) (define gatewaySessionValue "persisted")'});
-      expect((await tsHost.typecheck({sessionId,sourceId:"private.forma",source:"gatewaySessionValue"})).diagnostics[0]).toMatchObject({code:"typecheck/unbound-symbol",severity:"error"});
-      const source='(import "./value.forma" [gatewaySessionValue]) gatewaySessionValue';
-      expect((await tsHost.typecheck({sessionId,sourceId:"use.forma",source})).diagnostics).toEqual([]);
-      expect(await tsHost.evaluateInSession({sessionId,sourceId:"use.forma",source})).toMatchObject({status:"completed",result:{value:{kind:"string",value:"persisted"},diagnostics:[]}});
-      expect((await tsHost.typecheck({sessionId,sourceId:"still-private.forma",source:"gatewaySessionValue"})).diagnostics[0]).toMatchObject({code:"typecheck/unbound-symbol",severity:"error"});
+      await tsHost.loadSource({sessionId,sourceId:"value.lisp",source:'(export gatewaySessionValue) (define gatewaySessionValue "persisted")'});
+      expect((await tsHost.typecheck({sessionId,sourceId:"private.lisp",source:"gatewaySessionValue"})).diagnostics[0]).toMatchObject({code:"typecheck/unbound-symbol",severity:"error"});
+      const source='(import "./value.lisp" [gatewaySessionValue]) gatewaySessionValue';
+      expect((await tsHost.typecheck({sessionId,sourceId:"use.lisp",source})).diagnostics).toEqual([]);
+      expect(await tsHost.evaluateInSession({sessionId,sourceId:"use.lisp",source})).toMatchObject({status:"completed",result:{value:{kind:"string",value:"persisted"},diagnostics:[]}});
+      expect((await tsHost.typecheck({sessionId,sourceId:"still-private.lisp",source:"gatewaySessionValue"})).diagnostics[0]).toMatchObject({code:"typecheck/unbound-symbol",severity:"error"});
     } finally {await tsHost.closeSession({sessionId});}
   });
 

@@ -11,23 +11,23 @@ import {
 } from "../src/Modules.js";
 const files = [
   {
-    id: "ids.forma",
+    id: "ids.lisp",
     source:
       "(export CustomerId Customer make-customer) (type CustomerId (Brand String)) (class Customer {:id CustomerId :name String}) (: make-customer (-> CustomerId String Customer)) (define make-customer [id name] (Customer {:id id :name name}))",
   },
   {
-    id: "log.forma",
+    id: "log.lisp",
     source:
-      '(import "./ids.forma" [Customer]) (export Console log) (service Console (: print (-> String (Effect Unit)))) (: log (-> Customer (Effect String [] [Console.print]))) (define log [customer] (do! [_ (Console.print customer.name)] (succeed customer.name)))',
+      '(import "./ids.lisp" [Customer]) (export Console log) (service Console (: print (-> String (Effect Unit)))) (: log (-> Customer (Effect String [] [Console.print]))) (define log [customer] (do! [_ (Console.print customer.name)] (succeed customer.name)))',
   },
   {
-    id: "identity.forma",
+    id: "identity.lisp",
     source: "(export identity) (define identity [value] value)",
   },
   {
-    id: "main.forma",
+    id: "main.lisp",
     source:
-      '(import "./identity.forma" [identity]) (import "./ids.forma" :as ids) (import "./log.forma" [log]) (export main) (: main (Effect String [] [Console.print])) (define main (log (ids/make-customer (ids/CustomerId (identity "1")) (identity "Ada"))))',
+      '(import "./identity.lisp" [identity]) (import "./ids.lisp" :as ids) (import "./log.lisp" [log]) (export main) (: main (Effect String [] [Console.print])) (define main (log (ids/make-customer (ids/CustomerId (identity "1")) (identity "Ada"))))',
   },
 ];
 test("linked Effect modules compile and execute; importing prepares effects without running them", () => {
@@ -37,14 +37,14 @@ test("linked Effect modules compile and execute; importing prepares effects with
     source: files[3]!.source.replace("[log]", "[log Console]"),
   };
   const state = {
-    id: "state.forma",
+    id: "state.lisp",
     source:
       '(export Status label) (type Status (Tagged (Ready {:message String}) Empty)) (: label (-> Status String)) (define label [status] (match status (Status.Ready {:message message}) message Status.Empty ""))',
   };
   const entry = {
     ...main,
     source:
-      '(import "./state.forma" :as state) ' +
+      '(import "./state.lisp" :as state) ' +
       main.source.replace(
         '(identity "Ada")',
         '(state/label (state/Status.Ready {:message (identity "Ada")}))',
@@ -58,7 +58,7 @@ test("linked Effect modules compile and execute; importing prepares effects with
   expect(linked.diagnostics).toEqual([]);
   expect(linked.modules).toHaveLength(5);
   expect(
-    linked.modules.find((m) => m.moduleId === "main.forma")?.code,
+    linked.modules.find((m) => m.moduleId === "main.lisp")?.code,
   ).toContain("import {");
   expect(
     linked.modules.filter((m) => m.code.includes("extends Context.Service")),
@@ -85,11 +85,11 @@ test("linked Effect modules compile and execute; importing prepares effects with
       graph.modules.at(-1)!.interface.exports.find((b) => b.name === "main")!,
     );
     const consoleBinding = graph.modules
-      .find((m) => m.id === "log.forma")!
+      .find((m) => m.id === "log.lisp")!
       .interface.exports.find((b) => b.name === "Console")!;
     writeFileSync(
       resolve(dir, "run.ts"),
-      `import { Effect } from "effect";\nimport { ${mainName} as main } from "./${linked.entry.replace(/\.ts$/, ".js")}";\nimport { ${generatedBindingName(consoleBinding)} as Console } from "./${moduleOutputName("log.forma").replace(/\.ts$/, ".js")}";\nlet calls=0;\nif (calls !== 0) throw new Error("effect ran at import");\nconst value=await Effect.runPromise(Effect.provideService(main,Console,{print:()=>Effect.sync(()=>{calls++;})}));\nconsole.log(JSON.stringify({value,calls}));\n`,
+      `import { Effect } from "effect";\nimport { ${mainName} as main } from "./${linked.entry.replace(/\.ts$/, ".js")}";\nimport { ${generatedBindingName(consoleBinding)} as Console } from "./${moduleOutputName("log.lisp").replace(/\.ts$/, ".js")}";\nlet calls=0;\nif (calls !== 0) throw new Error("effect ran at import");\nconst value=await Effect.runPromise(Effect.provideService(main,Console,{print:()=>Effect.sync(()=>{calls++;})}));\nconsole.log(JSON.stringify({value,calls}));\n`,
     );
     writeFileSync(
       resolve(dir, "tsconfig.json"),
@@ -132,16 +132,16 @@ test("linked Effect modules compile and execute; importing prepares effects with
 test("generated nominal declarations stay distinct, and barrels re-export owning constructors", () => {
   const schema =
     "(export Id Item Status) (type Id (Brand String)) (class Item {:name String}) (type Status (Tagged (Ready {:message String}) Empty))";
-  const a = { id: "a.forma", source: schema },
-    b = { id: "b.forma", source: schema },
+  const a = { id: "a.lisp", source: schema },
+    b = { id: "b.lisp", source: schema },
     barrel = {
-      id: "barrel.forma",
-      source: '(export-from "./a.forma" [Id Item Status])',
+      id: "barrel.lisp",
+      source: '(export-from "./a.lisp" [Id Item Status])',
     };
   const entry = {
-    id: "main.forma",
+    id: "main.lisp",
     source:
-      '(import "./barrel.forma" :as a) (import "./b.forma" :as b) (export main) (: main (Effect String)) (define main (succeed "ok"))',
+      '(import "./barrel.lisp" :as a) (import "./b.lisp" :as b) (export main) (: main (Effect String)) (define main (succeed "ok"))',
   };
   const graph = resolveModuleGraph(entry, sourceModuleResolver([a, b, barrel]));
   const linked = linkEffectModules(graph);
@@ -162,8 +162,8 @@ test("generated nominal declarations stay distinct, and barrels re-export owning
           .find((m) => m.id === id)!
           .interface.exports.map((b) => [b.name, generatedBindingName(b)]),
       );
-    const first = names("a.forma"),
-      second = names("b.forma");
+    const first = names("a.lisp"),
+      second = names("b.lisp");
     writeFileSync(
       resolve(dir, "check.ts"),
       `import { ${first["Id"]} as AId, ${first["Item"]} as AItem, ${first["Status"]} as AStatus } from './${moduleOutputName(barrel.id).replace(/\.ts$/, ".js")}';
@@ -211,7 +211,7 @@ const wrongTagged: typeof AStatus.Type = BStatusConstructors.Ready({message:'B'}
 
 test("local macro expansion retains owning schemas, and top-level applications are diagnosed", () => {
   const entry = {
-    id: "main.forma",
+    id: "main.lisp",
     source:
       '(export Name greet) (type Name (Brand String)) (: helper (-> String String)) (define helper [x] (str "hello " x)) (macro (greeting x) `(helper ~x)) (: greet (-> Name String)) (define greet [name] (greeting "Ada"))',
   };
@@ -219,25 +219,25 @@ test("local macro expansion retains owning schemas, and top-level applications a
     linkEffectModules(resolveModuleGraph(entry, () => undefined)).diagnostics,
   ).toEqual([]);
   const application = resolveModuleGraph(
-    { id: "main.forma", source: "(export value) (define value 42) value" },
+    { id: "main.lisp", source: "(export value) (define value 42) value" },
     () => undefined,
   );
   expect(linkEffectModules(application).diagnostics[0]).toMatchObject({
     code: "module/target-expression",
-    span: { sourceId: "main.forma" },
+    span: { sourceId: "main.lisp" },
   });
 });
 
 test("unused file imports still initialize their owning modules", () => {
   const library = {
-    id: "unused.forma",
+    id: "unused.lisp",
     source: "(export value) (define value 42)",
   };
   const graph = resolveModuleGraph(
     {
-      id: "main.forma",
+      id: "main.lisp",
       source:
-        '(import "./unused.forma" [value]) (export main) (: main (Effect String)) (define main (succeed "ok"))',
+        '(import "./unused.lisp" [value]) (export main) (: main (Effect String)) (define main (succeed "ok"))',
     },
     sourceModuleResolver([library]),
   );
@@ -253,7 +253,7 @@ test("unused file imports still initialize their owning modules", () => {
 test("target name normalization preserves distinct declaration identities", () => {
   const graph = resolveModuleGraph(
     {
-      id: "names.forma",
+      id: "names.lisp",
       source: "(export foo-bar fooBar) (define foo-bar 1) (define fooBar 2)",
     },
     () => undefined,
@@ -268,14 +268,14 @@ test("target name normalization preserves distinct declaration identities", () =
 
 test("an imported macro links its private runtime helper in generated modules", () => {
   const library = {
-    id: "macros.forma",
+    id: "macros.lisp",
     source:
       "(export increment) (define helper [x] (+ x 1)) (macro (increment x) `(helper ~x))",
   };
   const entry = {
-    id: "main.forma",
+    id: "main.lisp",
     source:
-      '(import "./macros.forma" [increment]) (export answer) (define answer (increment 41))',
+      '(import "./macros.lisp" [increment]) (export answer) (define answer (increment 41))',
   };
   const graph = resolveModuleGraph(entry, sourceModuleResolver([library]));
   const linked = linkEffectModules(graph);

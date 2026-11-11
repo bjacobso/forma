@@ -32,7 +32,7 @@ describe("session edits match fresh results", () => {
     const preludes = ontologyPreludeStack.map(name => ({ sourceId: name, kind: "prelude" as const, source: preludeSource(name) }));
     expect((await host.loadSourceBundle({ sessionId, sources: preludes })).diagnostics).toEqual([]);
     const schema = scenarios.schema;
-    const sources = [{ sourceId: "cache/people.forma", source: schema.moduleBefore }, { sourceId: "cache/hiring.forma", source: schema.moduleDependent }];
+    const sources = [{ sourceId: "cache/people.lisp", source: schema.moduleBefore }, { sourceId: "cache/hiring.lisp", source: schema.moduleDependent }];
     expect((await host.loadSourceBundle({ sessionId, sources })).diagnostics).toEqual([]);
     const before = await host.moduleGraph({ sessionId, sourceId: sources[1]!.sourceId });
     expect(before.diagnostics).toEqual([]);

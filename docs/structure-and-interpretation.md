@@ -1147,9 +1147,9 @@ Mistakes are reported in the author's terms, at the author's text:
 ```
 
 ```text
-program.forma:2:57: credits must be at most 6
-program.forma:3:73: Unknown reference dta
-program.forma:4:47: A course cannot require itself.
+program.lisp:2:57: credits must be at most 6
+program.lisp:3:73: Unknown reference dta
+program.lisp:4:47: A course cannot require itself.
 ```
 
 The new language needed no parser, no separate checker, and no change to the

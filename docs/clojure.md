@@ -1,7 +1,7 @@
 ---
 layout: home
 title: Clojure spellings in Forma
-description: preludes/clojure.forma is an ordinary macro library that gives Forma modules Clojure's spellings — def, defn, defn-, if-let, when-let, if-not, when-not, comment, and threading. It changes spelling, not semantics; types, nil, and numbers stay Forma's.
+description: preludes/modules/clojure.lisp is an ordinary macro library that gives Forma modules Clojure's spellings — def, defn, defn-, if-let, when-let, if-not, when-not, comment, and threading. It changes spelling, not semantics; types, nil, and numbers stay Forma's.
 sidebar: false
 aside: false
 pageClass: forma-index
@@ -14,7 +14,7 @@ pageClass: forma-index
 <p class="fh-eyebrow">Clojure in Forma <span>· a shipped library · pre-alpha</span></p>
 <h1 id="hero-title">Clojure's spellings. Forma's types.</h1>
 <p class="fh-sub">Eight macros in one file, imported like any other module.</p>
-<p class="fh-lead"><code>preludes/clojure.forma</code> gives a module <code>def</code>, <code>defn</code>, <code>defn-</code>, <code>if-let</code>, <code>when-let</code>, <code>if-not</code>, <code>when-not</code>, <code>comment</code>, and threading. Every one is an ordinary macro that expands to core Forma, so the program it produces is checked by Hindley–Milner inference and carries Forma's effects and contracts. It is <strong>spelling, not semantics</strong>: <code>if</code> takes a <code>Bool</code>, absence is <code>Option</code>, and <code>nil</code> is a <code>Unit</code> value.</p>
+<p class="fh-lead"><code>preludes/modules/clojure.lisp</code> gives a module <code>def</code>, <code>defn</code>, <code>defn-</code>, <code>if-let</code>, <code>when-let</code>, <code>if-not</code>, <code>when-not</code>, <code>comment</code>, and threading. Every one is an ordinary macro that expands to core Forma, so the program it produces is checked by Hindley–Milner inference and carries Forma's effects and contracts. It is <strong>spelling, not semantics</strong>: <code>if</code> takes a <code>Bool</code>, absence is <code>Option</code>, and <code>nil</code> is a <code>Unit</code> value.</p>
 <div class="fh-actions">
 <a class="fh-button fh-button--primary" href="#example">See a checked example ↓</a>
 <a class="fh-button" href="#library">Read the library</a>
@@ -22,9 +22,9 @@ pageClass: forma-index
 </div>
 <div class="fh-hero__side">
 <div class="fh-window">
-<div class="fh-window__bar"><span class="fh-window__dots" aria-hidden="true"><i></i><i></i><i></i></span><span>orders.forma</span><span>a conformance fixture</span></div>
+<div class="fh-window__bar"><span class="fh-window__dots" aria-hidden="true"><i></i><i></i><i></i></span><span>orders.lisp</span><span>a conformance fixture</span></div>
 
-<<< @/snippets/clojure/orders.excerpt.forma
+<<< @/snippets/clojure/orders.excerpt.lisp
 
 </div>
 <p class="fh-hero__note">Stage 0 of <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md">RFC 0021</a> · <a href="#stops">where Clojure habits stop</a></p>
@@ -41,7 +41,7 @@ pageClass: forma-index
 
 | | What it would mean | Status |
 | --- | --- | --- |
-| **A spelling library** | Clojure's familiar heads as macros over Forma semantics | <span class="fh-status is-live">Shipped</span> `preludes/clojure.forma`, this page |
+| **A spelling library** | Clojure's familiar heads as macros over Forma semantics | <span class="fh-status is-live">Shipped</span> `preludes/modules/clojure.lisp`, this page |
 | **A Clojure surface** | A language with Clojure's reader, `(:key m)`, `#{...}`, and its own diagnostics | <span class="fh-status">Proposed</span> RFC 0021 stage 5 |
 | **A Clojure adapter** | Typechecking existing `.clj` files, with declaration files and a gradual boundary | <span class="fh-status">Proposed</span> RFC 0022 stage 5 |
 | **A Clojure backend** | Emitting `.cljc` that runs on the JVM and in ClojureScript | <span class="fh-status">Proposed</span> RFC 0021 stage 6 |
@@ -53,7 +53,7 @@ pageClass: forma-index
 The library exists because of one small engine change. Forma used to reject `def`, `defn`, `defmacro`, `lambda`, and `let*` in the reader, before any library could claim them. Those spellings are now rejected *after* expansion, so a macro in scope may define what they mean — and if none is, the old message still arrives at the form you wrote:
 
 </div>
-<div class="fh-window"><div class="fh-window__bar"><span>report.forma, with nothing imported</span><span>real diagnostic</span></div>
+<div class="fh-window"><div class="fh-window__bar"><span>report.lisp, with nothing imported</span><span>real diagnostic</span></div>
 
 <<< @/snippets/clojure/unimported.txt
 
@@ -66,16 +66,16 @@ The library exists because of one small engine change. Forma used to reject `def
 <h2 id="library-heading">Eight macros, and nothing privileged.</h2>
 <p>This is the whole thing. Each macro is a template over core Forma: <code>defn</code> builds a <code>define</code> of a <code>fn</code>, and <code>if-let</code> builds a <code>match</code> on <code>Option</code>. Nothing here is privileged — a prelude you write has the same powers.</p>
 </div>
-<div class="fh-window fh-window--full"><div class="fh-window__bar"><span>preludes/clojure.forma</span><span>bundled library, verbatim</span></div>
+<div class="fh-window fh-window--full"><div class="fh-window__bar"><span>preludes/modules/clojure.lisp</span><span>bundled library, verbatim</span></div>
 
-<<< @/../preludes/clojure.forma
+<<< @/../preludes/modules/clojure.lisp
 
 </div>
 <div class="fh-facts">
 <article><h3><code>def</code>, <code>defn</code>, <code>defn-</code></h3><p>Expand to <code>define</code>. A docstring or attribute map before the parameter vector is accepted and dropped, because <code>define</code> has no docstring slot.</p></article>
 <article><h3><code>if-let</code>, <code>when-let</code></h3><p>Expand to <code>match</code> on <code>Option</code>. They bind the value inside <code>Some</code>; they do not test truthiness.</p></article>
 <article><h3><code>if-not</code>, <code>when-not</code>, <code>comment</code></h3><p>Ordinary templates. <code>when-not</code> yields <code>nil</code>, which in Forma is a <code>Unit</code> value.</p></article>
-<article><h3><code>-&gt;</code>, <code>-&gt;&gt;</code></h3><p>Re-exported from <code>kernel.forma</code>, where they already lived. Threading is the one Clojure habit Forma always had.</p></article>
+<article><h3><code>-&gt;</code>, <code>-&gt;&gt;</code></h3><p>Re-exported from <code>kernel.lisp</code>, where they already lived. Threading is the one Clojure habit Forma always had.</p></article>
 </div>
 </section>
 
@@ -83,11 +83,11 @@ The library exists because of one small engine change. Forma used to reject `def
 <div class="fh-section__head">
 <p class="fh-label"><span>03</span> An example</p>
 <h2 id="example-heading">A module that reads like Clojure and checks like Forma.</h2>
-<p>This is <a href="https://github.com/bjacobso/forma/blob/main/conformance/clojure-spellings/orders.forma">a conformance fixture</a>, not a sketch. The engine checks it on every run of <code>pnpm check</code>, and the interface below is its own output.</p>
+<p>This is <a href="https://github.com/bjacobso/forma/blob/main/conformance/clojure-spellings/orders.lisp">a conformance fixture</a>, not a sketch. The engine checks it on every run of <code>pnpm check</code>, and the interface below is its own output.</p>
 </div>
-<div class="fh-window fh-window--full"><div class="fh-window__bar"><span>conformance/clojure-spellings/orders.forma</span><span>the source</span></div>
+<div class="fh-window fh-window--full"><div class="fh-window__bar"><span>conformance/clojure-spellings/orders.lisp</span><span>the source</span></div>
 
-<<< @/../conformance/clojure-spellings/orders.forma
+<<< @/../conformance/clojure-spellings/orders.lisp
 
 <div class="fh-window__bar fh-window__bar--run"><span>the checked interface</span><span>inferred, not written</span></div>
 

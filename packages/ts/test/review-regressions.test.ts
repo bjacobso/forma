@@ -107,9 +107,9 @@ describe("domain validation review regressions", () => {
     expect(await evaluate('(class Box {:value Int}) (match {} (Box box) 1 _ 0)')).toBe(0);
   });
   test("Effect surface errors retain locations and accumulate", () => {
-    const result = generateEffectProgram('(service A (: bad))\n(service B (: bad))', {sourceId:"bad.forma"});
+    const result = generateEffectProgram('(service A (: bad))\n(service B (: bad))', {sourceId:"bad.lisp"});
     expect(result.diagnostics).toHaveLength(2);
-    expect(result.diagnostics.map(d=>[d.span?.sourceId,d.span?.startLine])).toEqual([["bad.forma",1],["bad.forma",2]]);
+    expect(result.diagnostics.map(d=>[d.span?.sourceId,d.span?.startLine])).toEqual([["bad.lisp",1],["bad.lisp",2]]);
   });
 });
 

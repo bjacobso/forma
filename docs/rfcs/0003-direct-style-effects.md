@@ -27,7 +27,7 @@ today. All new syntax and semantics below are proposed behavior.
 ## A complete example
 
 ```lisp
-(import "./orders.forma" [OrderId Order])
+(import "./orders.lisp" [OrderId Order])
 (import "@forma/effect" [service])
 
 (export Payments pay)

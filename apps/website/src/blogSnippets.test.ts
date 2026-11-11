@@ -928,14 +928,14 @@ describe("blog: The Agent Can Read the Language", () => {
 
 describe("blog: A Language for Building Languages", () => {
   const page = readFileSync(resolve(repoRoot, "docs/blog/in-the-beginning/12-let-there-be-languages.md"), "utf8");
-  const forma = readFileSync(resolve(repoRoot, "docs/snippets/blog/in-the-beginning/12/vendor.forma"), "utf8");
+  const forma = readFileSync(resolve(repoRoot, "docs/snippets/blog/in-the-beginning/12/vendor-types.lisp"), "utf8");
   const policy = "(do\n  (vendor acme 70 security)\n  (vendor globex 90 finance)\n  (vendor initech 50 security))";
   const rejected = (source: string) => report9(source, Effect.runSync(Effect.flip(typeOfPolicy(source))));
   const loadError = (source: string) =>
     report9(source, Effect.runSync(Effect.flip(loadLanguage({ forms: standard9.forms, values: values12(unavailable) }, standardDocs, source))));
 
   test("the page includes every snippet file", () => {
-    for (const file of ["capabilities.ts", "defform.ts", "language.ts", "vendor.lisp", "vendor.forma"]) {
+    for (const file of ["capabilities.ts", "defform.ts", "language.ts", "vendor.lisp", "vendor.lisp"]) {
       expect(page).toContain(`@/snippets/blog/in-the-beginning/12/${file}`);
     }
     expect(page).toContain(policy);
@@ -1013,14 +1013,14 @@ describe("blog: A Language for Building Languages", () => {
   });
 
   test("the Forma version runs in Forma", async () => {
-    const checked = formaTypecheck({ sourceId: "vendor.forma", source: forma });
+    const checked = formaTypecheck({ sourceId: "vendor.lisp", source: forma });
     expect(checked.display).toBe("Bool");
     expect(checked.diagnostics).toEqual([]);
-    const evaluated = await formaEvaluate({ sourceId: "vendor.forma", source: forma });
+    const evaluated = await formaEvaluate({ sourceId: "vendor.lisp", source: forma });
     expect(evaluated.value).toBe(true);
-    const medium = formaTypecheck({ sourceId: "medium.forma", source: forma.replace(":risk :high", ":risk :medium") });
+    const medium = formaTypecheck({ sourceId: "medium.lisp", source: forma.replace(":risk :high", ":risk :medium") });
     expect(medium.diagnostics.map((d) => d.message)).toEqual([expect.stringContaining(":medium is not one of Union<:low, :high>")]);
-    const partial = formaTypecheck({ sourceId: "partial.forma", source: forma.replace("\n    None false))", "))") });
+    const partial = formaTypecheck({ sourceId: "partial.lisp", source: forma.replace("\n    None false))", "))") });
     expect(partial.diagnostics.map((d) => d.message)).toEqual(["Non-exhaustive match: missing constructor(s) None"]);
   });
 });

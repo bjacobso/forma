@@ -35,7 +35,7 @@ text on stderr and exits 64.
 
 ## Your first file
 
-Save this as `main.forma`:
+Save this as `main.lisp`:
 
 ```lisp
 (type Risk (Union :low :high))
@@ -56,13 +56,13 @@ Save this as `main.forma`:
 Check it, then run it:
 
 ```sh
-forma file typecheck main.forma
-forma file evaluate main.forma
+forma file typecheck main.lisp
+forma file evaluate main.lisp
 ```
 
 `file evaluate` typechecks first. If the check fails, it prints the typecheck
 response (with `"pass":"typecheck"`) and does not run the program. Use
-`forma file evaluate --unchecked main.forma` to run a program without checking
+`forma file evaluate --unchecked main.lisp` to run a program without checking
 it, for example while exploring a builtin the checker does not type yet. An
 unchecked run can succeed on a program that the checker rejects.
 
@@ -83,11 +83,11 @@ A file that uses `import` or `export` is a module, and every name it uses must
 be declared in the file, imported, or built in. Import paths are relative to
 the importing file.
 
-The kernel library `preludes/kernel.forma` exports `not`, `when`, `unless`,
+The kernel library `preludes/modules/kernel.lisp` exports `not`, `when`, `unless`,
 `cond`, `and`, `or`, `->` and `->>`. In a file module, import the ones you use:
 
 ```lisp
-(import "../forma/preludes/kernel.forma" [and or not when cond])
+(import "../forma/preludes/modules/kernel.lisp" [and or not when cond])
 ```
 
 Without the import, the checker reports `module/unimported-sugar` and names
@@ -140,7 +140,7 @@ becomes `None` and a plain value becomes `(Some value)`. This works for record
 types declared in the same file and for imported ones:
 
 ```lisp
-(import "./types.forma" [Vendor])
+(import "./types.lisp" [Vendor])
 (: beacon Vendor)
 (define beacon {:name "Beacon" :risk :low})   ; :reviewed-on is None
 ```
@@ -176,8 +176,8 @@ Forma has no test framework. A practical pattern is a test file whose final
 expression is the list of failing case names:
 
 ```lisp
-(import "../forma/preludes/kernel.forma" [not])
-(import "./policy.forma" [can-activate? acme])
+(import "../forma/preludes/modules/kernel.lisp" [not])
+(import "./policy.lisp" [can-activate? acme])
 (type Case {:name String :ok Bool})
 (: is (-> String a a Case))
 (define is [name actual expected] {:name name :ok (= actual expected)})
@@ -222,9 +222,9 @@ when you write forms in files:
 
 ```json
 {"summary": {"kind": "FormApplication", "form": "vendor", "name": "acme",
-             "moduleId": "/path/register.forma"},
+             "moduleId": "/path/register.lisp"},
  "payload": {"kind": "Vendor", "name": "acme", "status": "active", "blockers": []},
- "span": {"sourceId": "/path/register.forma", "startOffset": 120, "endOffset": 410}}
+ "span": {"sourceId": "/path/register.lisp", "startOffset": 120, "endOffset": 410}}
 ```
 
 `payload` is the projection's IR as plain JSON: record keys lose their leading

@@ -12,8 +12,8 @@ const root = resolve(import.meta.dirname, "../../..");
 const fixture = resolve(root, "conformance/clojure-spellings");
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 /** The library and its one dependency sit beside the fixtures they serve. */
-const preludes: readonly ModuleSource[] = ["clojure.forma", "kernel.forma"].map(
-  (name) => ({ id: name, source: read(`preludes/${name}`) }),
+const preludes: readonly ModuleSource[] = ["clojure.lisp", "kernel.lisp"].map(
+  (name) => ({ id: name, source: read(`preludes/modules/${name}`) }),
 );
 const fixtureSource = (name: string) =>
   readFileSync(resolve(fixture, name), "utf8");
@@ -29,7 +29,7 @@ const showType = (type: unknown): string =>
 
 describe("Clojure spellings (RFC 0021 stage 0)", () => {
   test("a module written with Clojure spellings typechecks and evaluates", () => {
-    const result = check("orders.forma");
+    const result = check("orders.lisp");
     expect(result.diagnostics).toEqual([]);
     const exports = new Map(
       result.interfaces.at(-1)?.exports.map((e) => [e.name, e]),
@@ -42,10 +42,10 @@ describe("Clojure spellings (RFC 0021 stage 0)", () => {
 
   // Spelling only: each Clojure habit below keeps Forma's meaning instead.
   test.each([
-    ["truthiness.forma", "Cannot unify Option<Int> with Bool", "coupon"],
-    ["nil-punning.forma", "Type mismatch: Unit vs Int", "nil"],
+    ["truthiness.lisp", "Cannot unify Option<Int> with Bool", "coupon"],
+    ["nil-punning.lisp", "Type mismatch: Unit vs Int", "nil"],
     [
-      "keyword-access.forma",
+      "keyword-access.lisp",
       "Cannot unify :customer with",
       "(:customer order)",
     ],
@@ -64,13 +64,13 @@ describe("Clojure spellings (RFC 0021 stage 0)", () => {
   // A gap, pinned so that fixing it is visible: the arity failure escapes
   // macro expansion as an exception instead of a located diagnostic.
   test("a multi-arity defn is rejected without an author diagnostic", () => {
-    expect(() => check("multi-arity.forma")).toThrow(
+    expect(() => check("multi-arity.lisp")).toThrow(
       expect.objectContaining({ _tag: "ArityError", message: "" }),
     );
   });
 
   test("the library is only in scope where a module imports it", () => {
-    const entry = { id: "unclaimed.forma", source: "(defn f [x] x)" };
+    const entry = { id: "unclaimed.lisp", source: "(defn f [x] x)" };
     expect(() =>
       checkModuleGraph(
         resolveModuleGraph(entry, sourceModuleResolver([...preludes, entry])),

@@ -43,9 +43,9 @@ import { bootstrapFromSources, ElaborationFailure } from "@formalang/ts/descript
 import { closestName } from "@formalang/ts/diagnostic";
 
 const prelude = bootstrapFromSources([
-  { sourceId: "types.forma", source: typesSource },
-  { sourceId: "entities.forma", source: entitySource },
-  { sourceId: "rules.forma", source: ruleSource },
+  { sourceId: "types.lisp", source: typesSource },
+  { sourceId: "entities.lisp", source: entitySource },
+  { sourceId: "rules.lisp", source: ruleSource },
 ]);
 const forms = prelude.descriptions.list();
 const children = prelude.descriptions.getChildForms("rule", "clauses");
@@ -456,8 +456,8 @@ Consumer preludes can generate data contracts without walking checker internals:
 import { generateTypeSchemas } from "@formalang/ts/mechanics";
 
 const result = generateTypeSchemas([
-  { sourceId: "names.forma", source: '(type Name (String :min-length 1))' },
-  { sourceId: "tree.forma", source: '(type Tree {:name Name :children (List Tree)})' },
+  { sourceId: "names.lisp", source: '(type Name (String :min-length 1))' },
+  { sourceId: "tree.lisp", source: '(type Tree {:name Name :children (List Tree)})' },
 ]);
 if (result.ok) {
   // result.files contains schema.ts, types.ts, and schema.json.
@@ -469,8 +469,8 @@ if (result.ok) {
 The Node CLI writes those three deterministic files:
 
 ```sh
-forma schema names.forma tree.forma --out generated
-forma schema names.forma tree.forma --out generated --check
+forma schema names.lisp tree.lisp --out generated
+forma schema names.lisp tree.lisp --out generated --check
 ```
 
 `--check` exits with status 1 for missing or stale output and never writes files.
