@@ -1019,7 +1019,7 @@ describe("blog: A Language for Building Languages", () => {
     const evaluated = await formaEvaluate({ sourceId: "vendor.lisp", source: forma });
     expect(evaluated.value).toBe(true);
     const medium = formaTypecheck({ sourceId: "medium.lisp", source: forma.replace(":risk :high", ":risk :medium") });
-    expect(medium.diagnostics.map((d) => d.message)).toEqual([expect.stringContaining(":medium is not one of Union<:low, :high>")]);
+    expect(medium.diagnostics.map((d) => d.message)).toEqual([expect.stringContaining("Expected Union<:low, :high>, found :medium")]);
     const partial = formaTypecheck({ sourceId: "partial.lisp", source: forma.replace("\n    None false))", "))") });
     expect(partial.diagnostics.map((d) => d.message)).toEqual(["Non-exhaustive match: missing constructor(s) None"]);
   });

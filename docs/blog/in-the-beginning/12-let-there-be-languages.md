@@ -299,7 +299,7 @@ itself, with records, keyword unions, options, and pattern matching:
 
 It type-checks as `Bool` and evaluates to `true`. Change `:risk :high` to
 `:risk :medium` and the checker reports
-`:medium is not one of Union<:low, :high>`. Leave out the `None` case and
+`Expected Union<:low, :high>, found :medium`. Leave out the `None` case and
 it warns `Non-exhaustive match: missing constructor(s) None`.
 
 Forma's forms are declared in the language too, with typed holes, checks
