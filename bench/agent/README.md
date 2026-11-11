@@ -33,7 +33,11 @@ Each directory receives `brief.md`, only the files listed in `context.json`,
 and `bin/forma`. PATH includes that bin directory and FORMA_TASK_DIR is the
 absolute working directory. Agents should use `forma` so calls are measured.
 The wrapper preserves CLI stdout, stderr, and exit status, and appends argv,
-cwd, exitCode, durationMs, and diagnosticCodes to `.forma-calls.jsonl`.
+cwd, exitCode, durationMs, diagnosticCodes, and messages to `.forma-calls.jsonl`.
+Diagnostics come from JSON stdout when available; otherwise the wrapper reads
+stderr lines beginning `error[code]:` or `warning[code]:`. Each message is its
+first line, truncated to 200 characters. Codes are unique within each call;
+messages retain diagnostic order, including repeated codes.
 Acceptance runs through the CLI separately after the command exits. A failed
 agent process is recorded independently from acceptance, so a good submission
 can still pass after an agent process error. Agent stdout/stderr are retained
@@ -63,6 +67,39 @@ run; combine `--tier core|hard` and `--tasks a,b` to take their intersection.
 An empty intersection or unknown tier is an error.
 Keep result JSONs with the agent model/version/settings and commit revision
 when comparing runs; the shell command alone may not identify a model version.
+
+## Diagnostic telemetry and comparing runs
+
+Each task's `failingCalls` lists every nonzero-exit wrapped CLI call in order as
+`{argv, codes, messages}`, including failures outside the entry-file repair
+metric and calls with no diagnostic code. Top-level `diagnostics` maps each code
+to `{calls, tasks, repairRoundsAttributed}`, sorted by descending call count
+(with code order breaking ties). `calls` counts failed calls containing the code,
+`tasks` counts distinct tasks with those calls, and `repairRoundsAttributed`
+counts those calls that qualify as repair rounds under the existing metric.
+A failed repair call with multiple codes contributes one round to each code;
+these counts can therefore sum to more than the total repair rounds. Warnings
+on successful calls do not enter this failure summary. The runner prints its
+top ten codes after the results tables. Core pass rates and repair-round rules
+remain unchanged.
+
+Print a saved run or compare models/revisions side by side:
+
+```sh
+node bench/agent/report.mjs results.json
+node bench/agent/report.mjs model-a-results.json model-b-results.json
+```
+
+Columns use the input filenames as labels. The report prints core and hard pass
+rates and median repair rounds, the union of each run's top ten diagnostic codes
+(with calls, tasks, and attributed rounds), and each task's failing-code sequence.
+`+` joins codes on the same call; `->` separates failed calls; `(no code)` marks
+a failure without a captured diagnostic. A task absent from a run shows `—`;
+an absent tier has `n/a` metrics. Older result files without telemetry show
+`unavailable (older report)` for sequences. Lost codes cannot be recovered from
+those files; rerun with the updated wrapper to collect them. Compare equivalent
+task selections and inspect attributed rounds to identify diagnostics associated
+with repeated entry-file repairs.
 
 ## Hard tasks
 
@@ -111,7 +148,8 @@ All twenty empty submissions, references, and simulated agents are validated.
 Reference checks use at most two worker processes to bound validation time.
 The simulator uses the legacy file commands for core and a human check followed
 by a file check for hard, pinning both telemetry paths. Harness
-unit tests pin option parsing and repair-count semantics. This infrastructure
+unit tests pin option parsing, repair-count semantics, human stderr capture,
+diagnostic attribution, and two-file report output. This infrastructure
 does not change Forma semantics and does not rewrite surface goldens.
 
 ## Latency tracking
