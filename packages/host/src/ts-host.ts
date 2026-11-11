@@ -1,3 +1,4 @@
+import { HOST_ABI_VERSION, HOST_CAPABILITIES } from "./host-contract.js";
 import * as Artifact from "@formalang/ts/artifact";
 import * as Modules from "@formalang/ts/modules";
 import { Effect, Ref } from "effect";
@@ -10,7 +11,6 @@ import * as Lsp from "@formalang/ts/lsp";
 import * as Reader from "@formalang/ts/reader";
 import * as Editor from "@formalang/ts/editor";
 import * as Engine from "@formalang/ts/engine";
-import { hostAbiVersion } from "./version.js";
 import * as LanguageSession from "@formalang/ts/session";
 import * as Syntax from "@formalang/ts/syntax";
 import * as VM from "@formalang/ts/vm";
@@ -243,42 +243,9 @@ export class TsLanguageHost implements LanguageHost {
     return {
       engine: "forma-typescript",
       engineVersion: Engine.engineVersion,
-      hostAbiVersion,
+      hostAbiVersion: HOST_ABI_VERSION,
       sourceLoadSemantics: "validate-and-store",
-      capabilities: [
-        "parse",
-        "expand",
-        "typecheck",
-        "evaluate",
-        "openSession",
-        "configureSession",
-        "loadSource",
-        "loadSourceBundle",
-        "evaluateInSession",
-        "replSubmit",
-        "callValue",
-        "resumeHostCall",
-        "abortEvaluation",
-        "projectValue",
-        "releaseValue",
-        "sessionInfo",
-        "resetSession",
-        "closeSession",
-        "identifySyntax",
-        "observe",
-        "symbolIndex",
-        "findReferences",
-        "applyEditScript",
-        "describeNodes",
-        "editScriptSchema",
-        "sourceToOutline",
-        "outlineToSource",
-        "formSlots",
-        "emit",
-        "emitMany",
-        "emitBackends",
-        "artifactSummary",
-      ],
+      capabilities: [...HOST_CAPABILITIES],
     };
   }
 
@@ -938,6 +905,11 @@ export class TsLanguageHost implements LanguageHost {
       })),
       parse,
     };
+  }
+
+  /** Evaluate while collecting per-expression observations. */
+  async observe(request: EvaluateRequest): Promise<EvaluationResult> {
+    return this.evaluate({ ...request, observe: request.observe ?? {} });
   }
 
   async identifySyntax(request: SyntaxIdentityRequest): Promise<SyntaxIdentityResult> {

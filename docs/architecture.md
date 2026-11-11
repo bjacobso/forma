@@ -36,6 +36,22 @@ The host's `forma` JSON CLI accepts one-shot `request`s, a newline-delimited JSO
 sessions retain loaded sources, generalized definitions, and suspended host
 calls. Artifact caching remains planned.
 
+The TypeScript host and JSON boundary derive their operation names, strict
+request decoder, response projections, and session scopes from one registry.
+Every `version().capabilities` entry is callable through JSON, including syntax
+identity, symbol references, node descriptions, edit scripts, outline conversion,
+form slots, editor analysis, and `observe` (evaluation with observation enabled).
+These operations exchange plain JSON using the programmatic request fields.
+An edit response contains the edited source and identity; failures also populate
+the response diagnostics. Edits do not commit source to a session or typecheck it.
+
+`HOST_ABI_VERSION` is `0.2.0`. Requests may supply a SemVer `abiVersion`; different
+majors return `abi/version-mismatch`, while omission preserves legacy clients.
+`hostAbiSchema()` exports JSON Schema for the request union and each operation's
+response envelope, plus session-scope metadata. Structural editor payloads have
+explicit schemas; engine debug payloads remain open. The reviewed contract lives
+in `conformance/host-abi/schema.json`, with executable boundary fixtures beside it.
+
 `version().sourceLoadSemantics` reports `validate-and-store` for the TypeScript
 host: source loads validate surface grammar, descriptor application structure,
 module directives, and duplicate global declaration identities. References and

@@ -857,6 +857,8 @@ export interface LanguageHost {
   expand(request: ExpandRequest): Promise<ExpandResult>;
   typecheck(request: TypecheckRequest): Promise<TypecheckResult>;
   evaluate(request: EvaluateRequest): Promise<EvaluationResult>;
+  /** Evaluate with per-expression observation enabled. */
+  observe?(request: EvaluateRequest): Promise<EvaluationResult>;
   evaluateInSession(request: EvaluateInSessionRequest): Promise<EvaluationState>;
   /** Atomically typecheck and evaluate, retaining bindings and types on success. */
   replSubmit?(request: EvaluateInSessionRequest & { readonly source: string }): Promise<EvaluationState>;

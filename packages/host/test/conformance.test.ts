@@ -1158,7 +1158,7 @@ describe("language-host shared ABI", () => {
     for (const host of hosts) {
       const version = await host.version();
       expect(version).toMatchObject({
-        hostAbiVersion: "0.1.0",
+        hostAbiVersion: "0.2.0",
         capabilities: expect.arrayContaining(["parse", "expand", "typecheck", "projectValue"]),
         sourceLoadSemantics: "validate-and-store",
       });
