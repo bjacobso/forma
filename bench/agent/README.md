@@ -135,21 +135,9 @@ application bundle size. Hardware, Node, revision, and raw samples are recorded.
 CI uploads its report without enforcing a threshold. Compare equivalent
 machines and toolchains before drawing conclusions from percentage changes.
 
-### Expr-list alias limitation
+### Named record aliases in expression holes
 
-This reduced repro currently rejects the record literal with
-`elaborate/form-check` at line 7, column 9, despite its matching shape:
-
-```lisp
-(type Item {:id String})
-(type BundleIR {:items (List Item)})
-(form (bundle items)
- :types {:items (Expr (List Item))}
- :ir BundleIR
- {:items items})
-(bundle [{:id "a"}])
-```
-
-Run `forma file declarations main.lisp` on it. Replacing the hole contract with
-`(Expr (List {:id String}))` works. The workflow task retains its full behavior
-and uses this structural spelling; no engine change is included here.
+Form expression holes now resolve named record aliases inside lists, options,
+and other nested type applications. The workflow task's reference retains its
+inline structural contract spelling; it remains valid. Regression fixtures live
+in `conformance/form-alias-records/`.
