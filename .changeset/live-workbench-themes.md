@@ -1,6 +1,5 @@
 ---
-"@formalang/editor": minor
-"@formalang/ts": minor
+"@forma-language/forma": minor
 ---
 
 Add independent light/dark appearance and Forma, Ocean, and Orchid syntax palettes

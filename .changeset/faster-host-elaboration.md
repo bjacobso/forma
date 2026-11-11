@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": patch
+"@forma-language/forma": patch
 ---
 
 Reuse the kernel macro prelude across host hook builtins objects. Form hook

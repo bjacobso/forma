@@ -1,6 +1,5 @@
 ---
-"@formalang/ts": minor
-"@formalang/editor": patch
+"@forma-language/forma": minor
 ---
 
 **Breaking:** Replace the previous authoring grammars with one canonical syntax

@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": minor
+"@forma-language/forma": minor
 ---
 
 Support `bootstrapFromSources([{sourceId, source}, ...], options?)` alongside the existing string signature. Named prelude definition diagnostics retain each file's ID and offsets, and the original inputs are available as `sourceInputs` without changing `sources`.

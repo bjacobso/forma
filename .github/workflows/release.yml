@@ -28,6 +28,7 @@ jobs:
         with:
           node-version: 24
       - uses: ./.github/actions/install
+      - run: node scripts/check-release-plan.mjs
       - id: changesets
         uses: changesets/action/select-mode@v2
 
@@ -51,8 +52,8 @@ jobs:
       - uses: changesets/action/version@v2
         with:
           script: pnpm release:version
-          commit-message: "chore: version packages"
-          pr-title: "chore: release Forma packages"
+          commit-message: "chore: version Forma"
+          pr-title: "chore: release Forma"
 
   pack:
     if: needs.select-mode.outputs.mode == 'publish'

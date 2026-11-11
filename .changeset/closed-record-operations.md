@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": minor
+"@forma-language/forma": minor
 ---
 
 Add closed-record type operations `Pick`, `Omit`, and disjoint `Merge` to the

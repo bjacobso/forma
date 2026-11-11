@@ -1,6 +1,5 @@
 ---
-"@formalang/ts": minor
-"@formalang/host": patch
+"@forma-language/forma": minor
 ---
 
 Check `:pattern`, `:min-length`, `:max-length`, `:min`, `:max`, and `:finite` refinements

@@ -1,7 +1,5 @@
 ---
-"@formalang/ts": minor
-"@formalang/host": patch
-"@formalang/language-server": patch
+"@forma-language/forma": minor
 ---
 
 Share the mechanics checked-declaration result across Effect generation, canonical artifact validation, host/CLI checking, and workspace analysis. Invalid Effect bodies, undeclared typed errors, and undeclared requirements cannot become validated canonical declarations. Module checks retain lexical identities and dependency diagnostics before emission selection; validated snapshots become stale when a checked dependency changes.

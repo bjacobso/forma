@@ -1,6 +1,5 @@
 ---
-"@formalang/ts": patch
-"@formalang/host": patch
+"@forma-language/forma": patch
 ---
 
 Keep a host's diagnostics when it resumes a host call with `{ok: false}`. The

@@ -1,6 +1,5 @@
 ---
-"@formalang/ts": minor
-"@formalang/host": minor
+"@forma-language/forma": minor
 ---
 
 **Breaking:** Distinguish Int and Float literals, inferred types, arithmetic, VM and evaluator

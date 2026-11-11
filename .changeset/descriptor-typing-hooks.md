@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": minor
+"@forma-language/forma": minor
 ---
 
 Run descriptor infer, check, bindings, and result-type hooks in the active
