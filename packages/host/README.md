@@ -49,7 +49,7 @@ The package also supplies the TypeScript `forma` executable:
 ```sh
 forma request '{"op":"typecheck","source":"(+ 1 2)"}'
 forma daemon
-forma file typecheck path/to/main.forma
+forma file typecheck path/to/main.lisp
 forma version
 ```
 

@@ -3,7 +3,7 @@ import { compileEffectDemo } from "./effectCompiler";
 import { ordersSource, ordersUndeclaredSource } from "../effectPageSources";
 import { contractSource, undeclaredCapabilitySource } from "../pipelines/sources";
 
-const compile = (source: string) => compileEffectDemo({ id: 1, sourceId: "demo.forma", source, passes: ["parse", "typecheck"], dialect: "effect" });
+const compile = (source: string) => compileEffectDemo({ id: 1, sourceId: "demo.lisp", source, passes: ["parse", "typecheck"], dialect: "effect" });
 
 describe("live Effect workbench compiler", () => {
   it("keeps inferred body requirements when the declaration omits one", () => {

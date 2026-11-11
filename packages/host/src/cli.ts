@@ -25,13 +25,13 @@ const print = (response: JsonResponse) => {
 const [command, ...args] = process.argv.slice(2);
 const usage = `Usage: forma <command>
 
-  file typecheck <entry.forma>          Typecheck a module graph.
-  file evaluate [--unchecked] <entry.forma>
+  file typecheck <entry.lisp>           Typecheck a module graph.
+  file evaluate [--unchecked] <entry.lisp>
                                         Typecheck, then evaluate the entry's final expressions.
                                         --unchecked skips the typecheck.
-  file declarations <entry.forma>       Elaborate forms and list declarations, including
+  file declarations <entry.lisp>        Elaborate forms and list declarations, including
                                         each form application's IR (kind FormApplication).
-  file interface <entry.forma>          Print the module graph's interfaces.
+  file interface <entry.lisp>           Print the module graph's interfaces.
   schema <sources...> --out <dir> [--check]
                                         Generate data codecs, types, and JSON Schema.
                                         --check fails on missing or stale output without writing.

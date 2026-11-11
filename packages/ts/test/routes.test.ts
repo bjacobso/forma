@@ -5,8 +5,8 @@ import { checkModuleGraph, resolveModuleGraph, sourceModuleResolver, ModuleRunti
 
 const root = resolve(import.meta.dirname, "../../..");
 const read = (id: string) => ({ id, source: readFileSync(resolve(root, id), "utf8") });
-const library = read("preludes/routes.forma");
-const valid = read("conformance/routes/valid.forma");
+const library = read("preludes/modules/routes.lisp");
+const valid = read("conformance/routes/valid.lisp");
 const graph = (entry: { id: string; source: string }) =>
   resolveModuleGraph(entry, sourceModuleResolver([library, valid, entry]));
 
@@ -42,7 +42,7 @@ test.each([
   ["typo", "typecheck/missing-field", "did you mean post?", "(get params :poost)"],
   ["wrong-segment", "typecheck/type-mismatch", "Int vs String", '(route broken-url ["users" 42 [:id]])'],
 ])("%s is rejected at the author's source", (name, code, message, text) => {
-  const entry = read(`conformance/routes/${name}.forma`);
+  const entry = read(`conformance/routes/${name}.lisp`);
   const result = checkModuleGraph(graph(entry));
   expect(result.diagnostics).toHaveLength(1);
   const diagnostic = result.diagnostics[0]!;
@@ -62,8 +62,8 @@ test.each([
   ['["users" [:id :post]]', "route capture must contain one keyword"],
 ])("malformed template %s is rejected during expansion", (template, message) => {
   const entry = {
-    id: "conformance/routes/malformed.forma",
-    source: `(import "../../preludes/routes.forma" [route]) (route bad ${template})`,
+    id: "conformance/routes/malformed.lisp",
+    source: `(import "../../preludes/modules/routes.lisp" [route]) (route bad ${template})`,
   };
   expect(() => graph(entry)).toThrow(message);
 });

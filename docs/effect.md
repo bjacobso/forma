@@ -42,7 +42,7 @@ pageClass: forma-index forma-effect
 <section id="live" class="fh-live" aria-label="Live workbench">
 <div class="fh-hero__demo">
 
-<WorkbenchEmbed example="orders" file="orders.forma" title="Live Effect workbench: order payments" />
+<WorkbenchEmbed example="orders" file="orders.lisp" title="Live Effect workbench: order payments" />
 
 </div>
 <p class="fh-caption">These panes run the real Effect compiler in your browser. Edit the operation, inspect the body's inferred failures and requirements, and open <strong>Effect TypeScript</strong> to see fresh generated code. <strong>Watch typing</strong> introduces an undeclared failure and repairs it.</p>
@@ -117,7 +117,7 @@ pageClass: forma-index forma-effect
 <p class="fh-spread__does">Drop <code>PaymentDeclined</code> from the signature. Forma reports the mistake at the call that can raise it. TypeScript would also reject the generated code, but it reports the mismatch on the generated function, as an assignability chain. Click the problem to reveal the call that introduces it, then add the error back or press Reset, and generated TypeScript becomes available again.</p>
 </div>
 
-<WorkbenchEmbed example="orders" file="orders.forma" broken title="Live undeclared PaymentDeclined diagnostic" />
+<WorkbenchEmbed example="orders" file="orders.lisp" broken title="Live undeclared PaymentDeclined diagnostic" />
 
 </div>
 </section>
@@ -149,7 +149,7 @@ pageClass: forma-index forma-effect
 <div>
 <p class="fh-file">Forma</p>
 
-<<< @/snippets/effect/strict.forma.txt
+<<< @/snippets/effect/strict.lisp.txt
 
 <p class="fh-file">tsc on the generated code</p>
 

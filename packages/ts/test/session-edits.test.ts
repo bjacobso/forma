@@ -9,25 +9,25 @@ const scenarios = JSON.parse(readFileSync(new URL("../../../conformance/session-
 describe("fresh analysis equivalence (incremental and artifact-cache scenarios)", () => {
   it("edits, removes, and replaces forms without stale source bindings", () => {
     const workspace = new AnalysisWorkspace();
-    workspace.setDocument("incremental.forma", scenarios.incremental.before);
-    workspace.analysis("incremental.forma");
+    workspace.setDocument("incremental.lisp", scenarios.incremental.before);
+    workspace.analysis("incremental.lisp");
     workspace.symbols();
     for (const edit of scenarios.incremental.edits) {
-      workspace.setDocument("incremental.forma", edit.source);
+      workspace.setDocument("incremental.lisp", edit.source);
       const fresh = new AnalysisWorkspace();
-      fresh.setDocument("incremental.forma", edit.source);
-      expect(workspace.analysis("incremental.forma")).toEqual(fresh.analysis("incremental.forma"));
+      fresh.setDocument("incremental.lisp", edit.source);
+      expect(workspace.analysis("incremental.lisp")).toEqual(fresh.analysis("incremental.lisp"));
       expect(workspace.symbols()).toEqual(fresh.symbols());
-      expect(workspace.documentSymbols("incremental.forma").map(s => s.name).sort()).toEqual(edit.expectedBindings);
+      expect(workspace.documentSymbols("incremental.lisp").map(s => s.name).sort()).toEqual(edit.expectedBindings);
     }
-    workspace.removeDocument("incremental.forma");
+    workspace.removeDocument("incremental.lisp");
     expect(workspace.symbols().definitions).toEqual([]);
   });
 
   it("schema removal invalidates dependent artifacts instead of leaving stale declarations", () => {
     const schema = scenarios.schema;
     const prelude = bootstrapOntologyPreludes();
-    const sources = [{ sourceId: "schema.forma", source: schema.before }, { sourceId: "data.forma", source: schema.data }];
+    const sources = [{ sourceId: "schema.lisp", source: schema.before }, { sourceId: "data.lisp", source: schema.data }];
     expect(elaborateSources(sources, { prelude }).diagnostics).toEqual([]);
     sources[0] = { ...sources[0]!, source: schema.removed };
     const actual = elaborateSources(sources, { prelude });
@@ -38,7 +38,7 @@ describe("fresh analysis equivalence (incremental and artifact-cache scenarios)"
   });
   it("private schema edits reach the emitted artifact and match a fresh elaboration", () => {
     const schema = scenarios.schema, prelude = bootstrapOntologyPreludes();
-    const sourceId = "people.forma";
+    const sourceId = "people.lisp";
     const before = schema.privateBefore.replace("(export Person)", "");
     const after = schema.privateAfter.replace("(export Person)", "");
     const initial = elaborateSources([{ sourceId, source: before }], { prelude });

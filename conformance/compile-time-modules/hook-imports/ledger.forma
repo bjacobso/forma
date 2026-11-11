@@ -1,3 +1,0 @@
-(import "./forms.forma" [spend])
-(export rent)
-(spend rent 90 30)

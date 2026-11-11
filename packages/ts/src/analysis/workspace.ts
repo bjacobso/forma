@@ -589,7 +589,7 @@ function isSymbolName(name: string): boolean {
 }
 
 function codeBlock(text: string): string {
-  return `\`\`\`forma\n${text}\n\`\`\``;
+  return `\`\`\`lisp\n${text}\n\`\`\``;
 }
 
 function describeForm(descriptor: FormDescriptor): string {

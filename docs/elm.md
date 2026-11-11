@@ -43,7 +43,7 @@ pageClass: forma-index forma-elm
 <section id="live" class="fh-live" aria-label="Live command checker">
 <div class="fh-hero__demo">
 
-<WorkbenchEmbed example="elm-command" file="counter-command.forma" title="Live Effect workbench: counter command recovery" />
+<WorkbenchEmbed example="elm-command" file="counter-command.lisp" title="Live Effect workbench: counter command recovery" />
 
 </div>
 <p class="fh-caption">This embed runs the <strong>existing Effect dialect</strong>, showing the operation and recovery that underlie a command. Introduce an error to remove recovery and expose an unhandled typed failure, then restore it. The full <code>msg / command / update / view / app</code> prelude runs through <code>generateElmProgram</code> in a build script; it is not wired into the browser worker or language server.</p>

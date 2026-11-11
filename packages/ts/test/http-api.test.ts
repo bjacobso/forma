@@ -63,14 +63,14 @@ describe("prelude emission and HTTP contracts", () => {
       ],
     ].map(([program, code]) => ({ program: program!, code: code! })),
   )("rejects a bad HTTP contract ($code)", ({ program, code }) => {
-    const result = generateHttpApiProgram(program, { sourceId: "bad.forma" });
+    const result = generateHttpApiProgram(program, { sourceId: "bad.lisp" });
     expect(result.ok).toBe(false);
     expect(result.code).toBeUndefined();
     expect(result.diagnostics).toContainEqual(
       expect.objectContaining({
         code: `http-api/${code}`,
         span: expect.objectContaining({
-          sourceId: "bad.forma",
+          sourceId: "bad.lisp",
           startLine: expect.any(Number),
         }),
       }),

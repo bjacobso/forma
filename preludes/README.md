@@ -9,13 +9,13 @@ The conformance fixtures and example corpus load these files as their domain
 stack. Applications are not required to use this domain vocabulary: hosts and the language server accept their own prelude
 paths, and the language server loads none by default.
 
-`@formalang/ts/preludes` embeds the `.lisp` files here as strings. Regenerate it with
+`@formalang/ts/preludes` embeds only the top-level `.lisp` files here (excluding `modules/`) as strings. Regenerate it with
 `pnpm --filter @formalang/ts preludes:generate` after changing a prelude.
 
-`kernel.forma` is an ordinary exported macro library for file modules. It is
+`modules/kernel.lisp` is an ordinary exported macro library for file modules. It is
 regenerated from `kernel.lisp` by the same command above. File modules explicitly
 import it or select it as a project prelude; they do not inherit the legacy stack.
-`clojure.forma` is a hand-written file-module library of Clojure spellings
+`modules/clojure.lisp` is a hand-written file-module library of Clojure spellings
 (`def`, `defn`, `defn-`, `if-let`, `when-let`, `if-not`, `when-not`, `comment`,
 and kernel threading) that expand to core Forma, as a first step of
 [RFC 0021](../docs/rfcs/0021-languages-as-libraries.md). It changes spelling
@@ -24,13 +24,13 @@ parameter vector and drops a docstring. `conformance/clojure-spellings/`
 pins what it does and what it refuses, and the [Clojure spellings
 guide](../docs/clojure.md) is generated from those fixtures.
 
-`routes.forma` is an ordinary file-module macro library demonstrating
+`modules/routes.lisp` is an ordinary file-module macro library demonstrating
 template-derived contracts: `(route post-url ["users" [:id] "posts" [:post]])`
 derives a checked `(-> {:id String :post String} String)` URL builder. It uses
 structured segments, not a route-string parser or first-class type-returning
 function. See the [executable route example](../conformance/routes/README.md)
 for imports, checked errors, runtime behavior, and current limits. Supply this
-`.forma` source through the module resolver; it is not an embedded `.lisp` prelude.
+`.lisp` source through the module resolver; it is not an embedded `.lisp` prelude.
 
 The remaining `.lisp` libraries use the existing descriptor bootstrap APIs and
 have not yet migrated to ordinary modules. Protocol preludes are also inputs to
@@ -80,7 +80,7 @@ The shipped `bootstrapOntologyPreludes()` order is `compiler → ontology → ui
 viewspec`. Kernel macros are available through the macro evaluator. That helper
 loads neither the generated `ontology-ir` contracts nor the opt-in `system`
 catalog. Protocol generation assembles the contracts it needs separately.
-`kernel.forma` serves explicit file-module imports; the remaining `.lisp`
+`modules/kernel.lisp` serves explicit file-module imports; the remaining `.lisp`
 libraries still use descriptor bootstrap. Each file's header names its purpose,
 requirements, and consumers.
 

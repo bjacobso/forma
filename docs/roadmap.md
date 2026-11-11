@@ -89,7 +89,7 @@ first language, and Lisp dialects such as a Clojure-shaped surface would be
 others. All of them would share one core, one type language, and one contract.
 Declarative surfaces would be invertible, which makes Lisp emitters such as
 `.cljc` possible. Stage 0 is implemented: a macro in scope may claim a
-retired spelling such as `defn`, and `preludes/clojure.forma` supplies Clojure
+retired spelling such as `defn`, and `preludes/modules/clojure.lisp` supplies Clojure
 spellings as an ordinary library, with a checked example, its diagnostics, and
 its limits in [Clojure spellings](./clojure.md). Later stages wait on an agent benchmark and
 are not implemented or scheduled.

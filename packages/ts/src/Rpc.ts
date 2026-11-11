@@ -34,7 +34,7 @@ export interface RpcProgramResult {
  * This adds no RPC cases to mechanics and generates no handler execution kernel.
  */
 export function generateRpcProgram(source: string, options: RpcProgramOptions = {}): RpcProgramResult {
-  const sourceId = options.sourceId ?? "rpc.forma";
+  const sourceId = options.sourceId ?? "rpc.lisp";
   const diagnostics: Diagnostic[] = [];
   let declarations: readonly PackageableDeclaration[] = [];
   const result = (code?: string): RpcProgramResult => ({

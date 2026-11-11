@@ -33,7 +33,7 @@ form holes, duplicate-name check and emit hooks use the existing extension syste
 ```ts
 import { generateRpcProgram } from "@formalang/ts/rpc";
 
-const result = generateRpcProgram(source, { sourceId: "accounts.forma" });
+const result = generateRpcProgram(source, { sourceId: "accounts.lisp" });
 if (!result.ok) throw new Error(result.diagnostics.map(d => d.message).join("\n"));
 // Write result.code to accounts.ts.
 ```
@@ -50,7 +50,7 @@ with an HTTP module:
 
 ```ts
 const rpc = generateRpcProgram(domainSource + "\n" + rpcSource, {
-  sourceId: "accounts-rpc.forma",
+  sourceId: "accounts-rpc.lisp",
   schemasFrom: "./accounts-http.js",
 });
 ```

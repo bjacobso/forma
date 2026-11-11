@@ -43,11 +43,11 @@ export function homeHeroStories() {
     {
       id: "release",
       label: "Release plan",
-      sourceId: "release.forma",
+      sourceId: "release.lisp",
       title: "Give a plan its own vocabulary.",
       introduction:
         "A tiny custom prelude defines workflow, step and a closed set of actions.",
-      preludeLabel: "release.prelude.forma · excerpt",
+      preludeLabel: "release.prelude.lisp · excerpt",
       preludeExcerpt: `(type Action
   (Union "process.test" "human.approve"))
 
@@ -68,7 +68,7 @@ export function homeHeroStories() {
     {
       id: "query",
       label: "Schema & query",
-      sourceId: "schema.forma",
+      sourceId: "schema.lisp",
       title: "Let a schema shape its query language.",
       introduction:
         "The ontology prelude introduces entity fields into a query’s scope and requires a Bool predicate.",
@@ -93,7 +93,7 @@ export function homeHeroStories() {
     {
       id: "effect",
       label: "Effect contract",
-      sourceId: "log.forma",
+      sourceId: "log.lisp",
       title: "Make a service requirement explicit.",
       introduction:
         "The supported Effect language tracks the failures and service requirements of an operation.",

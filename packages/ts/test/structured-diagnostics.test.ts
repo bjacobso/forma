@@ -28,9 +28,9 @@ describe("structured consumer diagnostics", () => {
     :help "Use Admin." :at [:name]
     :fix [{:at [:name] :new-text "Admin"}]}])
   {:kind "Role" :name name})`);
-    const result = elaborateProgram("(role Admn)", {prelude:custom,sourceId:"roles.forma"});
+    const result = elaborateProgram("(role Admn)", {prelude:custom,sourceId:"roles.lisp"});
     const diagnostic = result.diagnostics[0]!;
-    expect(diagnostic).toMatchObject({code:"world/role-name",details:{name:"Admn",candidates:["Admin"]},help:"Use Admin.",fix:[{newText:"Admin",span:{sourceId:"roles.forma",startOffset:6,endOffset:10}}]});
+    expect(diagnostic).toMatchObject({code:"world/role-name",details:{name:"Admn",candidates:["Admin"]},help:"Use Admin.",fix:[{newText:"Admin",span:{sourceId:"roles.lisp",startOffset:6,endOffset:10}}]});
     if (!hasDiagnosticCode(diagnostic, "world/role-name")) throw new Error("wrong consumer code");
     const candidates: readonly string[] = diagnostic.details!.candidates;
     expect(candidates).toEqual(["Admin"]);
@@ -41,15 +41,15 @@ describe("structured consumer diagnostics", () => {
   });
 
   test("kernel failures retain typed names and expected/actual values", () => {
-    expect(diagnosticFromUnknown(new ArityError({name:"lookup",expected:2,got:3}), "evaluate", "world.forma").details).toMatchObject({name:"lookup",expected:2,actual:3});
-    expect(diagnosticFromUnknown(new KernelTypeError({message:"Wrong value",expected:"String",got:"Int"}), "evaluate", "world.forma").details).toMatchObject({expected:"String",actual:"Int"});
+    expect(diagnosticFromUnknown(new ArityError({name:"lookup",expected:2,got:3}), "evaluate", "world.lisp").details).toMatchObject({name:"lookup",expected:2,actual:3});
+    expect(diagnosticFromUnknown(new KernelTypeError({message:"Wrong value",expected:"String",got:"Int"}), "evaluate", "world.lisp").details).toMatchObject({expected:"String",actual:"Int"});
   });
 
   test("an offered fix replaces only the misspelled form head in its source", () => {
     const source = "(itme A :open {})";
-    const diagnostic = elaborateProgram(source, {prelude,sourceId:"world.forma"}).diagnostics[0]!;
+    const diagnostic = elaborateProgram(source, {prelude,sourceId:"world.lisp"}).diagnostics[0]!;
     expect(diagnostic.help).toContain("item");
-    expect(diagnostic.fix).toEqual([{span:expect.objectContaining({sourceId:"world.forma",startOffset:1,endOffset:5}),newText:"item"}]);
+    expect(diagnostic.fix).toEqual([{span:expect.objectContaining({sourceId:"world.lisp",startOffset:1,endOffset:5}),newText:"item"}]);
     const edit = diagnostic.fix![0]!;
     const fixed = source.slice(0,edit.span.startOffset)+edit.newText+source.slice(edit.span.endOffset);
     expect(elaborateProgram(fixed,{prelude}).diagnostics).toEqual([]);
@@ -75,7 +75,7 @@ describe("structured consumer diagnostics", () => {
   });
 
   test("unknown forms expose the name and all considered forms without parsing prose", () => {
-    const result = elaborateProgram("(itme A :open {})", { prelude, sourceId: "world.forma" });
+    const result = elaborateProgram("(itme A :open {})", { prelude, sourceId: "world.lisp" });
     expect(result.diagnostics).toHaveLength(1);
     expect(result.diagnostics[0]).toMatchObject({
       code: "elaborate/unknown-form",
@@ -94,12 +94,12 @@ describe("structured consumer diagnostics", () => {
 
   test("unknown nested types expose their name at the offending symbol", () => {
     const source = "(item A :open {:x (List Strnig)})";
-    const result = elaborateProgram(source, { prelude, sourceId: "world.forma" });
+    const result = elaborateProgram(source, { prelude, sourceId: "world.lisp" });
     expect(result.diagnostics).toHaveLength(1);
     expect(result.diagnostics[0]).toMatchObject({
       code: "elaborate/hole-type",
       details: { form: "item", hole: "fields", name: "Strnig", expected: "Type", actual: "Strnig", candidates: expect.arrayContaining(["String", "ItemIR", "Choice"]) },
-      span: { sourceId: "world.forma", startOffset: source.indexOf("Strnig"), endOffset: source.indexOf("Strnig") + 6 },
+      span: { sourceId: "world.lisp", startOffset: source.indexOf("Strnig"), endOffset: source.indexOf("Strnig") + 6 },
     });
   });
 });

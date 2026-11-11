@@ -220,12 +220,12 @@ describe("inference annotations", () => {
   });
 
   test("a failed public check retains provenance and does not leak state into recovery", () => {
-    const failed = Engine.typecheck({ source: '(define field [r] r.value)\n(+ 1 "bad")', sourceId: "failed.forma" });
+    const failed = Engine.typecheck({ source: '(define field [r] r.value)\n(+ 1 "bad")', sourceId: "failed.lisp" });
     expect(failed.diagnostics).toHaveLength(1);
-    expect(failed.diagnostics[0]?.span).toMatchObject({ sourceId: "failed.forma", startOffset: 32, endOffset: 37 });
-    const fresh = Engine.typecheck({ source: "field", sourceId: "fresh.forma" });
+    expect(failed.diagnostics[0]?.span).toMatchObject({ sourceId: "failed.lisp", startOffset: 32, endOffset: 37 });
+    const fresh = Engine.typecheck({ source: "field", sourceId: "fresh.lisp" });
     expect(fresh.diagnostics).toHaveLength(1);
-    expect(fresh.diagnostics[0]?.span?.sourceId).toBe("fresh.forma");
+    expect(fresh.diagnostics[0]?.span?.sourceId).toBe("fresh.lisp");
     expect(Engine.typecheck({ source: '(define field [x] x) (field "ok")' }).display).toBe("String");
   });
 
