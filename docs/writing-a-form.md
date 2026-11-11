@@ -1,5 +1,10 @@
 # Writing a form
 
+Use `form` for new definitions. `define-form` is legacy, retained only for
+existing preludes pending migration. The checked-in preludes already use `form`.
+The repository check fences remaining historical occurrences with a reviewed
+file-and-count allowlist.
+
 Define the output type and the syntax together. A form's pattern supplies its
 positional arguments, options, and children; `:types` describes the holes;
 `:ir` checks the projected value and derives its artifact contract.

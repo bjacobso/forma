@@ -1,5 +1,10 @@
 # Forma preludes
 
+Use `form` for new definitions. `define-form` is legacy, retained only for
+existing preludes pending migration. The checked-in preludes already use `form`.
+The repository check fences remaining historical occurrences with a reviewed
+file-and-count allowlist.
+
 These Lisp sources demonstrate how Forma grows from a small typed core into
 domain-specific languages. `kernel.lisp` supplies general-purpose macros,
 `compiler.lisp` supplies shared projection helpers and macros, and the remaining files are

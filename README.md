@@ -62,7 +62,7 @@ Type errors remain attached to author-written source:
 
 ```lisp
 (+ 1 "nope")
-; Type mismatch: Number vs String (at offset 0)
+; Argument 2 to +: Type mismatch: String vs Float
 ```
 
 ## Why Forma
