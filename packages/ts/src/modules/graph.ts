@@ -5,6 +5,7 @@ import { toSExprMany } from "../reader/to-sexpr.js";
 import { headSym as head, type SExpr } from "../reader/types.js";
 const headSym = (e?: SExpr): string | undefined => (e ? head(e) : undefined);
 import type { Diagnostic } from "../diagnostic/diagnostic.js";
+import { authorNames, diagnosticFromUnknown } from "../diagnostic/diagnostic.js";
 import { defaultBuiltins } from "../Builtins.js";
 import {
   discoverFormDeclarations,
@@ -1185,8 +1186,15 @@ export function resolveModuleGraph(entry: ModuleSource, hostResolver: ModuleReso
   const sources = new Map<string, string>();
   try { return resolveModuleGraphUnlocated(entry, hostResolver, hostCore, sources); }
   catch (error) {
-    if (!(error instanceof ModuleError)) throw error;
+    if (!(error instanceof ModuleError)) {
+      const diagnostic = diagnosticFromUnknown(error, "typecheck", entry.id);
+      // Only translate source failures. Unexpected defects still reach the
+      // host's internal/error handler instead of being labelled author errors.
+      if (!diagnostic.span || diagnostic.code === "internal/error") throw error;
+      error = new ModuleError({ ...diagnostic, message: authorNames(diagnostic.message) });
+    }
+    const failure = error as ModuleError;
     const locate = diagnosticLocator(id => sources.get(normalizeModuleId(id)));
-    throw new ModuleError(locate(error.diagnostic), error.related.map(locate));
+    throw new ModuleError(locate(failure.diagnostic), failure.related.map(locate));
   }
 }

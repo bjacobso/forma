@@ -43,7 +43,11 @@ export function normalizeCoreProgram(exprs: readonly SExpr[], coerce = true, con
 }
 
 function normalizeCore(e: SExpr, top = false): SExpr {
-  return copySourceTrace(e, normalizeCoreInner(e, top));
+  try { return copySourceTrace(e, normalizeCoreInner(e, top)); }
+  catch (error) {
+    if (error instanceof Error && !("loc" in error)) Object.assign(error, { loc: e.loc });
+    throw error;
+  }
 }
 
 function normalizeCoreInner(e: SExpr, top = false): SExpr {
@@ -61,6 +65,15 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
   if (e._tag !== "List") return e;
   const h = head(e);
   if (h === "quote" || h === "quasiquote" || h === "__schema" || h === "__sum-type") return e;
+  if (h === "fn" && e.items.length >= 3 && e.items[1]?._tag !== "Vector") {
+    const at = e.items[1]!.loc;
+    throw Object.assign(new InferenceError({
+      message: "fn parameters must be a vector",
+      origin: { nodeId: `fn-parameters:${at.start}`, kind: "fn", span: at },
+      details: { code: "lower/lambda" },
+      help: "Write a parameter vector followed by a body, for example (fn [x] x).",
+    }), { loc: at });
+  }
   if (h === ":" && e.items.length === 3) {
     const errors = typeSyntaxErrors(e.items[2]!, schemaMetadata);
     if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:e.items[2]!.loc, details:{code:"surface/invalid-form"}});
