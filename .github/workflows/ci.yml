@@ -34,6 +34,8 @@ jobs:
         if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/main'
         run: pnpm check:changesets
       - run: pnpm check
+      - name: Guard prelude startup latency
+        run: node scripts/bench-prelude-startup.mjs --check
       - run: pnpm pack:check
       - run: pnpm --filter @formalang/website exec playwright install --with-deps chromium
       - run: pnpm test:visual

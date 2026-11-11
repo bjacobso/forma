@@ -209,6 +209,60 @@ this checks generation, while the existing conformance suites separately check
 emitted TypeScript and runtime harnesses. Run `pnpm check:preludes` after building
 the engine for just the prelude documentation check.
 
+Consumer preludes can run the same kind of checks without repository scripts:
+
+```sh
+forma prelude check greeting.forma --catalog diagnostics.json --out reference.md
+```
+
+Pass multiple source files in bootstrap order. Repeat `--dependency <source>`
+for dependencies whose forms should load but not appear in the reference or
+require documentation. `--catalog` is a JSON array of diagnostic entries with
+`code`, `summary`, `explanation`, and `stability` (`stable`, `unstable`, or
+`internal`); built-in codes are included automatically. The command checks
+descriptor definitions and references, nonempty form docstrings, at least one
+example per form, and elaborates each example in a fresh declaration environment.
+It checks literal `:code` fields even in branches not exercised by examples,
+plus diagnostics actually emitted by examples. Dynamically constructed codes
+still need consumer tests. Errors exit with status 1 and do not write the output;
+without `--out`, reference Markdown is returned in the JSON response.
+
+The browser-safe SDK is available from the existing prelude entry point:
+
+```ts
+import { checkPrelude } from "@formalang/ts/preludes";
+import { DiagnosticCatalog } from "@formalang/ts/diagnostic";
+
+const catalog = new DiagnosticCatalog();
+// catalog.register({ code, summary, explanation, stability });
+const checked = checkPrelude([{ sourceId: "greeting.forma", source }], { catalog });
+if (checked.ok) console.log(checked.reference);
+```
+
+These are descriptor/example checks, not a proof that arbitrary prelude hooks
+are sound or that a downstream code generator accepts their IR. Run the
+consumer's own generator and runtime tests as well.
+
+### Node prelude snapshots
+
+The built CLI enables a private disk cache for `file` and `prelude` commands.
+It stores validated descriptor data and closed, import-free macro-library scopes;
+JavaScript hooks are recreated from the current build, never deserialized.
+Mutable sessions, host builtin factories, deferred validation, and arbitrary
+imported module state are not cached. Node embeddings can opt in with
+`enablePreludeCache()` from `@formalang/ts/node`; browser SDK calls do not touch
+the filesystem.
+
+The default location is `$XDG_CACHE_HOME/forma/preludes` (or
+`~/.cache/forma/preludes`). Use `FORMA_CACHE_DIR` to choose another private
+directory, `FORMA_NO_CACHE=1` to disable it, or delete the directory to clear it.
+Snapshots are disposable, local build output—not an interchange format or an
+input to accept from other users. Source text/identity, engine build content,
+lockfile, Node/V8 version, and the native-elaboration setting invalidate entries.
+Corrupt entries and unwritable directories fall back to ordinary bootstrapping.
+An empty cache pays the normal bootstrap cost plus a write; subsequent fresh
+processes can reuse it.
+
 ## Extension metadata
 
 A form can carry constant metadata for editors, hosts, and other consumers. The

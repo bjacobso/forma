@@ -6,6 +6,8 @@ import { Env } from "../Env.js";
 import { ArityError } from "../diagnostic/errors.js";
 import { evaluateCompileTimeExprs } from "../evaluator/eval.js";
 import { PRELUDE_SOURCE } from "./prelude.js";
+import { defaultBuiltins } from "../builtins/index.js";
+import { preludeSnapshotCache } from "../preludes/snapshot-cache.js";
 import { kValueToSExpr } from "../evaluator/quasiquote.js";
 import {
   copySourceTrace,
@@ -123,7 +125,9 @@ export function getPreludeEnvSync(builtins: Record<string, BuiltinFn>): Env {
     return cached;
   }
 
-  const env = Effect.runSync(
+  const cacheKey = preludeSnapshotCache && builtins === defaultBuiltins ? JSON.stringify(["kernel",PRELUDE_SOURCE]) : undefined;
+  const snapshot = cacheKey ? preludeSnapshotCache?.get<Env>(cacheKey) : undefined;
+  const env = snapshot ?? Effect.runSync(
     Effect.gen(function* () {
       const exprs = normalizeCoreProgram(yield* parseManyToSExpr(PRELUDE_SOURCE));
       const result = yield* evaluateCompileTimeExprs(exprs, {
@@ -134,6 +138,7 @@ export function getPreludeEnvSync(builtins: Record<string, BuiltinFn>): Env {
     }).pipe(Effect.provideService(GensymScope, { next: 0 })),
   );
 
+  if (cacheKey && !snapshot) preludeSnapshotCache?.set(cacheKey,env);
   preludeEnvCache.set(builtins, env);
   return env;
 }

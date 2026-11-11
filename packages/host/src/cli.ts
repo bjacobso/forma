@@ -3,15 +3,18 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { createInterface } from "node:readline";
-import { managePackages, readModuleGraph, readNodePackages, verifyPackages } from "@formalang/ts/node";
-import { ModuleError, moduleMechanicsDeclarations, type ModuleGraph } from "@formalang/ts/modules";
+import { enablePreludeCache, managePackages, readModuleGraph, readNodePackages, verifyPackages } from "@formalang/ts/node";
+import { checkModuleGraph, moduleResultDisplay, ModuleError, moduleMechanicsDeclarations, type ModuleGraph } from "@formalang/ts/modules";
 import { isKFloat, isKKeyword, isKSymbol, mapKeyValue, type KValue } from "@formalang/ts/evaluator";
 import { diagnosticCatalog } from "@formalang/ts/diagnostic";
 import { generateTypeSchemas } from "@formalang/ts/mechanics";
-import { JsonAbi, type JsonResponse } from "./json-abi.js";
+import type { JsonAbi, JsonResponse } from "./json-abi.js";
+import { typeProjection } from "./abi-projections.js";
 import { authorNames, locateResponse } from "./diagnostic-locations.js";
+import { preludeCheck } from "./prelude-check.js";
 
-const abi = new JsonAbi();
+let abiInstance: JsonAbi | undefined;
+const jsonAbi = async (): Promise<JsonAbi> => abiInstance ??= new (await import("./json-abi.js")).JsonAbi();
 /** File sources are on disk, keyed by absolute path, so every diagnostic can carry a line and column. */
 const fileText = (sourceId: string): string | undefined => {
   try { return sourceId.startsWith("/") ? readFileSync(sourceId, "utf8") : undefined; } catch { return undefined; }
@@ -23,6 +26,7 @@ const print = (response: JsonResponse) => {
   if (command === "file" && !response.ok) process.exitCode = 1;
 };
 const [command, ...args] = process.argv.slice(2);
+if (command === "file" || command === "prelude") enablePreludeCache();
 const usage = `Usage: forma <command>
 
   file typecheck <entry.forma>          Typecheck a module graph.
@@ -35,6 +39,9 @@ const usage = `Usage: forma <command>
   schema <sources...> --out <dir> [--check]
                                         Generate data codecs, types, and JSON Schema.
                                         --check fails on missing or stale output without writing.
+  prelude check <sources...> [--dependency <source>] [--catalog <json>] [--out <md>]
+                                        Check descriptors, docs, examples and diagnostic coverage.
+                                        Emit reference Markdown inline or to --out on success.
   request ['<json>']                    Handle one JSON request (argument or stdin).
   daemon                                Handle one JSON request per stdin line.
   add <name> <spec> | update [name] | verify | vendor
@@ -77,6 +84,15 @@ function formApplications(graph: ModuleGraph) {
 
 async function file(operation: string, path: string, unchecked = false): Promise<JsonResponse> {
   const graph = readModuleGraph(path);
+  // The graph already contains resolved compile-time libraries. Do not resolve
+  // it again through a session merely to check the same modules.
+  const entry = graph.modules.find(module => module.id === graph.entry)!;
+  if (operation === "typecheck" && /\((?:import|export|export-from)\s/.test(entry.source)) {
+    const checked = checkModuleGraph(graph);
+    const display = moduleResultDisplay(checked,graph.entry);
+    return {ok:checked.ok,value:{sourceId:graph.entry,pass:"typecheck",display,type:typeProjection(display),diagnostics:checked.diagnostics},type:display,diagnostics:[...checked.diagnostics]};
+  }
+  const abi = await jsonAbi();
   const packages = readNodePackages(path);
   const opened = await abi.handleJson('{"op":"openSession"}');
   if (!opened.ok) return opened;
@@ -127,10 +143,11 @@ function schemaBuild(args: readonly string[]): JsonResponse {
 }
 
 try {
-  if (command === "request" && args.length <= 1) print(await abi.handleJson(args[0] ?? readFileSync(0, "utf8")));
+  if (command === "request" && args.length <= 1) print(await (await jsonAbi()).handleJson(args[0] ?? readFileSync(0, "utf8")));
   else if (command === "daemon" && args.length === 0) {
+    const abi = await jsonAbi();
     for await (const line of createInterface({input:process.stdin, crlfDelay:Infinity})) print(await abi.handleJson(line));
-  } else if (command === "version" && args.length === 0) print(await abi.handleJson('{"op":"version"}'));
+  } else if (command === "version" && args.length === 0) print(await (await jsonAbi()).handleJson('{"op":"version"}'));
   else if (command === "explain" && args.length === 1) {
     const entry = diagnosticCatalog.get(args[0]!);
     if (entry) print({ok:true,value:entry,diagnostics:[]});
@@ -142,6 +159,11 @@ try {
   else if (command === "help" || command === "--help" || command === "-h" || (args.length === 1 && (args[0] === "--help" || args[0] === "-h"))) process.stdout.write(usage);
   else if (command === "file" && args.length === 3 && args[0] === "evaluate" && args[1] === "--unchecked") print(await file("evaluate", args[2]!, true));
   else if (command === "file" && args.length === 2 && ["typecheck", "evaluate", "interface", "declarations"].includes(args[0]!)) print(await file(args[0]!, args[1]!));
+  else if (command === "prelude" && args[0] === "check") {
+    const result = preludeCheck(args.slice(1));
+    print(result);
+    if (!result.ok) process.exitCode = 1;
+  }
   else if (command === "schema") {
     const result = schemaBuild(args);
     print(result);

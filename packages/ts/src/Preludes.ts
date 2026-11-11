@@ -17,6 +17,7 @@ import {
 import { preludeSources } from "./preludes/sources.generated.js";
 
 export { preludeSources };
+export { checkPrelude, type CheckPreludeOptions, type CheckPreludeResult } from "./preludes/check.js";
 
 /** File name of a prelude bundled with Forma, e.g. `"ontology.lisp"`. */
 export type PreludeName = keyof typeof preludeSources;

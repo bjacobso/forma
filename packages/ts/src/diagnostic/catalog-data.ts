@@ -349,4 +349,7 @@ export const builtinDiagnosticCatalog = [
   {"code":"typecheck/unknown-typeclass","summary":"Unknown type class: <value>.","explanation":"Check the located expression, its bindings and annotations. Values and patterns must satisfy the inferred or declared type.","stability":"stable"},
   {"code":"value-ref/not-found","summary":"Not found.","explanation":"Check the located value-ref input against the declaration or operation's contract. Correct the reported problem before retrying.","stability":"stable"},
   {"code":"value-ref/unsupported","summary":"Unsupported.","explanation":"Check the located value-ref input against the declaration or operation's contract. Correct the reported problem before retrying.","stability":"stable"},
+  {"code":"prelude/docstring","summary":"A form is missing its docstring.","explanation":"Give each consumer form a nonempty docstring before its options.","stability":"unstable"},
+  {"code":"prelude/examples","summary":"A form has no examples.","explanation":"Add at least one executable program to the form's :examples vector.","stability":"unstable"},
+  {"code":"prelude/diagnostic-coverage","summary":"A prelude diagnostic is not registered.","explanation":"Register the code in the consumer DiagnosticCatalog or pass its JSON entries with --catalog. Literal :code fields and diagnostics emitted by examples are checked; dynamic codes also need consumer tests.","stability":"unstable"},
 ] as const;
