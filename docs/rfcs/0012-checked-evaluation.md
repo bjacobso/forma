@@ -203,6 +203,39 @@ already run as a child process, without a sandbox). Host builtin implementations
 boundary: each one must validate its arguments and enforce its own policy,
 such as confining paths to a directory.
 
+## Proposed agent capability profile, not a second sandbox design
+
+An agent host should compose this RFC's checked-run boundary with
+[typed-hole feedback](./0026-typed-holes.md), diagnostic fixes from RFC 0017,
+and optional journals from RFC 0016. No agent-specific execution kernel or
+claim that S-expressions make models inherently safer is needed.
+
+Publish a manifest tying source/prelude hashes, checker/profile version,
+entry point, declared requirements, host grants and argument restrictions to
+one checked run. Bind approval to that manifest and reject stale approvals
+after edits. Requirements restrict vocabulary, not invocation counts, monetary
+budgets, recipients or data sensitivity: enforce those at every native call,
+including delegated calls, callbacks, retries and revocation after checking.
+Fail closed on unknown/dynamic requirements. Apply separate expansion/checking
+budgets and process-level CPU, memory, time and output limits for hostile input.
+
+Brand constructors are ordinary functions from base values to branded values
+(`type/infer-typedef.ts`), not evidence issuers or unforgeable authority.
+Evidence must be issued by trusted host code and bound to subject, policy and
+fact revision; check freshness atomically with the authorized change. One-use
+tokens do not imply freshness or exactly-once external effects. Model these
+relations first with [bounded laws](./0028-bounded-verification.md).
+
+Acceptance requires denied and revoked calls to perform zero native work;
+argument confinement to reject an allowed service's forbidden path/recipient;
+changed sources to invalidate approval; pure loops and expansion bombs to hit
+limits; malformed native results to fail decoding; and replay to make no live
+calls. Test a deliberately overpowered provider as a negative control. These
+are staged security requirements, not claims about the current in-process host.
+Even a future sound checker establishes only its modeled static rules under
+trusted primitive/host assumptions, not freedom from defects, manipulation,
+unhandled runtime failures or schema violations in unchecked native code.
+
 ## Alternatives considered
 
 - **A JavaScript sandbox.** Compiling to JavaScript and running it in an

@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Stage 1 implemented for six checked runtime contracts; remaining stages proposed |
+| Status | Stages 1 and 2 implemented (six checked runtime contracts and exhaustiveness errors); remaining stages proposed |
 | Created | 2026-11-03 |
 | Scope | Builtin contract parity, numeric inference, local recursion, nullary functions, recursive generic aliases, Effect-name routing, match exhaustiveness, and four Effect checker gaps: constructor types, optional fields, callback references, and refinement literals |
 | Direction | The evaluator, the kernel typechecker, and the Effect checker agree about ordinary programs; a program that one accepts is not silently rejected, retyped, or crashed by another |
@@ -16,7 +16,7 @@ that didn't fail in a consistent way: a construct is accepted by one pass and
 rejected or retyped by another, or a classic program needs a workaround that
 the language guide does not mention.
 
-This RFC records each gap with a reproduction, the current result, and the
+This RFC records each gap with a reproduction, the baseline result, and the
 behavior Forma should have. It groups the fixes into stages that can land
 independently. None of them adds a new language feature. Each one either makes
 two existing passes agree or makes the checker accept a program whose meaning
@@ -46,16 +46,24 @@ case concatenate lists; examples had no `concat` calls. The HM string scheme
 and Effect string overload have been removed. `concat` is list-only; kernel
 string concatenation uses `str`. No existing surface golden needed changing.
 
-The reproduction tables below describe the pre-stage-1 baseline. Numeric
-generalization remains a separate decision. Nullary-function work in PR #92
-is not included in this slice.
+### Stage 2 implementation
 
-## Motivation
+Non-exhaustive matches on closed constructor types are errors in both checkers
+(PR #141). `type/infer-control.ts` now reports missing constructors with error
+severity; mechanics already rejects them. The historical K8 warning below is
+not current behavior. This is not a claim of solver-backed coverage for arbitrary
+predicates or infinite domains.
+
+The reproduction tables below describe the pre-stage-1/2 baseline. Numeric
+generalization remains a separate decision. Nullary-function work in PR #92
+is not included in these slices.
+
+## Motivation (original reports)
 
 Forma's claim is that the checker tells you what a program will do. That
 claim is weakest where it matters most for new users: the first programs they
 write. A reader following SICP writes `square`, `reduce`, `reverse`, a local
-helper, and a lazy stream in the first hour. Today, each of those hits a gap:
+helper, and a lazy stream in the first hour. At the baseline, each hit a gap:
 
 - `(define square [x] (* x x))` is inferred as `Float -> Float`, so integer
   code passed through an unannotated lambda comes back typed as `Float`.
@@ -75,7 +83,7 @@ arbitrary. Each one is also the kind of disagreement between passes that
 [RFC 0012](./0012-checked-evaluation.md) needs to rule out before a host can
 treat "it typechecks" as a promise about what will run.
 
-## Current state
+## Historical reproduction baseline
 
 All results below come from the TypeScript engine at commit `f43b679`, through
 the host's `typecheck` and `evaluate` operations and
@@ -279,9 +287,8 @@ way to accept the rest. A match that can fail at run time with
 `No pattern matched the value` should not pass the checker with only a
 warning.
 
-This is a behavior change. Before it lands, run the conformance suites,
-preludes, and examples, and list every program that changes from a warning to
-an error in the change description.
+Implemented in stage 2 (PR #141). The historical warning-to-error behavior
+change is now part of the checked contract; preserve its regression fixtures.
 
 ### 8. Effect checker: constructor applications have their type (E1, E2)
 

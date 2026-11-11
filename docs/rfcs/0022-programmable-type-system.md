@@ -129,6 +129,36 @@ their contracts.
 
 ## Proposal
 
+### Kernel scope and evidence boundaries
+
+Keep the independent checker separate from the HM/mechanics consolidation in
+[RFC 0004](./0004-one-analysis-architecture.md). Today HM latent rows and
+mechanics' closed error/requirement sets are distinct representations; sharing
+mechanics analysis with host/editor paths does not mean there is one checker.
+Consolidation reduces disagreement; independent re-checking reduces trust in
+elaboration. Neither follows automatically from the other.
+
+Do not set a speculative 1,000-line target or require solver refinements in the
+first kernel. Start with an explicit supported HM/effect core, specify primitive
+typing and operational assumptions, and reject unsupported constructs rather
+than silently trusting them. Elaborator-supplied scope assumptions must be
+justified by core binders/declared primitives, not accepted as arbitrary axioms.
+Static hook input checking belongs to [RFC 0008](./0008-typed-form-results.md);
+well-typed type-syntax manipulation alone does not establish a correct typing rule.
+
+Kernel acceptance means a term satisfies the selected rules. It does not prove
+that the interpreter, VM, emitter, native handlers or external world implement
+those rules. Stage 1 must include corrupted-term rejection and independent
+expected-value conformance for executed terms, not just agreement between two
+potentially wrong backends. Preserve numeric overflow, evaluation order and
+resource behavior at each supported runtime boundary. Stronger preservation
+claims require their own semantics and evidence.
+
+Finite workflow/evidence laws precede solver or dependent profiles under
+[RFC 0028](./0028-bounded-verification.md). A finite-analysis prototype may use
+trusted domain checks before the kernel exists, provided its report says so.
+Do not market that prototype, or today's hooks, as proof-carrying execution.
+
 ### Principle: an extensible compiler, a small definition of correctness
 
 Three parties contribute to a checked program:

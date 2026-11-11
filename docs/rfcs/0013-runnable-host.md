@@ -2,14 +2,15 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Author-facing host protocol proposed; existing CLI, daemon and filesystem commands implemented |
 | Created | 2026-10-09 |
 | Scope | A TypeScript `forma` command, a host protocol for out-of-process and attached sessions, host-call concurrency, streaming, and cancellation |
 | Direction | One JSON-RPC protocol whose requests are the existing host ABI objects, served by a `forma` command and embeddable in any Node process |
 
 ## Summary
 
-A new `@formalang/cli` package provides a `forma` command with `check`, `run`,
+The original proposal places a `forma` command in a new `@formalang/cli`
+package; package placement now defers to RFC 0025 in PR #142. It proposes `check`, `run`,
 `interface`, `repl`, `daemon`, and `attach`. The daemon and any embedding
 process speak one protocol: JSON-RPC 2.0 messages, one per line, whose
 parameters and results are the existing `LanguageHost` request and result
@@ -21,10 +22,24 @@ cooperative cancellation, and a defined pattern for streaming.
 
 ## Motivation
 
-Today a Forma program can only be run by writing a script against the
-TypeScript packages or by sending ABI requests to the low-level JSON CLI in
-`@formalang/host`. There is no author-facing command to check or run a file,
-and no way to connect to a Forma session inside a running process.
+### Current distribution boundary (2026-11-11)
+
+`@formalang/host` already declares a `forma` bin, with `file` commands,
+package/dependency commands, `schema`, and `explain` in `src/cli.ts`.
+FX1–FX4 provide diagnostic catalogs/help/fixes, authored syntax and named holes,
+named multi-file preludes, and explicit-source schema generation. These are
+merged foundations, not a missing SDK in its entirety. A standalone fast-start
+distribution, `init`, integrated `test`, and a complete prelude authoring workflow
+are not established by that bin declaration. RFC 0025 in open PR #142 owns
+the distribution proposal; do not create another CLI package design here.
+PR #150's active-context hook and PR #151's validator scoping remain open.
+
+The baseline below predates these author-facing commands. The JSON-RPC,
+attachment, cancellation, and streaming protocol proposed here remains distinct
+from the current ordered line-oriented JSON daemon.
+
+The remaining motivation is attaching to an existing session and a richer
+process protocol, not adding the first filesystem check/evaluate command.
 
 The agent evaluation described in [RFC 0010](./0010-live-sessions.md) needs
 both. Its host process owns I/O and calls Forma definitions; an author
@@ -33,7 +48,7 @@ through an nREPL server. A web UI may connect to the same session. None of
 this is agent-specific: editors, build scripts, notebooks, and test runners
 need the same command and protocol.
 
-## Current state
+## Historical baseline for the original protocol proposal
 
 - **No author-facing command.** The README, the [agent entry page](../agents.md),
   and the [Effect page](../effect.md) state that there is no published
