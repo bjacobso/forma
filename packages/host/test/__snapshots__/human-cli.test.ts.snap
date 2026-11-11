@@ -21,7 +21,7 @@ exports[`human CLI > preserves the exact machine file responses > interface main
 `;
 
 exports[`human CLI > preserves the exact machine file responses > typecheck bad.lisp 1`] = `
-"{"ok":false,"value":{"sourceId":"<cwd>/bad.lisp","pass":"typecheck","diagnostics":[{"code":"typecheck/type-mismatch","severity":"error","message":"Argument 2 to +: Type mismatch: String vs Float (at line 1, column 6)","phase":"typecheck","span":{"sourceId":"<cwd>/bad.lisp","startOffset":5,"endOffset":11,"startLine":1,"startColumn":6,"endLine":1,"endColumn":12}}]},"diagnostics":[{"code":"typecheck/type-mismatch","severity":"error","message":"Argument 2 to +: Type mismatch: String vs Float (at line 1, column 6)","phase":"typecheck","span":{"sourceId":"<cwd>/bad.lisp","startOffset":5,"endOffset":11,"startLine":1,"startColumn":6,"endLine":1,"endColumn":12}}]}
+"{"ok":false,"value":{"sourceId":"<cwd>/bad.lisp","pass":"typecheck","diagnostics":[{"code":"typecheck/type-mismatch","severity":"error","message":"Argument 2 to +: Type mismatch: String vs Float (at line 1, column 6)","phase":"typecheck","details":{"code":"typecheck/type-mismatch","message":"Type mismatch: String vs Float","expected":"String","got":"Float"},"span":{"sourceId":"<cwd>/bad.lisp","startOffset":5,"endOffset":11,"startLine":1,"startColumn":6,"endLine":1,"endColumn":12}}]},"diagnostics":[{"code":"typecheck/type-mismatch","severity":"error","message":"Argument 2 to +: Type mismatch: String vs Float (at line 1, column 6)","phase":"typecheck","span":{"sourceId":"<cwd>/bad.lisp","startOffset":5,"endOffset":11,"startLine":1,"startColumn":6,"endLine":1,"endColumn":12},"details":{"code":"typecheck/type-mismatch","message":"Type mismatch: String vs Float","expected":"String","got":"Float"}}]}
 "
 `;
 

@@ -20,6 +20,7 @@ Machine commands (JSON):
                                       Generate data codecs, types, and JSON Schema.
   request ['<json>']                   Handle one JSON request (argument or stdin).
   daemon                              Handle one JSON request per stdin line.
+  abi-schema                          Print the JSON Schema of every request and response.
   add <name> <spec> | update [name] | verify | vendor
                                       Manage packages.
   version                             Print the version.
