@@ -1,6 +1,5 @@
 ---
-"@formalang/ts": minor
-"@formalang/language-server": minor
+"@forma-language/forma": minor
 ---
 
 Add `AnalysisWorkspace.search`, which finds forms and global definitions across

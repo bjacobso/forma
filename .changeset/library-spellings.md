@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": minor
+"@forma-language/forma": minor
 ---
 
 Let libraries claim retired spellings (RFC 0021, stage 0). `def`, `defn`,

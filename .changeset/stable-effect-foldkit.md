@@ -1,7 +1,5 @@
 ---
-"@formalang/ts": minor
-"@formalang/host": minor
-"@formalang/editor": minor
+"@forma-language/forma": minor
 ---
 
 **Breaking:** Upgrade the Effect runtime and generated TypeScript target from

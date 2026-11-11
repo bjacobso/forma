@@ -1,5 +1,6 @@
 {
   "name": "@formalang/editor",
+  "private": true,
   "version": "0.3.0",
   "description": "Forma editor: CodeMirror + React editor integration for the Forma language (via @formalang/host).",
   "license": "MIT",
@@ -14,6 +15,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./analysis-host": {
+      "types": "./dist/analysis-host.d.ts",
+      "import": "./dist/analysis-host.js"
     },
     "./codemirror": {
       "types": "./dist/codemirror/index.d.ts",

@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": patch
+"@forma-language/forma": patch
 ---
 
 Fix structural edits that fuse adjacent tokens or retain replaced descendants,

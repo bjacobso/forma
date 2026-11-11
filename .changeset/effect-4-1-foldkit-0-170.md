@@ -1,8 +1,5 @@
 ---
-"@formalang/ts": minor
-"@formalang/host": minor
-"@formalang/editor": minor
-"@formalang/language-server": patch
+"@forma-language/forma": minor
 ---
 
 **Breaking:** Use Effect 4.1.1 in Forma's public types and generated TypeScript.

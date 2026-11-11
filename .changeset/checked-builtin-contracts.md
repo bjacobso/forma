@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": minor
+"@forma-language/forma": minor
 ---
 
 **Breaking:** `concat` now checks lists, not strings, in both HM and Effect

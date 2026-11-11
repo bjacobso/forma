@@ -1,6 +1,5 @@
 ---
-"@formalang/ts": minor
-"@formalang/host": minor
+"@forma-language/forma": minor
 ---
 
 Validate source structure and module directives at load time, and commit prelude

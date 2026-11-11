@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": minor
+"@forma-language/forma": minor
 ---
 
 Expose `authored` and `syntax` on elaborated declarations and export the

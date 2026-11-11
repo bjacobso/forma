@@ -1,5 +1,6 @@
 {
   "name": "@formalang/host",
+  "private": true,
   "version": "0.3.0",
   "description": "Forma host: the language-host ABI, JSON CLI, and session facade over the TypeScript engine (@formalang/ts).",
   "type": "module",

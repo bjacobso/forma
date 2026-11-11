@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": minor
+"@forma-language/forma": minor
 ---
 
 Make Forma an authoring language for Effect TypeScript programs. `@formalang/ts/mechanics` adds `elaborateEffectProgram` and `generateEffectProgram`, which read, project, check, and generate an Effect 4 module and report line and column diagnostics. It also adds `checkMechanicsDeclarations`, a checker over the portable mechanics IR. The checker verifies schemas, declared errors and requirements, exhaustive `match`, possible `catch`, non-failing finalizers, and layer completeness.

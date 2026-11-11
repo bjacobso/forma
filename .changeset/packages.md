@@ -1,6 +1,5 @@
 ---
-"@formalang/ts": minor
-"@formalang/host": minor
+"@forma-language/forma": minor
 ---
 
 Add package imports (RFC 0020). `(import "@acme/flows/ir" [FlowIR])` resolves

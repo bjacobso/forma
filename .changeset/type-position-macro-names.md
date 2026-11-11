@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": patch
+"@forma-language/forma": patch
 ---
 
 Keep imported macro names out of type annotations. A module that imported a

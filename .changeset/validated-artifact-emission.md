@@ -1,6 +1,5 @@
 ---
-"@formalang/ts": minor
-"@formalang/host": minor
+"@forma-language/forma": minor
 ---
 
 Validate declaration payloads and contracts before packaging artifacts.

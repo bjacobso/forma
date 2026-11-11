@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": patch
+"@forma-language/forma": patch
 ---
 
 Generate Effect TypeScript from the shared operational-effect body IR, covering

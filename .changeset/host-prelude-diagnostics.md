@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": minor
+"@forma-language/forma": minor
 ---
 
 Help host preludes report precise diagnostics. A `:check` diagnostic may carry
