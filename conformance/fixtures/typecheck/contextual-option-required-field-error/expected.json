@@ -1,0 +1,26 @@
+{
+  "normalized": {
+    "diagnostics": [
+      {
+        "code": "typecheck/type-mismatch",
+        "message": "Missing field(s) in record: Expected {:name String :vendor Option<String>}, found {:vendor Option<String>}",
+        "span": {
+          "start": 116,
+          "end": 118
+        }
+      }
+    ]
+  },
+  "success": false,
+  "expectation": {
+    "kind": "error",
+    "diagnostic": {
+      "code": "typecheck/type-mismatch",
+      "message": "Missing field(s) in record: Expected {:name String :vendor Option<String>}, found {:vendor Option<String>}",
+      "span": {
+        "start": 116,
+        "end": 118
+      }
+    }
+  }
+}

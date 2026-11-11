@@ -73,6 +73,7 @@ export function evaluate(
 ): Effect.Effect<KernelResult, KernelError | ParseError, PreludeEnv> {
   return withGensymScope(Effect.gen(function* () {
     const frontend = yield* parseAndExpandKernelSource(source, {
+      ...(options.contextTypes?.length ? { contextTypes: options.contextTypes } : {}),
       builtins: options.builtins ?? {},
       ...(options.env ? { env: options.env } : {}),
     });
