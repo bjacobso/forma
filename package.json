@@ -27,7 +27,7 @@
     "surfaces:test": "node --test scripts/surfaces/*.test.mjs && pnpm surfaces",
     "test:visual": "pnpm --filter @formalang/website test:visual",
     "typecheck": "tsc --noEmit -p tsconfig.alchemy.json && tsc --noEmit -p conformance/effect-typescript/tsconfig.json && turbo run typecheck --filter=@formalang/ts --filter=@formalang/host --filter=@formalang/editor --filter=@formalang/language-server --filter=@formalang/website",
-    "check": "pnpm check:branding && pnpm check:alchemy && pnpm check:diagnostics && pnpm typecheck && pnpm test:js && pnpm check:preludes && pnpm docs:build",
+    "check": "pnpm check:branding && pnpm check:alchemy && pnpm check:diagnostics && pnpm typecheck && pnpm test:js && pnpm check:preludes && pnpm docs:build && pnpm bench:validate",
     "check:diagnostics": "node scripts/check-diagnostics.mjs && node --test scripts/check-diagnostics.test.mjs",
     "check:branding": "bash scripts/check-branding.sh",
     "check:changesets": "changeset status",
@@ -38,7 +38,9 @@
     "website:deploy": "alchemy deploy --stage prod",
     "website:dry-run": "pnpm --filter @formalang/website exec wrangler deploy --dry-run",
     "test:site": "pnpm --filter @formalang/website test:site",
-    "check:preludes": "node packages/ts/scripts/derive-domain-protocol.mjs --check && node scripts/check-prelude-docs.mjs"
+    "check:preludes": "node packages/ts/scripts/derive-domain-protocol.mjs --check && node scripts/check-prelude-docs.mjs",
+    "bench:validate": "node --test bench/agent/harness.test.mjs && node bench/agent/validate.mjs",
+    "bench:latency": "node scripts/bench-latency.mjs"
   },
   "devDependencies": {
     "@alchemy.run/cloudflare": "2.0.0-beta.84",

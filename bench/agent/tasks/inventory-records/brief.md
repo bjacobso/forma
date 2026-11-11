@@ -1,0 +1,18 @@
+# Inventory adjustments
+Write `main.lisp`, exporting record type `Stock` with `sku : String`, `on-hand : Int`,
+`reserved : Int`. Export `available : Stock -> Int` (on-hand minus reserved),
+`reserve : Stock -> Int -> Stock` (increase reserved, preserve other fields), and
+`reorder? : Stock -> Int -> Bool` (available strictly below threshold).
+
+Write your solution in the sandbox root. Use only `.lisp` for authored source.
+`bin/forma` is also on PATH. Commands print JSON and exit nonzero on errors:
+
+```sh
+forma file typecheck main.lisp
+forma file evaluate main.lisp
+forma file declarations main.lisp   # elaborate forms and inspect FormApplication payloads
+```
+
+Read the supplied docs as needed. Existing library paths retain their repository
+extensions. Do not edit supplied context. Hidden tests import your exports and
+exercise additional inputs. No network or new dependencies are needed.

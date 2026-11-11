@@ -1,0 +1,12 @@
+{
+  "kind": "form",
+  "entry": "main.lisp",
+  "files": [
+    "docs/authoring.md",
+    "docs/language.md",
+    "docs/modules.md",
+    "docs/writing-a-form.md",
+    "preludes/README.md",
+    "preludes/kernel.forma"
+  ]
+}

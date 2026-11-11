@@ -1,0 +1,2 @@
+import { acceptProgram } from "../../accept-support.mjs";
+export const accept = dir => acceptProgram(dir, "(import \"./main.lisp\" [ticket-price sample])\n(= [(ticket-price 17 1) (ticket-price 18 1) (ticket-price 64 9) (ticket-price 65 10) (ticket-price 40 0) sample]\n   [8 12 108 40 0 100])", [{"source": "(import \"./main.lisp\" [ticket-price])\n(ticket-price \"adult\" 1)", "code": "typecheck/type-mismatch"}]);

@@ -1,0 +1,8 @@
+(import "./preludes/clojure.forma" [def defn])
+(export prefix label labels sample)
+(def prefix "job")
+(: label (-> String Int String))
+(defn label [name n] (str name "#" n))
+(: labels (-> (List Int) (List String)))
+(defn labels [numbers] (map (fn [n] (label prefix n)) numbers))
+(def sample (labels [2 5]))

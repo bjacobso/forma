@@ -22,3 +22,7 @@ PLAN
 PLAN.md
 TODO
 TODO.md
+
+# Local benchmark reports (the latency baseline is reviewed and committed)
+/results.json
+/scripts/benchmarks/latency-results.json

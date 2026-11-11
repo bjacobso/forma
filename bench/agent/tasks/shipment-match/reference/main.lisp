@@ -1,0 +1,10 @@
+(export Shipment describe terminal?)
+(type Shipment (Tagged (Queued Int) (Moving {:carrier String :days Int}) (Delivered String) (Cancelled String)))
+(: describe (-> Shipment String))
+(define describe [s] (match s
+ (Queued n) (str "queued:" n)
+ (Moving {:carrier carrier :days days}) (str "moving:" carrier ":" days)
+ (Delivered recipient) (str "delivered:" recipient)
+ (Cancelled reason) (str "cancelled:" reason)))
+(: terminal? (-> Shipment Bool))
+(define terminal? [s] (match s (Queued _) false (Moving _) false (Delivered _) true (Cancelled _) true))
