@@ -1,10 +1,9 @@
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, realpath, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { describe, expect, test, vi } from "vitest";
-import { elaborateProgram } from "@formalang/ts/descriptor";
+import { describe, expect, test } from "vitest";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionItemKind, ResponseError, SymbolKind } from "vscode-languageserver";
 
@@ -38,7 +37,7 @@ const PRELUDE = `(macro (defstep name) \`(define ~name {:step true}))
 const uri = "file:///workspace/source.lisp";
 
 async function setup(source: string) {
-  const directory = await mkdtemp(join(tmpdir(), "forma-ls-"));
+  const directory = await realpath(await mkdtemp(join(tmpdir(), "forma-ls-")));
   const preludePath = join(directory, "steps.lisp");
   await writeFile(preludePath, PRELUDE);
   const workspace = new FormaWorkspace({ workspaceRoot: directory, preludePaths: ["steps.lisp"] });
@@ -58,12 +57,7 @@ describe("Forma language server handlers", () => {
   test("unknown form diagnostics retain help, details and an applicable quick fix", async () => {
     const source = '(workflwo onboarding :trigger "hired")';
     const { workspace, document } = await setup(source);
-    // AnalysisWorkspace currently suppresses unknown-form diagnostics. Use the
-    // real elaborator output to pin the LSP forwarding contract independently.
-    const result = elaborateProgram(source, { prelude: workspace.analysis.scope(uri).prelude!, sourceId: uri });
-    const diagnosticsQuery = vi.spyOn(workspace.analysis, "diagnostics").mockReturnValue(result.diagnostics);
     const diagnostics = getDiagnostics(workspace, document).diagnostics;
-    diagnosticsQuery.mockRestore();
     const diagnostic = diagnostics.find((item) => item.code === "elaborate/unknown-form")!;
     expect(diagnostic.message).toContain("\nhelp: ");
     expect(diagnostic.message).toContain("workflow");

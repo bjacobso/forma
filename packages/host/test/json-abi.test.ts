@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
+import { realpathSync, mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -19,7 +19,7 @@ describe("JSON process ABI", () => {
     expect(JSON.parse(unknown.stdout)).toMatchObject({ok:false,diagnostics:[{code:"abi/unknown-code"}]});
   });
   it("schema builds are deterministic and --check fails without overwriting stale files", () => {
-    const dir = mkdtempSync(join(tmpdir(),"forma-schema-"));
+    const dir = realpathSync(mkdtempSync(join(tmpdir(),"forma-schema-")));
     try {
       const source = join(dir,"node.lisp"), out = join(dir,"generated");
       writeFileSync(source,'(type Node {:label (String :min-length 1) :children (List Node)})');
@@ -161,7 +161,7 @@ describe("JSON process ABI", () => {
   it("accepts requests on stdin and resolves file modules with author diagnostics", () => {
     const result = spawnSync(process.execPath,[cli,"request"],{input:JSON.stringify({op:"parseSummary",source:"1 2"}),encoding:"utf8"});
     expect(JSON.parse(result.stdout)).toMatchObject({ok:true,value:{formCount:2}});
-    const dir = mkdtempSync(join(tmpdir(),"forma-cli-"));
+    const dir = realpathSync(mkdtempSync(join(tmpdir(),"forma-cli-")));
     try {
       writeFileSync(join(dir,"lib.lisp"),'(export identity) (define identity [x] x)');
       writeFileSync(join(dir,"main.lisp"),'(import "./lib.lisp" [identity]) (identity 42)');

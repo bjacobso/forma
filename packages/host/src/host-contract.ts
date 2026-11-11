@@ -9,7 +9,7 @@ export const HOST_ABI_VERSION = "0.2.0";
 export const semverVersion = Schema.String.check(Schema.isPattern(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u));
 const id = Schema.String.check(Schema.isMinLength(1));
 const optionalString = Schema.optionalKey(Schema.String);
-const offsetSpan = Schema.Struct({ start: Schema.Int, end: Schema.Int });
+const offsetSpan = Schema.Struct({ start: Schema.Int, end: Schema.Int }).annotate({ identifier: "OffsetSpan" });
 const identity = Schema.Struct({
   version: Schema.Literal(1), idPrefix: Schema.String, nextId: Schema.Int,
   nodes: Schema.Array(Schema.Struct({
@@ -17,7 +17,7 @@ const identity = Schema.Struct({
     span: offsetSpan, parent: Schema.Union([Schema.String, Schema.Null]), index: Schema.Int,
   })),
   errors: Schema.Array(Schema.Struct({ message: Schema.String, span: offsetSpan })),
-});
+}).annotate({ identifier: "SyntaxIdentity" });
 export const TypeScheme: Schema.Codec<TypeSchemeExpr> = Schema.suspend(() => Schema.Union([
   Schema.Struct({ kind: Schema.Literal("type"), name: id }),
   Schema.Struct({ kind: Schema.Literal("any") }),
@@ -25,19 +25,19 @@ export const TypeScheme: Schema.Codec<TypeSchemeExpr> = Schema.suspend(() => Sch
   Schema.Struct({ kind: Schema.Literal("variadic-function"), params: Schema.Array(TypeScheme), rest: TypeScheme, result: TypeScheme }),
   Schema.Struct({ kind: Schema.Literal("list"), item: TypeScheme }),
   Schema.Struct({ kind: Schema.Literal("map"), key: TypeScheme, value: TypeScheme }),
-]));
+])).annotate({ identifier: "TypeScheme" });
 const policy = Schema.Struct({
   defaultBuiltinScheme: Schema.optionalKey(Schema.Literals(["kernel", "none"])),
   unboundSymbols: Schema.optionalKey(Schema.Array(Schema.Struct({
     match: Schema.Struct({ kind: Schema.Literals(["exact", "prefix"]), value: Schema.String }),
     type: TypeScheme, reason: optionalString,
   }))),
-});
+}).annotate({ identifier: "TypePolicy" });
 const builtin = Schema.Struct({ name: id, typeScheme: Schema.optionalKey(TypeScheme),
   arity: Schema.optionalKey(Schema.Union([Schema.Int, Schema.Struct({min: Schema.Int, max: Schema.optionalKey(Schema.Int)})])),
   handler: Schema.optionalKey(Schema.Struct({ kind: Schema.Literal("host-effect"), effect: id })),
   purity: Schema.optionalKey(Schema.Literals(["pure", "read", "write", "service"])),
-});
+}).annotate({ identifier: "HostBuiltin" });
 const hostBuiltins = (input: readonly (typeof builtin.Type)[] | undefined) => input?.map(b => ({...b, arity:b.arity ?? {min:0}, handler:b.handler ?? {kind:"host-effect" as const, effect:b.name}}));
 export const JsonValueProjection: Schema.Codec<ValueProjection> = Schema.suspend(() => Schema.Union([
   Schema.Struct({ kind: Schema.Literal("nil"), valueRef: optionalString }),
@@ -49,7 +49,7 @@ export const JsonValueProjection: Schema.Codec<ValueProjection> = Schema.suspend
   Schema.Struct({ kind: Schema.Literal("map"), valueRef: optionalString, entries: Schema.Array(Schema.Struct({ key: value, value })) }),
   Schema.Struct({ kind: Schema.Literal("opaque"), valueRef: optionalString, tag: Schema.String, display: optionalString }),
   Schema.Struct({ kind: Schema.Literal("function"), valueRef: id, display: optionalString }),
-]));
+])).annotate({ identifier: "ValueProjection" });
 const value = JsonValueProjection;
 const configuration = { hostBuiltins: Schema.optionalKey(Schema.Array(builtin)), typePolicy: Schema.optionalKey(policy) };
 const variables = Schema.optionalKey(Schema.Array(Schema.Struct({ name: id, value })));
@@ -76,13 +76,13 @@ const evaluation = { ...session, variables, stepLimit, observe, resultProjection
   retainValues: Schema.optionalKey(Schema.Literals(["none", "functions", "all"])) };
 const artifact = { ...session, sourceId: optionalString, sourceIds: Schema.optionalKey(Schema.Array(id)), backend: optionalString };
 const span = Schema.Struct({ sourceId: Schema.String, startOffset: Schema.Number, endOffset: Schema.Number,
-  startLine: Schema.optional(Schema.Number), startColumn: Schema.optional(Schema.Number), endLine: Schema.optional(Schema.Number), endColumn: Schema.optional(Schema.Number) });
+  startLine: Schema.optional(Schema.Number), startColumn: Schema.optional(Schema.Number), endLine: Schema.optional(Schema.Number), endColumn: Schema.optional(Schema.Number) }).annotate({ identifier: "Span" });
 export const JsonDiagnostic = Schema.Struct({
   code: Schema.String, severity: Schema.Literals(["error", "warning", "info"]), message: Schema.String,
   phase: Schema.optional(Schema.String), span: Schema.optional(span), details: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
   help: Schema.optional(Schema.String),
   fix: Schema.optional(Schema.Array(Schema.Struct({span, newText:Schema.String}))),
-});
+}).annotate({ identifier: "Diagnostic" });
 /** Payloads are operation-specific host projections or engine debug trees. */
 export const JsonResponse = Schema.Struct({
   ok: Schema.Boolean, value: Schema.optionalKey(Schema.Unknown), type: optionalString,
@@ -95,7 +95,7 @@ const optionalIdentity = Schema.optionalKey(identity);
 const base = Schema.Struct({ source: Schema.String, identity });
 const outlineItem: Schema.Codec<OutlineItem> = Schema.suspend(() => Schema.Struct({
   id: Schema.String, text: Schema.String, children: Schema.Array(outlineItem),
-}));
+})).annotate({ identifier: "OutlineItem" });
 const symbolInput = { ...source, identity: optionalIdentity, sessionId: optionalString,
   documents: Schema.optionalKey(Schema.Array(Schema.Struct({ ...document.fields, identity: optionalIdentity }))) };
 const position = { offset: Schema.optionalKey(Schema.Int), nodeId: optionalString };
@@ -106,22 +106,22 @@ const nodeDescription = Schema.Struct({
   id, kind: Schema.Literals(["List", "Vector", "Map", "Set", "Symbol", "String", "Number", "Boolean", "ReaderMacro", "Error", "Comment"]), text: Schema.String,
   parent: Schema.Union([Schema.String, Schema.Null]), head: optionalString,
   path: Schema.Array(Schema.String), topLevel: Schema.Struct({ id, text: Schema.String }),
-});
+}).annotate({ identifier: "NodeDescription" });
 const definition = Schema.Struct({
   key: Schema.String, name: Schema.String,
   kind: Schema.Literals(["value", "function", "macro", "type", "constructor", "method", "declaration", "parameter", "local"]),
   scope: Schema.Literals(["global", "local"]), nodeId: id, span, form: Schema.String,
   formNodeId: optionalString, scopeNodeId: optionalString,
-});
+}).annotate({ identifier: "Definition" });
 const reference = Schema.Struct({
   name: Schema.String, nodeId: id, span,
   resolution: Schema.Literals(["definition", "builtin", "form", "unresolved"]), definition: optionalString,
-});
+}).annotate({ identifier: "Reference" });
 const editPlace = Schema.Union([
   Schema.Struct({ before: id }), Schema.Struct({ after: id }),
   Schema.Struct({ parent: Schema.Union([Schema.String, Schema.Null]), index: Schema.optionalKey(Schema.Int) }),
 ]);
-const insertion = Schema.Struct({ at: editPlace, text: Schema.String, cursor: Schema.Int });
+const insertion = Schema.Struct({ at: editPlace, text: Schema.String, cursor: Schema.Int }).annotate({ identifier: "Insertion" });
 const outlineErrors = Schema.Array(Schema.Struct({ id: Schema.String, message: Schema.String }));
 const typeProjection = Schema.Struct({ kind: Schema.String, display: Schema.String });
 const evaluationResult = Schema.Struct({
