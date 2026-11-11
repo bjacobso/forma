@@ -1,11 +1,11 @@
 # Forma
 
-> Forma is a pre-alpha programmable type system for Lisp: a typed, homoiconic Lisp whose preludes define typed forms for domain-specific languages and portable artifacts. Install the TypeScript engine with `pnpm add @formalang/ts`, or try the browser playground at https://forma-lang.com/playground.
+> Forma is a pre-alpha programmable type system for Lisp: a typed, homoiconic Lisp whose preludes define typed forms for domain-specific languages and portable artifacts. The public package `@forma-language/forma` is not yet published; after publication install with `npm install @forma-language/forma effect`, or try the browser playground at https://forma-lang.com/playground.
 
 Forma source files use `.lisp`; project metadata uses `forma.json` and `forma.lock`.
 
 APIs, package boundaries, syntax, and artifact formats are still evolving.
-The TypeScript host includes a source-built `forma` JSON CLI and daemon, with
+The TypeScript host includes a source-built `forma` CLI (check, run, fmt, repl, explain, and JSON commands) and daemon, with
 filesystem module commands described in [File modules](https://forma-lang.com/modules).
 The TypeScript engine is the only implementation; it also powers the browser
 tools and language server. The earlier OCaml engine was removed.
@@ -21,14 +21,13 @@ A fresh clone uses
 
 ## Getting started
 
-- [Embedding Forma](https://forma-lang.com/embedding): Experimental promise-based host facade for checking, running, capabilities, form discovery, and canonical IR emission without Effect imports.
-
+- [Embedding](https://forma-lang.com/embedding): Experimental promise-based host facade for checking, running, capabilities, form discovery, and canonical IR emission without Effect imports.
+- [Authoring](https://raw.githubusercontent.com/bjacobso/forma/main/docs/authoring.md): Install from source before publication, check and run a first file, then use file modules, typed forms, diagnostics, formatting, and the REPL. Links to runnable project and Node embedding examples.
 - [Quick start](https://raw.githubusercontent.com/bjacobso/forma/main/README.md): Setup, examples, package layout, and current project status.
 - [TypeScript engine](https://raw.githubusercontent.com/bjacobso/forma/main/packages/ts/README.md): Embedding the reader, evaluator, typechecker, VM, and elaborator.
 - [Language guide](https://raw.githubusercontent.com/bjacobso/forma/main/docs/language.md): Syntax, values, types, macros, effects, and elaboration.
 - [Structure and Interpretation of Forma Programs](https://raw.githubusercontent.com/bjacobso/forma/main/docs/structure-and-interpretation.md): SICP-style introduction covering functions, processes, data abstraction, symbolic data, effects, streams, an interpreter, macros, and typed forms, with examples run on the current engine.
 - [Domain modeling in Forma](https://raw.githubusercontent.com/bjacobso/forma/main/docs/domain-modeling.md): A wholesale ordering workflow designed in the style of *Domain Modeling Made Functional*, with brands, refinements, tagged choices, typed errors, and service requirements, compiled to Effect TypeScript; lists current modeling limits.
-- [Authoring your own program](https://raw.githubusercontent.com/bjacobso/forma/main/docs/authoring.md): Write files and run `forma file typecheck`, `file evaluate` (typechecks first; `--unchecked` skips it) and `file declarations` (elaborates forms and lists each application's IR); kernel imports for file modules, a table of checked and evaluate-only builtins, Option filling across modules, polymorphism rules, a test pattern, hook hole values, diagnostics with lines and columns, and the absence of a date type.
 - [File modules](https://raw.githubusercontent.com/bjacobso/forma/main/docs/modules.md): Explicit imports, exports, compile-time form libraries, project preludes, and offline package imports through `forma.json`, verified `forma.lock`, committed vendor sources, and explicit add/update/verify/vendor commands.
 
 ## For agents

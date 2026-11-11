@@ -46,6 +46,7 @@ jobs:
           path: scripts/benchmarks/latency-results.json
           retention-days: 30
       - run: pnpm pack:check
+      - run: pnpm check:examples
       - run: pnpm --filter @formalang/website exec playwright install --with-deps chromium
       - run: pnpm test:visual
       - run: pnpm website:build

@@ -15,6 +15,7 @@
     "release:check": "pnpm check && pnpm pack:check",
     "release:publish": "changeset publish",
     "pack:check": "node scripts/check-packages.mjs",
+    "check:examples": "node scripts/check-examples.mjs",
     "build": "pnpm build:js",
     "build:js": "turbo run build --filter=@forma-language/forma --filter=@formalang/ts --filter=@formalang/host --filter=@formalang/editor --filter=@formalang/language-server --filter=@formalang/website",
     "dev": "pnpm --filter @formalang/website dev",
