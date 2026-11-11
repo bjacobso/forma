@@ -49,55 +49,86 @@
                   }
                 },
                 {
-                  "entries": [
+                  "items": [
                     {
-                      "key": {
-                        "kind": "Expr",
-                        "source": {
-                          "kind": "Symbol",
-                          "name": ":_tag"
-                        },
-                        "span": {
-                          "endOffset": 282,
-                          "sourceId": "surfaces/effect-typescript/surface-review",
-                          "startOffset": 266
-                        }
+                      "kind": "Expr",
+                      "source": {
+                        "kind": "Symbol",
+                        "name": ":"
                       },
-                      "value": {
-                        "kind": "Literal",
-                        "span": {
-                          "endOffset": 282,
-                          "sourceId": "surfaces/effect-typescript/surface-review",
-                          "startOffset": 266
-                        },
-                        "value": "Circle"
+                      "span": {
+                        "endOffset": 282,
+                        "sourceId": "surfaces/effect-typescript/surface-review",
+                        "startOffset": 266
                       }
                     },
                     {
-                      "key": {
-                        "kind": "Expr",
-                        "source": {
-                          "kind": "Symbol",
-                          "name": ":value"
+                      "entries": [
+                        {
+                          "key": {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":_tag"
+                            },
+                            "span": {
+                              "endOffset": 282,
+                              "sourceId": "surfaces/effect-typescript/surface-review",
+                              "startOffset": 266
+                            }
+                          },
+                          "value": {
+                            "kind": "Literal",
+                            "span": {
+                              "endOffset": 282,
+                              "sourceId": "surfaces/effect-typescript/surface-review",
+                              "startOffset": 266
+                            },
+                            "value": "Circle"
+                          }
                         },
-                        "span": {
-                          "endOffset": 281,
-                          "sourceId": "surfaces/effect-typescript/surface-review",
-                          "startOffset": 280
+                        {
+                          "key": {
+                            "kind": "Expr",
+                            "source": {
+                              "kind": "Symbol",
+                              "name": ":value"
+                            },
+                            "span": {
+                              "endOffset": 281,
+                              "sourceId": "surfaces/effect-typescript/surface-review",
+                              "startOffset": 280
+                            }
+                          },
+                          "value": {
+                            "kind": "Literal",
+                            "span": {
+                              "endOffset": 281,
+                              "sourceId": "surfaces/effect-typescript/surface-review",
+                              "startOffset": 280
+                            },
+                            "value": 7
+                          }
                         }
-                      },
-                      "value": {
-                        "kind": "Literal",
-                        "span": {
-                          "endOffset": 281,
-                          "sourceId": "surfaces/effect-typescript/surface-review",
-                          "startOffset": 280
-                        },
-                        "value": 7
+                      ],
+                      "kind": "Record",
+                      "span": {
+                        "endOffset": 282,
+                        "sourceId": "surfaces/effect-typescript/surface-review",
+                        "startOffset": 266
+                      }
+                    },
+                    {
+                      "kind": "Var",
+                      "name": "Shape",
+                      "span": {
+                        "endOffset": 282,
+                        "sourceId": "surfaces/effect-typescript/surface-review",
+                        "startOffset": 266
                       }
                     }
                   ],
-                  "kind": "Record",
+                  "kind": "List",
                   "span": {
                     "endOffset": 282,
                     "sourceId": "surfaces/effect-typescript/surface-review",
@@ -1657,55 +1688,86 @@
             }
           },
           "value": {
-            "entries": [
+            "items": [
               {
-                "key": {
-                  "kind": "Expr",
-                  "source": {
-                    "kind": "Symbol",
-                    "name": ":_tag"
-                  },
-                  "span": {
-                    "endOffset": 339,
-                    "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 321
-                  }
+                "kind": "Expr",
+                "source": {
+                  "kind": "Symbol",
+                  "name": ":"
                 },
-                "value": {
-                  "kind": "Literal",
-                  "span": {
-                    "endOffset": 339,
-                    "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 321
-                  },
-                  "value": "Circle"
+                "span": {
+                  "endOffset": 339,
+                  "sourceId": "surfaces/effect-typescript/surface-review",
+                  "startOffset": 321
                 }
               },
               {
-                "key": {
-                  "kind": "Expr",
-                  "source": {
-                    "kind": "Symbol",
-                    "name": ":value"
+                "entries": [
+                  {
+                    "key": {
+                      "kind": "Expr",
+                      "source": {
+                        "kind": "Symbol",
+                        "name": ":_tag"
+                      },
+                      "span": {
+                        "endOffset": 339,
+                        "sourceId": "surfaces/effect-typescript/surface-review",
+                        "startOffset": 321
+                      }
+                    },
+                    "value": {
+                      "kind": "Literal",
+                      "span": {
+                        "endOffset": 339,
+                        "sourceId": "surfaces/effect-typescript/surface-review",
+                        "startOffset": 321
+                      },
+                      "value": "Circle"
+                    }
                   },
-                  "span": {
-                    "endOffset": 338,
-                    "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 335
+                  {
+                    "key": {
+                      "kind": "Expr",
+                      "source": {
+                        "kind": "Symbol",
+                        "name": ":value"
+                      },
+                      "span": {
+                        "endOffset": 338,
+                        "sourceId": "surfaces/effect-typescript/surface-review",
+                        "startOffset": 335
+                      }
+                    },
+                    "value": {
+                      "kind": "Literal",
+                      "span": {
+                        "endOffset": 338,
+                        "sourceId": "surfaces/effect-typescript/surface-review",
+                        "startOffset": 335
+                      },
+                      "value": "x"
+                    }
                   }
-                },
-                "value": {
-                  "kind": "Literal",
-                  "span": {
-                    "endOffset": 338,
-                    "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 335
-                  },
-                  "value": "x"
+                ],
+                "kind": "Record",
+                "span": {
+                  "endOffset": 339,
+                  "sourceId": "surfaces/effect-typescript/surface-review",
+                  "startOffset": 321
+                }
+              },
+              {
+                "kind": "Var",
+                "name": "Other",
+                "span": {
+                  "endOffset": 339,
+                  "sourceId": "surfaces/effect-typescript/surface-review",
+                  "startOffset": 321
                 }
               }
             ],
-            "kind": "Record",
+            "kind": "List",
             "span": {
               "endOffset": 339,
               "sourceId": "surfaces/effect-typescript/surface-review",

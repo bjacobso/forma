@@ -73,10 +73,11 @@ fixtures for `reverse`, `sqrt`, `reduce`, `conj`, list `concat`, and `quot`.
 The builtin inventory records remaining pass-specific names and legacy gaps;
 it does not claim complete builtin parity. Stage 2 is also implemented:
 non-exhaustive closed-constructor matches are errors in both checkers (PR #141).
+Stage 3 preserves qualified constructor types through local bindings and
+collection joins, and lets optional record fields accept existing options.
 Local definitions and zero-argument functions still have gaps. Unannotated
-arithmetic infers `Float`. The Effect checker loses constructor types,
-rejects options for optional fields, requires literal callbacks, and accepts
-out-of-range literals. The guides document today's workarounds. The fixes are
+arithmetic infers `Float`. The Effect checker still requires literal callbacks
+and accepts out-of-range literals. The guides document today's workarounds. The fixes are
 otherwise proposed, not implemented or scheduled.
 
 ## Languages as libraries

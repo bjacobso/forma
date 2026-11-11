@@ -83,7 +83,7 @@ function body(e: SExpr, protectedNames: ReadonlySet<string> = new Set()): SExpr 
   return { ...e, items: e.items.map(v=>body(v,protectedNames)) };
 }
 
-interface Constructor { readonly tag: SExpr; readonly payload?: SExpr; readonly linked?: boolean; }
+interface Constructor { readonly owner: string; readonly tag: SExpr; readonly payload?: SExpr; readonly linked?: boolean; }
 function lowerConstructors(e: SExpr, constructors: ReadonlyMap<string, Constructor>): SExpr {
   if (head(e) === "quote" || head(e) === "quasiquote") return e;
   if (head(e) === ":" && e._tag === "List") return list(e, [e.items[0]!, lowerConstructors(e.items[1]!, constructors), e.items[2]!]);
@@ -94,7 +94,8 @@ function lowerConstructors(e: SExpr, constructors: ReadonlyMap<string, Construct
     const tag: SExpr = { _tag: "Str", value: (e._tag === "Sym" ? e.name : head(e)!).split(".").at(-1)!, loc: e.loc };
     const fields = arg?._tag === "Map" ? arg.pairs.map(([k,v]) => [k,lowerConstructors(v,constructors)] as const) : arg ? [[sym(arg,":value"),lowerConstructors(arg,constructors)] as const] : [];
     if (constructor.linked) return call(e, e._tag === "Sym" ? e.name : head(e)!, ...(constructor.payload ? [{ _tag: "Map" as const, pairs: fields, loc: e.loc }] : []));
-    return { _tag: "Map", pairs: [[sym(e,`:${tagName.replace(/^:/, "")}`),tag], ...fields], loc: e.loc };
+    const record: SExpr = { _tag: "Map", pairs: [[sym(e,`:${tagName.replace(/^:/, "")}`),tag], ...fields], loc: e.loc };
+    return call(e, ":", record, sym(e, constructor.owner));
   }
   if (e._tag === "List" && head(e) === "match") {
     const items: SExpr[] = [e.items[0]!, lowerConstructors(e.items[1]!, constructors)];
@@ -138,7 +139,7 @@ export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true,
     for (const arm of t.items.slice(custom ? 3 : 1)) {
       const n = arm._tag === "List" ? name(arm.items[0]) : name(arm);
       const owner = name(e.items[1]) ?? head(e.items[1]);
-      if (n && owner) constructors.set(`${owner}.${n}`, {tag,linked:linkedConstructors,...(arm._tag === "List" && arm.items[1] ? {payload:arm.items[1]} : {})});
+      if (n && owner) constructors.set(`${owner}.${n}`, {owner,tag,linked:linkedConstructors,...(arm._tag === "List" && arm.items[1] ? {payload:arm.items[1]} : {})});
     }
   }
   const protectedNames = new Set(constructors.keys());

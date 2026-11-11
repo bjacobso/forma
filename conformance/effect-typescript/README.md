@@ -55,6 +55,7 @@ For each positive case the runner checks that:
 | `recursive-schemas` | Self and mutually recursive schemas through `Schema.suspend`, a recursive function over a tagged tree, pattern, length, and range filters checked when decoding |
 | `config-and-logging` | `Config` reads with defaults, `ConfigError`, `log` |
 | `pure-domain-logic` | `Schema.Class`, typed constants, pure functions, value-level `match`, collection and string functions |
+| `checker-parity-records` | RFC 0019 E1–E3: qualified constructors through local bindings and collection joins; copying optional fields, `Some`, `None`, and plain field values |
 | `stream-pipeline` | Stream construction, effectful mapping with concurrency, `take`, folds, `runForEach`, functions returning streams |
 | `operational-effects` | The shared operational-effects fixture (`../operational-effects`) |
 | `edge-cases` | Regressions from adversarial testing: escaping, binder capture, prototype keys, shadowing, literal widening, literal and error matches, `provide` inside layer methods |

@@ -162,6 +162,17 @@ The *and* of the domain is a record. Fields are required unless their type is
    :delivery Delivery})
 ```
 
+An optional field accepts a plain value or an existing `Option`. Copying a
+field preserves its absence; `None` omits the generated object's key rather
+than storing `undefined`:
+
+```lisp
+(type OrderNote {:note (Option String) :revision Int})
+(: copy-note (-> OrderNote OrderNote))
+(define copy-note [previous]
+  {:note (get previous :note) :revision (+ (get previous :revision) 1)})
+```
+
 ### Each state is its own type
 
 An order is not one record that gains fields as the workflow runs. Each stage
@@ -425,14 +436,16 @@ recovery is removed, the checker reports that `acknowledge` can fail with
 ```lisp
 (: events-for (-> PricedOrder Bool (List OrderEvent)))
 (define events-for [order acknowledged]
-  (if acknowledged
-    [(OrderEvent.OrderPlaced {:order order})
-     (OrderEvent.InvoiceRequested
-       {:order-id (get order :id) :cafe (get order :cafe) :amount (get order :total)})
-     (OrderEvent.AcknowledgmentSent {:order-id (get order :id) :email (get order :email)})]
-    [(OrderEvent.OrderPlaced {:order order})
-     (OrderEvent.InvoiceRequested
-       {:order-id (get order :id) :cafe (get order :cafe) :amount (get order :total)})]))
+  (let [placed (OrderEvent.OrderPlaced {:order order})
+        billed (OrderEvent.InvoiceRequested
+                 {:order-id (get order :id)
+                  :cafe (get order :cafe)
+                  :amount (get order :total)})]
+    (concat [placed billed]
+      (if acknowledged
+        [(OrderEvent.AcknowledgmentSent
+           {:order-id (get order :id) :email (get order :email)})]
+        []))))
 ```
 
 ### Compose
@@ -598,22 +611,13 @@ builds a small one from scratch.
 ## What the model can't express yet
 
 Forma is pre-alpha. These limits affect domain modeling today.
-[RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) proposes fixes for the first four.
+[RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) proposes fixes for the first two.
 
 - **Refinements are checked at decode time, not proven.** `(Bags 0)`,
   `(Quantity 0)`, and even `-5` declared as `Cents` compile. Use `decode` or a
   smart constructor for values you haven't checked. The RFC proposes checking
   literals at compile time; computed values would still be checked at run
   time.
-- **Construct tagged values where their type is expected.** A tagged value
-  bound with `let` loses its union type and is rejected later. That's why
-  `events-for` builds its events inside each branch. Concatenating lists of
-  different constructors fails the same way.
-- **Optional fields can't be copied from an `Option` value.** When one stage's
-  record has an `(Option T)` field and the next stage's record has the same
-  field, assigning `(get record :field)` directly is rejected. Match on the
-  option and build the record in each branch, or keep the field out of later
-  stages.
 - **`for-each` needs a literal `fn`.** `(for-each lines price-line)` is
   rejected, so `price-order` writes `(fn [line] (price-line line))`. `map`
   already accepts a named function.
