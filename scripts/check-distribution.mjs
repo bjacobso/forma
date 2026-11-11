@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import { build } from "tsdown";
 
 const root = new URL("../", import.meta.url);
+// tsdown resolves entries against the working directory; package scripts run from packages/forma.
+process.chdir(root.pathname);
 const manifest = JSON.parse(await readFile(new URL("packages/forma/package.json", root), "utf8"));
 assert.equal(manifest.name, "@forma-language/forma");
 assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
