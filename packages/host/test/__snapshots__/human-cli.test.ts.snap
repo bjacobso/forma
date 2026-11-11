@@ -1,0 +1,71 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`human CLI > preserves the exact machine file responses > declarations main.lisp 1`] = `
+"{"ok":true,"value":[],"diagnostics":[]}
+"
+`;
+
+exports[`human CLI > preserves the exact machine file responses > evaluate --unchecked main.lisp 1`] = `
+"{"ok":true,"value":{"status":"completed","result":{"value":{"kind":"int","value":3},"printed":"3","steps":4,"diagnostics":[]}},"diagnostics":[]}
+"
+`;
+
+exports[`human CLI > preserves the exact machine file responses > evaluate main.lisp 1`] = `
+"{"ok":true,"value":{"status":"completed","result":{"value":{"kind":"int","value":3},"printed":"3","steps":4,"diagnostics":[]}},"diagnostics":[]}
+"
+`;
+
+exports[`human CLI > preserves the exact machine file responses > interface main.lisp 1`] = `
+"{"ok":true,"value":{"entry":"<cwd>/main.lisp","interfaces":[{"moduleId":"<cwd>/main.lisp","exports":[]}],"diagnostics":[]},"diagnostics":[]}
+"
+`;
+
+exports[`human CLI > preserves the exact machine file responses > typecheck bad.lisp 1`] = `
+"{"ok":false,"value":{"sourceId":"<cwd>/bad.lisp","pass":"typecheck","diagnostics":[{"code":"typecheck/type-mismatch","severity":"error","message":"Argument 2 to +: Type mismatch: String vs Float (at line 1, column 6)","phase":"typecheck","span":{"sourceId":"<cwd>/bad.lisp","startOffset":5,"endOffset":11,"startLine":1,"startColumn":6,"endLine":1,"endColumn":12}}]},"diagnostics":[{"code":"typecheck/type-mismatch","severity":"error","message":"Argument 2 to +: Type mismatch: String vs Float (at line 1, column 6)","phase":"typecheck","span":{"sourceId":"<cwd>/bad.lisp","startOffset":5,"endOffset":11,"startLine":1,"startColumn":6,"endLine":1,"endColumn":12}}]}
+"
+`;
+
+exports[`human CLI > preserves the exact machine file responses > typecheck main.lisp 1`] = `
+"{"ok":true,"value":{"sourceId":"<cwd>/main.lisp","pass":"typecheck","display":"Int","type":{"kind":"named","name":"Int","display":"Int"},"diagnostics":[]},"type":"Int","diagnostics":[]}
+"
+`;
+
+exports[`human CLI > renders mismatch diagnostics 1`] = `
+"error[typecheck/type-mismatch]: Argument 2 to +: Type mismatch: String vs Float
+  --> main.lisp:1:6
+   |
+ 1 | (+ 1 "nope")
+   |      ^^^^^^
+1 errors, 0 warnings
+"
+`;
+
+exports[`human CLI > renders modules diagnostics 1`] = `
+"error[typecheck/type-mismatch]: Argument 2 to +: Type mismatch: String vs Float
+  --> dep.lisp:2:21
+   |
+ 2 | (define answer (+ 1 "nope"))
+   |                     ^^^^^^
+1 errors, 0 warnings
+"
+`;
+
+exports[`human CLI > renders syntax diagnostics 1`] = `
+"error[read/syntax]: Unclosed list
+  --> main.lisp:1:1
+   |
+ 1 | (+ 1
+   | ^
+1 errors, 0 warnings
+"
+`;
+
+exports[`human CLI > renders unbound diagnostics 1`] = `
+"error[typecheck/unbound-symbol]: Unbound variable: missing
+  --> main.lisp:1:1
+   |
+ 1 | missing
+   | ^^^^^^^
+1 errors, 0 warnings
+"
+`;

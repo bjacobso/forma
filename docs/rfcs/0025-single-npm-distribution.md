@@ -83,7 +83,7 @@ evidence that every exported graph is Node-only, nor proof of browser safety.
   `daemon`, `file typecheck/evaluate/interface/declarations`, package commands,
   version, and help. Evaluation checks first unless `--unchecked` is supplied.
   JSON ABI session `replSubmit` exists; there is no shipped `forma repl` command.
-  The [readline prototype](../../packages/ts/src/cli/repl.ts) is not a declared
+  The retired readline prototype is not a declared
   npm bin. Do not accidentally turn it into a second supported CLI.
 - [`Engine`](../../packages/ts/src/Engine.ts) owns parse/expand/check/evaluate
   requests and results. Reader, expander, HM inference, interpreter, and VM are
