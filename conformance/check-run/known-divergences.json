@@ -1,11 +1,5 @@
 [
   {
-    "id": "E1",
-    "seed": "seeds/e1-partial-application.lisp",
-    "category": "accepted-but-fails",
-    "note": "Partial application is inferred but the evaluator requires both arguments."
-  },
-  {
     "id": "E2",
     "seed": "seeds/e2-map-numeric-kind.lisp",
     "category": "type-disagrees",

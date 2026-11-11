@@ -40,6 +40,10 @@ export const emptySubst: Subst = {
 // ---------------------------------------------------------------------------
 
 export function applyType(s: Subst, t: Type): Type {
+  if (t.nullaryResult) {
+    const { nullaryResult, ...base } = t;
+    return { ...applyType(s, base), nullaryResult: applyType(s, nullaryResult) };
+  }
   switch (t._tag) {
     case "TVar": {
       const hit = s.tvars.get(t.id);
@@ -50,19 +54,19 @@ export function applyType(s: Subst, t: Type): Type {
     case "TFun": {
       const effect = t.effect ? applyERow(s, t.effect) : undefined;
       const rest = t.rest ? applyType(s, t.rest) : undefined;
-      return TFun(applyType(s, t.arg), applyType(s, t.res), effect, rest);
+      return { ...t, ...TFun(applyType(s, t.arg), applyType(s, t.res), effect, rest) };
     }
     case "TVariadic": {
       const effect = t.effect ? applyERow(s, t.effect) : undefined;
       return TVariadic(applyType(s, t.rest), applyType(s, t.res), effect);
     }
     case "TApp":
-      return TApp(
+      return { ...t, ...TApp(
         applyType(s, t.con),
         t.args.map((a) => applyType(s, a)),
-      );
+      ) };
     case "TRow":
-      return TRow(applyRow(s, t.row));
+      return { ...t, ...TRow(applyRow(s, t.row)) };
   }
 }
 

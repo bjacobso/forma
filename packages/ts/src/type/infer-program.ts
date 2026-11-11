@@ -206,7 +206,9 @@ export const inferProgram = (
                   const sigT = yield* typeExprToType(defExpr.signature, tvarMap, rvarMap);
                   seedEnv.set(defExpr.name, mono(sigT));
                 } else if (!seedEnv.has(defExpr.name)) {
-                  seedEnv.set(defExpr.name, mono(yield* ctx.freshTVar));
+                  const placeholder = yield* ctx.freshTVar;
+                  seedEnv.set(defExpr.name, mono(defExpr.expr._tag === "Lam" && !defExpr.expr.restParam
+                    ? { ...placeholder, arity: defExpr.expr.params.length } : placeholder));
                 }
               }
 

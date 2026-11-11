@@ -55,7 +55,14 @@ export interface TRow {
   readonly row: Row;
 }
 
-export type Type = TVar | TCon | TFun | TVariadic | TApp | TRow;
+export type Type = (TVar | TCon | TFun | TVariadic | TApp | TRow) & {
+  /** Parameters consumed by one call, excluding any returned function. */
+  readonly arity?: number;
+  /** The arrow representation has no parameter node for a nullary function. */
+  readonly nullaryResult?: Type;
+  /** Numeric builtin values specialize when applied or checked as callbacks. */
+  readonly numericOperator?: string;
+};
 
 // ---------------------------------------------------------------------------
 // Rows
@@ -434,7 +441,7 @@ export function fnType(params: readonly Type[], ret: Type): Type {
   for (let i = params.length - 1; i >= 0; i--) {
     result = TFun(params[i]!, result);
   }
-  return result;
+  return { ...result, arity: params.length, ...(params.length === 0 ? { nullaryResult: ret } : {}) };
 }
 
 export function variadicFnType(

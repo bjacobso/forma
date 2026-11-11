@@ -10,6 +10,14 @@ import { InferenceError, type Origin } from "./errors.js";
 export const assignType = (actual: Type, expected: Type, origin: Origin): Effect.Effect<void,InferenceError,InferContext> => Effect.gen(function* () {
   const ctx = yield* InferContext, subst = yield* Ref.get(ctx.subst);
   const a = applyType(subst,actual), b = applyType(subst,expected);
+  if (a.numericOperator && b._tag === "TFun" && b.res._tag === "TFun") {
+    const left = b.arg, right = b.res.arg;
+    yield* assignType(left, TCon("Float"), origin);
+    yield* assignType(right, TCon("Float"), origin);
+    const result = a.numericOperator === "/" ? TCon("Float") : yield* joinType(left, right, origin);
+    yield* assignType(result, b.res.res, origin);
+    return;
+  }
   if (a._tag === "TVar" || b._tag === "TVar") return yield* unify(a, b, origin);
   if (a._tag === "TApp" && a.con._tag === "TCon" && a.con.name === "Union") {
     for (const member of a.args) yield* assignType(member,b,origin);

@@ -319,7 +319,7 @@ export function evalList(
     }
 
     // Check if it resolved to a builtin name — args are NOT in tail position
-    if (typeof fn === "string" && fn in runtime.builtins) {
+    if (isKBuiltin(fn) || typeof fn === "string" && fn in runtime.builtins) {
       const prevTail2 = getTcoTail();
       setTcoTail(false);
       const args: KValue[] = [];
@@ -329,7 +329,7 @@ export function evalList(
       setTcoTail(prevTail2);
       const applyFn = (kfn: KValue, fnArgs: readonly KValue[]) =>
         applyCallableValue(kfn, fnArgs, runtime);
-      return yield* runtime.builtins[fn]!(args, applyFn);
+      return yield* applyCallableValue(isKBuiltin(fn) ? fn : makeKBuiltin(fn), args, runtime);
     }
 
     return yield* new KernelTypeError({
