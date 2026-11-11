@@ -1,3 +1,4 @@
+import { diagnosticLocator } from "../diagnostic/locations.js";
 import { validateHostTypes, hostTypeNames } from "./type-policy.js";
 import { analyzeLsp } from "../lsp/hm-lsp.js";
 import { hasEffectDeclarations } from "../mechanics/analysis.js";
@@ -183,7 +184,7 @@ export function parse(request: ParseRequest): ParseResult {
   return result;
 }
 
-export function parseSource(request: ParseRequest): ParsedSource {
+function parseSourceUnlocated(request: ParseRequest): ParsedSource {
   const sourceId = request.sourceId ?? "source";
   try {
     const exprs = Effect.runSync(Reader.parseManyToSExpr(request.source));
@@ -205,7 +206,7 @@ export function parseSource(request: ParseRequest): ParsedSource {
   }
 }
 
-export function expand(request: ExpandRequest): ExpandResult {
+function expandUnlocated(request: ExpandRequest): ExpandResult {
   const sourceId = request.sourceId ?? (!request.source && request.session?.orderedSources("source").length === 1
     ? request.session.orderedSources("source")[0]!.id : "source");
   const source = sourceFromRequest(request);
@@ -220,11 +221,7 @@ export function expand(request: ExpandRequest): ExpandResult {
           severity: "error",
           message: `No loaded source found for ${request.sourceId ?? "source"}`,
           phase: "expand",
-          span: {
-            sourceId,
-            startOffset: 0,
-            endOffset: 0,
-          },
+          span: { sourceId, startOffset: 0, endOffset: 0, startLine: 1, startColumn: 1, endLine: 1, endColumn: 1 },
         },
       ],
     };
@@ -272,7 +269,7 @@ function formDiagnostics(request: TypecheckRequest, sourceId: string, source: st
   return elaborateSources([{sourceId,source}], {prelude:cached.prelude}).diagnostics.filter(d=>d.span?.sourceId === sourceId);
 }
 
-export function typecheck(request: TypecheckRequest): TypecheckResult {
+function typecheckUnlocated(request: TypecheckRequest): TypecheckResult {
   const sourceId = request.sourceId ?? (!request.source && request.session?.orderedSources("source").length === 1
     ? request.session.orderedSources("source")[0]!.id : "source");
   const source = sourceFromRequest(request);
@@ -299,11 +296,7 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
           severity: "error",
           message: `No loaded source found for ${request.sourceId ?? "session"}`,
           phase: "typecheck",
-          span: {
-            sourceId,
-            startOffset: 0,
-            endOffset: 0,
-          },
+          span: { sourceId, startOffset: 0, endOffset: 0, startLine: 1, startColumn: 1, endLine: 1, endColumn: 1 },
         },
       ],
     };
@@ -374,7 +367,7 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
   }
 }
 
-export async function evaluate(request: EvaluateRequest): Promise<EvaluateResult> {
+async function evaluateUnlocated(request: EvaluateRequest): Promise<EvaluateResult> {
   const sourceId = request.sourceId ?? "source";
   if (request.observe) {
     return evaluateObserved(request, request.observe, Builtins.defaultBuiltins);
@@ -409,7 +402,7 @@ export async function evaluate(request: EvaluateRequest): Promise<EvaluateResult
   }
 }
 
-export async function evaluateInSession(
+async function evaluateInSessionUnlocated(
   request: EvaluateInSessionRequest,
 ): Promise<EvaluateResult> {
   const sourceId = request.sourceId ?? (request.source ? "session" : (request.session.orderedSources("source")[0]?.id ?? "session"));
@@ -489,7 +482,7 @@ function moduleDiagnostic(error:unknown,phase:DiagnosticPhase,sourceId:string):D
  * author-written expression that contains their span, and the records
  * computed before a failure are returned with it.
  */
-export async function evaluateObserved(
+async function evaluateObservedUnlocated(
   request: EvaluateRequest,
   observe: Evaluator.ObservationOptions,
   builtins: Record<string, Evaluator.BuiltinFn>,
@@ -813,4 +806,41 @@ function primitiveType(name: string): Type.Type {
       if (!hostTypeNames.has(name)) throw new Type.InferenceError({ message: `Unknown host type ${name}`, details: { code: "typecheck/host-builtin" } });
       return Type.TCon(name);
   }
+}
+
+export function parseSource(request: ParseRequest): ParsedSource {
+  const result = parseSourceUnlocated(request);
+  return { ...result, diagnostics: result.diagnostics.map(diagnosticLocator(() => request.source)) };
+}
+
+export function expand(request: ExpandRequest): ExpandResult {
+  return locateResult(expandUnlocated(request), request);
+}
+
+export function typecheck(request: TypecheckRequest): TypecheckResult {
+  return locateResult(typecheckUnlocated(request), request);
+}
+
+export async function evaluate(request: EvaluateRequest): Promise<EvaluateResult> {
+  return locateResult(await evaluateUnlocated(request), request);
+}
+
+export async function evaluateInSession(request: EvaluateInSessionRequest): Promise<EvaluateResult> {
+  return locateResult(await evaluateInSessionUnlocated(request), request);
+}
+
+function locateResult<R extends PassResult>(result: R, request: { readonly source?: string | undefined; readonly sourceId?: string | undefined; readonly session?: LanguageSession | undefined }): R {
+  const locate = diagnosticLocator(id => (id === result.sourceId ? request.source : undefined) ?? request.session?.sourceText(normalizeModuleId(id)));
+  return {
+    ...result,
+    diagnostics: result.diagnostics.map(locate),
+    ...("observations" in result && result.observations ? { observations: {
+      ...(result.observations as ObservationReport),
+      records: (result.observations as ObservationReport).records.map(record => ({ ...record, ...(record.failure ? { failure: locate(record.failure) } : {}) })),
+    } } : {}),
+  };
+}
+
+export async function evaluateObserved(...args: Parameters<typeof evaluateObservedUnlocated>): Promise<EvaluateResult> {
+  return locateResult(await evaluateObservedUnlocated(...args), args[0]);
 }

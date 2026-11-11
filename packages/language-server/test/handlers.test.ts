@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { describe, expect, test, vi } from "vitest";
+import { diagnosticLocator } from "@formalang/ts/diagnostic";
 import { elaborateProgram } from "@formalang/ts/descriptor";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionItemKind, ResponseError, SymbolKind } from "vscode-languageserver";
@@ -61,7 +62,7 @@ describe("Forma language server handlers", () => {
     // AnalysisWorkspace currently suppresses unknown-form diagnostics. Use the
     // real elaborator output to pin the LSP forwarding contract independently.
     const result = elaborateProgram(source, { prelude: workspace.analysis.scope(uri).prelude!, sourceId: uri });
-    const diagnosticsQuery = vi.spyOn(workspace.analysis, "diagnostics").mockReturnValue(result.diagnostics);
+    const diagnosticsQuery = vi.spyOn(workspace.analysis, "diagnostics").mockReturnValue(result.diagnostics.map(diagnosticLocator(() => source)));
     const diagnostics = getDiagnostics(workspace, document).diagnostics;
     diagnosticsQuery.mockRestore();
     const diagnostic = diagnostics.find((item) => item.code === "elaborate/unknown-form")!;

@@ -738,7 +738,7 @@ const inferApp = (
         const t = yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst),env),arg);
         yield* assignType(t,op === "mod" ? TCon("Int") : tFloat,originOf(arg,"numeric-argument")).pipe(
           Effect.mapError(error => new InferenceError({
-            message: `Argument ${index + 1} to ${op}: ${error.message.replace(/ \(at offset \d+\)$/, "")}`,
+            message: `Argument ${index + 1} to ${op}: ${error.message}`,
             origin: error.origin,
             details: error.details,
           })),

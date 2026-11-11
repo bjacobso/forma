@@ -6,18 +6,20 @@ import { createInterface } from "node:readline";
 import { managePackages, readModuleGraph, readNodePackages, verifyPackages } from "@formalang/ts/node";
 import { ModuleError, moduleMechanicsDeclarations, type ModuleGraph } from "@formalang/ts/modules";
 import { isKFloat, isKKeyword, isKSymbol, mapKeyValue, type KValue } from "@formalang/ts/evaluator";
-import { diagnosticCatalog } from "@formalang/ts/diagnostic";
+import { authorNames, diagnosticCatalog } from "@formalang/ts/diagnostic";
 import { generateTypeSchemas } from "@formalang/ts/mechanics";
 import { JsonAbi, type JsonResponse } from "./json-abi.js";
-import { authorNames, locateResponse } from "./diagnostic-locations.js";
 
 const abi = new JsonAbi();
-/** File sources are on disk, keyed by absolute path, so every diagnostic can carry a line and column. */
-const fileText = (sourceId: string): string | undefined => {
-  try { return sourceId.startsWith("/") ? readFileSync(sourceId, "utf8") : undefined; } catch { return undefined; }
-};
 const print = (response: JsonResponse) => {
-  if (command === "file") response = locateResponse(response, fileText);
+  if (command === "file" && response.value && typeof response.value === "object" && !Array.isArray(response.value)) {
+    const { diagnostics: _diagnostics, ...value } = response.value as Record<string, unknown>;
+    if (value.result && typeof value.result === "object" && !Array.isArray(value.result)) {
+      const { diagnostics: _resultDiagnostics, ...result } = value.result as Record<string, unknown>;
+      value.result = result;
+    }
+    response = { ...response, value };
+  }
   process.stdout.write(JSON.stringify(response) + "\n");
   // A file command that reports errors fails the process, so scripts can rely on it.
   if (command === "file" && !response.ok) process.exitCode = 1;

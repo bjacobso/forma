@@ -1,3 +1,4 @@
+import { spanLocator } from "../diagnostic/locations.js";
 import { Effect } from "effect";
 import { Env } from "../Env.js";
 import { defaultBuiltins } from "../Builtins.js";
@@ -93,11 +94,11 @@ export class ModuleRuntime {
           phase: "evaluate",
           message:
             "Evaluate this Effect program through linkEffectModules and the Effect runtime; kernel module evaluation supports pure definitions.",
-          span: {
+          span: spanLocator(module.source)({
             sourceId: module.id,
             startOffset: effect.loc.start,
             endOffset: effect.loc.end,
-          },
+          }),
         });
     }
     for (const module of graph.modules) {

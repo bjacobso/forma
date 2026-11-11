@@ -175,9 +175,11 @@ describe("JSON process ABI", () => {
       const refused = spawnSync(process.execPath,[cli,"file","evaluate",join(dir,"main.lisp")],{encoding:"utf8"});
       expect(refused.status).toBe(1);
       expect(JSON.parse(refused.stdout)).toMatchObject({ok:false,value:{pass:"typecheck"},diagnostics:[{code:"typecheck/type-mismatch",span:{startLine:2,startColumn:1}}]});
+      expect(JSON.parse(refused.stdout).value).not.toHaveProperty("diagnostics");
       expect(JSON.parse(refused.stdout).diagnostics[0].message).not.toMatch(/at offset|__forma_/);
       const unchecked = spawnSync(process.execPath,[cli,"file","evaluate","--unchecked",join(dir,"main.lisp")],{encoding:"utf8"});
       expect(JSON.parse(unchecked.stdout)).toMatchObject({ok:true,value:{result:{printed:"false"}}});
+      expect(JSON.parse(unchecked.stdout).value.result).not.toHaveProperty("diagnostics");
       // declarations lists each form application's IR with author names.
       writeFileSync(join(dir,"forms.lisp"),'(export note NoteIR) (type NoteIR {:kind "Note" :name Symbol :text String}) (form (note name text) "A note." :types {:name (Declares NoteDecl) :text String} :ir NoteIR {:kind "Note" :name name :text text})');
       writeFileSync(join(dir,"main.lisp"),'(import "./forms.lisp" [note]) (note hello "hi")');

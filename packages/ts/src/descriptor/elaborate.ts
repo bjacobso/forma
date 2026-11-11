@@ -1,3 +1,4 @@
+import { diagnosticLocator, spanLocator, type LocatedSpan } from "../diagnostic/locations.js";
 import { isKFloat } from "../evaluator/types.js";
 import { irContractId, payloadConstraintsId } from "../artifact/contract-identity.js";
 import { descriptorPayloadContract, descriptorValidatorNames, checkArtifactDescriptor, checkArtifactPayloadContracts, payloadContractsFromSources } from "../artifact/descriptor-contracts.js";
@@ -355,7 +356,7 @@ export function elaborateSources(
   return {
     ok: !diagnostics.some((diagnostic) => diagnostic.severity === "error"),
     declarations,
-    diagnostics,
+    diagnostics: diagnostics.map(diagnosticLocator(id => sources.find(source => source.sourceId === id)?.source)),
   };
 }
 
@@ -418,33 +419,9 @@ export function declarationDiagnostic(
 }
 
 /** Compute a full span (with end line and column) for a reader location. */
-export function sourceLocator(source: string, sourceId: string): (loc: Loc) => Span {
-  const lineStarts = [0];
-  for (let index = 0; index < source.length; index++) {
-    if (source.charCodeAt(index) === 10) lineStarts.push(index + 1);
-  }
-  const position = (offset: number): { line: number; column: number } => {
-    let low = 0;
-    let high = lineStarts.length - 1;
-    while (low < high) {
-      const mid = (low + high + 1) >> 1;
-      if (lineStarts[mid]! <= offset) low = mid;
-      else high = mid - 1;
-    }
-    return { line: low + 1, column: offset - lineStarts[low]! + 1 };
-  };
-  return (loc) => {
-    const end = position(loc.end);
-    return {
-      sourceId,
-      startOffset: loc.start,
-      endOffset: loc.end,
-      startLine: loc.line,
-      startColumn: loc.col,
-      endLine: end.line,
-      endColumn: end.column,
-    };
-  };
+export function sourceLocator(source: string, sourceId: string): (loc: Loc) => LocatedSpan {
+  const locate = spanLocator(source);
+  return loc => locate({ sourceId, startOffset: loc.start, endOffset: loc.end });
 }
 
 /**
