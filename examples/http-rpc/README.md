@@ -50,10 +50,15 @@ Use Node 24 and pnpm 10.20 from the repository root:
 
 ```sh
 pnpm install --frozen-lockfile
+pnpm exec turbo run build --filter=@forma-language/forma
+pnpm --dir packages/forma pack --out /tmp/forma.tgz
+npm install --prefix examples/http-rpc /tmp/forma.tgz effect@4.1.1
 bash examples/http-rpc/check.sh
 node examples/http-rpc/server.ts
 ```
 
+The generator imports `@forma-language/forma/http-api` and `/rpc`. The package
+is not yet published, so the commands above install a local tarball.
 The check builds the compiler, checks saved generation against sources, strictly
 typechecks generated and native code, and runs contract-negative and transport
 integration tests. To regenerate after editing a `.lisp` file:
@@ -115,7 +120,7 @@ The tests assert this distinction and verify rejected requests leave state intac
   sockets; the walkthrough above was also run against the supervised server.
 - HTTP lowering is the existing shipped spike, not universal HTTP support.
   Its documented middleware, streaming and module-import limits still apply.
-- RPC contracts use the dedicated `rpc.lisp` prelude and `@formalang/ts/rpc`
+- RPC contracts use the dedicated `rpc.lisp` prelude and `@forma-language/forma/rpc`
   adapter, which support named unary groups and checked schemas without changes
   to mechanics. Native handler registration is still explicit; streaming,
   middleware and Forma file-module RPC linking are not implemented.
@@ -126,5 +131,6 @@ The tests assert this distinction and verify rejected requests leave state intac
   suspension, so it is atomic in one JavaScript process, not across replicas.
   No persistence, authentication, cancellation policy, idempotency or production
   reservation lifecycle is claimed. Swagger covers HTTP, not RPC.
-- These checks are intentionally local to the example, not added to root CI.
+- The full transport checks are local to the example. CI checks saved generation
+  and negative generator cases against the packed distribution.
   Generated code remains reviewable; `--check` fails rather than rewriting drift.

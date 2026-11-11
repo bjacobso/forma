@@ -1,11 +1,11 @@
 # Embedding Forma
 
-The **experimental** `createLanguage` facade in `@formalang/host` checks and
+The **experimental** `createLanguage` facade in `@forma-language/forma` checks and
 runs source through the TypeScript language host. It needs no Effect imports
 or session management. Its API may change before Forma stabilizes.
 
 ```ts
-import { createLanguage } from "@formalang/host";
+import { createLanguage } from "@forma-language/forma";
 const lang = await createLanguage({
   preludes: [{ id: "app.lisp", source: "(define greeting \"Hello\")" }],
   capabilities: {
@@ -26,6 +26,10 @@ loaded preludes; program definitions are not retained between runs. Prelude
 initialization itself validates and evaluates declarations with `kind: "prelude"`.
 Invalid preludes reject creation with `LanguageInitializationError`, whose
 `diagnostics` explain the failure; the session is released.
+
+See the [runnable Node example](https://github.com/bjacobso/forma/tree/main/examples/embed-node)
+for a prelude with a checked form, one granted capability, and `node:test` tests.
+For installation before publication, follow [Authoring](./authoring.md#setup).
 
 ## Capabilities and values
 

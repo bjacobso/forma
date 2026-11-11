@@ -2,8 +2,7 @@
 
 This page is for people writing Forma outside this repository's own tests and
 examples. It shows how to write files, check them, run them, elaborate forms,
-and read the results. Forma is pre-alpha: the commands below run from a source
-checkout, and their behavior may still change.
+and read the results. Forma is pre-alpha; command behavior and APIs may still change.
 
 ## What you can build
 
@@ -18,17 +17,24 @@ checkout, and their behavior may still change.
 
 ## Setup
 
-Use Node.js 24 and pnpm 10.20. Check with `node --version`: pnpm does not stop
-you from installing with an older Node. There is no published `forma` CLI yet:
-from a source checkout, build `@formalang/host` and run its `dist/cli.mjs`.
+Use Node.js 24. Install the public distribution and its required Effect peer:
+
+```sh
+npm install @forma-language/forma effect
+```
+
+**`@forma-language/forma` is not yet published.** That install command is for
+after publication. For now, use a source checkout with pnpm 10.20:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm --filter @formalang/ts build
-pnpm --filter @formalang/host build
-alias forma="node $PWD/packages/host/dist/cli.mjs"
+pnpm exec turbo run build --filter=@forma-language/forma
+alias forma="node $PWD/packages/forma/dist/cli.mjs"
 forma help
 ```
+
+With a local npm install, use `npx forma` for the commands below; the source
+alias lets you use `forma` directly from any directory in the same shell.
 
 `forma help` lists every command and exits 0. An unknown command prints the same
 text on stderr and exits 64.
@@ -38,19 +44,7 @@ text on stderr and exits 64.
 Save this as `main.lisp`:
 
 ```lisp
-(type Risk (Union :low :high))
-(type Vendor {:name String :risk Risk :reviewed-on (Option Int)})
-
-(: reviewed? (-> Vendor Bool))
-(define reviewed? [vendor]
-  (match vendor.reviewed-on
-    (Some day) (>= day 0)
-    None false))
-
-(: acme Vendor)
-(define acme {:name "Acme" :risk :high :reviewed-on 900})
-
-(reviewed? acme)
+(+ 20 22)
 ```
 
 Check it, then run it:
@@ -59,6 +53,13 @@ Check it, then run it:
 forma check main.lisp
 forma run main.lisp
 ```
+
+The result is `42`. Next, try the standalone
+[project example](https://github.com/bjacobso/forma/tree/main/examples/project),
+with a form library and imported data. To embed a language in a Node app, see
+[Embedding](./embedding.md) and the
+[Node example](https://github.com/bjacobso/forma/tree/main/examples/embed-node).
+Both examples are tested against the packed distribution by `pnpm check:examples`.
 
 `check` typechecks the module graph and renders diagnostics with source excerpts
 on stderr. `run` checks first, then prints the evaluated value on stdout. Both

@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { generateHttpApiProgram } from "../../packages/ts/dist/HttpApi.mjs";
-import { generateRpcProgram } from "../../packages/ts/dist/Rpc.mjs";
+import { generateHttpApiProgram } from "@forma-language/forma/http-api";
+import { generateRpcProgram } from "@forma-language/forma/rpc";
 
 const read = name => readFileSync(new URL(name, import.meta.url), "utf8");
 export function compile(domain = read("domain.lisp"), http = read("http.lisp"), rpc = read("rpc.lisp")) {
