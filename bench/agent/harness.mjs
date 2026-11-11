@@ -33,6 +33,44 @@ export function parseOptions(args) {
 export async function taskIds() {
   return (await readdir(tasksRoot, { withFileTypes: true })).filter(d => d.isDirectory()).map(d => d.name).sort();
 }
+// Self-contained so the generated wrapper can embed it without importing harness code.
+export function parseDiagnostics(stdout, stderr) {
+  let diagnostics;
+  try { diagnostics = JSON.parse(stdout)?.diagnostics ?? []; }
+  catch {
+    diagnostics = [...(stderr ?? "").matchAll(/^(?:error|warning)\[([^\]]+)\]:[^\S\r\n]*(.*)$/gm)]
+      .map(([, code, message]) => ({ code, message }));
+  }
+  if (!Array.isArray(diagnostics)) diagnostics = [];
+  return {
+    diagnosticCodes: [...new Set(diagnostics.map(d => d.code).filter(code => typeof code === "string"))],
+    messages: diagnostics.map(d => String(d.message ?? "").split(/\r?\n/)[0].slice(0, 200)),
+  };
+}
+export function failingCalls(calls) {
+  return calls.filter(call => call.exitCode !== 0).map(call => ({
+    argv: call.argv, codes: [...new Set(call.diagnosticCodes ?? [])], messages: call.messages ?? [],
+  }));
+}
+export function summarizeDiagnostics(taskCalls) {
+  const summary = new Map();
+  for (const { calls, dir, entry } of taskCalls) {
+    const repairs = new Set(repairCallIndices(calls, dir, entry).failures);
+    const seen = new Set();
+    for (const [i, call] of calls.entries()) {
+      if (call.exitCode === 0) continue;
+      for (const code of new Set(call.diagnosticCodes ?? [])) {
+        if (!summary.has(code)) summary.set(code, { calls: 0, tasks: 0, repairRoundsAttributed: 0 });
+        const counts = summary.get(code);
+        counts.calls++;
+        if (!seen.has(code)) counts.tasks++;
+        if (repairs.has(i)) counts.repairRoundsAttributed++;
+        seen.add(code);
+      }
+    }
+  }
+  return Object.fromEntries([...summary].sort(([a, x], [b, y]) => y.calls - x.calls || a.localeCompare(b)));
+}
 export async function prepare(id) {
   const task = join(tasksRoot, id);
   const context = JSON.parse(await readFile(join(task, "context.json"), "utf8"));
@@ -45,12 +83,12 @@ export async function prepare(id) {
   }
   await mkdir(join(dir, "bin"));
   // Embed absolute paths; logging is local to this sandbox and cannot be redirected by cwd.
-  const wrapper = `#!${process.execPath}\nimport { spawnSync } from 'node:child_process';\nimport { appendFileSync } from 'node:fs';\nconst argv = process.argv.slice(2);\nconst start = performance.now();\nconst r = spawnSync(${JSON.stringify(process.execPath)}, [${JSON.stringify(cli)}, ...argv], {encoding:'utf8'});\nlet diagnosticCodes = [];\ntry { diagnosticCodes = [...new Set(JSON.parse(r.stdout).diagnostics.map(d => d.code))]; } catch {}\nappendFileSync(${JSON.stringify(join(dir, ".forma-calls.jsonl"))}, JSON.stringify({argv, cwd:process.cwd(), exitCode:r.status ?? 1, durationMs:performance.now()-start, diagnosticCodes})+'\\n');\nprocess.stdout.write(r.stdout ?? '');\nprocess.stderr.write(r.stderr ?? r.error?.message ?? '');\nprocess.exit(r.status ?? 1);\n`;
+  const wrapper = `#!${process.execPath}\nimport { spawnSync } from 'node:child_process';\nimport { appendFileSync } from 'node:fs';\nconst argv = process.argv.slice(2);\nconst start = performance.now();\nconst r = spawnSync(${JSON.stringify(process.execPath)}, [${JSON.stringify(cli)}, ...argv], {encoding:'utf8'});\nconst parseDiagnostics = ${parseDiagnostics.toString()};\nconst { diagnosticCodes, messages } = parseDiagnostics(r.stdout, r.stderr);\nappendFileSync(${JSON.stringify(join(dir, ".forma-calls.jsonl"))}, JSON.stringify({argv, cwd:process.cwd(), exitCode:r.status ?? 1, durationMs:performance.now()-start, diagnosticCodes, messages})+'\\n');\nprocess.stdout.write(r.stdout ?? '');\nprocess.stderr.write(r.stderr ?? r.error?.message ?? '');\nprocess.exit(r.status ?? 1);\n`;
   await writeFile(join(dir, "bin/forma"), wrapper, { mode: 0o755 });
   return { dir, context };
 }
-export function metrics(calls, dir, entry) {
-  let repairRounds = 0;
+function repairCallIndices(calls, dir, entry) {
+  const failures = [];
   let firstPassingCall = null;
   for (const [i, call] of calls.entries()) {
     const [command, mode, ...args] = call.argv;
@@ -60,9 +98,13 @@ export function metrics(calls, dir, entry) {
     if (!target ||
         resolve(call.cwd ?? dir, target) !== resolve(dir, entry) || firstPassingCall !== null) continue;
     if (call.exitCode === 0) firstPassingCall = i + 1;
-    else repairRounds++;
+    else failures.push(i);
   }
-  return { repairRounds, cliCallCount: calls.length, firstPassingCall };
+  return { failures, firstPassingCall };
+}
+export function metrics(calls, dir, entry) {
+  const { failures, firstPassingCall } = repairCallIndices(calls, dir, entry);
+  return { repairRounds: failures.length, cliCallCount: calls.length, firstPassingCall };
 }
 export function runAgent(command, dir) {
   return new Promise((done, reject) => {

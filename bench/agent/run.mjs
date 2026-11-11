@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { median, metrics, parseOptions, prepare, root, runAgent, taskIds, tasksRoot } from "./harness.mjs";
+import { failingCalls, summarizeDiagnostics, median, metrics, parseOptions, prepare, root, runAgent, taskIds, tasksRoot } from "./harness.mjs";
 
 const options = parseOptions(process.argv.slice(2));
 const known = await taskIds();
@@ -18,6 +18,7 @@ if (options.tier) {
 }
 if (!selected.length) throw new Error("No tasks match the requested filters");
 const results = [];
+const taskCalls = [];
 for (const id of selected) {
   const { dir, context } = await prepare(id);
   const start = performance.now();
@@ -31,7 +32,8 @@ for (const id of selected) {
     const { accept } = await import(pathToFileURL(join(tasksRoot, id, "accept.mjs")));
     acceptance = await accept(dir);
   } catch (error) { acceptance = { pass: false, reasons: [String(error)] }; }
-  results.push({ id, kind: context.kind, tier: context.tier, ...acceptance, ...metrics(calls, dir, context.entry), wallTimeMs, agent, taskDir: dir });
+  taskCalls.push({ calls, dir, entry: context.entry });
+  results.push({ failingCalls: failingCalls(calls), id, kind: context.kind, tier: context.tier, ...acceptance, ...metrics(calls, dir, context.entry), wallTimeMs, agent, taskDir: dir });
   console.error(`${id}: ${acceptance.pass ? "PASS" : "FAIL"}${acceptance.reasons.length ? ` (${acceptance.reasons.join("; ")})` : ""}`);
 }
 const totals = rows => ({ tasks: rows.length, passed: rows.filter(r => r.pass).length,
@@ -44,10 +46,12 @@ const report = {
   agentCommand: options["agent-cmd"],
   totals: totals(results),
   tiers: Object.fromEntries(["core", "hard"].map(tier => [tier, totals(results.filter(r => r.tier === tier))])),
+  diagnostics: summarizeDiagnostics(taskCalls),
   results,
 };
 await mkdir(dirname(resolve(options.out)), { recursive: true });
 await writeFile(options.out, `${JSON.stringify(report, null, 2)}\n`);
 console.table(results.map(({ id, tier, pass, repairRounds, cliCallCount, wallTimeMs }) => ({ id, tier, pass, repairRounds, cliCallCount, seconds: +(wallTimeMs / 1000).toFixed(2) })));
 console.table(Object.entries(report.tiers).map(([tier, totals]) => ({ tier, ...totals })));
+console.table(Object.entries(report.diagnostics).slice(0, 10).map(([code, counts]) => ({ code, ...counts })));
 console.log(JSON.stringify(report.totals));

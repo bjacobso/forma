@@ -56,7 +56,7 @@ try {
   // The helper knows references only for this harness self-test. Real agents
   // receive no reference or acceptance files in their task directory.
   const helper = join(scratch, "copy-reference.mjs");
-  await writeFile(helper, `import {cp,readFile} from 'node:fs/promises';\nimport {basename, join} from 'node:path';\nimport {spawnSync} from 'node:child_process';\nconst dir=process.env.FORMA_TASK_DIR;\nconst id=basename(dir).replace(/^forma-agent-/, '').replace(/-[^-]+$/, '');\nconst context=JSON.parse(await readFile(join(${JSON.stringify(tasksRoot)},id,'context.json'),'utf8'));\nspawnSync('forma',context.tier==='hard'?['check','--json','main.lisp']:['file','typecheck','main.lisp']);\nawait cp(join(${JSON.stringify(tasksRoot)},id,'reference'),dir,{recursive:true});\nconst r=spawnSync('forma',['file','typecheck','main.lisp']);\nprocess.exit(r.status ?? 1);\n`);
+  await writeFile(helper, `import {cp,readFile} from 'node:fs/promises';\nimport {basename, join} from 'node:path';\nimport {spawnSync} from 'node:child_process';\nconst dir=process.env.FORMA_TASK_DIR;\nconst id=basename(dir).replace(/^forma-agent-/, '').replace(/-[^-]+$/, '');\nconst context=JSON.parse(await readFile(join(${JSON.stringify(tasksRoot)},id,'context.json'),'utf8'));\nspawnSync('forma',context.tier==='hard'?['check','main.lisp']:['file','typecheck','main.lisp']);\nawait cp(join(${JSON.stringify(tasksRoot)},id,'reference'),dir,{recursive:true});\nconst r=spawnSync('forma',['file','typecheck','main.lisp']);\nprocess.exit(r.status ?? 1);\n`);
   const output = join(scratch, "results.json");
   const command = `'${process.execPath.replaceAll("'", "'\\''")}' '${helper.replaceAll("'", "'\\''")}'`;
   const result = spawnSync(process.execPath, [join(root, "bench/agent/run.mjs"), "--agent-cmd", command, "--out", output], { encoding: "utf8", timeout: 180_000 });
@@ -70,6 +70,8 @@ try {
     assert.equal(report.tiers.hard.tasks, 8);
     assert.equal(report.tiers.core.passed, 12);
     assert.equal(report.tiers.hard.passed, 8);
+    assert.equal(Object.values(report.diagnostics).reduce((sum, counts) => sum + counts.calls, 0), 20);
+    assert.equal(Object.values(report.diagnostics).reduce((sum, counts) => sum + counts.repairRoundsAttributed, 0), 20);
     for (const result of report.results) {
       assert.equal(result.agent.exitCode, 0, result.id);
       assert.equal(result.repairRounds, 1, result.id);
@@ -77,6 +79,8 @@ try {
       const calls = (await readFile(join(result.taskDir, ".forma-calls.jsonl"), "utf8")).trim().split("\n").map(JSON.parse);
       assert(calls.every(c => c.durationMs > 0 && Array.isArray(c.diagnosticCodes)));
       assert(calls[0].diagnosticCodes.length > 0);
+      assert(calls[0].messages.length > 0);
+      assert.deepEqual(result.failingCalls, [{ argv: calls[0].argv, codes: calls[0].diagnosticCodes, messages: calls[0].messages }]);
     }
   } finally {
     for (const result of report.results) await rm(result.taskDir, { recursive: true, force: true });
