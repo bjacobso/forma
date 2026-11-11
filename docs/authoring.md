@@ -2,13 +2,13 @@
 
 This page is for people writing Forma outside this repository's own tests and
 examples. It shows how to write files, check them, run them, elaborate forms,
-and read the results. Forma is pre-alpha: the commands below are the JSON CLI
-from a source checkout, and their output shapes may still change.
+and read the results. Forma is pre-alpha: the commands below run from a source
+checkout, and their behavior may still change.
 
 ## What you can build
 
 - **Evaluated programs.** Types, pure functions and a final expression. Check
-  them with `file typecheck` and run them with `file evaluate`.
+  them with `forma check` and run them with `forma run`.
 - **Form-based languages.** A module defines `form`s whose `:check` hooks
   report author diagnostics and whose bodies produce typed IR. Other files use
   those forms. `file declarations` elaborates them and lists the IR. See
@@ -56,26 +56,38 @@ Save this as `main.lisp`:
 Check it, then run it:
 
 ```sh
-forma file typecheck main.lisp
-forma file evaluate main.lisp
+forma check main.lisp
+forma run main.lisp
 ```
 
-`file evaluate` typechecks first. If the check fails, it prints the typecheck
-response (with `"pass":"typecheck"`) and does not run the program. Use
-`forma file evaluate --unchecked main.lisp` to run a program without checking
-it, for example while exploring a builtin the checker does not type yet. An
-unchecked run can succeed on a program that the checker rejects.
+`check` typechecks the module graph and renders diagnostics with source excerpts
+on stderr. `run` checks first, then prints the evaluated value on stdout. Both
+exit 0 on success and 1 on failure. Use `forma run main.lisp --unchecked` to run
+without checking, for example while exploring a builtin the checker does not
+type yet. An unchecked run can succeed on a program that the checker rejects.
 
-Every command prints one JSON object with `ok`, `value` and `diagnostics`:
+Add `--json` to `check`, `run`, `fmt` or `explain` for a JSON response on stdout.
+The existing `file typecheck`, `file evaluate`, `file declarations` and
+`file interface` commands remain JSON machine interfaces. Their responses have
+`ok` and `diagnostics`, with `value` when available:
 
 | Command | Useful fields |
 | --- | --- |
-| `file typecheck` | `type` (display string of the final expression) |
-| `file evaluate` | `value.result.printed`, `value.result.value` |
+| `check --json` / `file typecheck` | `type` (display string of the final expression) |
+| `run --json` / `file evaluate` | `value.result.printed`, `value.result.value` |
 | `file declarations` | `value[]`, one entry per declaration (see [Getting the IR](#getting-the-ir)) |
 | `file interface` | `value.interfaces[]`, the exports of every module |
 
-File commands exit with status 0 when `ok` is true and 1 when it is false.
+Format files in place with `forma fmt main.lisp helper.lisp`. For CI,
+`forma fmt main.lisp --check` lists files that would change and exits 1 without
+writing them. `forma explain typecheck/type-mismatch` explains a diagnostic
+offline.
+
+Start a typed, stateful session with `forma repl`. Each successful submission
+prints `value : type` and retains its definitions; failed submissions do not
+commit. `:type <expr>` checks an expression without evaluating it, `:reset`
+clears the session, and `:quit` exits. Repeat `--prelude <file>` to load preludes
+at startup and again after reset. Each submission occupies one input line.
 
 ## Imports in file modules
 
@@ -102,7 +114,7 @@ you, so examples written there may need this import in a file.
 The checker accepts the builtins in the first table. The second table lists
 builtins that evaluate but that the checker does not type yet: a checked
 program that uses them is rejected with `Unbound variable`, and runs only with
-`file evaluate --unchecked`.
+`run --unchecked`.
 
 | Area | Checked builtins |
 | --- | --- |
@@ -185,8 +197,8 @@ expression is the list of failing case names:
 (map (fn [c] c.name) (filter (fn [c] (not c.ok)) cases))
 ```
 
-Run it with `file evaluate` and treat any result other than `[]` as a failure.
-Because `file evaluate` typechecks first, an ill-typed suite fails instead of
+Run it with `forma run` and treat any result other than `[]` as a failure.
+Because `run` typechecks first, an ill-typed suite fails instead of
 reporting `[]`. To check that the suite can fail, flip one expectation and
 confirm that the case name is reported. The vendor-risk trial in
 [`trials/vendor-risk`](https://github.com/bjacobso/forma/tree/main/trials/vendor-risk)
