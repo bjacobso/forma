@@ -8,5 +8,6 @@
     "docs/writing-a-form.md",
     "preludes/README.md",
     "preludes/modules/kernel.lisp"
-  ]
+  ],
+  "tier": "core"
 }

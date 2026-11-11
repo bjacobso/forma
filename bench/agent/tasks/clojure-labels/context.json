@@ -9,5 +9,6 @@
     "preludes/README.md",
     "preludes/modules/kernel.lisp",
     "preludes/modules/clojure.lisp"
-  ]
+  ],
+  "tier": "core"
 }

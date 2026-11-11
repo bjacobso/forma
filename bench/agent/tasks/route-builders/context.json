@@ -9,5 +9,6 @@
     "preludes/README.md",
     "preludes/modules/kernel.lisp",
     "preludes/modules/routes.lisp"
-  ]
+  ],
+  "tier": "core"
 }

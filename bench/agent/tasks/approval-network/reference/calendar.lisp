@@ -1,0 +1,5 @@
+(export current? due)
+(: current? (-> Int Int Bool))
+(define current? [approved today] (if (< today approved) false (< today (+ approved 182))))
+(: due (-> Int Int))
+(define due [approved] (+ approved 182))
