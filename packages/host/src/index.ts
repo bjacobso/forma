@@ -81,3 +81,16 @@ export { findEditorTypeAtOffset } from "./editor.js";
 export { createDefaultLanguageHost, type DefaultLanguageHost } from "./default-host.js";
 export { TsLanguageHost } from "./ts-host.js";
 
+export { createLanguage, LanguageInitializationError } from "./language.js";
+export type {
+  CapabilityResult,
+  Language,
+  LanguageCapability,
+  LanguageCheckResult,
+  LanguageDescription,
+  LanguageJson,
+  LanguageOptions,
+  LanguageRunOptions,
+  LanguageRunResult,
+  LanguageSourceOptions,
+} from "./language.js";

@@ -144,6 +144,7 @@ export default defineConfig({
             { text: "Design decisions", link: "/design-decisions" },
             { text: "Retiring the OCaml engine", link: "/engine-consolidation" },
             { text: "Language services", link: "/language-services" },
+            { text: "Embedding Forma", link: "/embedding" },
             { text: "File modules", link: "/modules" },
           ],
         },
