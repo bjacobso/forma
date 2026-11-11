@@ -150,6 +150,17 @@ function missingCheckHoles(check: SExpr, spec: UnifiedForm): readonly string[] {
 }
 
 export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = new Map(), helpers: readonly SExpr[] = []): FormDescriptor | undefined {
+  try { return parseUnifiedFormInner(e, types, helpers); }
+  catch (error) {
+    if (error instanceof Error) Object.assign(error, {
+      ...(!("loc" in error) ? { loc: e.loc } : {}),
+      details: { code: "elaborate/form-definition" },
+    });
+    throw error;
+  }
+}
+
+function parseUnifiedFormInner(e: SExpr, types: ReadonlyMap<string, SExpr>, helpers: readonly SExpr[]): FormDescriptor | undefined {
   if (head(e) !== "form" || e._tag !== "List") return undefined;
   const pattern = e.items[1];
   if (pattern?._tag !== "List" || !name(pattern.items[0])) throw new Error("form expects (head pattern ...) followed by :types, :ir and a body");
@@ -186,11 +197,14 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
   const slots: SlotSpec[] = [];
   const variables = new Set<string>();
   let declares: string | undefined;
-  const addHole = (n: string, positional: boolean, many = false) => {
+  const addHole = (n: string, at: SExpr, positional: boolean, many = false) => {
     if (variables.has(n)) throw new Error(`form ${formName}: duplicate pattern variable ${n}`);
     variables.add(n);
     const t = holes.get(n);
-    if (!t) throw new Error(`form ${formName}: missing type for ${n}`);
+    if (!t) throw Object.assign(new Error(`form ${formName}: missing type for :${n}`), {
+      loc: at.loc,
+      help: `Add :${n} and its type to the form's :types map.`,
+    });
     const u = unwrapOption(t);
     const h = head(u);
     if (positional && (h === "Declares" || h === "Refers" || name(u) === "Symbol")) {
@@ -205,11 +219,11 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
       if (p.pairs.length !== 1 || name(p.pairs[0]![0]) !== ":keys" || p.pairs[0]![1]._tag !== "Vector") throw new Error("Form options pattern must be {:keys [names ...]}");
       for (const key of p.pairs[0]![1].items) {
         if (!name(key)) throw new Error("Form option names must be symbols");
-        addHole(name(key)!, false);
+        addHole(name(key)!, key, false);
       }
     } else if (name(p) && name(p) !== "...") {
       const many = name(patterns[j + 1]) === "...";
-      addHole(name(p)!, true, many);
+      addHole(name(p)!, p, true, many);
       if (many) {
         if (j !== patterns.length - 2) throw new Error("A repeated form hole must be final");
         j++;
@@ -240,6 +254,16 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
 
 /** Parse the pattern once for both normalization and hook execution. */
 export function matchFormSyntax(spec: UnifiedForm, expr: SExpr): ReadonlyMap<string, SExpr> {
+  try { return matchFormSyntaxInner(spec, expr); }
+  catch (error) {
+    if (error instanceof Error && !("loc" in error)) Object.assign(error, {
+      loc: expr.loc, details: { code: "elaborate/malformed-form" },
+    });
+    throw error;
+  }
+}
+
+function matchFormSyntaxInner(spec: UnifiedForm, expr: SExpr): ReadonlyMap<string, SExpr> {
   if (expr._tag !== "List") throw new Error("Expected a form application");
   const result = new Map<string, SExpr>();
   const accepted = new Set<string>();

@@ -130,7 +130,7 @@ export function diagnosticFromUnknown(
     };
     const span: Span | undefined = candidate.origin?.span
       ? {
-          sourceId,
+          sourceId: candidate.loc?.sourceId ?? sourceId,
           startOffset: candidate.origin.span.start ?? 0,
           endOffset: candidate.origin.span.end ?? candidate.origin.span.start ?? 0,
         }

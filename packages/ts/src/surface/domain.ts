@@ -18,8 +18,8 @@ export function splitTypeMetadata(t: SExpr): { type: SExpr; metadata: readonly (
   const names = new Set<string>();
   for (let i=at;i<t.items.length;i+=2) {
     const key = t.items[i]!, value = t.items[i+1];
-    if (!name(key)?.startsWith(":") || !value) throw new Error("Type metadata expects :key value pairs");
-    if (names.has(name(key)!)) throw new Error(`Duplicate type metadata ${name(key)}`);
+    if (!name(key)?.startsWith(":") || !value) throw Object.assign(new Error("Type metadata expects :key value pairs"), { loc: key.loc, details: { code: "surface/invalid-form" } });
+    if (names.has(name(key)!)) throw Object.assign(new Error(`Duplicate type metadata ${name(key)}`), { loc: key.loc, details: { code: "surface/invalid-form" } });
     names.add(name(key)!); metadata.push([key,value]);
   }
   return {type:at===1 ? t.items[0]! : list(t,t.items.slice(0,at)),metadata};
