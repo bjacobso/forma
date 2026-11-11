@@ -29,6 +29,7 @@ export interface EffectProgramSpan {
 }
 
 export interface EffectProgramDiagnostic {
+  readonly details?: Readonly<Record<string, unknown>>;
   readonly phase: "read" | "project" | "check";
   readonly severity: "error" | "warning";
   readonly code: string;
@@ -191,6 +192,7 @@ function checkDiagnostic(
     severity: diagnostic.severity === "info" ? "warning" : diagnostic.severity,
     code: diagnostic.code,
     message: diagnostic.message,
+    ...(diagnostic.details ? {details:diagnostic.details} : {}),
     ...(diagnostic.span ? { span: locate(diagnostic.span.startOffset, diagnostic.span.endOffset) } : {}),
   };
 }

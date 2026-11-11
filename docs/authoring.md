@@ -358,6 +358,36 @@ an epoch you choose) and do calendar arithmetic, such as month lengths, in the
 host that calls Forma. Write each rule's boundary as a test: for example, that
 a review on day 364 is current and one on day 365 is expired.
 
+## Asking what fits with typed holes
+
+Use `?` or `?name` in expression position while writing a program:
+
+```lisp
+(: repair (-> Int Int))
+(define repair [amount] ?todo)
+```
+
+Checking reports `typecheck/hole`: `Hole ?todo needs Int; candidates: amount`.
+Its structured `details` contain `name`, `expected`, and `candidates`. The main
+checker lists up to ten visible bindings whose types unify with the goal, with
+locals before globals and concrete types before polymorphic types in each group.
+These are binding replacements; it does not synthesize calls or record skeletons.
+Unsolved types use readable letters such as `a`. Each occurrence is a separate
+goal, including repeated names. Other top-level forms are still checked.
+
+The CLI displays the goal and candidates, MCP checks retain the details, and the
+language server offers a replacement quick fix for each candidate. The Effect
+checker reports contextual goals with an empty candidate list. Checked runs
+refuse programs containing holes; unchecked evaluation raises an error when it
+reaches a hole.
+
+Names beginning with `?` are reserved in ordinary executable expressions. Explicit
+host `typePolicy.unboundSymbols` rules still take precedence for unbound query
+symbols. Predicate names
+ending in `?`, quoted query variables such as `'[?person ?name]`, patterns, and
+descriptor syntax slots retain their existing meaning. Descriptor slot errors
+use the separate `elaborate/hole-*` codes.
+
 ## Reading diagnostics
 
 Each diagnostic has a `code`, `severity`, `message`, `phase` and usually a

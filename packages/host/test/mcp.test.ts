@@ -131,3 +131,9 @@ test("describes the forms and exports a module graph makes available", async () 
   const outsideCall = await call("describe", { path: join(outside, "secret.lisp") });
   expect(outsideCall.ok).toBe(false);
 });
+
+test("checks typed goals with details and refuses to run them", async () => {
+  const source = '(: repair (-> Int Int)) (define repair [a] ?todo)';
+  expect(await call("check", {source})).toMatchObject({ok:false, diagnostics:[{code:"typecheck/hole", details:{name:"?todo",expected:"Int",candidates:["a"]}}]});
+  expect(await call("run", {source})).toMatchObject({ok:false, diagnostics:[{code:"typecheck/hole"}]});
+});

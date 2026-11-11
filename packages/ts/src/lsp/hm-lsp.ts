@@ -285,6 +285,7 @@ export function analyzeLsp(
 
     if (mechanics) errors.push(...mechanics.diagnostics.filter(d => d.severity === "error" && (!d.span || d.span.sourceId === sourceId)).map(d => ({
       message: d.message, diagnosticCode: d.code,
+      ...(d.details ? {details:d.details} : {}),
       ...(d.span ? { span: { start: d.span.startOffset, end: d.span.endOffset } } : {}),
     })));
     const last = authored.at(-1);

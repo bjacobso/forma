@@ -28,6 +28,7 @@ import {
   getServiceMethodSchemes,
 } from "./infer-state.js";
 import { Scheme, mono } from "./types.js";
+import { reportHoles } from "./holes.js";
 
 // ---------------------------------------------------------------------------
 // Binding groups
@@ -145,6 +146,7 @@ export const inferProgram = (
         const firstIndex = exprIndex;
         const envBefore = env;
         const pendingBefore = yield* Ref.get(ctx.pendingConstraints);
+        yield* Ref.set(ctx.globalNames, new Set(env.keys()));
 
         const inferForm = Effect.gen(function* () {
           if (expr._tag === "TypeDef") {
@@ -213,6 +215,7 @@ export const inferProgram = (
               }
 
               const inferredDefs: Array<{ name: string; type: Type; pendingStart: number; annotation?: import("./core-expr.js").Span; declaration: import("./core-expr.js").Span }> = [];
+              yield* Ref.set(ctx.globalNames, new Set(seedEnv.keys()));
               const failedNames: string[] = [];
               for (const defExpr of component) {
                 const pendingStart = (yield* Ref.get(ctx.pendingConstraints)).length;
@@ -347,6 +350,7 @@ export const inferProgram = (
       }
 
       const sFinal = yield* Ref.get(ctx.subst);
+      yield* reportHoles;
       captureEnv?.(applyEnv(sFinal, env));
       return applyType(sFinal, lastType);
     } finally {
@@ -383,6 +387,7 @@ export const inferProgramAll = (
       let rawExprIndex = 0;
 
       for (const expr of exprs) {
+        yield* Ref.set(ctx.globalNames, new Set(env.keys()));
         const s = yield* Ref.get(ctx.subst);
         const envN = applyEnv(s, env);
 
@@ -479,6 +484,7 @@ export const inferProgramAll = (
         rawExprIndex++;
       }
 
+      yield* reportHoles;
       return types;
     } finally {
       setInferDslProvider(prevProvider);

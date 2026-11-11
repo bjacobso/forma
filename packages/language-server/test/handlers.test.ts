@@ -277,3 +277,13 @@ test("annotated mismatches forward the annotation as related information", async
   const diagnostic = getDiagnostics(workspace,document).diagnostics.find(d => d.code === "typecheck/type-mismatch")!;
   expect(diagnostic.relatedInformation).toEqual([{message:"Expected type declared here",location:{uri,range:{start:{line:0,character:9},end:{line:0,character:14}}}}]);
 });
+
+test("typed holes publish their goal and offer a replacement for each candidate", async () => {
+  const { workspace, document } = await setup('(: repair (-> Int Int Int)) (define repair [a b] ?todo)');
+  const published = getDiagnostics(workspace, document);
+  const diagnostic = published.diagnostics.find(d => d.code === "typecheck/hole")!;
+  expect(diagnostic).toBeDefined();
+  const actions = getCodeActions(workspace, document, {textDocument:{uri}, range:diagnostic.range, context:{diagnostics:[diagnostic]}});
+  expect(actions.map(action => action.edit?.changes?.[uri]?.[0]?.newText)).toEqual(["a", "b", "base"]);
+  for (const action of actions) expect(action.edit?.changes?.[uri]?.[0]?.range).toEqual(diagnostic.range);
+});

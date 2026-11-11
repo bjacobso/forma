@@ -35,6 +35,9 @@ by the result. `define` creates a binding; a parameter vector creates a function
 `fn` makes an anonymous function; `let` creates local bindings. `if` requires a
 Bool condition and compatible branch results.
 
+Write `?` or `?name` for an unfinished expression: checking reports its expected
+type and up to ten fitting bindings; programs with holes cannot run.
+
 ```lisp
 (: greet (-> String String))
 (define greet [name] (str "Hello, " name))

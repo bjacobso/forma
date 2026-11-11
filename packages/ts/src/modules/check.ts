@@ -1,6 +1,7 @@
 import { diagnosticLocator } from "../diagnostic/locations.js";
 import { Effect, Layer, Ref } from "effect";
 import { inferProgram } from "../type/infer-program.js";
+import { hasHoles } from "../type/holes.js";
 import {
   makeOwnedInferContext,
   InferContext,
@@ -160,7 +161,7 @@ export function checkModuleGraph(
               provider,
               expressions,
               (env) => environments.set(module.id, env),
-              options.editor
+              options.editor || hasHoles(core)
                 ? {
                     onFormError: (error) =>
                       Effect.sync(() => {
@@ -198,7 +199,8 @@ export function checkModuleGraph(
           }
           for (const d of yield* Ref.get(ctx.diagnostics))
             diagnostics.push({
-              code: "typecheck/diagnostic",
+              code: d.code ?? "typecheck/diagnostic",
+              ...(d.details ? {details:d.details} : {}),
               severity: d.severity,
               message: d.message,
               phase: "typecheck",
