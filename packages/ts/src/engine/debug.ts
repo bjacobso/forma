@@ -1,3 +1,4 @@
+import { diagnosticLocator } from "../diagnostic/locations.js";
 /** Read-only compiler inspection. Shapes and annotations belong to this engine. */
 import { Effect, Layer, Ref } from "effect";
 import * as Reader from "../Reader.js";
@@ -18,7 +19,7 @@ export interface CoreDebugResult {
   readonly diagnostics: readonly Diagnostic[];
 }
 
-export function debugCore(request: TypecheckRequest & { readonly source: string }, mode: "lowerCore" | "typecheckCore" | "typecheckCoreTyped"): CoreDebugResult {
+function debugCoreUnlocated(request: TypecheckRequest & { readonly source: string }, mode: "lowerCore" | "typecheckCore" | "typecheckCoreTyped"): CoreDebugResult {
   const sourceId = request.sourceId ?? "source";
   try {
     validateHostTypes(request, request.source);
@@ -52,3 +53,8 @@ export function debugCore(request: TypecheckRequest & { readonly source: string 
 export const lowerCore = (request: TypecheckRequest & {readonly source:string}) => debugCore(request, "lowerCore");
 export const typecheckCore = (request: TypecheckRequest & {readonly source:string}) => debugCore(request, "typecheckCore");
 export const typecheckCoreTyped = (request: TypecheckRequest & {readonly source:string}) => debugCore(request, "typecheckCoreTyped");
+
+export function debugCore(...args: Parameters<typeof debugCoreUnlocated>): CoreDebugResult {
+  const result = debugCoreUnlocated(...args);
+  return { ...result, diagnostics: result.diagnostics.map(diagnosticLocator(id => (id === result.sourceId ? args[0].source : undefined) ?? args[0].session?.sourceText(id))) };
+}

@@ -1,5 +1,4 @@
 /** JSON boundary for process embeddings. One host instance owns daemon sessions. */
-import { locateResponse } from "./diagnostic-locations.js";
 import { Schema } from "effect";
 import * as Engine from "@formalang/ts/engine";
 import { TsLanguageHost } from "./ts-host.js";
@@ -34,16 +33,10 @@ export class JsonAbi {
     if (operation.sessionScope !== "none" && "sessionId" in request && request.sessionId) {
       if (!this.sessions.has(request.sessionId)) return errorResponse("abi/unknown-session", `Unknown session ${request.sessionId}. Open a session first.`);
     }
-    const inline = "source" in request && typeof request.source === "string" ? request.source : undefined;
-    const sessionId = "sessionId" in request && typeof request.sessionId === "string" ? request.sessionId : undefined;
-    // An inline source is the request's only unsaved text; session sources are looked up by id.
-    const sourceText = (sourceId: string): string | undefined =>
-      (sessionId ? this.host.sessionSourceText(sessionId, sourceId) : undefined) ?? inline;
     try {
       const result = await operation.project({ host: this.host, sessions: this.sessions }, request);
-      const located = locateResponse(result, sourceText);
-      Schema.decodeUnknownSync(operation.response)(located);
-      return Schema.decodeUnknownSync(JsonResponse)(located);
+      Schema.decodeUnknownSync(operation.response)(result);
+      return Schema.decodeUnknownSync(JsonResponse)(result);
     }
     catch (error) { return errorResponse("internal/error", `Internal error while handling ${op}: ${String(error)}`); }
   }

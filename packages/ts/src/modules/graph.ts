@@ -1,3 +1,4 @@
+import { diagnosticLocator } from "../diagnostic/locations.js";
 import { parse } from "../reader/parser.js";
 import { toSExprMany } from "../reader/to-sexpr.js";
 import { headSym as head, type SExpr } from "../reader/types.js";
@@ -223,10 +224,11 @@ export interface ModuleCoreOptions {
   /** Installed packages that bare specifiers resolve through (RFC 0020). */
   readonly packages?: PackageTable;
 }
-export function resolveModuleGraph(
+function resolveModuleGraphUnlocated(
   entry: ModuleSource,
   hostResolver: ModuleResolver,
-  hostCore: ModuleCoreOptions = {},
+  hostCore: ModuleCoreOptions,
+  sources: Map<string, string>,
 ): ModuleGraph {
   let resolver = hostResolver;
   if (hostCore.packages) {
@@ -302,6 +304,7 @@ export function resolveModuleGraph(
     bootstrap.set(project.id, closure);
   }
   const visit = (input: ModuleSource): ResolvedModule => {
+    sources.set(normalizeModuleId(input.id), input.source);
     const id = normalizeModuleId(input.id),
       cached = completed.get(id);
     if (cached) return cached;
@@ -1159,4 +1162,14 @@ export function resolveModuleGraph(
   };
   const root = visit(entry);
   return { entry: root.id, modules: [...completed.values()] };
+}
+
+export function resolveModuleGraph(entry: ModuleSource, hostResolver: ModuleResolver, hostCore: ModuleCoreOptions = {}): ModuleGraph {
+  const sources = new Map<string, string>();
+  try { return resolveModuleGraphUnlocated(entry, hostResolver, hostCore, sources); }
+  catch (error) {
+    if (!(error instanceof ModuleError)) throw error;
+    const locate = diagnosticLocator(id => sources.get(normalizeModuleId(id)));
+    throw new ModuleError(locate(error.diagnostic), error.related.map(locate));
+  }
 }

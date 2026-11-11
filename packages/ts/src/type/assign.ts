@@ -59,7 +59,7 @@ export const assignType = (actual: Type, expected: Type, origin: Origin): Effect
     }
   }
   yield* unify(a,b,origin).pipe(Effect.mapError(error => new InferenceError({
-    message:error.message.replace(/ \(at offset \d+\)$/, ""), origin:error.origin,
+    message:error.message, origin:error.origin,
     details:{...error.details,code:"typecheck/type-mismatch"},
   })));
 });

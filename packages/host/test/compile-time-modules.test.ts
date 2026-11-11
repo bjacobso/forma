@@ -243,7 +243,7 @@ describe("compile-time module conformance", () => {
             code: "elaborate/hook-failed",
             span: { sourceId: "caller.lisp", startOffset: caller.indexOf("(spend tea") },
           }]);
-          expect(failed.diagnostics[0]!.message).toMatch(/^:check <anonymous> of form spend: Cannot call Int as function \(in bad, helpers\.lisp line 1, column \d+\)$/);
+          expect(failed.diagnostics[0]!.message).toMatch(/^:check <anonymous> of form spend: Cannot call Int as function \(in bad\)$/);
           // Every failing application is reported, each at its own hole.
           expect(rejected.diagnostics).toMatchObject(["250", "900"].map((amount) => ({
             code: "spend/over-limit",

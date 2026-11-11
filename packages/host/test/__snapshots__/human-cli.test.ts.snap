@@ -6,27 +6,27 @@ exports[`human CLI > preserves the exact machine file responses > declarations m
 `;
 
 exports[`human CLI > preserves the exact machine file responses > evaluate --unchecked main.lisp 1`] = `
-"{"ok":true,"value":{"status":"completed","result":{"value":{"kind":"int","value":3},"printed":"3","steps":4,"diagnostics":[]}},"diagnostics":[]}
+"{"ok":true,"value":{"status":"completed","result":{"value":{"kind":"int","value":3},"printed":"3","steps":4}},"diagnostics":[]}
 "
 `;
 
 exports[`human CLI > preserves the exact machine file responses > evaluate main.lisp 1`] = `
-"{"ok":true,"value":{"status":"completed","result":{"value":{"kind":"int","value":3},"printed":"3","steps":4,"diagnostics":[]}},"diagnostics":[]}
+"{"ok":true,"value":{"status":"completed","result":{"value":{"kind":"int","value":3},"printed":"3","steps":4}},"diagnostics":[]}
 "
 `;
 
 exports[`human CLI > preserves the exact machine file responses > interface main.lisp 1`] = `
-"{"ok":true,"value":{"entry":"<cwd>/main.lisp","interfaces":[{"moduleId":"<cwd>/main.lisp","exports":[]}],"diagnostics":[]},"diagnostics":[]}
+"{"ok":true,"value":{"entry":"<cwd>/main.lisp","interfaces":[{"moduleId":"<cwd>/main.lisp","exports":[]}]},"diagnostics":[]}
 "
 `;
 
 exports[`human CLI > preserves the exact machine file responses > typecheck bad.lisp 1`] = `
-"{"ok":false,"value":{"sourceId":"<cwd>/bad.lisp","pass":"typecheck","diagnostics":[{"code":"typecheck/type-mismatch","severity":"error","message":"Argument 2 to +: Type mismatch: String vs Float (at line 1, column 6)","phase":"typecheck","details":{"code":"typecheck/type-mismatch","message":"Type mismatch: String vs Float","expected":"String","got":"Float"},"span":{"sourceId":"<cwd>/bad.lisp","startOffset":5,"endOffset":11,"startLine":1,"startColumn":6,"endLine":1,"endColumn":12}}]},"diagnostics":[{"code":"typecheck/type-mismatch","severity":"error","message":"Argument 2 to +: Type mismatch: String vs Float (at line 1, column 6)","phase":"typecheck","span":{"sourceId":"<cwd>/bad.lisp","startOffset":5,"endOffset":11,"startLine":1,"startColumn":6,"endLine":1,"endColumn":12},"details":{"code":"typecheck/type-mismatch","message":"Type mismatch: String vs Float","expected":"String","got":"Float"}}]}
+"{"ok":false,"value":{"sourceId":"<cwd>/bad.lisp","pass":"typecheck"},"diagnostics":[{"code":"typecheck/type-mismatch","severity":"error","message":"Argument 2 to +: Type mismatch: String vs Float","phase":"typecheck","span":{"sourceId":"<cwd>/bad.lisp","startOffset":5,"endOffset":11,"startLine":1,"startColumn":6,"endLine":1,"endColumn":12},"details":{"code":"typecheck/type-mismatch","message":"Type mismatch: String vs Float","expected":"String","got":"Float"}}]}
 "
 `;
 
 exports[`human CLI > preserves the exact machine file responses > typecheck main.lisp 1`] = `
-"{"ok":true,"value":{"sourceId":"<cwd>/main.lisp","pass":"typecheck","display":"Int","type":{"kind":"named","name":"Int","display":"Int"},"diagnostics":[]},"type":"Int","diagnostics":[]}
+"{"ok":true,"value":{"sourceId":"<cwd>/main.lisp","pass":"typecheck","display":"Int","type":{"kind":"named","name":"Int","display":"Int"}},"type":"Int","diagnostics":[]}
 "
 `;
 

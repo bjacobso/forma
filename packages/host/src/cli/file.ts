@@ -2,7 +2,7 @@ import { readModuleGraph, readNodePackages } from "@formalang/ts/node";
 import { moduleMechanicsDeclarations, type ModuleGraph } from "@formalang/ts/modules";
 import { isKFloat, isKKeyword, isKSymbol, mapKeyValue, type KValue } from "@formalang/ts/evaluator";
 import { JsonAbi, type JsonResponse } from "../json-abi.js";
-import { authorNames } from "../diagnostic-locations.js";
+import { authorNames } from "@formalang/ts/diagnostic";
 
 /** Plain JSON for elaborated IR: records become objects keyed without the leading ':'. */
 function plain(value: KValue): unknown {

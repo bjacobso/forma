@@ -1,3 +1,4 @@
+import { diagnosticLocator, type LocatedDiagnostic } from "../diagnostic/locations.js";
 /**
  * An analysis workspace: the preludes and documents an editor has open, and
  * every language service over them as a memoized query.
@@ -67,7 +68,7 @@ export interface DocumentAnalysis {
   readonly resultType?: string | undefined;
   /** Typed expressions in document order. */
   readonly typedSpans: readonly TypedSpan[];
-  readonly diagnostics: readonly Diagnostic[];
+  readonly diagnostics: readonly LocatedDiagnostic[];
   /** Types of the document's definitions and everything in scope before it. */
   readonly typeEnv: TypeEnv;
   readonly mechanicsBindingTypes?: ReadonlyMap<string, string>;
@@ -186,7 +187,7 @@ export class AnalysisWorkspace {
     );
   }
 
-  diagnostics(sourceId: string): readonly Diagnostic[] {
+  diagnostics(sourceId: string): readonly LocatedDiagnostic[] {
     return this.analysis(sourceId).diagnostics;
   }
 
@@ -474,7 +475,7 @@ function analyzeDocument(
     diagnostics.push({
       code: error.diagnosticCode ?? "typecheck/type-mismatch",
       severity: "error",
-      message: withoutOffset(error.message),
+      message: error.message,
       ...(error.details ? {details:error.details} : {}),
       ...(error.help ? {help:error.help} : {}),
       ...(error.fix ? {fix:error.fix} : {}),
@@ -538,7 +539,7 @@ function analyzeDocument(
       type: span.typeString,
       exprTag: span.exprTag,
     }))],
-    diagnostics: dedupe(diagnostics),
+    diagnostics: dedupe(diagnostics).map(diagnosticLocator(() => text)),
     typeEnv,
     ...(result.mechanics ? { mechanicsBindingTypes: result.mechanics.bindingTypes } : {}),
   };
@@ -558,9 +559,6 @@ function formDiagnostics(sourceId: string, text: string, scope: Scope): readonly
 }
 
 
-function withoutOffset(message: string): string {
-  return message.replace(/ \(at offset \d+\)$/, "");
-}
 
 /**
  * One diagnostic per message and span. A diagnostic without a position is

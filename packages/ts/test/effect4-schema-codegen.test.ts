@@ -63,6 +63,7 @@ describe("Effect 4 protocol schema projection", () => {
     expect(result).toMatchObject({ok:false,diagnostics:[{code:"schema/unsupported",span:{sourceId:"bad.lisp"}}]});
     const span = result.diagnostics[0]!.span!;
     expect(source.slice(span.startOffset,span.endOffset)).toBe("Missing");
+    expect(span).toMatchObject({startLine:1,startColumn:19,endLine:1,endColumn:26});
   });
 
   test("standalone mechanics schemas load and round-trip recursive records", () => {

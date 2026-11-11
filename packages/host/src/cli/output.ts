@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { isAbsolute, relative } from "node:path";
 import type { Diagnostic } from "../types.js";
 import type { JsonResponse } from "../json-abi.js";
-import { authorNames, locateDiagnostic, locateResponse } from "../diagnostic-locations.js";
+import { authorNames, diagnosticLocator } from "@formalang/ts/diagnostic";
 
 export function fileText(sourceId: string): string | undefined {
   try { return isAbsolute(sourceId) ? readFileSync(sourceId, "utf8") : undefined; } catch { return undefined; }
@@ -11,19 +11,25 @@ export const displayPath = (path: string) => isAbsolute(path) ? relative(process
 export function printJson(response: JsonResponse) {
   process.stdout.write(JSON.stringify(response) + "\n");
 }
+/** File responses carry diagnostics once, at the top level (the engine locates them). */
 export function located(response: JsonResponse): JsonResponse {
-  return locateResponse(response, fileText);
+  if (!response.value || typeof response.value !== "object" || Array.isArray(response.value)) return response;
+  const { diagnostics: _diagnostics, ...value } = response.value as Record<string, unknown>;
+  if (value.result && typeof value.result === "object" && !Array.isArray(value.result)) {
+    const { diagnostics: _resultDiagnostics, ...result } = value.result as Record<string, unknown>;
+    value.result = result;
+  }
+  return { ...response, value };
 }
 
-/** Temporary compatibility with messages that still embed their source position. */
 export function diagnosticMessage(message: string): string {
-  return authorNames(message).replace(/\s*\(at line \d+, column \d+\)\s*$/, "");
+  return authorNames(message);
 }
 
 export function renderDiagnostics(diagnostics: readonly Pick<Diagnostic, "code" | "severity" | "message" | "span" | "help" | "fix">[], sourceText = fileText, color = Boolean(process.stderr.isTTY) && process.env.NO_COLOR === undefined): string {
   const lines: string[] = [];
   for (const raw of diagnostics) {
-    const diagnostic = locateDiagnostic(raw, sourceText);
+    const diagnostic = diagnosticLocator(sourceText)(raw as Parameters<ReturnType<typeof diagnosticLocator>>[0]);
     const heading = `${diagnostic.severity}[${diagnostic.code}]`;
     lines.push(`${color ? `\x1b[${diagnostic.severity === "error" ? 31 : 33}m${heading}\x1b[0m` : heading}: ${diagnosticMessage(diagnostic.message)}`);
     const span = diagnostic.span;

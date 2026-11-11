@@ -135,11 +135,7 @@ export class InferenceError extends Error {
     help?: string | undefined;
     fix?: readonly import("./diagnostic.js").DiagnosticTextEdit[] | undefined;
   }) {
-    const msg =
-      opts.origin && opts.origin.span
-        ? `${opts.message} (at offset ${opts.origin.span.start})`
-        : opts.message;
-    super(msg);
+    super(opts.message);
     this.origin = opts.origin;
     this.details = opts.details ?? {};
     this.help = opts.help;

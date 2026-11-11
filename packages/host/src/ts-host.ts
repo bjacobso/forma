@@ -3,7 +3,7 @@ import * as Artifact from "@formalang/ts/artifact";
 import * as Modules from "@formalang/ts/modules";
 import { Effect, Ref } from "effect";
 import * as Builtins from "@formalang/ts/builtins";
-import { KernelTypeError, type KernelError } from "@formalang/ts/diagnostic";
+import { diagnosticLocator, spanLocator, KernelTypeError, type KernelError } from "@formalang/ts/diagnostic";
 import { Env } from "@formalang/ts/env";
 import * as Evaluator from "@formalang/ts/evaluator";
 import type { BuiltinFn, KFn, KValue } from "@formalang/ts/evaluator";
@@ -239,6 +239,59 @@ export class TsLanguageHost implements LanguageHost {
   #nextValueRefId = 1;
   readonly #sessions = new Map<string, TsSession>();
 
+  async loadSource(request: LoadSourceRequest): Promise<LoadSourceResult> {
+    return this.#locateResult(await this.#loadSourceUnlocated(request), request);
+  }
+
+  async loadSourceBundle(request: LoadSourceBundleRequest): Promise<LoadSourceBundleResult> {
+    return this.#locateResult(await this.#loadSourceBundleUnlocated(request), request);
+  }
+
+  async evaluate(request: EvaluateRequest): Promise<EvaluationResult> {
+    return this.#locateResult(await this.#evaluateUnlocated(request), request);
+  }
+
+  async evaluateInSession(request: EvaluateInSessionRequest): Promise<EvaluationState> {
+    return this.#locateResult(await this.#evaluateInSessionUnlocated(request), { ...request, sourceId: request.sourceId ?? "session" });
+  }
+
+  async replSubmit(request: EvaluateInSessionRequest & { readonly source: string }): Promise<EvaluationState> {
+    return this.#locateResult(await this.#replSubmitUnlocated(request), request);
+  }
+
+  async analyzeEditor(request: EditorAnalysisRequest): Promise<EditorAnalysisResult> {
+    return this.#locateResult(await this.#analyzeEditorUnlocated(request), request);
+  }
+
+  /** Project host-created diagnostics before they leave the in-process API. */
+  #locateResult<R>(result: R, request: { readonly source?: string | undefined; readonly sourceId?: string | undefined; readonly sessionId?: string | undefined; readonly sources?: readonly { readonly sourceId: string; readonly source: string }[] | undefined }): R {
+    const locate = diagnosticLocator(id =>
+      (id === (request.sourceId ?? "source") ? request.source : undefined) ??
+      request.sources?.find(source => source.sourceId === id)?.source ??
+      (request.sessionId ? this.sessionSourceText(request.sessionId, id) : undefined));
+    const visit = (value: unknown): unknown => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+      const record = value as Record<string, unknown>;
+      const projected = { ...record };
+      for (const key of ["diagnostics", "errors"]) {
+        if (Array.isArray(record[key])) projected[key] = record[key].map(diagnostic => locate(diagnostic));
+      }
+      for (const key of ["result", "observations", "parse"]) if (record[key]) projected[key] = visit(record[key]);
+      if (Array.isArray(record.records)) projected.records = record.records.map(visit);
+      if (record.failure) projected.failure = locate(record.failure as Diagnostic);
+      return projected;
+    };
+    return visit(result) as R;
+  }
+
+  async moduleGraph(request: ModuleGraphRequest): Promise<ModuleGraphResult> {
+    return this.#locateResult(await this.#moduleGraphUnlocated(request), request);
+  }
+
+  async linkEffectModules(request: ModuleGraphRequest): Promise<ModuleLinkResult> {
+    return this.#locateResult(await this.#linkEffectModulesUnlocated(request), request);
+  }
+
   async version(): Promise<VersionResult> {
     return {
       engine: "forma-typescript",
@@ -293,7 +346,7 @@ export class TsLanguageHost implements LanguageHost {
     };
   }
 
-  async loadSource(request: LoadSourceRequest): Promise<LoadSourceResult> {
+  async #loadSourceUnlocated(request: LoadSourceRequest): Promise<LoadSourceResult> {
     const session = this.#requireSession(request.sessionId);
     const kind = request.kind === "prelude" ? "prelude" : "source";
     const sourceId =
@@ -346,7 +399,7 @@ export class TsLanguageHost implements LanguageHost {
         session.language.scope = checked.scope!;
       } catch (error) {
         timings.evalMs ??= performance.now() - evalStart;
-        return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics: [Engine.diagnosticFromUnknown(error, "evaluate", sourceId)] };
+        return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics: [diagnosticLocator(id => id === sourceId ? request.source : session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", sourceId))] };
       }
     }
     const storeStart = performance.now();
@@ -356,7 +409,7 @@ export class TsLanguageHost implements LanguageHost {
     return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics: parsed.diagnostics };
   }
 
-  async loadSourceBundle(request: LoadSourceBundleRequest): Promise<LoadSourceBundleResult> {
+  async #loadSourceBundleUnlocated(request: LoadSourceBundleRequest): Promise<LoadSourceBundleResult> {
     const sources: LoadSourceResult[] = [];
     for (const source of request.sources) {
       sources.push(await this.loadSource({ ...source, sessionId: request.sessionId, timings: request.timings }));
@@ -380,7 +433,7 @@ export class TsLanguageHost implements LanguageHost {
       { ...Engine.moduleCoreOptions(session.language), ...(request.projects ? { projects: request.projects } : {}) },
     );
   }
-  async moduleGraph(request: ModuleGraphRequest): Promise<ModuleGraphResult> {
+  async #moduleGraphUnlocated(request: ModuleGraphRequest): Promise<ModuleGraphResult> {
     try {
       const graph = this.#moduleGraph(request),
         session = this.#requireSession(request.sessionId),
@@ -408,7 +461,7 @@ export class TsLanguageHost implements LanguageHost {
       };
     }
   }
-  async linkEffectModules(request: ModuleGraphRequest): Promise<ModuleLinkResult> {
+  async #linkEffectModulesUnlocated(request: ModuleGraphRequest): Promise<ModuleLinkResult> {
     try {
       return Modules.linkEffectModules(this.#moduleGraph(request));
     } catch (error) {
@@ -471,7 +524,7 @@ export class TsLanguageHost implements LanguageHost {
     return Engine.debugCore({...request, source, session:session?.language, hostBuiltins:request.hostBuiltins ?? session?.hostBuiltins, typePolicy:request.typePolicy ?? session?.typePolicy}, mode);
   }
 
-  async evaluate(request: EvaluateRequest): Promise<EvaluationResult> {
+  async #evaluateUnlocated(request: EvaluateRequest): Promise<EvaluationResult> {
     const sourceId = request.sourceId ?? "source";
     const result = await Engine.evaluate({
       sourceId,
@@ -497,7 +550,7 @@ export class TsLanguageHost implements LanguageHost {
     };
   }
 
-  async evaluateInSession(request: EvaluateInSessionRequest): Promise<EvaluationState> {
+  async #evaluateInSessionUnlocated(request: EvaluateInSessionRequest): Promise<EvaluationState> {
     const session = this.#requireSession(request.sessionId);
     const sourceId = request.sourceId ?? (!request.source && session.language.orderedSources("source").length === 1
       ? session.language.orderedSources("source")[0]!.id : "session");
@@ -560,7 +613,7 @@ export class TsLanguageHost implements LanguageHost {
     };
   }
 
-  async replSubmit(request: EvaluateInSessionRequest & { readonly source: string }): Promise<EvaluationState> {
+  async #replSubmitUnlocated(request: EvaluateInSessionRequest & { readonly source: string }): Promise<EvaluationState> {
     const session = this.#requireSession(request.sessionId);
     const sourceId = request.sourceId ?? `repl-${this.#nextEvaluationId++}`;
     const parsed = Engine.parseSource({ sourceId, source: request.source });
@@ -661,7 +714,7 @@ export class TsLanguageHost implements LanguageHost {
     } catch (error) {
       return {
         status: "failed",
-        diagnostics: [Engine.diagnosticFromUnknown(error, "evaluate", "value-ref")],
+        diagnostics: [diagnosticLocator(id => session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", "value-ref"))],
       };
     }
   }
@@ -793,7 +846,7 @@ export class TsLanguageHost implements LanguageHost {
     return { sessionId: request.sessionId, closed: true };
   }
 
-  async analyzeEditor(request: EditorAnalysisRequest): Promise<EditorAnalysisResult> {
+  async #analyzeEditorUnlocated(request: EditorAnalysisRequest): Promise<EditorAnalysisResult> {
     const sourceId = request.sourceId ?? "source";
     const parse = editorParseProjection(sourceId, request.source);
     const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
@@ -936,7 +989,7 @@ export class TsLanguageHost implements LanguageHost {
         severity: "error",
         message: error.message,
         phase: "parse",
-        span: { sourceId, startOffset: error.span.start, endOffset: error.span.end },
+        span: spanLocator(request.source)({ sourceId, startOffset: error.span.start, endOffset: error.span.end }),
       })),
     };
   }
@@ -1160,7 +1213,7 @@ export class TsLanguageHost implements LanguageHost {
       .catch(
         (error): EvaluationState => ({
           status: "failed",
-          diagnostics: [Engine.diagnosticFromUnknown(error, "evaluate", sourceId)],
+          diagnostics: [diagnosticLocator(id => id === sourceId ? source : session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", sourceId))],
         }),
       );
     Object.assign(evaluation, { completion });
@@ -1393,7 +1446,7 @@ export class TsLanguageHost implements LanguageHost {
       .catch(
         (error): EvaluationState => ({
           status: "failed",
-          diagnostics: [Engine.diagnosticFromUnknown(error, "evaluate", sourceId)],
+          diagnostics: [diagnosticLocator(id => session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", sourceId))],
         }),
       );
     Object.assign(evaluation, { completion });
