@@ -30,6 +30,8 @@ test("corpus, check-run seeds and type fixtures never expose solver variables", 
       expect(diagnostic.details?.expected,input.sourceId).toEqual(expect.any(String));
       expect(diagnostic.details?.got,input.sourceId).toEqual(expect.any(String));
     }
-    expect(diagnostic.message,input.sourceId).not.toMatch(/\bt\d+\b|__forma_[0-9a-f]+/);
+    // File paths may contain names such as "t4-…"; only the rest of the message must be free of solver variables.
+    const words = diagnostic.message.replace(/\S*[\\/]\S*/g, "");
+    expect(words,input.sourceId).not.toMatch(/\bt\d+\b|__forma_[0-9a-f]+/);
   }
 },60_000);
