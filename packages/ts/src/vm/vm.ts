@@ -499,6 +499,7 @@ function executeVM(
           });
         case "FailError":
           return new FailError({
+            ...errorContext(),
             message: error.message,
             ...(error.loc ? { loc: error.loc } : {}),
             ...(error.macroOrigins ? { macroOrigins: error.macroOrigins } : {}),
@@ -664,7 +665,7 @@ function executeVM(
               stack.push(null);
             }
             frame = { chunk: vmData.chunk, upvalues: vmData.upvalues, ip: 0, stackBase: newBase };
-          } else if (isKBuiltin(callee) || isKFn(callee) && callee.apply) {
+          } else if (isKBuiltin(callee) || (isKFn(callee) && callee.apply)) {
             const args: KValue[] = [];
             for (let i = 0; i < argc; i++) args.push(stack[calleePos + 1 + i]!);
             stack.length = calleePos;
@@ -725,7 +726,7 @@ function executeVM(
               ip: 0,
               stackBase: frame.stackBase,
             };
-          } else if (isKBuiltin(callee) || isKFn(callee) && callee.apply) {
+          } else if (isKBuiltin(callee) || (isKFn(callee) && callee.apply)) {
             // Non-VM tail call: fall back to regular call
             const args: KValue[] = [];
             for (let i = 0; i < argc; i++) args.push(stack[calleePos + 1 + i]!);

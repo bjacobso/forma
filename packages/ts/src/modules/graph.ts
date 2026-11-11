@@ -1,3 +1,4 @@
+import { copySourceTrace } from "../evaluator/source-trace.js";
 import { diagnosticLocator } from "../diagnostic/locations.js";
 import { parse } from "../reader/parser.js";
 import { toSExprMany } from "../reader/to-sexpr.js";
@@ -749,7 +750,9 @@ function resolveModuleGraphUnlocated(
       return [];
     };
     let resolvingTemplate = false;
-    const walk = (
+    const walk = (e: SExpr, locals: ReadonlySet<string> = new Set(), type = false): SExpr =>
+      copySourceTrace(e, walkInner(e, locals, type));
+    const walkInner = (
       e: SExpr,
       locals: ReadonlySet<string> = new Set(),
       type = false,

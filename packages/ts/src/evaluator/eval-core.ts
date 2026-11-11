@@ -319,7 +319,7 @@ export function evalList(
     }
 
     // Check if it resolved to a builtin name — args are NOT in tail position
-    if (isKBuiltin(fn) || typeof fn === "string" && fn in runtime.builtins) {
+    if (isKBuiltin(fn) || (typeof fn === "string" && fn in runtime.builtins)) {
       const prevTail2 = getTcoTail();
       setTcoTail(false);
       const args: KValue[] = [];

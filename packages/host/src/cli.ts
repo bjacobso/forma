@@ -8,7 +8,7 @@ import { usage } from "./cli/help.js";
 import { located, printJson, report } from "./cli/output.js";
 
 const [command = "", ...args] = process.argv.slice(2);
-const humanCommand = ["check", "run", "fmt", "repl", "explain", "describe"].includes(command);
+const humanCommand = ["check", "run", "test", "fmt", "repl", "explain", "describe"].includes(command);
 try {
   const abi = new JsonAbi();
   if (["help", "--help", "-h"].includes(command) || (args.length === 1 && ["--help", "-h"].includes(args[0]!))) process.stdout.write(usage);

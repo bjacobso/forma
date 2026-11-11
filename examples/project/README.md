@@ -19,6 +19,10 @@ locally installed CLI through `pnpm exec` to check and run the form graph,
 assert the run result, and check formatting. It prints `"Hello from Forma"`.
 Form applications reuse their elaborated declaration descriptors at runtime;
 the form's checks and projection do not run again.
+The script also runs `src/main-test.lisp` with `forma test`;
+`src/test-support.lisp` vendors the ordinary library from
+`preludes/modules/test.lisp` to keep this example self-contained (the npm
+package also ships a copy in `dist/preludes/test.lisp`).
 
 From the repository root, `pnpm check:examples` runs this script against an
 offline tarball installation without changing this directory.
