@@ -83,3 +83,16 @@ export { createDefaultLanguageHost, type DefaultLanguageHost } from "./default-h
 export { TsLanguageHost } from "./ts-host.js";
 
 export { HOST_ABI_VERSION, HOST_CAPABILITIES, hostAbiSchema } from "./host-contract.js";
+export { createLanguage, LanguageInitializationError } from "./language.js";
+export type {
+  CapabilityResult,
+  Language,
+  LanguageCapability,
+  LanguageCheckResult,
+  LanguageDescription,
+  LanguageJson,
+  LanguageOptions,
+  LanguageRunOptions,
+  LanguageRunResult,
+  LanguageSourceOptions,
+} from "./language.js";
