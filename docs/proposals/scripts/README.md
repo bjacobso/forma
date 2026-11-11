@@ -54,7 +54,7 @@ existing diagnostic presentation defects; proposals use descriptive prose.
 | `node docs/proposals/scripts/measure.mjs` | Pass: 464 inputs, 15 tree/VM differences; 0 counter differences; 149 checker fixtures |
 | `pnpm bench:latency --out docs/proposals/scripts/latency.json` | Pass: report written; baseline not updated |
 | `pnpm --filter @formalang/ts test test/numeric-types.test.ts test/check-run.test.ts test/effect-typescript-conformance.test.ts` | Pass: 3 files, 155 tests |
-| `ALCHEMY_HOME=$(mktemp -d) pnpm check` | Failed in test phase: 8 test timeouts at 5000 ms; 1153 ts tests passed. Earlier branding, define-form, alchemy, diagnostic and type checks passed. Later gates were not reached. |
+| `ALCHEMY_HOME=$(mktemp -d) pnpm check` | Failed in test phase: 8 test timeouts at 5000 ms; 1153 ts tests passed. Earlier branding, legacy-form guard, alchemy, diagnostic and type checks passed. Later gates were not reached. |
 | `pnpm --filter @formalang/ts test test/descriptor-typing.test.ts test/effect-typescript-codegen.test.ts test/effect4-schema-codegen.test.ts test/http-api.test.ts --maxWorkers=1` | Pass: all 4 failed-suite files rerun; 85 tests passed |
 | `pnpm check:preludes` | Pass: 135 form docstrings and 135 checked examples |
 | `pnpm docs:build` | Pass: bundles/pages and llms structure/source/link checks |
