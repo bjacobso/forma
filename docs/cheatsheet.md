@@ -111,9 +111,12 @@ does not publish its bindings. The following two fences are checked together.
 
 ```lisp file=main.lisp
 (import "./helpers.lisp" [double])
-(double 21)
+(import "forma:kernel" [and])
+(and true (= (double 21) 42))
 ```
 
+Bundled libraries use `forma:kernel`, `forma:test`, `forma:clojure`, and
+`forma:routes`, with no copying or dependency setup.
 A barrel can reexport names with `export-from`. An application's
 `createLanguage({ modules: [{ id, source }] })` automatically imports those
 modules' exports into programs. Legacy `preludes` share a declaration scope.

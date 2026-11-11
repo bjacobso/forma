@@ -120,6 +120,19 @@ try {
   }
   const version = JSON.parse(run(join(consumer, "node_modules/.bin/forma"), ["version"], consumer));
   assert(JSON.stringify(version).includes(packed.version));
+  const forma = join(consumer, "node_modules/.bin/forma");
+  for (const [library, source, expected] of [
+    ["kernel", '(import "forma:kernel" [and not]) (and true (not false))', "true"],
+    ["clojure", '(import "forma:clojure" [defn ->]) (defn inc [n] (+ n 1)) (-> 41 (inc))', "42"],
+    ["routes", '(import "forma:routes" [route]) (route user ["users" [:id]]) (user {:id "ada"})', '"/users/ada"'],
+    ["test", '(import "forma:test" [test is=]) (test "bundled" (is= 42 42))', undefined],
+  ]) {
+    const path = join(consumer, `${library}-test.lisp`);
+    await writeFile(path, source);
+    run(forma, ["check", path], consumer);
+    if (expected !== undefined) assert.equal(run(forma, ["run", path], consumer).trim(), expected);
+    else assert.match(run(forma, ["test", path], consumer), /PASS bundled/);
+  }
   run("pnpm", ["add", "--store-dir", store, "--prefer-offline", "--ignore-scripts", "--config.auto-install-peers=false",
     `@codemirror/state@${packed.dependencies["@codemirror/state"]}`,
     `@codemirror/view@${packed.dependencies["@codemirror/view"]}`], consumer);

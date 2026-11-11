@@ -93,14 +93,14 @@ at startup and again after reset. Each submission occupies one input line.
 ## Imports in file modules
 
 A file that uses `import` or `export` is a module, and every name it uses must
-be declared in the file, imported, or built in. Import paths are relative to
-the importing file.
+be declared in the file, imported, or built in. Relative import paths are resolved from
+the importing file; bundled libraries use reserved `forma:` specifiers.
 
-The kernel library `preludes/modules/kernel.lisp` exports `not`, `when`, `unless`,
+The bundled kernel library `forma:kernel` exports `not`, `when`, `unless`,
 `cond`, `and`, `or`, `->` and `->>`. In a file module, import the ones you use:
 
 ```lisp
-(import "../forma/preludes/modules/kernel.lisp" [and or not when cond])
+(import "forma:kernel" [and or not when cond])
 ```
 
 Without the import, the checker reports `module/unimported-sugar` and names
@@ -217,15 +217,11 @@ does not check against `Int`. Give numeric helpers a signature such as
 ## Writing tests
 
 Write ordinary checked Forma in `.lisp` files and import the test library.
-The npm distribution ships it at
-`node_modules/@forma-language/forma/dist/preludes/test.lisp`. Copy it into your
-project (for example, `cp node_modules/@forma-language/forma/dist/preludes/test.lisp
-test-support.lisp`) and import that local file. Direct imports through symlinked
-`node_modules` paths are not supported by the session file resolver. In a source checkout, import
-`preludes/modules/test.lisp` instead:
+Use `forma:test` in both repository checkouts and installed npm distributions;
+no copying or dependency declaration is needed:
 
 ```lisp
-(import "../forma/preludes/modules/test.lisp" [test is is=])
+(import "forma:test" [test is is=])
 (import "./policy.lisp" [can-activate? acme])
 
 (test "acme can activate"

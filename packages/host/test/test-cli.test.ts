@@ -1,13 +1,12 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, rmSync, realpathSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve, relative } from "node:path";
+import { join, resolve } from "node:path";
 import { afterEach, expect, it, vi } from "vitest";
 
 vi.setConfig({ testTimeout: 30_000 });
 
 const cli = resolve(import.meta.dirname, "../dist/cli.mjs");
-const library = resolve(import.meta.dirname, "../../../preludes/modules/test.lisp");
 const dirs: string[] = [];
 
 function workspace(files: Record<string, string>) {
@@ -15,13 +14,23 @@ function workspace(files: Record<string, string>) {
   dirs.push(dir);
   for (const [name, source] of Object.entries(files)) {
     mkdirSync(resolve(dir, name, ".."), { recursive: true });
-    const imports = `(import "${relative(resolve(realpathSync(dir), name, ".."), library)}" [test is is=])\n`;
+    const imports = '(import "forma:test" [test is is=])\n';
     writeFileSync(join(dir, name), imports + source);
   }
   return dir;
 }
 const run = (cwd: string, ...args: string[]) => spawnSync(process.execPath, [cli, "test", ...args], { cwd, encoding: "utf8", timeout: 30_000 });
 afterEach(() => { for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true }); });
+
+it("checks and evaluates a file graph using the bundled kernel", () => {
+  const entry = resolve(import.meta.dirname, "../../../conformance/modules/bundled/main.lisp");
+  const invoke = (...args: string[]) => spawnSync(process.execPath, [cli, ...args], { encoding: "utf8" });
+  const checked = invoke("check", entry);
+  expect(checked.status, checked.stdout + checked.stderr).toBe(0);
+  const evaluated = invoke("run", entry);
+  expect(evaluated.status, evaluated.stdout + evaluated.stderr).toBe(0);
+  expect(evaluated.stdout.trim()).toBe("true");
+});
 
 it("runs independent tests, reports assertion values and locations, and filters", () => {
   const dir = workspace({ "suite-test.lisp": '(test "bad" (is= (+ 1 1) 3))\n(test "good" (is true))' });
