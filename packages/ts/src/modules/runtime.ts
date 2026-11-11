@@ -9,7 +9,62 @@ import {
   type ObservationOptions,
 } from "../evaluator/observation.js";
 import { headSym, type SExpr } from "../reader/types.js";
+import { matchFormSyntax } from "../surface/form.js";
 import { ModuleError, type ModuleGraph } from "./graph.js";
+
+/** Form applications bind the same immutable descriptors as checking. Never
+ * execute their checks or projections again in the kernel. */
+function runtimeProgram(module: ModuleGraph["modules"][number]): {
+  expressions: readonly SExpr[];
+  values: Record<string, KValue>;
+} {
+  const values: Record<string, KValue> = {};
+  const state = module.compileTime;
+  const applications = [...(state?.elaborated() ?? [])];
+  const expressions = (
+    state?.expand(module.expressions) ?? module.expressions
+  ).flatMap((e, index): SExpr[] => {
+    if (headSym(e) === "form") return [];
+    const form = state?.forms.get(headSym(e) ?? "");
+    if (!form?.descriptor.surface) return [e];
+    const applicationIndex = applications.findIndex(
+      (a) =>
+        a.form === form.identity.declaration &&
+        a.span.startOffset === e.loc.start &&
+        a.span.endOffset === e.loc.end,
+    );
+    if (applicationIndex === -1) return [e];
+    // Several macro-generated applications can share the same call-site span.
+    // Consume their cached results in source order rather than reusing the first.
+    const application = applications.splice(applicationIndex, 1)[0]!;
+    const holes = matchFormSyntax(form.descriptor.surface, e);
+    const declared = form.descriptor.identifiers
+      .filter((identifier) => identifier.declaration)
+      .flatMap((identifier) => {
+        const hole = holes.get(identifier.name);
+        return hole?._tag === "Sym" ? [hole.name] : [];
+      });
+    // Named applications initialize every checked binding with ordinary
+    // definitions; unnamed forms remain entry expressions producing their IR.
+    return (declared.length ? declared : [undefined]).map((symbol, bindingIndex): SExpr => {
+      const slot = `__forma_application_${index}_${bindingIndex}`;
+      values[slot] = symbol ? state!.read(symbol) : application.ir;
+      const value: SExpr = { _tag: "Sym", name: slot, loc: e.loc };
+      return symbol
+        ? {
+            _tag: "List",
+            loc: e.loc,
+            items: [
+              { _tag: "Sym", name: "define", loc: e.loc },
+              { _tag: "Sym", name: symbol, loc: e.loc },
+              value,
+            ],
+          }
+        : value;
+    });
+  });
+  return { expressions, values };
+}
 
 export interface ModuleInstance {
   readonly moduleId: string;
@@ -115,13 +170,16 @@ export class ModuleRuntime {
         )
       )
         continue;
-      const env = this.importedEnvironment(module, dependencies);
+      const program = runtimeProgram(module);
+      const env = this.importedEnvironment(module, dependencies).extend(
+        program.values,
+      );
       const collector =
         observe && module.id === graph.entry
           ? new ObservationCollector(module.source, module.expressions, observe)
           : undefined;
       const result = await Effect.runPromise(
-        evaluateExprs(module.expressions.filter(definition), {
+        evaluateExprs(program.expressions.filter(definition), {
           env,
           contextTypes: contextTypes(graph, module.id),
           builtins: defaultBuiltins,
@@ -201,7 +259,7 @@ export class ModuleRuntime {
   ): Promise<{ result: KernelResult; collector?: ObservationCollector }> {
     const instance = await this.initialize(graph, stepLimit, observe);
     const entry = graph.modules.find((m) => m.id === graph.entry)!;
-    const expressions = entry.expressions.filter((e) => !definition(e));
+    const expressions = runtimeProgram(entry).expressions.filter((e) => !definition(e));
     const { collector } = instance;
     const result = expressions.length
       ? await Effect.runPromise(

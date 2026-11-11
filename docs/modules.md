@@ -266,7 +266,14 @@ importing author's span.
 Kernel module evaluation initializes pure definitions once per runtime instance
 and dependency version. Entry expressions run on explicit evaluation; importing
 that file does not run those expressions. Updating a file creates new instances
-for it and its dependents. Observation requests create a fresh entry instance so
+for it and its dependents. Form definitions are compile-time declarations and
+are not called by the runtime. A named form application initializes its declared
+name with the already elaborated descriptor (`:identity`, `:classification`,
+and projected `:data`), matching checked scope. Its value is that descriptor;
+an unnamed application evaluates to its projected IR. Checks and projections
+are reused from graph resolution, so evaluation does not run hooks again.
+Ordinary pure definitions in form libraries still initialize under the same
+module rules. Observation requests create a fresh entry instance so
 that the complete execution can be observed. Effect programs execute through the
 linked Effect target; kernel evaluation reports `module/effect-runtime` instead
 of executing an Effect initializer.
