@@ -10,6 +10,8 @@
 - Browser compiler explorer with live intermediate stages.
 - Consumer-prelude foundations (FX1–FX4): diagnostic catalogs/help/fixes,
   authored syntax and named holes, multi-file preludes, and `forma schema`.
+- `@forma-language/forma` workspace facade, `createLanguage`, `describe`,
+  `forma check|run|test|fmt|repl|explain|describe|mcp`, and `preludes/modules/test.lisp`.
 - Native unary RPC/group generation through the [RPC prelude](./effect/rpc.md).
 
 ## Elm-style application prototype
@@ -28,11 +30,15 @@ production-readiness claim.
    consumer examples.
 3. Improve incremental analysis, package caching, and editor latency without
    weakening source provenance.
-4. Reduce TypeScript CLI and engine startup cost, and define the distribution
-   model for the eventual public packages.
-5. Complete the consumer-prelude workflow on the merged FX1–FX4 foundations.
+4. Reduce TypeScript CLI and engine startup cost through
+   [content-addressed prelude snapshot caching (0029)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0029-consumer-prelude-sdk-and-caching.md),
+   and complete registry publication of `@forma-language/forma`
+   ([RFC 0025](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0025-single-npm-distribution.md)).
+5. Complete the consumer-prelude workflow on the merged FX1–FX4, `createLanguage`,
+   and `describe` foundations via
+   [public prelude verification (`checkPrelude` / `forma prelude check`, 0029)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0029-consumer-prelude-sdk-and-caching.md).
    Active-context typing hooks (PR #150) and validator scoping (PR #151) remain
-   open; RFC 0025 is accepted with amendments, with implementation in progress.
+   open.
 
 ## Record row rollout
 
@@ -149,10 +155,11 @@ The following is a dependency-aware proposal, not an implementation commitment:
    The current raw `nil`/bare-value optional-hole ABI needs an explicit migration,
    not an assumed `Option` type.
 3. Improve the authoring loop with
-   [typed holes (0026)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0026-typed-holes.md)
-   and RFC 0015's proposed seeded properties/fault schedules. The first kernel
-   test framework exists only in a local implementation, not shared main.
-   Build generated Effect testing on that foundation, not a parallel runner.
+   [typed holes (0026)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0026-typed-holes.md),
+   [consumer-prelude verification and snapshot caching (0029)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0029-consumer-prelude-sdk-and-caching.md),
+   and RFC 0015's proposed seeded properties/fault schedules. Kernel module tests
+   (`preludes/modules/test.lisp` and `forma test`) are implemented on main;
+   build generated Effect testing on that foundation, not a parallel runner.
 4. Run the small
    [finite workflow/evidence experiment (0028)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0028-bounded-verification.md)
    before SMT/Lean integration or general affine/dependent typing. This experiment
@@ -200,7 +207,7 @@ claims that other Lisps lack all capability mechanisms or that no other platform
 can support these ideas are not established by this repository review.
 
 The RFC directory has pre-existing duplicate 0022 and 0023 numbers. Keep those
-filenames stable and use descriptive links. New proposals use unique 0026–0028;
+filenames stable and use descriptive links. New proposals use unique 0026–0029;
 0024 is occupied and 0025 is accepted with amendments; implementation is in
 progress. The existing qualified-row and host-target designs are
 extended/referenced, not replaced by parallel RFCs.

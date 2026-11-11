@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Kernel module runner (`preludes/modules/test.lisp` and `forma test`) implemented; Effect test lowering, properties, and fault schedules proposed |
 | Created | 2026-10-16 |
 | Scope | A `test` declaration, assertions, exclusion from interfaces and artifacts, a host test operation, `forma test`, Effect program tests, stored test outcomes |
 | Direction | Tests are module declarations that run in isolated, requirement-free evaluations and report structured results through the host |
@@ -36,12 +36,13 @@ must control their implementations and execution environment.
 
 ### Delivery boundary (2026-11-11)
 
-This RFC remains proposed on shared main. A separate
-[local implementation](https://ampcode.com/threads/T-01a1c323-487b-76e1-8feb-48f453681bbf)
-has kernel module tests, assertions, checker expectations, host/CLI execution,
-and explicit interpreter/VM comparison. It is not merged and is not imported
-by this RFC update. Generated Effect execution, service fault injection, and
-property generators are not part of that local slice.
+`preludes/modules/test.lisp` (`test`, `is`, and `is=`) and `forma test` are
+implemented on main (#157) for kernel module tests, checking each module first
+and running each test independently under a 50,000-step budget. A separate
+[local exploration](https://ampcode.com/threads/T-01a1c323-487b-76e1-8feb-48f453681bbf)
+covers additional checker-expectation and interpreter/VM comparison harnesses.
+Generated Effect execution, service fault injection, and property generators
+remain proposed below.
 
 The [Effect page](../effect.md) states that "Tests are TypeScript harnesses
 written against the generated module. Forma has no way to write tests, test
