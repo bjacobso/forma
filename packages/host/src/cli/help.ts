@@ -20,6 +20,7 @@ Machine commands (JSON):
                                       Generate data codecs, types, and JSON Schema.
   request ['<json>']                   Handle one JSON request (argument or stdin).
   daemon                              Handle one JSON request per stdin line.
+  mcp                                 Serve structured agent tools over MCP stdio.
   abi-schema                          Print the JSON Schema of every request and response.
   add <name> <spec> | update [name] | verify | vendor
                                       Manage packages.
