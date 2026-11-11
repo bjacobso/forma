@@ -65,6 +65,14 @@ and the changes since the revision WorldVM vendors.
 
 ## Original proposal
 
+The baseline and JSON catalog layout below are historical, not a second
+implementation plan for FX1. The TypeScript catalog and implemented contract
+above take precedence. For the next authoring loop,
+[typed holes](./0026-typed-holes.md) should reuse structured details and atomic
+fixes; LSP code actions must preserve source versions and expose unsupported
+contexts without fabricating candidates. No message-text parsing or new
+parallel diagnostic registry is proposed.
+
 Forma diagnostics already have codes such as `typecheck/arity` and
 `module/effect-runtime`, but the codes are string literals scattered through
 the engine, with no list of what exists or what each one means. This RFC

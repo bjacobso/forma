@@ -284,6 +284,33 @@ OCaml engine was removed.)
 - Whether [RFC 0015](./0015-tests-in-forma.md) tests can name a journal
   fixture, and how such fixtures are re-recorded.
 
+## Durable workflows are a separate runtime obligation
+
+This proposed replay journal is not shipped deterministic replay and does not
+serialize a suspended evaluation. A durable workflow consumer should use checked
+IR plus native Effect workflow activities, durable timers and persistent storage,
+not turn this RFC into another execution kernel. Effect's workflow APIs in the
+current 4.1.1 dependency are unstable; memory layers do not establish restart
+durability. A runtime adapter must pin definition, codec, handler and semantic
+binding versions, and assign stable step-occurrence IDs across retries/loops.
+
+Choose one authoritative recovery journal. Do not run competing Forma and Effect
+journals with inconsistent commit boundaries. Record all nondeterminism, including
+clock, randomness, external results and mutable configuration. Distinguish a
+provider commit before journal commit from a journaled completed activity:
+re-execution can repeat the former. Use provider idempotency, transactions or
+explicit reconciliation, never an unconditional exactly-once claim. Compensation
+is separately durable work, not rollback.
+
+The [durability research](https://ampcode.com/threads/T-01a1c763-64e5-7230-8a66-55a59ab922ab)
+inspected WorldVM's bounded `durable-program@1`, transactional continuations and
+SIGKILL test source; it did not rerun those tests or establish a general workflow
+backend. Do not describe WorldVM durability as entirely future work either.
+For a Forma adapter, require persistent charge → wait → mail crash/restart tests,
+both sides of the provider/journal commit gap, a no-deduplication control, and a
+v1 run resumed after v2 is installed without changing its semantics. Checked IR
+alone proves none of these runtime properties.
+
 ## Related designs
 
 Loon's record and replay is in `crates/loon-lang/src/eir/replay.rs` in

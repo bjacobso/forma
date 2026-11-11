@@ -403,6 +403,15 @@ Escapes reuse `mechanics/undeclared-error` and
 
 ## Non-goals
 
+Typed-hole application suggestions ([RFC 0026](./0026-typed-holes.md)) and
+signature-driven test providers ([RFC 0015](./0015-tests-in-forma.md)) are
+consumers of these signatures, not new inference rules here. Instantiated sets
+describe possible errors and required services; they do not enumerate invocation
+counts, schedules, recovery outcomes or authority budgets. Keep this RFC's
+restricted set polymorphism independent of solver profiles and of the proposed
+trusted kernel. The duplicate RFC 0023 metadata proposal is a different document;
+references to this design should use its full filename.
+
 - Continuations, `perform`/`resume`, multi-shot handlers, generators, and
   backtracking.
 - Open sets at operation boundaries. A generated operation's type, an

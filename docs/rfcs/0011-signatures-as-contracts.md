@@ -20,6 +20,28 @@ against a binding's parameter type and report mismatches by path. The schema
 is derived from the portable module interface, so it does not depend on which
 engine checked the module.
 
+## Proposed integration milestone: one checked cross-boundary example
+
+Use one small module graph to connect a domain schema, unary RPC or HTTP contract,
+native Effect handler and Elm/Foldkit client. The RPC prelude is already merged:
+`generateRpcProgram` emits native groups and can import shared generated schemas
+with `schemasFrom` ([RPC guide](../effect/rpc.md)). That option is not Forma
+file-module resolution. Ontology, HTTP, email and Elm integrations have different
+maturity; “all isolated prototypes” is not an accurate inventory.
+
+The proposed milestone checks request/success/error agreement at both ends,
+executes a round-trip request and deliberate decode/error failures, and rejects
+a mismatched client at authored syntax or the explicit generated TypeScript
+boundary. Do not imply a shared full-stack linker already exists. Follow with a
+contract-change report under [RFC 0027](./0027-contract-evolution.md), not a
+promise that a 150-line spec verifies a full application.
+
+Keep the first executable path TypeScript-only. Go/Rust need the host profiles
+and conformance in [the Effect hosts RFC](./0022-effect-hosts.md); SQL/Datalog
+need a concrete consumer and schema/query contract. Native handlers, persistence,
+authorization and transport deployment stay host-owned. A workflow extension
+uses checked plans with native Effect activities under RFC 0016, not a new VM.
+
 ## Motivation
 
 Forma types are already schemas ([language guide](../language.md#types-are-schemas)).

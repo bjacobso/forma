@@ -88,6 +88,26 @@ assumed to be.
 
 ## Target architecture
 
+### Remaining parity gate (2026-11-11)
+
+The shared workspace already consumes mechanics diagnostics, binding types and
+typed spans (`analysis/workspace.ts`). It is inaccurate to describe Effect
+editor analysis as wholly absent. HM inference and mechanics checking still
+have separate types/rules. Consolidate them only against independently expected
+contracts from [RFC 0019](./0019-everyday-checker-gaps.md), retaining mechanics as
+authoritative for supported explicit Effect declarations during migration.
+
+The language server's `FormaWorkspace` loads configured preludes and open
+documents, not the filesystem package/module graph. Completion of this RFC needs
+the same `forma.json`/verified `forma.lock` resolver as file commands, including
+unsaved-file overlays, imported schemes, dependency/prelude invalidation and
+cross-file locations. Gate it with the same positive and rejection programs
+through file CLI, embedded workspace and LSP, including constructor/Option types,
+named callbacks, shadowed Effect names and errors inside imported files. Merely
+moving checker code or sharing a builtin registry does not establish parity.
+Independent core re-checking remains separate work in
+[the programmable type system RFC](./0022-programmable-type-system.md).
+
 ```text
 inputs    sourceText(id), preludes (ordered), host builtins, type policy
 queries   parse(id)            lossless tree and errors; never fails

@@ -27,10 +27,21 @@ those results or emits them as JSON, and exits non-zero when a test fails.
 
 A test in an Effect program is an Effect whose requirement set must be empty.
 It supplies every service through `provide`, usually with the local providers
-of [RFC 0014](./0014-local-providers.md). A test that would reach a real
-service is therefore rejected by the checker before it runs.
+of [RFC 0014](./0014-local-providers.md). A remaining service requirement is
+rejected before execution. An empty requirement set does not prove absence of
+real I/O: supplied providers and native code can still perform it. The runner
+must control their implementations and execution environment.
 
 ## Motivation
+
+### Delivery boundary (2026-11-11)
+
+This RFC remains proposed on shared main. A separate
+[local implementation](https://ampcode.com/threads/T-01a1c323-487b-76e1-8feb-48f453681bbf)
+has kernel module tests, assertions, checker expectations, host/CLI execution,
+and explicit interpreter/VM comparison. It is not merged and is not imported
+by this RFC update. Generated Effect execution, service fault injection, and
+property generators are not part of that local slice.
 
 The [Effect page](../effect.md) states that "Tests are TypeScript harnesses
 written against the generated module. Forma has no way to write tests, test
@@ -41,8 +52,8 @@ check it.
 Loon shows the alternative. Its `test` form lives in the module, assertions
 are a handful of builtins, and effectful code is tested by swapping handlers
 instead of using a mocking library. Its runner reports JSON for CI. Forma has
-stronger contracts to offer: closed requirement sets make "this test touches
-no real service" a type error rather than a convention.
+stronger contracts to offer: closed requirement sets expose unsupplied services
+before running, while test-owned providers determine what actually executes.
 
 Tests also give conformance a cheap surface. A conformance fixture that is a
 Forma test can be run and its outcomes compared with stored expectations,
@@ -223,6 +234,37 @@ prelude form with a different name, for example `ontology-test`, that expands
 or elaborates into core `test` declarations. Until then, the TypeScript
 engine reports an explicit `test/legacy-syntax` diagnostic for that form, so
 tests are never ignored without a report.
+
+## Proposed extension: signature-driven properties and fault schedules
+
+Build on ordinary tests, not a second runner. First add an explicit generated
+Effect execution adapter and test-owned providers. Then add opt-in generation
+for finite unions, bounded integers, records, Options and bounded lists. A
+generator validates values against the actual schema, records its seed and
+size bound, and shrinks without violating refinements. Unsupported predicates
+and regex generation report unsupported rather than silently generating no cases.
+
+Service signatures enumerate permitted success/error shapes, not executable
+success behavior or a probability model. Require supplied success fixtures or
+generators and declared laws/postconditions. A fault plan selects a service
+member, invocation occurrence and allowed error; record argument, outcome and
+schedule for reproduction under [RFC 0016](./0016-host-call-journals.md).
+Cover repeated calls, recovery failures, resource cleanup and cancellation;
+report unreachable injection points separately from passed checks.
+
+Start with one failing invocation at a time, then bounded combinations and
+explicit scheduler choices. Report explored cases, bounds and omissions. Neither
+one failure per declared error nor a closed error set proves recovery,
+compensation, rollback, liveness, or all concurrent executions. These are sampled
+tests unless a finite state space is exhaustively explored under
+[RFC 0028](./0028-bounded-verification.md). Do not call the operation
+`check-exhaustiveness` without that qualification.
+
+Acceptance: a seeded counterexample reproduces after shrinking; a bad generator
+is rejected; a deliberately omitted recovery branch fails an independent
+postcondition; cleanup traces distinguish success, failure and cancellation;
+real network/filesystem access is denied by the execution host. Check typed
+values and independently expected traces, not only agreement between backends.
 
 ## Alternatives considered
 

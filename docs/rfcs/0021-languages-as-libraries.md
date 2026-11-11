@@ -370,6 +370,25 @@ rounds, later stages should be reconsidered before Stage 1 starts.
 - How a multi-surface project formats files: always in the file's own
   language, or optionally projected.
 
+## Proposed editing lenses: round trips over a declared subset
+
+Extend stage 6's resugaring gate before promising interchangeable dialect and
+structured views. A lens must declare its supported core subset, retain authored
+provenance and map an edit back to source. Test parse/resugar equivalence modulo
+documented normalization, unchanged-view stability, edits across binders/macros,
+and refusal of unsupported or ambiguous inversions. Source comments/layout and
+node identities require explicit preservation rules; node IDs alone are not
+a bidirectional transformation. The UI-free editor codec is an integration point,
+not a structural workbench in this repository.
+
+Equivalent surfaces may share `payloadContractId` only when they reference the
+same IR root and reachable type definitions. Equal contract hashes establish
+contract identity, not equal program behavior, effect sets or lossless source
+round trips. Rust/Go emission remains in
+[the Effect hosts RFC](./0022-effect-hosts.md), not an automatic consequence of
+a dialect lens. A structured table editor needs a concrete external consumer
+and the same edit/round-trip tests before being called supported.
+
 ## Implemented consumer-prelude foundation
 
 Named source bundles are supported by the additive
