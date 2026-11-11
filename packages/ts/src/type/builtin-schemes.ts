@@ -40,10 +40,6 @@ function arithBinop(): Scheme {
   return mono(fnType([tFloat, tFloat], tFloat));
 }
 
-function variadicArith(): Scheme {
-  return mono(TFun(tFloat, tFloat, undefined, tFloat));
-}
-
 function arithUnary(): Scheme {
   return mono(fnType([tFloat], tFloat));
 }
@@ -60,7 +56,7 @@ export function builtinScheme(name: string): Scheme | undefined {
     case "/":
     case "min":
     case "max":
-      return variadicArith();
+      return mono({ ...fnType([tFloat, tFloat], tFloat), numericOperator: name });
     case "mod":
     case "quot": return mono(fnType([tInt, tInt], tInt));
     case "pow":

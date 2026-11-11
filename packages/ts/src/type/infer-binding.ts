@@ -112,7 +112,9 @@ export const inferDef = (
     }
 
     // No signature: standard recursive binding with fresh type var
-    const selfT = existingMonoType ?? (yield* ctx.freshTVar);
+    const placeholder = existingMonoType ?? (yield* ctx.freshTVar);
+    const selfT = expr.expr._tag === "Lam" && !expr.expr.restParam
+      ? { ...placeholder, arity: expr.expr.params.length } : placeholder;
     const defEnv = new Map(env);
     defEnv.set(expr.name, mono(selfT));
 

@@ -67,7 +67,7 @@ export function fnTypeWithEffect(params: readonly Type[], ret: Type, effect: ERo
   for (let i = params.length - 1; i >= 0; i--) {
     result = TFun(params[i]!, result, i === params.length - 1 ? effect : undefined);
   }
-  return result;
+  return { ...result, arity: params.length, ...(params.length === 0 ? { nullaryResult: ret } : {}) };
 }
 
 export function variadicFnTypeWithEffect(
@@ -674,6 +674,23 @@ const inferApp = (
     // `let`: its parameters take their arguments' types, so `((fn [y] (+ y 1)) n)`
     // stays Int for an Int `n` instead of widening `y` to Float first.
     const lambda = expr.fn;
+    const named = lambda._tag === "Var" ? lambda.name : undefined;
+    const known = named ? env.get(named)?.type ?? ctx.builtinScheme(named)?.type : undefined;
+    const variadicHead = named && !env.has(named) && ["+", "-", "*", "/", "min", "max"].includes(named);
+    let expected = lambda._tag === "Lam" && !lambda.restParam ? lambda.params.length : known?.arity;
+    if (expected === undefined && known?._tag === "TFun") {
+      let cursor: Type = known;
+      let count = 0;
+      while (cursor._tag === "TFun" && !cursor.rest) { count++; cursor = cursor.res; }
+      if (cursor._tag !== "TFun" && cursor._tag !== "TVariadic" && cursor._tag !== "TVar") expected = count;
+    }
+    if (!variadicHead && expected !== undefined && expected !== expr.args.length) {
+      const name = named ? authorNames(named) : "function";
+      return yield* ctx.fail(originOf(expr, "app"), {
+        code: "typecheck/arity", name, expected, actual: expr.args.length,
+        message: `${name} expects ${expected} arguments, got ${expr.args.length}`,
+      });
+    }
     if (lambda._tag === "Lam" && !lambda.restParam && lambda.params.length > 0 && lambda.params.length === expr.args.length) {
       const names = new Set(lambda.params.map((param) => param.name));
       // A lambda argument is typed better from its use in the body, as before.
@@ -731,8 +748,9 @@ const inferApp = (
       return yield* inferApply(env, expr);
     }
 
-    if (expr.fn._tag === "Var" && !env.has(expr.fn.name) && ctx.builtinScheme(expr.fn.name) && ["+","-","*","/","mod","pow","min","max","abs","sqrt","floor","ceil","round","<","<=",">",">="].includes(expr.fn.name)) {
-      const op = expr.fn.name;
+    const numericAlias = known?.numericOperator && known.arity !== 0 && named && env.has(named) ? known.numericOperator : undefined;
+    if (numericAlias || expr.fn._tag === "Var" && !env.has(expr.fn.name) && ctx.builtinScheme(expr.fn.name) && ["+","-","*","/","mod","pow","min","max","abs","sqrt","floor","ceil","round","<","<=",">",">="].includes(expr.fn.name)) {
+      const op = numericAlias ?? (expr.fn as CoreExpr & { _tag: "Var" }).name;
       const args: Type[] = [];
       for (const [index,arg] of expr.args.entries()) {
         const t = yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst),env),arg);
@@ -755,6 +773,40 @@ const inferApp = (
       return args.every(t=>t._tag === "TCon" && t.name === "Int") ? TCon("Int") : tFloat;
     }
     let fnT = yield* inferExpr(env, expr.fn);
+    if (fnT.arity !== undefined && fnT.arity !== expr.args.length) {
+      const name = named ? authorNames(named) : "function";
+      return yield* ctx.fail(originOf(expr, "app"), {
+        code: "typecheck/arity", name, expected: fnT.arity, actual: expr.args.length,
+        message: `${name} expects ${fnT.arity} arguments, got ${expr.args.length}`,
+      });
+    }
+    if (fnT.nullaryResult && expr.args.length === 0) return fnT.nullaryResult;
+    // Resolve ordinary arguments before specializing a numeric callback. For
+    // reduce this supplies both the accumulator and element numeric kinds.
+    const callbackParameters: Type[] = [];
+    let callbackCursor = fnT;
+    while (callbackCursor._tag === "TFun" && callbackParameters.length < expr.args.length) {
+      callbackParameters.push(callbackCursor.arg); callbackCursor = callbackCursor.res;
+    }
+    const numericCallback = expr.args.some(arg => arg._tag === "Var" &&
+      (env.get(arg.name)?.type ?? ctx.builtinScheme(arg.name)?.type)?.numericOperator);
+    if (numericCallback) {
+      // A numeric reducer can widen its accumulator when the elements are
+      // Float, even if its initial value is Int.
+      if (named === "reduce" && !env.has(named) && callbackParameters[0]?._tag === "TFun") {
+        const seed = yield* inferExpr(env, expr.args[1]!);
+        const list = yield* inferExpr(env, expr.args[2]!);
+        if (list._tag === "TApp" && list.con._tag === "TCon" && list.con.name === "List") {
+          const callback = expr.args[0]!;
+          const operator = callback._tag === "Var" ? (env.get(callback.name)?.type ?? ctx.builtinScheme(callback.name)?.type)?.numericOperator : undefined;
+          const result = operator === "/" ? tFloat : yield* joinType(seed, list.args[0]!, originOf(expr, "numeric-accumulator"));
+          yield* unify(callbackParameters[0].arg, result, originOf(expr, "numeric-accumulator"));
+        }
+      }
+      for (const [index, parameter] of callbackParameters.entries()) {
+        if (parameter._tag !== "TFun") yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[index]!, parameter);
+      }
+    }
     // Solve repeated unconstrained parameters together, using their common
     // supertype rather than letting the first argument narrow the variable.
     const parameters: Type[] = [];
