@@ -25,7 +25,7 @@ export function getDiagnostics(
 export function toLspDiagnostic(document: TextDocument, diagnostic: FormaDiagnostic): Diagnostic {
   return {
     range: spanToRange(document, diagnostic.span ?? { startOffset: 0, endOffset: 0 }),
-    message: diagnostic.message,
+    message: diagnostic.help ? `${diagnostic.message}\nhelp: ${diagnostic.help}` : diagnostic.message,
     severity:
       diagnostic.severity === "warning"
         ? DiagnosticSeverity.Warning
@@ -34,5 +34,6 @@ export function toLspDiagnostic(document: TextDocument, diagnostic: FormaDiagnos
           : DiagnosticSeverity.Error,
     source: "forma",
     code: diagnostic.code,
+    data: { fix: diagnostic.fix, details: diagnostic.details },
   };
 }
