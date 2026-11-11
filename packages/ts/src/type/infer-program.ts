@@ -28,6 +28,7 @@ import {
   getServiceMethodSchemes,
 } from "./infer-state.js";
 import { Scheme, mono } from "./types.js";
+import { reportHoles } from "./holes.js";
 
 // ---------------------------------------------------------------------------
 // Binding groups
@@ -145,6 +146,7 @@ export const inferProgram = (
         const firstIndex = exprIndex;
         const envBefore = env;
         const pendingBefore = yield* Ref.get(ctx.pendingConstraints);
+        yield* Ref.set(ctx.globalNames, new Set(env.keys()));
 
         const inferForm = Effect.gen(function* () {
           if (expr._tag === "TypeDef") {
@@ -154,7 +156,7 @@ export const inferProgram = (
             // Register constructor schemes in the environment
             const _adtConstructorSchemes = getAdtConstructorSchemes();
             if (_adtConstructorSchemes.size > 0) {
-              const updatedEnv = new Map(applyEnv(yield* Ref.get(ctx.subst), env));
+              const updatedEnv = applyEnv(yield* Ref.get(ctx.subst), env);
               for (const [name, scheme] of _adtConstructorSchemes) {
                 updatedEnv.set(name, scheme);
               }
@@ -167,7 +169,7 @@ export const inferProgram = (
             // Register class method schemes in the environment
             const _classMethodSchemes = getClassMethodSchemes();
             if (_classMethodSchemes.size > 0) {
-              const updatedEnv = new Map(applyEnv(yield* Ref.get(ctx.subst), env));
+              const updatedEnv = applyEnv(yield* Ref.get(ctx.subst), env);
               for (const [name, scheme] of _classMethodSchemes) {
                 updatedEnv.set(name, scheme);
               }
@@ -181,7 +183,7 @@ export const inferProgram = (
             lastType = (yield* withAmbientEffectScope(inferExpr(envN, expr))).value;
             const serviceMethodSchemes = getServiceMethodSchemes();
             if (serviceMethodSchemes.size > 0) {
-              const updatedEnv = new Map(applyEnv(yield* Ref.get(ctx.subst), env));
+              const updatedEnv = applyEnv(yield* Ref.get(ctx.subst), env);
               for (const [name, scheme] of serviceMethodSchemes) {
                 updatedEnv.set(name, scheme);
               }
@@ -198,19 +200,22 @@ export const inferProgram = (
             // generalized before the definitions that use it are typed.
             const lastDefType = new Map<string, Type>();
             for (const component of definitionComponents(defGroup)) {
-              const seedEnv = new Map(applyEnv(yield* Ref.get(ctx.subst), env));
+              const seedEnv = applyEnv(yield* Ref.get(ctx.subst), env);
               for (const defExpr of component) {
                 if (defExpr.signature) {
                   const tvarMap = new Map<string, Type>();
                   const rvarMap = new Map<string, Row>();
                   const sigT = yield* typeExprToType(defExpr.signature, tvarMap, rvarMap);
-                  seedEnv.set(defExpr.name, mono(sigT));
+                  seedEnv.set(defExpr.name, {...mono(sigT),declaration:defExpr.span,annotation:defExpr.signature.span});
                 } else if (!seedEnv.has(defExpr.name)) {
-                  seedEnv.set(defExpr.name, mono(yield* ctx.freshTVar));
+                  const placeholder = yield* ctx.freshTVar;
+                  seedEnv.set(defExpr.name, {...mono(defExpr.expr._tag === "Lam" && !defExpr.expr.restParam
+                    ? { ...placeholder, arity: defExpr.expr.params.length } : placeholder),declaration:defExpr.span});
                 }
               }
 
-              const inferredDefs: Array<{ name: string; type: Type; pendingStart: number }> = [];
+              const inferredDefs: Array<{ name: string; type: Type; pendingStart: number; annotation?: import("./core-expr.js").Span; declaration: import("./core-expr.js").Span }> = [];
+              yield* Ref.set(ctx.globalNames, new Set(seedEnv.keys()));
               const failedNames: string[] = [];
               for (const defExpr of component) {
                 const pendingStart = (yield* Ref.get(ctx.pendingConstraints)).length;
@@ -236,6 +241,8 @@ export const inferProgram = (
                 const boundType = applyType(sAfterDef, defT);
                 inferredDefs.push({
                   name: defExpr.name,
+                  declaration: defExpr.span,
+                  ...(defExpr.signature ? {annotation:defExpr.signature.span} : {}),
                   type: boundType,
                   pendingStart,
                 });
@@ -257,7 +264,7 @@ export const inferProgram = (
               for (const inferredDef of inferredDefs) {
                 schemes.set(
                   inferredDef.name,
-                  yield* generalizeBinding(baseGenEnv, inferredDef.type, inferredDef.pendingStart),
+                  {...yield* generalizeBinding(baseGenEnv, inferredDef.type, inferredDef.pendingStart),declaration:inferredDef.declaration,...(inferredDef.annotation ? {annotation:inferredDef.annotation} : {})},
                 );
               }
 
@@ -284,7 +291,7 @@ export const inferProgram = (
               const bindings = dslProvider.getTypeBindings(expr.name, rawExpr);
               if (bindings.size > 0) {
                 const sAfter = yield* Ref.get(ctx.subst);
-                const updatedEnv = new Map(applyEnv(sAfter, env));
+                const updatedEnv = applyEnv(sAfter, env);
                 for (const [name, scheme] of bindings) {
                   updatedEnv.set(name, scheme);
                 }
@@ -343,6 +350,7 @@ export const inferProgram = (
       }
 
       const sFinal = yield* Ref.get(ctx.subst);
+      yield* reportHoles;
       captureEnv?.(applyEnv(sFinal, env));
       return applyType(sFinal, lastType);
     } finally {
@@ -379,6 +387,7 @@ export const inferProgramAll = (
       let rawExprIndex = 0;
 
       for (const expr of exprs) {
+        yield* Ref.set(ctx.globalNames, new Set(env.keys()));
         const s = yield* Ref.get(ctx.subst);
         const envN = applyEnv(s, env);
 
@@ -387,7 +396,7 @@ export const inferProgramAll = (
           const t = (yield* withAmbientEffectScope(inferExpr(envN, expr))).value;
           const _adtConstructorSchemes = getAdtConstructorSchemes();
           if (_adtConstructorSchemes.size > 0) {
-            const updatedEnv = new Map(applyEnv(yield* Ref.get(ctx.subst), env));
+            const updatedEnv = applyEnv(yield* Ref.get(ctx.subst), env);
             for (const [name, scheme] of _adtConstructorSchemes) {
               updatedEnv.set(name, scheme);
             }
@@ -401,7 +410,7 @@ export const inferProgramAll = (
           const t = (yield* withAmbientEffectScope(inferExpr(envN, expr))).value;
           const _classMethodSchemes = getClassMethodSchemes();
           if (_classMethodSchemes.size > 0) {
-            const updatedEnv = new Map(applyEnv(yield* Ref.get(ctx.subst), env));
+            const updatedEnv = applyEnv(yield* Ref.get(ctx.subst), env);
             for (const [name, scheme] of _classMethodSchemes) {
               updatedEnv.set(name, scheme);
             }
@@ -419,7 +428,7 @@ export const inferProgramAll = (
           const t = (yield* withAmbientEffectScope(inferExpr(envN, expr))).value;
           const serviceMethodSchemes = getServiceMethodSchemes();
           if (serviceMethodSchemes.size > 0) {
-            const updatedEnv = new Map(applyEnv(yield* Ref.get(ctx.subst), env));
+            const updatedEnv = applyEnv(yield* Ref.get(ctx.subst), env);
             for (const [name, scheme] of serviceMethodSchemes) {
               updatedEnv.set(name, scheme);
             }
@@ -444,8 +453,8 @@ export const inferProgramAll = (
           }));
           yield* Ref.set(ctx.pendingConstraints, normalizedPending);
           const scheme = yield* generalizeBinding(genEnv, boundType, pendingStart);
-          const updatedEnv = new Map(applyEnv(sAfter, env));
-          updatedEnv.set(expr.name, scheme);
+          const updatedEnv = applyEnv(sAfter, env);
+          updatedEnv.set(expr.name, {...scheme,declaration:expr.span,...(expr.signature ? {annotation:expr.signature.span} : {})});
           env = updatedEnv;
           types.push(applyType(sAfter, defT));
         } else if (expr._tag === "DSLForm" && dslProvider && rawExprs) {
@@ -457,7 +466,7 @@ export const inferProgramAll = (
             const bindings = dslProvider.getTypeBindings(expr.name, rawExpr);
             if (bindings.size > 0) {
               const sAfter = yield* Ref.get(ctx.subst);
-              const updatedEnv = new Map(applyEnv(sAfter, env));
+              const updatedEnv = applyEnv(sAfter, env);
               for (const [name, scheme] of bindings) {
                 updatedEnv.set(name, scheme);
               }
@@ -475,6 +484,7 @@ export const inferProgramAll = (
         rawExprIndex++;
       }
 
+      yield* reportHoles;
       return types;
     } finally {
       setInferDslProvider(prevProvider);

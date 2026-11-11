@@ -1,7 +1,7 @@
 // Test runner for the vendor-risk trial. Source: the trial brief (REPORT.md).
 // Usage: PATH=/opt/node24/bin:$PATH node trials/vendor-risk/tests/run.mjs
 // Requires the built JSON CLI: pnpm --filter @formalang/ts build && pnpm --filter @formalang/host build
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { copyFileSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,6 +22,10 @@ const t = (name, cond, detail = "") => {
 };
 const printed = (r) => r.value?.result?.printed;
 const msgs = (r) => JSON.stringify((r.diagnostics ?? []).map((d) => d.code + ": " + d.message));
+
+// Companion suites use the shipped runner; the historical checks below remain intact.
+const suite = spawnSync(process.execPath, [cli, "test", join(here, "runner-test.lisp")], { encoding: "utf8" });
+t("Forma runner companion suite", suite.status === 0, suite.stdout + suite.stderr);
 
 // 1. Policy functions (evaluation)
 t("policy typechecks", forma("typecheck", "src/policy.lisp").ok);

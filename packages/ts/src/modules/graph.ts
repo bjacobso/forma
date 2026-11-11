@@ -1,9 +1,11 @@
+import { copySourceTrace } from "../evaluator/source-trace.js";
 import { diagnosticLocator } from "../diagnostic/locations.js";
 import { parse } from "../reader/parser.js";
 import { toSExprMany } from "../reader/to-sexpr.js";
 import { headSym as head, type SExpr } from "../reader/types.js";
 const headSym = (e?: SExpr): string | undefined => (e ? head(e) : undefined);
 import type { Diagnostic } from "../diagnostic/diagnostic.js";
+import { authorNames, diagnosticFromUnknown } from "../diagnostic/diagnostic.js";
 import { defaultBuiltins } from "../Builtins.js";
 import {
   discoverFormDeclarations,
@@ -23,6 +25,7 @@ import {
 } from "./packages.js";
 import type { Span } from "../diagnostic/diagnostic.js";
 import { retiredExtensionDiagnostic } from "./retired-extension.js";
+import { bundledModuleSources } from "./sources.generated.js";
 
 /** A resolver is supplied by the host. IDs identify file instances, not contents. */
 export interface ModuleSource {
@@ -239,6 +242,19 @@ function resolveModuleGraphUnlocated(
       throw new ModuleError({ code: error.code, message: error.message, severity: "error", phase: "typecheck" });
     }
   }
+  // Reserved, runtime-independent sources take precedence over host/package lookup.
+  const externalResolver = resolver;
+  resolver = (specifier, importer) => {
+    const bundled = specifier.startsWith("forma:");
+    const internal = importer.startsWith("forma:") &&
+      (specifier.startsWith("./") || specifier.startsWith("../"));
+    if (!bundled && !internal) return externalResolver(specifier, importer);
+    const name = bundled ? specifier.slice(6) : specifier.slice(2).replace(/\.lisp$/, "");
+    if ((!internal || /^\.\/[a-z]+\.lisp$/.test(specifier)) && Object.hasOwn(bundledModuleSources, name))
+      return { id: `forma:${name}`, source: bundledModuleSources[name as keyof typeof bundledModuleSources] };
+    throw new ModuleResolutionError("module/specifier",
+      `Unknown bundled library ${specifier}. Available libraries: ${Object.keys(bundledModuleSources).map(name => `forma:${name}`).join(", ")}.`);
+  };
   // Each package's own modules use its prelude, through the project mechanism.
   const core: ModuleCoreOptions = hostCore.packages
     ? {
@@ -709,7 +725,7 @@ function resolveModuleGraphUnlocated(
           id,
           e,
           "module/unimported-sugar",
-          `${n} is kernel sugar, which file modules must import: add (import "<path to forma>/preludes/modules/kernel.lisp" [${n}]) with a path relative to this file, or select a project prelude that provides it. The kernel library exports not, when, unless, cond, and, or, -> and ->>.`,
+          `${n} is kernel sugar, which file modules must import: add (import "forma:kernel" [${n}]), or select a project prelude that provides it. The kernel library exports not, when, unless, cond, and, or, -> and ->>.`,
         );
       if (n.includes("__forma_"))
         fail(
@@ -749,7 +765,9 @@ function resolveModuleGraphUnlocated(
       return [];
     };
     let resolvingTemplate = false;
-    const walk = (
+    const walk = (e: SExpr, locals: ReadonlySet<string> = new Set(), type = false): SExpr =>
+      copySourceTrace(e, walkInner(e, locals, type));
+    const walkInner = (
       e: SExpr,
       locals: ReadonlySet<string> = new Set(),
       type = false,
@@ -1168,8 +1186,15 @@ export function resolveModuleGraph(entry: ModuleSource, hostResolver: ModuleReso
   const sources = new Map<string, string>();
   try { return resolveModuleGraphUnlocated(entry, hostResolver, hostCore, sources); }
   catch (error) {
-    if (!(error instanceof ModuleError)) throw error;
+    if (!(error instanceof ModuleError)) {
+      const diagnostic = diagnosticFromUnknown(error, "typecheck", entry.id);
+      // Only translate source failures. Unexpected defects still reach the
+      // host's internal/error handler instead of being labelled author errors.
+      if (!diagnostic.span || diagnostic.code === "internal/error") throw error;
+      error = new ModuleError({ ...diagnostic, message: authorNames(diagnostic.message) });
+    }
+    const failure = error as ModuleError;
     const locate = diagnosticLocator(id => sources.get(normalizeModuleId(id)));
-    throw new ModuleError(locate(error.diagnostic), error.related.map(locate));
+    throw new ModuleError(locate(failure.diagnostic), failure.related.map(locate));
   }
 }

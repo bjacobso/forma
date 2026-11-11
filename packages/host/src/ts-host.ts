@@ -1,3 +1,4 @@
+import { describeForm, describeBinding, referenceEntries, type LanguageDescription } from "./description.js";
 import { HOST_ABI_VERSION, HOST_CAPABILITIES } from "./host-contract.js";
 import * as Artifact from "@formalang/ts/artifact";
 import * as Modules from "@formalang/ts/modules";
@@ -814,6 +815,75 @@ export class TsLanguageHost implements LanguageHost {
     return this.#sessions.get(sessionId)?.language.sourceText(sourceId);
   }
 
+  /** Describe checked public library vocabulary without evaluating an entry program. */
+  async describe(request: { readonly sessionId: string; readonly sourceId?: string }): Promise<LanguageDescription> {
+    const session = this.#requireSession(request.sessionId);
+    const forms: LanguageDescription["forms"][number][] = [];
+    const functions: LanguageDescription["functions"][number][] = [];
+    const types: LanguageDescription["types"][number][] = [];
+    const diagnostics: Diagnostic[] = [];
+    for (const source of session.language.orderedSources("prelude")) {
+      for (const entry of referenceEntries(source.id, source.text)) {
+        if (entry.kind === "function" && ["TFun", "TVariadic"].includes(session.language.scope.typeEnv.get(entry.name)?.type._tag ?? "")) {
+          const checked = entry.signature ? undefined : await this.typecheck({ sessionId: request.sessionId, source: entry.name });
+          const vars = new Map<string, string>();
+          const signature = entry.signature ?? checked?.display?.replace(/\bt\d+\b/gu, name => {
+            if (!vars.has(name)) vars.set(name, `a${vars.size}`);
+            return vars.get(name)!;
+          }) ?? entry.pattern ?? entry.name;
+          functions.push({ name: entry.name, sourceId: source.id, signature, ...(entry.doc ? { doc: entry.doc } : {}) });
+        } else if (entry.kind === "type") types.push({ name: entry.name, sourceId: source.id, signature: entry.source, ...(entry.doc ? { doc: entry.doc } : {}) });
+      }
+    }
+    for (const descriptor of session.language.scope.prelude?.descriptions.list() ?? []) {
+      if (descriptor.resultType.kind === "none" && !descriptor.surface) continue;
+      const sourceId = session.language.orderedSources("prelude").find(source => referenceEntries(source.id, source.text).some(entry => entry.kind === "form" && entry.name === descriptor.name))?.id ?? "prelude";
+      forms.push(describeForm(descriptor.name, sourceId, descriptor));
+    }
+    const roots = request.sourceId ? [request.sourceId] : session.language.orderedSources("source").map(source => source.id);
+    const seen = new Set<string>();
+    for (const sourceId of roots) {
+      try {
+        const graph = this.#moduleGraph({ sessionId: request.sessionId, sourceId });
+        const checked = Modules.checkModuleGraph(graph, Engine.moduleCheckOptions({ session: session.language, source: "", hostBuiltins: session.hostBuiltins, typePolicy: session.typePolicy }));
+        diagnostics.push(...checked.diagnostics);
+        if (!checked.ok) continue;
+        for (const binding of checked.interfaces.find(entry => entry.moduleId === graph.entry)!.exports) {
+          const key = `${binding.name}:${binding.identity.moduleId}:${binding.identity.declaration}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const owner = graph.modules.find(module => module.id === binding.identity.moduleId)!;
+          const entries = referenceEntries(owner.id, owner.source);
+          if (binding.kind === "form") {
+            const descriptor = owner.compileTime?.forms.get(binding.symbol)?.descriptor;
+            if (descriptor) {
+              const form = describeForm(binding.name, owner.id, descriptor);
+              forms.push(form);
+              // Examples are authored in the defining library's scope, including private helpers.
+              // Reuse its compile-time form provider through the graph's own module checker.
+              for (const example of form.examples) {
+                const parsed = Engine.parseSource({ sourceId: `${owner.id}#example`, source: example });
+                diagnostics.push(...parsed.diagnostics);
+                if (!parsed.diagnostics.length) {
+                  const exampleGraph = Modules.resolveModuleGraph({ id: owner.id, source: owner.source + "\n" + example },
+                    Modules.sourceModuleResolver(graph.modules.map(module => ({ id: module.id, source: module.source }))), Engine.moduleCoreOptions(session.language));
+                  diagnostics.push(...Modules.checkModuleGraph(exampleGraph, Engine.moduleCheckOptions({ session: session.language, source: example, hostBuiltins: session.hostBuiltins, typePolicy: session.typePolicy })).diagnostics);
+                }
+              }
+            }
+          } else if (binding.kind === "type" || binding.kind === "class" || binding.kind === "error" || binding.kind === "service") {
+            types.push(describeBinding(binding, entries));
+          } else if (binding.kind === "value" && Array.isArray(binding.scheme?.type) && binding.scheme.type[0] === "->") {
+            functions.push(describeBinding(binding, entries));
+          }
+        }
+      } catch (error) {
+        diagnostics.push(...(error instanceof Modules.ModuleError ? error.diagnostics : [Engine.diagnosticFromUnknown(error, "typecheck", sourceId)]));
+      }
+    }
+    return { forms, functions, types, diagnostics };
+  }
+
   async sessionInfo(request: SessionInfoRequest): Promise<SessionInfoResult> {
     const session = this.#requireSession(request.sessionId);
     return {
@@ -925,6 +995,7 @@ export class TsLanguageHost implements LanguageHost {
         message: error.message,
         ...(error.details ? {details:error.details} : {}),
         ...(error.help ? {help:error.help} : {}),
+        ...(error.related ? {related:error.related} : {}),
         ...(error.fix ? {fix:error.fix} : {}),
         ...(error.span
           ? {
@@ -944,6 +1015,7 @@ export class TsLanguageHost implements LanguageHost {
         message: diagnostic.message,
         ...(diagnostic.details ? {details:diagnostic.details} : {}),
         ...(diagnostic.help ? {help:diagnostic.help} : {}),
+        ...(diagnostic.related ? {related:diagnostic.related} : {}),
         ...(diagnostic.fix ? {fix:diagnostic.fix} : {}),
         phase: "typecheck",
         ...(diagnostic.span

@@ -53,8 +53,8 @@ export const inferLet = (
       }));
       yield* Ref.set(ctx.pendingConstraints, normalizedPending);
       const scheme = yield* generalizeBinding(genEnv, boundType, pendingStart);
-      letEnv = new Map(applyEnv(sAfter, letEnv));
-      letEnv.set(binding.name, scheme);
+      letEnv = applyEnv(sAfter, letEnv);
+      letEnv.set(binding.name, {...scheme,declaration:binding.expr.span});
     }
 
     const s = yield* Ref.get(ctx.subst);
@@ -94,11 +94,11 @@ export const inferDef = (
 
       // Bind name to signature type for recursive reference
       const defEnv = new Map(env);
-      defEnv.set(expr.name, mono(sigT));
+      defEnv.set(expr.name, {...mono(sigT),declaration:expr.span,annotation:expr.signature.span});
 
       // Infer the expression type
       const exprT = yield* checkExpr(defEnv,expr.expr,sigT).pipe(Effect.mapError(error =>
-        new InferenceError({message:error.message,origin:error.origin ?? originOf(expr,"def-signature"),details:error.details})));
+        new InferenceError({...error,message:error.message,origin:error.origin ?? originOf(expr,"def-signature"),related:[...(error.related ?? []),{message:"Expected type declared here",span:{sourceId:expr.signature!.span.sourceId ?? "",startOffset:expr.signature!.span.start,endOffset:expr.signature!.span.end}}]})));
 
       // Unify inferred type with signature type
       yield* assignType(
@@ -112,9 +112,11 @@ export const inferDef = (
     }
 
     // No signature: standard recursive binding with fresh type var
-    const selfT = existingMonoType ?? (yield* ctx.freshTVar);
+    const placeholder = existingMonoType ?? (yield* ctx.freshTVar);
+    const selfT = expr.expr._tag === "Lam" && !expr.expr.restParam
+      ? { ...placeholder, arity: expr.expr.params.length } : placeholder;
     const defEnv = new Map(env);
-    defEnv.set(expr.name, mono(selfT));
+    defEnv.set(expr.name, {...mono(selfT),declaration:expr.span});
 
     const exprT = yield* inferExpr(defEnv, expr.expr);
 

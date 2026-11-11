@@ -6,6 +6,7 @@ import {
   resolveModuleGraph,
   sourceModuleResolver,
   type ModuleSource,
+  ModuleError,
 } from "../src/Modules.js";
 
 const root = resolve(import.meta.dirname, "../../..");
@@ -42,11 +43,11 @@ describe("Clojure spellings (RFC 0021 stage 0)", () => {
 
   // Spelling only: each Clojure habit below keeps Forma's meaning instead.
   test.each([
-    ["truthiness.lisp", "Cannot unify Option<Int> with Bool", "coupon"],
-    ["nil-punning.lisp", "Type mismatch: Unit vs Int", "nil"],
+    ["truthiness.lisp", "Expected Bool, found Option<Int>", "coupon"],
+    ["nil-punning.lisp", "Expected Int, found Unit", "nil"],
     [
       "keyword-access.lisp",
-      "Cannot unify :customer with",
+      "found :customer",
       "(:customer order)",
     ],
   ])("%s is rejected at the author's span", (name, message, text) => {
@@ -61,12 +62,16 @@ describe("Clojure spellings (RFC 0021 stage 0)", () => {
     ).toBe(text);
   });
 
-  // A gap, pinned so that fixing it is visible: the arity failure escapes
-  // macro expansion as an exception instead of a located diagnostic.
-  test("a multi-arity defn is rejected without an author diagnostic", () => {
-    expect(() => check("multi-arity.lisp")).toThrow(
-      expect.objectContaining({ _tag: "ArityError", message: "fn expects 2+ arguments, got 0" }),
-    );
+  test("a multi-arity defn reports a located module diagnostic", () => {
+    expect.assertions(2);
+    try { check("multi-arity.lisp"); }
+    catch (error) {
+      expect(error).toBeInstanceOf(ModuleError);
+      expect((error as ModuleError).diagnostic).toMatchObject({
+        code: "ArityError", message: "fn expects 2+ arguments, got 0",
+        span: { sourceId: expect.any(String), startLine: expect.any(Number) },
+      });
+    }
   });
 
   test("the library is only in scope where a module imports it", () => {

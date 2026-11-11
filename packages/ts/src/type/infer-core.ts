@@ -1,3 +1,4 @@
+import { typeMismatch } from "./diagnostic-types.js";
 import { collectionOperations, inferCollectionOperation } from "./infer-collections.js";
 import { closestName, nearestNames } from "../diagnostic/closest-name.js";
 import { authorNames } from "../diagnostic/diagnostic.js";
@@ -67,7 +68,7 @@ export function fnTypeWithEffect(params: readonly Type[], ret: Type, effect: ERo
   for (let i = params.length - 1; i >= 0; i--) {
     result = TFun(params[i]!, result, i === params.length - 1 ? effect : undefined);
   }
-  return result;
+  return { ...result, arity: params.length, ...(params.length === 0 ? { nullaryResult: ret } : {}) };
 }
 
 export function variadicFnTypeWithEffect(
@@ -88,7 +89,7 @@ export const applyFnWithEffect = (
     const ctx = yield* InferContext;
     const retT = yield* ctx.freshTVar;
     const effectT = yield* ctx.freshEVar;
-    yield* unify(fnT, TFun(argT, retT, effectT), origin);
+    yield* unify(TFun(argT, retT, effectT), fnT, origin);
     const s = yield* Ref.get(ctx.subst);
     return {
       result: applyType(s, retT),
@@ -500,7 +501,7 @@ const inferEffectDo = (
 
     for (const binding of expr.bindings) {
       const s = yield* Ref.get(ctx.subst);
-      currentEnv = new Map(applyEnv(s, currentEnv));
+      currentEnv = applyEnv(s, currentEnv);
       const bindingType = yield* inferExpr(currentEnv, binding.expr);
       const resolvedBindingType = applyType(yield* Ref.get(ctx.subst), bindingType);
       const parts = operationalEffectParts(resolvedBindingType);
@@ -511,7 +512,7 @@ const inferEffectDo = (
             span: binding.span,
             kind: "effect-bind",
           },
-          { code: "typecheck/type-mismatch", message: `Effect bind expects Effect, received ${showType(resolvedBindingType)}.` },
+          typeMismatch(TCon("Effect"),resolvedBindingType),
         );
       }
 
@@ -562,13 +563,24 @@ const inferVar = (
   expr: CoreExpr & { _tag: "Var" },
 ): Effect.Effect<Type, InferenceError, InferContext> =>
   Effect.gen(function* () {
+    const ctx = yield* InferContext;
+    if (expr.name.startsWith("?")) {
+      // Explicit host query-symbol policies predate expression goals.
+      const literal = !env.has(expr.name) ? ctx.unboundSymbolType(expr.name) : undefined;
+      if (literal) return literal;
+      const previous = (yield* Ref.get(ctx.holes)).find(hole => hole.expr.id === expr.id);
+      if (previous) return previous.type;
+      const type = yield* ctx.freshTVar;
+      const globals = yield* Ref.get(ctx.globalNames);
+      yield* Ref.update(ctx.holes, holes => [...holes, { expr, type, env: new Map(env), globals }]);
+      return type;
+    }
     const scheme = env.get(expr.name);
     if (scheme) {
       const t = yield* instantiateWithConstraints(scheme, originOf(expr, "var"));
       return t;
     }
 
-    const ctx = yield* InferContext;
     const bt = ctx.builtinScheme(expr.name);
     if (bt) return yield* instantiate(bt);
 
@@ -674,6 +686,31 @@ const inferApp = (
     // `let`: its parameters take their arguments' types, so `((fn [y] (+ y 1)) n)`
     // stays Int for an Int `n` instead of widening `y` to Float first.
     const lambda = expr.fn;
+    const named = lambda._tag === "Var" ? lambda.name : undefined;
+    const annotation = named ? env.get(named)?.annotation : undefined;
+    const checkArgument = (argumentEnv: TypeEnv, argument: CoreExpr, expectedType: Type) =>
+      checkExpr(argumentEnv,argument,expectedType).pipe(Effect.mapError(error => annotation
+        ? new InferenceError({...error,message:error.message,related:[...(error.related ?? []),{message:"Expected type declared here",span:{sourceId:annotation.sourceId ?? "",startOffset:annotation.start,endOffset:annotation.end}}]})
+        : error));
+    const known = named ? env.get(named)?.type ?? ctx.builtinScheme(named)?.type : undefined;
+    const variadicHead = named && !env.has(named) && ["+", "-", "*", "/", "min", "max"].includes(named);
+    let expected = lambda._tag === "Lam" && !lambda.restParam ? lambda.params.length : known?.arity;
+    if (expected === undefined && known?._tag === "TFun") {
+      let cursor: Type = known;
+      let count = 0;
+      while (cursor._tag === "TFun" && !cursor.rest) { count++; cursor = cursor.res; }
+      if (cursor._tag !== "TFun" && cursor._tag !== "TVariadic" && cursor._tag !== "TVar") expected = count;
+    }
+    if (!variadicHead && expected !== undefined && expected !== expr.args.length) {
+      const name = named ? authorNames(named) : "function";
+      const declaration = named ? env.get(named)?.declaration : lambda._tag === "Lam" ? lambda.span : undefined;
+      return yield* Effect.fail(new InferenceError({
+        origin:originOf(expr,"app"),
+        details:{code:"typecheck/arity",name,expected,actual:expr.args.length},
+        message:`${name} expects ${expected} arguments, got ${expr.args.length}`,
+        ...(declaration ? {related:[{message:"Function defined here",span:{sourceId:declaration.sourceId ?? "",startOffset:declaration.start,endOffset:declaration.end}}]} : {}),
+      }));
+    }
     if (lambda._tag === "Lam" && !lambda.restParam && lambda.params.length > 0 && lambda.params.length === expr.args.length) {
       const names = new Set(lambda.params.map((param) => param.name));
       // A lambda argument is typed better from its use in the body, as before.
@@ -694,7 +731,7 @@ const inferApp = (
         const literal=literalName(other);
         if (literal !== undefined) {
           if (members.some(member => sameLiteral(member, literal))) return TCon("Bool");
-          return yield* ctx.fail(originOf(other,"equality"),{code:"typecheck/type-mismatch",message:`${literal} is not one of ${showType(applyType(subst,enumType))}, so this comparison is always false`});
+          return yield* ctx.fail(originOf(other,"equality"),typeMismatch(applyType(subst,enumType),TCon(literal)));
         }
         const bases=new Set(members.map(literalBase)), resolved=applyType(subst,otherType);
         const otherMembers=resolved._tag === "TCon" && literalBase(resolved.name) ? [resolved.name] : literalMembers(resolved);
@@ -731,8 +768,9 @@ const inferApp = (
       return yield* inferApply(env, expr);
     }
 
-    if (expr.fn._tag === "Var" && !env.has(expr.fn.name) && ctx.builtinScheme(expr.fn.name) && ["+","-","*","/","mod","pow","min","max","abs","sqrt","floor","ceil","round","<","<=",">",">="].includes(expr.fn.name)) {
-      const op = expr.fn.name;
+    const numericAlias = known?.numericOperator && known.arity !== 0 && named && env.has(named) ? known.numericOperator : undefined;
+    if (numericAlias || expr.fn._tag === "Var" && !env.has(expr.fn.name) && ctx.builtinScheme(expr.fn.name) && ["+","-","*","/","mod","pow","min","max","abs","sqrt","floor","ceil","round","<","<=",">",">="].includes(expr.fn.name)) {
+      const op = numericAlias ?? (expr.fn as CoreExpr & { _tag: "Var" }).name;
       const args: Type[] = [];
       for (const [index,arg] of expr.args.entries()) {
         const t = yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst),env),arg);
@@ -755,6 +793,43 @@ const inferApp = (
       return args.every(t=>t._tag === "TCon" && t.name === "Int") ? TCon("Int") : tFloat;
     }
     let fnT = yield* inferExpr(env, expr.fn);
+    if (fnT.arity !== undefined && fnT.arity !== expr.args.length) {
+      const name = named ? authorNames(named) : "function";
+      const declaration = named ? env.get(named)?.declaration : undefined;
+      return yield* Effect.fail(new InferenceError({
+        origin:originOf(expr,"app"),
+        details:{code:"typecheck/arity",name,expected:fnT.arity,actual:expr.args.length},
+        message:`${name} expects ${fnT.arity} arguments, got ${expr.args.length}`,
+        ...(declaration ? {related:[{message:"Function defined here",span:{sourceId:declaration.sourceId ?? "",startOffset:declaration.start,endOffset:declaration.end}}]} : {}),
+      }));
+    }
+    if (fnT.nullaryResult && expr.args.length === 0) return fnT.nullaryResult;
+    // Resolve ordinary arguments before specializing a numeric callback. For
+    // reduce this supplies both the accumulator and element numeric kinds.
+    const callbackParameters: Type[] = [];
+    let callbackCursor = fnT;
+    while (callbackCursor._tag === "TFun" && callbackParameters.length < expr.args.length) {
+      callbackParameters.push(callbackCursor.arg); callbackCursor = callbackCursor.res;
+    }
+    const numericCallback = expr.args.some(arg => arg._tag === "Var" &&
+      (env.get(arg.name)?.type ?? ctx.builtinScheme(arg.name)?.type)?.numericOperator);
+    if (numericCallback) {
+      // A numeric reducer can widen its accumulator when the elements are
+      // Float, even if its initial value is Int.
+      if (named === "reduce" && !env.has(named) && callbackParameters[0]?._tag === "TFun") {
+        const seed = yield* inferExpr(env, expr.args[1]!);
+        const list = yield* inferExpr(env, expr.args[2]!);
+        if (list._tag === "TApp" && list.con._tag === "TCon" && list.con.name === "List") {
+          const callback = expr.args[0]!;
+          const operator = callback._tag === "Var" ? (env.get(callback.name)?.type ?? ctx.builtinScheme(callback.name)?.type)?.numericOperator : undefined;
+          const result = operator === "/" ? tFloat : yield* joinType(seed, list.args[0]!, originOf(expr, "numeric-accumulator"));
+          yield* unify(callbackParameters[0].arg, result, originOf(expr, "numeric-accumulator"));
+        }
+      }
+      for (const [index, parameter] of callbackParameters.entries()) {
+        if (parameter._tag !== "TFun") yield* checkArgument(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[index]!, parameter);
+      }
+    }
     // Solve repeated unconstrained parameters together, using their common
     // supertype rather than letting the first argument narrow the variable.
     const parameters: Type[] = [];
@@ -763,10 +838,23 @@ const inferApp = (
       parameters.push(cursor.arg); cursor = cursor.res;
     }
     const repeated = new Map<string, Type>();
-    for (const [i, parameter] of parameters.entries()) {
+    const contextualLiteral = (arg: CoreExpr) => arg._tag === "Lit" ||
+      arg._tag === "App" && arg.fn._tag === "Var" && arg.fn.name === "__vector";
+    const hasUnion = (type: Type): boolean => type._tag === "TApp" &&
+      (type.con._tag === "TCon" && type.con.name === "Union" || type.args.some(hasUnion));
+    // Establish context from computed values before widening literal arguments,
+    // including when the literal appears before the value that supplies its type.
+    const ordered = [...parameters.entries()].sort(([a], [b]) =>
+      Number(contextualLiteral(expr.args[a]!)) - Number(contextualLiteral(expr.args[b]!)));
+    for (const [i, parameter] of ordered) {
       if (parameter._tag !== "TVar" || parameters.filter(p => p._tag === "TVar" && p.id === parameter.id).length < 2) continue;
-      const actual = yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[i]!);
       const previous = repeated.get(parameter.id);
+      const argumentEnv = applyEnv(yield* Ref.get(ctx.subst), env);
+      if (previous && contextualLiteral(expr.args[i]!) && hasUnion(applyType(yield* Ref.get(ctx.subst), previous))) {
+        yield* checkArgument(argumentEnv, expr.args[i]!, previous);
+        continue;
+      }
+      const actual = yield* inferExpr(argumentEnv, expr.args[i]!);
       repeated.set(parameter.id, previous ? yield* joinType(previous, actual, originOf(expr, "argument-join")) : actual);
     }
     for (const [id, actual] of repeated) yield* unify({ _tag: "TVar", id }, actual, originOf(expr, "argument-join"));
@@ -775,16 +863,16 @@ const inferApp = (
       const current = applyType(sBefore, fnT);
       const envN = applyEnv(sBefore,env);
       if (current._tag === "TFun") {
-        yield* checkExpr(envN,expr.args[i]!,current.arg);
+        yield* checkArgument(envN,expr.args[i]!,current.arg);
         const sAfter=yield* Ref.get(ctx.subst);
         yield* emitAmbientEffect(applyERow(sAfter,current.effect ?? EEmpty),originOf(expr,"app"));
         if (current.rest) {
-          for (let j=i+1;j<expr.args.length;j++) yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst),env),expr.args[j]!,current.rest);
+          for (let j=i+1;j<expr.args.length;j++) yield* checkArgument(applyEnv(yield* Ref.get(ctx.subst),env),expr.args[j]!,current.rest);
           return applyType(yield* Ref.get(ctx.subst),current.res);
         }
         fnT=applyType(sAfter,current.res);
       } else if (current._tag === "TVariadic") {
-        for (let j=i;j<expr.args.length;j++) yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst),env),expr.args[j]!,current.rest);
+        for (let j=i;j<expr.args.length;j++) yield* checkArgument(applyEnv(yield* Ref.get(ctx.subst),env),expr.args[j]!,current.rest);
         const subst=yield* Ref.get(ctx.subst);
         yield* emitAmbientEffect(applyERow(subst,current.effect ?? EEmpty),originOf(expr,"app"));
         return applyType(subst,current.res);
@@ -853,8 +941,8 @@ const inferApply = (
     const listArgT = yield* inferExpr(listEnv, lastArgExpr);
     const restElemT = yield* ctx.freshTVar;
     yield* unify(
-      applyType(yield* Ref.get(ctx.subst), listArgT),
       TApp(tList, [restElemT]),
+      applyType(yield* Ref.get(ctx.subst), listArgT),
       originOf(expr, "app"),
     );
 

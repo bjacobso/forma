@@ -180,6 +180,14 @@ export function elaborateSources(
   for (const descriptor of descriptions.list()) for (const hook of unifiedFormHooks(descriptor,descriptions,options.prelude.formBuiltins,options.prelude.hostedDsls)) elaboration.registerHook(hook);
   const accepted = options.forms ? new Set(options.forms) : undefined;
   const semanticEnv = options.semanticEnv ?? new SimpleSemanticEnvironment();
+  // The form type table includes nominal record shapes for IR validation. Keep
+  // their declaration kind available so expression holes do not treat them as aliases.
+  for (const source of options.prelude.sources ?? []) for (const expression of toSExprMany(parse(source).redTree)) {
+    const kind = head(expression);
+    if ((kind === "class" || kind === "error") && expression._tag === "List" && expression.items[1]?._tag === "Sym") {
+      semanticEnv.setFact("type-kind", expression.items[1].name, kind);
+    }
+  }
   for (const expression of authorForms) if (["type", "error", "class"].includes(head(expression) ?? "") && expression._tag === "List") {
     const definition=typeDefinition(expression);
     if (definition) {

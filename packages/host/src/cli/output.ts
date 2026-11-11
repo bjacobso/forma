@@ -26,7 +26,7 @@ export function diagnosticMessage(message: string): string {
   return authorNames(message);
 }
 
-export function renderDiagnostics(diagnostics: readonly Pick<Diagnostic, "code" | "severity" | "message" | "span" | "help" | "fix">[], sourceText = fileText, color = Boolean(process.stderr.isTTY) && process.env.NO_COLOR === undefined): string {
+export function renderDiagnostics(diagnostics: readonly Pick<Diagnostic, "code" | "severity" | "message" | "span" | "help" | "fix" | "related">[], sourceText = fileText, color = Boolean(process.stderr.isTTY) && process.env.NO_COLOR === undefined): string {
   const lines: string[] = [];
   for (const raw of diagnostics) {
     const diagnostic = diagnosticLocator(sourceText)(raw as Parameters<ReturnType<typeof diagnosticLocator>>[0]);
@@ -44,6 +44,9 @@ export function renderDiagnostics(diagnostics: readonly Pick<Diagnostic, "code" 
         const prefix = text.slice(0, column - 1).replace(/[^\t]/g, " ");
         lines.push(`${" ".repeat(gutter + 2)}|`, ` ${line} | ${text}`, `${" ".repeat(gutter + 2)}| ${prefix}${"^".repeat(Math.max(1, Math.min(length, text.length - column + 2)))}`);
       }
+    }
+    for (const note of diagnostic.related ?? []) {
+      lines.push(`  note: ${diagnosticMessage(note.message)} --> ${displayPath(note.span.sourceId)}${note.span.startLine === undefined ? "" : `:${note.span.startLine}:${note.span.startColumn ?? 1}`}`);
     }
     if (diagnostic.help) lines.push(`  = help: ${diagnosticMessage(diagnostic.help)}`);
     for (const fix of diagnostic.fix ?? []) {

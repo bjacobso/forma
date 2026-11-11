@@ -1,6 +1,7 @@
 import { diagnosticLocator } from "../diagnostic/locations.js";
 import { Effect, Layer, Ref } from "effect";
 import { inferProgram } from "../type/infer-program.js";
+import { hasHoles } from "../type/holes.js";
 import {
   makeOwnedInferContext,
   InferContext,
@@ -142,11 +143,11 @@ export function checkModuleGraph(
             ? moduleFormProvider(module.compileTime)
             : unifiedFormProvider(source, expressions);
           // Mangled type names are unique across the graph, so every other
-          // module's type declarations can inform implicit Option filling.
+          // module's types and signatures can inform implicit Option filling.
           const contextTypes = graph.modules.flatMap((owner) =>
             owner.id === module.id
               ? []
-              : owner.expressions.filter((e) => e._tag === "List" && e.items[0]?._tag === "Sym" && e.items[0].name === "type"),
+              : owner.expressions.filter((e) => e._tag === "List" && e.items[0]?._tag === "Sym" && ["type", ":"].includes(e.items[0].name)),
           );
           const core = lowerProgram(expressions, provider, {
             includePrelude: false,
@@ -160,7 +161,7 @@ export function checkModuleGraph(
               provider,
               expressions,
               (env) => environments.set(module.id, env),
-              options.editor
+              options.editor || hasHoles(core)
                 ? {
                     onFormError: (error) =>
                       Effect.sync(() => {
@@ -198,7 +199,8 @@ export function checkModuleGraph(
           }
           for (const d of yield* Ref.get(ctx.diagnostics))
             diagnostics.push({
-              code: "typecheck/diagnostic",
+              code: d.code ?? "typecheck/diagnostic",
+              ...(d.details ? {details:d.details} : {}),
               severity: d.severity,
               message: d.message,
               phase: "typecheck",

@@ -46,7 +46,7 @@ export interface TypedSpan {
   readonly exprTag: string; // e.g., "Lam", "App", "Var", "Lit"
 }
 
-export interface LspError extends Pick<Diagnostic, "details" | "help" | "fix"> {
+export interface LspError extends Pick<Diagnostic, "details" | "help" | "fix" | "related"> {
   readonly message: string;
   readonly span?: Span | undefined;
   readonly code?: string | undefined;
@@ -164,6 +164,8 @@ export interface AnalyzeLspOptions {
   readonly initialEnv?: TypeEnv | undefined;
   /** Macros defined before this source, such as by its preludes. */
   readonly macroEnv?: Env | undefined;
+  /** Type declarations and signatures available from preceding sources. */
+  readonly contextTypes?: readonly SExpr[] | undefined;
   /** Receives the type environment after the last form. */
   readonly captureEnv?: ((env: TypeEnv) => void) | undefined;
   readonly captureState?: ((state: import("../type/inference-snapshot.js").InferenceSnapshot) => void) | undefined;
@@ -244,7 +246,7 @@ export function analyzeLsp(
     resetNodeIds();
     // An invalid local `form` declaration is reported; the program is still
     // typed with the forms its preludes describe.
-    const lowered = lowerRecovering(sexprs, dslProvider, options?.macroEnv);
+    const lowered = lowerRecovering(sexprs, dslProvider, options?.macroEnv, options?.contextTypes);
     const coreExprs = lowered.core;
     // Infer (passing DSL provider for result types and type bindings). A
     // top-level form that does not type is reported, and the forms around it
@@ -276,12 +278,14 @@ export function analyzeLsp(
       diagnosticCode: typeof err.details.code === "string" ? err.details.code : "typecheck/type-mismatch",
       details: err.details,
       ...(err.help ? {help:err.help} : {}),
+      ...(err.related ? {related:err.related.map(note => ({...note,span:{...note.span,sourceId:note.span.sourceId || sourceId}}))} : {}),
       ...(err.fix ? {fix:err.fix.map(edit => ({...edit, span:{...edit.span, sourceId:edit.span.sourceId || sourceId}}))} : {}),
       code: err.origin?.span ? extractCode(source, err.origin.span) : undefined,
     }))];
 
     if (mechanics) errors.push(...mechanics.diagnostics.filter(d => d.severity === "error" && (!d.span || d.span.sourceId === sourceId)).map(d => ({
       message: d.message, diagnosticCode: d.code,
+      ...(d.details ? {details:d.details} : {}),
       ...(d.span ? { span: { start: d.span.startOffset, end: d.span.endOffset } } : {}),
     })));
     const last = authored.at(-1);
@@ -338,6 +342,7 @@ function asInferenceError(error: unknown): InferenceError {
     const loc = error.loc as { start: number; end: number };
     const details = (error as { details?: Record<string, unknown> }).details;
     return new InferenceError({
+      ...(error as Error & Pick<Diagnostic,"fix" | "help" | "related">),
       message: error.message,
       origin: { nodeId: `surface:${loc.start}`, kind: "surface", span: { start: loc.start, end: loc.end } },
       details: { code: "surface/invalid-form", ...details },
@@ -354,8 +359,9 @@ function lowerRecovering(
   sexprs: readonly SExpr[],
   dslProvider: DSLTypeProvider | undefined,
   macroEnv: Env | undefined,
+  contextTypes: readonly SExpr[] = [],
 ): { readonly core: CoreExpr[]; readonly errors: readonly InferenceError[] } {
-  const lowerOptions = macroEnv ? { macroEnv } : {};
+  const lowerOptions = { contextTypes, ...(macroEnv ? { macroEnv } : {}) };
   try {
     return { core: lowerProgram(sexprs, dslProvider, lowerOptions), errors: [] };
   } catch {
@@ -380,7 +386,7 @@ function lowerRecovering(
   if (macros.length > 0) {
     try {
       const env = expandKernelExprsSync(macros, macroEnv ? { env: macroEnv } : {}).macroEnv;
-      formOptions = { macroEnv: env.flatten() };
+      formOptions = { ...lowerOptions, macroEnv: env.flatten() };
     } catch {
       // Calls to a macro that does not define are reported where they are lowered.
     }
@@ -399,6 +405,7 @@ function lowerRecovering(
         error.origin?.span
           ? error
           : new InferenceError({
+              ...error,
               message: error.message,
               origin: { span: { start: expr.loc.start, end: expr.loc.end }, kind: "form", nodeId: "form" },
             }),

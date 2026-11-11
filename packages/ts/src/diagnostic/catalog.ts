@@ -5,7 +5,7 @@ export interface DiagnosticCatalogEntry {
   readonly summary: string;
   /** Plain text or Markdown, available offline. */
   readonly explanation: string;
-  readonly stability: "stable" | "unstable" | "internal";
+  readonly stability: "stable" | "experimental" | "unstable" | "internal";
 }
 
 /** A consumer's catalog includes the engine and its own prelude codes.

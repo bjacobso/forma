@@ -24,6 +24,12 @@ positional arguments, options, and children; `:types` describes the holes;
 (greeting welcome "Ada" :doc "Shown on arrival")
 ```
 
+In file modules, running this application binds `welcome` to the elaborated
+declaration descriptor. Its `:data` field holds the projected `GreetingIR`.
+The application evaluates to that descriptor; an application without a declared
+name evaluates to its projected IR. Runtime evaluation reuses elaboration and
+does not run `:check` or the projection again.
+
 `welcome` is a declaration name, `"Ada"` is a string literal, and `:doc` is
 optional. Unknown options are errors. The optional IR field disappears from
 the wire object when the author leaves it absent.

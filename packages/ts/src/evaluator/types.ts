@@ -249,8 +249,8 @@ export function asList(v: KValue, context: string): readonly KValue[] {
   return v;
 }
 
-export function asKFn(v: KValue, context: string): KFn {
-  if (!isKFn(v)) {
+export function asKFn(v: KValue, context: string): KFn | KBuiltin {
+  if (!isKFn(v) && !isKBuiltin(v)) {
     throw new TypeCheckError(context, "function", describeType(v));
   }
   return v;

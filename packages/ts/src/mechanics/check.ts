@@ -55,6 +55,7 @@ import {
 } from "./types.js";
 
 export interface MechanicsCheckDiagnostic {
+  readonly details?: Readonly<Record<string, unknown>>;
   readonly code: string;
   readonly message: string;
   readonly severity: "error" | "warning";
@@ -1782,6 +1783,14 @@ class Checker {
   }
 
   private variable(name: string, scope: Scope, expected: MType | undefined, span: JsonValue | undefined, node?: JsonRecord): MType {
+    if (name.startsWith("?")) {
+      const type = expected ?? tUnknown;
+      const location = toSourceSpan(span);
+      this.diagnostics.push({code:"typecheck/hole", severity:"error",
+        message:`Hole ${name} needs ${showType(type)}`, details:{name, expected:showType(type), candidates:[]},
+        ...(location ? {span:location} : {})});
+      return type;
+    }
     const local = scope.get(name);
     if (local) return local;
     switch (name) {
@@ -2271,7 +2280,13 @@ class Checker {
       this.error(span, "mechanics/arity", `${name} expects ${params.length} argument(s), received ${args.length}.`);
     }
     const subst:Substitution=new Map();
-    args.forEach((arg,index)=>{
+    // Computed arguments supply the context for literals sharing a generic
+    // parameter, even when the literal is written first.
+    const deferred = (arg: JsonValue, index: number) => params[index] && hasVariables(params[index]!) &&
+      isRecord(arg) && (arg["kind"] === "Vector" || arg["kind"] === "Literal");
+    const ordered = args.map((arg, index) => ({ arg, index })).sort((a, b) =>
+      Number(Boolean(deferred(a.arg, a.index))) - Number(Boolean(deferred(b.arg, b.index))));
+    ordered.forEach(({arg,index})=>{
       const param=params[index];
       if (!param) {this.value(arg,scope);return;}
       const expected=applySubstitution(param,subst);

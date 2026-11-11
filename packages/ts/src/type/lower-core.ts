@@ -66,6 +66,7 @@ export const resetBindingCounter = () => {
 export function spanOf(expr: SExpr): Span {
   const trace = sourceTraceOf(expr);
   return {
+    ...(trace.loc.sourceId ? {sourceId:trace.loc.sourceId} : {}),
     start: trace.loc.start,
     end: trace.loc.end,
     ...(trace.macroOrigins ? { macroOrigins: trace.macroOrigins } : {}),

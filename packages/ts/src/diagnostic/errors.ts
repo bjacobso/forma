@@ -125,6 +125,7 @@ export class InferenceError extends Error {
   readonly _tag = "InferenceError" as const;
   readonly origin: Origin | undefined;
   readonly details: Record<string, unknown>;
+  readonly related: import("./diagnostic.js").Diagnostic["related"];
   readonly help: string | undefined;
   readonly fix: readonly import("./diagnostic.js").DiagnosticTextEdit[] | undefined;
 
@@ -132,12 +133,14 @@ export class InferenceError extends Error {
     message: string;
     origin?: Origin | undefined;
     details?: Record<string, unknown>;
+    related?: import("./diagnostic.js").Diagnostic["related"];
     help?: string | undefined;
     fix?: readonly import("./diagnostic.js").DiagnosticTextEdit[] | undefined;
   }) {
     super(opts.message);
     this.origin = opts.origin;
     this.details = opts.details ?? {};
+    this.related = opts.related;
     this.help = opts.help;
     this.fix = opts.fix;
   }

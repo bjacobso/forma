@@ -9,17 +9,17 @@ import { reachableHelpers } from "./helpers.js";
 import { typeSyntaxErrors, retiredNumericTypeErrors, unknownTypeReferences, primitiveTypeNames } from "./type-syntax.js";
 import { KernelTypeError, type KernelError } from "../diagnostic/errors.js";
 import { KKeyword, KSymbol, mapKey, mapKeyValue, isKKeyword, isKSymbol } from "../evaluator/types.js";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Ref } from "effect";
 import type { SExpr } from "../reader/types.js";
 import { authorNames, failureLocation } from "../diagnostic/diagnostic.js";
 import type { FormDescriptor, IdentifierSpec, SlotSpec, DescriptorExtensionValue } from "../descriptor/FormDescriptor.js";
-import { ElaborationError, type ElaborationHook, type HookInput } from "../descriptor/ElaborationHook.js";
+import { ElaborationError, type ElaborationHook, type HookInput, type SemanticEnvironment } from "../descriptor/ElaborationHook.js";
 import { SimpleNormalizedSlots, type SlotValue } from "../descriptor/NormalizedSlots.js";
 import { Env } from "../Env.js";
 import { defaultBuiltins } from "../builtins/index.js";
 import { evaluateExpandedExprs, expandExprs } from "../evaluator/eval.js";
 import type { KValue, BuiltinFn } from "../evaluator/types.js";
-import { showType, type Type } from "../type/types.js";
+import { flattenRow, showType, type Type } from "../type/types.js";
 import { InferContext, makeOwnedInferContext } from "../type/context.js";
 import { typeExprToType } from "../type/infer-core.js";
 import { parseTypeExpr } from "../type/type-parser.js";
@@ -67,26 +67,59 @@ const typeSyntax = (value: KValue, template: SExpr): SExpr => {
   const normalize = (e: SExpr): SExpr => e._tag === "Map" ? {...e,pairs:e.pairs.map(([k,t])=>[k,normalize(t)] as const)} : e._tag === "Vector" ? {...e,_tag:"List",items:e.items.map(normalize)} : e._tag === "List" ? {...e,items:e.items.map((t,i)=>head(e)==="Effect" && i>=2 && (t._tag==="List" || t._tag==="Vector") ? {...t,_tag:"Vector"} : normalize(t))} : e;
   return normalize(toTypeSyntax(value));
 };
-/** Enum aliases (unions of literals) expand so scoped expressions can compare with literals. */
-const expandEnums = (type: SExpr, types: ReadonlyMap<string,SExpr>, seen: ReadonlySet<string> = new Set()): SExpr => {
-  const n = name(type), definition = n && !seen.has(n) ? types.get(n) : undefined;
-  if (definition) {
-    const body = stripTypeMetadata(definition), next = new Set([...seen, n!]);
-    if (head(body) !== "Union" || body._tag !== "List") return type;
-    const members = body.items.slice(1).map(member => expandEnums(member, types, next));
-    const literal = (member: SExpr): boolean => member._tag === "Str" || member._tag === "Num" || member._tag === "Bool" || name(member)?.startsWith(":") === true || head(member) === "Union" && member._tag === "List" && member.items.slice(1).every(literal);
-    return members.every(literal) ? {...body, items:[body.items[0]!, ...members]} : type;
-  }
-  if (type._tag === "Map") return {...type, pairs:type.pairs.map(([key,value]) => [key,expandEnums(value,types,seen)] as const)};
-  return type._tag === "List" || type._tag === "Vector" ? {...type, items:type.items.map(item => expandEnums(item,types,seen))} : type;
-};
-const resolveType = (value: KValue, template: SExpr, types: ReadonlyMap<string,SExpr> = new Map()): Effect.Effect<Type, Error> => {
-  const syntax=expandEnums(typeSyntax(value,template),types);
+const resolveType = (value: KValue, template: SExpr, types: ReadonlyMap<string,SExpr> = new Map(), environment?: SemanticEnvironment): Effect.Effect<Type, Error> => {
+  const syntax=typeSyntax(value,template);
   return Effect.gen(function* () {
     const context = yield* makeOwnedInferContext();
+    // Use the engine's recursive alias resolver, including generic and recursive
+    // aliases. Tagged declarations keep their nominal name; brands retain their
+    // owner as the first argument, just as ordinary type declaration lowering does.
+    for (const [owner,definition] of types) {
+      const kind = environment?.getFact("type-kind", owner);
+      if (kind === "class" || kind === "error") continue;
+      let body = stripTypeMetadata(definition);
+      if (head(body) === "Tagged") continue;
+      if (head(body) === "__type-function" && body._tag === "List" && body.items[1]?._tag === "Vector") {
+        const parameters = body.items[1].items.map(param => name(param)!);
+        yield* Ref.update(context.typeAliasParams, params => new Map(params).set(owner, parameters));
+        body = body.items[2]!;
+      } else if (head(body) === "Brand" && body._tag === "List") {
+        body = list(body, [body.items[0]!, sym(body,owner), ...body.items.slice(1)]);
+      }
+      const alias = parseTypeExpr(body);
+      yield* Ref.update(context.typeAliases, aliases => new Map(aliases).set(owner,alias));
+    }
     return yield* typeExprToType(parseTypeExpr(syntax), new Map(), new Map()).pipe(Effect.provide(Layer.succeed(InferContext, context)));
   });
 };
+
+/** On a failed hole assignment, blame the innermost authored literal that fails. */
+const holeMismatch = (expression: SExpr, expected: Type, environment: SemanticEnvironment): Effect.Effect<SExpr | undefined> => Effect.gen(function* () {
+  const children: [SExpr, Type][] = [];
+  if (expression._tag === "Map" && expected._tag === "TRow") {
+    const fields = flattenRow(expected.row).fields;
+    for (const [key,value] of expression.pairs) {
+      const label = mapKey(datum(key));
+      const type = label === undefined ? undefined : fields.get(label);
+      if (type) children.push([value,type]);
+    }
+  } else if (expected._tag === "TApp" && expected.con._tag === "TCon" && expected.args[0]) {
+    if (expected.con.name === "List" && expression._tag === "Vector") {
+      children.push(...expression.items.map(item => [item,expected.args[0]!] as [SExpr,Type]));
+    } else if (expected.con.name === "Option" && ["Some","Option.Some"].includes(head(expression) ?? "") && expression._tag === "List" && expression.items[1]) {
+      children.push([expression.items[1],expected.args[0]]);
+    }
+  }
+  for (const [child,type] of children) {
+    const mismatch = yield* holeMismatch(child,type,environment);
+    if (mismatch) return mismatch;
+  }
+  const inferred = environment.inferExpression(expression);
+  if (inferred._tag === "failure") return expression;
+  const context = yield* makeOwnedInferContext();
+  const checked = yield* assignType(inferred.type,expected,{kind:"expression",nodeId:"form-hole",span:expression.loc}).pipe(Effect.provide(Layer.succeed(InferContext,context)),Effect.result);
+  return checked._tag === "Failure" ? expression : undefined;
+});
 const typeName = (e: SExpr | undefined): Type | undefined => name(e) ? {_tag:"TCon",name:name(e)!} : undefined;
 const fieldName = (e: SExpr): string | undefined => name(e)?.replace(/^:/, "");
 const unwrapOption = (t: SExpr): SExpr => head(t) === "Option" && t._tag === "List" ? t.items[1]! : t;
@@ -117,6 +150,17 @@ function missingCheckHoles(check: SExpr, spec: UnifiedForm): readonly string[] {
 }
 
 export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = new Map(), helpers: readonly SExpr[] = []): FormDescriptor | undefined {
+  try { return parseUnifiedFormInner(e, types, helpers); }
+  catch (error) {
+    if (error instanceof Error) Object.assign(error, {
+      ...(!("loc" in error) ? { loc: e.loc } : {}),
+      details: { code: "elaborate/form-definition" },
+    });
+    throw error;
+  }
+}
+
+function parseUnifiedFormInner(e: SExpr, types: ReadonlyMap<string, SExpr>, helpers: readonly SExpr[]): FormDescriptor | undefined {
   if (head(e) !== "form" || e._tag !== "List") return undefined;
   const pattern = e.items[1];
   if (pattern?._tag !== "List" || !name(pattern.items[0])) throw new Error("form expects (head pattern ...) followed by :types, :ir and a body");
@@ -153,11 +197,14 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
   const slots: SlotSpec[] = [];
   const variables = new Set<string>();
   let declares: string | undefined;
-  const addHole = (n: string, positional: boolean, many = false) => {
+  const addHole = (n: string, at: SExpr, positional: boolean, many = false) => {
     if (variables.has(n)) throw new Error(`form ${formName}: duplicate pattern variable ${n}`);
     variables.add(n);
     const t = holes.get(n);
-    if (!t) throw new Error(`form ${formName}: missing type for ${n}`);
+    if (!t) throw Object.assign(new Error(`form ${formName}: missing type for :${n}`), {
+      loc: at.loc,
+      help: `Add :${n} and its type to the form's :types map.`,
+    });
     const u = unwrapOption(t);
     const h = head(u);
     if (positional && (h === "Declares" || h === "Refers" || name(u) === "Symbol")) {
@@ -172,11 +219,11 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
       if (p.pairs.length !== 1 || name(p.pairs[0]![0]) !== ":keys" || p.pairs[0]![1]._tag !== "Vector") throw new Error("Form options pattern must be {:keys [names ...]}");
       for (const key of p.pairs[0]![1].items) {
         if (!name(key)) throw new Error("Form option names must be symbols");
-        addHole(name(key)!, false);
+        addHole(name(key)!, key, false);
       }
     } else if (name(p) && name(p) !== "...") {
       const many = name(patterns[j + 1]) === "...";
-      addHole(name(p)!, true, many);
+      addHole(name(p)!, p, true, many);
       if (many) {
         if (j !== patterns.length - 2) throw new Error("A repeated form hole must be final");
         j++;
@@ -207,6 +254,16 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
 
 /** Parse the pattern once for both normalization and hook execution. */
 export function matchFormSyntax(spec: UnifiedForm, expr: SExpr): ReadonlyMap<string, SExpr> {
+  try { return matchFormSyntaxInner(spec, expr); }
+  catch (error) {
+    if (error instanceof Error && !("loc" in error)) Object.assign(error, {
+      loc: expr.loc, details: { code: "elaborate/malformed-form" },
+    });
+    throw error;
+  }
+}
+
+function matchFormSyntaxInner(spec: UnifiedForm, expr: SExpr): ReadonlyMap<string, SExpr> {
   if (expr._tag !== "List") throw new Error("Expected a form application");
   const result = new Map<string, SExpr>();
   const accepted = new Set<string>();
@@ -481,7 +538,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
           const scope = yield* invoke(scopeFn);
           const scoped = semanticEnv.childScope();
           if (!(scope instanceof Map)) throw new ElaborationError({message:":scope must return a record of bindings",hookName:descriptor.name,phase:"validate"});
-          for (const [key,type] of scope) scoped.bind(String(mapKeyValue(key)).replace(/^:/,""),yield* resolveType(type,e,spec.types));
+          for (const [key,type] of scope) scoped.bind(String(mapKeyValue(key)).replace(/^:/,""),yield* resolveType(type,e,spec.types,semanticEnv));
           semanticEnv = scoped;
         }
         const children = repeatedChildren && e._tag === "Vector" ? e.items : [e];
@@ -579,7 +636,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
             if (bindings instanceof Map) {
               const annotations=new Map([...bindings].map(([key,value])=>[String(mapKeyValue(key)).replace(/^:/,""),typeSyntax(value,e)]));
               checkedExpression=coerceProgram([e],annotations)[0]!;
-              for (const [key,value] of bindings) child.bind(String(mapKeyValue(key)).replace(/^:/,""),yield* resolveType(value, e, spec.types));
+              for (const [key,value] of bindings) child.bind(String(mapKeyValue(key)).replace(/^:/,""),yield* resolveType(value, e, spec.types,semanticEnv));
             }
             semanticEnv = child;
           }
@@ -587,10 +644,10 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
           if (inferred._tag === "failure") diagnostics.push({ severity: "error", message: inferred.message, loc: (inferred.span && innermost(e, inferred.span)?.loc) ?? e.loc, details: holeDetails });
           else {
             const expectedSyntax = arg(u)!;
-            const expected = yield* resolveType(converted.get(`:${name(expectedSyntax)}`) ?? datum(expectedSyntax), e, spec.types);
+            const expected = yield* resolveType(converted.get(`:${name(expectedSyntax)}`) ?? datum(expectedSyntax), e, spec.types,semanticEnv);
             const context = yield* makeOwnedInferContext();
             const checked = yield* assignType(inferred.type,expected,{kind:"expression",nodeId:"form-hole",span:{start:e.loc.start,end:e.loc.end}}).pipe(Effect.provide(Layer.succeed(InferContext,context)),Effect.result);
-            if (checked._tag === "Failure") diagnostics.push({severity:"error",message:`${n} expects ${showType(expected)}, found ${showType(inferred.type)}`,loc:e.loc,details:{...holeDetails,expected:showType(expected),actual:showType(inferred.type)}});
+            if (checked._tag === "Failure") diagnostics.push({severity:"error",message:`${n} expects ${showType(expected)}, found ${showType(inferred.type)}`,loc:(yield* holeMismatch(e,expected,semanticEnv))?.loc ?? e.loc,details:{...holeDetails,expected:showType(expected),actual:showType(inferred.type)}});
           }
         }
       }

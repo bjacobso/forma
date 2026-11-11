@@ -63,7 +63,7 @@ export default defineConfig({
   description: "A programmable type system for Lisp.",
   cleanUrls: true,
   // RFCs are design records for the repository, not site pages.
-  srcExclude: ["rfcs/**"],
+  srcExclude: ["rfcs/**", "proposals/**"],
   lastUpdated: true,
   outDir: resolve(import.meta.dirname, "../../dist-docs"),
   head: [
@@ -96,6 +96,7 @@ export default defineConfig({
         text: "Learn",
         items: [
           { text: "Language guide", link: "/language" },
+          { text: "Core cheat sheet", link: "/cheatsheet" },
           { text: "Authoring your own program", link: "/authoring" },
           { text: "Structure and interpretation", link: "/structure-and-interpretation" },
           { text: "Domain modeling", link: "/domain-modeling" },
@@ -122,6 +123,7 @@ export default defineConfig({
             { text: "Preludes", link: "/preludes/" },
             { text: "Vision", link: "/vision" },
             { text: "Language", link: "/language" },
+            { text: "Core cheat sheet", link: "/cheatsheet" },
             { text: "Authoring your own program", link: "/authoring" },
             { text: "Structure and interpretation", link: "/structure-and-interpretation" },
             { text: "Roots of Lisp crib sheet", link: "/roots-of-lisp" },
@@ -152,6 +154,7 @@ export default defineConfig({
           text: "Project",
           items: [
             { text: "For agents", link: "/agents" },
+            { text: "MCP server", link: "/mcp" },
             { text: "Roadmap", link: "/roadmap" },
           ],
         },

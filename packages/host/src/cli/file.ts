@@ -1,4 +1,4 @@
-import { readModuleGraph, readNodePackages } from "@formalang/ts/node";
+import { readModuleGraph, readNodePackages, type NodePackages } from "@formalang/ts/node";
 import { moduleMechanicsDeclarations, type ModuleGraph } from "@formalang/ts/modules";
 import { isKFloat, isKKeyword, isKSymbol, mapKeyValue, type KValue } from "@formalang/ts/evaluator";
 import { JsonAbi, type JsonResponse } from "../json-abi.js";
@@ -35,13 +35,7 @@ function formApplications(graph: ModuleGraph) {
 export async function file(abi: JsonAbi, operation: string, path: string, unchecked = false): Promise<JsonResponse> {
   const graph = readModuleGraph(path);
   const packages = readNodePackages(path);
-  const opened = await abi.handleJson('{"op":"openSession"}');
-  if (!opened.ok) return opened;
-  const { sessionId } = opened.value as {sessionId:string};
-  try {
-    if (packages) await abi.host.configureSession({ sessionId, packages: packages.table });
-    const loaded = await abi.host.loadSourceBundle({ sessionId, sources: graph.modules.map(m => ({ kind: "source", sourceId: m.id, source: m.source })) });
-    if (loaded.diagnostics.some(d => d.severity === "error")) return {ok:false, diagnostics:loaded.diagnostics};
+  return withFileSession(abi, graph, packages, async (sessionId) => {
     const request = { sessionId, sourceId: graph.entry };
     if (operation === "typecheck") return await abi.handleJson(JSON.stringify({ op: "typecheck", ...request }));
     if (operation === "evaluate") {
@@ -56,6 +50,19 @@ export async function file(abi: JsonAbi, operation: string, path: string, unchec
     const result = moduleMechanicsDeclarations(graph);
     const ok = !result.diagnostics.some(d => d.severity === "error");
     return { ok, value: ok ? [...result.declarations, ...formApplications(graph)] : result.declarations, diagnostics: result.diagnostics };
+  });
+}
+
+/** Share module loading and guaranteed session cleanup across CLI transports. */
+export async function withFileSession<T>(abi: JsonAbi, graph: ModuleGraph, packages: NodePackages | undefined, action: (sessionId: string) => Promise<T>): Promise<T | JsonResponse> {
+  const opened = await abi.handleJson('{"op":"openSession"}');
+  if (!opened.ok) return opened;
+  const { sessionId } = opened.value as {sessionId:string};
+  try {
+    if (packages) await abi.host.configureSession({ sessionId, packages: packages.table });
+    const loaded = await abi.host.loadSourceBundle({ sessionId, sources: graph.modules.map(m => ({ kind: "source", sourceId: m.id, source: m.source })) });
+    if (loaded.diagnostics.some(d => d.severity === "error")) return {ok:false, diagnostics:loaded.diagnostics};
+    return await action(sessionId);
   } finally { await abi.handleJson(JSON.stringify({op:"closeSession",sessionId})); }
 }
 

@@ -1,2 +1,2 @@
 nil-punning.lisp:7:26 error typecheck/type-mismatch
-  Type mismatch: Unit vs Int
+  Expected Int, found Unit

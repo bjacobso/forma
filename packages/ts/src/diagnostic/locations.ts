@@ -9,8 +9,9 @@ export interface LocatedSpan extends Span {
 }
 
 /** Diagnostics whose located spans have been projected against author source. */
-export interface LocatedDiagnostic extends Omit<Diagnostic, "span" | "fix"> {
+export interface LocatedDiagnostic extends Omit<Diagnostic, "span" | "fix" | "related"> {
   readonly span?: LocatedSpan | undefined;
+  readonly related?: readonly { readonly span: LocatedSpan; readonly message: string }[] | undefined;
   readonly fix?: readonly { readonly span: LocatedSpan; readonly newText: string }[] | undefined;
 }
 
@@ -53,6 +54,7 @@ export function diagnosticLocator(sourceText: (sourceId: string) => string | und
     ...diagnostic,
     message: authorNames(diagnostic.message),
     ...(diagnostic.span ? { span: locate(diagnostic.span) } : {}),
+    ...(diagnostic.related ? {related:diagnostic.related.map(note => ({...note,message:authorNames(note.message),span:locate({...note.span,sourceId:note.span.sourceId || diagnostic.span?.sourceId || ""})}))} : {}),
     ...(diagnostic.fix ? { fix: diagnostic.fix.map(edit => ({ ...edit, span: locate({ ...edit.span, sourceId: edit.span.sourceId || diagnostic.span?.sourceId || "" }) })) } : {}),
   });
 }

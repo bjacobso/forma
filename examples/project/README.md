@@ -14,11 +14,13 @@ sh check.sh
 
 `forma.json` identifies the project. `src/rules.lisp` exports a `greeting` form
 with a nonempty-message check; `src/data.lisp` uses it and exports a message;
-`src/main.lisp` is a separate pure program evaluating `(+ 20 22)`. The script
-uses the locally installed CLI through `pnpm exec` to check the form graph and
-pure entry, assert the run result, and check formatting. It prints `42`. Form
-libraries currently produce compile-time IR; running a graph that imports a form
-definition is not supported by the pure evaluator.
+`src/main.lisp` imports that message and evaluates it. The script uses the
+locally installed CLI through `pnpm exec` to check and run the form graph,
+assert the run result, and check formatting. It prints `"Hello from Forma"`.
+Form applications reuse their elaborated declaration descriptors at runtime;
+the form's checks and projection do not run again.
+The script also runs `src/main-test.lisp` with `forma test`. It imports the
+embedded `forma:test` library directly, without a vendored source file.
 
 From the repository root, `pnpm check:examples` runs this script against an
 offline tarball installation without changing this directory.

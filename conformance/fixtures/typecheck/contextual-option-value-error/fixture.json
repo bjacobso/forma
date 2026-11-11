@@ -1,0 +1,17 @@
+{
+  "name": "contextual-option-value-error",
+  "category": "typecheck",
+  "sourceId": "parity/contextual-option-value-error",
+  "source": {
+    "file": "source.lisp"
+  },
+  "operation": {
+    "kind": "typecheck"
+  },
+  "comparison": {
+    "mode": "typeDiagnostics"
+  },
+  "expected": {
+    "file": "expected.json"
+  }
+}

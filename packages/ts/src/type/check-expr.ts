@@ -1,7 +1,8 @@
+import { typeMismatch } from "./diagnostic-types.js";
 import { printFloat } from "../evaluator/types.js";
 import { Effect, Ref } from "effect";
 import type { Type } from "./types.js";
-import { flattenRow, showType, TCon, TRow, REmpty, RExtend, type Row } from "./types.js";
+import { flattenRow, TCon, TRow, REmpty, RExtend, type Row } from "./types.js";
 import type { TypeEnv } from "./substitution.js";
 import { applyType } from "./substitution.js";
 import type { CoreExpr } from "./core-expr.js";
@@ -38,7 +39,7 @@ export const checkExpr = (env: TypeEnv, expr: CoreExpr, expected: Type): Effect.
     const members = target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "Union" ? target.args : [];
     const base = literal._tag === "TCon" ? literalBase(literal.name) : undefined;
     if (base && members.length > 0 && members.every(member => member._tag === "TCon" && literalBase((member as Type & { _tag: "TCon" }).name) === base)) {
-      return yield* ctx.fail(originOf(expr,"literal-check"),{code:"typecheck/type-mismatch",message:`${showType(literal)} is not one of ${showType(target)}`});
+      return yield* ctx.fail(originOf(expr,"literal-check"),typeMismatch(target,literal));
     }
   }
   if (target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "Map"

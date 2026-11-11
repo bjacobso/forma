@@ -57,8 +57,8 @@ are not implemented.
 The implicit module core consists of intrinsic syntax, evaluation primitives,
 primitive/container types, and the current Effect-value authoring forms. `type`,
 `class`, `error`, `service`, `layer`, and `do!` remain built in. Kernel sugar can be
-imported from `preludes/modules/kernel.lisp`; it is not automatically loaded into file
-modules. `preludes/modules/clojure.lisp` is a second such library with Clojure
+imported as `forma:kernel`; it is not automatically loaded into file
+modules. `forma:clojure` is a second such library with Clojure
 spellings such as `defn` and `if-let`, described in
 [Clojure spellings](./clojure.md). A macro in scope may claim a retired
 spelling (`def`, `defn`, `defmacro`, `lambda`, `let*`); an unclaimed one reports
@@ -66,6 +66,28 @@ spelling (`def`, `defn`, `defmacro`, `lambda`, `let*`); an unclaimed one reports
 Explicitly configured host variables remain available. Source-loading and legacy
 descriptor-prelude APIs do not add library bindings to module scopes.
 Typeclass instance imports and coherence remain deferred.
+
+## Bundled libraries
+
+Reserved specifiers import the libraries shipped with the engine:
+
+```lisp
+(import "forma:kernel" [and or not])
+(import "forma:test" [test is is=])
+(import "forma:clojure" [defn if-let])
+(import "forma:routes" [route])
+```
+
+The available names are `kernel`, `test`, `clojure`, and `routes`. They need no
+`forma.json` dependency, vendored copy, or filesystem path. Their source strings
+are embedded from `preludes/modules/` and work in Node, browser hosts, and the
+installed npm distribution. The engine reserves the `forma:` scheme before host
+or package lookup; unknown names report `module/specifier` with available names.
+Each module's ID is its specifier, such as `forma:kernel`, so interfaces and
+binding/contract identities contain no checkout or installation path. Bundled
+sources follow the engine version rather than a separately locked dependency.
+Relative imports inside these libraries resolve only to other embedded library
+sources. Importing libraries does not add their exports to unrelated modules.
 
 ## Compile-time libraries
 
@@ -266,7 +288,14 @@ importing author's span.
 Kernel module evaluation initializes pure definitions once per runtime instance
 and dependency version. Entry expressions run on explicit evaluation; importing
 that file does not run those expressions. Updating a file creates new instances
-for it and its dependents. Observation requests create a fresh entry instance so
+for it and its dependents. Form definitions are compile-time declarations and
+are not called by the runtime. A named form application initializes its declared
+name with the already elaborated descriptor (`:identity`, `:classification`,
+and projected `:data`), matching checked scope. Its value is that descriptor;
+an unnamed application evaluates to its projected IR. Checks and projections
+are reused from graph resolution, so evaluation does not run hooks again.
+Ordinary pure definitions in form libraries still initialize under the same
+module rules. Observation requests create a fresh entry instance so
 that the complete execution can be observed. Effect programs execute through the
 linked Effect target; kernel evaluation reports `module/effect-runtime` instead
 of executing an Effect initializer.

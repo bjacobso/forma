@@ -1,0 +1,13 @@
+{
+  "tier": "hard",
+  "kind": "kernel",
+  "entry": "main.lisp",
+  "files": [
+    "docs/authoring.md",
+    "docs/cheatsheet.md",
+    "docs/modules.md",
+    "docs/domain-modeling.md",
+    "docs/writing-a-form.md",
+    "preludes/modules/kernel.lisp"
+  ]
+}

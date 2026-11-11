@@ -55,7 +55,7 @@ describe("Effect 4 protocol schema projection", () => {
     for (const patch of [{name:"X"},{tags:[]},{count:0},{count:10},{state:"unknown"},{unit:undefined}]) {
       expect(() => Schema.decodeUnknownSync(schema)({...value,...patch})).toThrow();
     }
-  });
+  }, 30_000); // compiles generated TypeScript; slow under parallel load
 
   test("unsupported data types fail with source spans instead of emitting Unknown", () => {
     const source = '(type Bad {:value Missing})';
@@ -78,7 +78,7 @@ describe("Effect 4 protocol schema projection", () => {
     expect(Schema.decodeUnknownSync(schema)(value)).toEqual(value);
     expect(Schema.encodeSync(schema)(value)).toEqual(value);
     expect(() => Schema.decodeUnknownSync(schema)({name:"root",children:[{name:1,children:[]}]})).toThrow();
-  });
+  }, 30_000); // compiles generated TypeScript; slow under parallel load
 
   test("typechecks and decodes the emitted record schema", () => {
     const code = [
@@ -112,7 +112,7 @@ describe("Effect 4 protocol schema projection", () => {
       labels: { team: "forma" },
     });
     expect(() => Schema.decodeUnknownSync(generated)({ labels: { team: 1 } })).toThrow();
-  });
+  }, 30_000); // compiles generated TypeScript; slow under parallel load
 });
 
 interface Payload {

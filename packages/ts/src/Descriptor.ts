@@ -233,3 +233,5 @@ export type {
 export { generateEffectSchemaModule } from "./descriptor/descriptor-to-schema.js";
 
 export { checkDescriptors, type DescriptorSource, type CheckDescriptorsOptions } from "./descriptor/check-descriptors.js";
+
+export { extractPreludeReference, type Entry, type Slot } from "./descriptor/reference.js";

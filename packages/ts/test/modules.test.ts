@@ -19,6 +19,25 @@ const id = {
   source: "(export identity) (define identity [x] x)",
 };
 describe("isolated file modules", () => {
+  test.each(["test", "kernel", "clojure", "routes"])("resolves bundled %s without host sources or filesystem access", name => {
+    const g = graph(`(import "forma:${name}" :as lib)`);
+    expect(checkModuleGraph(g).diagnostics).toEqual([]);
+    const library = g.modules.find(m => m.id === `forma:${name}`)!;
+    expect(library.interface.exports.length).toBeGreaterThan(0);
+    expect(library.interface.exports.every(b => b.identity.moduleId.startsWith("forma:"))).toBe(true);
+    if (name === "clojure") expect(library.dependencies).toEqual(["forma:kernel"]);
+  });
+  test("bundled specifiers are reserved even with packages and a conflicting host resolver", () => {
+    const g = resolveModuleGraph({ id: "main.lisp", source: '(import "forma:kernel" [and]) (and true true)' },
+      () => { throw new Error("host must not resolve bundled sources"); }, { packages: { packages: [] } });
+    expect(checkModuleGraph(g).ok).toBe(true);
+  });
+  test("unknown bundled libraries list the available specifiers at the author span", () => {
+    expect(() => graph('(import "forma:nope" [test])')).toThrowError(expect.objectContaining({
+      diagnostic: expect.objectContaining({ code: "module/specifier", message: expect.stringMatching(/Unknown bundled library forma:nope.*forma:clojure.*forma:kernel.*forma:routes.*forma:test/),
+        span: expect.objectContaining({ sourceId: "src/main.lisp", startLine: 1, startColumn: 9 }) }),
+    }));
+  });
   test("the retired-extension conformance fixture reports a fix before resolution", () => {
     const source = readFileSync(new URL("../../../conformance/modules/retired-extension.lisp", import.meta.url), "utf8");
     expect(() => graph(source)).toThrowError(expect.objectContaining({

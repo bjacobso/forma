@@ -148,11 +148,13 @@ export function inferenceDiagnostics(sourceId: string, result: LspResult): reado
     ...result.errors.map(error => ({ code: error.diagnosticCode ?? "typecheck/error", severity: "error" as const, message: error.message, phase: "typecheck" as const,
       ...(error.details ? {details:error.details} : {}),
       ...(error.help ? {help:error.help} : {}),
+      ...(error.related ? {related:error.related} : {}),
       ...(error.fix ? {fix:error.fix} : {}),
       ...(error.span ? { span: { sourceId, startOffset: error.span.start, endOffset: error.span.end } } : {}) })),
     ...result.diagnostics.map(d => ({ code: d.code ?? "typecheck/diagnostic", severity: d.severity, message: d.message, phase: "typecheck" as const,
       ...(d.details ? {details:d.details} : {}),
       ...(d.help ? {help:d.help} : {}),
+      ...(d.related ? {related:d.related} : {}),
       ...(d.fix ? {fix:d.fix} : {}),
       ...(d.span ? { span: { sourceId, startOffset: d.span.start, endOffset: d.span.end } } : {}) })),
   ];
@@ -229,6 +231,12 @@ function validatePreludeTypesUnlocated(
   }
 }
 
+/** Surface declarations retained for contextual record normalization. */
+export function sessionCoercionContext(session: LanguageSession): readonly SExpr[] {
+  return session.orderedSources("prelude").flatMap(s => toSExprMany(parse(s.text).redTree))
+    .filter(e => ["type", "class", "error", ":"].includes(head(e) ?? ""));
+}
+
 /** Analyze a session snapshot using retained schemes rather than typing every binding as Any. */
 export function checkSessionTypes(request: TypecheckRequest & { readonly session: LanguageSession; readonly source: string }, sourceId: string, dslProvider?: Type.DSLTypeProvider): import("./operations.js").TypecheckResult {
   const result = Effect.runSync(analyzeLsp(request.source, {
@@ -236,6 +244,7 @@ export function checkSessionTypes(request: TypecheckRequest & { readonly session
     sourceId,
     ...(dslProvider ? {dslProvider} : {}),
     macroEnv: request.session.scope.macroEnv ?? request.session.env.flatten(),
+    contextTypes: sessionCoercionContext(request.session),
   }));
   const display = result.resultTypeString;
   return {

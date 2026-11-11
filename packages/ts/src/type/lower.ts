@@ -122,12 +122,12 @@ export function lowerProgram(
       if (isTypeSig(expr)) {
         const name = expr.items[1]!;
         if (name._tag !== "Sym") throw new InferenceError({ message: "Signature name must be a symbol" });
-        if (signatures.has(name.name)) throw new InferenceError({ message: `Duplicate signature for '${name.name}'` });
+        if (signatures.has(name.name)) throw new InferenceError({ details:{code:"typecheck/lower"}, message: `Duplicate signature for '${name.name}'` });
         signatures.set(name.name, parseTypeExpr(expr.items[2]!));
       }
       if (isDef(expr) && expr.items[1]?._tag === "Sym") definitions.add(expr.items[1].name);
     }
-    for (const name of signatures.keys()) if (!definitions.has(name)) throw new InferenceError({ message: `Type signature for '${name}' has no matching definition` });
+    for (const name of signatures.keys()) if (!definitions.has(name)) throw new InferenceError({ details:{code:"typecheck/lower"}, message: `Type signature for '${name}' has no matching definition` });
     const result: CoreExpr[] = [];
     for (const expr of expanded) {
       if (isTypeSig(expr)) continue;

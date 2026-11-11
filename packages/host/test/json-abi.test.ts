@@ -196,7 +196,7 @@ describe("JSON process ABI", () => {
       writeFileSync(join(dir,"main.lisp"),'(and true false)');
       const sugar = JSON.parse(spawnSync(process.execPath,[cli,"file","typecheck",join(dir,"main.lisp")],{encoding:"utf8"}).stdout);
       expect(sugar).toMatchObject({ok:false,diagnostics:[{code:"module/unimported-sugar"}]});
-      expect(sugar.diagnostics[0].message).toContain("preludes/modules/kernel.lisp");
+      expect(sugar.diagnostics[0].message).toContain("forma:kernel");
       for (const help of [["help"],["--help"],["file","--help"]]) {
         const shown = spawnSync(process.execPath,[cli,...help],{encoding:"utf8"});
         expect(shown.status).toBe(0);

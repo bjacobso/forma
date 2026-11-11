@@ -112,7 +112,7 @@ describe("scoped expressions", () => {
   test("enum bindings compare with their members and reject other literals", () => {
     expect(elaborate(prelude, '(visible-when (or (= status "active") (= plan "paid")))').diagnostics).toEqual([]);
     expect(elaborate(prelude, '(visible-when (= status "actve"))').diagnostics).toEqual([
-      { message: expect.stringContaining('"actve" is not one of Union<"active", "inactive">'), text: '"actve"' },
+      { message: expect.stringContaining('Expected Union<"active", "inactive">, found "actve"'), text: '"actve"' },
     ]);
     expect(elaborate(prelude, '(visible-when (and (present? age) (= nickame "x")))').diagnostics).toEqual([
       { message: expect.stringContaining("nickame"), text: "nickame" },
@@ -134,12 +134,12 @@ describe("enum equality", () => {
   test("vector literals check their items against an enum list", async () => {
     const oneOf = '(: one-of? (-> a (List a) Bool)) (define one-of? [x xs] true)';
     expect(await infer(`${color} ${oneOf} (: f (-> Color Bool)) (define f [c] (one-of? c ["red" "green"])) (f "red")`)).toBe("Bool");
-    await expect(infer(`${color} ${oneOf} (: f (-> Color Bool)) (define f [c] (one-of? c ["red" "blu"])) (f "red")`)).rejects.toThrow('"blu" is not one of Union<"red", "green">');
+    await expect(infer(`${color} ${oneOf} (: f (-> Color Bool)) (define f [c] (one-of? c ["red" "blu"])) (f "red")`)).rejects.toThrow('Expected Union<"red", "green">, found "blu"');
   });
 
   test.each([
-    [`${color} (: f (-> Color Bool)) (define f [c] (= c "blue")) (f "red")`, '"blue" is not one of Union<"red", "green">'],
-    ['(type Color (Union :red :green)) (: f (-> Color Bool)) (define f [c] (= c :blu)) (f :red)', ":blu is not one of Union<:red, :green>"],
+    [`${color} (: f (-> Color Bool)) (define f [c] (= c "blue")) (f "red")`, 'Expected Union<"red", "green">, found "blue"'],
+    ['(type Color (Union :red :green)) (: f (-> Color Bool)) (define f [c] (= c :blu)) (f :red)', "Expected Union<:red, :green>, found :blu"],
   ])("rejects %s", async (source, message) => {
     await expect(infer(source)).rejects.toThrow(message);
   });
