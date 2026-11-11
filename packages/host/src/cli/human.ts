@@ -1,5 +1,6 @@
 import type { JsonAbi } from "../json-abi.js";
 import type { EvaluationState } from "../types.js";
+import { testFiles } from "./test.js";
 import { file } from "./file.js";
 import { formatFiles } from "./format.js";
 import { explain } from "./explain.js";
@@ -7,6 +8,7 @@ import { repl } from "./repl.js";
 import { displayPath, report } from "./output.js";
 
 export async function human(abi: JsonAbi, command: string, args: readonly string[]): Promise<boolean> {
+  if (command === "test") return testFiles(args);
   const json = args.includes("--json");
   const paths = args.filter(arg => !arg.startsWith("-"));
   const allowed = command === "run" ? ["--json", "--unchecked"] : command === "fmt" ? ["--json", "--check"] : ["--json"];

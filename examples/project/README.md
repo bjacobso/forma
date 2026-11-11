@@ -16,7 +16,10 @@ sh check.sh
 with a nonempty-message check; `src/data.lisp` uses it and exports a message;
 `src/main.lisp` is a separate pure program evaluating `(+ 20 22)`. The script
 uses the locally installed CLI through `pnpm exec` to check the form graph and
-pure entry, assert the run result, and check formatting. It prints `42`. Form
+pure entry, assert the run result, check formatting, and run `src/main-test.lisp`
+with `forma test`. `src/test-support.lisp` vendors the ordinary library from
+`preludes/modules/test.lisp` to keep this example self-contained. The npm package
+also ships a copy in `dist/preludes/test.lisp`. The script prints `42` and a passing test summary. Form
 libraries currently produce compile-time IR; running a graph that imports a form
 definition is not supported by the pure evaluator.
 

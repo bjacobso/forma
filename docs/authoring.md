@@ -185,25 +185,62 @@ does not check against `Int`. Give numeric helpers a signature such as
 
 ## Writing tests
 
-Forma has no test framework. A practical pattern is a test file whose final
-expression is the list of failing case names:
+Write ordinary checked Forma in `.lisp` files and import the test library.
+The npm distribution ships it at
+`node_modules/@forma-language/forma/dist/preludes/test.lisp`. Copy it into your
+project (for example, `cp node_modules/@forma-language/forma/dist/preludes/test.lisp
+test-support.lisp`) and import that local file. Direct imports through symlinked
+`node_modules` paths are not supported by the session file resolver. In a source checkout, import
+`preludes/modules/test.lisp` instead:
 
 ```lisp
-(import "../forma/preludes/modules/kernel.lisp" [not])
+(import "../forma/preludes/modules/test.lisp" [test is is=])
 (import "./policy.lisp" [can-activate? acme])
-(type Case {:name String :ok Bool})
-(: is (-> String a a Case))
-(define is [name actual expected] {:name name :ok (= actual expected)})
-(define cases [(is "acme can activate" (can-activate? acme 1000) true)])
-(map (fn [c] c.name) (filter (fn [c] (not c.ok)) cases))
+
+(test "acme can activate"
+  (is (can-activate? acme 1000)))
+
+(test "structural equality"
+  (is= [{:amount 42}] [{:amount 42}]))
 ```
 
-Run it with `forma run` and treat any result other than `[]` as a failure.
-Because `run` typechecks first, an ill-typed suite fails instead of
-reporting `[]`. To check that the suite can fail, flip one expectation and
-confirm that the case name is reported. The vendor-risk trial in
-[`trials/vendor-risk`](https://github.com/bjacobso/forma/tree/main/trials/vendor-risk)
-uses this pattern, with a small Node runner.
+Run `forma test [paths...]`. With no paths it searches the current directory.
+Directories discover `**/*-test.lisp` and `test/**/*.lisp`; explicit file paths
+run regardless of their names. Discovery skips dependency, build and hidden
+repository metadata directories and does not follow directory symlinks. Results
+are ordered by canonical file path, then source order; overlapping paths run a
+file once. `--filter <substring>` selects names, and `--json` emits one object
+with `ok`, `files` (check outcomes and diagnostics), and `results` (module, name,
+status, source span and diagnostics). Exit status is 1 for a failed test or file,
+0 otherwise, including an empty selection.
+
+Each file is checked in full before any of its tests run, even with a filter.
+A check failure reports diagnostics and skips that file; other files continue.
+Each selected test gets a fresh session and a 50,000-step evaluation budget.
+A runtime error or exhausted budget fails that test; later tests still run.
+Module initialization also uses the budget. Tests do not share runtime state.
+
+`test` is a library macro that wraps its body in an unevaluated function. The
+runner recognizes top-level `(test "literal name" body...)` calls and evaluates
+one selected body at a time. Importing a test module leaves its tests dormant.
+Tests may see private definitions in their file. This initial runner supports
+kernel evaluation; Effect programs, tags, property generators and `throws?`
+are not implemented. It does not add the core declarations or host operation
+proposed in RFC 0015. Use the spelling `test` directly, rather than an import
+alias, for discovery.
+
+A test passes when its body completes. Use `is` for a Bool condition and `is=`
+for structural equality (actual value first, expected value second). Multiple
+body expressions run in order; the first failed assertion ends that test.
+Assertion failures print expected and actual values and point to the assertion
+in the author's source. A bare `false` value is a completed expression, so use
+an assertion to make it fail. Helpers return `true` on success and call the
+kernel failure builtin on failure. There is currently no checked kernel catch
+form, so an expected-failure assertion is deferred.
+
+The trial reports retain their original list-of-failures suites. New
+`runner-test.lisp` companions in `trials/vendor-risk/tests` and
+`trials/expense-rules/src` demonstrate the runner without rewriting that history.
 
 ## Writing a form
 
@@ -311,4 +348,4 @@ you wrote. Common codes:
 
 See [Domain modeling](./domain-modeling.md#what-the-model-can-t-express-yet)
 and the [roadmap](./roadmap.md). Gaps that affect outside authors today: no
-date type, evaluate-only builtins (above), and no test runner.
+date type and evaluate-only builtins (above).

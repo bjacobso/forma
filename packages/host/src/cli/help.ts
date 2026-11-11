@@ -4,6 +4,8 @@ Human commands:
   check <entry.lisp> [--json]          Typecheck a module graph.
   run <entry.lisp> [--unchecked] [--json]
                                       Check, then print the evaluated value.
+  test [paths...] [--json] [--filter <substring>]
+                                      Check and run independent Forma tests.
   fmt <files...> [--check] [--json]    Format in place, or list files that would change.
   repl [--prelude <file>]...          Start a typed, stateful REPL.
                                       :quit, :type <expr>, :reset
@@ -26,5 +28,5 @@ Machine commands (JSON):
   version                             Print the version.
 
 Human diagnostics go to stderr. --json prints a JSON response on stdout.
-Check, run, fmt and file commands exit 1 on failure; usage errors exit 64.
+Check, run, test, fmt and file commands exit 1 on failure; usage errors exit 64.
 `;
