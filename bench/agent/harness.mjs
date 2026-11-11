@@ -17,8 +17,8 @@ export function parseOptions(args) {
   const options = { out: "results.json" };
   for (let i = 0; i < args.length; i++) {
     const key = args[i];
-    if (!["--agent-cmd", "--tasks", "--out"].includes(key) || !args[i + 1] || args[i + 1].startsWith("--")) {
-      throw new Error("Usage: node bench/agent/run.mjs --agent-cmd COMMAND [--tasks a,b] [--out results.json]");
+    if (!["--agent-cmd", "--tasks", "--tier", "--out"].includes(key) || !args[i + 1] || args[i + 1].startsWith("--")) {
+      throw new Error("Usage: node bench/agent/run.mjs --agent-cmd COMMAND [--tasks a,b] [--tier core|hard] [--out results.json]");
     }
     options[key.slice(2)] = args[++i];
   }
@@ -27,6 +27,7 @@ export function parseOptions(args) {
     options.tasks = options.tasks.split(",");
     if (options.tasks.some(id => !id) || new Set(options.tasks).size !== options.tasks.length) throw new Error("Task IDs must be nonempty and unique");
   }
+  if (options.tier && !["core", "hard"].includes(options.tier)) throw new Error("Tier must be core or hard");
   return options;
 }
 export async function taskIds() {
@@ -53,8 +54,10 @@ export function metrics(calls, dir, entry) {
   let firstPassingCall = null;
   for (const [i, call] of calls.entries()) {
     const [command, mode, ...args] = call.argv;
-    const target = args.filter(a => !a.startsWith("--")).at(-1);
-    if (command !== "file" || !["typecheck", "evaluate", "declarations"].includes(mode) || !target ||
+    const target = (command === "file" ? args : call.argv.slice(1)).filter(a => !a.startsWith("--")).at(-1);
+    if (!(command === "file" && ["typecheck", "evaluate", "declarations"].includes(mode)) &&
+        !["check", "run", "test"].includes(command)) continue;
+    if (!target ||
         resolve(call.cwd ?? dir, target) !== resolve(dir, entry) || firstPassingCall !== null) continue;
     if (call.exitCode === 0) firstPassingCall = i + 1;
     else repairRounds++;

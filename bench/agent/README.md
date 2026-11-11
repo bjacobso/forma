@@ -1,14 +1,20 @@
 # Cold-agent benchmark
 
-Twelve tasks measure whether a cold coding agent can author checked Forma:
-four kernel programs, four uses of existing file-module libraries, and four
-module-defined forms with checks (including the adapted vendor-risk trial).
+Twenty tasks measure whether a cold coding agent can author checked Forma.
+The `core` tier preserves the original twelve tasks: four kernel programs,
+four library consumers, and four module-defined forms (including vendor risk).
+The `hard` tier adds eight integration tasks targeting 20–60 minutes each.
+The original real-agent baseline passed 12/12 core tasks with a median of zero
+repairs (gpt-6.1-sol, revision bb59a29); compare core separately when measuring
+progress. Hard-task times are design estimates, not measured agent baselines;
+run a cold real agent to establish their solve rate and calibrate difficulty.
 No model SDK, API call, or agent dependency is part of this repository.
 Use Node 24 and the installed pnpm 10.20 dependencies. Rebuild first:
 
 ```sh
 pnpm --filter @formalang/ts build && pnpm --filter @formalang/host build
 pnpm bench:validate
+node bench/agent/run.mjs --tier hard --agent-cmd 'codex exec --full-auto "$(cat brief.md)"' --out hard-results.json
 node bench/agent/run.mjs --agent-cmd 'codex exec --full-auto "$(cat brief.md)"' --out results.json
 node bench/agent/run.mjs --agent-cmd 'claude -p "$(cat brief.md)"' --tasks tiered-price,spend-limit --out results.json
 ```
@@ -20,8 +26,8 @@ your agent. The harness creates a clean temporary working directory, not an OS
 security boundary: an unrestricted agent can still read the repository. The
 wrapper uses the repository's absolute built CLI path. It does not copy engine
 source, reference solutions, or acceptance checks into the working directory.
-Existing context libraries keep their original extensions; all authored task
-files and references use `.lisp`.
+Existing context libraries keep their original extensions; authored Forma
+sources and references use `.lisp`. The embedding task also authors a Node script.
 
 Each directory receives `brief.md`, only the files listed in `context.json`,
 and `bin/forma`. PATH includes that bin directory and FORMA_TASK_DIR is the
@@ -39,21 +45,54 @@ agent time limit; use your agent's limits or a shell timeout when desired.
 command (excluding setup and hidden acceptance), CLI call count, repair rounds,
 and first passing call index. Repair rounds count failed `file typecheck`,
 `file evaluate`, or `file declarations` calls on `context.entry` before its
-first passing call; other files and commands do not count. An entry that never
+first passing call. Human `check`, `run`, and `test` calls targeting that same
+entry now also count (including flags such as `--json`). The built CLI currently
+has no `test` command; it is recognized by telemetry for CLI versions that do.
+Other targets and commands do not count. The existing `file` command metric is
+unchanged, so core runs using those commands remain comparable to the baseline;
+for human-command runs record this metric extension when comparing old reports.
+An entry that never
 passes has a null firstPassingCall and counts all its failed calls. This is a
 CLI repair proxy, not a count of chat turns. Deliberately checking invalid
 inputs can increase it. Calls made without the wrapper cannot be measured.
 Totals report pass rate as a fraction and median repair rounds across all tasks.
+Each result carries `tier`; `results.json.tiers.core` and `.hard` contain the same
+totals by tier, and the printed tables show task tiers and tier totals. An absent
+tier has zero tasks, null pass rate, and null median. Without `--tier` all tasks
+run; combine `--tier core|hard` and `--tasks a,b` to take their intersection.
+An empty intersection or unknown tier is an error.
 Keep result JSONs with the agent model/version/settings and commit revision
 when comparing runs; the shell command alone may not identify a model version.
+
+## Hard tasks
+
+| Task | Stress case |
+| --- | --- |
+| approval-network | Five modules, imported policy helpers in hooks, multiple located errors, expiry and money boundaries |
+| optional-enrollment | Nested imported Option records, omitted fields, inline arguments, fallback and aggregation |
+| tagged-ledger | Closed literal unions and tagged events through polymorphic helpers and map/filter/reduce |
+| effect-checkout | Errors and service requirements, recovery, generated Effect execution against test services |
+| embedded-gate | Isolated facade modules, typed capability, no effects before checking, step limits and lifecycle |
+| repair-dispatch | Seven seeded module, visibility, arity, name, Option, numeric, and boundary faults |
+| numeric-invoice | Integer per-line tax rounding, negative credits, Float telemetry and smoothing |
+| workflow-planner | Stable topological scheduling, validation precedence, projected workflow IR |
+
+These tasks draw on the expense-rules and vendor-risk trials, the domain and
+Effect guides, and the check/run numeric divergences. Hidden acceptance compares
+behavior, declaration payloads, diagnostic codes and author locations; it never
+matches submission source text. Effect acceptance compiles the CLI's checked
+IR and runs it with in-memory services. References use explicit Int reducer
+signatures to avoid known numeric widening. Workflow expressions use an inline
+structural record contract because a named record alias in an Expr-list hole
+currently fails elaboration; this does not weaken its pure Plan API.
 
 ## Adding a task
 
 Create `tasks/<id>/` with:
 
 - `brief.md`: everything the agent sees, precise public API, files to write
-  (all `.lisp`), and CLI commands. Target 5–30 minutes of competent work.
-- `context.json`: `{ "kind": "kernel|prelude|form", "entry": "main.lisp",
+  (Forma source uses `.lisp`), and CLI commands. Target 5–30 minutes for core or 20–60 minutes for hard.
+- `context.json`: `{ "tier": "core|hard", "kind": "kernel|prelude|form", "entry": "main.lisp",
   "files": ["docs/authoring.md", "preludes/modules/kernel.lisp"] }` with repo-relative
   context paths. Include transitive imports of any supplied library.
 - `accept.mjs`: export `async function accept(outputDir)` returning
@@ -67,7 +106,11 @@ Create `tasks/<id>/` with:
 `validate.mjs` first checks that empty submissions fail and all references pass,
 then runs the real harness with a simulated agent that fails once, copies a
 reference, and checks it. It verifies both acceptance and telemetry. Update
-its explicit task/kind counts when intentionally extending the suite. Harness
+its explicit task/kind/tier counts when intentionally extending the suite.
+All twenty empty submissions, references, and simulated agents are validated.
+Reference checks use at most two worker processes to bound validation time.
+The simulator uses the legacy file commands for core and a human check followed
+by a file check for hard, pinning both telemetry paths. Harness
 unit tests pin option parsing and repair-count semantics. This infrastructure
 does not change Forma semantics and does not rewrite surface goldens.
 
@@ -91,3 +134,22 @@ individually compressed files at level 9. This is package footprint, not an
 application bundle size. Hardware, Node, revision, and raw samples are recorded.
 CI uploads its report without enforcing a threshold. Compare equivalent
 machines and toolchains before drawing conclusions from percentage changes.
+
+### Expr-list alias limitation
+
+This reduced repro currently rejects the record literal with
+`elaborate/form-check` at line 7, column 9, despite its matching shape:
+
+```lisp
+(type Item {:id String})
+(type BundleIR {:items (List Item)})
+(form (bundle items)
+ :types {:items (Expr (List Item))}
+ :ir BundleIR
+ {:items items})
+(bundle [{:id "a"}])
+```
+
+Run `forma file declarations main.lisp` on it. Replacing the hole contract with
+`(Expr (List {:id String}))` works. The workflow task retains its full behavior
+and uses this structural spelling; no engine change is included here.
