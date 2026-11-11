@@ -36,7 +36,7 @@ try {
     manifest.dependencies["@forma-language/forma"] = `file:${archive}`;
     manifest.pnpm = { overrides };
     await writeFile(join(cwd, "package.json"), JSON.stringify(manifest));
-    run("pnpm", ["install", "--store-dir", store, "--offline", "--ignore-scripts", "--config.auto-install-peers=false"], cwd);
+    run("pnpm", ["install", "--store-dir", store, "--prefer-offline", "--ignore-scripts", "--config.auto-install-peers=false"], cwd);
     console.log(run("pnpm", ["test"], cwd).trim());
     if (example === "embed-node") {
       console.log(run("pnpm", ["start"], cwd).trim());

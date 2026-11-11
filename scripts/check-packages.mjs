@@ -61,7 +61,7 @@ try {
   };
   trees.forEach(collect);
   await writeFile(join(consumer, "package.json"), JSON.stringify({ private: true, type: "module", pnpm: { overrides } }));
-  run("pnpm", ["add", "--store-dir", store, "--offline", "--ignore-scripts", "--config.auto-install-peers=false", archive, "effect@4.1.1"], consumer);
+  run("pnpm", ["add", "--store-dir", store, "--prefer-offline", "--ignore-scripts", "--config.auto-install-peers=false", archive, "effect@4.1.1"], consumer);
   const inert = Object.keys(packed.exports).filter(key => key !== "./editor/react").map(key => name + (key === "." ? "" : key.slice(1)));
   await writeFile(join(consumer, "smoke.mjs"), `
     import assert from 'node:assert/strict';
@@ -110,7 +110,7 @@ try {
   }
   const version = JSON.parse(run(join(consumer, "node_modules/.bin/forma"), ["version"], consumer));
   assert(JSON.stringify(version).includes(packed.version));
-  run("pnpm", ["add", "--store-dir", store, "--offline", "--ignore-scripts", "--config.auto-install-peers=false",
+  run("pnpm", ["add", "--store-dir", store, "--prefer-offline", "--ignore-scripts", "--config.auto-install-peers=false",
     `@codemirror/state@${packed.dependencies["@codemirror/state"]}`,
     `@codemirror/view@${packed.dependencies["@codemirror/view"]}`], consumer);
   run(process.execPath, ["--input-type=module", "-e", `
@@ -118,7 +118,7 @@ try {
     import { lispSupport } from '${name}/editor/codemirror';
     EditorState.create({ doc: '(+ 1 2)', extensions: [lispSupport()] });
   `], consumer);
-  run("pnpm", ["add", "--store-dir", store, "--offline", "--ignore-scripts", "--config.auto-install-peers=false", `react@${overrides.react}`, `react-dom@${overrides["react-dom"]}`], consumer);
+  run("pnpm", ["add", "--store-dir", store, "--prefer-offline", "--ignore-scripts", "--config.auto-install-peers=false", `react@${overrides.react}`, `react-dom@${overrides["react-dom"]}`], consumer);
   run(process.execPath, ["--input-type=module", "-e", `await import('${name}/editor/react')`], consumer);
   console.log(`Packed ${name}: ${entries.length} files; all exports, declarations and both bins verified`);
 } finally {
