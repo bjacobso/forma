@@ -203,7 +203,7 @@ export const inferEffectCatch = (
       new Map<string, Type>(),
       new Map(),
     );
-    const handlerEnv = new Map(applyEnv(yield* Ref.get(ctx.subst), env));
+    const handlerEnv = applyEnv(yield* Ref.get(ctx.subst), env);
     handlerEnv.set(expr.binding.name, mono(payloadType));
     const handlerType = applyType(
       yield* Ref.get(ctx.subst),
@@ -402,7 +402,7 @@ export const inferMatch = (
           );
 
           // Bind pattern variables
-          armEnv = new Map(applyEnv(yield* Ref.get(ctx.subst), envN));
+          armEnv = applyEnv(yield* Ref.get(ctx.subst), envN);
           for (let i = 0; i < arm.pattern.vars.length; i++) {
             const varName = arm.pattern.vars[i]!;
             const fieldT = applyType(yield* Ref.get(ctx.subst), fieldTypes[i]!);
