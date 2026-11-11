@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { readFileSync } from "node:fs";
 
 import { Analysis } from "../src/index.js";
 
@@ -29,6 +30,20 @@ const workspace = (document: string, prelude = PRELUDE) => {
 };
 
 describe("AnalysisWorkspace", () => {
+  test("offers form spelling fixes only for unbound near misses", () => {
+    const source = readFileSync(new URL("../../../conformance/analysis/unknown-form.lisp", import.meta.url), "utf8");
+    const diagnostics = workspace(source).diagnostics("doc.lisp");
+    expect(diagnostics.map(d => d.code)).toEqual(["elaborate/unknown-form"]);
+    expect(diagnostics.filter(d => d.code === "elaborate/unknown-form")).toMatchObject([
+      { details: { name: "workflwo" }, fix: [{ newText: "workflow", span: { startOffset: 1, endOffset: 9 } }] },
+    ]);
+    for (const bound of ["(define workflwo (fn [x] x))\n(workflwo 1)", "(workflwo 1)"]) {
+      const prelude = bound.startsWith("(define") ? PRELUDE : PRELUDE + "\n(define workflwo (fn [x] x))";
+      expect(workspace(bound, prelude).diagnostics("doc.lisp")).toEqual([]);
+    }
+    expect(workspace("(unrelated 1)").diagnostics("doc.lisp").map(d => d.code)).toEqual(["typecheck/unbound-symbol"]);
+  });
+
   test("types documents with the definitions and macros of their preludes", () => {
     const source = "(define double (fn [n] (twice n)))\n(double base)";
     const analysis = workspace(source).analysis("doc.lisp");

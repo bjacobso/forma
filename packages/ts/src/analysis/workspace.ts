@@ -28,7 +28,6 @@ import { formatLispSource } from "../Formatter.js";
 import { blankBrokenForms } from "../lsp/recovery.js";
 import { analyzeLsp, type LspResult } from "../lsp/hm-lsp.js";
 import { parse, toSExprMany } from "../reader/index.js";
-import { head } from "../surface/effect.js";
 import {
   identifySyntax,
   indexSyntax,
@@ -503,13 +502,33 @@ function analyzeDocument(
       },
     });
   }
-  if (parsed.errors.length === 0) diagnostics.push(...formDiagnostics(sourceId, text, scope).filter(diagnostic => {
-    if (diagnostic.code === "elaborate/unknown-form") return false;
+  const describedDiagnostics = parsed.errors.length === 0 ? formDiagnostics(sourceId, text, scope).filter(diagnostic => {
+    // Ordinary calls are checked above. Only an unbound form spelling
+    // suggestion adds useful information (and an editor quick fix).
+    if (diagnostic.code === "elaborate/unknown-form") {
+      const name = diagnostic.details?.name;
+      return diagnostic.fix?.length === 1 && typeof name === "string" &&
+        !typeEnv.has(name) && !builtinScheme(name) && !scope.macroEnv?.has(name);
+    }
     return diagnostic.code !== "elaborate/hole-type" || !diagnostics.some(existing =>
       existing.span && diagnostic.span && existing.span.startOffset >= diagnostic.span.startOffset &&
       existing.span.endOffset <= diagnostic.span.endOffset &&
       ["elaborate/form-check", "typecheck/type-mismatch", "typecheck/unbound-symbol"].includes(existing.code));
-  }));
+  }) : [];
+  for (const diagnostic of describedDiagnostics) {
+    if (diagnostic.code !== "elaborate/unknown-form") continue;
+    const headSpan = diagnostic.fix![0]!.span;
+    // The form diagnostic carries the more specific advice for this head.
+    // Retain checker errors for arguments and all other ordinary calls.
+    for (let index = diagnostics.length - 1; index >= 0; index--) {
+      const existing = diagnostics[index]!;
+      if (existing.code === "typecheck/unbound-symbol" &&
+          existing.span?.startOffset === headSpan.startOffset && existing.span.endOffset === headSpan.endOffset) {
+        diagnostics.splice(index, 1);
+      }
+    }
+  }
+  diagnostics.push(...describedDiagnostics);
   return {
     sourceId,
     ...(result.resultTypeString !== undefined ? { resultType: result.resultTypeString } : {}),
@@ -529,10 +548,6 @@ function analyzeDocument(
 function formDiagnostics(sourceId: string, text: string, scope: Scope): readonly Diagnostic[] {
   const prelude = scope.prelude;
   if (!prelude) return [];
-  const described = toSExprMany(parse(text).redTree).some((expr) =>
-    prelude.descriptions.has(head(expr) ?? ""),
-  );
-  if (!described) return [];
   try {
     return elaborateSources([{ sourceId, source: text }], { prelude }).diagnostics.filter(
       (diagnostic) => diagnostic.span?.sourceId === sourceId && diagnostic.code !== "elaborate/no-construct-hook",

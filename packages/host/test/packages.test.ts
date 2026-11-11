@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { realpathSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
@@ -43,7 +43,7 @@ describe("packages through the host", () => {
   });
 
   test("the forma CLI checks a file against its verified vendored packages", () => {
-    const root = mkdtempSync(join(tmpdir(), "forma-cli-packages-"));
+    const root = realpathSync(mkdtempSync(join(tmpdir(), "forma-cli-packages-")));
     const files: Record<string, unknown> = {
       "forma.json": { name: "app", exports: {}, dependencies: { "@acme/flows": "github.com/acme/flows@v2.1.0" } },
       "vendor/@acme/ir/forma.json": { name: "@acme/ir", version: "1.0.0", exports: { ".": "./ir.lisp" } },
@@ -79,7 +79,7 @@ describe("packages through the host", () => {
   }, 30_000);
 
   test("dependency commands add local packages, verify offline, and refresh local edits", () => {
-    const root = mkdtempSync(join(tmpdir(), "forma-cli-dependencies-"));
+    const root = realpathSync(mkdtempSync(join(tmpdir(), "forma-cli-dependencies-")));
     const files: Record<string, unknown> = {
       "forma.json": { name: "app", exports: {} },
       "local/flows/forma.json": { name: "@acme/flows", exports: { ".": "index.lisp" }, dependencies: { "@acme/ir": "../ir" } },

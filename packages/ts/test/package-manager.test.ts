@@ -1,15 +1,16 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { realpathSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { gzipSync, gunzipSync } from "node:zlib";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { managePackages, verifyPackages } from "../src/Node.js";
 import { gitSource, extractPackageArchive } from "../src/node/package-fetch.js";
 import { compareVersions, semver, type FormaManifest } from "../src/node/package-files.js";
 
 const temporary: string[] = [];
-const temp = () => { const root = mkdtempSync(join(tmpdir(), "forma-vendor-test-")); temporary.push(root); return root; };
+const temp = () => { const root = realpathSync(mkdtempSync(join(tmpdir(), "forma-vendor-test-"))); temporary.push(root); return root; };
 afterEach(() => { for (const root of temporary.splice(0)) rmSync(root, { recursive: true, force: true }); });
 const write = (root: string, path: string, value: unknown) => {
   mkdirSync(dirname(join(root, path)), { recursive: true });
@@ -229,7 +230,17 @@ describe("transport mapping and semver", () => {
     symlinkSync("../../outside", join(root, "repo/escape.lisp"));
     execFileSync("tar", ["-czf", join(root, "links.tar.gz"), "-C", root, "repo"]);
     await expect(extractPackageArchive(join(root, "links.tar.gz"), join(root, "bad"))).rejects.toThrow();
-    execFileSync("tar", ["-czf", join(root, "escape.tar.gz"), "--transform=s#repo#../outside#", "-C", root, "repo/forma.json"]);
+    // Rewrite a regular tar header directly: GNU tar's --transform is absent
+    // from macOS bsdtar. Keep a valid checksum so rejection tests traversal.
+    execFileSync("tar", ["-czf", join(root, "escape.tar.gz"), "-C", root, "repo/forma.json"]);
+    const tar = gunzipSync(readFileSync(join(root, "escape.tar.gz")));
+    expect([0, 48]).toContain(tar[156]); // NUL or '0': a regular file, not a metadata header.
+    tar.fill(0, 0, 100);
+    tar.write("../outside/forma.json", 0);
+    tar.fill(32, 148, 156);
+    const checksum = tar.subarray(0, 512).reduce((sum, byte) => sum + byte, 0);
+    tar.write(checksum.toString(8).padStart(6, "0") + "\0 ", 148);
+    writeFileSync(join(root, "escape.tar.gz"), gzipSync(tar));
     await expect(extractPackageArchive(join(root, "escape.tar.gz"), join(root, "bad"))).rejects.toThrow();
     expect(existsSync(join(root, "bad"))).toBe(false);
   }, 30_000);

@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { realpathSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { describe, expect, test } from "vitest";
@@ -126,7 +126,7 @@ describe("Node packages", () => {
     }
   };
   const app = (extra: Record<string, unknown> = {}) => {
-    const root = mkdtempSync(join(tmpdir(), "forma-packages-"));
+    const root = realpathSync(mkdtempSync(join(tmpdir(), "forma-packages-")));
     write(root, {
       "forma.json": { name: "app", exports: {}, dependencies: { "@acme/flows": "github.com/acme/flows@v2.1.0", "@acme/ir": "gitlab.com/acme/ir@v1.0.0" } },
       "vendor/@acme/ir/forma.json": { name: "@acme/ir", version: "1.0.0", exports: { ".": "./ir.lisp" } },
@@ -211,7 +211,7 @@ describe("Node packages", () => {
   });
 
   test("relative dependencies stay local and package.json discovery is gone", () => {
-    const root = mkdtempSync(join(tmpdir(), "forma-local-"));
+    const root = realpathSync(mkdtempSync(join(tmpdir(), "forma-local-")));
     write(root, {
       "forma.json": { name: "app", exports: {}, dependencies: { util: "./util" } },
       "util/forma.json": { name: "util", exports: { ".": "index.lisp" } },

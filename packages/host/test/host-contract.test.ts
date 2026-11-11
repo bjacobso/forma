@@ -1,12 +1,44 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { Schema } from "effect";
+import { Schema, type JsonSchema } from "effect";
 import { describe, expect, it } from "vitest";
 import { HOST_ABI_VERSION, HOST_CAPABILITIES, HOST_OPERATIONS, hostAbiSchema, JsonAbi, JsonRequest } from "../src/json-abi.js";
 import { TsLanguageHost } from "../src/ts-host.js";
 import type { SyntaxIdentity } from "../src/types.js";
 
 const send = (abi: JsonAbi, input: unknown) => abi.handleJson(JSON.stringify(input));
+
+// Compare the actual schema trees after resolving local references. Remember
+// pairs so recursive value/type schemas are compared without infinite expansion.
+function expectEquivalent(left: JsonSchema.Document<"draft-2020-12">, right: JsonSchema.Document<"draft-2020-12">) {
+  const seen = new WeakMap<object, WeakSet<object>>();
+  const dereference = (value: unknown, document: typeof left): unknown => {
+    if (value && typeof value === "object" && "$ref" in value) {
+      expect(Object.keys(value)).toEqual(["$ref"]);
+      const ref = String(value.$ref);
+      expect(ref.startsWith("#/$defs/")).toBe(true);
+      const definition = document.definitions[ref.slice("#/$defs/".length)];
+      expect(definition, ref).toBeDefined();
+      return definition;
+    }
+    return value;
+  };
+  const compare = (a: unknown, b: unknown): void => {
+    a = dereference(a, left);
+    b = dereference(b, right);
+    if (!a || !b || typeof a !== "object" || typeof b !== "object") {
+      expect(a).toEqual(b);
+      return;
+    }
+    if (seen.get(a)?.has(b)) return;
+    if (!seen.has(a)) seen.set(a, new WeakSet());
+    seen.get(a)!.add(b);
+    expect(Array.isArray(a)).toBe(Array.isArray(b));
+    expect(Object.keys(a).sort()).toEqual(Object.keys(b).sort());
+    for (const key of Object.keys(a)) compare((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]);
+  };
+  compare(left.schema, right.schema);
+}
 
 describe("shared host contract", () => {
   it("snapshots the complete request/response schema", () => {
@@ -17,6 +49,8 @@ describe("shared host contract", () => {
     expect(HOST_CAPABILITIES).toEqual(HOST_OPERATIONS.map(operation => operation.name));
     expect(new Set(HOST_CAPABILITIES).size).toBe(HOST_CAPABILITIES.length);
     const schema = hostAbiSchema();
+    expect(JSON.stringify(schema.requests)).toContain('"$ref":"#/$defs/TypeScheme"');
+    expect(JSON.stringify(schema.responses.observe!.schema)).toContain('"$ref":"#/$defs/Diagnostic"');
     expect(Object.keys(schema.responses)).toEqual(HOST_CAPABILITIES);
     expect(JSON.stringify(schema.requests)).toContain('"pattern"');
     expect(HOST_OPERATIONS.find(op => op.name === "loadSource")!.sessionScope).toBe("required");
@@ -25,9 +59,20 @@ describe("shared host contract", () => {
   });
 
   const fixtures = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../conformance/host-abi/cases.json"), "utf8"));
+  it("preserves the inline schema semantics, including recursive definitions", () => {
+    const inline = { referencePolicy: () => undefined };
+    const schema = hostAbiSchema();
+    expectEquivalent(schema.requests, Schema.toJsonSchemaDocument(JsonRequest, { ...inline, onExcessProperty: "error" }));
+    for (const operation of HOST_OPERATIONS) {
+      expectEquivalent(schema.responses[operation.name]!, Schema.toJsonSchemaDocument(operation.response, inline));
+    }
+  });
   for (const fixture of fixtures.cases) {
     it(`conformance: ${fixture.id}`, async () => {
-      expect(await send(new JsonAbi(), fixture.request)).toMatchObject(fixture.expected);
+      const result = await send(new JsonAbi(), fixture.request);
+      expect(result).toMatchObject(fixture.expected);
+      const operation = HOST_OPERATIONS.find(operation => operation.name === fixture.request.op)!;
+      expect(() => Schema.decodeUnknownSync(Schema.toCodecJson(operation.response))(result)).not.toThrow();
     });
   }
 
