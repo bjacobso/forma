@@ -231,6 +231,12 @@ function validatePreludeTypesUnlocated(
   }
 }
 
+/** Surface declarations retained for contextual record normalization. */
+export function sessionCoercionContext(session: LanguageSession): readonly SExpr[] {
+  return session.orderedSources("prelude").flatMap(s => toSExprMany(parse(s.text).redTree))
+    .filter(e => ["type", "class", "error", ":"].includes(head(e) ?? ""));
+}
+
 /** Analyze a session snapshot using retained schemes rather than typing every binding as Any. */
 export function checkSessionTypes(request: TypecheckRequest & { readonly session: LanguageSession; readonly source: string }, sourceId: string, dslProvider?: Type.DSLTypeProvider): import("./operations.js").TypecheckResult {
   const result = Effect.runSync(analyzeLsp(request.source, {
@@ -238,6 +244,7 @@ export function checkSessionTypes(request: TypecheckRequest & { readonly session
     sourceId,
     ...(dslProvider ? {dslProvider} : {}),
     macroEnv: request.session.scope.macroEnv ?? request.session.env.flatten(),
+    contextTypes: sessionCoercionContext(request.session),
   }));
   const display = result.resultTypeString;
   return {

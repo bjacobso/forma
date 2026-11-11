@@ -3,7 +3,8 @@ import { validateHostTypes, hostTypeNames } from "./type-policy.js";
 import { analyzeLsp } from "../lsp/hm-lsp.js";
 import { hasEffectDeclarations } from "../mechanics/analysis.js";
 import { inferenceDiagnostics, inferenceExpressionTypes } from "./session-validation.js";
-import { checkSessionTypes } from "./session-validation.js";
+import { checkSessionTypes, sessionCoercionContext } from "./session-validation.js";
+import { normalizeCoreProgram } from "../surface/core.js";
 import { bootstrapFromSources, type BootstrappedPrelude } from "../descriptor/bootstrap.js";
 import { descriptorFormProvider } from "../type/unified-form-provider.js";
 import { elaborateSources } from "../descriptor/elaborate.js";
@@ -371,10 +372,11 @@ function typecheckUnlocated(request: TypecheckRequest): TypecheckResult {
   }
 }
 
-async function evaluateUnlocated(request: EvaluateRequest): Promise<EvaluateResult> {
+async function evaluateUnlocated(request: EvaluateRequest, contextTypes: readonly Reader.SExpr[] = []): Promise<EvaluateResult> {
   const sourceId = request.sourceId ?? "source";
   if (request.observe) {
-    return evaluateObserved(request, request.observe, Builtins.defaultBuiltins);
+    return evaluateObserved(request, request.observe, Builtins.defaultBuiltins,
+      contextTypes.length ? normalizeCoreProgram(Effect.runSync(Reader.parseManyToSExpr(request.source)), true, contextTypes) : undefined);
   }
   try {
     const result = await Effect.runPromise(
@@ -382,6 +384,7 @@ async function evaluateUnlocated(request: EvaluateRequest): Promise<EvaluateResu
         Evaluator.evaluate(request.source, {
           stepLimit: request.stepLimit ?? 50_000,
           builtins: Builtins.defaultBuiltins,
+          contextTypes,
           ...(request.env ? { env: request.env } : {}),
         }),
         Evaluator.makePreludeLayer(Builtins.defaultBuiltins),
@@ -431,12 +434,12 @@ async function evaluateInSessionUnlocated(
     !request.session.projects.length &&
     !/\((?:import|export|export-from)\s/.test(source)
   ) {
-    return evaluate({
+    return evaluateUnlocated({
       ...request,
       source,
       sourceId,
       env: request.env ?? request.session.env,
-    });
+    }, sessionCoercionContext(request.session));
   }
   try {
     const core = request.env ?? request.session.configurationEnv;
@@ -456,12 +459,15 @@ async function evaluateInSessionUnlocated(
 const moduleRuntimes = new WeakMap<LanguageSession,{core:Env;runtime:ModuleRuntime}>();
 export async function prepareModuleImports(request:EvaluateInSessionRequest,sourceId:string,source:string,core:Env):Promise<{expressions:readonly Reader.SExpr[];env:Env}> {
   if (!request.session.projects.length && !/\((?:import|export|export-from)\s/.test(source)) {
-    return {expressions:Effect.runSync(Reader.parseManyToSExpr(source)),env:core};
+    return {expressions:normalizeCoreProgram(Effect.runSync(Reader.parseManyToSExpr(source)), true, sessionCoercionContext(request.session)),env:core};
   }
   let cached=moduleRuntimes.get(request.session);
   if (!cached || cached.core!==core) {cached={core,runtime:new ModuleRuntime(core)};moduleRuntimes.set(request.session,cached);}
   const graph=graphFromRequest(request,sourceId,source);
-  return {expressions:graph.modules.find((m) =>m.id===graph.entry)!.expressions,env:await cached.runtime.imports(graph,request.stepLimit)};
+  const entry = graph.modules.find(m => m.id === graph.entry)!;
+  const contextTypes = graph.modules.flatMap(m => m.id === entry.id ? [] :
+    m.expressions.filter(e => ["type", ":"].includes(head(e) ?? "")));
+  return {expressions:normalizeCoreProgram(entry.expressions, true, contextTypes),env:await cached.runtime.imports(graph,request.stepLimit)};
 }
 function graphFromRequest(request:{readonly session?:LanguageSession|undefined},sourceId:string,source:string):ModuleGraph {
   return resolveModuleGraph({id:sourceId,source},sourceModuleResolver(request.session?.orderedSources("source").map((s) =>({id:s.id,source:s.text})) ?? []),moduleCoreOptions(request.session));

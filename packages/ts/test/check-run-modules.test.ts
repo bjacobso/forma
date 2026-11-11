@@ -11,6 +11,16 @@ const expected = JSON.parse(readFileSync(new URL("expected.json", root), "utf8")
 const graph = () => resolveModuleGraph(files[2]!, sourceModuleResolver(files));
 
 describe("checker against module runtime", () => {
+  test("fills inline Option records using imported parameter signatures", async () => {
+    const library = { id: "details.lisp", source: `(export Details valid?)
+(type Details {:vendor (Option String) :asset-tag (Option String)})
+(: valid? (-> Details Bool))
+(define valid? [details] (match details.vendor (Some vendor) (= vendor "Acme") None false))` };
+    const g = resolveModuleGraph({ id: "main.lisp", source: '(import "./details.lisp" [Details valid?]) (valid? {:vendor "Acme"})' }, sourceModuleResolver([library]));
+    expect(checkModuleGraph(g).diagnostics).toEqual([]);
+    expect((await new ModuleRuntime().evaluate(g)).result.value).toBe(true);
+  });
+
   test("accepted imported forms and dependent values run", async () => {
     const g = graph();
     const checked = checkModuleGraph(g);

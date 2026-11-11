@@ -10,6 +10,24 @@ const prelude = `(type ItemIR {:kind "Item" :id String :value String})
   :ir ItemIR {:kind "Item" :id id :value value})`;
 
 describe("experimental embedding facade", () => {
+  it.each(["prelude", "module", "prelude with capability", "module with capability"])("fills Option record fields from %s types when checking and running", async mode => {
+    const source = `
+(type Details {:vendor (Option String) :asset-tag (Option String)})
+(: valid? (-> Details Bool))
+(define valid? [details] (match details.vendor (Some vendor) (= vendor "Acme") None false))`;
+    const module = mode.startsWith("module");
+    const lang = await createLanguage({
+      ...(module ? { modules: [{ id: "details.lisp", source: `${source}\n(export Details valid?)` }] }
+        : { preludes: [{ id: "details.lisp", source }] }),
+      ...(mode.endsWith("capability") ? { capabilities: { ping: { arity: 0, handler: () => ({ ok: true as const, value: true }) } } } : {}),
+    });
+    try {
+      const source = '(: request Details) (define request {}) [(= request.vendor None) (valid? {:vendor "Acme"})]';
+      expect(await lang.check(source)).toMatchObject({ ok: true, diagnostics: [] });
+      expect(await lang.run(source)).toMatchObject({ ok: true, value: [true, true] });
+    } finally { await lang.close(); }
+  });
+
   it("automatically imports the unchanged expense policy module", async () => {
     const source = readFileSync(new URL("../../../trials/expense-rules/src/policy.lisp", import.meta.url), "utf8");
     const lang = await createLanguage({ modules: [{ id: "policy.lisp", source }] });

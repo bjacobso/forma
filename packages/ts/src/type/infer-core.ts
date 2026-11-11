@@ -827,10 +827,23 @@ const inferApp = (
       parameters.push(cursor.arg); cursor = cursor.res;
     }
     const repeated = new Map<string, Type>();
-    for (const [i, parameter] of parameters.entries()) {
+    const contextualLiteral = (arg: CoreExpr) => arg._tag === "Lit" ||
+      arg._tag === "App" && arg.fn._tag === "Var" && arg.fn.name === "__vector";
+    const hasUnion = (type: Type): boolean => type._tag === "TApp" &&
+      (type.con._tag === "TCon" && type.con.name === "Union" || type.args.some(hasUnion));
+    // Establish context from computed values before widening literal arguments,
+    // including when the literal appears before the value that supplies its type.
+    const ordered = [...parameters.entries()].sort(([a], [b]) =>
+      Number(contextualLiteral(expr.args[a]!)) - Number(contextualLiteral(expr.args[b]!)));
+    for (const [i, parameter] of ordered) {
       if (parameter._tag !== "TVar" || parameters.filter(p => p._tag === "TVar" && p.id === parameter.id).length < 2) continue;
-      const actual = yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[i]!);
       const previous = repeated.get(parameter.id);
+      const argumentEnv = applyEnv(yield* Ref.get(ctx.subst), env);
+      if (previous && contextualLiteral(expr.args[i]!) && hasUnion(applyType(yield* Ref.get(ctx.subst), previous))) {
+        yield* checkArgument(argumentEnv, expr.args[i]!, previous);
+        continue;
+      }
+      const actual = yield* inferExpr(argumentEnv, expr.args[i]!);
       repeated.set(parameter.id, previous ? yield* joinType(previous, actual, originOf(expr, "argument-join")) : actual);
     }
     for (const [id, actual] of repeated) yield* unify({ _tag: "TVar", id }, actual, originOf(expr, "argument-join"));

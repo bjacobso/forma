@@ -2271,7 +2271,13 @@ class Checker {
       this.error(span, "mechanics/arity", `${name} expects ${params.length} argument(s), received ${args.length}.`);
     }
     const subst:Substitution=new Map();
-    args.forEach((arg,index)=>{
+    // Computed arguments supply the context for literals sharing a generic
+    // parameter, even when the literal is written first.
+    const deferred = (arg: JsonValue, index: number) => params[index] && hasVariables(params[index]!) &&
+      isRecord(arg) && (arg["kind"] === "Vector" || arg["kind"] === "Literal");
+    const ordered = args.map((arg, index) => ({ arg, index })).sort((a, b) =>
+      Number(Boolean(deferred(a.arg, a.index))) - Number(Boolean(deferred(b.arg, b.index))));
+    ordered.forEach(({arg,index})=>{
       const param=params[index];
       if (!param) {this.value(arg,scope);return;}
       const expected=applySubstitution(param,subst);

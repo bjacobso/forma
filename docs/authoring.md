@@ -158,6 +158,24 @@ types declared in the same file and for imported ones:
 (define beacon {:name "Beacon" :risk :low})   ; :reviewed-on is None
 ```
 
+The type must be available at the literal's use site. The same rules apply to
+file modules and `createLanguage` programs using prelude or imported types:
+
+| Literal context | Omitted `(Option T)` field | Plain field value |
+| --- | --- | --- |
+| Annotated binding, `(: value RecordType)` | `None` | `Some value` |
+| Argument to a function with a declared record parameter | `None` | `Some value` |
+| Expression annotation, `(: {...} RecordType)` | `None` | `Some value` |
+| Declared function result, including `if` branches and list elements with a known record type | `None` | `Some value` |
+| Record without a known type | No fields added | Value unchanged |
+
+Explicit `Some` and `None` values are preserved. Required fields must still be
+provided, and supplied values must match their field types. Filling applies to
+literal syntax; it does not add fields to an already computed record value.
+In Effect TypeScript schema records, optional fields use optional properties:
+omission stays absent, plain values stay plain, and reading the field produces
+an `Option`. Form hooks also receive plain values, with `nil` for omitted holes.
+
 Records computed with `Pick`, `Omit` or `Merge` do not fill implicitly yet:
 write `Some` and `None` there. Field access with a dot (`beacon.name`) works on
 local and imported record values.
@@ -173,6 +191,19 @@ function can be used at different types by later definitions:
 (define a (same? 1 1))
 (define b (same? "x" "y"))
 ```
+
+A literal list can use the enum type supplied by another argument to a generic
+function, in either argument order:
+
+```lisp
+(type ApprovalRole (Union "manager" "finance"))
+(: roles (List ApprovalRole))
+(define roles ["manager" "finance"])
+(same? roles ["manager" "finance"])
+```
+
+Each literal must belong to the union. A computed `String` still needs validation
+or an appropriate declared type before it can be used as an `ApprovalRole`.
 
 Definitions that call each other form one group. Inside that group they are
 monomorphic, as in standard Hindley–Milner inference. Give a definition an

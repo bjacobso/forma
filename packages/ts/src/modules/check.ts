@@ -142,11 +142,11 @@ export function checkModuleGraph(
             ? moduleFormProvider(module.compileTime)
             : unifiedFormProvider(source, expressions);
           // Mangled type names are unique across the graph, so every other
-          // module's type declarations can inform implicit Option filling.
+          // module's types and signatures can inform implicit Option filling.
           const contextTypes = graph.modules.flatMap((owner) =>
             owner.id === module.id
               ? []
-              : owner.expressions.filter((e) => e._tag === "List" && e.items[0]?._tag === "Sym" && e.items[0].name === "type"),
+              : owner.expressions.filter((e) => e._tag === "List" && e.items[0]?._tag === "Sym" && ["type", ":"].includes(e.items[0].name)),
           );
           const core = lowerProgram(expressions, provider, {
             includePrelude: false,

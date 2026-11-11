@@ -73,10 +73,10 @@ export interface ModuleInstance {
   readonly result: KernelResult;
   readonly collector?: ObservationCollector;
 }
-/** Type declarations of the graph's other modules; resolved names are unique. */
+/** Types and signatures of other modules; resolved names are unique. */
 const contextTypes = (graph: ModuleGraph, moduleId: string): readonly SExpr[] =>
   graph.modules.flatMap((m) =>
-    m.id === moduleId ? [] : m.expressions.filter((e) => headSym(e) === "type"),
+    m.id === moduleId ? [] : m.expressions.filter((e) => ["type", ":"].includes(headSym(e) ?? "")),
   );
 const definition = (e: SExpr): boolean =>
   [
@@ -267,7 +267,7 @@ export class ModuleRuntime {
             env: instance.result.env,
             contextTypes: [
               ...contextTypes(graph, entry.id),
-              ...entry.expressions.filter((e) => headSym(e) === "type"),
+              ...entry.expressions.filter((e) => ["type", ":"].includes(headSym(e) ?? "")),
             ],
             builtins: defaultBuiltins,
             includePrelude: false,
