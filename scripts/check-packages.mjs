@@ -9,7 +9,7 @@ const root = resolve(import.meta.dirname, "..");
 const temporary = await mkdtemp(join(tmpdir(), "forma-release-check-"));
 const run = (command, args, cwd = root) => {
   try {
-    return execFileSync(command, args, { cwd, encoding: "utf8", timeout: 180_000, stdio: ["ignore", "pipe", "pipe"] });
+    return execFileSync(command, args, { cwd, encoding: "utf8", timeout: 180_000, maxBuffer: 16 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"] });
   } catch (error) {
     console.error(error.stdout?.toString(), error.stderr?.toString());
     throw error;
@@ -32,6 +32,7 @@ try {
   assert.equal(packed.version, JSON.parse(await readFile(join(cwd, "package.json"), "utf8")).version);
   assert.equal(packed.engines.node, ">=24");
   assert.equal(packed.peerDependencies.effect, "^4.1.1");
+  assert.equal(packed.dependencies["@modelcontextprotocol/sdk"], "1.32.2");
   assert.deepEqual(packed.peerDependenciesMeta, { react: { optional: true }, "react-dom": { optional: true } });
   assert(!packed.dependencies.effect);
   assert.equal(packed.publishConfig.access, "public");
@@ -51,7 +52,7 @@ try {
   await mkdir(consumer);
   // Reproduce the tested dependency closure offline. Cached registry metadata can
   // otherwise select newer range-compatible tarballs that are not in the store.
-  const trees = JSON.parse(run("pnpm", ["list", "--filter", "@formalang/editor", "--filter", "@formalang/language-server", "--prod", "--depth", "Infinity", "--json"]));
+  const trees = JSON.parse(run("pnpm", ["list", "--filter", "@formalang/host", "--filter", "@formalang/editor", "--filter", "@formalang/language-server", "--prod", "--depth", "Infinity", "--json"]));
   const overrides = {};
   const collect = tree => {
     for (const [dependency, value] of Object.entries(tree.dependencies ?? {})) {
@@ -66,11 +67,20 @@ try {
   await writeFile(join(consumer, "smoke.mjs"), `
     import assert from 'node:assert/strict';
     import { createRequire } from 'node:module';
+    import { fileURLToPath } from 'node:url';
     const require = createRequire(import.meta.url);
     assert.throws(() => require.resolve('react'));
     for (const specifier of ${JSON.stringify(inert)}) await import(specifier);
     const libraryRequire = createRequire(import.meta.resolve('${name}'));
     assert.equal(libraryRequire.resolve('effect'), require.resolve('effect'));
+    const { Client } = await import(libraryRequire.resolve('@modelcontextprotocol/sdk/client/index.js'));
+    const { StdioClientTransport } = await import(libraryRequire.resolve('@modelcontextprotocol/sdk/client/stdio.js'));
+    const client = new Client({ name: 'packed-smoke', version: '1.0.0' });
+    try {
+      await client.connect(new StdioClientTransport({ command: process.execPath, args: [fileURLToPath(new URL('./cli.mjs', import.meta.resolve('${name}'))), 'mcp'] }));
+      assert((await client.listTools()).tools.some(tool => tool.name === 'check'));
+      assert.equal((await client.callTool({ name: 'run', arguments: { source: '(+ 1 2)' } })).structuredContent.printed, '3');
+    } finally { await client.close(); }
     const { createDefaultLanguageHost } = await import('${name}');
     const host = createDefaultLanguageHost();
     assert.equal((await host.version()).engineVersion, '${packed.version}');

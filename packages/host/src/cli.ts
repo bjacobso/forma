@@ -12,6 +12,7 @@ const humanCommand = ["check", "run", "fmt", "repl", "explain"].includes(command
 try {
   const abi = new JsonAbi();
   if (["help", "--help", "-h"].includes(command) || (args.length === 1 && ["--help", "-h"].includes(args[0]!))) process.stdout.write(usage);
+  else if (command === "mcp" && args.length === 0) await (await import("./cli/mcp.js")).mcp(abi);
   else if (command === "abi-schema" && args.length === 0) process.stdout.write(`${JSON.stringify(hostAbiSchema(), null, 2)}\n`);
   else if (!(humanCommand ? await human(abi, command, args) : await machine(abi, command, args))) {
     process.stderr.write(usage);

@@ -152,6 +152,7 @@ export default defineConfig({
           text: "Project",
           items: [
             { text: "For agents", link: "/agents" },
+            { text: "MCP server", link: "/mcp" },
             { text: "Roadmap", link: "/roadmap" },
           ],
         },
