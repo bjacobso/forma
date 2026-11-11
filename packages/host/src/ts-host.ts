@@ -925,6 +925,7 @@ export class TsLanguageHost implements LanguageHost {
         message: error.message,
         ...(error.details ? {details:error.details} : {}),
         ...(error.help ? {help:error.help} : {}),
+        ...(error.related ? {related:error.related} : {}),
         ...(error.fix ? {fix:error.fix} : {}),
         ...(error.span
           ? {
@@ -944,6 +945,7 @@ export class TsLanguageHost implements LanguageHost {
         message: diagnostic.message,
         ...(diagnostic.details ? {details:diagnostic.details} : {}),
         ...(diagnostic.help ? {help:diagnostic.help} : {}),
+        ...(diagnostic.related ? {related:diagnostic.related} : {}),
         ...(diagnostic.fix ? {fix:diagnostic.fix} : {}),
         phase: "typecheck",
         ...(diagnostic.span

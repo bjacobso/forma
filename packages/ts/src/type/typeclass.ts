@@ -1,3 +1,4 @@
+import { diagnosticTypePrinter } from "./diagnostic-types.js";
 /**
  * Type class system: instance resolution, coherence checking, and constraint solving.
  *
@@ -171,29 +172,11 @@ export function resolveConstraint(
 
     // No matching instance found
     return yield* ctx.fail(origin, {
-      code: "typecheck/missing-instance", message: `No instance found for ${constraint.className} ${resolvedArgs.map(showTypeSimple).join(" ")}`,
+      code: "typecheck/missing-instance", message: `No instance found for ${constraint.className} ${resolvedArgs.map(diagnosticTypePrinter()).join(" ")}`,
     });
   });
 }
 
-function showTypeSimple(t: Type): string {
-  switch (t._tag) {
-    case "TVar":
-      return t.id;
-    case "TCon":
-      return t.name;
-    case "TApp":
-      return `(${showTypeSimple(t.con)} ${t.args.map(showTypeSimple).join(" ")})`;
-    case "TFun":
-      return t.rest
-        ? `(-> ${showTypeSimple(t.arg)} & ${showTypeSimple(t.rest)} ${showTypeSimple(t.res)})`
-        : `(-> ${showTypeSimple(t.arg)} ${showTypeSimple(t.res)})`;
-    case "TVariadic":
-      return `(-> & ${showTypeSimple(t.rest)} ${showTypeSimple(t.res)})`;
-    case "TRow":
-      return "{...}";
-  }
-}
 
 /**
  * Resolve all constraints, returning any that couldn't be resolved

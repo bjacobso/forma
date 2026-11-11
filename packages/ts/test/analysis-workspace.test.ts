@@ -73,7 +73,7 @@ describe("AnalysisWorkspace", () => {
     const source = '(define ok 1)\n(+ 1 "nope")';
     const [diagnostic] = workspace(source).diagnostics("doc.lisp");
     expect(diagnostic).toMatchObject({ code: "typecheck/type-mismatch", severity: "error" });
-    expect(diagnostic?.message).toContain("Type mismatch");
+    expect(diagnostic?.message).toContain("Expected");
     expect(diagnostic?.message).not.toContain("at offset");
   });
 

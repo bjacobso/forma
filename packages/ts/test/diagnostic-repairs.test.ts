@@ -93,3 +93,34 @@ test("session typechecking preserves unbound-symbol repair metadata", async () =
   expect(diagnostic.details?.candidates).toContain("total");
   expect(diagnostic.fix?.[0]).toMatchObject({newText:"total",span:{sourceId:"session.lisp"}});
 });
+
+test.each([
+  [fixture('field-rename').trim(), ':totl', ':total'],
+  ['(get {"total" 1} "totl")', '"totl"', '"total"'],
+])("a unique nearby field has an atomic rename: %s", (source, before, after) => {
+  const diagnostic = typecheck({sourceId:"field.lisp",source}).diagnostics[0]!;
+  expect(diagnostic.fix).toEqual([{newText:after,span:expect.objectContaining({sourceId:"field.lisp",startOffset:source.lastIndexOf(before),endOffset:source.lastIndexOf(before)+before.length})}]);
+  const edit = diagnostic.fix![0]!;
+  expect(typecheck({source:source.slice(0,edit.span.startOffset)+edit.newText+source.slice(edit.span.endOffset)}).diagnostics).toEqual([]);
+});
+
+test("ambiguous field names have no automatic rename", () => {
+  expect(typecheck({source:'(get {:cat 1 :bat 2} :dat)'}).diagnostics[0]?.fix).toBeUndefined();
+});
+
+test.each([['def','define'],['defn','define'],['lambda','fn']])("retired %s spelling has an exact head edit", (before, after) => {
+  const source = before === 'lambda' ? '(lambda [x] x)' : `(${before} value 1)`;
+  expect(typecheck({sourceId:"retired.lisp",source}).diagnostics[0]?.fix).toEqual([{newText:after,span:expect.objectContaining({sourceId:"retired.lisp",startOffset:1,endOffset:1+before.length})}]);
+});
+
+test("generated member access does not offer an edit over the whole expression", () => {
+  expect(typecheck({source:'(define record {:total 1}) record.totl'}).diagnostics[0]?.fix).toBeUndefined();
+});
+
+test("a retired macro declaration needing a syntax rewrite has no head-only fix", () => {
+  expect(typecheck({source:'(defmacro identity [x] x)'}).diagnostics[0]?.fix).toBeUndefined();
+});
+
+test("keyword and string fields with the same display name are ambiguous", () => {
+  expect(typecheck({source:'(get {:total 1 "total" 2} :totl)'}).diagnostics[0]?.fix).toBeUndefined();
+});

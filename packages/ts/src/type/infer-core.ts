@@ -1,3 +1,4 @@
+import { typeMismatch } from "./diagnostic-types.js";
 import { collectionOperations, inferCollectionOperation } from "./infer-collections.js";
 import { closestName, nearestNames } from "../diagnostic/closest-name.js";
 import { authorNames } from "../diagnostic/diagnostic.js";
@@ -88,7 +89,7 @@ export const applyFnWithEffect = (
     const ctx = yield* InferContext;
     const retT = yield* ctx.freshTVar;
     const effectT = yield* ctx.freshEVar;
-    yield* unify(fnT, TFun(argT, retT, effectT), origin);
+    yield* unify(TFun(argT, retT, effectT), fnT, origin);
     const s = yield* Ref.get(ctx.subst);
     return {
       result: applyType(s, retT),
@@ -511,7 +512,7 @@ const inferEffectDo = (
             span: binding.span,
             kind: "effect-bind",
           },
-          { code: "typecheck/type-mismatch", message: `Effect bind expects Effect, received ${showType(resolvedBindingType)}.` },
+          typeMismatch(TCon("Effect"),resolvedBindingType),
         );
       }
 
@@ -675,6 +676,11 @@ const inferApp = (
     // stays Int for an Int `n` instead of widening `y` to Float first.
     const lambda = expr.fn;
     const named = lambda._tag === "Var" ? lambda.name : undefined;
+    const annotation = named ? env.get(named)?.annotation : undefined;
+    const checkArgument = (argumentEnv: TypeEnv, argument: CoreExpr, expectedType: Type) =>
+      checkExpr(argumentEnv,argument,expectedType).pipe(Effect.mapError(error => annotation
+        ? new InferenceError({...error,message:error.message,related:[...(error.related ?? []),{message:"Expected type declared here",span:{sourceId:annotation.sourceId ?? "",startOffset:annotation.start,endOffset:annotation.end}}]})
+        : error));
     const known = named ? env.get(named)?.type ?? ctx.builtinScheme(named)?.type : undefined;
     const variadicHead = named && !env.has(named) && ["+", "-", "*", "/", "min", "max"].includes(named);
     let expected = lambda._tag === "Lam" && !lambda.restParam ? lambda.params.length : known?.arity;
@@ -686,10 +692,13 @@ const inferApp = (
     }
     if (!variadicHead && expected !== undefined && expected !== expr.args.length) {
       const name = named ? authorNames(named) : "function";
-      return yield* ctx.fail(originOf(expr, "app"), {
-        code: "typecheck/arity", name, expected, actual: expr.args.length,
-        message: `${name} expects ${expected} arguments, got ${expr.args.length}`,
-      });
+      const declaration = named ? env.get(named)?.declaration : lambda._tag === "Lam" ? lambda.span : undefined;
+      return yield* Effect.fail(new InferenceError({
+        origin:originOf(expr,"app"),
+        details:{code:"typecheck/arity",name,expected,actual:expr.args.length},
+        message:`${name} expects ${expected} arguments, got ${expr.args.length}`,
+        ...(declaration ? {related:[{message:"Function defined here",span:{sourceId:declaration.sourceId ?? "",startOffset:declaration.start,endOffset:declaration.end}}]} : {}),
+      }));
     }
     if (lambda._tag === "Lam" && !lambda.restParam && lambda.params.length > 0 && lambda.params.length === expr.args.length) {
       const names = new Set(lambda.params.map((param) => param.name));
@@ -711,7 +720,7 @@ const inferApp = (
         const literal=literalName(other);
         if (literal !== undefined) {
           if (members.some(member => sameLiteral(member, literal))) return TCon("Bool");
-          return yield* ctx.fail(originOf(other,"equality"),{code:"typecheck/type-mismatch",message:`${literal} is not one of ${showType(applyType(subst,enumType))}, so this comparison is always false`});
+          return yield* ctx.fail(originOf(other,"equality"),typeMismatch(applyType(subst,enumType),TCon(literal)));
         }
         const bases=new Set(members.map(literalBase)), resolved=applyType(subst,otherType);
         const otherMembers=resolved._tag === "TCon" && literalBase(resolved.name) ? [resolved.name] : literalMembers(resolved);
@@ -775,10 +784,13 @@ const inferApp = (
     let fnT = yield* inferExpr(env, expr.fn);
     if (fnT.arity !== undefined && fnT.arity !== expr.args.length) {
       const name = named ? authorNames(named) : "function";
-      return yield* ctx.fail(originOf(expr, "app"), {
-        code: "typecheck/arity", name, expected: fnT.arity, actual: expr.args.length,
-        message: `${name} expects ${fnT.arity} arguments, got ${expr.args.length}`,
-      });
+      const declaration = named ? env.get(named)?.declaration : undefined;
+      return yield* Effect.fail(new InferenceError({
+        origin:originOf(expr,"app"),
+        details:{code:"typecheck/arity",name,expected:fnT.arity,actual:expr.args.length},
+        message:`${name} expects ${fnT.arity} arguments, got ${expr.args.length}`,
+        ...(declaration ? {related:[{message:"Function defined here",span:{sourceId:declaration.sourceId ?? "",startOffset:declaration.start,endOffset:declaration.end}}]} : {}),
+      }));
     }
     if (fnT.nullaryResult && expr.args.length === 0) return fnT.nullaryResult;
     // Resolve ordinary arguments before specializing a numeric callback. For
@@ -804,7 +816,7 @@ const inferApp = (
         }
       }
       for (const [index, parameter] of callbackParameters.entries()) {
-        if (parameter._tag !== "TFun") yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[index]!, parameter);
+        if (parameter._tag !== "TFun") yield* checkArgument(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[index]!, parameter);
       }
     }
     // Solve repeated unconstrained parameters together, using their common
@@ -827,16 +839,16 @@ const inferApp = (
       const current = applyType(sBefore, fnT);
       const envN = applyEnv(sBefore,env);
       if (current._tag === "TFun") {
-        yield* checkExpr(envN,expr.args[i]!,current.arg);
+        yield* checkArgument(envN,expr.args[i]!,current.arg);
         const sAfter=yield* Ref.get(ctx.subst);
         yield* emitAmbientEffect(applyERow(sAfter,current.effect ?? EEmpty),originOf(expr,"app"));
         if (current.rest) {
-          for (let j=i+1;j<expr.args.length;j++) yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst),env),expr.args[j]!,current.rest);
+          for (let j=i+1;j<expr.args.length;j++) yield* checkArgument(applyEnv(yield* Ref.get(ctx.subst),env),expr.args[j]!,current.rest);
           return applyType(yield* Ref.get(ctx.subst),current.res);
         }
         fnT=applyType(sAfter,current.res);
       } else if (current._tag === "TVariadic") {
-        for (let j=i;j<expr.args.length;j++) yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst),env),expr.args[j]!,current.rest);
+        for (let j=i;j<expr.args.length;j++) yield* checkArgument(applyEnv(yield* Ref.get(ctx.subst),env),expr.args[j]!,current.rest);
         const subst=yield* Ref.get(ctx.subst);
         yield* emitAmbientEffect(applyERow(subst,current.effect ?? EEmpty),originOf(expr,"app"));
         return applyType(subst,current.res);
@@ -905,8 +917,8 @@ const inferApply = (
     const listArgT = yield* inferExpr(listEnv, lastArgExpr);
     const restElemT = yield* ctx.freshTVar;
     yield* unify(
-      applyType(yield* Ref.get(ctx.subst), listArgT),
       TApp(tList, [restElemT]),
+      applyType(yield* Ref.get(ctx.subst), listArgT),
       originOf(expr, "app"),
     );
 

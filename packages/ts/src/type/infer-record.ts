@@ -4,7 +4,7 @@
 import { Effect, Ref } from "effect";
 import type { Type, Row } from "./types.js";
 import { TRow, REmpty, RExtend, tUnknown, TCon, TApp, flattenRow } from "./types.js";
-import { closestName } from "../diagnostic/closest-name.js";
+import { closestName, nearestNames } from "../diagnostic/closest-name.js";
 import { applyType, applyEnv, type TypeEnv } from "./substitution.js";
 import { assignType } from "./assign.js";
 import { unify } from "./unify.js";
@@ -95,7 +95,7 @@ export const inferGet = (
       }
       if (resolved._tag === "TCon" && resolved.name === "Unknown") return tUnknown;
       const value = yield* ctx.freshTVar;
-      yield* unify(recT,TApp(TCon("Map"),[keyType,value]),originOf(expr,"get"));
+      yield* unify(TApp(TCon("Map"),[keyType,value]),recT,originOf(expr,"get"));
       return TApp(TCon("Option"),[applyType(yield* Ref.get(ctx.subst),value)]);
     }
 
@@ -117,12 +117,16 @@ export const inferGet = (
         const available = [...fields.keys()].map(displayField).sort();
         const field = displayField(expr.label);
         const suggestion = closestName(field, available);
-        return yield* ctx.fail(originOf(expr, "get"), {
-          code: "typecheck/missing-field",
+        const ranked = nearestNames(field,available);
+        const replacements = [...fields.keys()].filter(key => displayField(key) === suggestion);
+        const replacement = replacements.length === 1 ? replacements[0] : undefined;
+        const unambiguous = replacement !== undefined && ranked[0]?.distance !== ranked[1]?.distance;
+        return yield* Effect.fail(new InferenceError({
+          origin:originOf(expr,"get"),
+          details:{code:"typecheck/missing-field",field:expr.label,fields:[...fields.keys()]},
+          ...(unambiguous && expr.labelSpan ? {fix:[{span:{sourceId:expr.labelSpan.sourceId ?? "",startOffset:expr.labelSpan.start,endOffset:expr.labelSpan.end},newText:replacement.startsWith(":") ? replacement : JSON.stringify(replacement.startsWith("\0str:") ? replacement.slice(5) : replacement)}]} : {}),
           message: `${recordPath(expr.record) ?? "Record"} has no field ${field}${suggestion ? ` (did you mean ${suggestion}?)` : ""}; fields: ${available.join(", ") || "(none)"}`,
-          field: expr.label,
-          fields: [...fields.keys()],
-        });
+        }));
       }
     }
     // The record type should be { label: resultT | restRow }
@@ -130,7 +134,7 @@ export const inferGet = (
     const restRow = yield* ctx.freshRowVar;
     const expectedRecT = TRow(RExtend(expr.label, resultT, restRow));
 
-    yield* unify(resolved, expectedRecT, originOf(expr, "get"));
+    yield* unify(expectedRecT, resolved, originOf(expr, "get"));
 
     const s = yield* Ref.get(ctx.subst);
     return applyType(s, resultT);

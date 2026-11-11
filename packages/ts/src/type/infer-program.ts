@@ -204,15 +204,15 @@ export const inferProgram = (
                   const tvarMap = new Map<string, Type>();
                   const rvarMap = new Map<string, Row>();
                   const sigT = yield* typeExprToType(defExpr.signature, tvarMap, rvarMap);
-                  seedEnv.set(defExpr.name, mono(sigT));
+                  seedEnv.set(defExpr.name, {...mono(sigT),declaration:defExpr.span,annotation:defExpr.signature.span});
                 } else if (!seedEnv.has(defExpr.name)) {
                   const placeholder = yield* ctx.freshTVar;
-                  seedEnv.set(defExpr.name, mono(defExpr.expr._tag === "Lam" && !defExpr.expr.restParam
-                    ? { ...placeholder, arity: defExpr.expr.params.length } : placeholder));
+                  seedEnv.set(defExpr.name, {...mono(defExpr.expr._tag === "Lam" && !defExpr.expr.restParam
+                    ? { ...placeholder, arity: defExpr.expr.params.length } : placeholder),declaration:defExpr.span});
                 }
               }
 
-              const inferredDefs: Array<{ name: string; type: Type; pendingStart: number }> = [];
+              const inferredDefs: Array<{ name: string; type: Type; pendingStart: number; annotation?: import("./core-expr.js").Span; declaration: import("./core-expr.js").Span }> = [];
               const failedNames: string[] = [];
               for (const defExpr of component) {
                 const pendingStart = (yield* Ref.get(ctx.pendingConstraints)).length;
@@ -238,6 +238,8 @@ export const inferProgram = (
                 const boundType = applyType(sAfterDef, defT);
                 inferredDefs.push({
                   name: defExpr.name,
+                  declaration: defExpr.span,
+                  ...(defExpr.signature ? {annotation:defExpr.signature.span} : {}),
                   type: boundType,
                   pendingStart,
                 });
@@ -259,7 +261,7 @@ export const inferProgram = (
               for (const inferredDef of inferredDefs) {
                 schemes.set(
                   inferredDef.name,
-                  yield* generalizeBinding(baseGenEnv, inferredDef.type, inferredDef.pendingStart),
+                  {...yield* generalizeBinding(baseGenEnv, inferredDef.type, inferredDef.pendingStart),declaration:inferredDef.declaration,...(inferredDef.annotation ? {annotation:inferredDef.annotation} : {})},
                 );
               }
 
@@ -447,7 +449,7 @@ export const inferProgramAll = (
           yield* Ref.set(ctx.pendingConstraints, normalizedPending);
           const scheme = yield* generalizeBinding(genEnv, boundType, pendingStart);
           const updatedEnv = new Map(applyEnv(sAfter, env));
-          updatedEnv.set(expr.name, scheme);
+          updatedEnv.set(expr.name, {...scheme,declaration:expr.span,...(expr.signature ? {annotation:expr.signature.span} : {})});
           env = updatedEnv;
           types.push(applyType(sAfter, defT));
         } else if (expr._tag === "DSLForm" && dslProvider && rawExprs) {

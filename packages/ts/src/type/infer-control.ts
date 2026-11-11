@@ -1,3 +1,4 @@
+import { showDiagnosticType, typeMismatch } from "./diagnostic-types.js";
 import { isFloatLiteral } from "../reader/types.js";
 /**
  * Inference for control flow: if (with type narrowing) and match (with exhaustiveness).
@@ -184,7 +185,7 @@ export const inferEffectCatch = (
     const bodyEffect = operationalEffectParts(bodyType);
     if (!bodyEffect) {
       return yield* ctx.fail(originOf(expr, "effect-catch"), {
-        code: "typecheck/type-mismatch", message: `catch expects Effect, received ${showType(bodyType)}.`,
+        ...typeMismatch(TCon("Effect"),bodyType),
       });
     }
 
@@ -193,7 +194,7 @@ export const inferEffectCatch = (
     );
     if (!handled) {
       return yield* ctx.fail(originOf(expr, "effect-catch"), {
-        code: "typecheck/effect-set", message: `Impossible catch: ${expr.errorName} is not in ${showType(bodyType)}.`,
+        code: "typecheck/effect-set", message: `Impossible catch: ${expr.errorName} is not in ${showDiagnosticType(bodyType)}.`,
       });
     }
 

@@ -85,7 +85,7 @@ export interface EditorTypedSpan {
   readonly exprTag: string;
 }
 
-export interface EditorAnalysisError extends Pick<Diagnostic, "details" | "help" | "fix"> {
+export interface EditorAnalysisError extends Pick<Diagnostic, "details" | "help" | "fix" | "related"> {
   /** Compiler diagnostic identity, separate from the author source excerpt. */
   readonly diagnosticCode?: string | undefined;
   readonly message: string;

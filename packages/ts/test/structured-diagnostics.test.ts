@@ -103,3 +103,16 @@ describe("structured consumer diagnostics", () => {
     });
   });
 });
+
+test("catalog entries with shared boilerplate are experimental", () => {
+  const entries = diagnosticCatalog.list();
+  for (const entry of entries) {
+    if (entries.some(other => other.code !== entry.code && other.explanation === entry.explanation)) {
+      expect(entry.stability,entry.code).toBe("experimental");
+    }
+    if (/^(typecheck|module|elaborate|read|reader)\//.test(entry.code)) {
+      expect(entry.summary,entry.code).not.toContain("<value>");
+      expect(entry.explanation,entry.code).not.toMatch(/^Check the (located|authored)/);
+    }
+  }
+});

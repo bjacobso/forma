@@ -38,9 +38,9 @@ test("route templates derive checked parameter records and executable URL builde
 
 test.each([
   ["missing", "typecheck/type-mismatch", "Missing field(s) in record", '{:id "alice"}'],
-  ["wrong-type", "typecheck/type-mismatch", "Int vs String", "42"],
+  ["wrong-type", "typecheck/type-mismatch", "Expected String, found Int", "42"],
   ["typo", "typecheck/missing-field", "did you mean post?", "(get params :poost)"],
-  ["wrong-segment", "typecheck/type-mismatch", "Int vs String", '(route broken-url ["users" 42 [:id]])'],
+  ["wrong-segment", "typecheck/type-mismatch", "Expected String, found Int", '(route broken-url ["users" 42 [:id]])'],
 ])("%s is rejected at the author's source", (name, code, message, text) => {
   const entry = read(`conformance/routes/${name}.lisp`);
   const result = checkModuleGraph(graph(entry));

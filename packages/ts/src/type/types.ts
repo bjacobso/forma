@@ -129,6 +129,8 @@ export interface Constraint {
 
 /** Polymorphic type scheme: forall tvars rvars evars. type where constraints */
 export interface Scheme {
+  readonly declaration?: import("./core-expr.js").Span;
+  readonly annotation?: import("./core-expr.js").Span;
   readonly tvars: readonly string[];
   readonly rvars: readonly string[];
   readonly evars: readonly string[];

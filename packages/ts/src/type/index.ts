@@ -208,7 +208,7 @@ export function inferSource(
         if (e instanceof InferenceError) return e;
         if (e instanceof Error && "loc" in e) {
           const loc = e.loc as {start:number; end:number};
-          return new InferenceError({message:e.message, origin:{nodeId:`surface:${loc.start}`, kind:"surface", span:loc}, details:{code:"surface/invalid-form"}});
+          return new InferenceError({...(e as Error & Pick<import("../diagnostic/diagnostic.js").Diagnostic,"fix" | "related" | "help">),message:e.message, origin:{nodeId:`surface:${loc.start}`, kind:"surface", span:loc}, details:{code:"surface/invalid-form"}});
         }
         throw e;
       },
@@ -276,7 +276,7 @@ export function inferSourceAll(
         if (e instanceof InferenceError) return e;
         if (e instanceof Error && "loc" in e) {
           const loc = e.loc as {start:number; end:number};
-          return new InferenceError({message:e.message, origin:{nodeId:`surface:${loc.start}`, kind:"surface", span:loc}, details:{code:"surface/invalid-form"}});
+          return new InferenceError({...(e as Error & Pick<import("../diagnostic/diagnostic.js").Diagnostic,"fix" | "related" | "help">),message:e.message, origin:{nodeId:`surface:${loc.start}`, kind:"surface", span:loc}, details:{code:"surface/invalid-form"}});
         }
         throw e;
       },
