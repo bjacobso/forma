@@ -2,11 +2,24 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented or authorized for publication |
+| Status | Accepted; implementation in progress |
 | Created | 2026-11-08 |
 | Scope | npm distribution, public JavaScript entry points, migration, and release gates |
 | Related | [RFC 0020](./0020-packages.md), [host ABI](./0013-runnable-host.md), [publishing](../publishing.md), [language services](../language-services.md) |
 | Decision | Publish only `@forma-language/forma`; preserve internal workspaces and explicit browser/Node boundaries |
+
+## Amendments
+
+The accepted direction includes these amendments; they describe implementation
+work, not a claim that every surface below has shipped:
+
+1. Forma source files use `.lisp`. `.forma` is retired as a file extension,
+   with no alias; `forma.json` and `forma.lock` keep their names.
+2. The root additionally exports an experimental embedding facade,
+   `createLanguage`.
+3. The `forma` CLI gains human-facing `check`, `run`, `fmt`, `repl`, and
+   `explain` commands with `--json` for machines, while keeping the existing
+   `file ...` JSON commands.
 
 ## Summary and first principles
 
@@ -533,8 +546,8 @@ The intentional costs are retaining a broad advanced API during migration and
 installing non-React adapter dependencies for language-only users. The proposed
 checks make those costs visible; neither is concealed by the phrase "one package."
 
-Approval is still needed for the proposed public name/surface and migration
-policy. Org access, name eligibility, first-publish authentication and trusted
+The public name/surface and migration policy are accepted with the amendments
+above. Org access, name eligibility, first-publish authentication and trusted
 publisher settings are unverified. External consumer inventory and measured
 package/browser size baselines belong to implementation, not assertions of this
 planning RFC. The document proposes a product boundary; it does not establish

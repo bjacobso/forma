@@ -1,6 +1,8 @@
 # Architecture
 
 Forma separates language machinery from consumer-defined vocabulary.
+The [vision](./vision.md) describes the product direction: applications hand
+agents and users a checked, capability-scoped language whose vocabulary they define.
 
 ```text
 source
