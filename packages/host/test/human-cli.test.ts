@@ -57,6 +57,21 @@ describe("human CLI", { timeout: 30_000 }, () => {
     }
     expect(run(dir, ["run", "--bogus", "main.lisp"]).status).toBe(64);
   });
+  it("describes modules and ordered legacy preludes in Markdown or JSON", () => {
+    const dir = workspace({ "policy.lisp": '; Double an integer.\n(export double)\n(: double (-> Int Int))\n(define double [x] (* x 2))', "prelude.lisp": '(type Label String)\n(: label (-> String String))\n(define label [x] x)' });
+    const markdown = run(dir, ["describe", "policy.lisp"]);
+    expect(markdown).toMatchObject({ status: 0, stderr: "" });
+    expect(markdown.stdout).toContain("## Functions");
+    expect(markdown.stdout).toContain("(-> Int Int)");
+    const json = run(dir, ["describe", "policy.lisp", "--format", "json"]);
+    expect(json.status).toBe(0);
+    expect(JSON.parse(json.stdout)).toMatchObject({ functions: [{ name: "double" }], diagnostics: [] });
+    const legacy = run(dir, ["describe", "--prelude", "prelude.lisp", "--format", "json"]);
+    expect(legacy.status).toBe(0);
+    expect(JSON.parse(legacy.stdout)).toMatchObject({ types: [{ name: "Label" }], functions: [{ name: "label" }] });
+    expect(run(dir, ["describe", "policy.lisp", "--format", "xml"]).status).toBe(64);
+  });
+
   it("formats in place and checks without writing", () => {
     const dir = workspace({ "main.lisp": "(+   1  2)" });
     expect(run(dir, ["fmt", "main.lisp", "--check"])).toMatchObject({ status: 1, stdout: "main.lisp\n" });

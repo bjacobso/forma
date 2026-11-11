@@ -7,6 +7,8 @@ Human commands:
   fmt <files...> [--check] [--json]    Format in place, or list files that would change.
   repl [--prelude <file>]...          Start a typed, stateful REPL.
                                       :quit, :type <expr>, :reset
+  describe <entry.lisp | --prelude path> [--format md|json]
+                                      Describe forms, functions, and types.
   explain <code> [--json]             Explain a diagnostic offline.
   help                                Print this help.
 

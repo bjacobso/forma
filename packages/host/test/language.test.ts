@@ -1,5 +1,8 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { createLanguage, type LanguageJson } from "../src/index.js";
+
+const fixture = (name: string) => readFileSync(new URL(`../../../conformance/embedding/${name}`, import.meta.url), "utf8");
 
 const prelude = `(type ItemIR {:kind "Item" :id String :value String})
 (form (item id value {:keys [doc]})
@@ -7,6 +10,68 @@ const prelude = `(type ItemIR {:kind "Item" :id String :value String})
   :ir ItemIR {:kind "Item" :id id :value value})`;
 
 describe("experimental embedding facade", () => {
+  it("automatically imports the unchanged expense policy module", async () => {
+    const source = readFileSync(new URL("../../../trials/expense-rules/src/policy.lisp", import.meta.url), "utf8");
+    const lang = await createLanguage({ modules: [{ id: "policy.lisp", source }] });
+    try {
+      expect(await lang.run(fixture("expense.lisp")))
+        .toMatchObject({ ok: true, value: ["manager", "finance"] });
+      expect(await lang.check('(valid-details? 42)')).toMatchObject({ ok: false });
+      expect(lang.describe().functions).toEqual(expect.arrayContaining([expect.objectContaining({ name: "required-approvals", signature: expect.stringContaining("Expense") })]));
+    } finally { await lang.close(); }
+  });
+
+  it("describes a form module's public vocabulary and checked examples", async () => {
+    const lang = await createLanguage({ modules: [{ id: "items.lisp", source: fixture("items.lisp") }] });
+    try {
+      expect(lang.describe()).toMatchObject({ forms: [{ name: "item", doc: "An item.", ir: "ItemIR", examples: [expect.stringContaining("item")], slots: [expect.objectContaining({ name: "value", type: "String", required: true }), expect.objectContaining({ name: "doc", required: false })] }], types: [{ name: "ItemIR" }] });
+      expect(await lang.check('(item "first" "value")')).toMatchObject({ ok: true });
+      expect(await lang.check('(label "private")')).toMatchObject({ ok: false });
+      expect(lang.describe().functions).toEqual([]);
+    } finally { await lang.close(); }
+  });
+
+  it("preserves reexports, inferred signatures, private helpers, and authored spans", async () => {
+    const lang = await createLanguage({ modules: [
+      { id: "lib/helpers.lisp", source: '(export identity) (define private-value 7) (define identity [x] x)' },
+      { id: "public.lisp", source: '(export-from "./lib/helpers.lisp" [identity])' },
+    ] });
+    try {
+      expect(await lang.run('(identity 42)', { sourceId: "app/main.lisp" })).toMatchObject({ ok: true, value: 42 });
+      expect(await lang.run('(identity "yes")')).toMatchObject({ ok: true, value: "yes" });
+      expect(lang.describe().functions).toEqual([expect.objectContaining({ name: "identity", signature: expect.stringContaining("->") })]);
+      expect(JSON.stringify(lang.describe())).not.toMatch(/__forma_|\bt\d+\b/);
+      expect(await lang.check("private-value", { sourceId: "app/main.lisp" })).toMatchObject({ ok: false, diagnostics: [expect.objectContaining({ span: expect.objectContaining({ startLine: 1, startColumn: 1 }) })] });
+    } finally { await lang.close(); }
+  });
+
+  it("rejects bad module examples and colliding automatic imports", async () => {
+    await expect(createLanguage({ modules: [{ id: "items.lisp", source: fixture("items.lisp").replace('(item "first" "value")', '(item "first" 42)') }] })).rejects.toMatchObject({ name: "LanguageInitializationError" });
+    await expect(createLanguage({ modules: [
+      { id: "a.lisp", source: '(export answer) (define answer 1)' },
+      { id: "b.lisp", source: '(export answer) (define answer 2)' },
+    ] })).rejects.toMatchObject({ name: "LanguageInitializationError" });
+  });
+
+  it("keeps the default program identity separate from a main.lisp vocabulary module", async () => {
+    const lang = await createLanguage({ modules: [{ id: "main.lisp", source: '(export double) (define double [x] (* x 2))' }] });
+    try {
+      expect(await lang.run('(double 21)')).toMatchObject({ ok: true, value: 42 });
+      await expect(lang.check('(double 21)', { sourceId: "main.lisp" })).rejects.toThrow("collides");
+    } finally { await lang.close(); }
+  });
+
+  it("checks explicit capability schemes before calling handlers", async () => {
+    const handler = vi.fn(() => ({ ok: true as const, value: "hello" }));
+    const lang = await createLanguage({ capabilities: { echo: { arity: 1,
+      typeScheme: { kind: "function", params: [{ kind: "type", name: "String" }], result: { kind: "type", name: "String" } }, handler } } });
+    try {
+      expect(await lang.check('(echo "Ada")')).toMatchObject({ ok: true, type: { display: "String" } });
+      expect(await lang.run('(echo 42)')).toMatchObject({ ok: false });
+      expect(handler).not.toHaveBeenCalled();
+    } finally { await lang.close(); }
+  });
+
   it("checks without evaluating and refuses to run a failed check", async () => {
     const handler = vi.fn(() => ({ ok: true as const, value: 1 }));
     const lang = await createLanguage({ capabilities: { touch: { arity: 0, handler } } });

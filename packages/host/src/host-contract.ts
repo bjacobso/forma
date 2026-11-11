@@ -172,6 +172,23 @@ const operation = <N extends string, F extends Schema.Struct.Fields>(
   // Called only after decoding the discriminated request union at the boundary.
   project: (context: OperationContext, request: unknown) => project(context, request as Schema.Struct.Type<F>),
 });
+const describedDefinition = Schema.Struct({ name: id, sourceId: Schema.String, signature: Schema.String, doc: optionalString });
+const descriptionResult = Schema.Struct({
+  forms: Schema.Array(Schema.Struct({
+    name: id, sourceId: Schema.String, doc: optionalString,
+    identifiers: Schema.Array(Schema.Struct({ name: id, kind: Schema.Literals(["Symbol", "String", "Value"]), declaration: Schema.optionalKey(Schema.Boolean), doc: optionalString })),
+    slots: Schema.Array(Schema.Struct({ name: id, mode: Schema.Literals(["value", "expr", "form"]), required: Schema.Boolean, many: Schema.Boolean,
+      type: optionalString, typeFrom: optionalString, aliases: Schema.optionalKey(Schema.Array(Schema.String)), childShape: Schema.optionalKey(Schema.Unknown), doc: optionalString })),
+    result: Schema.Union([
+      Schema.Struct({ kind: Schema.Literal("constant"), type: Schema.String }),
+      Schema.Struct({ kind: Schema.Literals(["slot-type", "declaration-result", "declaration-ref-result"]), slot: Schema.String }),
+      Schema.Struct({ kind: Schema.Literal("hook"), fn: Schema.String }),
+      Schema.Struct({ kind: Schema.Literal("none") }),
+    ]), ir: optionalString, examples: Schema.Array(Schema.String),
+  })),
+  functions: Schema.Array(describedDefinition), types: Schema.Array(describedDefinition), diagnostics,
+});
+
 const stateResponse = (result: Awaited<ReturnType<TsLanguageHost["evaluateInSession"]>>) => ({
   ...envelope(result, result.status === "failed" ? result.diagnostics : result.status === "completed" ? result.result.diagnostics : []),
   ...(result.status === "completed" && result.result.type ? { type: result.result.type.display } : {}),
@@ -195,6 +212,9 @@ export const HOST_OPERATIONS = [
     const result = await host.closeSession(request); sessions.delete(request.sessionId); return envelope(result);
   }),
   operation("resetSession", session, async ({host}, request) => envelope(await host.resetSession(request))),
+  operation("describe", { ...session, sourceId: optionalString }, async ({host}, request) => {
+    const result = await host.describe(request); return envelope(result, result.diagnostics);
+  }, descriptionResult),
   operation("sessionInfo", session, async ({host}, request) => envelope(await host.sessionInfo(request))),
   ...(["parse", "parseAst", "parseSummary", "incrementalSummary"] as const).map(name => operation(name, source, async ({host}, request) => {
     if (name === "incrementalSummary") { const {diagnostics, ...summary} = Engine.incrementalSummary(request); return envelope(summary, diagnostics); }
