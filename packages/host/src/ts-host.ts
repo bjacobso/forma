@@ -1,3 +1,4 @@
+import { HOST_ABI_VERSION, HOST_CAPABILITIES } from "./host-contract.js";
 import * as Artifact from "@formalang/ts/artifact";
 import * as Modules from "@formalang/ts/modules";
 import { Effect, Ref } from "effect";
@@ -242,42 +243,9 @@ export class TsLanguageHost implements LanguageHost {
     return {
       engine: "forma-typescript",
       engineVersion: "0.0.0",
-      hostAbiVersion: "0.1.0",
+      hostAbiVersion: HOST_ABI_VERSION,
       sourceLoadSemantics: "validate-and-store",
-      capabilities: [
-        "parse",
-        "expand",
-        "typecheck",
-        "evaluate",
-        "openSession",
-        "configureSession",
-        "loadSource",
-        "loadSourceBundle",
-        "evaluateInSession",
-        "replSubmit",
-        "callValue",
-        "resumeHostCall",
-        "abortEvaluation",
-        "projectValue",
-        "releaseValue",
-        "sessionInfo",
-        "resetSession",
-        "closeSession",
-        "identifySyntax",
-        "observe",
-        "symbolIndex",
-        "findReferences",
-        "applyEditScript",
-        "describeNodes",
-        "editScriptSchema",
-        "sourceToOutline",
-        "outlineToSource",
-        "formSlots",
-        "emit",
-        "emitMany",
-        "emitBackends",
-        "artifactSummary",
-      ],
+      capabilities: [...HOST_CAPABILITIES],
     };
   }
 
@@ -937,6 +905,11 @@ export class TsLanguageHost implements LanguageHost {
       })),
       parse,
     };
+  }
+
+  /** Evaluate while collecting per-expression observations. */
+  async observe(request: EvaluateRequest): Promise<EvaluationResult> {
+    return this.evaluate({ ...request, observe: request.observe ?? {} });
   }
 
   async identifySyntax(request: SyntaxIdentityRequest): Promise<SyntaxIdentityResult> {
