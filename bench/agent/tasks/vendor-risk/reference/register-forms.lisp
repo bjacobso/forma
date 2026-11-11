@@ -1,8 +1,8 @@
 ;; A small vendor-register language. Source: the trial brief.
-;; `vendor` declares a vendor; its :check calls the policy in src/policy.forma,
+;; `vendor` declares a vendor; its :check calls the policy in src/policy.lisp,
 ;; so "Procurement must not mark a vendor active while its review is incomplete
 ;; or expired" is enforced as an authoring diagnostic at the `:status` option.
-(import "./preludes/kernel.forma" [and not cond])
+(import "./preludes/modules/kernel.lisp" [and not cond])
 (import "./policy.lisp" [Role Vendor activation-blockers])
 (export vendor VendorIR VendorStatus Approver)
 

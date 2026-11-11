@@ -1,5 +1,5 @@
 # Routes for a help desk
-Write `main.lisp` using the existing `route` macro from `preludes/routes.forma`.
+Write `main.lisp` using the existing `route` macro from `preludes/modules/routes.lisp`.
 Export builders `ticket-url` for /teams/:team/tickets/:ticket and `home-url` for /.
 Capture fields are Strings. Preserve the supplied field text without encoding.
 Export `sample` equal to ticket-url for team "support", ticket "T-42".

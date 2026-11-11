@@ -54,7 +54,7 @@ Create `tasks/<id>/` with:
 - `brief.md`: everything the agent sees, precise public API, files to write
   (all `.lisp`), and CLI commands. Target 5–30 minutes of competent work.
 - `context.json`: `{ "kind": "kernel|prelude|form", "entry": "main.lisp",
-  "files": ["docs/authoring.md", "preludes/kernel.forma"] }` with repo-relative
+  "files": ["docs/authoring.md", "preludes/modules/kernel.lisp"] }` with repo-relative
   context paths. Include transitive imports of any supplied library.
 - `accept.mjs`: export `async function accept(outputDir)` returning
   `{pass, reasons}`. Test behavior through CLI evaluation and declarations,

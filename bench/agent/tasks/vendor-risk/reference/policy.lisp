@@ -5,8 +5,8 @@
 ;; Forma has no date type (see REPORT.md), so every date is an Int day number
 ;; (days since an arbitrary epoch). "12 months" = 365 days, "6 months" = 182 days.
 ;; Kernel `and`/`or`/`not` are macros that file modules import from
-;; preludes/kernel.forma.
-(import "./preludes/kernel.forma" [and or not])
+;; preludes/modules/kernel.lisp.
+(import "./preludes/modules/kernel.lisp" [and or not])
 (export Role Exception Review Vendor
         review-validity-days exception-validity-days
         requires-review? high-risk? review-current? soc2-current? exception-valid?

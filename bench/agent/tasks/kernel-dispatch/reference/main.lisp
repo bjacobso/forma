@@ -1,4 +1,4 @@
-(import "./preludes/kernel.forma" [cond and or not])
+(import "./preludes/modules/kernel.lisp" [cond and or not])
 (export dispatch safe-divide)
 (: dispatch (-> Bool Bool Int String))
 (define dispatch [enabled urgent backlog]

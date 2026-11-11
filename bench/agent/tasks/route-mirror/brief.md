@@ -1,5 +1,5 @@
 # Asset route templates
-Write `main.lisp` using `route` from `preludes/routes.forma`. Export `mirror-url`
+Write `main.lisp` using `route` from `preludes/modules/routes.lisp`. Export `mirror-url`
 for /mirror/:asset/:asset, `revision-url` for /assets/:asset/revisions/:rev,
 and `health-url` for /health. Repeated captures use one field.
 

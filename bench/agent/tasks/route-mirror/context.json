@@ -7,7 +7,7 @@
     "docs/modules.md",
     "docs/writing-a-form.md",
     "preludes/README.md",
-    "preludes/kernel.forma",
-    "preludes/routes.forma"
+    "preludes/modules/kernel.lisp",
+    "preludes/modules/routes.lisp"
   ]
 }

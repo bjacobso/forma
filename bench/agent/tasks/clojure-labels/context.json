@@ -7,7 +7,7 @@
     "docs/modules.md",
     "docs/writing-a-form.md",
     "preludes/README.md",
-    "preludes/kernel.forma",
-    "preludes/clojure.forma"
+    "preludes/modules/kernel.lisp",
+    "preludes/modules/clojure.lisp"
   ]
 }

@@ -1,4 +1,4 @@
-(import "./preludes/routes.forma" [route])
+(import "./preludes/modules/routes.lisp" [route])
 (export ticket-url home-url sample)
 (route ticket-url ["teams" [:team] "tickets" [:ticket]])
 (route home-url [])

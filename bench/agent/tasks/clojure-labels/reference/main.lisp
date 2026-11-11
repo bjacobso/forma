@@ -1,4 +1,4 @@
-(import "./preludes/clojure.forma" [def defn])
+(import "./preludes/modules/clojure.lisp" [def defn])
 (export prefix label labels sample)
 (def prefix "job")
 (: label (-> String Int String))

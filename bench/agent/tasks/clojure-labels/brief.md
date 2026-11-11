@@ -1,5 +1,5 @@
 # Labels with the Clojure spelling library
-Write `main.lisp` using `def` and `defn` from `preludes/clojure.forma`.
+Write `main.lisp` using `def` and `defn` from `preludes/modules/clojure.lisp`.
 Export `prefix` equal to "job", `label : String -> Int -> String` returning
 "<name>#<number>", and `labels : (List Int) -> (List String)` mapping label
 with prefix over numbers in order. Export `sample` equal to labels [2 5].

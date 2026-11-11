@@ -1,5 +1,5 @@
 # Dispatch decisions with the kernel library
-Write `main.lisp`, importing `cond`, `and`, `or`, `not` from `preludes/kernel.forma`.
+Write `main.lisp`, importing `cond`, `and`, `or`, `not` from `preludes/modules/kernel.lisp`.
 Export `dispatch : Bool -> Bool -> Int -> String` (enabled, urgent, backlog).
 Disabled always returns "paused"; enabled with urgent or backlog >= 20 returns
 "express"; remaining enabled with backlog > 0 returns "normal"; otherwise "idle".

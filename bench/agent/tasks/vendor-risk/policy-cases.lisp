@@ -1,6 +1,6 @@
-;; Behaviour tests for src/policy.forma. Each case cites the brief rule it pins.
+;; Behaviour tests for src/policy.lisp. Each case cites the brief rule it pins.
 ;; Evaluates to the list of FAILING case names; [] means all pass.
-(import "./preludes/kernel.forma" [not])
+(import "./preludes/modules/kernel.lisp" [not])
 (import "./policy.lisp" [Role Vendor Review Exception activation-blockers
                                can-activate? can-sign-contract? exception-valid?
                                security-review-complete?])
