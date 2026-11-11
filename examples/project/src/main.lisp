@@ -1,1 +1,2 @@
-(+ 20 22)
+(import "./data.lisp" [message])
+message

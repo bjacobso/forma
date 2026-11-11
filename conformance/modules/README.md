@@ -21,3 +21,10 @@ expectation, rewrite the files from TypeScript output and review the JSON diff:
 ```sh
 FORMA_UPDATE_GOLDEN=1 pnpm --filter @formalang/host exec vitest run test/modules.test.ts test/compile-time-modules.test.ts
 ```
+
+`run-forms/` pins successful checking and runtime values for a form library,
+a module that declares a greeting and ordinary values, and an importing entry.
+`expected.json` is asserted by `packages/ts/test/check-run-modules.test.ts`;
+it also verifies descriptor identity and that runtime evaluation does not rerun
+form hooks. `unnamed.lisp` pins projected IR values, and `multiple-names.lisp`
+checks that every `Declares` hole introduces a runtime binding.
