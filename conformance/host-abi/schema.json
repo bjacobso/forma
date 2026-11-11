@@ -5093,6 +5093,32 @@
                 }
               ]
             },
+            "related": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "span": {
+                        "$ref": "#/$defs/Span"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "span",
+                      "message"
+                    ],
+                    "additionalProperties": true
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "help": {
               "anyOf": [
                 {
