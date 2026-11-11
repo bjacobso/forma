@@ -63,7 +63,7 @@ export default defineConfig({
   description: "A programmable type system for Lisp.",
   cleanUrls: true,
   // RFCs are design records for the repository, not site pages.
-  srcExclude: ["rfcs/**"],
+  srcExclude: ["rfcs/**", "proposals/**"],
   lastUpdated: true,
   outDir: resolve(import.meta.dirname, "../../dist-docs"),
   head: [
