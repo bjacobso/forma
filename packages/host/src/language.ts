@@ -1,7 +1,10 @@
+import { normalizeModuleId } from "@formalang/ts/modules";
+import type { LanguageDescription } from "./description.js";
+export type { LanguageDescription } from "./description.js";
 import { TsLanguageHost } from "./ts-host.js";
 import { plainJsonFromValue } from "./value-projections.js";
 import type {
-  Diagnostic, EmitRequest, FormSlotsResult, HostBuiltinDescriptor, LanguageHost,
+  Diagnostic, EmitRequest, HostBuiltinDescriptor, LanguageHost,
   TypeProjection, ValueProjection,
 } from "./types.js";
 
@@ -20,6 +23,8 @@ export interface LanguageCapability {
 
 export interface LanguageOptions {
   readonly preludes?: readonly { readonly id: string; readonly source: string }[];
+  /** In-memory file modules. Only their exports become automatic imports. IDs are bundle-relative paths. */
+  readonly modules?: readonly { readonly id: string; readonly source: string }[];
   readonly capabilities?: Readonly<Record<string, LanguageCapability>>;
 }
 
@@ -45,14 +50,6 @@ export interface LanguageRunResult extends LanguageCheckResult {
   /** The existing plain-json projection (keywords keep their colon). */
   readonly value?: unknown;
   readonly printed?: string;
-}
-
-export interface LanguageDescription {
-  readonly forms: readonly {
-    readonly name: string;
-    readonly identifiers: FormSlotsResult["identifiers"];
-    readonly slots: FormSlotsResult["slots"];
-  }[];
 }
 
 export interface Language {
@@ -82,10 +79,24 @@ export class LanguageInitializationError extends Error {
  * close releases the session; await active operations before closing it.
  */
 export async function createLanguage(options: LanguageOptions = {}): Promise<Language> {
-  const host: LanguageHost = new TsLanguageHost();
+  const host = new TsLanguageHost();
   const { sessionId } = await host.openSession();
   const capabilities = new Map(Object.entries(options.capabilities ?? {}));
-  const forms = new Map<string, LanguageDescription["forms"][number]>();
+  let description: LanguageDescription;
+  let modulePrelude: string | undefined;
+  const moduleIds = new Set((options.modules ?? []).map(module => normalizeModuleId(module.id)));
+  let defaultSourceId = "main.lisp";
+  while (moduleIds.has(defaultSourceId)) defaultSourceId = `_${defaultSourceId}`;
+  const programIds = new Set<string>();
+  const prepare = async (sourceId: string) => {
+    if (moduleIds.has(normalizeModuleId(sourceId)) || sourceId === modulePrelude) {
+      throw new TypeError("Program sourceId collides with a vocabulary module ID.");
+    }
+    if (modulePrelude && !programIds.has(normalizeModuleId(sourceId))) {
+      programIds.add(normalizeModuleId(sourceId));
+      await host.configureSession({ sessionId, projects: [{ id: "language", base: "main.lisp", prelude: `./${modulePrelude}`, modules: [...programIds] }] });
+    }
+  };
   let closed = false;
   const assertOpen = () => { if (closed) throw new Error("Forma language is closed."); };
   const failure = (code: string, message: string): LanguageRunResult => ({
@@ -104,19 +115,32 @@ export async function createLanguage(options: LanguageOptions = {}): Promise<Lan
       const loaded = await host.loadSource({ sessionId, sourceId: prelude.id, source: prelude.source, kind: "prelude" });
       if (loaded.diagnostics.some(d => d.severity === "error")) throw new LanguageInitializationError(loaded.diagnostics);
     }
-    // Discover authored form heads through the host, and get slot metadata from
-    // the session's descriptor registry rather than interpreting slot syntax here.
-    for (const prelude of options.preludes ?? []) {
-      const parsed = await host.parse({ sourceId: prelude.id, source: prelude.source });
-      for (const node of parsed.ast) {
-        if (node.kind !== "list" || node.items[0]?.kind !== "symbol" || node.items[0].value !== "form") continue;
-        const signature = node.items[1];
-        const head = signature?.kind === "list" ? signature.items[0] : signature;
-        if (head?.kind !== "symbol") continue;
-        const slots = await host.formSlots!({ sessionId, source: `(${head.value})`, offset: 1 });
-        if (slots.form) forms.set(head.value, { name: head.value, identifiers: slots.identifiers, slots: slots.slots });
-      }
+    if (options.modules?.some(module => module.id.startsWith("/") || module.id.includes("\\") || normalizeModuleId(module.id).startsWith("../"))) {
+      throw new TypeError("Module IDs must be bundle-relative paths.");
     }
+    if (options.modules?.length) {
+      const loaded = await host.loadSourceBundle({ sessionId, sources: options.modules.map(module => ({ sourceId: module.id, source: module.source })) });
+      if (loaded.diagnostics.some(d => d.severity === "error")) throw new LanguageInitializationError(loaded.diagnostics);
+      modulePrelude = "__language_prelude__.lisp";
+      while (options.modules.some(module => normalizeModuleId(module.id) === modulePrelude)) modulePrelude = `_${modulePrelude}`;
+      const reexports: string[] = [];
+      const exported = new Map<string, string>();
+      for (const module of options.modules) {
+        const checked = await host.moduleGraph({ sessionId, sourceId: module.id });
+        if (checked.diagnostics.some(d => d.severity === "error")) throw new LanguageInitializationError(checked.diagnostics);
+        const names = checked.interfaces.find(entry => entry.moduleId === normalizeModuleId(module.id))!.exports.flatMap(binding => {
+          const identity = JSON.stringify(binding.identity);
+          if (exported.get(binding.name) === identity) return [];
+          exported.set(binding.name, identity);
+          return [binding.name];
+        });
+        if (names.length) reexports.push(`(export-from ${JSON.stringify(`./${normalizeModuleId(module.id)}`)} [${names.join(" ")}])`);
+      }
+      const barrel = await host.loadSource({ sessionId, sourceId: modulePrelude, source: reexports.join("\n") });
+      if (barrel.diagnostics.some(d => d.severity === "error")) throw new LanguageInitializationError(barrel.diagnostics);
+    }
+    description = await host.describe({ sessionId, ...(modulePrelude ? { sourceId: modulePrelude } : {}) });
+    if (description.diagnostics.some(d => d.severity === "error")) throw new LanguageInitializationError(description.diagnostics);
   } catch (error) {
     await host.closeSession({ sessionId });
     throw error;
@@ -124,16 +148,18 @@ export async function createLanguage(options: LanguageOptions = {}): Promise<Lan
 
   const check: Language["check"] = async (source, request = {}) => {
     assertOpen();
-    const checked = await host.typecheck({ sessionId, source, sourceId: request.sourceId ?? "main.lisp" });
+    await prepare(request.sourceId ?? defaultSourceId);
+    const checked = await host.typecheck({ sessionId, source, sourceId: request.sourceId ?? defaultSourceId });
     return { ok: !checked.diagnostics.some(d => d.severity === "error"),
       ...(checked.type ? { type: checked.type } : {}), diagnostics: checked.diagnostics };
   };
   return {
     check,
-    describe() { assertOpen(); return { forms: [...forms.values()] }; },
+    describe() { assertOpen(); return description; },
     async emit(source, request = {}) {
       assertOpen();
-      const emitRequest: EmitRequest = { sessionId, source, sourceId: request.sourceId ?? "main.lisp", ...request };
+      await prepare(request.sourceId ?? defaultSourceId);
+      const emitRequest: EmitRequest = { sessionId, source, sourceId: request.sourceId ?? defaultSourceId, ...request };
       return host.emit!(emitRequest);
     },
     async run(source, request = {}) {
@@ -147,7 +173,7 @@ export async function createLanguage(options: LanguageOptions = {}): Promise<Lan
       const timedOut = () => Date.now() >= deadline;
       const timeout = () => failure("evaluation/aborted", "Evaluation exceeded timeoutMs.");
       if (timedOut()) return timeout();
-      let state = await host.evaluateInSession({ sessionId, source, sourceId: request.sourceId ?? "main.lisp",
+      let state = await host.evaluateInSession({ sessionId, source, sourceId: request.sourceId ?? defaultSourceId,
         stepLimit: request.limits?.steps });
       while (state.status === "host-call") {
         const call = state.call;

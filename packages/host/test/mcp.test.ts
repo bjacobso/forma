@@ -117,3 +117,17 @@ test("loads offline packages within cwd and rejects package paths outside it", a
   symlinkSync(outside, join(vendorProject, "vendor"));
   expect(await call("check", { path: "vendor-project/main.lisp" })).toMatchObject({ ok: false });
 }, 30_000);
+
+test("describes the forms and exports a module graph makes available", async () => {
+  writeFileSync(join(dir, "rules.lisp"), `(export greeting GreetingIR)
+(type GreetingIR {:kind "Greeting" :name Symbol :message String})
+(form (greeting name message)
+  :types {:name (Declares Greeting) :message String}
+  :ir GreetingIR
+  {:kind "Greeting" :name name :message message})`);
+  const described = await call("describe", { path: "rules.lisp" });
+  expect(described.ok).toBe(true);
+  expect(JSON.stringify(described)).toContain("greeting");
+  const outsideCall = await call("describe", { path: join(outside, "secret.lisp") });
+  expect(outsideCall.ok).toBe(false);
+});

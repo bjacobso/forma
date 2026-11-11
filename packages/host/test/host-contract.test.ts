@@ -84,7 +84,7 @@ describe("shared host contract", () => {
       const { identity } = await abi.host.identifySyntax({ source: "42" });
       const fields: Record<string, object> = {
         version: {}, openSession: {}, emitBackends: {}, editScriptSchema: {},
-        configureSession: { sessionId }, closeSession: { sessionId }, resetSession: { sessionId }, sessionInfo: { sessionId },
+        describe: { sessionId }, configureSession: { sessionId }, closeSession: { sessionId }, resetSession: { sessionId }, sessionInfo: { sessionId },
         loadSource: { sessionId, sourceId: "other.lisp", source: "42" },
         loadSourceBundle: { sessionId, sources: [{ sourceId: "other.lisp", source: "42" }] },
         evaluateInSession: { sessionId, source: "42" }, replSubmit: { sessionId, source: "42" },
@@ -112,6 +112,24 @@ describe("shared host contract", () => {
       expect(result, `${op}: ${JSON.stringify(result)}`).toMatchObject({ ok: true });
       expect(JSON.parse(JSON.stringify(result))).toEqual(result);
     }
+  });
+
+  it("returns the host description over JSON and validates its structured response", async () => {
+    const abi = new JsonAbi();
+    const { sessionId } = await abi.host.openSession();
+    try {
+      const source = readFileSync(new URL("../../../conformance/embedding/items.lisp", import.meta.url), "utf8");
+      await abi.host.loadSource({ sessionId, sourceId: "items.lisp", source });
+      const expected = await abi.host.describe({ sessionId });
+      // A JSON session must be opened through the ABI so its scope is registered.
+      const opened = await send(abi, { op: "openSession" });
+      const jsonSession = (opened.value as { sessionId: string }).sessionId;
+      await send(abi, { op: "loadSource", sessionId: jsonSession, sourceId: "items.lisp", source });
+      const response = await send(abi, { op: "describe", sessionId: jsonSession });
+      expect(response).toEqual({ ok: true, value: expected, diagnostics: [] });
+      expect(() => Schema.decodeUnknownSync(HOST_OPERATIONS.find(operation => operation.name === "describe")!.response)(response)).not.toThrow();
+      await send(abi, { op: "closeSession", sessionId: jsonSession });
+    } finally { await abi.host.closeSession({ sessionId }); }
   });
 
   it("observes with caller identities and the programmatic evaluation options", async () => {

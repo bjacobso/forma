@@ -66,6 +66,10 @@ export async function mcp(abi = new JsonAbi()): Promise<void> {
   }
   async function checkOrRun(name: string, args: Record<string, any>): Promise<Record<string, unknown>> {
     const execute = async (request: { source?: string; sourceId?: string; sessionId?: string }) => {
+      if (name === "describe") {
+        const description = await abi.host.describe({ sessionId: request.sessionId! });
+        return { ok: !hasErrors(description.diagnostics), ...description };
+      }
       const check = await checked(request);
       if (name === "check") return check;
       if (!check.ok) return { ...check, value: null, printed: null, type: check.type ?? null };
@@ -105,7 +109,7 @@ export async function mcp(abi = new JsonAbi()): Promise<void> {
     { name: "describe_nodes", description: "Identify and describe every syntax node. Ids refer to this exact source; describe again after editing.", inputSchema: input({ source: string }, ["source"]) },
     { name: "edit", description: "Apply an id-addressed edit script to source, then check the new source. Does not write files.", inputSchema: input({ source: string, script: scriptDocument.schema }, ["source", "script"], { $defs: scriptDocument.definitions }) },
   ];
-  // TODO(describe): wire the host describe operation here when it is available.
+  tools.push({ name: "describe", description: "Describe the vocabulary a file module graph makes available: forms with typed slots and checked examples, exported functions with signatures and docs, and types.", inputSchema: input({ path: string }, ["path"]) });
   const validator = new AjvJsonSchemaValidator();
   const validators = new Map(tools.map(tool => [tool.name, validator.getValidator<Record<string, any>>(tool.inputSchema as JsonSchemaType)]));
   const version = await abi.host.version();
@@ -121,7 +125,7 @@ export async function mcp(abi = new JsonAbi()): Promise<void> {
         if (!validated.valid) result = failed("abi/invalid-request", validated.errorMessage);
         else {
           const args = validated.data;
-          if (params.name === "check" || params.name === "run") result = await checkOrRun(params.name, args);
+          if (params.name === "check" || params.name === "run" || params.name === "describe") result = await checkOrRun(params.name, args);
           else if (params.name === "format") {
             const path = args.path === undefined ? undefined : confined(args.path);
             const source = path === undefined ? args.source : readFileSync(path, "utf8");

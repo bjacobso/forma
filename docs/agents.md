@@ -5,7 +5,7 @@
 Forma source files use `.lisp`; project metadata uses `forma.json` and `forma.lock`.
 
 APIs, package boundaries, syntax, and artifact formats are still evolving.
-The TypeScript host includes a source-built `forma` CLI (check, run, fmt, repl, explain, MCP, and JSON commands) and daemon, with
+The TypeScript host includes a source-built `forma` CLI (check, run, fmt, repl, explain, describe, mcp, and JSON commands) and daemon, with
 filesystem module commands described in [File modules](https://forma-lang.com/modules).
 The TypeScript engine is the only implementation; it also powers the browser
 tools and language server. The earlier OCaml engine was removed.
@@ -21,6 +21,7 @@ A fresh clone uses
 
 ## Getting started
 
+- [Core cheat sheet](https://raw.githubusercontent.com/bjacobso/forma/main/docs/cheatsheet.md): Checked syntax, types, modules, forms, effects, builtin signatures, and fixes for common diagnostics.
 - [Embedding](https://forma-lang.com/embedding): Experimental promise-based host facade for checking, running, capabilities, form discovery, and canonical IR emission without Effect imports.
 - [Authoring](https://raw.githubusercontent.com/bjacobso/forma/main/docs/authoring.md): Install from source before publication, check and run a first file, then use file modules, typed forms, diagnostics, formatting, and the REPL. Links to runnable project and Node embedding examples.
 - [Quick start](https://raw.githubusercontent.com/bjacobso/forma/main/README.md): Setup, examples, package layout, and current project status.

@@ -46,7 +46,7 @@ Diagnostics retain engine spans (including line and column), help, and fixes.
 | `run` | Exactly one of `{ path }` or `{ source }`, optional `stepLimit` | `{ ok, value, printed, type, diagnostics }` |
 | `format` | Exactly one of `{ path }` or `{ source }`, optional `write` | `{ ok, source, diagnostics }` |
 | `explain` | `{ code }` | Catalog `code`, `summary`, `explanation`, and `ok` |
-| `describe_nodes` | `{ source }` | `{ ok, nodes, diagnostics }`; each node includes its id, text, kind and context |
+| `describe` (forms, exports and types a module graph provides; `{ path }`), `describe_nodes` | `{ source }` | `{ ok, nodes, diagnostics }`; each node includes its id, text, kind and context |
 | `edit` | `{ source, script }` | New `source`, identity, change preview, and diagnostics; edit errors if rejected |
 
 `run` checks first and refuses programs with errors. `value` is the host's JSON

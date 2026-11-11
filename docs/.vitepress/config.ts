@@ -96,6 +96,7 @@ export default defineConfig({
         text: "Learn",
         items: [
           { text: "Language guide", link: "/language" },
+          { text: "Core cheat sheet", link: "/cheatsheet" },
           { text: "Authoring your own program", link: "/authoring" },
           { text: "Structure and interpretation", link: "/structure-and-interpretation" },
           { text: "Domain modeling", link: "/domain-modeling" },
@@ -122,6 +123,7 @@ export default defineConfig({
             { text: "Preludes", link: "/preludes/" },
             { text: "Vision", link: "/vision" },
             { text: "Language", link: "/language" },
+            { text: "Core cheat sheet", link: "/cheatsheet" },
             { text: "Authoring your own program", link: "/authoring" },
             { text: "Structure and interpretation", link: "/structure-and-interpretation" },
             { text: "Roots of Lisp crib sheet", link: "/roots-of-lisp" },
