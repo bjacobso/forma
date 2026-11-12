@@ -28,7 +28,7 @@ try {
     const manifest = JSON.parse(await readFile(join(temporary, path, "package.json"), "utf8"));
     const key = `${manifest.name}@${entry.version}`;
     if (!sizes.has(key)) {
-      const [packed] = JSON.parse(run(["pack", "--prefer-offline", "--ignore-scripts", "--json", key]));
+      const [packed] = JSON.parse(run(["pack", "--prefer-online", "--ignore-scripts", "--json", key]));
       sizes.set(key, packed.size);
       await rm(join(temporary, packed.filename));
     }
