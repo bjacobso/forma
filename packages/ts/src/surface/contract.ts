@@ -1,3 +1,4 @@
+import { surfaceError } from "./errors.js";
 import { isNumeric, kEquals, numericDatum } from "../evaluator/types.js";
 import { resolveTypeAlias, optionalType } from "./type-alias.js";
 import { isKKeyword, isKSymbol, mapKey, mapKeyValue } from "../evaluator/types.js";
@@ -191,5 +192,5 @@ function projectRuntimeExpression(value: KValue): KValue {
 function contractKey(key: SExpr): string {
   if (key._tag === "Str") return mapKey(key.value)!;
   if (key._tag === "Sym" && key.name.startsWith(":")) return key.name;
-  throw new Error("Record type labels must be keywords or strings");
+  throw surfaceError("Record type labels must be keywords or strings", key);
 }

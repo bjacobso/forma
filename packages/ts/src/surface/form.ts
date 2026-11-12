@@ -1,3 +1,4 @@
+import { surfaceError, SurfaceInputError } from "./errors.js";
 import { descriptorConstant } from "./metadata.js";
 import { formatSExprMany } from "../Formatter.js";
 import {buildDescriptorTreeLayoutAliases,rewriteDescriptorTreeLayoutAliases} from "../descriptor/descriptor-tree-aliases.js";
@@ -52,7 +53,7 @@ export function formHookExpressions(spec: Pick<UnifiedForm, "body" | "options">)
 function formExamples(value: SExpr | undefined, formName: string): readonly string[] | undefined {
   if (!value) return undefined;
   const invalid = (at: SExpr): never => {
-    throw Object.assign(new Error(`form ${formName}: :examples expects a vector of nonempty program vectors or source strings`), { loc: at.loc });
+    throw surfaceError(`form ${formName}: :examples expects a vector of nonempty program vectors or source strings`, at, "elaborate/form-definition");
   };
   if (value._tag !== "Vector") return invalid(value);
   return value.items.map(example => {
@@ -163,18 +164,17 @@ export function parseUnifiedForm(e: SExpr, types: ReadonlyMap<string, SExpr> = n
 function parseUnifiedFormInner(e: SExpr, types: ReadonlyMap<string, SExpr>, helpers: readonly SExpr[]): FormDescriptor | undefined {
   if (head(e) !== "form" || e._tag !== "List") return undefined;
   const pattern = e.items[1];
-  if (pattern?._tag !== "List" || !name(pattern.items[0])) throw new Error("form expects (head pattern ...) followed by :types, :ir and a body");
+  if (pattern?._tag !== "List" || !name(pattern.items[0])) throw surfaceError("form expects (head pattern ...) followed by :types, :ir and a body", e, "elaborate/form-definition");
   const formName = name(pattern.items[0])!;
   let i = 2;
   const doc = e.items[i]?._tag === "Str" ? (e.items[i++] as Extract<SExpr, { _tag: "Str" }>).value : undefined;
   const options = new Map<string, SExpr>();
   while (i < e.items.length - 1) {
     const key = name(e.items[i]);
-    if (!key?.startsWith(":")) throw new Error(`form ${formName}: expected a :key value option`);
-    if (![":types", ":ir", ":type", ":scope", ":check", ":examples", ":emit", ":extensions"].includes(key)) throw new Error(`form ${formName}: unknown option ${key}`);
-    if (options.has(key)) throw new Error(`form ${formName}: duplicate option ${key}`);
-    const value = e.items[++i];
-    if (!value) throw new Error(`form ${formName}: ${key} needs a value`);
+    if (!key?.startsWith(":")) throw surfaceError(`form ${formName}: expected a :key value option`, e.items[i]!, "elaborate/form-definition");
+    if (![":types", ":ir", ":type", ":scope", ":check", ":examples", ":emit", ":extensions"].includes(key)) throw surfaceError(`form ${formName}: unknown option ${key}`, e.items[i]!, "elaborate/form-definition");
+    if (options.has(key)) throw surfaceError(`form ${formName}: duplicate option ${key}`, e.items[i]!, "elaborate/form-definition");
+    const value = e.items[++i]!; // The option loop leaves at least one following expression.
     options.set(key, value);
     i++;
   }
@@ -182,15 +182,15 @@ function parseUnifiedFormInner(e: SExpr, types: ReadonlyMap<string, SExpr>, help
   const holeTypes = options.get(":types");
   const irName = name(options.get(":ir"));
   const body = e.items[i];
-  if (holeTypes?._tag !== "Map" || !irName || !body) throw new Error(`form ${formName} requires :types {:hole Type ...}, :ir IRType and one body`);
-  if (!types.has(irName)) throw new Error(`form ${formName}: unknown IR type ${irName}`);
+  if (holeTypes?._tag !== "Map" || !irName || !body) throw surfaceError(`form ${formName} requires :types {:hole Type ...}, :ir IRType and one body`, e, "elaborate/form-definition");
+  if (!types.has(irName)) throw surfaceError(`form ${formName}: unknown IR type ${irName}`, e, "elaborate/form-definition");
   const holes = new Map<string, SExpr>();
   for (const [k, t] of holeTypes.pairs) {
     const n = fieldName(k);
-    if (!n || !name(k)?.startsWith(":")) throw new Error("form :types keys must be keywords");
-    if (holes.has(n)) throw new Error(`Duplicate hole type ${n}`);
+    if (!n || !name(k)?.startsWith(":")) throw surfaceError("form :types keys must be keywords", k, "elaborate/form-definition");
+    if (holes.has(n)) throw surfaceError(`Duplicate hole type ${n}`, k, "elaborate/form-definition");
     const errors = retiredNumericTypeErrors(t);
-    if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:t.loc});
+    if (errors.length) throw surfaceError(errors.join("; "), t, "elaborate/form-definition");
     holes.set(n, t);
   }
   const identifiers: IdentifierSpec[] = [];
@@ -198,10 +198,10 @@ function parseUnifiedFormInner(e: SExpr, types: ReadonlyMap<string, SExpr>, help
   const variables = new Set<string>();
   let declares: string | undefined;
   const addHole = (n: string, at: SExpr, positional: boolean, many = false) => {
-    if (variables.has(n)) throw new Error(`form ${formName}: duplicate pattern variable ${n}`);
+    if (variables.has(n)) throw surfaceError(`form ${formName}: duplicate pattern variable ${n}`, at, "elaborate/form-definition");
     variables.add(n);
     const t = holes.get(n);
-    if (!t) throw Object.assign(new Error(`form ${formName}: missing type for :${n}`), {
+    if (!t) throw Object.assign(surfaceError(`form ${formName}: missing type for :${n}`, at, "elaborate/form-definition"), {
       loc: at.loc,
       help: `Add :${n} and its type to the form's :types map.`,
     });
@@ -216,25 +216,25 @@ function parseUnifiedFormInner(e: SExpr, types: ReadonlyMap<string, SExpr>, help
   for (let j = 0; j < patterns.length; j++) {
     const p = patterns[j]!;
     if (p._tag === "Map") {
-      if (p.pairs.length !== 1 || name(p.pairs[0]![0]) !== ":keys" || p.pairs[0]![1]._tag !== "Vector") throw new Error("Form options pattern must be {:keys [names ...]}");
+      if (p.pairs.length !== 1 || name(p.pairs[0]![0]) !== ":keys" || p.pairs[0]![1]._tag !== "Vector") throw surfaceError("Form options pattern must be {:keys [names ...]}", p, "elaborate/form-definition");
       for (const key of p.pairs[0]![1].items) {
-        if (!name(key)) throw new Error("Form option names must be symbols");
+        if (!name(key)) throw surfaceError("Form option names must be symbols", key, "elaborate/form-definition");
         addHole(name(key)!, key, false);
       }
     } else if (name(p) && name(p) !== "...") {
       const many = name(patterns[j + 1]) === "...";
       addHole(name(p)!, p, true, many);
       if (many) {
-        if (j !== patterns.length - 2) throw new Error("A repeated form hole must be final");
+        if (j !== patterns.length - 2) throw surfaceError("A repeated form hole must be final", p, "elaborate/form-definition");
         j++;
       }
-    } else throw new Error("Form patterns contain symbols, {:keys [...]} and a final repeated hole");
+    } else throw surfaceError("Form patterns contain symbols, {:keys [...]} and a final repeated hole", p, "elaborate/form-definition");
   }
-  for (const n of holes.keys()) if (!variables.has(n)) throw new Error(`form ${formName}: type for unknown hole ${n}`);
+  for (const n of holes.keys()) if (!variables.has(n)) throw surfaceError(`form ${formName}: type for unknown hole ${n}`, e, "elaborate/form-definition");
   const resultType = options.get(":type");
   const extensionSyntax = options.get(":extensions");
   if (extensionSyntax && extensionSyntax._tag !== "Map") {
-    throw Object.assign(new Error(`form ${formName}: :extensions expects a literal map`), { loc: extensionSyntax.loc });
+    throw surfaceError(`form ${formName}: :extensions expects a literal map`, extensionSyntax, "elaborate/form-definition");
   }
   const extensions = {
     ...typeDescriptor(irName, types.get(irName)!, types).extensions,
@@ -256,6 +256,7 @@ function parseUnifiedFormInner(e: SExpr, types: ReadonlyMap<string, SExpr>, help
 export function matchFormSyntax(spec: UnifiedForm, expr: SExpr): ReadonlyMap<string, SExpr> {
   try { return matchFormSyntaxInner(spec, expr); }
   catch (error) {
+    if (error instanceof SurfaceInputError) throw error;
     if (error instanceof Error && !("loc" in error)) Object.assign(error, {
       loc: expr.loc, details: { code: "elaborate/malformed-form" },
     });
@@ -264,7 +265,7 @@ export function matchFormSyntax(spec: UnifiedForm, expr: SExpr): ReadonlyMap<str
 }
 
 function matchFormSyntaxInner(spec: UnifiedForm, expr: SExpr): ReadonlyMap<string, SExpr> {
-  if (expr._tag !== "List") throw new Error("Expected a form application");
+  if (expr._tag !== "List") throw new SurfaceInputError("Expected a form application", "expression._tag");
   const result = new Map<string, SExpr>();
   const accepted = new Set<string>();
   for (const p of spec.pattern) if (p._tag === "Map") {
@@ -277,13 +278,13 @@ function matchFormSyntaxInner(spec: UnifiedForm, expr: SExpr): ReadonlyMap<strin
     if (p._tag === "Map") {
       while (at < expr.items.length && name(expr.items[at])?.startsWith(":")) {
         const key = fieldName(expr.items[at++]!)!;
-        if (!accepted.has(key)) throw new Error(`Unknown option :${key}`);
-        if (result.has(key)) throw new Error(`Duplicate option :${key}`);
+        if (!accepted.has(key)) throw surfaceError(`Unknown option :${key}`, expr, "elaborate/malformed-form");
+        if (result.has(key)) throw surfaceError(`Duplicate option :${key}`, expr, "elaborate/malformed-form");
         const value = expr.items[at++];
-        if (!value) throw new Error(`Option :${key} needs a value`);
+        if (!value) throw surfaceError(`Option :${key} needs a value`, expr, "elaborate/malformed-form");
         result.set(key, value);
       }
-      for (const n of accepted) if (!result.has(n) && head(spec.holes.get(n)) !== "Option") throw new Error(`Missing required option :${n}`);
+      for (const n of accepted) if (!result.has(n) && head(spec.holes.get(n)) !== "Option") throw surfaceError(`Missing required option :${n}`, expr, "elaborate/malformed-form");
     } else {
       const n = name(p)!;
       if (name(spec.pattern[i + 1]) === "...") {
@@ -296,11 +297,11 @@ function matchFormSyntaxInner(spec: UnifiedForm, expr: SExpr): ReadonlyMap<strin
         const skipsString = optional && name(arg(spec.holes.get(n)!)) === "String" && expr.items[at]?._tag !== "Str";
         const value = optional && (skipsString || accepted.has(fieldName(expr.items[at]!) ?? "")) ? undefined : expr.items[at++];
         if (value) result.set(n, value);
-        else if (head(spec.holes.get(n)) !== "Option") throw new Error(`Missing positional argument ${n}`);
+        else if (head(spec.holes.get(n)) !== "Option") throw surfaceError(`Missing positional argument ${n}`, expr, "elaborate/malformed-form");
       }
     }
   }
-  if (at < expr.items.length) throw new Error("Too many positional arguments");
+  if (at < expr.items.length) throw surfaceError("Too many positional arguments", expr, "elaborate/malformed-form");
   return result;
 }
 
@@ -340,10 +341,10 @@ export function normalizeUnifiedForm(descriptor: FormDescriptor, expr: SExpr) {
     if (descriptor.identifiers.some(i => i.name === n)) {
       const identifier = descriptor.identifiers.find(i => i.name === n)!;
       if (identifier.kind === "String") {
-        if (v._tag !== "Str") throw new Error(`${n} must be a string`);
+        if (v._tag !== "Str") throw surfaceError(`${n} must be a string`, v, "elaborate/malformed-form");
         identifiers.set(n, v.value);
       } else {
-        if (v._tag !== "Sym" || v.name.startsWith(":")) throw new Error(`${n} must be a symbol`);
+        if (v._tag !== "Sym" || v.name.startsWith(":")) throw surfaceError(`${n} must be a symbol`, v, "elaborate/malformed-form");
         identifiers.set(n, v.name);
       }
     } else slots.set(n, { kind: "expr", value: v });
@@ -537,7 +538,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         if (scopeFn && semanticEnv instanceof SimpleSemanticEnvironment) {
           const scope = yield* invoke(scopeFn);
           const scoped = semanticEnv.childScope();
-          if (!(scope instanceof Map)) throw new ElaborationError({message:":scope must return a record of bindings",hookName:descriptor.name,phase:"validate"});
+          if (!(scope instanceof Map)) return yield* Effect.fail(new ElaborationError({message:":scope must return a record of bindings",hookName:descriptor.name,phase:"validate"}));
           for (const [key,type] of scope) scoped.bind(String(mapKeyValue(key)).replace(/^:/,""),yield* resolveType(type,e,spec.types,semanticEnv));
           semanticEnv = scoped;
         }
@@ -662,32 +663,38 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         const extra = yield* invoke(check).pipe(Effect.mapError(error => new ElaborationError({
           message: `${context}: ${authorNames(error.message)}${failureLocation(error)}`, hookName: descriptor.name, phase: "validate",
         })));
-        if (!Array.isArray(extra)) throw new ElaborationError({message: ":check must return a list of diagnostics",hookName:descriptor.name,phase:"validate"});
-        for (const problem of extra) {
-          if (!(problem instanceof Map)) throw new ElaborationError({message:"Each :check diagnostic must be a record",hookName:descriptor.name,phase:"validate"});
-          const severity = String(problem.get(":severity") ?? problem.get("severity") ?? "error").replace(/^:/, "");
-          if (!["error","warning","info"].includes(severity)) throw new ElaborationError({message:"Invalid diagnostic severity",hookName:descriptor.name,phase:"validate"});
-          const slot = String(problem.get(":slot") ?? problem.get("slot") ?? "").replace(/^:/,"");
-          const code = problem.get(":code") ?? problem.get("code");
-          if (code !== undefined && typeof code !== "string") throw new ElaborationError({message:"Diagnostic code must be a string",hookName:descriptor.name,phase:"validate"});
-          // Preserve Syntax datum identity before interpreting a constructed list as a path.
-          const at = problem.get(":at") ?? problem.get("at");
-          const loc = (at === undefined ? undefined : syntaxForDatum(at)?.loc) ?? (Array.isArray(at) ? locateSyntax(values, at)?.loc : undefined) ?? values.get(slot)?.loc ?? input.loc;
-          const details = problem.get(":details") ?? problem.get("details");
-          const help = problem.get(":help") ?? problem.get("help");
-          const edits = problem.get(":fix") ?? problem.get("fix");
-          if (details !== undefined && !(details instanceof Map)) throw new ElaborationError({message:"Diagnostic details must be a record",hookName:descriptor.name,phase:"validate"});
-          if (help !== undefined && typeof help !== "string") throw new ElaborationError({message:"Diagnostic help must be a string",hookName:descriptor.name,phase:"validate"});
-          if (edits !== undefined && !Array.isArray(edits)) throw new ElaborationError({message:"Diagnostic fix must be a list of edits",hookName:descriptor.name,phase:"validate"});
-          const fix = Array.isArray(edits) ? edits.map(edit => {
-            const at = edit instanceof Map ? edit.get(":at") ?? edit.get("at") : undefined;
-            const newText = edit instanceof Map ? edit.get(":new-text") ?? edit.get("new-text") : undefined;
-            const loc = at === undefined ? undefined : syntaxForDatum(at)?.loc ?? (Array.isArray(at) ? locateSyntax(values,at)?.loc : undefined);
-            if (!loc || typeof newText !== "string") throw new ElaborationError({message:"Diagnostic edits require authored :at syntax and a :new-text string",hookName:descriptor.name,phase:"validate"});
-            return {loc,newText};
-          }) : undefined;
-          diagnostics.push({...(code !== undefined ? {code} : {}),severity:severity as Diagnostic["severity"],message:String(problem.get(":message") ?? problem.get("message") ?? "Form validation failed"),loc,...(details ? {details:toJsonValue(details) as Record<string,unknown>} : {}),...(typeof help === "string" ? {help} : {}),...(fix ? {fix} : {})});
-        }
+        // Authored hook results are contract failures, not defects in the Effect runtime.
+        yield* Effect.try({
+          try: () => {
+            if (!Array.isArray(extra)) throw new ElaborationError({message: ":check must return a list of diagnostics",hookName:descriptor.name,phase:"validate"});
+            for (const problem of extra) {
+              if (!(problem instanceof Map)) throw new ElaborationError({message:"Each :check diagnostic must be a record",hookName:descriptor.name,phase:"validate"});
+              const severity = String(problem.get(":severity") ?? problem.get("severity") ?? "error").replace(/^:/, "");
+              if (!["error","warning","info"].includes(severity)) throw new ElaborationError({message:"Invalid diagnostic severity",hookName:descriptor.name,phase:"validate"});
+              const slot = String(problem.get(":slot") ?? problem.get("slot") ?? "").replace(/^:/,"");
+              const code = problem.get(":code") ?? problem.get("code");
+              if (code !== undefined && typeof code !== "string") throw new ElaborationError({message:"Diagnostic code must be a string",hookName:descriptor.name,phase:"validate"});
+              // Preserve Syntax datum identity before interpreting a constructed list as a path.
+              const at = problem.get(":at") ?? problem.get("at");
+              const loc = (at === undefined ? undefined : syntaxForDatum(at)?.loc) ?? (Array.isArray(at) ? locateSyntax(values, at)?.loc : undefined) ?? values.get(slot)?.loc ?? input.loc;
+              const details = problem.get(":details") ?? problem.get("details");
+              const help = problem.get(":help") ?? problem.get("help");
+              const edits = problem.get(":fix") ?? problem.get("fix");
+              if (details !== undefined && !(details instanceof Map)) throw new ElaborationError({message:"Diagnostic details must be a record",hookName:descriptor.name,phase:"validate"});
+              if (help !== undefined && typeof help !== "string") throw new ElaborationError({message:"Diagnostic help must be a string",hookName:descriptor.name,phase:"validate"});
+              if (edits !== undefined && !Array.isArray(edits)) throw new ElaborationError({message:"Diagnostic fix must be a list of edits",hookName:descriptor.name,phase:"validate"});
+              const fix = Array.isArray(edits) ? edits.map(edit => {
+                const at = edit instanceof Map ? edit.get(":at") ?? edit.get("at") : undefined;
+                const newText = edit instanceof Map ? edit.get(":new-text") ?? edit.get("new-text") : undefined;
+                const loc = at === undefined ? undefined : syntaxForDatum(at)?.loc ?? (Array.isArray(at) ? locateSyntax(values,at)?.loc : undefined);
+                if (!loc || typeof newText !== "string") throw new ElaborationError({message:"Diagnostic edits require authored :at syntax and a :new-text string",hookName:descriptor.name,phase:"validate"});
+                return {loc,newText};
+              }) : undefined;
+              diagnostics.push({...(code !== undefined ? {code} : {}),severity:severity as Diagnostic["severity"],message:String(problem.get(":message") ?? problem.get("message") ?? "Form validation failed"),loc,...(details ? {details:toJsonValue(details) as Record<string,unknown>} : {}),...(typeof help === "string" ? {help} : {}),...(fix ? {fix} : {})});
+            }
+          },
+          catch: error => new ElaborationError({message:error instanceof Error ? error.message : String(error),hookName:descriptor.name,phase:"validate"}),
+        });
       }
       return { kind: "validate" as const, diagnostics };
     }
@@ -695,7 +702,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
     const ir = result.value;
     if (spec.ir) {
       const errors = contractErrors(ir,spec.ir,spec.types);
-      if (errors.length) throw new ElaborationError({message:errors.join("; "),hookName:descriptor.name,phase:"construct"});
+      if (errors.length) return yield* Effect.fail(new ElaborationError({message:errors.join("; "),hookName:descriptor.name,phase:"construct"}));
     }
     return { kind: "construct" as const, ir: spec.ir ? normalizeContractValue(ir,spec.ir,spec.types) : ir };
   }).pipe(Effect.mapError(error => new ElaborationError({ message: String(error.message), hookName: `form/${descriptor.name}/${kind}`, phase: kind })));
