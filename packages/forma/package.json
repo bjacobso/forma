@@ -1,6 +1,6 @@
 {
   "name": "@forma-language/forma",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Forma: a pre-alpha typed Lisp, language host, editor adapters and language server.",
   "type": "module",
   "license": "MIT",
@@ -23,65 +23,25 @@
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs"
     },
-    "./analysis": {
-      "types": "./dist/analysis.d.mts",
-      "import": "./dist/analysis.mjs"
-    },
     "./reader": {
       "types": "./dist/reader.d.mts",
       "import": "./dist/reader.mjs"
-    },
-    "./source": {
-      "types": "./dist/source.d.mts",
-      "import": "./dist/source.mjs"
-    },
-    "./session": {
-      "types": "./dist/session.d.mts",
-      "import": "./dist/session.mjs"
     },
     "./engine": {
       "types": "./dist/engine.d.mts",
       "import": "./dist/engine.mjs"
     },
-    "./artifact": {
-      "types": "./dist/artifact.d.mts",
-      "import": "./dist/artifact.mjs"
-    },
     "./mechanics": {
       "types": "./dist/mechanics.d.mts",
       "import": "./dist/mechanics.mjs"
-    },
-    "./sexpr": {
-      "types": "./dist/sexpr.d.mts",
-      "import": "./dist/sexpr.mjs"
     },
     "./expander": {
       "types": "./dist/expander.d.mts",
       "import": "./dist/expander.mjs"
     },
-    "./evaluator": {
-      "types": "./dist/evaluator.d.mts",
-      "import": "./dist/evaluator.mjs"
-    },
-    "./vm": {
-      "types": "./dist/vm.d.mts",
-      "import": "./dist/vm.mjs"
-    },
-    "./builtins": {
-      "types": "./dist/builtins.d.mts",
-      "import": "./dist/builtins.mjs"
-    },
     "./type": {
       "types": "./dist/type.d.mts",
       "import": "./dist/type.mjs"
-    },
-    "./core-expr": {
-      "types": "./dist/core-expr.d.mts",
-      "import": "./dist/core-expr.mjs"
-    },
-    "./env": {
-      "types": "./dist/env.d.mts",
-      "import": "./dist/env.mjs"
     },
     "./diagnostic": {
       "types": "./dist/diagnostic.d.mts",
@@ -94,22 +54,6 @@
     "./editor-services": {
       "types": "./dist/editor-services.d.mts",
       "import": "./dist/editor-services.mjs"
-    },
-    "./syntax": {
-      "types": "./dist/syntax.d.mts",
-      "import": "./dist/syntax.mjs"
-    },
-    "./lsp": {
-      "types": "./dist/lsp.d.mts",
-      "import": "./dist/lsp.mjs"
-    },
-    "./codegen": {
-      "types": "./dist/codegen.d.mts",
-      "import": "./dist/codegen.mjs"
-    },
-    "./descriptor-codegen": {
-      "types": "./dist/descriptor-codegen.d.mts",
-      "import": "./dist/descriptor-codegen.mjs"
     },
     "./http-api": {
       "types": "./dist/http-api.d.mts",
@@ -126,10 +70,6 @@
     "./preludes": {
       "types": "./dist/preludes.d.mts",
       "import": "./dist/preludes.mjs"
-    },
-    "./ontology": {
-      "types": "./dist/ontology.d.mts",
-      "import": "./dist/ontology.mjs"
     },
     "./modules": {
       "types": "./dist/modules.d.mts",
@@ -149,33 +89,13 @@
       "types": "./dist/email.d.mts",
       "import": "./dist/email.mjs"
     },
-    "./authoring": {
-      "types": "./dist/authoring.d.mts",
-      "import": "./dist/authoring.mjs"
-    },
     "./host": {
       "types": "./dist/host.d.mts",
       "import": "./dist/host.mjs"
     },
-    "./host/default-host": {
-      "types": "./dist/host/default-host.d.mts",
-      "import": "./dist/host/default-host.mjs"
-    },
-    "./host/editor": {
-      "types": "./dist/host/editor.d.mts",
-      "import": "./dist/host/editor.mjs"
-    },
-    "./host/ts-host": {
-      "types": "./dist/host/ts-host.d.mts",
-      "import": "./dist/host/ts-host.mjs"
-    },
     "./host/types": {
       "types": "./dist/host/types.d.mts",
       "import": "./dist/host/types.mjs"
-    },
-    "./host/json-abi": {
-      "types": "./dist/host/json-abi.d.mts",
-      "import": "./dist/host/json-abi.mjs"
     },
     "./editor": {
       "types": "./dist/editor.d.mts",
