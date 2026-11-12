@@ -164,7 +164,7 @@ pageClass: forma-index forma-elm
 <article><h3>Schema-backed data</h3><p>Model and Msg become Effect schemas and TypeScript types. Message tags and payload fields survive generation.</p></article>
 <article><h3>Named commands</h3><p>Prelude emit hooks produce <code>Command.define</code>. An adapter turns checked command keywords into deferred Foldkit commands.</p></article>
 <article><h3>A mountable app</h3><p>The exported Counter configuration has Model, init, update, and view. Host code passes it, a container, and service layers to <code>Runtime.makeElement</code>.</p></article>
-<article><h3>An isolated generator</h3><p>Call <code>generateElmProgram</code> from <code>@formalang/ts/elm</code>. Prelude descriptors define the domain IR; existing mechanics checks the lowered expressions.</p></article>
+<article><h3>An isolated generator</h3><p>Call <code>generateElmProgram</code> from <code>@forma-language/forma/elm</code>. Prelude descriptors define the domain IR; existing mechanics checks the lowered expressions.</p></article>
 </div>
 <div class="fh-window"><div class="fh-window__bar"><span>counter.ts</span><span>actual generator output</span></div>
 

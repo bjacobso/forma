@@ -1,0 +1,23 @@
+/* Shared by the docs and playground; inherit each shell's paper and ink. */
+.family-strip, .shared-footer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  border-top: 1px solid;
+  border-color: var(--vp-c-divider, var(--forma-line));
+  font-size: 14px;
+}
+.family-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+.family-strip a { display: flex; flex-direction: column; gap: 6px; text-decoration: none; }
+.family-strip strong { color: var(--vp-c-text-1, var(--forma-ink)); }
+.family-strip span, .shared-footer { color: var(--vp-c-text-2, var(--forma-muted)); }
+.family-strip a[data-tier="family"] { font-size: 13px; }
+.shared-footer { text-align: center; }
+.shared-footer nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px 20px; }
+.shared-footer p { margin: 16px 0 0; }
+.shared-footer a:hover, .family-strip a:hover strong { text-decoration: underline; }
+@media (max-width: 640px) { .family-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

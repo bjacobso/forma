@@ -341,7 +341,7 @@ class Generator {
     const signature = this.info.functions.get(name);
     this.typeVariables = new Map();
     const variables=(type:MType):void=>{
-      if (type.kind === "var" && !this.typeVariables.has(type.id)) this.typeVariables.set(type.id,`A${this.typeVariables.size}`);
+      if (type.kind === "var" && !type.numeric && !this.typeVariables.has(type.id)) this.typeVariables.set(type.id,`A${this.typeVariables.size}`);
       for (const value of Object.values(type)) {
         if (Array.isArray(value)) value.forEach(v=>{if (v && typeof v === "object") {if ("kind" in v) variables(v as MType);else if ("type" in v) variables(v.type as MType);}});
         else if (value && typeof value === "object" && "kind" in value) variables(value as MType);
@@ -1051,6 +1051,10 @@ class Generator {
         const call = this.info.calls.get(node);
         if (call?.kind === "tagged-constructor") return atom(`${propertyAccess(`${typeName(call.owner)}Constructors`,call.name)}${call.nullary ? "()" : ""}`);
         if (call?.kind === "builtin") return this.builtinFunction(call.name, call.overload, names, contextual);
+        if (call?.kind === "arithmetic") {
+          const code = ["min", "max"].includes(call.operator) ? `Math.${call.operator}(left, right)` : `left ${call.operator} right`;
+          return atom(`(left: number, right: number) => ${code}`);
+        }
         return atom(this.variable(String(node["name"]), names));
       }
       case "Expr": {
@@ -1589,7 +1593,7 @@ class Generator {
       case "layer":
         return this.layerTypeTs({ type: type.layer, contextServices: [] });
       case "var":
-        return this.typeVariables.get(type.id) ?? "never";
+        return type.numeric ? "number" : this.typeVariables.get(type.id) ?? "never";
     }
   }
 }

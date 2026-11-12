@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest";
 import fc from "fast-check";
 import { AnalysisWorkspace } from "../src/analysis/workspace.js";
 import { identifySyntax } from "../src/syntax/identity.js";
-import { showScheme } from "../src/type/types.js";
 
 const sourceId = "document.lisp";
 const prelude = `(define base 10)
@@ -70,16 +69,18 @@ function workspace(): AnalysisWorkspace {
   return result;
 }
 
-function observable(workspace: AnalysisWorkspace, source: string) {
+function observable(workspace: AnalysisWorkspace, source: string, bindingNames: Set<string>) {
   const analysis = workspace.analysis(sourceId);
   const symbols = workspace.symbols();
+  // Retain probes after names disappear, so stale bindings remain observable.
+  for (const item of [...symbols.definitions, ...symbols.references]) bindingNames.add(item.name);
   // Stable syntax ids intentionally differ after insert/delete. Compare their
   // author-visible meaning, including where each reference resolves, instead.
   return {
     resultType: analysis.resultType,
     diagnostics: analysis.diagnostics,
     typedSpans: analysis.typedSpans,
-    typeEnv: [...analysis.typeEnv].map(([name, scheme]) => [name, showScheme(scheme)]),
+    bindings: [...bindingNames].sort().map(name => [name, analysis.hasBinding(name), analysis.bindingDisplay(name)]),
     documentSymbols: workspace.documentSymbols(sourceId),
     definitions: symbols.definitions.map(({ key: _key, nodeId: _nodeId,
       formNodeId: _formNodeId, scopeNodeId: _scopeNodeId, ...definition }) => definition),
@@ -101,12 +102,13 @@ describe("analysis cold/warm equivalence", () => {
       fc.assert(fc.property(fc.array(edit, { minLength: 5, maxLength: 15 }), operations => {
         const warm = workspace();
         const forms = [...initial];
+        const bindingNames = new Set<string>();
         const compare = () => {
           const source = forms.join("\n");
           warm.setDocument(sourceId, source);
           const cold = workspace();
           cold.setDocument(sourceId, source);
-          expect(observable(warm, source)).toEqual(observable(cold, source));
+          expect(observable(warm, source, bindingNames)).toEqual(observable(cold, source, bindingNames));
         };
         compare();
         for (const operation of operations) {

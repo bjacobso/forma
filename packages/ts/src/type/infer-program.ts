@@ -16,6 +16,7 @@ import type { SExpr } from "../reader/index.js";
 import { resolveConstraints } from "./typeclass.js";
 import { inferExpr, typeExprToType } from "./infer-core.js";
 import { generalizeBinding } from "./scheme-ops.js";
+import { solveNumeric } from "./numeric.js";
 import { withAmbientEffectScope } from "./effect-helpers.js";
 import { findRawExprForDSLForm } from "./infer-dsl.js";
 import {
@@ -322,6 +323,7 @@ export const inferProgram = (
         rawExprIndex++;
       }
 
+      yield* solveNumeric(true);
       // Discharge pending type class constraints
       const pending = yield* Ref.get(ctx.pendingConstraints);
       if (pending.length > 0) {
@@ -484,8 +486,10 @@ export const inferProgramAll = (
         rawExprIndex++;
       }
 
+      yield* solveNumeric(true);
       yield* reportHoles;
-      return types;
+      const finalSubst = yield* Ref.get(ctx.subst);
+      return types.map(type => applyType(finalSubst, type));
     } finally {
       setInferDslProvider(prevProvider);
       setInferRawExprs(prevRawExprs);

@@ -109,8 +109,10 @@ export function descriptorApplication(
           yield* ctx.addDiagnostic({code:diagnostic.code ?? (field ? "elaborate/form-check" : "typecheck/type-mismatch"),source:"typecheck",severity:diagnostic.severity === "warning" ? "warning" : "error",message:diagnostic.message,span:{start:loc.start,end:loc.end},...(diagnostic.details ? {details:diagnostic.details} : {}),...(diagnostic.help ? {help:diagnostic.help} : {}),...(diagnostic.fix ? {fix:diagnostic.fix.map(edit=>({newText:edit.newText,span:{sourceId:edit.loc.sourceId ?? raw.loc.sourceId ?? "source",startOffset:edit.loc.start,endOffset:edit.loc.end}}))} : {})});
         }
       }
-      if (descriptor.resultType.kind === "hook") return yield* prelude.elaboration.computeResultType(descriptor.resultType.fn,hookInput).pipe(Effect.mapError(e=>new InferenceError({origin:originOf(expr,"descriptor"),message:e.message,details:{code:"typecheck/descriptor-result-type"}})));
-      return descriptor.resultType.kind === "constant" && descriptor.resultType.type !== "Unit" ? metaType(descriptor.resultType.type) : TCon("Declaration");
+      if (!descriptor.inferHook) {
+        if (descriptor.resultType.kind === "hook") return yield* prelude.elaboration.computeResultType(descriptor.resultType.fn,hookInput).pipe(Effect.mapError(e=>new InferenceError({origin:originOf(expr,"descriptor"),message:e.message,details:{code:"typecheck/descriptor-result-type"}})));
+        return descriptor.resultType.kind === "constant" && descriptor.resultType.type !== "Unit" ? metaType(descriptor.resultType.type) : TCon("Declaration");
+      }
     }
     const input = hookInputToKValue(hookInput) as Map<string,KValue>;
     input.set("kind", "descriptor-hook");

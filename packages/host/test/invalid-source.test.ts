@@ -4,11 +4,52 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { expect, test } from "vitest";
 import { diagnosticCatalog } from "@formalang/ts/diagnostic";
+import { bootstrapFromSources, elaborateProgram } from "@formalang/ts/descriptor";
+import { TsLanguageHost } from "../src/ts-host.js";
 
 const cli = resolve(import.meta.dirname, "../dist/cli.mjs");
 const fixtures = resolve(import.meta.dirname, "../../../conformance/invalid-source");
 const cases = Object.fromEntries(readdirSync(fixtures).filter(name => name.endsWith(".lisp"))
   .map(name => [name, readFileSync(join(fixtures, name), "utf8")]));
+
+// These programs exercise standalone elaboration against an already loaded
+// source prelude, a separate entry point from module check/run.
+for (const name of readdirSync(join(fixtures, "elaboration")).filter(name => name.endsWith(".lisp"))) {
+  test(`author mistakes are located during standalone elaboration: ${name}`, () => {
+    const source = readFileSync(join(fixtures, "elaboration", name), "utf8");
+    const result = elaborateProgram(source, { prelude: bootstrapFromSources("", source), sourceId: name });
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics.length).toBeGreaterThan(0);
+    for (const diagnostic of result.diagnostics) {
+      expect(diagnostic.code).not.toBe("internal/error");
+      expect(diagnosticCatalog.get(diagnostic.code)).toBeDefined();
+      expect(diagnostic.span).toMatchObject({ sourceId: name, startLine: expect.any(Number), startColumn: expect.any(Number) });
+      expect(diagnostic.message).not.toMatch(/__forma_|\bt\d+\b/);
+    }
+  });
+}
+
+// Prelude syntax is validated during load, before check/run/declarations can
+// execute. Ordinary module bindings named `protocol` are not manifests.
+for (const name of readdirSync(join(fixtures, "prelude")).filter(name => name.endsWith(".lisp"))) {
+  test(`author mistakes in preludes are located during load: ${name}`, async () => {
+    const host = new TsLanguageHost();
+    const { sessionId } = await host.openSession();
+    try {
+      const source = readFileSync(join(fixtures, "prelude", name), "utf8");
+      const result = await host.loadSource({ sessionId, sourceId: name, source, kind: "prelude" });
+      expect(result.diagnostics.length).toBeGreaterThan(0);
+      for (const diagnostic of result.diagnostics) {
+        expect(diagnostic.code).not.toBe("internal/error");
+        expect(diagnosticCatalog.get(diagnostic.code)).toBeDefined();
+        expect(diagnostic.span).toMatchObject({ sourceId: name, startLine: expect.any(Number), startColumn: expect.any(Number) });
+        expect(diagnostic.message).not.toMatch(/__forma_|\bt\d+\b/);
+      }
+    } finally {
+      await host.closeSession({ sessionId });
+    }
+  });
+}
 
 for (const [name, source] of Object.entries(cases)) {
   test(`author mistakes are located across CLI operations: ${name}`, () => {
@@ -38,7 +79,7 @@ for (const [name, source] of Object.entries(cases)) {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
-  });
+  }, 60_000); // spawns the CLI three times per program; slow under parallel load
 }
 
 test("malformed imported functions retain the dependency's location", () => {
@@ -55,4 +96,23 @@ test("malformed imported functions retain the dependency's location", () => {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
-});
+}, 30_000);
+
+for (const name of ["action-match.lisp", "core-type-body.lisp", "ontology-collision.lisp"]) {
+  test(`early-layer diagnostics retain the imported author's location: ${name}`, () => {
+    const dir = mkdtempSync(join(tmpdir(), "forma-invalid-early-import-"));
+    try {
+      writeFileSync(join(dir, "main.lisp"), `(import "./${name}" [])`);
+      const source = cases[name]!;
+      writeFileSync(join(dir, name), source);
+      const result = spawnSync(process.execPath, [cli, "check", "--json", join(dir, "main.lisp")], { encoding: "utf8", timeout: 10_000 });
+      expect(result.status).toBe(1);
+      const diagnostic = JSON.parse(result.stdout).diagnostics[0];
+      expect(diagnostic.code).not.toBe("internal/error");
+      expect(diagnostic.span).toMatchObject({ sourceId: expect.stringContaining(name), startLine: expect.any(Number), startColumn: expect.any(Number) });
+      expect(diagnostic.message).not.toMatch(/__forma_|\bt\d+\b/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 30_000);
+}

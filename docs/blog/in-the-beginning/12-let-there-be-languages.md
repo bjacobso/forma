@@ -1,11 +1,12 @@
 ---
+date: 2026-11-07
 title: A Language for Building Languages
 description: Part 12 of From Lists to Languages. Declare forms in the language itself, build a vendor-review policy language from them, run it with Effect services a host provides, and see how the pieces add up to a language-building platform.
 ---
 
 # A Language for Building Languages
 
-<p class="blog-meta">Part 12 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act III, Effects in Practice · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 12 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act III, Effects in Practice · <time datetime="2026-11-07">November 7, 2026</time></p>
 
 > The final product isn't a Lisp. It's a language-building platform.
 

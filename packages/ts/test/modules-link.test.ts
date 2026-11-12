@@ -30,6 +30,45 @@ const files = [
       '(import "./identity.lisp" [identity]) (import "./ids.lisp" :as ids) (import "./log.lisp" [log]) (export main) (: main (Effect String [] [Console.print])) (define main (log (ids/make-customer (ids/CustomerId (identity "1")) (identity "Ada"))))',
   },
 ];
+test("numeric schemes link reusable square and total helpers", () => {
+  const library = {id:"numeric.lisp", source:"(export square total add-total plus absolute) (define square [x] (* x x)) (define total [xs] (reduce + 0 xs)) (define add-total [xs x] (+ (reduce + 0 xs) x)) (define plus +) (define absolute abs)"};
+  const entry = {id:"main.lisp", source:'(import "./numeric.lisp" [square total add-total plus absolute]) (export answer) (define answer [(total (map square [1 2 3])) (total (map square [1.5 2.0])) (add-total [1] 2.5) (plus 1 2.5) (total (map absolute [-1.5 2.0]))])'};
+  const graph = resolveModuleGraph(entry, sourceModuleResolver([library]));
+  const linked = linkEffectModules(graph);
+  expect(linked.diagnostics).toEqual([]);
+  expect(linked.modules).toHaveLength(2);
+  const root = resolve(import.meta.dirname, "../../..");
+  const context = resolve(root, ".context");
+  mkdirSync(context, {recursive:true});
+  const dir = mkdtempSync(resolve(context, "numeric-link-test-"));
+  try {
+    writeFileSync(resolve(dir, "package.json"), '{"type":"module"}');
+    for (const module of linked.modules) writeFileSync(resolve(dir, module.fileName), module.code);
+    const answer = generatedBindingName(graph.modules.at(-1)!.interface.exports.find(binding => binding.name === "answer")!);
+    writeFileSync(resolve(dir, "run.ts"), `import { ${answer} as answer } from "./${linked.entry.replace(/\.ts$/, ".js")}"; console.log(JSON.stringify(answer));`);
+    writeFileSync(resolve(dir, "tsconfig.json"), JSON.stringify({compilerOptions:{target:"ES2022", module:"NodeNext", moduleResolution:"NodeNext", strict:true, skipLibCheck:true, outDir:"out"}, include:["*.ts"]}));
+    try {
+      execFileSync(process.execPath, [resolve(root, "node_modules/typescript/bin/tsc"), "-p", resolve(dir, "tsconfig.json")], {encoding:"utf8"});
+    } catch (error) {
+      throw new Error(String((error as {stdout:unknown}).stdout));
+    }
+    expect(JSON.parse(execFileSync(process.execPath, [resolve(dir, "out/run.js")], {encoding:"utf8"}))).toEqual([14, 6.25, 3.5, 3.5, 3.5]);
+  } finally {
+    rmSync(dir, {recursive:true, force:true});
+  }
+}, 20000);
+test("numeric constraints reject nonnumeric imports and unconstrained generic bodies", () => {
+  const library = {id:"numeric.lisp", source:"(export square) (define square [x] (* x x))"};
+  for (const source of [
+    '(import "./numeric.lisp" [square]) (define answer (square "bad"))',
+    '(: bad (-> a a)) (define bad [x] (+ x 1))',
+    '(define answer (map (fn [x] (+ x 1)) ["bad"]))',
+  ]) {
+    const linked = linkEffectModules(resolveModuleGraph({id:"main.lisp", source}, sourceModuleResolver([library])));
+    expect(linked.diagnostics.some(diagnostic => diagnostic.severity === "error"), source).toBe(true);
+    expect(linked.diagnostics.every(diagnostic => !/__forma_|\?-?\d+|\bt\d+\b/.test(diagnostic.message))).toBe(true);
+  }
+});
 test("linked Effect modules compile and execute; importing prepares effects without running them", () => {
   // Requirement members must themselves be imported explicitly.
   const main = {

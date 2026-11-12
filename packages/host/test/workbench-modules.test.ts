@@ -23,7 +23,7 @@ test("editor types imports and retains caller spans and types around a failing f
     const calls = result.typedSpans.filter((typed) =>
       /^\(double \d+\)$/.test(source.slice(typed.span.startOffset, typed.span.endOffset)),
     );
-    expect(calls.map((call) => call.display)).toEqual(["Float", "Float"]);
+    expect(calls.map((call) => call.display)).toEqual(["Int", "Int"]);
     expect(calls.every((call) => call.span.sourceId === "main.lisp")).toBe(true);
   } finally {
     await host.closeSession({ sessionId });

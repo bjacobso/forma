@@ -12,7 +12,7 @@ import { KKeyword, mapKey, quotedDatum } from "../evaluator/types.js";
  */
 
 import type { KernelObserver } from "../evaluator/observation.js";
-import { Effect, Ref } from "effect";
+import { Effect } from "effect";
 import type { KValue, KFn, BuiltinFn } from "../evaluator/types.js";
 import {
   asNumber,
@@ -21,6 +21,7 @@ import {
   isKBuiltin,
   isKFn,
   TypeCheckError,
+  describeType,
 } from "../evaluator/types.js";
 import { Env } from "../Env.js";
 import type { KernelError, KernelStackFrame } from "../diagnostic/errors.js";
@@ -31,6 +32,10 @@ import type { SExpr } from "../reader/index.js";
 import { evalQuasiquoteTemplate } from "../evaluator/quasiquote.js";
 import type { Chunk } from "./opcodes.js";
 import { Op } from "./opcodes.js";
+
+// A reusable scheduler checkpoint. Effect.void is an Exit and is inlined by
+// Effect.gen, so it cannot give the scheduler an opportunity to interrupt.
+const VM_CHECKPOINT = Effect.sync(() => {});
 
 // ---------------------------------------------------------------------------
 // VM Closure — stored internally on a KFn via __vmClosure property
@@ -54,7 +59,8 @@ interface VMRuntime {
   readonly stepLimit: number;
   readonly globalNames?: readonly (string | undefined)[];
   readonly strictGlobals?: boolean;
-  readonly stepCounter: Ref.Ref<number>;
+  /** Owned by one run; shared by reentrant builtin callbacks and closures. */
+  readonly stepCounter: { value: number };
   readonly observer?: KernelObserver;
 }
 
@@ -154,7 +160,7 @@ function applyCallableValue(
   if (isKBuiltin(fn)) {
     const builtin = runtime.builtinLookup.get(fn.name);
     if (builtin) {
-      return builtin(args, (innerFn, innerArgs) => applyCallableValue(innerFn, innerArgs, runtime));
+      return invokeBuiltin(builtin, args, runtime);
     }
   }
   if (isKFn(fn)) {
@@ -162,11 +168,21 @@ function applyCallableValue(
   }
   return Effect.fail(
     new KernelTypeError({
-      message: `Cannot call ${typeof fn} as function`,
+      message: `Cannot call ${describeType(fn)} as function`,
       expected: "function",
-      got: typeof fn,
+      got: describeType(fn),
     }),
   );
+}
+
+/** Convert the shared builtins' synchronous type checks into located failures. */
+function invokeBuiltin(builtin: BuiltinFn, args: readonly KValue[], runtime: VMRuntime): Effect.Effect<KValue, KernelError> {
+  try {
+    return builtin(args, (fn, fnArgs) => applyCallableValue(fn, fnArgs, runtime));
+  } catch (error) {
+    if (!(error instanceof TypeCheckError)) throw error;
+    return Effect.fail(new KernelTypeError({ message: error.message, expected: error.expected, got: error.got }));
+  }
 }
 
 function makeDispatchWrapper(
@@ -329,7 +345,7 @@ export function runChunkWithStats(
       ...(options.globalNames ? { globalNames: options.globalNames } : {}),
       ...(options.strictGlobals !== undefined ? { strictGlobals: options.strictGlobals } : {}),
       ...(options.observer ? { observer: options.observer } : {}),
-      stepCounter: yield* Ref.make(0),
+      stepCounter: { value: 0 },
     };
     return yield* executeVM(topChunk, [], runtime);
   });
@@ -477,6 +493,7 @@ function executeVM(
             expected: error.expected,
             got: error.got,
             ...(error.details ? { details: error.details } : {}),
+            ...errorContext(),
             ...(error.loc ? { loc: error.loc } : {}),
             ...(error.macroOrigins ? { macroOrigins: error.macroOrigins } : {}),
             stackTrace: mergedStackTrace,
@@ -535,7 +552,10 @@ function executeVM(
     }
 
     while (true) {
-      const totalSteps = yield* Ref.updateAndGet(stepCounter, (count) => count + 1);
+      const totalSteps = ++stepCounter.value;
+      // Keep pure bytecode interruptible through Effect's cooperative scheduler
+      // without allocating a counter operation for every instruction.
+      if ((totalSteps & 63) === 0) yield* VM_CHECKPOINT;
       if (stepLimit > 0 && totalSteps > stepLimit) {
         return yield* withStackTrace(
           new StepLimitExceeded({ limit: stepLimit, ...errorContext() }),
@@ -636,11 +656,20 @@ function executeVM(
         }
 
         // ── Function calls ─────────────────────────────────
+        case Op.CALL_NULLARY:
         case Op.CALL: {
           const argc = readU8();
           const calleePos = stack.length - 1 - argc;
           const callee = stack[calleePos]!;
           const vmData = getVMClosure(callee);
+
+          if (op === Op.CALL_NULLARY && !isKFn(callee) && !isKBuiltin(callee)) {
+            // The tree evaluator treats an uppercase non-callable value in
+            // nullary constructor syntax as that value, rather than applying it.
+            stack.length = calleePos;
+            stack.push(callee);
+            break;
+          }
 
           if (vmData && (!vmData.scope || vmData.scope.globals === runtime.globals)) {
             if (!hasValidArity(vmData.chunk, argc)) {
@@ -680,9 +709,9 @@ function executeVM(
           } else {
             return yield* withStackTrace(
               new KernelTypeError({
-                message: `Cannot call ${typeof callee} as function`,
+                message: `Cannot call ${describeType(callee)} as function`,
                 expected: "function",
-                got: typeof callee,
+                got: describeType(callee),
                 ...errorContext(),
               }),
             );
@@ -742,9 +771,9 @@ function executeVM(
           } else {
             return yield* withStackTrace(
               new KernelTypeError({
-                message: `Cannot tail-call ${typeof callee} as function`,
+                message: `Cannot call ${describeType(callee)} as function`,
                 expected: "function",
-                got: typeof callee,
+                got: describeType(callee),
                 ...errorContext(),
               }),
             );
@@ -995,12 +1024,7 @@ function executeVM(
               }),
             );
           }
-          // applyFn for higher-order builtins (map, filter, reduce)
-          const applyFn = (
-            fn: KValue,
-            fnArgs: readonly KValue[],
-          ): Effect.Effect<KValue, KernelError> => applyCallableValue(fn, fnArgs, runtime);
-          const result = yield* builtin(args, applyFn).pipe(Effect.mapError(withStackTrace));
+          const result = yield* invokeBuiltin(builtin, args, runtime).pipe(Effect.mapError(withStackTrace));
           stack.push(result);
           break;
         }
@@ -1023,7 +1047,7 @@ function executeVM(
             if (!isKFn(methodValue)) {
               return yield* withStackTrace(
                 new KernelTypeError({
-                  message: `Instance method '${methods[i]!.name}' must evaluate to a function`,
+                  message: `instance method '${methods[i]!.name}' must evaluate to a function`,
                   expected: "function",
                   got: typeof methodValue,
                   ...errorContext(),
@@ -1070,7 +1094,7 @@ function executeVM(
         case Op.OBSERVE: {
           const target = readU16();
           runtime.observer?.observe(target, stack[stack.length - 1] ?? null);
-          yield* Ref.update(stepCounter, (count) => count - 1);
+          stepCounter.value--;
           break;
         }
 

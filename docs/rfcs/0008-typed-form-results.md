@@ -226,3 +226,23 @@ No arbitrary dependent types, runtime schema introspection in signatures,
 unchecked meta-hook promotion, or removal of legacy hooks is included. Public
 reflection/template contracts and changed engine behavior need changesets and
 documentation that records implemented support separately from remaining stages.
+
+## Implemented compatibility hook
+
+Consumer forms can now spell `:infer-fn function-name` on an ordinary `form`.
+This connects the existing descriptor infer-hook protocol to unified syntax;
+it does not implement the checked templates or reflection proposed above.
+The named one-argument function uses `meta/positional-arg` and
+`meta/infer-expr-type` to infer authored arguments in the active HM context.
+Returning the resulting metadata preserves nominal identity and inference
+variables. A table-like regression forwards a polymorphic record argument,
+looks up its field, and retains `Brand<Status, Keyword>`; an unbranded keyword
+still fails a `Status` parameter check.
+
+`:infer-fn` and `:type` are mutually exclusive. Existing syntax-driven `:type`
+hooks and legacy descriptors are unchanged. The hook must visit the expression
+holes whose typing it owns; this does not automatically check all opaque Syntax
+holes. Consumers can remove checker monkey-patches without adopting a second
+type-meta vocabulary or waiting for result templates. Runtime form lowering is
+still separate from typing. See the executable example in
+[language services](../language-services.md#argument-dependent-form-typing).

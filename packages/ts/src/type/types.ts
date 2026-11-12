@@ -425,7 +425,7 @@ export function showERow(e: ERow): string {
 }
 
 export function showConstraint(c: Constraint): string {
-  return `${c.className} ${c.args.map(showType).join(" ")}`;
+  return `${c.className === "$Numeric" ? "Numeric" : c.className} ${c.args.map(showType).join(" ")}`;
 }
 
 export function showScheme(s: Scheme): string {

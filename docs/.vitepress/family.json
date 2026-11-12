@@ -1,0 +1,8 @@
+[
+  { "name": "WorldVM", "site": "https://worldvm.com", "pitch": "A runtime for requirements and the facts that satisfy them.", "tier": "core" },
+  { "name": "Forma", "site": "https://forma-lang.com", "pitch": "Define your domain. Check its programs.", "tier": "core" },
+  { "name": "Triplex", "site": "https://triplex.build", "pitch": "The database that remembers why.", "tier": "core" },
+  { "name": "Foldworks", "site": "https://foldworks.dev", "pitch": "Components and application primitives for Foldkit.", "tier": "family" },
+  { "name": "Open Ontology", "site": "https://open-ontology.com", "pitch": "Tools for describing domains as data.", "tier": "family" },
+  { "name": "Schematics", "site": "https://schematics.run", "pitch": "Effect libraries that turn application structure into data.", "tier": "family" }
+]

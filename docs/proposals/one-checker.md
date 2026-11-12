@@ -1,6 +1,6 @@
 # T5: converge checker boundaries before replacing rules
 
-Status: proposal under RFC 0004; no checker changes implemented.
+Status: stage 1 boundary implemented under RFC 0004; checker rules remain unchanged.
 
 ## Evidence and reproduction
 
@@ -130,3 +130,24 @@ may affect internal consumers and requires a compile-time migration. Shared
 syntax does not imply shared assignability. Baseline standalone prelude checks
 have six context-dependent errors across 19 files; use normal prelude loading
 as the migration gate, not that standalone count.
+
+## Implementation status
+
+Stage 1 (Boundary PR) is implemented. `DocumentAnalysis` exposes
+`bindingDisplay(name, offset?)` and `hasBinding(name)` instead of `typeEnv` and
+`mechanicsBindingTypes`. The analysis binding adapter captures the HM environment
+and formats schemes privately. Mechanics binding displays take precedence over
+HM bindings, followed by builtins. Offset queries use only expression spans owned
+by the analyzed source; inherited prelude binding names remain visible, and an
+unknown name inside a mechanics expression cannot borrow an HM display.
+
+Hover, completion and search consume those queries. The cold/warm equivalence
+harness compares binding membership and displays through the same public
+boundary. Downstream LSP, language-server, editor, host and website consumers
+were audited; none read the removed document fields. Host and prelude scope
+environments remain available for inference and module schemes.
+
+This changes the exported analysis API (minor changeset), without changing
+checker rules, conformance expectations or surface goldens. Stages 2–4 remain
+planned; the 149-fixture direct-checker matrix above still describes the separate
+solver domains and is not a claim that the solvers are equivalent.

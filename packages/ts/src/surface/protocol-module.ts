@@ -1,6 +1,14 @@
 import type { SExpr } from "../reader/types.js";
+import { InferenceError } from "../diagnostic/errors.js";
 import type { DescriptorExtensionValue, FormDescriptor } from "../descriptor/FormDescriptor.js";
 import { head, name } from "./effect.js";
+
+function invalidManifest(message: string, at: SExpr): never {
+  throw Object.assign(new InferenceError({
+    message,
+    details: { code: "surface/invalid-form" },
+  }), { loc: at.loc });
+}
 
 /** A protocol manifest names the module and its imports. Its types are derived. */
 export function protocolModuleDescriptor(expressions: readonly SExpr[], forms: readonly FormDescriptor[]): FormDescriptor | undefined {
@@ -10,10 +18,10 @@ export function protocolModuleDescriptor(expressions: readonly SExpr[], forms: r
   const config: Record<string, DescriptorExtensionValue> = {};
   for (const [key, value] of manifest.pairs) {
     const field = name(key)?.replace(/^:/, "");
-    if (!field || !["name", "imports"].includes(field)) throw new Error(`Unknown protocol manifest field ${name(key)}`);
+    if (!field || !["name", "imports"].includes(field)) invalidManifest(`Unknown protocol manifest field ${name(key)}`, key);
     config[field] = literal(value);
   }
-  if (typeof config.name !== "string") throw new Error("Protocol manifests require a name");
+  if (typeof config.name !== "string") invalidManifest("Protocol manifests require a name", manifest);
   for (const [category, extension] of [["types", "protocol/type"], ["objects", "protocol/object"], ["enums", "protocol/enum"], ["unions", "protocol/union"]]) {
     config[category!] = forms.flatMap(form => {
       const metadata = form.extensions?.[extension!];
@@ -26,5 +34,5 @@ export function protocolModuleDescriptor(expressions: readonly SExpr[], forms: r
 function literal(value: SExpr): DescriptorExtensionValue {
   if (value._tag === "Str" || value._tag === "Num" || value._tag === "Bool") return value.value;
   if (value._tag === "Vector") return value.items.map(literal);
-  throw new Error("Protocol manifest values must be literals or vectors of literals");
+  return invalidManifest("Protocol manifest values must be literals or vectors of literals", value);
 }

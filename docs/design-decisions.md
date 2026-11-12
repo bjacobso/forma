@@ -23,9 +23,21 @@ language does not retain aliases or a warning period. Conformance goldens
 never normalize numeric type names or value kinds. Numeric operations accept both types;
 `+`, `-`, `*`, `min`, `max`, and `abs` return Int when every operand is Int,
 otherwise Float. `/` always returns Float. `mod`, `floor`, `ceil`, and `round`
-return Int. Assignment permits Int where Float is expected;
+return Int. Numeric operands that are not yet known retain numeric constraints
+until callback inputs and call arguments supply their types. Reusable helpers
+such as `(define square [x] (* x x))` and
+`(define total [xs] (reduce + 0 xs))` generalize those constraints, so separate
+Int and Float calls specialize independently. Numeric variables that cannot be
+supplied by a reusable function's inputs default to Int at a monomorphic
+boundary. Numeric operators passed as values follow their call-position rules.
+Portable module schemes retain numeric requirements as `(Numeric a)` variables;
+the mechanics checker instantiates them at use sites. Generated TypeScript
+projects constrained numeric variables to `number` at its interop boundary.
+
+Assignment permits Int where Float is expected;
 that assignment does not retag the runtime value. Mixed branches and collections
-join to Float. Equality compares numeric values, so `(= 2 2.0)` is true, including
+join to Float without retagging selected or contained Int values. Branch-join
+coercion remains planned (numeric specification Stage 3). Equality compares numeric values, so `(= 2 2.0)` is true, including
 inside collections. Numeric literal patterns remain kind-sensitive:
 `(match 2.0 2 true _ false)` is false. NaN does not equal itself.
 
@@ -88,9 +100,9 @@ media type is `application/vnd.forma.ir+json`.
 
 ## Compatibility follows publication
 
-Forma is pre-alpha, with published 0.x packages under `@formalang`, including
-`@formalang/ts` 0.3.0. The distribution is moving to one public package,
-`@forma-language/forma`, under
+Forma is pre-alpha. The single public distribution, `@forma-language/forma`,
+is prepared but not yet published to npm. Use a source checkout or a tarball
+packed from `main`; see [Publishing](/publishing) and
 [RFC 0025](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0025-single-npm-distribution.md).
 There is no compatibility promise before 1.0; APIs, package boundaries, and
 wire contracts may change, with migration notes accompanying releases.

@@ -1,12 +1,10 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
 import { WorkbenchPage } from "./pages/WorkbenchPage";
 import { Home } from "./pages/Home";
 
-const About = lazy(() =>
-  import("./pages/About").then((module) => ({ default: module.About })),
-);
 const PreludePlayground = lazy(() =>
   import("./pages/PreludePlayground").then((module) => ({ default: module.PreludePlayground })),
 );
@@ -19,10 +17,10 @@ const DemoPipeline = lazy(() =>
 
 export function App() {
   const location = useLocation();
-  const customPlayground = location.pathname === "/custom" || location.pathname.startsWith("/p/");
+  const embedded = location.pathname.startsWith("/embed/");
   return (
     <>
-      {!location.pathname.startsWith("/embed/") && !customPlayground ? <SiteHeader /> : null}
+      {!embedded ? <SiteHeader /> : null}
       <Suspense fallback={<main className="route-loading">Loading...</main>}>
         <Routes>
           <Route element={<Home />} path="/" />
@@ -31,12 +29,12 @@ export function App() {
           <Route element={<PreludePlayground embedded />} path="/embed/custom" />
           <Route element={<WorkbenchPage embedded />} path="/embed/:exampleId" />
           <Route element={<WorkbenchPage />} path="/live/:exampleId" />
-          <Route element={<About />} path="/about" />
           <Route element={<DemoGallery />} path="/demo" />
           <Route element={<DemoPipeline />} path="/demo/:pipelineId" />
           <Route element={<Navigate replace to="/" />} path="*" />
         </Routes>
       </Suspense>
+      {!embedded ? <SiteFooter /> : null}
     </>
   );
 }

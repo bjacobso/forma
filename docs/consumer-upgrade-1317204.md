@@ -16,7 +16,7 @@ const unknown = diagnostic.message.match(/^Unknown form '(.+)'/);
 Now use the public diagnostic code and typed details:
 
 ```ts
-import { hasDiagnosticCode, DiagnosticCatalog } from "@formalang/ts/diagnostic";
+import { hasDiagnosticCode, DiagnosticCatalog } from "@forma-language/forma/diagnostic";
 
 if (hasDiagnosticCode(diagnostic, "elaborate/unknown-form")) {
   const { name, candidates } = diagnostic.details!;

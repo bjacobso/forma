@@ -1,5 +1,6 @@
 import { diagnosticLocator, spanLocator, type LocatedSpan } from "../diagnostic/locations.js";
 import { isKFloat } from "../evaluator/types.js";
+import { InferenceError } from "../diagnostic/errors.js";
 import { irContractId, payloadConstraintsId } from "../artifact/contract-identity.js";
 import { descriptorPayloadContract, descriptorValidatorNames, checkArtifactDescriptor, checkArtifactPayloadContracts, payloadContractsFromSources } from "../artifact/descriptor-contracts.js";
 import { makeArtifactValidatorRegistry } from "../artifact/validator-catalog.js";
@@ -144,7 +145,11 @@ export function elaborateSources(
   for (const {source,sourceId} of sources) {
     try {
       for (const descriptor of parsePrelude(source,typeDefinitions,authorForms.filter(e=>head(e)==="define" || head(e)==="macro")).forms) {
-        if (descriptor.surface && descriptions.has(descriptor.name)) throw new Error(`Form '${descriptor.name}' is already declared`);
+        if (descriptor.surface && descriptions.has(descriptor.name)) {
+          const definition = toSExprMany(parse(source).redTree).find(e => head(e) === "form" && e._tag === "List" && head(e.items[1]) === descriptor.name);
+          report(sourceLocator(source,sourceId), "elaborate/form-definition", `Form '${descriptor.name}' is already declared`, definition?.loc ?? descriptor.surface.body.loc);
+          continue;
+        }
         descriptions.register(descriptor);
       }
     } catch (error) {
@@ -281,7 +286,9 @@ export function elaborateSources(
           ...(name !== undefined ? { name } : {}),
         });
       } catch (error) {
-        at("elaborate/malformed-form", errorMessage(error), loc, { form: recognized.formName });
+        const failure = error instanceof InferenceError ? error : undefined;
+        const errorLoc = error && typeof error === "object" && "loc" in error ? error.loc as Loc : undefined;
+        at(typeof failure?.details.code === "string" ? failure.details.code : "elaborate/malformed-form", errorMessage(error), origin.kind === "authored" ? errorLoc ?? loc : loc, { form: recognized.formName });
       }
     }
   }
