@@ -19,7 +19,7 @@
     "build": "pnpm build:js",
     "build:js": "turbo run build --filter=@forma-language/forma --filter=@formalang/ts --filter=@formalang/host --filter=@formalang/editor --filter=@formalang/language-server --filter=@formalang/website",
     "dev": "pnpm --filter @formalang/website dev",
-    "docs:build": "vitepress build docs && node scripts/llms.mjs --generate",
+    "docs:build": "node --test scripts/site-content.test.mjs && vitepress build docs && node scripts/llms.mjs --generate",
     "docs:dev": "vitepress dev docs",
     "docs:preview": "vitepress preview docs",
     "test": "pnpm test:js",

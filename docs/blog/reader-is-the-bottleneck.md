@@ -1,11 +1,12 @@
 ---
+date: 2026-11-07
 title: The Reader Is the Bottleneck
 description: An essay on why machine-written programs weaken the old case for macros and strengthen the case for languages whose abstractions come with rules a compiler can check.
 ---
 
 # The Reader Is the Bottleneck
 
-<p class="blog-meta">Essay · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Essay · <time datetime="2026-11-07">November 7, 2026</time></p>
 
 The case for macros has always been a case about writing. A macro lets
 you say in one line what would otherwise take ten. Lisp programmers have

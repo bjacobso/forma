@@ -16,15 +16,15 @@ longer-term goals from the implemented language services.
 
 ## What Forma owns
 
-`@formalang/ts` owns parsing, inference, evaluation, elaboration, stable syntax
+`@forma-language/forma` owns parsing, inference, evaluation, elaboration, stable syntax
 identity, outline/source conversion, observations, and structural edit scripts.
-`@formalang/host` provides the asynchronous `LanguageHost` ABI, sessions,
+`@forma-language/forma/host` provides the asynchronous `LanguageHost` ABI, sessions,
 source/prelude loading, editor analysis, symbol indexing, navigation, completion,
 refactoring, descriptor slots, retained values, and suspended host calls.
 See [Language services](./language-services.md).
 
 Reusable helpers formerly implemented inside the workbench are available from
-`@formalang/ts/authoring`:
+`@forma-language/forma/authoring`:
 
 - `requirementsFor` propagates capability names through resolved definitions,
   children, and recursive references. It is a conservative graph calculation,
@@ -66,7 +66,7 @@ frozen install needs no Foldworks checkout, link hook, or tarballs.
 ## The source-first live compiler stays here
 
 The homepage and language pages still embed Forma's `LiveWorkbench` and
-`WorkbenchEditor`. These use the Web Worker compiler and `@formalang/editor`,
+`WorkbenchEditor`. These use the Web Worker compiler and `@forma-language/forma/editor`,
 with CodeMirror and React. They are separate from the structural Foldworks app.
 See [Live workbench embeds](./workbench-embeds.md).
 

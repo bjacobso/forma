@@ -228,7 +228,7 @@ of hosting or checkout location. Binding identities and `contractId`s stay the
 same for unchanged definitions. A graph has one version per name. Modules of
 the package being developed keep file IDs for diagnostics.
 
-`forma file <op> entry.lisp` and `readModuleGraph` in `@formalang/ts/node` find
+`forma file <op> entry.lisp` and `readModuleGraph` in `@forma-language/forma/node` find
 the nearest `forma.json`, verify `forma.lock`, and read `vendor/` and relative
 dependencies without network access. Other hosts pass a table to
 `configureSession` and store package sources under their `pkg:` IDs:
@@ -257,10 +257,10 @@ The language server does not resolve packages yet.
 
 `TsLanguageHost` supports source-bundle, `moduleGraph`, `typecheck`, `expand`,
 `evaluateInSession`, and `linkEffectModules` workflows. The host and the
-`@formalang/ts/modules` entry point work in browsers without filesystem APIs:
+`@forma-language/forma/modules` entry point work in browsers without filesystem APIs:
 
 ```typescript
-import { TsLanguageHost } from "@formalang/host/ts-host";
+import { TsLanguageHost } from "@forma-language/forma/host/ts-host";
 
 const host = new TsLanguageHost();
 const { sessionId } = await host.openSession();
@@ -280,7 +280,7 @@ await host.closeSession({ sessionId });
 
 Loading order does not affect resolution. The host supplies a synchronous resolver
 `(specifier, importerId) => { id, source } | undefined`. In-memory bundles resolve
-normalized relative paths. The Node adapter in `@formalang/ts/node` and the `forma`
+normalized relative paths. The Node adapter in `@forma-language/forma/node` and the `forma`
 CLI use canonical filesystem paths. Cycles report the complete import chain;
 missing files, private exports, collisions, and namespace mistakes report the
 importing author's span.
@@ -310,8 +310,7 @@ prepares that value; application code supplies the service and runs the Effect.
 After building the TypeScript packages:
 
 ```sh
-pnpm --filter @formalang/ts build
-pnpm --filter @formalang/host build
+pnpm exec turbo run build --filter=@forma-language/forma
 node scripts/link-forma-modules.mjs conformance/modules/main.lisp .context/linked
 # The host package installs the forma executable; from a checkout:
 node packages/host/dist/cli.mjs file interface conformance/modules/main.lisp
@@ -344,7 +343,7 @@ Typecheck also exposes its display string in `type`. Malformed requests use
 and unexpected engine failures use `internal/error`. Request failures do not
 terminate the daemon. Filesystem failures use `io/error`.
 
-The exported `@formalang/host/json-abi` entry provides `JsonRequest`, `JsonResponse`,
+The exported `@forma-language/forma/host/json-abi` entry provides `JsonRequest`, `JsonResponse`,
 `TypeScheme`, and `JsonValueProjection` Effect schemas and a `JsonAbi` dispatcher.
 Its operations cover parsing, expansion, typechecking, evaluation, modules,
 session configuration, loading, retained values, and suspended host calls.
@@ -372,7 +371,7 @@ The remaining optional `LanguageHost` methods are editor APIs:
 `describeNodes`, `editScriptSchema`, `sourceToOutline`, `outlineToSource`, and
 `formSlots`. They remain available through the in-process host, which carries
 syntax identities and editor projections; this process ABI covers compiler and
-session operations. Elaboration is not a separate ABI operation. The standalone `elaborateProgram` and `elaborateSources` APIs in `@formalang/ts/descriptor` return declaration projections;
+session operations. Elaboration is not a separate ABI operation. The standalone `elaborateProgram` and `elaborateSources` APIs in `@forma-language/forma/descriptor` return declaration projections;
 use session `emit`/`emitMany` for validated, packaged artifacts.
 Host schemes reject unknown names and malformed structure, including nested
 schemes. `Int` and `Float` are distinct host types; `Number` and `Num` are rejected

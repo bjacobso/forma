@@ -41,7 +41,7 @@ that could overwrite someone's draft while they are reading.
 Appearance and syntax colors are separate choices: Light or Dark, and Forma,
 Ocean, or Orchid. The source and generated-code editors share the selected
 palette. `editorAppearance(mode, palette)` is exported by
-`@formalang/editor/codemirror`; `LispEditor` also accepts `syntaxPalette`.
+`@forma-language/forma/editor/codemirror`; `LispEditor` also accepts `syntaxPalette`.
 Reconfigure a CodeMirror `Compartment` to change appearance without recreating
 the editor, losing focus, or clearing its undo history.
 

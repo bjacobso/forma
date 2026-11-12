@@ -32,7 +32,7 @@ pre-alpha, and the last section lists what the model can't express yet.
 
 > To follow along, paste the code into the
 > [Effect playground](https://forma-lang.com/playground/demo/effect-ts), or
-> call `Mechanics.generateEffectProgram(source)` from `@formalang/ts`. The
+> call `Mechanics.generateEffectProgram(source)` from `@forma-language/forma/mechanics`. The
 > [Effect reference](./effect/reference.md) documents every form used here.
 
 ## 1 Understanding the domain

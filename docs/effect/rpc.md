@@ -24,14 +24,14 @@ a union, or another supported serializable schema. `rpc-group` exports a native
 group under its Forma name converted to PascalCase; wire names remain unchanged.
 Names must be unique within a group, but different groups may reuse a wire name.
 
-Bootstrap with `bootstrapRpcPreludes()` from `@formalang/ts/rpc`, or load
+Bootstrap with `bootstrapRpcPreludes()` from `@forma-language/forma/rpc`, or load
 `compiler.lisp` and `rpc.lisp` with the descriptor bootstrap API. The prelude's
 form holes, duplicate-name check and emit hooks use the existing extension system.
 
 ## Generate Effect code
 
 ```ts
-import { generateRpcProgram } from "@formalang/ts/rpc";
+import { generateRpcProgram } from "@forma-language/forma/rpc";
 
 const result = generateRpcProgram(source, { sourceId: "accounts.lisp" });
 if (!result.ok) throw new Error(result.diagnostics.map(d => d.message).join("\n"));

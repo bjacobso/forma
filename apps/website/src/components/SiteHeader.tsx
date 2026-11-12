@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import navigation from "../../../../docs/.vitepress/navigation.json";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function SiteHeader() {
@@ -10,11 +10,7 @@ export function SiteHeader() {
         <span className="site-brand-paren" aria-hidden="true">)</span>
       </a>
       <nav aria-label="Main navigation" className="site-nav">
-        <a href="/language">Learn</a>
-        <a href="/preludes/">Preludes</a>
-        <NavLink to="/demo">Examples</NavLink>
-        <NavLink to="/custom">Your DSL</NavLink>
-        <NavLink className="site-nav-cta" end to="/">Playground</NavLink>
+        {navigation.map(item => <a key={item.text} href={item.link}>{item.text}</a>)}
       </nav>
       <ThemeToggle />
     </header>

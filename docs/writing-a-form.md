@@ -111,7 +111,7 @@ Each edit requires a `:new-text` string and an `:at` that resolves to authored
 syntax; it never falls back to the whole application. Consumers receive
 `{span, newText}` edits and must apply them atomically against the unchanged
 source version. Forma does not apply them automatically. Register consumer
-codes in a project-local `DiagnosticCatalog` from `@formalang/ts/diagnostic`
+codes in a project-local `DiagnosticCatalog` from `@forma-language/forma/diagnostic`
 to share explanations with engine codes. Code identifiers and documented
 detail fields are API; message wording is not. See the
 [consumer upgrade note](./consumer-upgrade-1317204.md) for typed TypeScript use.

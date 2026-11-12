@@ -40,7 +40,7 @@ endpoint. An undeclared handler failure is reported on its `handler` form.
 Every endpoint in a handled group must have exactly one handler.
 
 ```ts
-import { generateHttpApiProgram } from "@formalang/ts/http-api";
+import { generateHttpApiProgram } from "@forma-language/forma/http-api";
 
 const result = generateHttpApiProgram(source, { sourceId: "shop.lisp" });
 if (!result.ok) throw new Error(result.diagnostics.map(d => d.message).join("\n"));
@@ -69,7 +69,7 @@ const { handler, dispose } = HttpRouter.toWebHandler(routes);
 
 ```ts
 import { writeFileSync } from "node:fs";
-import { generateHttpApiBuilders } from "@formalang/ts/http-api";
+import { generateHttpApiBuilders } from "@forma-language/forma/http-api";
 
 writeFileSync("http-builders.ts", generateHttpApiBuilders().code);
 ```
@@ -118,7 +118,7 @@ quasiquoted TypeScript expression:
   {:kind "Message" :name name :text text})
 ```
 
-`emitFormTypeScript` in `@formalang/ts/descriptor-codegen` evaluates the hook.
+`emitFormTypeScript` in `@forma-language/forma/descriptor-codegen` evaluates the hook.
 Symbols in its output name target bindings; strings and keyword map labels
 are escaped as TypeScript literals. `ts/ref` constructs a validated target
 reference. `ts/schema` lowers a Forma Type hole; `ts/schemas` lowers a list of
