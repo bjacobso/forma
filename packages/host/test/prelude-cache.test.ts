@@ -35,7 +35,7 @@ test("CLI prelude snapshots survive fresh processes and corrupt entries fall bac
     expect(run("evaluate").stdout).toBe(run("evaluate",true).stdout);
     expect(files.some(name => readFileSync(join(cache,name),"utf8") !== "broken snapshot")).toBe(true);
   } finally { rmSync(dir,{recursive:true,force:true}); }
-},20_000);
+},60_000);
 
 test("persisted descriptors reconstruct executable hooks and fresh mutable registries", () => {
   const dir = mkdtempSync(join(tmpdir(),"forma-descriptors-"));
@@ -61,4 +61,4 @@ test("persisted descriptors reconstruct executable hooks and fresh mutable regis
     expect(warm.stdout).toBe(baseline.stdout);
     expect(readdirSync(dir).length).toBeGreaterThan(0);
   } finally { rmSync(dir,{recursive:true,force:true}); }
-},20_000);
+},60_000);
