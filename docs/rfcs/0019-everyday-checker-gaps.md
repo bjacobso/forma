@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Stages 1 and 2 implemented (six checked runtime contracts and exhaustiveness errors); remaining stages proposed |
+| Status | Stages 1–3 implemented (six checked runtime contracts, exhaustiveness errors, constructor identity and optional fields); remaining stages proposed |
 | Created | 2026-11-03 |
 | Scope | Builtin contract parity, numeric inference, local recursion, nullary functions, recursive generic aliases, Effect-name routing, match exhaustiveness, and four Effect checker gaps: constructor types, optional fields, callback references, and refinement literals |
 | Direction | The evaluator, the kernel typechecker, and the Effect checker agree about ordinary programs; a program that one accepts is not silently rejected, retyped, or crashed by another |
@@ -54,7 +54,22 @@ severity; mechanics already rejects them. The historical K8 warning below is
 not current behavior. This is not a claim of solver-backed coverage for arbitrary
 predicates or infinite domains.
 
-The reproduction tables below describe the pre-stage-1/2 baseline. Numeric
+### Stage 3 implementation
+
+Standalone Effect normalization now preserves a qualified constructor's owner
+as a checked type ascription instead of erasing it to an untyped record. Local
+bindings, vectors, conditionals, and collection joins retain the declared union
+(E1 and E2). Linked modules keep their existing constructor-reference path.
+
+Optional record fields accept compatible `Option` values as well as plain
+values (E3). Generation evaluates the option once and conditionally spreads
+the present field, omitting absent keys under `exactOptionalPropertyTypes`.
+Conformance cases check strict TypeScript, runtime values, and located rejection
+controls; the updated domain-modeling examples are extracted and checked too.
+Existing TypeScript goldens remain unchanged. Callback references and literal
+refinements (stage 4) are not implemented by this stage.
+
+The reproduction tables below describe the pre-stage-1/2/3 baseline. Numeric
 generalization remains a separate decision. Nullary-function work in PR #92
 is not included in these slices.
 

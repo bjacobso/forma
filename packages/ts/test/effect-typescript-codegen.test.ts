@@ -37,6 +37,25 @@ function checkGeneratedTypes(code: string): void {
 }
 
 describe("Effect TypeScript projection", () => {
+  test("checks the domain-modeling guide's constructor joins and optional field copy", () => {
+    const guide = readFileSync(resolve(packageDir, "../../docs/domain-modeling.md"), "utf8").split("## 7 Evolving the model")[0]!;
+    const blocks = [...guide.matchAll(/```lisp\n([\s\S]*?)```/g)].map(match => match[1]!);
+    const forms = Effect.runSync(Reader.parseManyToSExpr(blocks.join("\n")));
+    const examples = forms.filter(form => {
+      if (form._tag !== "List" || form.items[0]?._tag !== "Sym") return false;
+      if (form.items[0].name === "type") return true;
+      return [":", "define"].includes(form.items[0].name) && form.items[1]?._tag === "Sym" &&
+        ["events-for", "copy-note"].includes(form.items[1].name);
+    });
+    expect(examples.filter(form => form._tag === "List" && form.items[0]?._tag === "Sym" && form.items[0].name === "define")).toHaveLength(2);
+    const result = Mechanics.mechanicsPackageableDeclarations(examples, "docs/domain-modeling.md");
+    expect(result.ok ? [] : result.diagnostics).toEqual([]);
+    if (!result.ok) return;
+    const checked = Mechanics.checkMechanicsProgram(result.declarations);
+    expect(checked.diagnostics).toEqual([]);
+    checkGeneratedTypes(Mechanics.generateMechanicsEffectTypeScriptModule(result.declarations, { check: checked.check }).code);
+  }, 20_000);
+
   test("compiles and runs the shared operational effect fixture", async () => {
     const code = generatedCode();
     checkGeneratedTypes(code);

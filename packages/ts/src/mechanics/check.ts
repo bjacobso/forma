@@ -125,7 +125,7 @@ export interface CheckInfo {
   readonly effectTypes: WeakMap<object, EffectType>;
   readonly calls: WeakMap<object, ResolvedCall>;
   readonly matches: WeakMap<object, MatchShape>;
-  /** Record literals checked against a named schema type. */
+  /** Record literals checked against an expected record type. */
   readonly recordTargets: WeakMap<object, MType>;
   /** Literal syntax (strings, numbers, booleans, keywords, records, vectors) checked against a type with literal types. */
   readonly literalTargets: WeakMap<object, MType>;
@@ -156,6 +156,8 @@ type JsonRecord = Readonly<Record<string, JsonValue>>;
 interface ValueOptions {
   /** Skip the expected-type check when the value turns out to be an effect. */
   readonly allowEffect?: boolean;
+  /** Optional record fields also accept an existing Option of the field type. */
+  readonly allowOption?: boolean;
 }
 
 interface LayerContext {
@@ -1720,7 +1722,9 @@ class Checker {
     if (expected && isRecord(node) && isLiteralSyntax(node) && containsLiterals(expected, this.env)) {
       this.info.literalTargets.set(node, expected);
     }
-    if (expected && !(options.allowEffect && type.kind === "effect") && !isAssignable(type, expected, this.env)) {
+    const optional = options.allowOption ? resolve(type, this.env) : undefined;
+    const checked = optional?.kind === "option" && expected && !isAssignable(type, expected, this.env) ? optional.item : type;
+    if (expected && !(options.allowEffect && type.kind === "effect") && !isAssignable(checked, expected, this.env)) {
       this.error(spanOf(node), "mechanics/type-mismatch", `Expected ${showType(expected)}, but this is ${showType(type)}.`);
       // Reported here; enclosing expressions should not report it again.
       return tUnknown;
@@ -1909,7 +1913,7 @@ class Checker {
           `${expected ? showType(expected) : "This record"} has no field :${key}.`,
         );
       }
-      const type = this.value(entry["value"], scope, field?.type);
+      const type = this.value(entry["value"], scope, field?.type, { allowOption: field?.optional ?? false });
       fields.push({ name: key, optional: false, type });
     }
     if (struct) {
@@ -1924,7 +1928,7 @@ class Checker {
       }
       if (fields.some((field) => !struct.fields.some((candidate) => candidate.name === field.name))) return tUnknown;
       // Field values were checked against the schema above; report nothing twice.
-      if (expected!.kind === "named") this.info.recordTargets.set(node, expected!);
+      this.info.recordTargets.set(node, struct);
       return expected!;
     }
     // Like TypeScript, a record literal without a target type widens its fields.
@@ -2095,8 +2099,8 @@ class Checker {
           return tUnknown;
         }
         const target = expected ? resolve(expected, this.env) : undefined;
-        const item = this.value(args[0], scope, target?.kind === "option" ? target.item : undefined);
-        return { kind: "option", item: target?.kind === "option" ? target.item : widenDeep(item) };
+        const item = this.value(args[0], scope, target?.kind === "option" ? target.item : expected);
+        return { kind: "option", item: target?.kind === "option" ? target.item : expected ?? widenDeep(item) };
       }
       default:
         break;

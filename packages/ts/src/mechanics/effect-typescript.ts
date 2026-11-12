@@ -38,8 +38,10 @@ import {
 import {
   arrayItems,
   containsLiterals,
+  isAssignable,
   isRecord,
   requirementService,
+  resolve,
   stringItems,
   typeFromJson,
   type MType,
@@ -1135,12 +1137,22 @@ class Generator {
 
   private recordLiteral(node: JsonRecord, names: Names, indent: string): string {
     const entries = arrayItems(node["entries"]).filter(isRecord);
+    const target = this.info.recordTargets.get(node);
     return objectLiteral(
       entries.map((entry) => (inner: string) => {
         const key = recordKey(entry["key"]);
         if (key === undefined) throw new Error("Effect TypeScript: unsupported record key");
         // Fields of an object literal are contextually typed by the literal's own type.
-        return objectEntry(key, this.contextualValue(entry["value"], names, inner).code);
+        const value = entry["value"];
+        const code = this.contextualValue(value, names, inner).code;
+        const field = target?.kind === "struct" ? target.fields.find(field => field.name === key) : undefined;
+        const type = isRecord(value) ? this.info.valueTypes.get(value) : undefined;
+        if (field?.optional && type && resolve(type, this.info.env).kind === "option" && !isAssignable(type, field.type, this.info.env)) {
+          this.use("Option");
+          const param = names.child().bind("optional:field", "option");
+          return `...((${param}) => Option.isSome(${param}) ? { ${objectEntry(key, `${param}.value`)} } : {})(${code})`;
+        }
+        return objectEntry(key, code);
       }),
       indent,
     );

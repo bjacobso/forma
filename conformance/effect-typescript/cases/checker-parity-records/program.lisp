@@ -1,0 +1,33 @@
+;; RFC 0019 E1–E3: constructors retain their union through bindings and joins;
+;; optional record fields accept plain values and preserve existing options.
+(type Ev (Tagged (Placed {:id String}) (Billed {:amount Int}) (Acked {:to String})))
+(type Stage {:note (Option String) :n Int})
+(: events (-> String Bool (List Ev)))
+(define events [id acked]
+  (let [placed (Ev.Placed {:id id})]
+    (concat [placed (Ev.Billed {:amount 37})]
+      (if acked [(Ev.Acked {:to "buyer"})] []))))
+(: copy-stage (-> Stage Stage))
+(define copy-stage [stage] {:note (get stage :note) :n 2})
+(: some-stage Stage)
+(define some-stage {:note (Some "present") :n 3})
+(: none-stage Stage)
+(define none-stage {:note None :n 4})
+(: plain-stage Stage)
+(define plain-stage {:note "plain" :n 5})
+(type Status (Union :ready :waiting))
+(type WithStatus {:status (Option Status)})
+(: ready WithStatus)
+(define ready {:status (Some :ready)})
+(: copy-anonymous (-> Stage {:note (Option String)}))
+(define copy-anonymous [stage] {:note (get stage :note)})
+(type Signal (Tagged :tag kind Off (On Int)))
+(: signals (List Signal))
+(define signals (let [off Signal.Off] [off (Signal.On 9)]))
+(: from-computed (-> (-> Int (Option String)) Stage))
+(define from-computed [fetch] {:note (fetch 7) :n 6})
+(type Choice (Tagged (Has {:note (Option String)}) (Empty {})))
+(: chosen Choice)
+(define chosen (Choice.Has {:note (Some "inside union")}))
+(: nested-plain (-> (Option String) {:note (Option (Option String))}))
+(define nested-plain [note] {:note note})

@@ -1,0 +1,45 @@
+{
+  "typescript": "rejects",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected String, but this is 7.",
+      "line": 7,
+      "column": 37,
+      "endLine": 7,
+      "endColumn": 38
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected Ev, but this is Other.",
+      "line": 9,
+      "column": 22,
+      "endLine": 9,
+      "endColumn": 34
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected String, but this is 12.",
+      "line": 11,
+      "column": 33,
+      "endLine": 11,
+      "endColumn": 35
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected Int, but this is (Option Never).",
+      "line": 13,
+      "column": 26,
+      "endLine": 13,
+      "endColumn": 30
+    }
+  ]
+}
