@@ -55,7 +55,7 @@ describe("operators as values", () => {
     ["(let [op >] (op 2 1))", "Bool", "true"],
     ["(let [op >=] (op 2.0 1))", "Bool", "true"],
     ["(let [op =] (op 1 1.0))", "Bool", "true"],
-    ["(map abs [-1 2])", "List<Float>", "[1 2]"],
+    ["(map abs [-1 2])", "List<Int>", "[1 2]"],
   ])("checks and runs %s", async (source, type, printed) => {
     expect(await Effect.runPromise(Type.inferSourceStr(source))).toBe(type);
     for (const interpreter of [false, true]) expect(run(source, interpreter)).toBe(printed);

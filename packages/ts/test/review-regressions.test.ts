@@ -23,7 +23,7 @@ describe("review regressions", () => {
 
   test("higher-kinded application preserves numeric subtyping", async () => {
     const source=readFileSync(new URL("../../../conformance/fixtures/typecheck/typeclass-hkt-instance-success/source.lisp",import.meta.url),"utf8");
-    expect(await infer(source)).toBe("List<Float>");
+    expect(await infer(source)).toBe("List<Int>");
   });
 
   test.each([

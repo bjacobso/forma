@@ -78,6 +78,61 @@
           ]
         },
         "symbol": "second__forma_66756e6374696f6e732e6c697370_d7365636f6e64"
+      },
+      {
+        "constructors": [],
+        "identity": {
+          "declaration": "square",
+          "moduleId": "functions.lisp"
+        },
+        "kind": "value",
+        "name": "square",
+        "scheme": {
+          "parameters": [
+            "a0"
+          ],
+          "type": [
+            "->",
+            [
+              "Numeric",
+              "a0"
+            ],
+            [
+              "Numeric",
+              "a0"
+            ]
+          ]
+        },
+        "symbol": "square__forma_66756e6374696f6e732e6c697370_d737175617265"
+      },
+      {
+        "constructors": [],
+        "identity": {
+          "declaration": "total",
+          "moduleId": "functions.lisp"
+        },
+        "kind": "value",
+        "name": "total",
+        "scheme": {
+          "parameters": [
+            "a0"
+          ],
+          "type": [
+            "->",
+            [
+              "List",
+              [
+                "Numeric",
+                "a0"
+              ]
+            ],
+            [
+              "Numeric",
+              "a0"
+            ]
+          ]
+        },
+        "symbol": "total__forma_66756e6374696f6e732e6c697370_d746f74616c"
       }
     ],
     "moduleId": "functions.lisp"

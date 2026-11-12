@@ -56,6 +56,7 @@ export function schemeSyntax(scheme: Scheme, e: SExpr, target = true): SExpr {
     ...scheme.evars,
   ]);
   const vars = new Map<string, string>();
+  const numeric = new Set(scheme.constraints.flatMap(c => c.className === "$Numeric" ? c.args.flatMap(t => t._tag === "TVar" ? [t.id] : []) : []));
   const variable = (id: string): string => {
     if (!quantified.has(id)) return id;
     if (!vars.has(id)) vars.set(id, `a${vars.size}`);
@@ -64,7 +65,7 @@ export function schemeSyntax(scheme: Scheme, e: SExpr, target = true): SExpr {
   const convert = (t: Type): SExpr => {
     switch (t._tag) {
       case "TVar":
-        return sym(variable(t.id));
+        return numeric.has(t.id) ? list("Numeric", [sym(variable(t.id))]) : sym(variable(t.id));
       case "TCon":
         return sym(t.name);
       case "TFun": {

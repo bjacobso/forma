@@ -68,7 +68,7 @@ export type MType =
       readonly requirements: Provenance;
     }
   | { readonly kind: "layer"; readonly layer: LayerType }
-  | { readonly kind: "var"; readonly id: number };
+  | { readonly kind: "var"; readonly id: number; readonly numeric?: boolean };
 
 export interface LayerType {
   readonly provides: readonly string[];
@@ -123,6 +123,10 @@ export interface TypeEnvironment {
 export function typeFromJson(json: JsonValue | undefined, env: TypeEnvironment): MType {
   if (!isRecord(json)) return tUnknown;
   switch (json["kind"]) {
+    case "Numeric": {
+      const type = typeFromJson(json["type"], env);
+      return type.kind === "var" ? {...type, numeric:true} : tInt;
+    }
     case "Primitive":
       return primitiveType(json["name"]);
     case "Ref": {
@@ -413,6 +417,16 @@ export function isAssignable(
   const s = subst ? applySubstitution(source, subst) : source;
   const t = subst ? applySubstitution(target, subst) : target;
   if (s.kind === "var" && t.kind === "var" && s.id === t.id) return true;
+  if (s.kind === "var" && t.kind === "var" && subst) {
+    if (s.numeric) subst.set(t.id, s);
+    else subst.set(s.id, t);
+    return true;
+  }
+  const numeric = (type: MType): boolean => type.kind === "var" ? Boolean(type.numeric) : type.kind === "prim" ? ["Int", "Float"].includes(type.name) : type.kind === "literal" && typeof type.value === "number";
+  if (s.kind === "var" && s.numeric && t.kind !== "var" && !numeric(t)) return false;
+  if (t.kind === "var" && t.numeric && s.kind !== "var" && !numeric(s)) return false;
+  if (s.kind === "var" && s.numeric && t.kind === "prim" && t.name === "Float") return true;
+  if (t.kind === "var" && t.numeric && s.kind === "prim" && s.name === "Int" && !subst) return true;
   if (s.kind === "var" && subst) {
     if (t.kind === "var" && t.id === s.id) return true;
     subst.set(s.id, widenDeep(t));
@@ -589,7 +603,7 @@ export function showType(type: MType): string {
     case "layer":
       return `(Layer [${type.layer.provides.join(" ")}] [${[...type.layer.errors.keys()].join(" ")}] [${[...type.layer.requirements.keys()].join(" ")}])`;
     case "var":
-      return `?${type.id}`;
+      return type.numeric ? "a numeric value" : "a generic value";
   }
 }
 
