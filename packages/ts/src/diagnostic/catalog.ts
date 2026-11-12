@@ -8,6 +8,16 @@ export interface DiagnosticCatalogEntry {
   readonly stability: "stable" | "experimental" | "unstable" | "internal";
 }
 
+/** Invalid host-owned catalog input; no authored source location is implied. */
+export class DiagnosticCatalogError extends Error {
+  override readonly name = "DiagnosticCatalogError";
+  readonly code = "diagnostic/invalid-catalog" as const;
+
+  constructor(message: string, readonly path: string) {
+    super(message);
+  }
+}
+
 /** A consumer's catalog includes the engine and its own prelude codes.
  * Use a separate instance per language/project to avoid process-global state.
  */
@@ -19,8 +29,10 @@ export class DiagnosticCatalog {
   }
 
   register(entry: DiagnosticCatalogEntry): void {
-    if (this.#entries.has(entry.code)) throw new Error(`Diagnostic ${entry.code} is already registered`);
-    if (!entry.code.trim() || !entry.summary.trim() || !entry.explanation.trim()) throw new Error("Diagnostic entries require a code, summary and explanation");
+    if (this.#entries.has(entry.code)) throw new DiagnosticCatalogError(`Diagnostic ${entry.code} is already registered`, "entry.code");
+    for (const field of ["code", "summary", "explanation"] as const) {
+      if (!entry[field].trim()) throw new DiagnosticCatalogError("Diagnostic entries require a code, summary and explanation", `entry.${field}`);
+    }
     this.#entries.set(entry.code, Object.freeze({...entry}));
   }
 
@@ -35,7 +47,7 @@ export class DiagnosticCatalog {
 
   /** Useful at a consumer's diagnostic boundary and in conformance tests. */
   assertKnown(diagnostic: { readonly code: string }): void {
-    if (!this.get(diagnostic.code)) throw new Error(`Unregistered diagnostic code: ${diagnostic.code}`);
+    if (!this.get(diagnostic.code)) throw new DiagnosticCatalogError(`Unregistered diagnostic code: ${diagnostic.code}`, "diagnostic.code");
   }
 }
 

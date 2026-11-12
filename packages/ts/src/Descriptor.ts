@@ -167,6 +167,7 @@ export {
   emitProtocolLiteralSchema,
   emitProtocolModule,
   emitProtocolModuleImports,
+  ProtocolGenerationError,
   emitProtocolObjectSchema,
   emitProtocolTypeAlias,
   emitProtocolTypeAliasSchema,

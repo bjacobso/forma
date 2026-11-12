@@ -47,7 +47,7 @@ export {
   type MechanicsServiceMethod,
 } from "./mechanics/runtime.js";
 
-export { ArtifactValidatorRegistry, type ArtifactValidator, type PayloadValidator, type ValidatorInput } from "./artifact/validator-registry.js";
+export { ArtifactValidatorRegistry, ArtifactValidatorRegistrationError, type ArtifactValidator, type PayloadValidator, type ValidatorInput } from "./artifact/validator-registry.js";
 export { makeArtifactValidatorRegistry } from "./artifact/validator-catalog.js";
 export { checkArtifactDescriptor, checkArtifactPayloadContracts, descriptorPayloadContract, descriptorValidatorNames, resolvePayloadContract, payloadContractsFromSources, type PayloadContract, type PayloadContracts } from "./artifact/descriptor-contracts.js";
 export { domainPayloadSchemas } from "./artifact/domain-payloads.js";
