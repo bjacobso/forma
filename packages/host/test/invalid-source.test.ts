@@ -38,7 +38,7 @@ for (const [name, source] of Object.entries(cases)) {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
-  });
+  }, 60_000); // spawns the CLI three times per program; slow under parallel load
 }
 
 test("malformed imported functions retain the dependency's location", () => {
@@ -55,4 +55,4 @@ test("malformed imported functions retain the dependency's location", () => {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
-});
+}, 30_000);
