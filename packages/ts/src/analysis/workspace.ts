@@ -27,7 +27,7 @@ import {
 } from "../editor/symbols.js";
 import { formatLispSource } from "../Formatter.js";
 import { blankBrokenForms } from "../lsp/recovery.js";
-import { analyzeLsp, type LspResult } from "../lsp/hm-lsp.js";
+import { analyzeBindings, type BindingQueries } from "./bindings.js";
 import { parse, toSExprMany } from "../reader/index.js";
 import {
   identifySyntax,
@@ -35,10 +35,7 @@ import {
   type SyntaxIndex,
   type SyntaxNode,
 } from "../syntax/identity.js";
-import { builtinScheme } from "../type/builtin-schemes.js";
 import type { MakeInferContextOptions } from "../type/context.js";
-import type { TypeEnv } from "../type/substitution.js";
-import { showScheme } from "../type/types.js";
 import { completionsAt, type CompletionItem } from "./completion.js";
 import { searchDefinitions, type SearchQuery, type SearchResult } from "./search.js";
 import {
@@ -62,16 +59,13 @@ export interface TypedSpan {
   readonly exprTag: string;
 }
 
-export interface DocumentAnalysis {
+export interface DocumentAnalysis extends BindingQueries {
   readonly sourceId: string;
   /** The type of the last form, when every form typed. */
   readonly resultType?: string | undefined;
   /** Typed expressions in document order. */
   readonly typedSpans: readonly TypedSpan[];
   readonly diagnostics: readonly LocatedDiagnostic[];
-  /** Types of the document's definitions and everything in scope before it. */
-  readonly typeEnv: TypeEnv;
-  readonly mechanicsBindingTypes?: ReadonlyMap<string, string>;
 }
 
 export interface Hover {
@@ -238,8 +232,7 @@ export class AnalysisWorkspace {
       const type =
         typed && typed.start === node.span.start && typed.end === node.span.end
           ? typed.type
-          : this.analysis(sourceId).mechanicsBindingTypes?.get(name) ??
-            (mechanicsExpression ? undefined : this.#typeOfName(sourceId, name));
+          : this.analysis(sourceId).bindingDisplay(name, offset);
       const descriptor = this.#descriptors().find((candidate) => candidate.name === name);
       if (descriptor) sections.push(describeForm(descriptor));
       else if (type !== undefined) sections.push(codeBlock(`${name} : ${type}`));
@@ -428,11 +421,7 @@ export class AnalysisWorkspace {
   }
 
   #typeOfName(sourceId: string, name: string): string | undefined {
-    const analysis = this.analysis(sourceId);
-    const mechanicsType = analysis.mechanicsBindingTypes?.get(name);
-    if (mechanicsType) return mechanicsType;
-    const scheme = analysis.typeEnv.get(name) ?? builtinScheme(name);
-    return scheme ? showScheme(scheme) : undefined;
+    return this.analysis(sourceId).bindingDisplay(name);
   }
 }
 
@@ -461,16 +450,7 @@ function analyzeDocument(
   // Forms that do not parse are blanked, keeping every offset, so the forms
   // around them are still typed.
   const typedText = parsed.errors.length > 0 ? blankBrokenForms(text) : text;
-  let typeEnv: TypeEnv = scope.typeEnv;
-  const result: LspResult = Effect.runSync(
-    analyzeLsp(typedText, {
-      ...analyzeOptions(scope, inferOptions),
-      sourceId,
-      captureEnv: (env) => {
-        typeEnv = env;
-      },
-    }),
-  );
+  const { result, bindings } = analyzeBindings(sourceId, typedText, analyzeOptions(scope, inferOptions));
   for (const error of result.errors) {
     diagnostics.push({
       code: error.diagnosticCode ?? "typecheck/type-mismatch",
@@ -511,7 +491,7 @@ function analyzeDocument(
     if (diagnostic.code === "elaborate/unknown-form") {
       const name = diagnostic.details?.name;
       return diagnostic.fix?.length === 1 && typeof name === "string" &&
-        !typeEnv.has(name) && !builtinScheme(name) && !scope.macroEnv?.has(name);
+        !bindings.hasBinding(name) && !scope.macroEnv?.has(name);
     }
     return diagnostic.code !== "elaborate/hole-type" || !diagnostics.some(existing =>
       existing.span && diagnostic.span && existing.span.startOffset >= diagnostic.span.startOffset &&
@@ -542,8 +522,7 @@ function analyzeDocument(
       exprTag: span.exprTag,
     }))],
     diagnostics: dedupe(diagnostics).map(diagnosticLocator(() => text)),
-    typeEnv,
-    ...(result.mechanics ? { mechanicsBindingTypes: result.mechanics.bindingTypes } : {}),
+    ...bindings,
   };
 }
 

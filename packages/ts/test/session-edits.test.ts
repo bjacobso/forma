@@ -12,11 +12,17 @@ describe("fresh analysis equivalence (incremental and artifact-cache scenarios)"
     workspace.setDocument("incremental.lisp", scenarios.incremental.before);
     workspace.analysis("incremental.lisp");
     workspace.symbols();
+    const bindingNames = new Set(workspace.symbols().definitions.map(d => d.name));
     for (const edit of scenarios.incremental.edits) {
       workspace.setDocument("incremental.lisp", edit.source);
       const fresh = new AnalysisWorkspace();
       fresh.setDocument("incremental.lisp", edit.source);
-      expect(workspace.analysis("incremental.lisp")).toEqual(fresh.analysis("incremental.lisp"));
+      for (const definition of fresh.symbols().definitions) bindingNames.add(definition.name);
+      const observable = (ws: AnalysisWorkspace) => {
+        const { bindingDisplay, hasBinding, ...data } = ws.analysis("incremental.lisp");
+        return { ...data, bindings: [...bindingNames].sort().map(name => [name, hasBinding(name), bindingDisplay(name)]) };
+      };
+      expect(observable(workspace)).toEqual(observable(fresh));
       expect(workspace.symbols()).toEqual(fresh.symbols());
       expect(workspace.documentSymbols("incremental.lisp").map(s => s.name).sort()).toEqual(edit.expectedBindings);
     }
