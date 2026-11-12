@@ -35,6 +35,7 @@ import {
 } from "./types.js";
 import { applyType, applyEnv, type TypeEnv, applyERow } from "./substitution.js";
 import { assignType, joinType, literalBase } from "./assign.js";
+import { requireNumeric, numericResult } from "./numeric.js";
 import { unify } from "./unify.js";
 import { InferContext } from "./context.js";
 import type { Origin } from "./errors.js";
@@ -582,7 +583,7 @@ const inferVar = (
     }
 
     const bt = ctx.builtinScheme(expr.name);
-    if (bt) return yield* instantiate(bt);
+    if (bt) return yield* instantiateWithConstraints(bt, originOf(expr, "var"));
 
     const hostLiteralType = ctx.unboundSymbolType(expr.name);
     if (hostLiteralType) return hostLiteralType;
@@ -774,7 +775,7 @@ const inferApp = (
       const args: Type[] = [];
       for (const [index,arg] of expr.args.entries()) {
         const t = yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst),env),arg);
-        yield* assignType(t,op === "mod" ? TCon("Int") : tFloat,originOf(arg,"numeric-argument")).pipe(
+        yield* (op === "mod" ? assignType(t,TCon("Int"),originOf(arg,"numeric-argument")) : requireNumeric(t,originOf(arg,"numeric-argument"))).pipe(
           Effect.mapError(error => new InferenceError({
             message: `Argument ${index + 1} to ${op}: ${error.message}`,
             origin: error.origin,
@@ -790,7 +791,7 @@ const inferApp = (
       if (["<","<=",">",">="].includes(op)) return tBool;
       if (["floor","ceil","round","mod"].includes(op)) return TCon("Int");
       if (["/","pow","sqrt"].includes(op)) return tFloat;
-      return args.every(t=>t._tag === "TCon" && t.name === "Int") ? TCon("Int") : tFloat;
+      return yield* numericResult(args, originOf(expr,"numeric-result"));
     }
     let fnT = yield* inferExpr(env, expr.fn);
     if (fnT.arity !== undefined && fnT.arity !== expr.args.length) {
@@ -811,21 +812,16 @@ const inferApp = (
     while (callbackCursor._tag === "TFun" && callbackParameters.length < expr.args.length) {
       callbackParameters.push(callbackCursor.arg); callbackCursor = callbackCursor.res;
     }
-    const numericCallback = expr.args.some(arg => arg._tag === "Var" &&
-      (env.get(arg.name)?.type ?? ctx.builtinScheme(arg.name)?.type)?.numericOperator);
-    if (numericCallback) {
-      // A numeric reducer can widen its accumulator when the elements are
-      // Float, even if its initial value is Int.
-      if (named === "reduce" && !env.has(named) && callbackParameters[0]?._tag === "TFun") {
-        const seed = yield* inferExpr(env, expr.args[1]!);
-        const list = yield* inferExpr(env, expr.args[2]!);
-        if (list._tag === "TApp" && list.con._tag === "TCon" && list.con.name === "List") {
-          const callback = expr.args[0]!;
-          const operator = callback._tag === "Var" ? (env.get(callback.name)?.type ?? ctx.builtinScheme(callback.name)?.type)?.numericOperator : undefined;
-          const result = operator === "/" ? tFloat : yield* joinType(seed, list.args[0]!, originOf(expr, "numeric-accumulator"));
-          yield* unify(callbackParameters[0].arg, result, originOf(expr, "numeric-accumulator"));
-        }
-      }
+    const callback = expr.args[0];
+    const numericReducer = callback?._tag === "Var" ? (env.get(callback.name)?.type ?? ctx.builtinScheme(callback.name)?.type)?.numericOperator : undefined;
+    if (numericReducer && ["+", "-", "*", "/", "min", "max"].includes(numericReducer) && named === "reduce" && !env.has(named) && expr.args.length === 3) {
+      const seed = yield* inferExpr(env, expr.args[1]!);
+      const item = yield* ctx.freshTVar;
+      yield* checkArgument(env, expr.args[2]!, TApp(tList, [item]));
+      const result = yield* numericResult([seed, item], originOf(expr,"numeric-accumulator"));
+      return numericReducer === "/" ? tFloat : result;
+    }
+    if (callbackParameters.some(parameter => parameter._tag === "TFun")) {
       for (const [index, parameter] of callbackParameters.entries()) {
         if (parameter._tag !== "TFun") yield* checkArgument(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[index]!, parameter);
       }
@@ -846,8 +842,37 @@ const inferApp = (
     // including when the literal appears before the value that supplies its type.
     const ordered = [...parameters.entries()].sort(([a], [b]) =>
       Number(contextualLiteral(expr.args[a]!)) - Number(contextualLiteral(expr.args[b]!)));
+    // Numeric variables can occur inside an input container as well as in a
+    // scalar parameter. Join all those input occurrences before binding them.
+    const leaves = (type: Type): string[] => type._tag === "TVar" ? [type.id]
+      : type._tag === "TApp" ? type.args.flatMap(leaves)
+      : type._tag === "TRow" ? [...flattenRow(type.row).fields.values()].flatMap(leaves) : [];
+    const occurrences = parameters.flatMap(leaves);
+    const numericSubst = yield* Ref.get(ctx.subst);
+    const numericVariables = new Set((yield* Ref.get(ctx.pendingConstraints)).flatMap(pc => pc.constraint.className === "$Numeric" ? pc.constraint.args.flatMap(arg => {
+      const type = applyType(numericSubst, arg);
+      return type._tag === "TVar" ? [type.id] : [];
+    }) : []));
+    const shared = (id: string) => numericVariables.has(id)
+      ? occurrences.filter(other => other === id).length > 1
+      : parameters.filter(parameter => parameter._tag === "TVar" && parameter.id === id).length > 1;
+    const collect = (parameter: Type, actual: Type): Effect.Effect<void, InferenceError, InferContext> => Effect.gen(function* () {
+      if (parameter._tag === "TVar" && shared(parameter.id) && numericVariables.has(parameter.id)) {
+        const previous = repeated.get(parameter.id);
+        repeated.set(parameter.id, previous ? yield* joinType(previous, actual, originOf(expr,"argument-join")) : actual);
+      } else if (parameter._tag === "TApp" && actual._tag === "TApp" && parameter.args.length === actual.args.length) {
+        for (let i = 0; i < parameter.args.length; i++) yield* collect(parameter.args[i]!, actual.args[i]!);
+      } else if (parameter._tag === "TRow" && actual._tag === "TRow") {
+        const fields = flattenRow(actual.row).fields;
+        for (const [label, type] of flattenRow(parameter.row).fields) if (fields.has(label)) yield* collect(type, fields.get(label)!);
+      }
+    });
     for (const [i, parameter] of ordered) {
-      if (parameter._tag !== "TVar" || parameters.filter(p => p._tag === "TVar" && p.id === parameter.id).length < 2) continue;
+      if (parameter._tag !== "TVar") {
+        if (leaves(parameter).some(id => shared(id) && numericVariables.has(id))) yield* collect(parameter, yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[i]!));
+        continue;
+      }
+      if (!shared(parameter.id)) continue;
       const previous = repeated.get(parameter.id);
       const argumentEnv = applyEnv(yield* Ref.get(ctx.subst), env);
       if (previous && contextualLiteral(expr.args[i]!) && hasUnion(applyType(yield* Ref.get(ctx.subst), previous))) {

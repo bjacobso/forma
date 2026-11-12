@@ -6,17 +6,27 @@ import { applyType } from "./substitution.js";
 import { typeMismatch } from "./diagnostic-types.js";
 import { unify } from "./unify.js";
 import { InferenceError, type Origin } from "./errors.js";
+import { requireNumeric, numericResult } from "./numeric.js";
 
 /** Assignment is directional: every Int is a Float; arbitrary Floats are not Ints. */
 export const assignType = (actual: Type, expected: Type, origin: Origin): Effect.Effect<void,InferenceError,InferContext> => Effect.gen(function* () {
   const ctx = yield* InferContext, subst = yield* Ref.get(ctx.subst);
   const a = applyType(subst,actual), b = applyType(subst,expected);
-  if (a.numericOperator && b._tag === "TFun" && b.res._tag === "TFun") {
-    const left = b.arg, right = b.res.arg;
-    yield* assignType(left, TCon("Float"), origin);
-    yield* assignType(right, TCon("Float"), origin);
-    const result = a.numericOperator === "/" ? TCon("Float") : yield* joinType(left, right, origin);
-    yield* assignType(result, b.res.res, origin);
+  if (a.numericOperator && b._tag === "TFun") {
+    const params: Type[] = [];
+    const count = a.arity ?? 2;
+    let target: Type = b;
+    for (let i = 0; i < count && target._tag === "TFun"; i++) {
+      params.push(target.arg);
+      target = target.res;
+    }
+    if (params.length !== count) return yield* unify(b, a, origin);
+    for (const param of params) yield* requireNumeric(param, origin);
+    const op = a.numericOperator;
+    const result = ["<", "<=", ">", ">="].includes(op) ? TCon("Bool")
+      : ["floor", "ceil", "round"].includes(op) ? TCon("Int")
+      : ["/", "pow", "sqrt"].includes(op) ? TCon("Float") : yield* numericResult(params, origin);
+    yield* assignType(result, target, origin);
     return;
   }
   if (a._tag === "TVar" || b._tag === "TVar") return yield* unify(b, a, origin);

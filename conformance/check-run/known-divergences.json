@@ -1,29 +1,5 @@
 [
   {
-    "id": "E2",
-    "seed": "seeds/e2-map-numeric-kind.lisp",
-    "category": "type-disagrees",
-    "note": "Mapped squares display List<Float> but contain Int values."
-  },
-  {
-    "id": "G1",
-    "program": "(map (fn [x] (+ x 1)) [0])",
-    "category": "type-disagrees",
-    "note": "Displays List<Float> but evaluates to [1]."
-  },
-  {
-    "id": "G2",
-    "program": "(filter (fn [x] (> x 0)) [0 1])",
-    "category": "type-disagrees",
-    "note": "Displays List<Float> but evaluates to [1]."
-  },
-  {
-    "id": "G3",
-    "program": "(reduce (fn [a b] (+ a b)) 0 [1])",
-    "category": "type-disagrees",
-    "note": "Displays Float but evaluates to 1."
-  },
-  {
     "id": "G4",
     "program": "(if false 0.0 1)",
     "category": "type-disagrees",

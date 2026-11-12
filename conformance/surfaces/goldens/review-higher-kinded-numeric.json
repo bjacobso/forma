@@ -3,7 +3,7 @@
   "outputs": {
     "typecheck": {
       "diagnostics": [],
-      "type": "List<Float>"
+      "type": "List<Int>"
     }
   },
   "version": 1

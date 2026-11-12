@@ -250,7 +250,7 @@ test(
           sessionId,
           sourceId: "functions.lisp",
           source:
-            "(export second name rest) (define second [a b] b) (define name [record] record.name) (define rest [& items] items)",
+            "(export second name rest square total) (define second [a b] b) (define name [record] record.name) (define rest [& items] items) (define square [x] (* x x)) (define total [xs] (reduce + 0 xs))",
         });
         const result = await host.moduleGraph({
           sessionId,

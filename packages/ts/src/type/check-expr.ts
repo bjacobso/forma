@@ -55,6 +55,11 @@ export const checkExpr = (env: TypeEnv, expr: CoreExpr, expected: Type): Effect.
   // ["warehouse" "office"] can be a List of an enum.
   if (target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "List" && target.args.length === 1
     && expr._tag === "App" && expr.fn._tag === "Var" && expr.fn.name === "__vector") {
+    if (applyType(yield* Ref.get(ctx.subst), target.args[0]!)._tag === "TVar") {
+      const actual = yield* inferExpr(env, expr);
+      yield* assignType(actual, target, originOf(expr,"vector-check"));
+      return applyType(yield* Ref.get(ctx.subst), target);
+    }
     for (const item of expr.args) yield* checkExpr(env, item, target.args[0]!);
     yield* ctx.recordType(expr.id, target);
     return target;
