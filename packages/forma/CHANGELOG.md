@@ -4,6 +4,9 @@
 
 ### Minor Changes
 
+- 6042916: Infer reusable numeric functions with numeric constraints and solve callback inputs before choosing Int or Float. Carry numeric requirements through portable module signatures and generated Effect modules; default ambiguous numeric values to Int.
+- b7cad56: **Breaking:** Align the kernel VM and compile-time tree evaluator on constructor calls, lexical builtin shadowing, malformed function/conditional/binding validation, and runtime diagnostic names and tags. Malformed kernel forms previously accepted by the VM now fail. Replace the VM's per-instruction Effect Ref updates with a shared per-run counter while preserving callback budgets, observation steps, and cooperative cancellation. The compile-time evaluator and runtime fallback remain available.
+- f52b012: **Breaking:** Replace the public document analysis `typeEnv` and `mechanicsBindingTypes` fields with read-only `bindingDisplay(name, offset?)` and `hasBinding(name)` queries. Editor services now obtain mechanics, HM, and builtin binding displays through one analysis adapter; inference and module schemes retain their internal environments.
 - 2ec3020: Expose `authored` and `syntax` on elaborated declarations and export the
   `DeclarationSyntax` type from `/descriptor`. Consumers can inspect original
   top-level expressions and named, nested and repeated hole values with exact
@@ -270,6 +273,10 @@
 
 ### Patch Changes
 
+- bece13a: Locate descriptor normalization and duplicate form diagnostics. Export typed errors with stable codes and field paths for invalid protocol generator, diagnostic catalog, and artifact validator registrations, and retain module/package-fetch for transport filesystem failures.
+- 636d8e3: Locate unmatched and duplicate type signatures, reject incomplete match arms and List type applications before early traversal can crash, and report invalid module declaration names without exposing internal markers.
+- a711c0e: Report invalid protocol manifest fields, missing names, and nonliteral values as typed diagnostics located at the authored prelude syntax.
+- 95dbd22: Report malformed surface declarations, form applications, action operations, and type contracts as located diagnostics. Keep invalid authored hook results in the Effect failure channel, and expose `SurfaceInputError` with a stable code and field path for unsupported host-supplied syntax.
 - 8a44902: Reduce typechecking allocations by caching scheme free variables and sharing schemes that are unaffected by a substitution, preserving inference results.
 - 93e8642: Align the shared CodeMirror theme with Forma's green-black code panels and warm-paper light mode. Improve comment, gutter, and placeholder contrast and use a restrained default syntax palette without changing editing behavior or the optional syntax palettes.
 - e44ffca: Expose form documentation examples as source strings on descriptors. Accept source strings or vectors of example programs without evaluating them or capturing their helper references. Document all bundled domain forms and check their examples in the repository checks.
