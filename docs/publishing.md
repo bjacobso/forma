@@ -118,21 +118,23 @@ project, prints `packages=<n> bytes=<n>`, then removes the project. The count is
 installed package instances from npm's lockfile, including Forma and Effect.
 Bytes sum compressed registry tarball sizes from `npm pack --json` for those
 instances plus the actual local Forma archive size. This is compressed transfer
-size, not installed disk size. Both install and pack use `--prefer-offline`.
-Registry access is needed for cache misses; the sandbox could not complete the
-baseline registry install, so before/after totals remain to be measured outside
-it. `pnpm check:tarball` prints the lean package count and checks both missing
-and explicitly installed tooling. To test an uncommitted build, pass its archive:
+size, not installed disk size. The install uses `--prefer-offline`; the size
+lookup uses `--prefer-online`, so a stale npm metadata cache cannot fail it.
+Measured for 0.6.0 (#162): **124 packages and 15,554,206 bytes** before the
+tooling became optional peers, **2 packages and 10,858,635 bytes** after, most of
+it Effect. `pnpm check:tarball` prints the lean package count and checks both
+missing and explicitly installed tooling. To test an uncommitted build, pass its archive:
 `pnpm check:tarball /absolute/path/to/forma.tgz`.
 
 ## Version rule and release checks
 
-The manifest on `main` names the next release. Pending changesets have been
-consumed with `pnpm exec changeset version` into `packages/forma/CHANGELOG.md`
-for 0.5.0. Only `@forma-language/forma` belongs in new changesets. Before merging
-a later breaking change, add a **Breaking** minor changeset and consume it in
-the same PR with `pnpm release:version`, advancing the pre-1.0 minor again.
-Keep the manifest, changelog, README version mentions and this page aligned.
+The manifest on `main` names the current prepared version. Changesets' release
+PR ("chore: release Forma") consumes pending notes with `pnpm release:version`,
+which runs `changeset version`, then `scripts/sync-release-version.mjs` to write
+the new version into the README, the package README and this page. Only
+`@forma-language/forma` belongs in changesets. Before merging a later breaking
+change, add a **Breaking** minor changeset, advancing the pre-1.0 minor.
+`node scripts/check-release-plan.mjs` fails when those version mentions differ from the manifest.
 Private workspaces are excluded from versioning and tags. The release-plan
 check validates pending release names, or requires a changelog entry matching
 the manifest when all notes are consumed. This permits a prepared release PR
@@ -151,32 +153,62 @@ executables. Offline CI needs the dependency closure in its pnpm store;
 pack/example checks retain `--prefer-offline`. The clean tarball gate also
 needs npm's cache or registry access for its ordinary npm consumer install.
 
-## Commands for Ben to publish
+## First publication
 
 Prerequisites: control the `forma-language` npm organization and permission to
-publish `@forma-language/forma`; authenticate with an npm account that satisfies
-the organization's 2FA policy for the authorized first publication. The old
-scope's trusted publishers do not transfer. Bootstrap the package under that
-account, then configure its npm trusted publisher for repository `bjacobso/forma`,
-workflow `release.yml`, environment `npm-publish`. The release workflow uses
-GitHub OIDC with `id-token: write` and npm 11.5.1 or newer. Do not add a persistent
-token to CI.
+publish `@forma-language/forma`, with an npm account that satisfies the
+organization's 2FA policy. The old scope's trusted publishers do not transfer,
+and npm cannot attach a trusted publisher to a package that does not exist yet,
+so the first version is published by hand. Do not add a persistent token to CI.
 
-From the reviewed release checkout, Ben runs:
+Publish from the head of the release PR **before** merging it. Replace
+`<release-head>` with that PR's head commit and `<version>` with its manifest
+version:
 
 ```sh
+git fetch origin
+git checkout --detach <release-head>
+git status --short                     # must print nothing
 pnpm install --frozen-lockfile
 pnpm release:check
 pnpm check:tarball
 pnpm check:examples
+node scripts/check-release-plan.mjs
+pnpm exec turbo run build --filter=@forma-language/forma
+pnpm --filter @forma-language/forma pack --pack-destination "$PWD/.context"
+tar -xOzf .context/forma-language-forma-<version>.tgz package/package.json | grep '"version"'
 npm login
-pnpm --filter @forma-language/forma publish --access public --no-git-checks
+npm publish .context/forma-language-forma-<version>.tgz --access public
+npm view @forma-language/forma@<version> version
 ```
 
-Subsequent versioned releases use the gated Changesets `release.yml` workflow;
-its publish job requires the `npm-publish` environment approval. The repository
-also exposes `pnpm release:publish` (`changeset publish`) for an authorized
-maintainer release. Do not publish the private implementation workspaces.
+Then, on npmjs.com, open the package's settings and add a trusted publisher:
+GitHub Actions, repository `bjacobso/forma`, workflow `release.yml`, environment
+`npm-publish`. Then merge the release PR. Its push to `main` runs `release.yml`;
+`select-mode` finds the version already on npm and selects `none`, so no pack or
+publish job runs and no tag or GitHub release is created. To record the release,
+tag the merge commit yourself:
+
+```sh
+git fetch origin
+git tag -a '@forma-language/forma@<version>' origin/main -m '@forma-language/forma@<version>'
+git push origin '@forma-language/forma@<version>'
+gh release create '@forma-language/forma@<version>' --verify-tag --title '@forma-language/forma@<version>' --notes 'See packages/forma/CHANGELOG.md.'
+```
+
+If the release PR is merged before the package exists, `release.yml` selects
+`publish`. Pack runs `pnpm release:check`. The publish job starts without approval
+(the `npm-publish` environment has no protection rules) and its `npm publish`
+through GitHub OIDC fails because no trusted publisher exists. Changesets tags
+and creates releases only for packages that published, so the failure leaves no
+tag or release. Publish by hand from the merge commit as above, then configure
+the trusted publisher.
+
+Later releases use the Changesets workflow: merging a release PR publishes from
+`release.yml` through OIDC, with provenance, and creates the tag and GitHub
+release. Consider adding required reviewers to the `npm-publish` environment so
+that publish waits for approval. Do not publish the private implementation
+workspaces.
 
 After the new package is published and verified, Ben can deprecate exactly the
 old versions with these commands:
