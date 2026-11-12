@@ -311,7 +311,7 @@ are resolved module names.
 
 ### Authored syntax in an embedded compiler
 
-`elaborateProgram` and `elaborateSources` from `@formalang/ts/descriptor`
+`elaborateProgram` and `elaborateSources` from `@forma-language/forma/descriptor`
 return `ElaboratedDeclaration`s with `authored` and `syntax`. You do not need
 to parse the source a second time or join nodes by source ID and offset:
 

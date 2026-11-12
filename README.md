@@ -398,9 +398,10 @@ consumer-prelude SDK, the trusted kernel and elaborators
 ([RFC 0022](docs/rfcs/0022-programmable-type-system.md)), Lisp dialect adapters
 and emitters ([RFC 0021](docs/rfcs/0021-languages-as-libraries.md)), Go and
 Rust Effect hosts ([Effect hosts](docs/rfcs/0022-effect-hosts.md)), and
-effect-polymorphic signatures ([RFC 0023](docs/rfcs/0023-effect-polymorphism.md)). Public packages use
-the `@formalang` npm scope. Changesets manages version PRs and the Release
-workflow publishes validated packages after those PRs merge. First publication
+effect-polymorphic signatures ([RFC 0023](docs/rfcs/0023-effect-polymorphism.md)). The single public distribution is
+`@forma-language/forma`; it has not yet been published. Internal workspaces are
+private. Changesets manages version PRs and the Release workflow publishes the
+validated public package after maintainer authorization. First publication
 and npm trusted-publisher setup are described in [Publishing](docs/publishing.md).
 
 ## Website deployment

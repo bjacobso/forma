@@ -17,7 +17,7 @@ source
 
 ## Engine
 
-`@formalang/ts` is the TypeScript/Effect engine. It runs the browser demo, the
+`@forma-language/forma` is the TypeScript/Effect engine. It runs the browser demo, the
 language server, the Foldworks-hosted workbench, and the default host. It is the only
 implementation: an OCaml engine with native, JavaScript, and WebAssembly builds
 was removed (see [Retiring the OCaml engine](./engine-consolidation.md)).
@@ -29,7 +29,7 @@ hook registrations.
 
 ## Host boundary
 
-`@formalang/host` presents one asynchronous ABI for parsing, inference, evaluation,
+`@forma-language/forma/host` presents one asynchronous ABI for parsing, inference, evaluation,
 sessions, editor analysis, retained values, and host calls. `TsLanguageHost`
 adapts the TypeScript engine to that contract.
 
@@ -107,12 +107,13 @@ stored goldens and reports differences by JSON path.
 
 ## Tooling
 
-`@formalang/editor` provides syntax, structural editing, diagnostics, hover, and
-React bindings. `@formalang/ts/analysis` is a workspace of preludes and
+`@forma-language/forma/editor` provides UI-free editor services.
+`@forma-language/forma/editor/codemirror` provides syntax and structural editing;
+`@forma-language/forma/editor/react` provides React bindings. `@forma-language/forma/analysis` is a workspace of preludes and
 documents whose language services (diagnostics, hover, completion,
 definitions, references, rename, document symbols, search, semantic tokens,
 and formatting) are memoized queries. Documents are typed in the scope of their
-preludes. `@formalang/language-server` projects those queries into standard
+preludes. `@forma-language/forma/language-server` projects those queries into standard
 Language Server Protocol requests. It starts domain-neutral and loads only
 preludes explicitly supplied by its consumer. Language services are
 implemented by the TypeScript engine only; see

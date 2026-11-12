@@ -31,7 +31,7 @@ program in your browser. From a checkout, the `forma` JSON CLI does the same:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm --filter @formalang/ts build && pnpm --filter @formalang/host build
+pnpm exec turbo run build --filter=@forma-language/forma
 node packages/host/dist/cli.mjs request '{"op":"evaluate","source":"(+ 137 349)"}'
 # {"ok":true,"value":{"kind":"int","value":486},"diagnostics":[]}
 node packages/host/dist/cli.mjs request '{"op":"typecheck","source":"(+ 137 349)"}'
@@ -832,7 +832,7 @@ environment.
 Programs with Effect types are checked by Forma's Effect checker and compiled
 to [Effect](https://effect.website) TypeScript, which runs them. To try one,
 use the [Effect playground](https://forma-lang.com/playground/demo/effect-ts),
-or call `Mechanics.generateEffectProgram` from `@formalang/ts`. The checker
+or call `Mechanics.generateEffectProgram` from `@forma-language/forma/mechanics`. The checker
 holds operations to their signatures. Delete `[InsufficientFunds]` from the
 signature of `withdraw`, and the `fail` call is reported:
 

@@ -221,7 +221,7 @@ pageClass: forma-index
 <ul class="fh-checklist" aria-label="What a prelude author gets today, and what is planned">
 <li><span><strong>Checked programs</strong>Slot types, Hindley–Milner inference, and effect sets for every use of a form.</span><em>engine</em></li>
 <li><span><strong>Generated reference</strong>Forms, slots, types, and signatures with their doc comments, built from the source.</span><em>this site</em></li>
-<li><span><strong>Live playground</strong>The browser compiler runs prelude vocabularies such as email rules and Elm commands.</span><em>@formalang/ts</em></li>
+<li><span><strong>Live playground</strong>The browser compiler runs prelude vocabularies such as email rules and Elm commands.</span><em>@forma-language/forma</em></li>
 <li><span><strong>Refined contracts</strong><code>:pattern</code>, <code>:min-length</code>, <code>:min</code>, and <code>:max</code> on IR fields, checked where the author wrote them and generated as Schema filters.</span><em>engine</em></li>
 <li><span><strong>Modules and packages</strong>Explicit imports and exports, <code>forma.json</code>, a verified <code>forma.lock</code>, and committed vendor sources. <a href="/modules">File modules</a></span><em>engine</em></li>
 <li><span><strong>Editor support</strong>Diagnostics, hover, and workspace search by name, documentation, or IR type.</span><em>language server</em></li>
@@ -274,11 +274,33 @@ pageClass: forma-index
 <p>One TypeScript engine runs behind a JSON host ABI in Node, the browser, and editor tooling, and stored fixtures pin its behavior.</p>
 </div>
 <div class="fh-facts">
-<article><h3>TypeScript engine</h3><p><code>@formalang/ts</code> on npm. Runs in Node and in the browser; the live compiler above runs it in a Web Worker.</p></article>
-<article><h3>Host and CLI</h3><p><code>@formalang/host</code> wraps the engine in a JSON host ABI, with a source-built <code>forma</code> JSON CLI and daemon.</p></article>
+<article><h3>One package</h3><p><code>@forma-language/forma</code> contains the TypeScript engine, host, editor adapters, and language server. The engine runs in Node and in the browser.</p></article>
+<article><h3>CLI and embedding</h3><p><code>forma check</code>, <code>run</code>, <code>test</code>, <code>fmt</code>, <code>repl</code>, and <code>describe</code> serve the human workflow. <code>forma mcp</code> serves agents; <code>createLanguage</code> embeds the same language services.</p></article>
 <article><h3>Conformance</h3><p>Fixtures and reviewed goldens pin parsing, typing, evaluation, and IR output, and CI checks the engine against them.</p></article>
-<article><h3>Editor tooling</h3><p>A language server plus CodeMirror and React components for diagnostics, hover, and structural editing.</p></article>
+<article><h3>Repair loop</h3><p>Typed holes such as <code>?name</code> expose expected types. Diagnostics carry source spans, explanations, and repair information for editors and agents.</p></article>
 </div>
+<p class="fh-proof"><a href="https://worldvm.com">WorldVM's world language is a Forma prelude.</a></p>
+
+From a checkout of `main` (Node.js 24 and pnpm 10.20):
+
+```sh
+pnpm install --frozen-lockfile
+pnpm exec turbo run build --filter=@forma-language/forma
+node packages/forma/dist/cli.mjs help
+```
+
+To install a tarball packed from `main`, after that build:
+
+```sh
+mkdir -p .context/tarballs
+pnpm --filter @forma-language/forma pack --pack-destination ../../.context/tarballs
+# In your consumer project, use the actual tarball filename printed above:
+npm install /absolute/path/to/forma/.context/tarballs/forma-language-forma-*.tgz effect@4.1.1
+```
+
+The package has not been published to npm. [Publishing](/publishing) records the
+release checks and publication gates.
+
 </section>
 
 <section class="fh-section" aria-labelledby="status-heading">
@@ -289,13 +311,13 @@ pageClass: forma-index
 <div class="fh-notes-grid">
 <dl class="fh-notes">
 <div><dt>It is pre-alpha research.</dt><dd>Packages are 0.x and change without notice. There are no stable APIs, wire formats, or host ABI yet.</dd></div>
-<div><dt>There is no published CLI.</dt><dd>You call the engine from your own build script. A consumer-prelude SDK is next on the <a href="/roadmap">roadmap</a>.</dd></div>
+<div><dt>The package is not on npm yet.</dt><dd>Run the CLI from a checkout using the commands above, or install a tarball packed from <code>main</code>. See <a href="/publishing">Publishing</a> for the distribution contract and release gates.</dd></div>
 <div><dt>Some browser output is stored.</dt><dd>The playground does not run ontology elaboration yet; those examples show a stored canonical IR golden that CI checks against the TypeScript engine.</dd></div>
 <div><dt>One generated target.</dt><dd>Effect TypeScript and Effect Schema are generated today. Lisp emitters, starting with <code>.cljc</code>, and Go and Rust Effect hosts are proposals in <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md">RFC 0021</a> and the <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-effect-hosts.md">Effect hosts RFC</a>, not built.</dd></div>
 <div><dt>One Lisp surface.</dt><dd>Forma's own syntax is the only surface; Clojure spellings are macros over it. The trusted kernel, elaborator API, and dialect adapters are proposals in <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md">RFC 0021</a> and <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md">RFC 0022</a>.</dd></div>
 </dl>
 
-<pre class="fh-ascii fh-ascii--card" v-pre aria-label="Working today: lossless reader and formatter, macros, Hindley–Milner and effect inference, refined contracts, canonical IR with contract identities, file modules and offline packages, Effect TypeScript and Schema generation, the browser playground and language server, and conformance goldens. Not yet: a published forma CLI, a stable host ABI, a consumer-prelude SDK, a trusted kernel and elaborator API, Lisp dialect adapters, emitters for Clojure, Racket, Scheme, and Common Lisp, Go and Rust Effect hosts, and effect-polymorphic signatures.">working today
+<pre class="fh-ascii fh-ascii--card" v-pre aria-label="Working today: lossless reader and formatter, macros, Hindley–Milner and effect inference, refined contracts, canonical IR with contract identities, file modules and offline packages, Effect TypeScript and Schema generation, the browser playground and language server, and conformance goldens. Not yet: npm publication, a stable host ABI, a trusted kernel and elaborator API, Lisp dialect adapters, emitters for Clojure, Racket, Scheme, and Common Lisp, Go and Rust Effect hosts, and effect-polymorphic signatures.">working today
 <span class="tone-ok">✓</span> reader · formatter · macros
 <span class="tone-ok">✓</span> HM inference · effect inference
 <span class="tone-ok">✓</span> refined contracts
@@ -304,11 +326,12 @@ pageClass: forma-index
 <span class="tone-ok">✓</span> Effect TypeScript + Schema
 <span class="tone-ok">✓</span> playground · language server
 <span class="tone-ok">✓</span> conformance goldens
+<span class="tone-ok">✓</span> human CLI · MCP · createLanguage
+<span class="tone-ok">✓</span> typed holes · repair diagnostics
 
 not yet
-<span class="tone-muted">○</span> published CLI
+<span class="tone-muted">○</span> npm publication
 <span class="tone-muted">○</span> stable host ABI
-<span class="tone-muted">○</span> consumer-prelude SDK
 <span class="tone-muted">○</span> trusted kernel · elaborators
 <span class="tone-muted">○</span> Lisp dialect adapters
 <span class="tone-muted">○</span> Clojure / Racket / Scheme / CL emitters
@@ -332,28 +355,12 @@ not yet
 <li>General application programming. Forma isn't trying to replace Clojure, OCaml, or TypeScript.</li>
 <li>Typechecking an existing Clojure, Racket, or Common Lisp codebase. That is a later, proposed stage.</li>
 <li>Numeric or throughput-critical code.</li>
-<li>Teams that need stable APIs, wire formats, or a CLI today.</li>
+<li>Teams that need stable APIs or wire formats today.</li>
 </ul>
 </div>
 </div>
 </section>
 
-<section class="fh-family" aria-labelledby="family-heading">
-<div class="fh-family__head">
-<div>
-<p class="fh-label">Part of the WorldVM family</p>
-<h2 id="family-heading">Small experiments. Bigger worlds.</h2>
-</div>
-<p>Forma is one thread in a family of open experiments in software that can describe, remember, coordinate, and explain itself. WorldVM is where they meet: a runtime for operational worlds of entities, rules, goals, and actions.</p>
-</div>
-<ul class="fh-family__grid">
-<li><a class="no-icon" href="https://triplex.build"><strong>Triplex ↗</strong><em>A memory for your world.</em><span>An embedded fact database that keeps time, rules, and provenance together.</span></a></li>
-<li><a class="no-icon" href="https://schematics.run"><strong>Schematics ↗</strong><em>Let your schemas tell you more.</em><span>Small Effect libraries that pull an app's hidden program out into data.</span></a></li>
-<li><a class="no-icon" href="https://foldworks.dev"><strong>Foldworks ↗</strong><em>Give the machinery a face.</em><span>Components and application primitives for Foldkit.</span></a></li>
-<li><a class="no-icon" href="https://github.com/bjacobso/runfold"><strong>Runfold ↗</strong><em>Work that keeps unfolding.</em><span>Typed programs as data, for durable and inspectable work.</span></a></li>
-<li class="fh-family__here"><div><strong>Forma</strong><em>Little language. Big ideas.</em><span>You are here: a programmable type system for Lisp.</span></div></li>
-</ul>
-<a class="fh-family__cta no-icon" href="https://worldvm.com/">Meet the whole family at worldvm.com ↗</a>
-</section>
+
 
 </div>

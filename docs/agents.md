@@ -5,7 +5,7 @@
 Forma source files use `.lisp`; project metadata uses `forma.json` and `forma.lock`.
 
 APIs, package boundaries, syntax, and artifact formats are still evolving.
-The TypeScript host includes a source-built `forma` CLI (check, run, fmt, repl, explain, describe, mcp, and JSON commands) and daemon, with
+The TypeScript host includes a source-built `forma` CLI (check, run, test, fmt, repl, explain, describe, mcp, and JSON commands) and daemon, with
 filesystem module commands described in [File modules](https://forma-lang.com/modules).
 The TypeScript engine is the only implementation; it also powers the browser
 tools and language server. The earlier OCaml engine was removed.

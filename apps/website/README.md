@@ -1,20 +1,20 @@
-# `@formalang/website`
+# Forma playground
 
 The static Vite/React site and browser compiler explorer for `forma-lang.com`.
-Its live pipelines run `@formalang/ts` in a Web Worker and expose source, syntax,
+Its live pipelines run the engine distributed in `@forma-language/forma` in a Web Worker and expose source, syntax,
 inferred types, evaluated values, and generated artifacts.
 
 The structural workbench lives in Foldworks. The Worker redirects the legacy
 `/workbench/demo` and `/workbench/demo/` paths to the destination in
 `src/lib/workbenchLocation.ts`. `pnpm website:build` assembles only the docs
 and playground. The homepage's `LiveWorkbench` and `WorkbenchEditor` stay here
-and use `@formalang/editor`; they do not depend on Foldworks.
+and use `@forma-language/forma/editor`; they do not depend on Foldworks.
 
 ```sh
-pnpm --filter @formalang/website dev
-pnpm --filter @formalang/website test
-pnpm --filter @formalang/website build
-pnpm --filter @formalang/website test:visual
+pnpm --dir apps/website dev
+pnpm --dir apps/website test
+pnpm --dir apps/website build
+pnpm --dir apps/website test:visual
 pnpm test:site
 pnpm website:dry-run
 ```
@@ -58,7 +58,7 @@ are create-only, and bodies are limited to 128 KiB. Saves are rate limited to
 endpoint; operators can remove an object directly from R2 when necessary.
 
 For local storage and sharing, run `pnpm website:build` followed by
-`pnpm --filter @formalang/website exec wrangler dev --local` and open its
+`pnpm --dir apps/website exec wrangler dev --local` and open its
 `/playground/custom` route. Wrangler simulates R2 locally; no cloud credentials
 are needed. The Vite-only `pnpm dev` server supports editing and compilation,
 but does not serve the storage API. `pnpm test:site` tests the full Worker and

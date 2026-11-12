@@ -1,11 +1,12 @@
 ---
+date: 2026-11-07
 title: Giving the List a Schema
 description: Part 2 of From Lists to Languages. Give s-expressions a recursive Effect Schema, add source spans, and turn parsing into a Schema transformation that reports structured diagnostics.
 ---
 
 # Giving the List a Schema
 
-<p class="blog-meta">Part 02 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act I, Foundations · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 02 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act I, Foundations · <time datetime="2026-11-07">November 7, 2026</time></p>
 
 > A program is data with a shape.
 
