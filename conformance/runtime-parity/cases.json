@@ -1,0 +1,143 @@
+[
+  {
+    "file": "conformance/check-run/seeds/t12-lambda-arity.lisp",
+    "classification": "kernel",
+    "expected": {
+      "error": "ArityError",
+      "message": "lambda expects 2 arguments, got 1"
+    }
+  },
+  {
+    "file": "conformance/effect-typescript/cases/http-api/program.lisp",
+    "classification": "domain-unavailable",
+    "expected": {
+      "error": "KernelTypeError",
+      "message": "Unbound symbol: service"
+    }
+  },
+  {
+    "file": "conformance/fixtures/typecheck/adt-constructor-success/source.lisp",
+    "classification": "kernel",
+    "expected": {
+      "printed": "{:_tag \"Red\"}"
+    }
+  },
+  {
+    "file": "conformance/fixtures/typecheck/arity-mismatch-curried-error/source.lisp",
+    "classification": "kernel",
+    "expected": {
+      "error": "ArityError",
+      "message": "lambda expects 1 arguments, got 3"
+    }
+  },
+  {
+    "file": "conformance/fixtures/typecheck/arity-mismatch-saturated-error/source.lisp",
+    "classification": "kernel",
+    "expected": {
+      "error": "ArityError",
+      "message": "lambda expects 2 arguments, got 3"
+    }
+  },
+  {
+    "file": "conformance/fixtures/typecheck/fn-arity-error/source.lisp",
+    "classification": "kernel",
+    "expected": {
+      "error": "ArityError",
+      "message": "fn expects 2+ arguments, got 1"
+    }
+  },
+  {
+    "file": "conformance/fixtures/typecheck/function-overapplication-error/source.lisp",
+    "classification": "kernel",
+    "expected": {
+      "error": "ArityError",
+      "message": "lambda expects 1 arguments, got 2"
+    }
+  },
+  {
+    "file": "conformance/fixtures/typecheck/if-arity-error/source.lisp",
+    "classification": "kernel",
+    "expected": {
+      "error": "ArityError",
+      "message": "if expects 2-3 arguments, got 4"
+    }
+  },
+  {
+    "file": "conformance/fixtures/typecheck/let-binding-vector-error/source.lisp",
+    "classification": "kernel",
+    "expected": {
+      "error": "KernelTypeError",
+      "message": "let bindings must be a vector"
+    }
+  },
+  {
+    "file": "conformance/fixtures/typecheck/let-polymorphism-success/source.lisp",
+    "classification": "kernel",
+    "expected": {
+      "printed": "42"
+    }
+  },
+  {
+    "file": "conformance/fixtures/typecheck/list-expected-error/source.lisp",
+    "classification": "kernel",
+    "expected": {
+      "error": "KernelTypeError",
+      "message": "first: expected list, got Int"
+    }
+  },
+  {
+    "file": "conformance/fixtures/typecheck/non-callable-error/source.lisp",
+    "classification": "kernel",
+    "expected": {
+      "error": "KernelTypeError",
+      "message": "Cannot call Int as function"
+    }
+  },
+  {
+    "file": "conformance/fixtures/typecheck/nth-index-type-error/source.lisp",
+    "classification": "kernel",
+    "expected": {
+      "error": "KernelTypeError",
+      "message": "nth: expected Int, got string"
+    }
+  },
+  {
+    "file": "conformance/fixtures/typecheck/partial-application-success/source.lisp",
+    "classification": "kernel",
+    "expected": {
+      "error": "ArityError",
+      "message": "lambda expects 2 arguments, got 1"
+    }
+  },
+  {
+    "file": "conformance/fixtures/typecheck/typeclass-hkt-instance-direct-builtin-success/source.lisp",
+    "classification": "kernel",
+    "expected": {
+      "error": "KernelTypeError",
+      "message": "instance method 'fmap' must evaluate to a function"
+    }
+  },
+  {
+    "file": "conformance/invalid-source/fn-body.lisp",
+    "classification": "kernel",
+    "expected": {
+      "error": "ArityError",
+      "message": "fn expects 2+ arguments, got 1"
+    }
+  },
+  {
+    "file": "conformance/invalid-source/fn-rest.lisp",
+    "classification": "kernel",
+    "expected": {
+      "error": "KernelTypeError",
+      "message": "& must be followed by a rest parameter name"
+    }
+  },
+  {
+    "file": "conformance/check-run/seeds/e3-reduce-builtin.lisp",
+    "classification": "kernel",
+    "expected": {
+      "printed": "6"
+    }
+  }
+]

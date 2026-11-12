@@ -148,3 +148,44 @@ first step. Hosted async/suspension semantics differ from VM opcode execution.
 Optimization must preserve shared budgets, reentrancy and observation. Printed
 corpus equality and baseline golden success are necessary evidence, not proof
 that a runtime or hosted adapter can already be deleted.
+
+## Implementation status
+
+Stages 1–3 are implemented in `wp/t7-one-runtime`; stage 4 remains pending.
+Independent expectations in `conformance/runtime-parity/` cover the proposal's
+15 cases and newer malformed-function fixtures. Tests run both runtimes through
+session continuation, module imports, and hosted service callbacks with trace
+and provisioning assertions. Raw service programs intentionally require the
+hosted adapter; `handle` follows ordinary kernel name resolution.
+
+`let` has sequential lexical semantics: local `id` shadows the builtin, captured
+bindings remain lexical, and the polymorphism fixture returns `42`. Nullary
+constructor syntax resolves the current runtime value, including rebound
+functions. VM validation and diagnostic names/tags agree with the tree; builtin
+failures retain author spans. No stored golden was rewritten.
+
+The counter is a cell owned by each run and shared across callbacks. A reusable
+scheduler checkpoint every 64 instructions keeps pure recursion interruptible.
+Tests pin values/steps at limits 0 (unlimited), 1, exact and exceeded, and cover
+recursion, callbacks, simultaneous runs, failures, cancellation and observation.
+
+The current checkout's baseline was 512 inputs with 17 differences. The final
+sweep has **515 inputs, 36 shared frontend failures, 479 agreements, and zero
+runtime differences**. A temporary recreated Ref counter gives **zero
+value/error/step differences**. The measurement script requires inverse patch
+assertions after Ref removal; the adapted script and reports remain local in
+`.context/`, preserving historical checked-in evidence.
+
+Evaluation-only medians (ms, before Ref → final cell): 10 definitions
+**0.0377 → 0.0230**, 100 **0.1561 → 0.0787**, 250 **0.3518 → 0.0595**,
+500 **0.6478 → 0.0680**, 250 callbacks **0.5146 → 0.4312**.
+Shared-machine load and JIT effects preclude a universal speedup claim.
+
+Public latency medians (ms, before → after): version **1020.778 → 711.313**,
+cold file check **815.954 → 1061.994**, warm engine check
+**317.030 → 241.613**, workspace edit **138.481 → 258.434**.
+These broader operations do not isolate the counter. Full `pnpm check` reached
+1,343 passing engine tests but failed four host CLI cases at their 5-second
+timeout. All 17 cases in that host file pass with a 30-second timeout; remaining
+surface, prelude, cheatsheet, docs/llms and benchmark-validation gates pass
+independently. An unqualified full-check pass is still outstanding.
