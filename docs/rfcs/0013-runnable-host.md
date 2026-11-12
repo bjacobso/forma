@@ -198,7 +198,7 @@ The pause and resume model stays, because each pause is a permission point.
 
 1. **Command.** `@formalang/cli` with `check`, `run` for kernel programs, and
    `interface`. Tests run the binary on fixtures: `check` on
-   `conformance/modules/main.forma` exits 0; for failing fixtures, its
+   `conformance/modules/main.lisp` exits 0; for failing fixtures, its
    diagnostic codes and spans match the JSON CLI's `file typecheck`.
 2. **Protocol.** `forma daemon` over stdio, the envelope in the existing
    JSON-lines daemon, and `RemoteLanguageHost`. The host

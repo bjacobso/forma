@@ -3,6 +3,10 @@
  *
  * @module Engine
  */
+import enginePackage from "../package.json" with { type: "json" };
+
+/** Engine release version, bundled from the package manifest. */
+export const engineVersion: string = enginePackage.version;
 
 export {
   diagnosticFromUnknown,

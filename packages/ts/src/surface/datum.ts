@@ -1,4 +1,5 @@
 import { numericDatum } from "../evaluator/types.js";
+import { SurfaceInputError } from "./errors.js";
 import type { SExpr } from "../reader/types.js";
 import { KKeyword, KSymbol, mapKey, type KValue } from "../evaluator/types.js";
 
@@ -22,7 +23,7 @@ export function datum(expr: SExpr): KValue {
       break;
     case "List": case "Vector": value = expr.items.map(datum); break;
     case "Map": value = new Map(expr.pairs.map(([k, v]) => [mapKey(datum(k))!, datum(v)])); break;
-    default: throw new Error(`Invalid form datum ${expr._tag}`);
+    default: throw new SurfaceInputError(`Invalid form datum ${expr._tag}`, "expression._tag");
   }
   syntax.set(value, expr);
   return value;

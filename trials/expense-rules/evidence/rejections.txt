@@ -1,0 +1,21 @@
+error[expense/vendor-required]: Software needs a vendor.
+  --> src/expenses.lisp:4:62
+   |
+ 4 | (expense unlicensed :employee "alice" :amount 9000 :category "software" :date 20771)
+   |                                                              ^^^^^^^^^^
+error[expense/asset-required]: Equipment needs an asset tag.
+  --> src/expenses.lisp:5:58
+   |
+ 5 | (expense untagged :employee "bob" :amount 9000 :category "equipment" :date 20771)
+   |                                                          ^^^^^^^^^^^
+error[expense/self-approval]: Employee cannot approve their own expense.
+  --> src/expenses.lisp:6:93
+   |
+ 6 | (expense self-managed :employee "carol" :amount 8000 :category "meals" :date 20771 :manager "carol")
+   |                                                                                             ^^^^^^^
+error[expense/self-approval]: Employee cannot approve their own expense.
+  --> src/expenses.lisp:7:96
+   |
+ 7 | (expense self-financed :employee "dana" :amount 300000 :category "travel" :date 20771 :finance "dana")
+   |                                                                                                ^^^^^^
+4 errors, 0 warnings

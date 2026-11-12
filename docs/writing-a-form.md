@@ -1,5 +1,10 @@
 # Writing a form
 
+Use `form` for new definitions. `define-form` is legacy, retained only for
+existing preludes pending migration. The checked-in preludes already use `form`.
+The repository check fences remaining historical occurrences with a reviewed
+file-and-count allowlist.
+
 Define the output type and the syntax together. A form's pattern supplies its
 positional arguments, options, and children; `:types` describes the holes;
 `:ir` checks the projected value and derives its artifact contract.
@@ -18,6 +23,12 @@ positional arguments, options, and children; `:types` describes the holes;
 
 (greeting welcome "Ada" :doc "Shown on arrival")
 ```
+
+In file modules, running this application binds `welcome` to the elaborated
+declaration descriptor. Its `:data` field holds the projected `GreetingIR`.
+The application evaluates to that descriptor; an application without a declared
+name evaluates to its projected IR. Runtime evaluation reuses elaboration and
+does not run `:check` or the projection again.
 
 `welcome` is a declaration name, `"Ada"` is a string literal, and `:doc` is
 optional. Unknown options are errors. The optional IR field disappears from
@@ -100,7 +111,7 @@ Each edit requires a `:new-text` string and an `:at` that resolves to authored
 syntax; it never falls back to the whole application. Consumers receive
 `{span, newText}` edits and must apply them atomically against the unchanged
 source version. Forma does not apply them automatically. Register consumer
-codes in a project-local `DiagnosticCatalog` from `@formalang/ts/diagnostic`
+codes in a project-local `DiagnosticCatalog` from `@forma-language/forma/diagnostic`
 to share explanations with engine codes. Code identifiers and documented
 detail fields are API; message wording is not. See the
 [consumer upgrade note](./consumer-upgrade-1317204.md) for typed TypeScript use.
@@ -212,7 +223,7 @@ the engine for just the prelude documentation check.
 Consumer preludes can run the same kind of checks without repository scripts:
 
 ```sh
-forma prelude check greeting.forma --catalog diagnostics.json --out reference.md
+forma prelude check greeting.lisp --catalog diagnostics.json --out reference.md
 ```
 
 Pass multiple source files in bootstrap order. Repeat `--dependency <source>`
@@ -235,7 +246,7 @@ import { DiagnosticCatalog } from "@formalang/ts/diagnostic";
 
 const catalog = new DiagnosticCatalog();
 // catalog.register({ code, summary, explanation, stability });
-const checked = checkPrelude([{ sourceId: "greeting.forma", source }], { catalog });
+const checked = checkPrelude([{ sourceId: "greeting.lisp", source }], { catalog });
 if (checked.ok) console.log(checked.reference);
 ```
 

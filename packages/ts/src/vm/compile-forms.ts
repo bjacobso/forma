@@ -4,7 +4,7 @@
 
 import type { SExpr } from "../reader/index.js";
 import { trySym, headSym } from "../reader/types.js";
-import { KernelTypeError } from "../diagnostic/errors.js";
+import { ArityError, KernelTypeError } from "../diagnostic/errors.js";
 import { compileMatchPattern, type MatchPattern } from "../evaluator/match.js";
 import type { SourceTrace } from "../evaluator/source-trace.js";
 import {
@@ -36,34 +36,39 @@ export function compileFn(
   context: CompileContext,
   trace: SourceTrace,
   compileSExpr: CompileFn,
+  bindingName?: string,
 ): void {
-  const paramsExpr = items[1];
-  if (!paramsExpr || paramsExpr._tag !== "Vector") {
-    // Invalid fn form — emit nil (error caught at type-check time)
-    emit(parentChunk, Op.NIL, trace);
-    return;
-  }
+  if (items.length < 3) throw new ArityError({ name: "fn", expected: "2+", got: items.length - 1, ...trace });
+  const paramsExpr = items[1]!;
+  if (paramsExpr._tag !== "Vector") throw new KernelTypeError({
+    message: "fn params must be a vector", expected: "vector", got: paramsExpr._tag, loc: paramsExpr.loc,
+  });
 
   const paramNames: string[] = [];
   let restParam: string | undefined;
   for (let i = 0; i < paramsExpr.items.length; i++) {
     const p = paramsExpr.items[i]!;
     const pName = trySym(p);
-    if (!pName) continue;
+    if (!pName) throw new KernelTypeError({
+      message: "fn param must be a symbol, map destructure, or vector destructure",
+      expected: "symbol, map, or vector", got: p._tag, loc: p.loc,
+    });
     if (pName === "&") {
       const nextP = paramsExpr.items[i + 1];
       const nextPName = nextP ? trySym(nextP) : undefined;
-      if (!nextPName || i + 2 !== paramsExpr.items.length) {
-        emit(parentChunk, Op.NIL, trace);
-        return;
-      }
+      if (!nextPName) throw new KernelTypeError({
+        message: "& must be followed by a rest parameter name", expected: "symbol", got: nextP?._tag ?? "nothing", loc: p.loc,
+      });
+      if (i + 2 !== paramsExpr.items.length) throw new KernelTypeError({
+        message: "rest parameter must be the final fn parameter", expected: "final rest parameter", got: "additional parameters", loc: nextP!.loc,
+      });
       restParam = nextPName;
       break;
     }
     paramNames.push(pName);
   }
 
-  const fnName = `<lambda:${trace.loc.line}>`;
+  const fnName = bindingName ?? "lambda";
   const funcChunk = newChunk(fnName, paramNames.length, restParam !== undefined);
   const childScope = new CompileScope(scope, paramNames.length + (restParam ? 1 : 0));
 
@@ -166,11 +171,14 @@ export function compileLet(
   trace: SourceTrace,
   compileSExpr: CompileFn,
 ): void {
-  const bindingsExpr = items[1];
-  if (!bindingsExpr || bindingsExpr._tag !== "Vector") {
-    emit(chunk, Op.NIL, trace);
-    return;
-  }
+  if (items.length < 3) throw new ArityError({ name: "let", expected: "2+", got: items.length - 1, ...trace });
+  const bindingsExpr = items[1]!;
+  if (bindingsExpr._tag !== "Vector") throw new KernelTypeError({
+    message: "let bindings must be a vector", expected: "vector", got: bindingsExpr._tag, loc: bindingsExpr.loc,
+  });
+  if (bindingsExpr.items.length % 2 !== 0) throw new KernelTypeError({
+    message: "let bindings must have an even number of forms", expected: "even count", got: `${bindingsExpr.items.length}`, loc: bindingsExpr.loc,
+  });
 
   // Track how many locals we add so we can clean up
   const localsBefore = scope.locals.length;
@@ -182,7 +190,11 @@ export function compileLet(
     if (!nameSym || !valExpr) break;
 
     // Compile the value
-    compileSExpr(valExpr, chunk, scope, globals, builtins, context, false, false);
+    if (valExpr._tag === "List" && headSym(valExpr) === "fn" && trySym(nameSym)) {
+      compileFn(valExpr.items, chunk, scope, globals, builtins, context, traceOf(valExpr), compileSExpr, trySym(nameSym));
+    } else {
+      compileSExpr(valExpr, chunk, scope, globals, builtins, context, false, false);
+    }
 
     const letBindName = trySym(nameSym);
     if (letBindName) {
@@ -192,8 +204,10 @@ export function compileLet(
       emitU8(chunk, slot, trace);
       emit(chunk, Op.POP, trace);
     } else {
-      // Unsupported destructuring in bytecode — emit store to a dummy slot
-      emit(chunk, Op.POP, trace);
+      throw new KernelTypeError({
+        message: "let binding name must be a symbol, map destructure, or vector destructure",
+        expected: "symbol, map, or vector", got: nameSym._tag, loc: nameSym.loc,
+      });
     }
   }
 
@@ -240,6 +254,7 @@ export function compileIf(
   trace: SourceTrace,
   compileSExpr: CompileFn,
 ): void {
+  if (items.length < 3 || items.length > 4) throw new ArityError({ name: "if", expected: "2-3", got: items.length - 1, ...trace });
   // Compile condition
   compileSExpr(items[1]!, chunk, scope, globals, builtins, context, false, false);
 
@@ -417,7 +432,11 @@ export function compileDef(
 
   const globalIdx = globals.resolve(globalName);
 
-  compileSExpr(valueExpr, chunk, scope, globals, builtins, context, false, false);
+  if (valueExpr._tag === "List" && headSym(valueExpr) === "fn") {
+    compileFn(valueExpr.items, chunk, scope, globals, builtins, context, traceOf(valueExpr), compileSExpr, globalName);
+  } else {
+    compileSExpr(valueExpr, chunk, scope, globals, builtins, context, false, false);
+  }
 
   emit(chunk, Op.STORE_GLOBAL, trace);
   emitU16(chunk, globalIdx, trace);

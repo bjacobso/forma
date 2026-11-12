@@ -146,7 +146,7 @@ export function descriptorFormProvider(
       ? descriptorApplication(prelude, provider, env, expr, expected)
       : parent?.typeApplication?.(env, expr, expected) ?? noDescriptorRule(),
     isKnownForm: (name) =>
-      prelude.descriptions.has(name) || !!parent?.isKnownForm(name),
+      prelude.descriptions.get(name)?.phase === "domain" || !!parent?.isKnownForm(name),
     getSlots: (name) => parent?.getSlots(name) ?? [],
     getResultType: (name) =>
       prelude.descriptions.has(name)

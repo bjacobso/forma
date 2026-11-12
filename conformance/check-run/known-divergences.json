@@ -1,0 +1,20 @@
+[
+  {
+    "id": "G4",
+    "program": "(if false 0.0 1)",
+    "category": "type-disagrees",
+    "note": "Displays Float but evaluates to 1."
+  },
+  {
+    "id": "G5",
+    "program": "(if true 0 1.0)",
+    "category": "type-disagrees",
+    "note": "Displays Float but evaluates to 0."
+  },
+  {
+    "id": "R1",
+    "seed": "seeds/r1-unreachable-branch.lisp",
+    "category": "rejected-but-runs",
+    "note": "Incompatible branch types are rejected even though the selected branch runs; recorded without asserting this is a checker bug."
+  }
+]

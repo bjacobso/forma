@@ -1,11 +1,12 @@
 ---
+date: 2026-11-07
 title: Effects Are Part of the Type
 description: Part 9 of From Lists to Languages. Give function types a row of effects, infer them with row-polymorphic unification, add Unit, when, catch, and race, and let a host reject a program that needs a capability it doesn't have, before it runs.
 ---
 
 # Effects Are Part of the Type
 
-<p class="blog-meta">Part 09 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act III, Effects in Practice · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 09 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act III, Effects in Practice · <time datetime="2026-11-07">November 7, 2026</time></p>
 
 > The type describes not only the result, but what the computation demands.
 

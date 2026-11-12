@@ -1,0 +1,5 @@
+(import "./rules.lisp" [greeting])
+(export welcome declarations answer)
+(greeting welcome "Ada")
+(define declarations [welcome])
+(define answer 42)

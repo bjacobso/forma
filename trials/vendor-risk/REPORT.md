@@ -16,8 +16,8 @@ Synthetic data only. This is illustrative, not compliance advice.
 
 The README says Forma is "a programmable type system for Lisp": preludes define typed forms that "take part in checking", and a program "can evaluate to a value or elaborate into a typed description". So I built two layers:
 
-- **`src/policy.forma`**: types (`Vendor`, `Review`, `Exception`, `Role`) and pure policy functions (`activation-blockers`, `can-activate?`, `can-sign-contract?`, `exception-valid?`, ...). It is checked with `forma file typecheck` and run with `forma file evaluate`.
-- **`src/register-forms.forma` + `src/register.forma`**: a small domain language. The form `(vendor name :status ... )` has a `:check` that rejects `:status "active"` while the vendor has blockers. It is elaborated with `forma file declarations`.
+- **`src/policy.lisp`**: types (`Vendor`, `Review`, `Exception`, `Role`) and pure policy functions (`activation-blockers`, `can-activate?`, `can-sign-contract?`, `exception-valid?`, ...). It is checked with `forma file typecheck` and run with `forma file evaluate`.
+- **`src/register-forms.lisp` + `src/register.lisp`**: a small domain language. The form `(vendor name :status ... )` has a `:check` that rejects `:status "active"` while the vendor has blockers. It is elaborated with `forma file declarations`.
 
 There is no published CLI. The only runner the README points to is the repository JSON CLI, `node packages/host/dist/cli.mjs`. Forma has no test framework, so tests are a Forma file that evaluates to its list of failing cases, plus `tests/run.mjs`, which drives the CLI.
 
@@ -69,7 +69,7 @@ The `TRAP` lines assert current, surprising behaviour so that the traps stay rep
 2. Read the language guide and *Writing a form*. Neither says how to run a file. I found the CLI build commands in *Structure and Interpretation of Forma Programs* → "Running the examples".
 3. `cli.mjs --help` printed usage but exited 64. The usage line revealed `file <typecheck|evaluate|interface|declarations>`. That command is the most useful thing I found, and no guide mentions it.
 4. First probe: `file evaluate` returned `ok:true` for a program that `file typecheck` rejects (trap T1).
-5. `and`, `or` and `not` failed with `module/unimported-sugar: Import and from a library or select a project prelude.` *File modules* hints at `preludes/kernel.forma`. Importing `[and or not]` from it by relative path worked.
+5. `and`, `or` and `not` failed with `module/unimported-sugar: Import and from a library or select a project prelude.` *File modules* hints at `preludes/modules/kernel.lisp`. Importing `[and or not]` from it by relative path worked.
 6. `string/trim` produced `Unknown module namespace string.` I found no list of builtins and dropped the trim.
 7. Building the blocker list with `conj` failed with `Unbound variable: conj`. The SICP guide notes that `conj`/`concat` don't typecheck. I rewrote the list as a fixed vector of `{:failed :reason}` checks passed through `filter`/`map`.
 8. The tests failed with `Cannot unify Int with Option<Int> (at offset 551)`: implicit `Some`-wrapping does not happen for an *imported* record type (T3). I spelled out `(Some 800)` and `:exception None`.
@@ -90,13 +90,13 @@ The `TRAP` lines assert current, surprising behaviour so that the traps stay rep
 - *Wish:* "Form hooks may call only helpers defined in the form's own module" (if that is the rule), with an error that names the helper and has a span.
 
 **F2. No "author your own program" path.** The README quick start runs the repo's own tests and dev server. The file CLI (`file typecheck|evaluate|declarations`) appears only in `--help`, and that help exits with code 64. No guide says which command elaborates forms, or that `evaluate` does not typecheck.
-- *Wish:* "Write `main.forma`, then run `node packages/host/dist/cli.mjs file typecheck main.forma` and `file evaluate main.forma` (evaluate does **not** typecheck) and `file declarations` (elaborates forms)."
+- *Wish:* "Write `main.lisp`, then run `node packages/host/dist/cli.mjs file typecheck main.lisp` and `file evaluate main.lisp` (evaluate does **not** typecheck) and `file declarations` (elaborates forms)."
 
 **F3. I found no documented way to get elaborated IR for a multi-file program.** `file declarations` lists the form module's `SchemaDef`/`FunctionDef` entries but none of the `vendor` payloads. `request` ops (`emit`, `artifactSummary`, ...) are listed only inside a `SchemaError` message, and nothing documents their fields.
 - *Wish:* "To see a form's projected IR from files, run X."
 
-**F5. Builtins are undocumented, and the kernel macros need a relative-path import.** `and`/`or`/`not` live in `preludes/kernel.forma`, and the error does not say which library. The SICP guide uses `or` and `not` without imports, which only works in the playground and `request` mode. I could not find a `string/` namespace or a trim function.
-- *Wish:* a builtin table, and "In file modules add `(import \"<repo>/preludes/kernel.forma\" [and or not ...])`".
+**F5. Builtins are undocumented, and the kernel macros need a relative-path import.** `and`/`or`/`not` live in `preludes/modules/kernel.lisp`, and the error does not say which library. The SICP guide uses `or` and `not` without imports, which only works in the playground and `request` mode. I could not find a `string/` namespace or a trim function.
+- *Wish:* a builtin table, and "In file modules add `(import \"<repo>/preludes/modules/kernel.lisp\" [and or not ...])`".
 
 **F6. Hook values differ from their declared hole types.** An `(Option Int)` hole arrives as `nil` or a plain Int. *Writing a form* does say an omitted optional hole is `nil`. But `(= x nil)` then infers `Unit`, so untyped helpers cannot handle such a hole, and `match` with `Some`/`None` fails at runtime with `No pattern matched the value`.
 - *Wish:* "In `:check`, optional holes are `nil` or the bare value; test with `X`."
@@ -127,14 +127,14 @@ The `TRAP` lines assert current, surprising behaviour so that the traps stay rep
 
 I listed `docs/` filenames but did not open vision, architecture, design-decisions or the RFCs.
 
-**Phase 2:** I opened no example or fixture files. I imported `preludes/kernel.forma` by path without reading it, because *File modules* names it as the library to import. No implementation source was read.
+**Phase 2:** I opened no example or fixture files. I imported `preludes/modules/kernel.lisp` by path without reading it, because *File modules* names it as the library to import. No implementation source was read.
 
 ## Silent traps (things that passed but were wrong or surprising)
 
 - **T1. `file evaluate` skips typechecking.** It returns `ok:true` and a value for code that `file typecheck` rejects, such as `(= :high "high")`. A test suite run only through `evaluate` can be "green" and ill-typed. Mine was green under evaluate for 2 iterations while typecheck failed.
 - **T2. Generic functions are instantiated once across top-level defines.** `(: same (-> a a Bool))` then `(define a (same 1 1)) (define b (same "a" "b"))` is rejected, while `[(same 1 1) (same "a" "b")]` as a final expression is accepted. The docs promise Hindley–Milner inference.
 - **T3. Implicit `Some`/`None` filling works only for record types declared in the same file.** The same record checked against an imported type fails. A local copy of the type passes.
-- **T4. Only the first form diagnostic is reported.** `register-bad.forma` has 3 vendors that each violate a rule, but only one error comes back. An author would fix one error and discover the next only on the following run.
+- **T4. Only the first form diagnostic is reported.** `register-bad.lisp` has 3 vendors that each violate a rule, but only one error comes back. An author would fix one error and discover the next only on the following run.
 - **T5. Hook holes are not Option-typed at runtime** (F6). `match` on `Some` fails only at elaboration.
 - **T6. Boolean and equality behaviour:** `(= :high "high")` is false at runtime but a type error in the checker, which is good. `(= 2 2.0)` is true, as documented. The kernel `and`/`or` need an import, but `if` is always available, so I wrote `both`/`either`/`no` functions. These are not short-circuiting.
 - **T7. "Must give a reason" accepts whitespace.** No documented trim exists, so `" "` passes as a reason.
@@ -172,8 +172,8 @@ with the reason).
 | F2. No authoring path | Documented | New [Authoring your own program](../../docs/authoring.md) page, built from the draft outline below. It is linked from the README, the docs sidebar and `llms.txt`. |
 | F3. Form IR missing from `file declarations` | Fixed | `file declarations` appends one `FormApplication` entry per form application, with `form`, `name`, `moduleId`, the span and the IR as plain JSON `payload`. The runner checks all four vendors. |
 | F4. Imported helpers fail in `:check` | Fixed | There were two causes. (1) Hook holes were bound with `Env.bind`, which copies the innermost frame. In a linked module that frame is the mutable slot of the last imported binding, so the hook saw its initial `nil`. Only the last name in an `import` list failed, which is why `or` and inner `fn` looked like the trigger. Holes are now bound in a fresh frame. (2) The `Float vs Int` error came from `k` in the same module: `((fn [y] (+ y 1)) x)` widened `y` to `Float` before seeing `x`. An immediately applied `fn` now types like `let` (except when an argument is itself a lambda). This changed one stored expectation, `inline-application-success`, from `Float` to `Int`, because `((fn [x] (+ x 1)) 41)` adds two Ints. Pinned by `conformance/compile-time-modules/hook-imports`. The register's `:check` now calls the policy's `activation-blockers` directly. |
-| F4/F10. `internal/error`, no span, mangled names | Fixed | A hook that fails while running reports `elaborate/hook-failed` at the form application, naming the helper and its location, for example `Cannot call Int as function (in bad, helpers.forma line 1, column …)`. |
-| F5. Builtins and kernel import | Fixed + documented | `module/unimported-sugar` names `preludes/kernel.forma` and its exports. The guide has a builtins table, generated by probing the checker, that separates checked builtins from evaluate-only ones. A `trim` builtin exists; there is no `string/` namespace. In a file with `import`/`export`, a bare `not` still reports `Unbound variable: not` (deferred, see below). |
+| F4/F10. `internal/error`, no span, mangled names | Fixed | A hook that fails while running reports `elaborate/hook-failed` at the form application, naming the helper and its location, for example `Cannot call Int as function (in bad, helpers.lisp line 1, column …)`. |
+| F5. Builtins and kernel import | Fixed + documented | `module/unimported-sugar` names `preludes/modules/kernel.lisp` and its exports. The guide has a builtins table, generated by probing the checker, that separates checked builtins from evaluate-only ones. A `trim` builtin exists; there is no `string/` namespace. In a file with `import`/`export`, a bare `not` still reports `Unbound variable: not` (deferred, see below). |
 | F6. Hook hole values | Documented | This is intentional: hooks receive plain runtime values (`nil` or the bare value). It is now stated in *Writing a form* and the guide, with the `(= (get h :x) nil)` test. |
 | F7. No date type | Documented | Added to the domain-modeling gaps and to the guide's "Modelling time" section. A `Date` type is deferred: it is a language feature, not a fix. |
 | F8. Offsets without line/column | Fixed | At the JSON boundary (`request`, `daemon`, `file`), every located diagnostic gets 1-based `startLine`, `startColumn`, `endLine` and `endColumn`, and `(at offset N)` in messages becomes `(at line L, column C)`. The ABI span schema keeps these fields. Diagnostics returned by the in-process TypeScript API are unchanged (deferred). |
@@ -187,7 +187,7 @@ with the reason).
 | Trap | Status | What changed / why |
 | --- | --- | --- |
 | T1. `file evaluate` skips typechecking | Fixed | `file evaluate` typechecks first and returns the typecheck response when it fails. `--unchecked` keeps the old behaviour on request. The CLI's behaviour change is recorded as breaking in a changeset. |
-| T2. Generic fn instantiated once across defines | Fixed | Consecutive top-level defines were typed as one recursive group. They are now split into strongly connected components and generalized in dependency order. Pinned by `generic-across-defines-success` and `generic-signature-across-defines-success`. `policy-test.forma` uses one generic `is`. |
+| T2. Generic fn instantiated once across defines | Fixed | Consecutive top-level defines were typed as one recursive group. They are now split into strongly connected components and generalized in dependency order. Pinned by `generic-across-defines-success` and `generic-signature-across-defines-success`. `policy-test.lisp` uses one generic `is`. |
 | T3. Implicit `Some`/`None` only for local record types | Fixed | Coercion sees other modules' type declarations during module checking and module evaluation. Pinned by `conformance/modules/imported-records`. |
 | T4. Only the first form error reported | Fixed | Each application reports all its `:check` errors, and errors are collected across the module's applications. `ModuleError` carries them all. The bad register now reports 3. |
 | T5. Hook holes not Option-typed | Documented | Same as F6. |

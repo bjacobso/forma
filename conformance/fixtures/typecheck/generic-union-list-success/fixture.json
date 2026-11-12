@@ -1,0 +1,17 @@
+{
+  "name": "generic-union-list-success",
+  "category": "typecheck",
+  "sourceId": "parity/generic-union-list-success",
+  "source": {
+    "file": "source.lisp"
+  },
+  "operation": {
+    "kind": "typecheck"
+  },
+  "comparison": {
+    "mode": "type"
+  },
+  "expected": {
+    "file": "expected.json"
+  }
+}

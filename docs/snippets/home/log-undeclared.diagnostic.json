@@ -6,6 +6,10 @@
   "span": {
     "sourceId": "log.lisp",
     "startOffset": 217,
-    "endOffset": 240
+    "endOffset": 240,
+    "startLine": 8,
+    "startColumn": 11,
+    "endLine": 8,
+    "endColumn": 34
   }
 }

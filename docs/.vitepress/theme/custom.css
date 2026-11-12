@@ -1,3 +1,4 @@
+@import "./shell.css";
 /* Forma in the WorldVM register: warm paper, ink, one blue. Dark code windows
    are the only heavy surface. Landing pages share the fh-* vocabulary below. */
 
@@ -175,31 +176,6 @@ body {
 
 /* Homepage chrome */
 
-.worldvm-banner {
-  width: 100%;
-  margin: 0;
-  padding: 9px 16px;
-  border-bottom: 1px solid var(--vp-c-divider);
-  background: var(--vp-c-bg-alt);
-  color: var(--vp-c-text-2);
-  font-size: 13px;
-  line-height: 20px;
-  text-align: center;
-}
-
-.worldvm-banner a {
-  color: var(--vp-c-text-1);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.worldvm-banner a:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
-}
-
-/* Keep the homepage header below the banner in normal document flow. */
 .forma-index .VPNav {
   position: relative;
   top: 0;
@@ -218,7 +194,7 @@ body {
   position: absolute;
   top: 100%;
   bottom: auto;
-  max-height: calc(100dvh - var(--vp-nav-height) - var(--worldvm-banner-height));
+  max-height: calc(100dvh - var(--vp-nav-height));
 }
 
 .forma-index .VPHome {
@@ -2094,5 +2070,13 @@ body {
   .vp-doc .blog-stack__layer {
     grid-template-columns: 1fr;
     gap: 4px;
+  }
+}
+
+@media (min-width: 960px) {
+  .Layout:has(.VPSidebar) > .family-strip,
+  .Layout:has(.VPSidebar) > .shared-footer {
+    margin-left: var(--vp-sidebar-width);
+    margin-right: 0;
   }
 }

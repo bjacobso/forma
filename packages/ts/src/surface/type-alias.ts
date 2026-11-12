@@ -1,3 +1,4 @@
+import { surfaceError } from "./errors.js";
 import type { SExpr } from "../reader/types.js";
 import { head, name, list, sym, vector } from "./effect.js";
 import { splitTypeMetadata } from "./domain.js";
@@ -24,11 +25,11 @@ function substitute(type: SExpr, bindings: ReadonlyMap<string, SExpr>): SExpr {
 export function resolveTypeAlias(type: SExpr, types: ReadonlyMap<string,SExpr>, seen: ReadonlySet<string> = new Set()): SExpr {
   const owner=name(type) ?? head(type), definition=owner ? types.get(owner) : undefined;
   if (!owner || !definition) return type;
-  if (seen.has(owner)) throw new Error(`Cyclic type alias ${owner}`);
+  if (seen.has(owner)) throw surfaceError(`Cyclic type alias ${owner}`, type);
   const next=new Set([...seen,owner]);
   if (head(definition)==="__type-function" && definition._tag==="List") {
     const params=definition.items[1], args=type._tag==="List" ? type.items.slice(1) : [];
-    if (params?._tag!=="Vector" || args.length!==params.items.length) throw new Error(`Type ${owner} expects ${params?._tag==="Vector" ? params.items.length : 0} arguments`);
+    if (params?._tag!=="Vector" || args.length!==params.items.length) throw surfaceError(`Type ${owner} expects ${params?._tag==="Vector" ? params.items.length : 0} arguments`, type);
     const bindings=new Map(params.items.map((param,i)=>[name(param)!,args[i]!]));
     return resolveTypeAlias(substitute(definition.items[2]!,bindings),types,next);
   }

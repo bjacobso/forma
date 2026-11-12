@@ -13,10 +13,9 @@ import {
   RExtend,
   EExtend,
   ftvType,
-  frvType,
   ftvRow,
   fevERow,
-  fevType,
+  freeVarsScheme,
 } from "./types.js";
 
 // ---------------------------------------------------------------------------
@@ -40,6 +39,10 @@ export const emptySubst: Subst = {
 // ---------------------------------------------------------------------------
 
 export function applyType(s: Subst, t: Type): Type {
+  if (t.nullaryResult) {
+    const { nullaryResult, ...base } = t;
+    return { ...applyType(s, base), nullaryResult: applyType(s, nullaryResult) };
+  }
   switch (t._tag) {
     case "TVar": {
       const hit = s.tvars.get(t.id);
@@ -50,19 +53,19 @@ export function applyType(s: Subst, t: Type): Type {
     case "TFun": {
       const effect = t.effect ? applyERow(s, t.effect) : undefined;
       const rest = t.rest ? applyType(s, t.rest) : undefined;
-      return TFun(applyType(s, t.arg), applyType(s, t.res), effect, rest);
+      return { ...t, ...TFun(applyType(s, t.arg), applyType(s, t.res), effect, rest) };
     }
     case "TVariadic": {
       const effect = t.effect ? applyERow(s, t.effect) : undefined;
       return TVariadic(applyType(s, t.rest), applyType(s, t.res), effect);
     }
     case "TApp":
-      return TApp(
+      return { ...t, ...TApp(
         applyType(s, t.con),
         t.args.map((a) => applyType(s, a)),
-      );
+      ) };
     case "TRow":
-      return TRow(applyRow(s, t.row));
+      return { ...t, ...TRow(applyRow(s, t.row)) };
   }
 }
 
@@ -102,12 +105,19 @@ function restrict<K, V>(map: ReadonlyMap<K, V>, bound: readonly K[]): ReadonlyMa
 }
 
 export function applyScheme(s: Subst, scheme: Scheme): Scheme {
+  const info = schemeInfo(scheme);
+  if (!info.normalizes &&
+      !intersects(info.dependencies.tvars, s.tvars) &&
+      !intersects(info.dependencies.rvars, s.rvars) &&
+      !intersects(info.dependencies.evars, s.evars)) return scheme;
   const restricted: Subst = {
     tvars: restrict(s.tvars, scheme.tvars),
     rvars: restrict(s.rvars, scheme.rvars),
     evars: restrict(s.evars, scheme.evars),
   };
   return {
+    ...(scheme.annotation ? {annotation:scheme.annotation} : {}),
+    ...(scheme.declaration ? {declaration:scheme.declaration} : {}),
     tvars: scheme.tvars,
     rvars: scheme.rvars,
     evars: scheme.evars,
@@ -121,6 +131,63 @@ export function applyScheme(s: Subst, scheme: Scheme): Scheme {
 // ---------------------------------------------------------------------------
 
 export type TypeEnv = ReadonlyMap<string, Scheme>;
+
+type FreeVars = ReturnType<typeof freeVarsScheme>;
+interface SchemeInfo {
+  readonly free: FreeVars;
+  readonly dependencies: FreeVars;
+  readonly normalizes: boolean;
+}
+
+// Schemes and their types are readonly. Weak keys keep this cache scoped to the
+// lifetime of the schemes, without retaining previous analyses or substitutions.
+const schemeInfos = new WeakMap<Scheme, SchemeInfo>();
+
+function intersects<V>(vars: ReadonlySet<string>, domain: ReadonlyMap<string, V>): boolean {
+  for (const v of vars) if (domain.has(v)) return true;
+  return false;
+}
+
+function schemeInfo(scheme: Scheme): SchemeInfo {
+  const cached = schemeInfos.get(scheme);
+  if (cached) return cached;
+  const dependencies: FreeVars = { tvars: new Set(), rvars: new Set(), evars: new Set() };
+  let normalizes = false;
+  const effect = (e: ERow): void => { fevERow(e, dependencies.evars); };
+  const row = (r: Row): void => {
+    if (r._tag === "RVar") dependencies.rvars.add(r.id);
+    else if (r._tag === "RExtend") { type(r.type); row(r.tail); }
+  };
+  const type = (t: Type): void => {
+    if (t.nullaryResult) type(t.nullaryResult);
+    switch (t._tag) {
+      case "TVar": dependencies.tvars.add(t.id); break;
+      case "TCon": break;
+      case "TFun":
+        type(t.arg); type(t.res);
+        if (t.rest) type(t.rest);
+        if (t.effect) effect(t.effect);
+        break;
+      case "TVariadic":
+        // applyType reconstructs variadics without these optional decorations.
+        normalizes ||= t.arity !== undefined || t.numericOperator !== undefined;
+        type(t.rest); type(t.res);
+        if (t.effect) effect(t.effect);
+        break;
+      case "TApp": type(t.con); t.args.forEach(type); break;
+      case "TRow": row(t.row); break;
+    }
+  };
+  type(scheme.type);
+  for (const v of scheme.tvars) dependencies.tvars.delete(v);
+  for (const v of scheme.rvars) dependencies.rvars.delete(v);
+  for (const v of scheme.evars) dependencies.evars.delete(v);
+  // Generalization intentionally retains its existing free-variable semantics;
+  // substitution also visits nullary results and effects inside record fields.
+  const info = { free: freeVarsScheme(scheme), dependencies, normalizes };
+  schemeInfos.set(scheme, info);
+  return info;
+}
 
 export function applyEnv(s: Subst, env: TypeEnv): Map<string, Scheme> {
   const result = new Map<string, Scheme>();
@@ -140,12 +207,7 @@ export function freeVarsEnv(env: TypeEnv): {
   const evars = new Set<string>();
   for (const scheme of env.values()) {
     // Free vars = all vars in type minus bound vars
-    const schemeFtv = ftvType(scheme.type);
-    const schemeRv = frvType(scheme.type);
-    const schemeEv = fevType(scheme.type);
-    for (const v of scheme.tvars) schemeFtv.delete(v);
-    for (const v of scheme.rvars) schemeRv.delete(v);
-    for (const v of scheme.evars) schemeEv.delete(v);
+    const { tvars: schemeFtv, rvars: schemeRv, evars: schemeEv } = schemeInfo(scheme).free;
     for (const v of schemeFtv) tvars.add(v);
     for (const v of schemeRv) rvars.add(v);
     for (const v of schemeEv) evars.add(v);

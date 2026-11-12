@@ -6,7 +6,7 @@ test("session emit, emitMany, backend discovery and summaries", async () => {
   const host = new TsLanguageHost();
   const { sessionId } = await host.openSession();
   for (const name of ["compiler.lisp", "ontology.lisp"] as const) await host.loadSource({ sessionId, sourceId: name, source: preludeSource(name), kind: "prelude" });
-  await host.loadSource({ sessionId, sourceId: "people.forma", source: "(entity Person {:name String})" });
+  await host.loadSource({ sessionId, sourceId: "people.lisp", source: "(entity Person {:name String})" });
   const emitted = await host.emit({ sessionId });
   expect(emitted).toMatchObject({ ok: true, backend: "canonical-ir", artifactCount: 1, artifacts: [{ name: "ir.json", mediaType: "application/vnd.forma.ir+json", content: { irVersion: "language-ts-artifact/v1", declarationCount: 1, hashAlgorithm: "sha256" } }] });
   expect(await host.emitMany({ sessionId })).toMatchObject({ ok: true, sourceCount: 1, succeededCount: 1 });

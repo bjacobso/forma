@@ -12,11 +12,11 @@ const dir = mkdtempSync(join(tmpdir(),"forma-startup-"));
 const samples = 15;
 const median = values => [...values].sort((a,b) => a-b)[Math.floor(values.length/2)];
 try {
-  writeFileSync(join(dir,"kernel.forma"),readFileSync(join(root,"preludes/kernel.forma"),"utf8"));
-  writeFileSync(join(dir,"main.forma"),'(import "./kernel.forma" [unless]) (define answer (unless false (+ 20 3))) answer');
+  writeFileSync(join(dir,"kernel.lisp"),readFileSync(join(root,"preludes/kernel.lisp"),"utf8") + "\n(export unless)\n");
+  writeFileSync(join(dir,"main.lisp"),'(import "./kernel.lisp" [unless]) (define answer (unless false (+ 20 3))) answer');
   const url = name => JSON.stringify(pathToFileURL(join(root,`packages/ts/dist/${name}.mjs`)).href);
   const cases = {
-    file: [join(root,"packages/host/dist/cli.mjs"),"file","typecheck",join(dir,"main.forma")],
+    file: [join(root,"packages/host/dist/cli.mjs"),"file","typecheck",join(dir,"main.lisp")],
     descriptors: ["--input-type=module","-e",`import {enablePreludeCache} from ${url("Node")}; import {bootstrapOntologyPreludes} from ${url("Preludes")}; enablePreludeCache(); console.log(JSON.stringify(bootstrapOntologyPreludes().stats));`],
   };
   const results = {};

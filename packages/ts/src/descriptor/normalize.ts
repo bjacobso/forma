@@ -1,4 +1,5 @@
 import { normalizeUnifiedForm } from "../surface/form.js";
+import { InferenceError } from "../diagnostic/errors.js";
 import type { SExpr, Loc } from "../Reader.js";
 import { headSym, tail, trySym, children } from "../SExpr.js";
 import type { FormDescriptor, ChildFormShape, IdentifierSpec, SlotSpec } from "./FormDescriptor.js";
@@ -17,6 +18,10 @@ export interface NormalizedForm {
 }
 
 type ChildShape = ChildFormShape;
+
+function unknownSlot(message: string, at: SExpr): never {
+  throw Object.assign(new InferenceError({ message, details: { code: "descriptor/unknown-slot" } }), { loc: at.loc });
+}
 
 export function normalizeForm(
   recognized: RecognizedForm,
@@ -133,7 +138,7 @@ function extractSlots(
     const head = headSym(arg)!;
     const slotName = head.startsWith(":") ? head.slice(1) : head;
     const spec = specMap.get(slotName);
-    if (!spec) throw new Error(`Unknown slot :${slotName} in ${formName}`);
+    if (!spec) unknownSlot(`Unknown slot :${slotName} in ${formName}`, arg);
 
     // Use the canonical name from the spec
     const canonicalName = spec.name;
@@ -283,7 +288,7 @@ function normalizeChildForm(
       const keyStr = key._tag === "Sym" ? key.name : undefined;
       if (!keyStr) continue;
       const canonicalKey = keyStr.startsWith(":") ? keyStr.slice(1) : keyStr;
-      if (!resolved.shape.slots.some(s => s.name === canonicalKey || s.aliases?.includes(canonicalKey))) throw new Error(`Unknown option :${canonicalKey} in ${resolved.shape.formName}`);
+      if (!resolved.shape.slots.some(s => s.name === canonicalKey || s.aliases?.includes(canonicalKey))) unknownSlot(`Unknown option :${canonicalKey} in ${resolved.shape.formName}`, key);
       values.set(canonicalKey, scalarSlotValue(value));
     }
   }

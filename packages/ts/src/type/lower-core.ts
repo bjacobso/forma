@@ -66,6 +66,7 @@ export const resetBindingCounter = () => {
 export function spanOf(expr: SExpr): Span {
   const trace = sourceTraceOf(expr);
   return {
+    ...(trace.loc.sourceId ? {sourceId:trace.loc.sourceId} : {}),
     start: trace.loc.start,
     end: trace.loc.end,
     ...(trace.macroOrigins ? { macroOrigins: trace.macroOrigins } : {}),
@@ -112,7 +113,7 @@ export function lower(expr: SExpr): CoreExpr {
     if (!(error instanceof InferenceError)) throw error;
     const head = expr._tag === "List" && expr.items[0]?._tag === "Sym" ? expr.items[0].name : "expression";
     const code = ({fn:"lower/lambda", let:"lower/let", if:"lower/if"} as Record<string,string>)[head] ?? "typecheck/lower";
-    throw new InferenceError({message:error.message.replace(/ \(at offset \d+\)$/, ""),
+    throw new InferenceError({message:error.message,
       origin:error.origin ?? {nodeId:`lower:${expr.loc.start}`, kind:head, span:spanOf(expr)},
       details:{code,...error.details}});
   }

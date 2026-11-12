@@ -2,13 +2,12 @@
 
 This page is for people writing Forma outside this repository's own tests and
 examples. It shows how to write files, check them, run them, elaborate forms,
-and read the results. Forma is pre-alpha: the commands below are the JSON CLI
-from a source checkout, and their output shapes may still change.
+and read the results. Forma is pre-alpha; command behavior and APIs may still change.
 
 ## What you can build
 
 - **Evaluated programs.** Types, pure functions and a final expression. Check
-  them with `file typecheck` and run them with `file evaluate`.
+  them with `forma check` and run them with `forma run`.
 - **Form-based languages.** A module defines `form`s whose `:check` hooks
   report author diagnostics and whose bodies produce typed IR. Other files use
   those forms. `file declarations` elaborates them and lists the IR. See
@@ -18,76 +17,90 @@ from a source checkout, and their output shapes may still change.
 
 ## Setup
 
-Use Node.js 24 and pnpm 10.20. Check with `node --version`: pnpm does not stop
-you from installing with an older Node. There is no published `forma` CLI yet:
-from a source checkout, build `@formalang/host` and run its `dist/cli.mjs`.
+Use Node.js 24. Install the public distribution and its required Effect peer:
+
+```sh
+npm install @forma-language/forma effect
+```
+
+**`@forma-language/forma` is not yet published.** That install command is for
+after publication. For now, use a source checkout with pnpm 10.20:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm --filter @formalang/ts build
-pnpm --filter @formalang/host build
-alias forma="node $PWD/packages/host/dist/cli.mjs"
+pnpm exec turbo run build --filter=@forma-language/forma
+alias forma="node $PWD/packages/forma/dist/cli.mjs"
 forma help
 ```
+
+With a local npm install, use `npx forma` for the commands below; the source
+alias lets you use `forma` directly from any directory in the same shell.
 
 `forma help` lists every command and exits 0. An unknown command prints the same
 text on stderr and exits 64.
 
 ## Your first file
 
-Save this as `main.forma`:
+Save this as `main.lisp`:
 
 ```lisp
-(type Risk (Union :low :high))
-(type Vendor {:name String :risk Risk :reviewed-on (Option Int)})
-
-(: reviewed? (-> Vendor Bool))
-(define reviewed? [vendor]
-  (match vendor.reviewed-on
-    (Some day) (>= day 0)
-    None false))
-
-(: acme Vendor)
-(define acme {:name "Acme" :risk :high :reviewed-on 900})
-
-(reviewed? acme)
+(+ 20 22)
 ```
 
 Check it, then run it:
 
 ```sh
-forma file typecheck main.forma
-forma file evaluate main.forma
+forma check main.lisp
+forma run main.lisp
 ```
 
-`file evaluate` typechecks first. If the check fails, it prints the typecheck
-response (with `"pass":"typecheck"`) and does not run the program. Use
-`forma file evaluate --unchecked main.forma` to run a program without checking
-it, for example while exploring a builtin the checker does not type yet. An
-unchecked run can succeed on a program that the checker rejects.
+The result is `42`. Next, try the standalone
+[project example](https://github.com/bjacobso/forma/tree/main/examples/project),
+with a form library and imported data. To embed a language in a Node app, see
+[Embedding](./embedding.md) and the
+[Node example](https://github.com/bjacobso/forma/tree/main/examples/embed-node).
+Both examples are tested against the packed distribution by `pnpm check:examples`.
 
-Every command prints one JSON object with `ok`, `value` and `diagnostics`:
+`check` typechecks the module graph and renders diagnostics with source excerpts
+on stderr. `run` checks first, then prints the evaluated value on stdout. Both
+exit 0 on success and 1 on failure. Use `forma run main.lisp --unchecked` to run
+without checking, for example while exploring a builtin the checker does not
+type yet. An unchecked run can succeed on a program that the checker rejects.
+
+Add `--json` to `check`, `run`, `fmt` or `explain` for a JSON response on stdout.
+The existing `file typecheck`, `file evaluate`, `file declarations` and
+`file interface` commands remain JSON machine interfaces. Their responses have
+`ok` and `diagnostics`, with `value` when available:
 
 | Command | Useful fields |
 | --- | --- |
-| `file typecheck` | `type` (display string of the final expression) |
-| `file evaluate` | `value.result.printed`, `value.result.value` |
+| `check --json` / `file typecheck` | `type` (display string of the final expression) |
+| `run --json` / `file evaluate` | `value.result.printed`, `value.result.value` |
 | `file declarations` | `value[]`, one entry per declaration (see [Getting the IR](#getting-the-ir)) |
 | `file interface` | `value.interfaces[]`, the exports of every module |
 
-File commands exit with status 0 when `ok` is true and 1 when it is false.
+Format files in place with `forma fmt main.lisp helper.lisp`. For CI,
+`forma fmt main.lisp --check` lists files that would change and exits 1 without
+writing them. `forma explain typecheck/type-mismatch` explains a diagnostic
+offline.
+
+Start a typed, stateful session with `forma repl`. Each successful submission
+prints `value : type` and retains its definitions; failed submissions do not
+commit. `:type <expr>` checks an expression without evaluating it, `:reset`
+clears the session, and `:quit` exits. Repeat `--prelude <file>` to load preludes
+at startup and again after reset. Each submission occupies one input line.
 
 ## Imports in file modules
 
 A file that uses `import` or `export` is a module, and every name it uses must
-be declared in the file, imported, or built in. Import paths are relative to
-the importing file.
+be declared in the file, imported, or built in. Relative import paths are resolved from
+the importing file; bundled libraries use reserved `forma:` specifiers.
 
-The kernel library `preludes/kernel.forma` exports `not`, `when`, `unless`,
+The bundled kernel library `forma:kernel` exports `not`, `when`, `unless`,
 `cond`, `and`, `or`, `->` and `->>`. In a file module, import the ones you use:
 
 ```lisp
-(import "../forma/preludes/kernel.forma" [and or not when cond])
+(import "forma:kernel" [and or not when cond])
 ```
 
 Without the import, the checker reports `module/unimported-sugar` and names
@@ -102,7 +115,7 @@ you, so examples written there may need this import in a file.
 The checker accepts the builtins in the first table. The second table lists
 builtins that evaluate but that the checker does not type yet: a checked
 program that uses them is rejected with `Unbound variable`, and runs only with
-`file evaluate --unchecked`.
+`run --unchecked`.
 
 | Area | Checked builtins |
 | --- | --- |
@@ -140,10 +153,28 @@ becomes `None` and a plain value becomes `(Some value)`. This works for record
 types declared in the same file and for imported ones:
 
 ```lisp
-(import "./types.forma" [Vendor])
+(import "./types.lisp" [Vendor])
 (: beacon Vendor)
 (define beacon {:name "Beacon" :risk :low})   ; :reviewed-on is None
 ```
+
+The type must be available at the literal's use site. The same rules apply to
+file modules and `createLanguage` programs using prelude or imported types:
+
+| Literal context | Omitted `(Option T)` field | Plain field value |
+| --- | --- | --- |
+| Annotated binding, `(: value RecordType)` | `None` | `Some value` |
+| Argument to a function with a declared record parameter | `None` | `Some value` |
+| Expression annotation, `(: {...} RecordType)` | `None` | `Some value` |
+| Declared function result, including `if` branches and list elements with a known record type | `None` | `Some value` |
+| Record without a known type | No fields added | Value unchanged |
+
+Explicit `Some` and `None` values are preserved. Required fields must still be
+provided, and supplied values must match their field types. Filling applies to
+literal syntax; it does not add fields to an already computed record value.
+In Effect TypeScript schema records, optional fields use optional properties:
+omission stays absent, plain values stay plain, and reading the field produces
+an `Option`. Form hooks also receive plain values, with `nil` for omitted holes.
 
 Records computed with `Pick`, `Omit` or `Merge` do not fill implicitly yet:
 write `Some` and `None` there. Field access with a dot (`beacon.name`) works on
@@ -161,6 +192,19 @@ function can be used at different types by later definitions:
 (define b (same? "x" "y"))
 ```
 
+A literal list can use the enum type supplied by another argument to a generic
+function, in either argument order:
+
+```lisp
+(type ApprovalRole (Union "manager" "finance"))
+(: roles (List ApprovalRole))
+(define roles ["manager" "finance"])
+(same? roles ["manager" "finance"])
+```
+
+Each literal must belong to the union. A computed `String` still needs validation
+or an appropriate declared type before it can be used as an `ApprovalRole`.
+
 Definitions that call each other form one group. Inside that group they are
 monomorphic, as in standard Hindley–Milner inference. Give a definition an
 explicit signature when you need it to stay generic.
@@ -172,25 +216,58 @@ does not check against `Int`. Give numeric helpers a signature such as
 
 ## Writing tests
 
-Forma has no test framework. A practical pattern is a test file whose final
-expression is the list of failing case names:
+Write ordinary checked Forma in `.lisp` files and import the test library.
+Use `forma:test` in both repository checkouts and installed npm distributions;
+no copying or dependency declaration is needed:
 
 ```lisp
-(import "../forma/preludes/kernel.forma" [not])
-(import "./policy.forma" [can-activate? acme])
-(type Case {:name String :ok Bool})
-(: is (-> String a a Case))
-(define is [name actual expected] {:name name :ok (= actual expected)})
-(define cases [(is "acme can activate" (can-activate? acme 1000) true)])
-(map (fn [c] c.name) (filter (fn [c] (not c.ok)) cases))
+(import "forma:test" [test is is=])
+(import "./policy.lisp" [can-activate? acme])
+
+(test "acme can activate"
+  (is (can-activate? acme 1000)))
+
+(test "structural equality"
+  (is= [{:amount 42}] [{:amount 42}]))
 ```
 
-Run it with `file evaluate` and treat any result other than `[]` as a failure.
-Because `file evaluate` typechecks first, an ill-typed suite fails instead of
-reporting `[]`. To check that the suite can fail, flip one expectation and
-confirm that the case name is reported. The vendor-risk trial in
-[`trials/vendor-risk`](https://github.com/bjacobso/forma/tree/main/trials/vendor-risk)
-uses this pattern, with a small Node runner.
+Run `forma test [paths...]`. With no paths it searches the current directory.
+Directories discover `**/*-test.lisp` and `test/**/*.lisp`; explicit file paths
+run regardless of their names. Discovery skips dependency, build and hidden
+repository metadata directories and does not follow directory symlinks. Results
+are ordered by canonical file path, then source order; overlapping paths run a
+file once. `--filter <substring>` selects names, and `--json` emits one object
+with `ok`, `files` (check outcomes and diagnostics), and `results` (module, name,
+status, source span and diagnostics). Exit status is 1 for a failed test or file,
+0 otherwise, including an empty selection.
+
+Each file is checked in full before any of its tests run, even with a filter.
+A check failure reports diagnostics and skips that file; other files continue.
+Each selected test gets a fresh session and a 50,000-step evaluation budget.
+A runtime error or exhausted budget fails that test; later tests still run.
+Module initialization also uses the budget. Tests do not share runtime state.
+
+`test` is a library macro that wraps its body in an unevaluated function. The
+runner recognizes top-level `(test "literal name" body...)` calls and evaluates
+one selected body at a time. Importing a test module leaves its tests dormant.
+Tests may see private definitions in their file. This initial runner supports
+kernel evaluation; Effect programs, tags, property generators and `throws?`
+are not implemented. It does not add the core declarations or host operation
+proposed in RFC 0015. Use the spelling `test` directly, rather than an import
+alias, for discovery.
+
+A test passes when its body completes. Use `is` for a Bool condition and `is=`
+for structural equality (actual value first, expected value second). Multiple
+body expressions run in order; the first failed assertion ends that test.
+Assertion failures print expected and actual values and point to the assertion
+in the author's source. A bare `false` value is a completed expression, so use
+an assertion to make it fail. Helpers return `true` on success and call the
+kernel failure builtin on failure. There is currently no checked kernel catch
+form, so an expected-failure assertion is deferred.
+
+The trial reports retain their original list-of-failures suites. New
+`runner-test.lisp` companions in `trials/vendor-risk/tests` and
+`trials/expense-rules/src` demonstrate the runner without rewriting that history.
 
 ## Writing a form
 
@@ -222,9 +299,9 @@ when you write forms in files:
 
 ```json
 {"summary": {"kind": "FormApplication", "form": "vendor", "name": "acme",
-             "moduleId": "/path/register.forma"},
+             "moduleId": "/path/register.lisp"},
  "payload": {"kind": "Vendor", "name": "acme", "status": "active", "blockers": []},
- "span": {"sourceId": "/path/register.forma", "startOffset": 120, "endOffset": 410}}
+ "span": {"sourceId": "/path/register.lisp", "startOffset": 120, "endOffset": 410}}
 ```
 
 `payload` is the projection's IR as plain JSON: record keys lose their leading
@@ -234,7 +311,7 @@ are resolved module names.
 
 ### Authored syntax in an embedded compiler
 
-`elaborateProgram` and `elaborateSources` from `@formalang/ts/descriptor`
+`elaborateProgram` and `elaborateSources` from `@forma-language/forma/descriptor`
 return `ElaboratedDeclaration`s with `authored` and `syntax`. You do not need
 to parse the source a second time or join nodes by source ID and offset:
 
@@ -277,6 +354,36 @@ an epoch you choose) and do calendar arithmetic, such as month lengths, in the
 host that calls Forma. Write each rule's boundary as a test: for example, that
 a review on day 364 is current and one on day 365 is expired.
 
+## Asking what fits with typed holes
+
+Use `?` or `?name` in expression position while writing a program:
+
+```lisp
+(: repair (-> Int Int))
+(define repair [amount] ?todo)
+```
+
+Checking reports `typecheck/hole`: `Hole ?todo needs Int; candidates: amount`.
+Its structured `details` contain `name`, `expected`, and `candidates`. The main
+checker lists up to ten visible bindings whose types unify with the goal, with
+locals before globals and concrete types before polymorphic types in each group.
+These are binding replacements; it does not synthesize calls or record skeletons.
+Unsolved types use readable letters such as `a`. Each occurrence is a separate
+goal, including repeated names. Other top-level forms are still checked.
+
+The CLI displays the goal and candidates, MCP checks retain the details, and the
+language server offers a replacement quick fix for each candidate. The Effect
+checker reports contextual goals with an empty candidate list. Checked runs
+refuse programs containing holes; unchecked evaluation raises an error when it
+reaches a hole.
+
+Names beginning with `?` are reserved in ordinary executable expressions. Explicit
+host `typePolicy.unboundSymbols` rules still take precedence for unbound query
+symbols. Predicate names
+ending in `?`, quoted query variables such as `'[?person ?name]`, patterns, and
+descriptor syntax slots retain their existing meaning. Descriptor slot errors
+use the separate `elaborate/hole-*` codes.
+
 ## Reading diagnostics
 
 Each diagnostic has a `code`, `severity`, `message`, `phase` and usually a
@@ -298,4 +405,4 @@ you wrote. Common codes:
 
 See [Domain modeling](./domain-modeling.md#what-the-model-can-t-express-yet)
 and the [roadmap](./roadmap.md). Gaps that affect outside authors today: no
-date type, evaluate-only builtins (above), and no test runner.
+date type and evaluate-only builtins (above).

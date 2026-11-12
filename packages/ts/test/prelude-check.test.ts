@@ -10,7 +10,7 @@ const source = `(type Greeting {:kind "Greeting" :name Symbol})
   :ir Greeting {:kind "Greeting" :name name})`;
 const catalog = new DiagnosticCatalog();
 catalog.register({code:"greeting/notice",summary:"A greeting",explanation:"Greetings are welcome.",stability:"unstable"});
-const inputs = (text = source) => [{sourceId:"consumer/greeting.forma",source:text}];
+const inputs = (text = source) => [{sourceId:"consumer/greeting.lisp",source:text}];
 
 describe("consumer prelude checks", () => {
   test("checks examples and emits reference Markdown with a consumer catalog", () => {
@@ -37,12 +37,12 @@ describe("consumer prelude checks", () => {
   test("requires coverage for literal codes even in an unexecuted branch", () => {
     const result = checkPrelude(inputs(source.replace('(fn [holes] [', '(fn [holes] (if false [').replace('"A greeting"}])', '"A greeting"}] []))')));
     expect(result.ok).toBe(false);
-    expect(result.diagnostics).toContainEqual(expect.objectContaining({code:"prelude/diagnostic-coverage",span:expect.objectContaining({sourceId:"consumer/greeting.forma"})}));
+    expect(result.diagnostics).toContainEqual(expect.objectContaining({code:"prelude/diagnostic-coverage",span:expect.objectContaining({sourceId:"consumer/greeting.lisp"})}));
   });
 
   test("runs artifact metachecks even for unused standalone contracts", () => {
     const result = checkPrelude(inputs('(__payload-contract Broken not-a-payload-clause)'));
     expect(result.ok).toBe(false);
-    expect(result.diagnostics).toContainEqual(expect.objectContaining({code:"artifact/descriptor-payload",span:expect.objectContaining({sourceId:"consumer/greeting.forma"})}));
+    expect(result.diagnostics).toContainEqual(expect.objectContaining({code:"artifact/descriptor-payload",span:expect.objectContaining({sourceId:"consumer/greeting.lisp"})}));
   });
 });

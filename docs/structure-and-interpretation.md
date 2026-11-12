@@ -31,7 +31,7 @@ program in your browser. From a checkout, the `forma` JSON CLI does the same:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm --filter @formalang/ts build && pnpm --filter @formalang/host build
+pnpm exec turbo run build --filter=@forma-language/forma
 node packages/host/dist/cli.mjs request '{"op":"evaluate","source":"(+ 137 349)"}'
 # {"ok":true,"value":{"kind":"int","value":486},"diagnostics":[]}
 node packages/host/dist/cli.mjs request '{"op":"typecheck","source":"(+ 137 349)"}'
@@ -832,7 +832,7 @@ environment.
 Programs with Effect types are checked by Forma's Effect checker and compiled
 to [Effect](https://effect.website) TypeScript, which runs them. To try one,
 use the [Effect playground](https://forma-lang.com/playground/demo/effect-ts),
-or call `Mechanics.generateEffectProgram` from `@formalang/ts`. The checker
+or call `Mechanics.generateEffectProgram` from `@forma-language/forma/mechanics`. The checker
 holds operations to their signatures. Delete `[InsufficientFunds]` from the
 signature of `withdraw`, and the `fail` call is reported:
 
@@ -1147,9 +1147,9 @@ Mistakes are reported in the author's terms, at the author's text:
 ```
 
 ```text
-program.forma:2:57: credits must be at most 6
-program.forma:3:73: Unknown reference dta
-program.forma:4:47: A course cannot require itself.
+program.lisp:2:57: credits must be at most 6
+program.lisp:3:73: Unknown reference dta
+program.lisp:4:47: A course cannot require itself.
 ```
 
 The new language needed no parser, no separate checker, and no change to the

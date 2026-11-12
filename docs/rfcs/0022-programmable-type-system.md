@@ -117,7 +117,7 @@ their contracts.
   reconstructs types and decides well-typedness. `type/lower-core.ts` lowers
   to a core expression, but nothing re-checks that core independently.
 - **One surface, and stage 0 of a second.** Forma's surface is engine code in
-  `surface/core.ts`. `preludes/clojure.forma` supplies Clojure spellings as
+  `surface/core.ts`. `preludes/modules/clojure.lisp` supplies Clojure spellings as
   macros over Forma semantics ([RFC 0021](./0021-languages-as-libraries.md),
   stage 0).
 - **One type-system profile.** Hindley–Milner with records and rows
@@ -316,7 +316,7 @@ promising to understand arbitrary programs.
 ```
 
 ```lisp
-;; greet.forma, a declaration file read alongside greet.clj (illustrative)
+;; greet.lisp, a declaration file read alongside greet.clj (illustrative)
 (: greet (-> String String))
 ```
 
@@ -356,7 +356,7 @@ target.
 Four Lisps are in scope, each as a surface ([RFC
 0021](./0021-languages-as-libraries.md)) and later as an emitter target.
 None of them is a backend today: Effect TypeScript, Effect Schema, and
-artifact IR are the only targets, and `preludes/clojure.forma` is a macro
+artifact IR are the only targets, and `preludes/modules/clojure.lisp` is a macro
 library, not a code generator.
 
 A target needs three things (RFC 0021, "Targets"): **resugaring**, which
@@ -538,7 +538,7 @@ its status:
 - The kernel's implementation language and whether it is a separate package
   that other engines could reuse.
 - Whether `elaborator` is a new head or `form` with a bidirectional hook.
-- Whether declaration files are separate `.forma` files, annotations inside
+- Whether declaration files are separate `.lisp` files, annotations inside
   dialect source, or both.
 - The casting semantics of `Dynamic` at each backend, and whether casts are
   checked by contracts (as in Typed Racket) or by generated validators.

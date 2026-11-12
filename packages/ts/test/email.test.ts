@@ -24,6 +24,6 @@ describe("Email prelude", () => {
     expect(result.ok).toBe(false);
     expect(result.code).toBeUndefined();
     expect(result.diagnostics.map(d => d.code)).toContain(code);
-    expect(result.diagnostics.every(d => d.span?.sourceId === "rules.forma")).toBe(true);
+    expect(result.diagnostics.every(d => d.span?.sourceId === "rules.lisp")).toBe(true);
   });
 });

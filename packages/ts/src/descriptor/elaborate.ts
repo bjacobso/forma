@@ -1,4 +1,6 @@
+import { diagnosticLocator, spanLocator, type LocatedSpan } from "../diagnostic/locations.js";
 import { isKFloat } from "../evaluator/types.js";
+import { InferenceError } from "../diagnostic/errors.js";
 import { irContractId, payloadConstraintsId } from "../artifact/contract-identity.js";
 import { descriptorPayloadContract, descriptorValidatorNames, checkArtifactDescriptor, checkArtifactPayloadContracts, payloadContractsFromSources } from "../artifact/descriptor-contracts.js";
 import { makeArtifactValidatorRegistry } from "../artifact/validator-catalog.js";
@@ -51,7 +53,7 @@ import { SimpleSemanticEnvironment } from "./SemanticEnvironment.js";
 export interface ElaborateProgramOptions {
   /** Descriptors and hooks, e.g. from `bootstrapOntologyPreludes()`. */
   readonly prelude: BootstrappedPrelude;
-  /** Identifies the source in spans and diagnostics. Defaults to `"source.forma"`. */
+  /** Identifies the source in spans and diagnostics. Defaults to `"source.lisp"`. */
   readonly sourceId?: string;
   /** Restrict accepted top-level forms. Other recognized forms are reported. */
   readonly forms?: Iterable<string>;
@@ -103,7 +105,7 @@ export function elaborateProgram(
   source: string,
   options: ElaborateProgramOptions,
 ): ElaborateProgramResult {
-  return elaborateSources([{ sourceId: options.sourceId ?? "source.forma", source }], options);
+  return elaborateSources([{ sourceId: options.sourceId ?? "source.lisp", source }], options);
 }
 
 /**
@@ -143,7 +145,11 @@ export function elaborateSources(
   for (const {source,sourceId} of sources) {
     try {
       for (const descriptor of parsePrelude(source,typeDefinitions,authorForms.filter(e=>head(e)==="define" || head(e)==="macro")).forms) {
-        if (descriptor.surface && descriptions.has(descriptor.name)) throw new Error(`Form '${descriptor.name}' is already declared`);
+        if (descriptor.surface && descriptions.has(descriptor.name)) {
+          const definition = toSExprMany(parse(source).redTree).find(e => head(e) === "form" && e._tag === "List" && head(e.items[1]) === descriptor.name);
+          report(sourceLocator(source,sourceId), "elaborate/form-definition", `Form '${descriptor.name}' is already declared`, definition?.loc ?? descriptor.surface.body.loc);
+          continue;
+        }
         descriptions.register(descriptor);
       }
     } catch (error) {
@@ -179,6 +185,14 @@ export function elaborateSources(
   for (const descriptor of descriptions.list()) for (const hook of unifiedFormHooks(descriptor,descriptions,options.prelude.formBuiltins,options.prelude.hostedDsls)) elaboration.registerHook(hook);
   const accepted = options.forms ? new Set(options.forms) : undefined;
   const semanticEnv = options.semanticEnv ?? new SimpleSemanticEnvironment();
+  // The form type table includes nominal record shapes for IR validation. Keep
+  // their declaration kind available so expression holes do not treat them as aliases.
+  for (const source of options.prelude.sources ?? []) for (const expression of toSExprMany(parse(source).redTree)) {
+    const kind = head(expression);
+    if ((kind === "class" || kind === "error") && expression._tag === "List" && expression.items[1]?._tag === "Sym") {
+      semanticEnv.setFact("type-kind", expression.items[1].name, kind);
+    }
+  }
   for (const expression of authorForms) if (["type", "error", "class"].includes(head(expression) ?? "") && expression._tag === "List") {
     const definition=typeDefinition(expression);
     if (definition) {
@@ -272,7 +286,9 @@ export function elaborateSources(
           ...(name !== undefined ? { name } : {}),
         });
       } catch (error) {
-        at("elaborate/malformed-form", errorMessage(error), loc, { form: recognized.formName });
+        const failure = error instanceof InferenceError ? error : undefined;
+        const errorLoc = error && typeof error === "object" && "loc" in error ? error.loc as Loc : undefined;
+        at(typeof failure?.details.code === "string" ? failure.details.code : "elaborate/malformed-form", errorMessage(error), origin.kind === "authored" ? errorLoc ?? loc : loc, { form: recognized.formName });
       }
     }
   }
@@ -355,7 +371,7 @@ export function elaborateSources(
   return {
     ok: !diagnostics.some((diagnostic) => diagnostic.severity === "error"),
     declarations,
-    diagnostics,
+    diagnostics: diagnostics.map(diagnosticLocator(id => sources.find(source => source.sourceId === id)?.source)),
   };
 }
 
@@ -418,33 +434,9 @@ export function declarationDiagnostic(
 }
 
 /** Compute a full span (with end line and column) for a reader location. */
-export function sourceLocator(source: string, sourceId: string): (loc: Loc) => Span {
-  const lineStarts = [0];
-  for (let index = 0; index < source.length; index++) {
-    if (source.charCodeAt(index) === 10) lineStarts.push(index + 1);
-  }
-  const position = (offset: number): { line: number; column: number } => {
-    let low = 0;
-    let high = lineStarts.length - 1;
-    while (low < high) {
-      const mid = (low + high + 1) >> 1;
-      if (lineStarts[mid]! <= offset) low = mid;
-      else high = mid - 1;
-    }
-    return { line: low + 1, column: offset - lineStarts[low]! + 1 };
-  };
-  return (loc) => {
-    const end = position(loc.end);
-    return {
-      sourceId,
-      startOffset: loc.start,
-      endOffset: loc.end,
-      startLine: loc.line,
-      startColumn: loc.col,
-      endLine: end.line,
-      endColumn: end.column,
-    };
-  };
+export function sourceLocator(source: string, sourceId: string): (loc: Loc) => LocatedSpan {
+  const locate = spanLocator(source);
+  return loc => locate({ sourceId, startOffset: loc.start, endOffset: loc.end });
 }
 
 /**

@@ -1,0 +1,26 @@
+{
+  "normalized": {
+    "diagnostics": [
+      {
+        "code": "typecheck/type-mismatch",
+        "message": "Expected Union<\"manager\", \"finance\">, found String",
+        "span": {
+          "start": 178,
+          "end": 182
+        }
+      }
+    ]
+  },
+  "success": false,
+  "expectation": {
+    "kind": "error",
+    "diagnostic": {
+      "code": "typecheck/type-mismatch",
+      "message": "Expected Union<\"manager\", \"finance\">, found String",
+      "span": {
+        "start": 178,
+        "end": 182
+      }
+    }
+  }
+}

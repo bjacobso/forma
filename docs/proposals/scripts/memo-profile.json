@@ -1,0 +1,196 @@
+{
+  "revision": "8a449021a0a713016deafe35b733f7261d42deb6",
+  "node": "v24.13.0",
+  "cpu": "Apple M2 Max",
+  "warmup": 3,
+  "samples": [
+    {
+      "original": 117.37000000000012,
+      "profiled": 124.96112500000004,
+      "unchangedMs": 86.92958399999816,
+      "editedMs": 0.15604199999984303
+    },
+    {
+      "profiled": 111.74137500000006,
+      "original": 122.57895900000017,
+      "unchangedMs": 87.81827400000338,
+      "editedMs": 0.14141700000004676
+    },
+    {
+      "original": 116.73795800000016,
+      "profiled": 115.64962500000001,
+      "unchangedMs": 90.23792300000014,
+      "editedMs": 0.15724999999974898
+    },
+    {
+      "profiled": 117.53195799999958,
+      "original": 115.29295899999988,
+      "unchangedMs": 92.96931299999642,
+      "editedMs": 0.15895899999986796
+    },
+    {
+      "original": 129.44529199999988,
+      "profiled": 142.84837500000003,
+      "unchangedMs": 108.85478300000159,
+      "editedMs": 0.17233299999998053
+    },
+    {
+      "profiled": 144.728208,
+      "original": 114.62033299999985,
+      "unchangedMs": 119.65383199999997,
+      "editedMs": 0.1708330000001297
+    },
+    {
+      "original": 115.37487499999997,
+      "profiled": 116.32441599999993,
+      "unchangedMs": 93.0941729999995,
+      "editedMs": 0.15833299999985684
+    },
+    {
+      "profiled": 124.38975000000028,
+      "original": 119.1118749999996,
+      "unchangedMs": 99.94522899999856,
+      "editedMs": 0.1558749999999236
+    },
+    {
+      "original": 124.52279200000021,
+      "profiled": 120.06195799999978,
+      "unchangedMs": 93.44533600000159,
+      "editedMs": 0.16679199999998673
+    },
+    {
+      "profiled": 118.3995829999999,
+      "original": 159.6829170000001,
+      "unchangedMs": 92.48054400000274,
+      "editedMs": 0.1770000000001346
+    },
+    {
+      "original": 189.8821250000001,
+      "profiled": 128.89666699999998,
+      "unchangedMs": 100.70753500000046,
+      "editedMs": 0.15825000000040745
+    },
+    {
+      "profiled": 116.61233300000004,
+      "original": 112.50983400000041,
+      "unchangedMs": 92.15828299999612,
+      "editedMs": 0.16154199999982666
+    },
+    {
+      "original": 112.83024999999998,
+      "profiled": 113.92445800000041,
+      "unchangedMs": 91.28096300000198,
+      "editedMs": 0.1639580000000933
+    },
+    {
+      "profiled": 131.96408400000018,
+      "original": 121.54233300000033,
+      "unchangedMs": 100.34158600000137,
+      "editedMs": 0.3490830000000642
+    },
+    {
+      "original": 111.7900410000002,
+      "profiled": 114.21670899999936,
+      "unchangedMs": 91.20449699999881,
+      "editedMs": 0.15791600000011385
+    },
+    {
+      "profiled": 116.55100000000039,
+      "original": 119.74287499999991,
+      "unchangedMs": 90.57078799999545,
+      "editedMs": 2.0730419999999867
+    },
+    {
+      "original": 131.95045800000025,
+      "profiled": 118.38837500000045,
+      "unchangedMs": 91.4310319999995,
+      "editedMs": 0.18775000000005093
+    },
+    {
+      "profiled": 111.92174999999952,
+      "original": 111.73966599999949,
+      "unchangedMs": 88.11566499999208,
+      "editedMs": 0.17304200000035053
+    },
+    {
+      "original": 124.70845800000006,
+      "profiled": 109.32558299999982,
+      "unchangedMs": 84.43892199999573,
+      "editedMs": 0.14066599999932805
+    },
+    {
+      "profiled": 111.53779200000008,
+      "original": 108.21720800000003,
+      "unchangedMs": 86.66845299999841,
+      "editedMs": 0.16200000000026193
+    },
+    {
+      "original": 104.32324999999946,
+      "profiled": 111.83570899999995,
+      "unchangedMs": 88.19945700001881,
+      "editedMs": 0.1547920000002705
+    },
+    {
+      "profiled": 112.67095900000004,
+      "original": 115.00887499999953,
+      "unchangedMs": 87.36208899999474,
+      "editedMs": 0.15612500000042928
+    },
+    {
+      "original": 111.00858300000073,
+      "profiled": 107.07129200000054,
+      "unchangedMs": 83.72625100000369,
+      "editedMs": 0.15704100000039034
+    },
+    {
+      "profiled": 107.3937079999996,
+      "original": 120.37991600000078,
+      "unchangedMs": 84.46196100000907,
+      "editedMs": 0.15058399999998073
+    },
+    {
+      "original": 113.0282500000003,
+      "profiled": 112.59045900000001,
+      "unchangedMs": 87.53466700000445,
+      "editedMs": 0.15454200000021956
+    },
+    {
+      "profiled": 114.4110840000003,
+      "original": 112.19200000000001,
+      "unchangedMs": 91.59662199999912,
+      "editedMs": 0.16441699999995762
+    },
+    {
+      "original": 112.04462499999954,
+      "profiled": 117.95458300000064,
+      "unchangedMs": 93.37644999999702,
+      "editedMs": 0.1744169999992664
+    },
+    {
+      "profiled": 113.58500000000004,
+      "original": 112.70787500000006,
+      "unchangedMs": 89.42813200000182,
+      "editedMs": 0.14891699999952834
+    },
+    {
+      "original": 108.1440419999999,
+      "profiled": 109.27774999999929,
+      "unchangedMs": 87.19520699997156,
+      "editedMs": 0.16200000000026193
+    },
+    {
+      "profiled": 116.78708300000108,
+      "original": 116.2036250000001,
+      "unchangedMs": 93.57708299997103,
+      "editedMs": 0.16600000000107684
+    }
+  ],
+  "medians": {
+    "original": 115.37487499999997,
+    "profiled": 116.32441599999993,
+    "unchangedMs": 91.28096300000198,
+    "editedMs": 0.16154199999982666
+  },
+  "unchangedFraction": 0.7835752935105829,
+  "method": "Elapsed time inside each definition SCC, including environment application, inference and generalization; excludes graph construction, parse/lower and final projection. 499 unchanged independent definitions, one edited definition, unchanged final expression excluded. GC inside a component is charged to it."
+}

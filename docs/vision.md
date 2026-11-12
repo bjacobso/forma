@@ -1,5 +1,10 @@
 # Vision
 
+Forma's product direction is a checked, capability-scoped language that an
+application hands to its agents and users, with vocabulary the application
+defines. A programmable type system for Lisp is the mechanism that makes that
+application-defined language possible.
+
 Forma is a programmable type system for Lisp. It owns the meaning of types
 and elaboration, and lets libraries define what a well-typed program means for
 their domain. Today it is one small, homoiconic, macro-first language whose

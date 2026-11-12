@@ -9,7 +9,7 @@ test("an external prelude uses only the CLI to check and generate its reference"
   const dir = mkdtempSync(join(tmpdir(),"forma-prelude-"));
   try {
     const out = join(dir,"reference.md");
-    const run = (...options: string[]) => spawnSync(process.execPath,[resolve(import.meta.dirname,"../dist/cli.mjs"),"prelude","check",join(fixture,"greeting.forma"),...options],{cwd:dir,encoding:"utf8"});
+    const run = (...options: string[]) => spawnSync(process.execPath,[resolve(import.meta.dirname,"../dist/cli.mjs"),"prelude","check",join(fixture,"greeting.lisp"),...options],{cwd:dir,encoding:"utf8"});
     const checked = run("--catalog",join(fixture,"diagnostics.json"),"--out",out);
     expect(checked.status, checked.stdout + checked.stderr).toBe(0);
     expect(JSON.parse(checked.stdout)).toMatchObject({ok:true,value:{forms:1,examples:1}});

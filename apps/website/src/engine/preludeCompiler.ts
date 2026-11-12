@@ -5,7 +5,7 @@ import type { RunRequest, RunResult } from "./protocol";
 
 export function compilePreludeDemo(request: RunRequest): RunResult {
   const started = performance.now();
-  const preludeSyntax = parse({ sourceId: "prelude.forma", source: request.prelude ?? "" });
+  const preludeSyntax = parse({ sourceId: "prelude.lisp", source: request.prelude ?? "" });
   const parsed = parse({ sourceId: request.sourceId, source: request.source });
   const parsedAt = performance.now();
   const parseDiagnostics = [...preludeSyntax.diagnostics, ...parsed.diagnostics];
