@@ -368,7 +368,9 @@ function resolveModuleGraphUnlocated(
           id,
           header!,
           "module/declaration-name",
-          `Module declaration ${name} must be an unqualified name without the reserved __forma_ marker.`,
+          name.includes("__forma_")
+            ? "Module declaration uses a reserved internal name."
+            : `Module declaration ${name} must be an unqualified name.`,
         );
       if (bindings.has(name))
         fail(

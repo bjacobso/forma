@@ -97,3 +97,22 @@ test("malformed imported functions retain the dependency's location", () => {
     rmSync(dir, { recursive: true, force: true });
   }
 }, 30_000);
+
+for (const name of ["action-match.lisp", "core-type-body.lisp", "ontology-collision.lisp"]) {
+  test(`early-layer diagnostics retain the imported author's location: ${name}`, () => {
+    const dir = mkdtempSync(join(tmpdir(), "forma-invalid-early-import-"));
+    try {
+      writeFileSync(join(dir, "main.lisp"), `(import "./${name}" [])`);
+      const source = cases[name]!;
+      writeFileSync(join(dir, name), source);
+      const result = spawnSync(process.execPath, [cli, "check", "--json", join(dir, "main.lisp")], { encoding: "utf8", timeout: 10_000 });
+      expect(result.status).toBe(1);
+      const diagnostic = JSON.parse(result.stdout).diagnostics[0];
+      expect(diagnostic.code).not.toBe("internal/error");
+      expect(diagnostic.span).toMatchObject({ sourceId: expect.stringContaining(name), startLine: expect.any(Number), startColumn: expect.any(Number) });
+      expect(diagnostic.message).not.toMatch(/__forma_|\bt\d+\b/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 30_000);
+}
