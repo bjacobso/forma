@@ -581,7 +581,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         env = env.bind(n,projected);
       }
     }
-    if (kind === "result-type") return {kind: "result-type" as const, type: yield* resolveType(yield* invoke(spec.options.get(":type")!), input.rawExpr)};
+    if (kind === "result-type") return {kind: "result-type" as const, type: yield* resolveType(yield* invoke(spec.options.get(":type")!), input.rawExpr, spec.types, input.semanticEnv)};
     if (kind === "validate") {
       const diagnostics: Diagnostic[] = [...childDiagnostics];
       for (const [n, e] of values) {
