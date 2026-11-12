@@ -305,7 +305,7 @@ it does not emit a placeholder program.
 ## Quick start
 
 Use Node.js 24. The public distribution is `@forma-language/forma` 0.6.0, with
-Effect as a required peer. **It is not yet published**; after publication:
+Effect as a required peer:
 
 ```sh
 npm install @forma-language/forma effect
@@ -319,7 +319,7 @@ CodeMirror/Lezer peers; `/editor/react` also needs React and React DOM 19.
 See [optional tooling installation](packages/forma/README.md#optional-tooling)
 for the full package lists and commands. UI-free `/editor` needs no extra peers.
 
-Until then, from a source checkout with pnpm 10.20:
+Or, from a source checkout with pnpm 10.20:
 
 ```sh
 pnpm install --frozen-lockfile
@@ -407,10 +407,10 @@ consumer-prelude SDK, the trusted kernel and elaborators
 and emitters ([RFC 0021](docs/rfcs/0021-languages-as-libraries.md)), Go and
 Rust Effect hosts ([Effect hosts](docs/rfcs/0022-effect-hosts.md)), and
 effect-polymorphic signatures ([RFC 0023](docs/rfcs/0023-effect-polymorphism.md)). The single public distribution is
-`@forma-language/forma`; it has not yet been published. Internal workspaces are
+`@forma-language/forma`, on npm. Internal workspaces are
 private. Changesets manages version PRs and the Release workflow publishes the
-validated public package after maintainer authorization. First publication
-and npm trusted-publisher setup are described in [Publishing](docs/publishing.md).
+validated public package after maintainer authorization. Releases and npm
+trusted-publisher setup are described in [Publishing](docs/publishing.md).
 
 ## Website deployment
 

@@ -281,7 +281,14 @@ pageClass: forma-index
 </div>
 <p class="fh-proof"><a href="https://worldvm.com">WorldVM's world language is a Forma prelude.</a></p>
 
-From a checkout of `main` (Node.js 24 and pnpm 10.20):
+Install from npm (Node.js 24):
+
+```sh
+npm install @forma-language/forma effect
+npx forma help
+```
+
+Or from a checkout of `main` (pnpm 10.20):
 
 ```sh
 pnpm install --frozen-lockfile
@@ -298,8 +305,7 @@ pnpm --filter @forma-language/forma pack --pack-destination ../../.context/tarba
 npm install /absolute/path/to/forma/.context/tarballs/forma-language-forma-*.tgz effect@4.1.1
 ```
 
-The package has not been published to npm. [Publishing](/publishing) records the
-release checks and publication gates.
+[Publishing](/publishing) records the release checks and publication gates.
 
 </section>
 
@@ -311,7 +317,7 @@ release checks and publication gates.
 <div class="fh-notes-grid">
 <dl class="fh-notes">
 <div><dt>It is pre-alpha research.</dt><dd>Packages are 0.x and change without notice. There are no stable APIs, wire formats, or host ABI yet.</dd></div>
-<div><dt>The package is not on npm yet.</dt><dd>Run the CLI from a checkout using the commands above, or install a tarball packed from <code>main</code>. See <a href="/publishing">Publishing</a> for the distribution contract and release gates.</dd></div>
+<div><dt>Releases lag <code>main</code>.</dt><dd>npm has the last released version; to try unreleased changes, run the CLI from a checkout or install a tarball packed from <code>main</code>. See <a href="/publishing">Publishing</a> for the distribution contract and release gates.</dd></div>
 <div><dt>Some browser output is stored.</dt><dd>The playground does not run ontology elaboration yet; those examples show a stored canonical IR golden that CI checks against the TypeScript engine.</dd></div>
 <div><dt>One generated target.</dt><dd>Effect TypeScript and Effect Schema are generated today. Lisp emitters, starting with <code>.cljc</code>, and Go and Rust Effect hosts are proposals in <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md">RFC 0021</a> and the <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-effect-hosts.md">Effect hosts RFC</a>, not built.</dd></div>
 <div><dt>One Lisp surface.</dt><dd>Forma's own syntax is the only surface; Clojure spellings are macros over it. The trusted kernel, elaborator API, and dialect adapters are proposals in <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md">RFC 0021</a> and <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md">RFC 0022</a>.</dd></div>

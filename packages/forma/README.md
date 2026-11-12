@@ -1,7 +1,6 @@
 # Forma
 
-Prepared pre-alpha distribution, version 0.6.0. This package has not been published.
-After publication, install `@forma-language/forma` with `effect@4.1.1`:
+Pre-alpha distribution, version 0.6.0. Install `@forma-language/forma` with `effect@4.1.1`:
 
 ```sh
 npm install @forma-language/forma effect@4.1.1

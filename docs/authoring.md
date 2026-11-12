@@ -23,8 +23,7 @@ Use Node.js 24. Install the public distribution and its required Effect peer:
 npm install @forma-language/forma effect
 ```
 
-**`@forma-language/forma` is not yet published.** That install command is for
-after publication. For now, use a source checkout with pnpm 10.20:
+To run from a source checkout instead, use pnpm 10.20:
 
 ```sh
 pnpm install --frozen-lockfile

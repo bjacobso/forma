@@ -57,8 +57,8 @@ bash examples/http-rpc/check.sh
 node examples/http-rpc/server.ts
 ```
 
-The generator imports `@forma-language/forma/http-api` and `/rpc`. The package
-is not yet published, so the commands above install a local tarball.
+The generator imports `@forma-language/forma/http-api` and `/rpc`. The commands
+above install a local tarball built from this checkout.
 The check builds the compiler, checks saved generation against sources, strictly
 typechecks generated and native code, and runs contract-negative and transport
 integration tests. To regenerate after editing a `.lisp` file:
