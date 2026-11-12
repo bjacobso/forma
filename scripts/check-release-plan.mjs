@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { readFile, readdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { checkReleaseVersionDocs } from "./sync-release-version.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const expected = "@forma-language/forma";
@@ -38,3 +39,6 @@ if (notes.length === 0) {
     await rm(temporary, { recursive: true, force: true });
   }
 }
+// The release PR gets no CI; select-mode runs this before publishing.
+const versionProblems = await checkReleaseVersionDocs();
+assert.deepEqual(versionProblems, [], `Release version docs are out of sync; run node scripts/sync-release-version.mjs\n${versionProblems.join("\n")}`);
