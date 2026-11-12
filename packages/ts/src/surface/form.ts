@@ -172,7 +172,7 @@ function parseUnifiedFormInner(e: SExpr, types: ReadonlyMap<string, SExpr>, help
   while (i < e.items.length - 1) {
     const key = name(e.items[i]);
     if (!key?.startsWith(":")) throw surfaceError(`form ${formName}: expected a :key value option`, e.items[i]!, "elaborate/form-definition");
-    if (![":types", ":ir", ":type", ":scope", ":check", ":examples", ":emit", ":extensions"].includes(key)) throw surfaceError(`form ${formName}: unknown option ${key}`, e.items[i]!, "elaborate/form-definition");
+    if (![":types", ":ir", ":type", ":infer-fn", ":scope", ":check", ":examples", ":emit", ":extensions"].includes(key)) throw surfaceError(`form ${formName}: unknown option ${key}`, e.items[i]!, "elaborate/form-definition");
     if (options.has(key)) throw surfaceError(`form ${formName}: duplicate option ${key}`, e.items[i]!, "elaborate/form-definition");
     const value = e.items[++i]!; // The option loop leaves at least one following expression.
     options.set(key, value);
@@ -232,6 +232,9 @@ function parseUnifiedFormInner(e: SExpr, types: ReadonlyMap<string, SExpr>, help
   }
   for (const n of holes.keys()) if (!variables.has(n)) throw surfaceError(`form ${formName}: type for unknown hole ${n}`, e, "elaborate/form-definition");
   const resultType = options.get(":type");
+  const inferHook = options.get(":infer-fn");
+  if (inferHook && (inferHook._tag !== "Sym" || inferHook.name.startsWith(":"))) throw surfaceError(`form ${formName}: :infer-fn expects a function name`, inferHook, "elaborate/form-definition");
+  if (inferHook && resultType) throw surfaceError(`form ${formName}: choose :type or :infer-fn, not both`, inferHook, "elaborate/form-definition");
   const extensionSyntax = options.get(":extensions");
   if (extensionSyntax && extensionSyntax._tag !== "Map") {
     throw surfaceError(`form ${formName}: :extensions expects a literal map`, extensionSyntax, "elaborate/form-definition");
@@ -246,6 +249,7 @@ function parseUnifiedFormInner(e: SExpr, types: ReadonlyMap<string, SExpr>, help
     validation: { kind: "hook", fn: `form/${formName}/validate` },
     elaboration: { kind: "hook", fn: `form/${formName}/construct` },
     resultType: head(resultType) === "fn" ? {kind:"hook",fn:`form/${formName}/result-type`} : { kind: "constant", type: name(resultType) ?? declares ?? "Unit" },
+    ...(inferHook ? {inferHook:name(inferHook)!} : {}),
     produces: irName, ...(extensions ? {extensions} : {}),
     completionShape: `(${formName} ${patterns.map(p => name(p) ?? "options").join(" ")})`,
     surface: { pattern: patterns, holes, options, body, helpers:reachableHelpers(formHookExpressions({body, options}),helpers,new Set(holes.keys())), types, ...(types.has(irName) ? { ir: types.get(irName)! } : {}) },
