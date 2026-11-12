@@ -32,9 +32,11 @@ try {
   assert.equal(packed.version, JSON.parse(await readFile(join(cwd, "package.json"), "utf8")).version);
   assert.equal(packed.engines.node, ">=24");
   assert.equal(packed.peerDependencies.effect, "^4.1.1");
-  assert.equal(packed.dependencies["@modelcontextprotocol/sdk"], "1.32.2");
-  assert.deepEqual(packed.peerDependenciesMeta, { react: { optional: true }, "react-dom": { optional: true } });
-  assert(!packed.dependencies.effect);
+  assert.equal(packed.peerDependencies["@modelcontextprotocol/sdk"], "1.32.2");
+  assert(!packed.dependencies || Object.keys(packed.dependencies).length === 0);
+  for (const dependency of Object.keys(packed.peerDependencies).filter(name => name !== "effect")) {
+    assert.equal(packed.peerDependenciesMeta[dependency]?.optional, true, dependency);
+  }
   assert.equal(packed.publishConfig.access, "public");
   assert.equal(packed.repository.url, "git+https://github.com/bjacobso/forma.git");
   assert(!/@formalang\/|workspace:/.test(JSON.stringify(packed)), "private reference in manifest");
@@ -62,7 +64,12 @@ try {
   };
   trees.forEach(collect);
   await writeFile(join(consumer, "package.json"), JSON.stringify({ private: true, type: "module", pnpm: { overrides } }));
-  run("pnpm", ["add", "--store-dir", store, "--prefer-offline", "--ignore-scripts", "--config.auto-install-peers=false", archive, "effect@4.1.1"], consumer);
+  const tools = Object.entries(packed.peerDependencies)
+    .filter(([name]) => !["effect", "react", "react-dom"].includes(name))
+    // Add tools at the tested versions: a fresh range beside pinned transitive
+    // copies would load two @codemirror/state instances.
+    .map(([name, range]) => `${name}@${overrides[name] ?? range}`);
+  run("pnpm", ["add", "--store-dir", store, "--prefer-offline", "--ignore-scripts", "--config.auto-install-peers=false", archive, "effect@4.1.1", ...tools], consumer);
   const installed = JSON.parse(run("pnpm", ["list", "--prod", "--depth", "Infinity", "--json"], consumer));
   const packages = new Map();
   const measure = tree => {
@@ -82,7 +89,7 @@ try {
     }
   };
   for (const path of new Set(packages.values())) await size(path);
-  console.log(`Checking consumer: ${packages.size} packages, ${bytes} installed file bytes (excluding node_modules links and metadata)`);
+  console.log(`Tooling consumer: ${packages.size} packages, ${bytes} installed file bytes (excluding node_modules links and metadata)`);
   const inert = Object.keys(packed.exports).filter(key => key !== "./editor/react").map(key => name + (key === "." ? "" : key.slice(1)));
   await writeFile(join(consumer, "smoke.mjs"), `
     import assert from 'node:assert/strict';
@@ -161,8 +168,8 @@ try {
     else assert.match(run(forma, ["test", path], consumer), /PASS bundled/);
   }
   run("pnpm", ["add", "--store-dir", store, "--prefer-offline", "--ignore-scripts", "--config.auto-install-peers=false",
-    `@codemirror/state@${packed.dependencies["@codemirror/state"]}`,
-    `@codemirror/view@${packed.dependencies["@codemirror/view"]}`], consumer);
+    `@codemirror/state@${packed.peerDependencies["@codemirror/state"]}`,
+    `@codemirror/view@${packed.peerDependencies["@codemirror/view"]}`], consumer);
   run(process.execPath, ["--input-type=module", "-e", `
     import { EditorState } from '@codemirror/state';
     import { lispSupport } from '${name}/editor/codemirror';

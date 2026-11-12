@@ -12,7 +12,15 @@ const humanCommand = ["check", "run", "test", "fmt", "repl", "explain", "describ
 try {
   const abi = new JsonAbi();
   if (["help", "--help", "-h"].includes(command) || (args.length === 1 && ["--help", "-h"].includes(args[0]!))) process.stdout.write(usage);
-  else if (command === "mcp" && args.length === 0) await (await import("./cli/mcp.js")).mcp(abi);
+  else if (command === "mcp" && args.length === 0) {
+    try {
+      await (await import("./cli/mcp.js")).mcp(abi);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ERR_MODULE_NOT_FOUND" || !String(error).includes("'@modelcontextprotocol/sdk'")) throw error;
+      process.stderr.write("forma mcp needs @modelcontextprotocol/sdk. Install it: npm install @modelcontextprotocol/sdk@1.32.2\n");
+      process.exitCode = 1;
+    }
+  }
   else if (command === "abi-schema" && args.length === 0) process.stdout.write(`${JSON.stringify(hostAbiSchema(), null, 2)}\n`);
   else if (!(humanCommand ? await human(abi, command, args) : await machine(abi, command, args))) {
     process.stderr.write(usage);

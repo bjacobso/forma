@@ -133,10 +133,13 @@
   ],
   "scripts": {
     "build": "tsdown && node scripts/executable.mjs",
-    "test": "node ../../scripts/check-distribution.mjs",
+    "test": "node --test ../../scripts/optional-dependencies.test.mjs && node ../../scripts/check-distribution.mjs",
     "typecheck": "node ../../scripts/check-distribution.mjs"
   },
-  "dependencies": {
+  "peerDependencies": {
+    "effect": "^4.1.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "@codemirror/autocomplete": "^6.18.6",
     "@codemirror/commands": "^6.8.1",
     "@codemirror/lang-markdown": "^6.5.0",
@@ -150,17 +153,62 @@
     "vscode-languageserver": "^9.0.1",
     "vscode-languageserver-textdocument": "^1.0.12"
   },
-  "peerDependencies": {
-    "effect": "^4.1.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  },
   "peerDependenciesMeta": {
     "react": {
       "optional": true
     },
     "react-dom": {
       "optional": true
+    },
+    "@codemirror/autocomplete": {
+      "optional": true
+    },
+    "@codemirror/commands": {
+      "optional": true
+    },
+    "@codemirror/lang-markdown": {
+      "optional": true
+    },
+    "@codemirror/language": {
+      "optional": true
+    },
+    "@codemirror/lint": {
+      "optional": true
+    },
+    "@codemirror/state": {
+      "optional": true
+    },
+    "@codemirror/view": {
+      "optional": true
+    },
+    "@lezer/highlight": {
+      "optional": true
+    },
+    "@lezer/lr": {
+      "optional": true
+    },
+    "@modelcontextprotocol/sdk": {
+      "optional": true
+    },
+    "vscode-languageserver": {
+      "optional": true
+    },
+    "vscode-languageserver-textdocument": {
+      "optional": true
     }
+  },
+  "devDependencies": {
+    "@codemirror/autocomplete": "^6.18.6",
+    "@codemirror/commands": "^6.8.1",
+    "@codemirror/lang-markdown": "^6.5.0",
+    "@codemirror/language": "^6.11.0",
+    "@codemirror/lint": "^6.8.5",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.36.8",
+    "@lezer/highlight": "^1.2.1",
+    "@lezer/lr": "^1.4.2",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12"
   }
 }

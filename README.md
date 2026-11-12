@@ -311,6 +311,14 @@ Effect as a required peer. **It is not yet published**; after publication:
 npm install @forma-language/forma effect
 ```
 
+This installs the language and runtime without editor, MCP or language-server
+libraries. For `forma mcp`, add `@modelcontextprotocol/sdk@1.32.2`. For
+`forma-language-server`, add `vscode-languageserver@^9.0.1` and
+`vscode-languageserver-textdocument@^1.0.12`. Editor adapters use optional
+CodeMirror/Lezer peers; `/editor/react` also needs React and React DOM 19.
+See [optional tooling installation](packages/forma/README.md#optional-tooling)
+for the full package lists and commands. UI-free `/editor` needs no extra peers.
+
 Until then, from a source checkout with pnpm 10.20:
 
 ```sh
