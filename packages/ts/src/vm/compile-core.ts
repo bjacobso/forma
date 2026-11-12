@@ -352,11 +352,12 @@ function compileList(
     }
   }
 
-  if (items.length === 1 && head._tag === "Sym"
-    && (head.name === "None" || head.name === "Option.None"
-      || (context.env?.lookup(`__constructor/${head.name}`) instanceof Map
-        && (context.env.lookup(`__constructor/${head.name}`) as Map<string, unknown>).get(":arity") === 0))) {
+  // Nullary constructor syntax resolves its value at execution time, including
+  // constructors and functions rebound in the current lexical environment.
+  if (items.length === 1 && head._tag === "Sym" && /^[A-Z]/.test(head.name)) {
     compileSymbol(head.name, chunk, scope, globals, builtins, context, trace);
+    emit(chunk, Op.CALL_NULLARY, trace);
+    emitU8(chunk, 0, trace);
     return;
   }
   // General function call: compile callee, compile args, CALL/TAIL_CALL

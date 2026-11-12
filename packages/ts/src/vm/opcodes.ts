@@ -54,6 +54,8 @@ export enum Op {
   TAIL_CALL = 22,
   /** Return top of stack to caller */
   RETURN = 23,
+  /** CALL_NULLARY u8 — uppercase nullary constructor value or normal zero-arg call */
+  CALL_NULLARY = 24,
 
   // ── Inline arithmetic (no builtin dispatch) ─────────────
   /** pop b, pop a, push a + b */
