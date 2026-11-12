@@ -23,8 +23,8 @@ source/prelude loading, editor analysis, symbol indexing, navigation, completion
 refactoring, descriptor slots, retained values, and suspended host calls.
 See [Language services](./language-services.md).
 
-Reusable helpers formerly implemented inside the workbench are available from
-`@forma-language/forma/authoring`:
+Reusable helpers formerly implemented inside the workbench live in the engine's
+internal authoring module (not a public subpath of `@forma-language/forma`):
 
 - `requirementsFor` propagates capability names through resolved definitions,
   children, and recursive references. It is a conservative graph calculation,

@@ -118,7 +118,7 @@ quasiquoted TypeScript expression:
   {:kind "Message" :name name :text text})
 ```
 
-`emitFormTypeScript` in `@forma-language/forma/descriptor-codegen` evaluates the hook.
+The internal `emitFormTypeScript` generator (not a public subpath) evaluates the hook.
 Symbols in its output name target bindings; strings and keyword map labels
 are escaped as TypeScript literals. `ts/ref` constructs a validated target
 reference. `ts/schema` lowers a Forma Type hole; `ts/schemas` lowers a list of

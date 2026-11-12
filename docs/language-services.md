@@ -439,7 +439,8 @@ The regressions and properties live in `language-service-regressions.test.ts`;
 
 ## UI-free authoring helpers
 
-`@forma-language/forma/authoring` preserves reusable language logic from the structural
+The engine's internal authoring module (not a public subpath of
+`@forma-language/forma`) preserves reusable language logic from the structural
 workbench, which is now owned by Foldworks. It exports capability reachability
 (`requirementsFor`), declaration replay preparation (`mergeReplSource` and
 `replDefinitions`), outline/source coordinate mapping (`rowLayouts`, `nodeAt`,

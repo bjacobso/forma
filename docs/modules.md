@@ -260,7 +260,7 @@ The language server does not resolve packages yet.
 `@forma-language/forma/modules` entry point work in browsers without filesystem APIs:
 
 ```typescript
-import { TsLanguageHost } from "@forma-language/forma/host/ts-host";
+import { TsLanguageHost } from "@forma-language/forma/host";
 
 const host = new TsLanguageHost();
 const { sessionId } = await host.openSession();
