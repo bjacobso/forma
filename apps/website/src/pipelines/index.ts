@@ -202,7 +202,7 @@ export const pipelines: readonly PipelineDef[] = [
       targetLabel: "Generated Effect TypeScript",
       language: "typescript",
       output: effectTypeScriptTarget(effectTsSource),
-      notice: "This target is generated in-browser from mechanics service and operation declarations through @formalang/ts/mechanics.",
+      notice: "This target is generated in-browser from mechanics service and operation declarations through @forma-language/forma/mechanics.",
     },
     narration: [
       {
@@ -227,7 +227,7 @@ export const pipelines: readonly PipelineDef[] = [
       targetLabel: "Generated Effect Schema",
       language: "typescript",
       output: effectSchemaTarget(schemaSource),
-      notice: "This target is generated in-browser from the parsed Forma schema declarations through @formalang/ts/mechanics.",
+      notice: "This target is generated in-browser from the parsed Forma schema declarations through @forma-language/forma/mechanics.",
     },
     narration: [
       {
@@ -236,7 +236,7 @@ export const pipelines: readonly PipelineDef[] = [
       },
       {
         stage: "target",
-        md: "The target pane is generated from those parsed schema declarations through `@formalang/ts/mechanics`, then emitted as Effect Schema code.",
+        md: "The target pane is generated from those parsed schema declarations through `@forma-language/forma/mechanics`, then emitted as Effect Schema code.",
       },
     ],
   },

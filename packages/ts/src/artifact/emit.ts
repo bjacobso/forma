@@ -1,3 +1,4 @@
+import { diagnosticLocator } from "../diagnostic/locations.js";
 import { resolveModuleGraph, sourceModuleResolver, relativeModuleId } from "../modules/graph.js";
 import { moduleMechanicsDeclarations } from "../modules/link.js";
 import { LanguageSession } from "../session/session.js";
@@ -35,7 +36,7 @@ export function emitBackends() {
 }
 
 /** Explicit elaboration → validation → immutable packaging boundary. */
-export function emit(request: EmitRequest): EmitResult {
+function emitUnlocated(request: EmitRequest): EmitResult {
   if (request.source !== undefined) {
     const { source, ...options } = request;
     const session = new LanguageSession({ id: request.session.id, env: request.session.env, projects: request.session.projects });
@@ -251,4 +252,10 @@ export function canonicalIrProjection(artifact: ArtifactPackage) {
     modules: artifact.modules.map(({ sourceHash: _, ...m }) => m),
     typeSummary: artifact.typeSummary,
   };
+}
+
+export function emit(request: EmitRequest): EmitResult {
+  const result = emitUnlocated(request);
+  return { ...result, diagnostics: result.diagnostics.map(diagnosticLocator(id =>
+    id === (request.sourceId ?? "request") && request.source !== undefined ? request.source : request.session.sourceText(id))) };
 }

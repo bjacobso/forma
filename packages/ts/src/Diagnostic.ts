@@ -13,6 +13,7 @@ export {
 } from "./diagnostic/errors.js";
 
 export { InferenceError, type Origin } from "./diagnostic/errors.js";
+export { SurfaceInputError } from "./surface/errors.js";
 
 // Re-export ParseError for convenience
 export { ParseError } from "./reader/types.js";
@@ -30,4 +31,7 @@ export {
   type Span,
 } from "./diagnostic/diagnostic.js";
 
-export { DiagnosticCatalog, diagnosticCatalog, builtinDiagnosticCatalog, type DiagnosticCatalogEntry } from "./diagnostic/catalog.js";
+export { DiagnosticCatalog, DiagnosticCatalogError, diagnosticCatalog, builtinDiagnosticCatalog, type DiagnosticCatalogEntry } from "./diagnostic/catalog.js";
+
+export { authorNames } from "./diagnostic/diagnostic.js";
+export { spanLocator, diagnosticLocator, type LocatedSpan, type LocatedDiagnostic } from "./diagnostic/locations.js";

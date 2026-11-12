@@ -1,7 +1,7 @@
 {
   "normalized": {
     "diagnostics": [],
-    "type": "List<Float>"
+    "type": "List<Int>"
   },
   "success": true,
   "expectation": {

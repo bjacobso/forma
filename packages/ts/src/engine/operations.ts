@@ -1,8 +1,10 @@
+import { diagnosticLocator } from "../diagnostic/locations.js";
 import { validateHostTypes, hostTypeNames } from "./type-policy.js";
 import { analyzeLsp } from "../lsp/hm-lsp.js";
 import { hasEffectDeclarations } from "../mechanics/analysis.js";
 import { inferenceDiagnostics, inferenceExpressionTypes } from "./session-validation.js";
-import { checkSessionTypes } from "./session-validation.js";
+import { checkSessionTypes, sessionCoercionContext } from "./session-validation.js";
+import { normalizeCoreProgram } from "../surface/core.js";
 import { bootstrapFromSources, type BootstrappedPrelude } from "../descriptor/bootstrap.js";
 import { descriptorFormProvider } from "../type/unified-form-provider.js";
 import { elaborateSources } from "../descriptor/elaborate.js";
@@ -183,7 +185,7 @@ export function parse(request: ParseRequest): ParseResult {
   return result;
 }
 
-export function parseSource(request: ParseRequest): ParsedSource {
+function parseSourceUnlocated(request: ParseRequest): ParsedSource {
   const sourceId = request.sourceId ?? "source";
   try {
     const exprs = Effect.runSync(Reader.parseManyToSExpr(request.source));
@@ -205,7 +207,7 @@ export function parseSource(request: ParseRequest): ParsedSource {
   }
 }
 
-export function expand(request: ExpandRequest): ExpandResult {
+function expandUnlocated(request: ExpandRequest): ExpandResult {
   const sourceId = request.sourceId ?? (!request.source && request.session?.orderedSources("source").length === 1
     ? request.session.orderedSources("source")[0]!.id : "source");
   const source = sourceFromRequest(request);
@@ -220,11 +222,7 @@ export function expand(request: ExpandRequest): ExpandResult {
           severity: "error",
           message: `No loaded source found for ${request.sourceId ?? "source"}`,
           phase: "expand",
-          span: {
-            sourceId,
-            startOffset: 0,
-            endOffset: 0,
-          },
+          span: { sourceId, startOffset: 0, endOffset: 0, startLine: 1, startColumn: 1, endLine: 1, endColumn: 1 },
         },
       ],
     };
@@ -272,7 +270,7 @@ function formDiagnostics(request: TypecheckRequest, sourceId: string, source: st
   return elaborateSources([{sourceId,source}], {prelude:cached.prelude}).diagnostics.filter(d=>d.span?.sourceId === sourceId);
 }
 
-export function typecheck(request: TypecheckRequest): TypecheckResult {
+function typecheckUnlocated(request: TypecheckRequest): TypecheckResult {
   const sourceId = request.sourceId ?? (!request.source && request.session?.orderedSources("source").length === 1
     ? request.session.orderedSources("source")[0]!.id : "source");
   const source = sourceFromRequest(request);
@@ -299,11 +297,7 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
           severity: "error",
           message: `No loaded source found for ${request.sourceId ?? "session"}`,
           phase: "typecheck",
-          span: {
-            sourceId,
-            startOffset: 0,
-            endOffset: 0,
-          },
+          span: { sourceId, startOffset: 0, endOffset: 0, startLine: 1, startColumn: 1, endLine: 1, endColumn: 1 },
         },
       ],
     };
@@ -340,6 +334,10 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
         code: diagnostic.code ?? "typecheck/diagnostic",
         severity: diagnostic.severity,
         message: diagnostic.message,
+        ...(diagnostic.details ? {details:diagnostic.details} : {}),
+        ...(diagnostic.help ? {help:diagnostic.help} : {}),
+        ...(diagnostic.fix ? {fix:diagnostic.fix} : {}),
+        ...(diagnostic.related ? {related:diagnostic.related} : {}),
         phase: "typecheck",
         ...(diagnostic.span
           ? {
@@ -374,10 +372,11 @@ export function typecheck(request: TypecheckRequest): TypecheckResult {
   }
 }
 
-export async function evaluate(request: EvaluateRequest): Promise<EvaluateResult> {
+async function evaluateUnlocated(request: EvaluateRequest, contextTypes: readonly Reader.SExpr[] = []): Promise<EvaluateResult> {
   const sourceId = request.sourceId ?? "source";
   if (request.observe) {
-    return evaluateObserved(request, request.observe, Builtins.defaultBuiltins);
+    return evaluateObserved(request, request.observe, Builtins.defaultBuiltins,
+      contextTypes.length ? normalizeCoreProgram(Effect.runSync(Reader.parseManyToSExpr(request.source)), true, contextTypes) : undefined);
   }
   try {
     const result = await Effect.runPromise(
@@ -385,6 +384,7 @@ export async function evaluate(request: EvaluateRequest): Promise<EvaluateResult
         Evaluator.evaluate(request.source, {
           stepLimit: request.stepLimit ?? 50_000,
           builtins: Builtins.defaultBuiltins,
+          contextTypes,
           ...(request.env ? { env: request.env } : {}),
         }),
         Evaluator.makePreludeLayer(Builtins.defaultBuiltins),
@@ -409,7 +409,7 @@ export async function evaluate(request: EvaluateRequest): Promise<EvaluateResult
   }
 }
 
-export async function evaluateInSession(
+async function evaluateInSessionUnlocated(
   request: EvaluateInSessionRequest,
 ): Promise<EvaluateResult> {
   const sourceId = request.sourceId ?? (request.source ? "session" : (request.session.orderedSources("source")[0]?.id ?? "session"));
@@ -434,12 +434,12 @@ export async function evaluateInSession(
     !request.session.projects.length &&
     !/\((?:import|export|export-from)\s/.test(source)
   ) {
-    return evaluate({
+    return evaluateUnlocated({
       ...request,
       source,
       sourceId,
       env: request.env ?? request.session.env,
-    });
+    }, sessionCoercionContext(request.session));
   }
   try {
     const core = request.env ?? request.session.configurationEnv;
@@ -459,12 +459,15 @@ export async function evaluateInSession(
 const moduleRuntimes = new WeakMap<LanguageSession,{core:Env;runtime:ModuleRuntime}>();
 export async function prepareModuleImports(request:EvaluateInSessionRequest,sourceId:string,source:string,core:Env):Promise<{expressions:readonly Reader.SExpr[];env:Env}> {
   if (!request.session.projects.length && !/\((?:import|export|export-from)\s/.test(source)) {
-    return {expressions:Effect.runSync(Reader.parseManyToSExpr(source)),env:core};
+    return {expressions:normalizeCoreProgram(Effect.runSync(Reader.parseManyToSExpr(source)), true, sessionCoercionContext(request.session)),env:core};
   }
   let cached=moduleRuntimes.get(request.session);
   if (!cached || cached.core!==core) {cached={core,runtime:new ModuleRuntime(core)};moduleRuntimes.set(request.session,cached);}
   const graph=graphFromRequest(request,sourceId,source);
-  return {expressions:graph.modules.find((m) =>m.id===graph.entry)!.expressions,env:await cached.runtime.imports(graph,request.stepLimit)};
+  const entry = graph.modules.find(m => m.id === graph.entry)!;
+  const contextTypes = graph.modules.flatMap(m => m.id === entry.id ? [] :
+    m.expressions.filter(e => ["type", ":"].includes(head(e) ?? "")));
+  return {expressions:normalizeCoreProgram(entry.expressions, true, contextTypes),env:await cached.runtime.imports(graph,request.stepLimit)};
 }
 function graphFromRequest(request:{readonly session?:LanguageSession|undefined},sourceId:string,source:string):ModuleGraph {
   return resolveModuleGraph({id:sourceId,source},sourceModuleResolver(request.session?.orderedSources("source").map((s) =>({id:s.id,source:s.text})) ?? []),moduleCoreOptions(request.session));
@@ -489,7 +492,7 @@ function moduleDiagnostic(error:unknown,phase:DiagnosticPhase,sourceId:string):D
  * author-written expression that contains their span, and the records
  * computed before a failure are returned with it.
  */
-export async function evaluateObserved(
+async function evaluateObservedUnlocated(
   request: EvaluateRequest,
   observe: Evaluator.ObservationOptions,
   builtins: Record<string, Evaluator.BuiltinFn>,
@@ -813,4 +816,41 @@ function primitiveType(name: string): Type.Type {
       if (!hostTypeNames.has(name)) throw new Type.InferenceError({ message: `Unknown host type ${name}`, details: { code: "typecheck/host-builtin" } });
       return Type.TCon(name);
   }
+}
+
+export function parseSource(request: ParseRequest): ParsedSource {
+  const result = parseSourceUnlocated(request);
+  return { ...result, diagnostics: result.diagnostics.map(diagnosticLocator(() => request.source)) };
+}
+
+export function expand(request: ExpandRequest): ExpandResult {
+  return locateResult(expandUnlocated(request), request);
+}
+
+export function typecheck(request: TypecheckRequest): TypecheckResult {
+  return locateResult(typecheckUnlocated(request), request);
+}
+
+export async function evaluate(request: EvaluateRequest): Promise<EvaluateResult> {
+  return locateResult(await evaluateUnlocated(request), request);
+}
+
+export async function evaluateInSession(request: EvaluateInSessionRequest): Promise<EvaluateResult> {
+  return locateResult(await evaluateInSessionUnlocated(request), request);
+}
+
+function locateResult<R extends PassResult>(result: R, request: { readonly source?: string | undefined; readonly sourceId?: string | undefined; readonly session?: LanguageSession | undefined }): R {
+  const locate = diagnosticLocator(id => (id === result.sourceId ? request.source : undefined) ?? request.session?.sourceText(normalizeModuleId(id)));
+  return {
+    ...result,
+    diagnostics: result.diagnostics.map(locate),
+    ...("observations" in result && result.observations ? { observations: {
+      ...(result.observations as ObservationReport),
+      records: (result.observations as ObservationReport).records.map(record => ({ ...record, ...(record.failure ? { failure: locate(record.failure) } : {}) })),
+    } } : {}),
+  };
+}
+
+export async function evaluateObserved(...args: Parameters<typeof evaluateObservedUnlocated>): Promise<EvaluateResult> {
+  return locateResult(await evaluateObservedUnlocated(...args), args[0]);
 }

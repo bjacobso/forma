@@ -1,0 +1,7 @@
+(import "./expenses-forms.lisp" [expense])
+(expense train :employee "alice" :amount 4000 :category "travel" :date 20768)
+(expense lunch :employee "bob" :amount 7500 :category "meals" :date 20768)
+(expense dinner :employee "carol" :amount 7501 :category "meals" :date 20769 :manager "dana")
+(expense editor :employee "dana" :amount 20000 :category "software" :date 20769 :vendor "Acme")
+(expense laptop :employee "erin" :amount 250001 :category "equipment" :date 20770 :asset-tag "IT-42" :manager "frank" :finance "grace")
+(expense airfare :employee "frank" :amount 300000 :category "travel" :date 20770 :manager "grace" :finance "helen")

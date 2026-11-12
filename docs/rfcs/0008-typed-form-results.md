@@ -144,6 +144,34 @@ evaluate or recheck a general result-hook program. Validation of the form's
 `:ir`, `:check`, and `:emit` bodies remains separate. This RFC does not certify
 all metaprograms or prove an emitter preserves semantics.
 
+## Proposed follow-up: statically checked hook inputs
+
+Derive a conceptual `Holes<Form>` record from the pattern and `:types`, rather
+than asking authors to duplicate it. This is a proposed compiler contract,
+not new executable type syntax. Check `:check`, `:scope`, `:type`, and projection
+bodies against their input and result contracts when compiling a prelude.
+Repeated children receive lists of projected child IR; `Syntax` and `(Expr T)`
+remain syntax, not evaluated values of `T`; declaration references retain
+validated identities. Reflection must use the boundary described above.
+
+The existing hook ABI is not that record type: optional holes currently receive
+`nil` or a bare value, not `None` or `Some`. Do not infer `Option T` over this ABI
+and call it checked. First specify a versioned opt-in typed-hook ABI with real
+Options and explicit syntax/type representations, retaining old hooks unchanged.
+Diagnose a missing hole, invalid Option elimination, or wrong projection result
+at the prelude definition, with related information at the application if needed.
+Imported helpers must retain checked schemes and the selected ABI version.
+
+Start with concrete hole records and projections, then diagnostics, then scope
+and result hooks. Generic child families and reflected records depend on RFCs
+0006–0009. Preserve legacy artifact goldens; add rejection fixtures for helpers
+that destructure an undeclared hole and for matching a raw optional value as an
+Option. A correctly typed function returning type syntax can still lie about
+the program it describes: static hook checking does not replace independent
+core re-checking in [the programmable type system RFC](./0022-programmable-type-system.md).
+Active-context inference hooks in open PR #150 are separate work, not an
+implementation of this proposal.
+
 ## Prelude migration and compatibility
 
 First add reflection and concrete normalization behind the existing `row-of`

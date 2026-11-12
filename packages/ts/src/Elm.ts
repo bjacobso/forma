@@ -28,7 +28,7 @@ export interface ElmProgramResult {
  * Target adapter expressions come from elm.lisp's emit hooks. No Forma runtime.
  */
 export function generateElmProgram(source: string, options: { readonly sourceId?: string } = {}): ElmProgramResult {
-  const sourceId = options.sourceId ?? "app.forma";
+  const sourceId = options.sourceId ?? "app.lisp";
   const sourceSpan = sourceLocator(source, sourceId);
   const locate = (loc: SExpr["loc"]) => {
     const prefix = source.slice(0, loc.start);

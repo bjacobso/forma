@@ -1,5 +1,6 @@
 {
   "name": "@formalang/ts",
+  "private": true,
   "version": "0.3.0",
   "description": "The TypeScript implementation of Forma, a typed Lisp for extensible domain languages.",
   "type": "module",

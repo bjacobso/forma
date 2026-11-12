@@ -1,0 +1,8 @@
+(export Stock available reserve reorder?)
+(type Stock {:sku String :on-hand Int :reserved Int})
+(: available (-> Stock Int))
+(define available [s] (- s.on-hand s.reserved))
+(: reserve (-> Stock Int Stock))
+(define reserve [s n] {:sku s.sku :on-hand s.on-hand :reserved (+ s.reserved n)})
+(: reorder? (-> Stock Int Bool))
+(define reorder? [s threshold] (< (available s) threshold))

@@ -1,0 +1,38 @@
+; orders.lisp
+; -----------------------------------------------------------------------------
+; Clojure spellings over Forma semantics (RFC 0021, stage 0).
+;
+; Every head below that Clojure programmers recognise — `def`, `defn`, `defn-`,
+; `if-let`, `->` — is an ordinary macro imported from preludes/modules/clojure.lisp.
+; The semantics are Forma's: `if` takes a Bool, absence is `Option`, and the
+; annotations are checked by Hindley-Milner inference.
+; -----------------------------------------------------------------------------
+(import "./clojure.lisp" [def defn defn- if-let ->])
+(export quote-for receipt)
+
+(def free-shipping-from 5000)
+(def flat-shipping 700)
+
+;; `defn-` is module-private in Clojure. Forma modules export by name, so it
+;; is `defn` with a comment.
+(: shipping-for (-> Int Int))
+(defn- shipping-for "Shipping in cents for a subtotal." [subtotal]
+  (if (>= subtotal free-shipping-from) 0 flat-shipping))
+
+;; `if-let` binds the value inside `Some`. There is no truthiness and no nil
+;; punning: the coupon is an `Option Int`, so the missing case is `None`.
+(: after-coupon (-> Int (Option Int) Int))
+(defn after-coupon [subtotal coupon]
+  (if-let [off coupon]
+    (max 0 (- subtotal off))
+    subtotal))
+
+;; `->` threads the value first, as in Clojure.
+;; This is the whole module's job: one receipt line.
+(: quote-for (-> Int (Option Int) String))
+(defn quote-for [subtotal coupon]
+  (-> (after-coupon subtotal coupon)
+      (+ (shipping-for subtotal))
+      (str " cents")))
+
+(define receipt (quote-for 4200 (Some 500)))

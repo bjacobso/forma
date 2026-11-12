@@ -1,11 +1,12 @@
 ---
+date: 2026-11-07
 title: Types Before Execution
 description: Part 5 of From Lists to Languages. Represent types with Effect Schema, infer them with unification, and reject ill-typed programs before they run, with errors that point at the call site.
 ---
 
 # Types Before Execution
 
-<p class="blog-meta">Part 05 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act II, Types and Extension · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 05 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act II, Types and Extension · <time datetime="2026-11-07">November 7, 2026</time></p>
 
 > `(+ 1 "hello")` should be a type error before evaluation.
 

@@ -6,6 +6,7 @@
  * row unification with open/closed record semantics.
  */
 import { Effect, Ref } from "effect";
+import { diagnosticTypePrinter, typeMismatch } from "./diagnostic-types.js";
 import type { Type, Row, ERow } from "./types.js";
 import { showType, flattenRow, buildRow, flattenERow, buildERow, EEmpty } from "./types.js";
 import { TApp, TCon, TFun } from "./types.js";
@@ -35,10 +36,12 @@ const bindTVar = (id: string, t: Type, origin: Origin) =>
     if (tApplied._tag === "TVar" && tApplied.id === id) return;
 
     if (occursInType(id, tApplied)) {
+      const print = diagnosticTypePrinter();
+      const variable = print({_tag:"TVar",id}), within = print(tApplied);
       return yield* ctx.fail(origin, {
-        code: "typecheck/occurs-check", message: `Infinite type: ${id} occurs in ${showType(tApplied)}`,
-        tvar: id,
-        in: showType(tApplied),
+        code: "typecheck/occurs-check", message: `Infinite type: ${variable} occurs in ${within}`,
+        tvar: variable,
+        in: within,
       });
     }
 
@@ -97,6 +100,7 @@ const bindEVar = (id: string, e: ERow, origin: Origin) =>
 // unify (types)
 // ---------------------------------------------------------------------------
 
+/** Directional diagnostic convention: t1 is expected, t2 is actual. */
 export const unify = (
   t1: Type,
   t2: Type,
@@ -120,11 +124,7 @@ export const unify = (
     // TCon must match
     if (a._tag === "TCon" && b._tag === "TCon") {
       if (a.name === b.name) return;
-      return yield* ctx.fail(origin, {
-        code: "typecheck/type-mismatch", message: `Type mismatch: ${showType(a)} vs ${showType(b)}`,
-        expected: showType(a),
-        got: showType(b),
-      });
+      return yield* ctx.fail(origin, typeMismatch(a, b));
     }
 
     // TFun: unify arg, res, and effects
@@ -167,11 +167,7 @@ export const unify = (
       return;
     }
 
-    return yield* ctx.fail(origin, {
-      code: "typecheck/type-mismatch", message: `Cannot unify ${showType(a)} with ${showType(b)}`,
-      expected: showType(a),
-      got: showType(b),
-    });
+    return yield* ctx.fail(origin, typeMismatch(a, b));
   });
 
 function isFiniteTypeSet(type: Type): boolean {
@@ -390,7 +386,7 @@ export const applyFn = (
   Effect.gen(function* () {
     const ctx = yield* InferContext;
     const retT = yield* ctx.freshTVar;
-    yield* unify(fnT, TFun(argT, retT), origin);
+    yield* unify(TFun(argT, retT), fnT, origin);
     const s = yield* Ref.get(ctx.subst);
     return applyType(s, retT);
   });

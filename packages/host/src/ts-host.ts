@@ -1,8 +1,10 @@
+import { describeForm, describeBinding, referenceEntries, type LanguageDescription } from "./description.js";
+import { HOST_ABI_VERSION, HOST_CAPABILITIES } from "./host-contract.js";
 import * as Artifact from "@formalang/ts/artifact";
 import * as Modules from "@formalang/ts/modules";
 import { Effect, Ref } from "effect";
 import * as Builtins from "@formalang/ts/builtins";
-import { KernelTypeError, type KernelError } from "@formalang/ts/diagnostic";
+import { diagnosticLocator, spanLocator, KernelTypeError, type KernelError } from "@formalang/ts/diagnostic";
 import { Env } from "@formalang/ts/env";
 import * as Evaluator from "@formalang/ts/evaluator";
 import type { BuiltinFn, KFn, KValue } from "@formalang/ts/evaluator";
@@ -238,46 +240,66 @@ export class TsLanguageHost implements LanguageHost {
   #nextValueRefId = 1;
   readonly #sessions = new Map<string, TsSession>();
 
+  async loadSource(request: LoadSourceRequest): Promise<LoadSourceResult> {
+    return this.#locateResult(await this.#loadSourceUnlocated(request), request);
+  }
+
+  async loadSourceBundle(request: LoadSourceBundleRequest): Promise<LoadSourceBundleResult> {
+    return this.#locateResult(await this.#loadSourceBundleUnlocated(request), request);
+  }
+
+  async evaluate(request: EvaluateRequest): Promise<EvaluationResult> {
+    return this.#locateResult(await this.#evaluateUnlocated(request), request);
+  }
+
+  async evaluateInSession(request: EvaluateInSessionRequest): Promise<EvaluationState> {
+    return this.#locateResult(await this.#evaluateInSessionUnlocated(request), { ...request, sourceId: request.sourceId ?? "session" });
+  }
+
+  async replSubmit(request: EvaluateInSessionRequest & { readonly source: string }): Promise<EvaluationState> {
+    return this.#locateResult(await this.#replSubmitUnlocated(request), request);
+  }
+
+  async analyzeEditor(request: EditorAnalysisRequest): Promise<EditorAnalysisResult> {
+    return this.#locateResult(await this.#analyzeEditorUnlocated(request), request);
+  }
+
+  /** Project host-created diagnostics before they leave the in-process API. */
+  #locateResult<R>(result: R, request: { readonly source?: string | undefined; readonly sourceId?: string | undefined; readonly sessionId?: string | undefined; readonly sources?: readonly { readonly sourceId: string; readonly source: string }[] | undefined }): R {
+    const locate = diagnosticLocator(id =>
+      (id === (request.sourceId ?? "source") ? request.source : undefined) ??
+      request.sources?.find(source => source.sourceId === id)?.source ??
+      (request.sessionId ? this.sessionSourceText(request.sessionId, id) : undefined));
+    const visit = (value: unknown): unknown => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+      const record = value as Record<string, unknown>;
+      const projected = { ...record };
+      for (const key of ["diagnostics", "errors"]) {
+        if (Array.isArray(record[key])) projected[key] = record[key].map(diagnostic => locate(diagnostic));
+      }
+      for (const key of ["result", "observations", "parse"]) if (record[key]) projected[key] = visit(record[key]);
+      if (Array.isArray(record.records)) projected.records = record.records.map(visit);
+      if (record.failure) projected.failure = locate(record.failure as Diagnostic);
+      return projected;
+    };
+    return visit(result) as R;
+  }
+
+  async moduleGraph(request: ModuleGraphRequest): Promise<ModuleGraphResult> {
+    return this.#locateResult(await this.#moduleGraphUnlocated(request), request);
+  }
+
+  async linkEffectModules(request: ModuleGraphRequest): Promise<ModuleLinkResult> {
+    return this.#locateResult(await this.#linkEffectModulesUnlocated(request), request);
+  }
+
   async version(): Promise<VersionResult> {
     return {
       engine: "forma-typescript",
-      engineVersion: "0.0.0",
-      hostAbiVersion: "0.1.0",
+      engineVersion: Engine.engineVersion,
+      hostAbiVersion: HOST_ABI_VERSION,
       sourceLoadSemantics: "validate-and-store",
-      capabilities: [
-        "parse",
-        "expand",
-        "typecheck",
-        "evaluate",
-        "openSession",
-        "configureSession",
-        "loadSource",
-        "loadSourceBundle",
-        "evaluateInSession",
-        "replSubmit",
-        "callValue",
-        "resumeHostCall",
-        "abortEvaluation",
-        "projectValue",
-        "releaseValue",
-        "sessionInfo",
-        "resetSession",
-        "closeSession",
-        "identifySyntax",
-        "observe",
-        "symbolIndex",
-        "findReferences",
-        "applyEditScript",
-        "describeNodes",
-        "editScriptSchema",
-        "sourceToOutline",
-        "outlineToSource",
-        "formSlots",
-        "emit",
-        "emitMany",
-        "emitBackends",
-        "artifactSummary",
-      ],
+      capabilities: [...HOST_CAPABILITIES],
     };
   }
 
@@ -325,7 +347,7 @@ export class TsLanguageHost implements LanguageHost {
     };
   }
 
-  async loadSource(request: LoadSourceRequest): Promise<LoadSourceResult> {
+  async #loadSourceUnlocated(request: LoadSourceRequest): Promise<LoadSourceResult> {
     const session = this.#requireSession(request.sessionId);
     const kind = request.kind === "prelude" ? "prelude" : "source";
     const sourceId =
@@ -378,7 +400,7 @@ export class TsLanguageHost implements LanguageHost {
         session.language.scope = checked.scope!;
       } catch (error) {
         timings.evalMs ??= performance.now() - evalStart;
-        return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics: [Engine.diagnosticFromUnknown(error, "evaluate", sourceId)] };
+        return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics: [diagnosticLocator(id => id === sourceId ? request.source : session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", sourceId))] };
       }
     }
     const storeStart = performance.now();
@@ -388,7 +410,7 @@ export class TsLanguageHost implements LanguageHost {
     return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics: parsed.diagnostics };
   }
 
-  async loadSourceBundle(request: LoadSourceBundleRequest): Promise<LoadSourceBundleResult> {
+  async #loadSourceBundleUnlocated(request: LoadSourceBundleRequest): Promise<LoadSourceBundleResult> {
     const sources: LoadSourceResult[] = [];
     for (const source of request.sources) {
       sources.push(await this.loadSource({ ...source, sessionId: request.sessionId, timings: request.timings }));
@@ -412,7 +434,7 @@ export class TsLanguageHost implements LanguageHost {
       { ...Engine.moduleCoreOptions(session.language), ...(request.projects ? { projects: request.projects } : {}) },
     );
   }
-  async moduleGraph(request: ModuleGraphRequest): Promise<ModuleGraphResult> {
+  async #moduleGraphUnlocated(request: ModuleGraphRequest): Promise<ModuleGraphResult> {
     try {
       const graph = this.#moduleGraph(request),
         session = this.#requireSession(request.sessionId),
@@ -440,7 +462,7 @@ export class TsLanguageHost implements LanguageHost {
       };
     }
   }
-  async linkEffectModules(request: ModuleGraphRequest): Promise<ModuleLinkResult> {
+  async #linkEffectModulesUnlocated(request: ModuleGraphRequest): Promise<ModuleLinkResult> {
     try {
       return Modules.linkEffectModules(this.#moduleGraph(request));
     } catch (error) {
@@ -503,7 +525,7 @@ export class TsLanguageHost implements LanguageHost {
     return Engine.debugCore({...request, source, session:session?.language, hostBuiltins:request.hostBuiltins ?? session?.hostBuiltins, typePolicy:request.typePolicy ?? session?.typePolicy}, mode);
   }
 
-  async evaluate(request: EvaluateRequest): Promise<EvaluationResult> {
+  async #evaluateUnlocated(request: EvaluateRequest): Promise<EvaluationResult> {
     const sourceId = request.sourceId ?? "source";
     const result = await Engine.evaluate({
       sourceId,
@@ -529,7 +551,7 @@ export class TsLanguageHost implements LanguageHost {
     };
   }
 
-  async evaluateInSession(request: EvaluateInSessionRequest): Promise<EvaluationState> {
+  async #evaluateInSessionUnlocated(request: EvaluateInSessionRequest): Promise<EvaluationState> {
     const session = this.#requireSession(request.sessionId);
     const sourceId = request.sourceId ?? (!request.source && session.language.orderedSources("source").length === 1
       ? session.language.orderedSources("source")[0]!.id : "session");
@@ -592,7 +614,7 @@ export class TsLanguageHost implements LanguageHost {
     };
   }
 
-  async replSubmit(request: EvaluateInSessionRequest & { readonly source: string }): Promise<EvaluationState> {
+  async #replSubmitUnlocated(request: EvaluateInSessionRequest & { readonly source: string }): Promise<EvaluationState> {
     const session = this.#requireSession(request.sessionId);
     const sourceId = request.sourceId ?? `repl-${this.#nextEvaluationId++}`;
     const parsed = Engine.parseSource({ sourceId, source: request.source });
@@ -693,7 +715,7 @@ export class TsLanguageHost implements LanguageHost {
     } catch (error) {
       return {
         status: "failed",
-        diagnostics: [Engine.diagnosticFromUnknown(error, "evaluate", "value-ref")],
+        diagnostics: [diagnosticLocator(id => session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", "value-ref"))],
       };
     }
   }
@@ -793,6 +815,75 @@ export class TsLanguageHost implements LanguageHost {
     return this.#sessions.get(sessionId)?.language.sourceText(sourceId);
   }
 
+  /** Describe checked public library vocabulary without evaluating an entry program. */
+  async describe(request: { readonly sessionId: string; readonly sourceId?: string }): Promise<LanguageDescription> {
+    const session = this.#requireSession(request.sessionId);
+    const forms: LanguageDescription["forms"][number][] = [];
+    const functions: LanguageDescription["functions"][number][] = [];
+    const types: LanguageDescription["types"][number][] = [];
+    const diagnostics: Diagnostic[] = [];
+    for (const source of session.language.orderedSources("prelude")) {
+      for (const entry of referenceEntries(source.id, source.text)) {
+        if (entry.kind === "function" && ["TFun", "TVariadic"].includes(session.language.scope.typeEnv.get(entry.name)?.type._tag ?? "")) {
+          const checked = entry.signature ? undefined : await this.typecheck({ sessionId: request.sessionId, source: entry.name });
+          const vars = new Map<string, string>();
+          const signature = entry.signature ?? checked?.display?.replace(/\bt\d+\b/gu, name => {
+            if (!vars.has(name)) vars.set(name, `a${vars.size}`);
+            return vars.get(name)!;
+          }) ?? entry.pattern ?? entry.name;
+          functions.push({ name: entry.name, sourceId: source.id, signature, ...(entry.doc ? { doc: entry.doc } : {}) });
+        } else if (entry.kind === "type") types.push({ name: entry.name, sourceId: source.id, signature: entry.source, ...(entry.doc ? { doc: entry.doc } : {}) });
+      }
+    }
+    for (const descriptor of session.language.scope.prelude?.descriptions.list() ?? []) {
+      if (descriptor.resultType.kind === "none" && !descriptor.surface) continue;
+      const sourceId = session.language.orderedSources("prelude").find(source => referenceEntries(source.id, source.text).some(entry => entry.kind === "form" && entry.name === descriptor.name))?.id ?? "prelude";
+      forms.push(describeForm(descriptor.name, sourceId, descriptor));
+    }
+    const roots = request.sourceId ? [request.sourceId] : session.language.orderedSources("source").map(source => source.id);
+    const seen = new Set<string>();
+    for (const sourceId of roots) {
+      try {
+        const graph = this.#moduleGraph({ sessionId: request.sessionId, sourceId });
+        const checked = Modules.checkModuleGraph(graph, Engine.moduleCheckOptions({ session: session.language, source: "", hostBuiltins: session.hostBuiltins, typePolicy: session.typePolicy }));
+        diagnostics.push(...checked.diagnostics);
+        if (!checked.ok) continue;
+        for (const binding of checked.interfaces.find(entry => entry.moduleId === graph.entry)!.exports) {
+          const key = `${binding.name}:${binding.identity.moduleId}:${binding.identity.declaration}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const owner = graph.modules.find(module => module.id === binding.identity.moduleId)!;
+          const entries = referenceEntries(owner.id, owner.source);
+          if (binding.kind === "form") {
+            const descriptor = owner.compileTime?.forms.get(binding.symbol)?.descriptor;
+            if (descriptor) {
+              const form = describeForm(binding.name, owner.id, descriptor);
+              forms.push(form);
+              // Examples are authored in the defining library's scope, including private helpers.
+              // Reuse its compile-time form provider through the graph's own module checker.
+              for (const example of form.examples) {
+                const parsed = Engine.parseSource({ sourceId: `${owner.id}#example`, source: example });
+                diagnostics.push(...parsed.diagnostics);
+                if (!parsed.diagnostics.length) {
+                  const exampleGraph = Modules.resolveModuleGraph({ id: owner.id, source: owner.source + "\n" + example },
+                    Modules.sourceModuleResolver(graph.modules.map(module => ({ id: module.id, source: module.source }))), Engine.moduleCoreOptions(session.language));
+                  diagnostics.push(...Modules.checkModuleGraph(exampleGraph, Engine.moduleCheckOptions({ session: session.language, source: example, hostBuiltins: session.hostBuiltins, typePolicy: session.typePolicy })).diagnostics);
+                }
+              }
+            }
+          } else if (binding.kind === "type" || binding.kind === "class" || binding.kind === "error" || binding.kind === "service") {
+            types.push(describeBinding(binding, entries));
+          } else if (binding.kind === "value" && Array.isArray(binding.scheme?.type) && binding.scheme.type[0] === "->") {
+            functions.push(describeBinding(binding, entries));
+          }
+        }
+      } catch (error) {
+        diagnostics.push(...(error instanceof Modules.ModuleError ? error.diagnostics : [Engine.diagnosticFromUnknown(error, "typecheck", sourceId)]));
+      }
+    }
+    return { forms, functions, types, diagnostics };
+  }
+
   async sessionInfo(request: SessionInfoRequest): Promise<SessionInfoResult> {
     const session = this.#requireSession(request.sessionId);
     return {
@@ -825,7 +916,7 @@ export class TsLanguageHost implements LanguageHost {
     return { sessionId: request.sessionId, closed: true };
   }
 
-  async analyzeEditor(request: EditorAnalysisRequest): Promise<EditorAnalysisResult> {
+  async #analyzeEditorUnlocated(request: EditorAnalysisRequest): Promise<EditorAnalysisResult> {
     const sourceId = request.sourceId ?? "source";
     const parse = editorParseProjection(sourceId, request.source);
     const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
@@ -904,6 +995,7 @@ export class TsLanguageHost implements LanguageHost {
         message: error.message,
         ...(error.details ? {details:error.details} : {}),
         ...(error.help ? {help:error.help} : {}),
+        ...(error.related ? {related:error.related} : {}),
         ...(error.fix ? {fix:error.fix} : {}),
         ...(error.span
           ? {
@@ -923,6 +1015,7 @@ export class TsLanguageHost implements LanguageHost {
         message: diagnostic.message,
         ...(diagnostic.details ? {details:diagnostic.details} : {}),
         ...(diagnostic.help ? {help:diagnostic.help} : {}),
+        ...(diagnostic.related ? {related:diagnostic.related} : {}),
         ...(diagnostic.fix ? {fix:diagnostic.fix} : {}),
         phase: "typecheck",
         ...(diagnostic.span
@@ -937,6 +1030,11 @@ export class TsLanguageHost implements LanguageHost {
       })),
       parse,
     };
+  }
+
+  /** Evaluate while collecting per-expression observations. */
+  async observe(request: EvaluateRequest): Promise<EvaluationResult> {
+    return this.evaluate({ ...request, observe: request.observe ?? {} });
   }
 
   async identifySyntax(request: SyntaxIdentityRequest): Promise<SyntaxIdentityResult> {
@@ -963,7 +1061,7 @@ export class TsLanguageHost implements LanguageHost {
         severity: "error",
         message: error.message,
         phase: "parse",
-        span: { sourceId, startOffset: error.span.start, endOffset: error.span.end },
+        span: spanLocator(request.source)({ sourceId, startOffset: error.span.start, endOffset: error.span.end }),
       })),
     };
   }
@@ -1187,7 +1285,7 @@ export class TsLanguageHost implements LanguageHost {
       .catch(
         (error): EvaluationState => ({
           status: "failed",
-          diagnostics: [Engine.diagnosticFromUnknown(error, "evaluate", sourceId)],
+          diagnostics: [diagnosticLocator(id => id === sourceId ? source : session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", sourceId))],
         }),
       );
     Object.assign(evaluation, { completion });
@@ -1420,7 +1518,7 @@ export class TsLanguageHost implements LanguageHost {
       .catch(
         (error): EvaluationState => ({
           status: "failed",
-          diagnostics: [Engine.diagnosticFromUnknown(error, "evaluate", sourceId)],
+          diagnostics: [diagnosticLocator(id => session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", sourceId))],
         }),
       );
     Object.assign(evaluation, { completion });

@@ -245,18 +245,12 @@ pnpm --filter @formalang/ts typecheck
 
 ## Effect 4 consumer migration
 
-The development branch targets `effect@4.1.1` in its public types, runtime,
-and generated TypeScript. Consumers of the next release should install that
-same version.
-
-Version 0.4.0 uses `effect@4.0.3` in its public Effect types and
-runtime. Consumers should install that same version, remove any Effect 3 alias
-used only for Forma, and import `Effect` directly from `effect`. Generated
-Effect TypeScript and Schema modules now target the Effect 4 APIs, including
-`Context.Service` and `Schema.annotate`.
-
-Version 0.2.0 uses Effect 3 and 0.3.0 uses the `effect@4.0.0-rc.112`
-prerelease; consumers of either should move to `effect@4.0.3` with 0.4.0.
+The current workspace declares `effect ^4.1.1` as an application-supplied peer.
+Its public types, runtime, and generated TypeScript target Effect 4, including
+`Context.Service` and `Schema.annotate`. Remove any Effect 3 alias used only for
+Forma and import `Effect` directly from `effect` when migrating to this target.
+Check the peer range of the release you install: published 0.3.0 used the
+`effect@4.0.0-rc.112` prerelease.
 
 ## Descriptor typing and definition checks
 

@@ -1,11 +1,12 @@
 ---
+date: 2026-11-07
 title: Start with a List
 description: Part 1 of From Lists to Languages. Build the smallest Lisp imaginable, numbers, symbols, lists, and an evaluator, and see why code-as-data matters more than parentheses.
 ---
 
 # Start with a List
 
-<p class="blog-meta">Part 01 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act I, Foundations · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 01 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act I, Foundations · <time datetime="2026-11-07">November 7, 2026</time></p>
 
 ```lisp
 (+ 1 2) ; => 3

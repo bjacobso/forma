@@ -55,7 +55,14 @@ export interface TRow {
   readonly row: Row;
 }
 
-export type Type = TVar | TCon | TFun | TVariadic | TApp | TRow;
+export type Type = (TVar | TCon | TFun | TVariadic | TApp | TRow) & {
+  /** Parameters consumed by one call, excluding any returned function. */
+  readonly arity?: number;
+  /** The arrow representation has no parameter node for a nullary function. */
+  readonly nullaryResult?: Type;
+  /** Numeric builtin values specialize when applied or checked as callbacks. */
+  readonly numericOperator?: string;
+};
 
 // ---------------------------------------------------------------------------
 // Rows
@@ -122,6 +129,8 @@ export interface Constraint {
 
 /** Polymorphic type scheme: forall tvars rvars evars. type where constraints */
 export interface Scheme {
+  readonly declaration?: import("./core-expr.js").Span;
+  readonly annotation?: import("./core-expr.js").Span;
   readonly tvars: readonly string[];
   readonly rvars: readonly string[];
   readonly evars: readonly string[];
@@ -416,7 +425,7 @@ export function showERow(e: ERow): string {
 }
 
 export function showConstraint(c: Constraint): string {
-  return `${c.className} ${c.args.map(showType).join(" ")}`;
+  return `${c.className === "$Numeric" ? "Numeric" : c.className} ${c.args.map(showType).join(" ")}`;
 }
 
 export function showScheme(s: Scheme): string {
@@ -434,7 +443,7 @@ export function fnType(params: readonly Type[], ret: Type): Type {
   for (let i = params.length - 1; i >= 0; i--) {
     result = TFun(params[i]!, result);
   }
-  return result;
+  return { ...result, arity: params.length, ...(params.length === 0 ? { nullaryResult: ret } : {}) };
 }
 
 export function variadicFnType(

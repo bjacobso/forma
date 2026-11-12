@@ -2,7 +2,7 @@
 ; -----------------------------------------------------------------------------
 ; Purpose: Core control-flow and threading macros, expanded before checking and evaluation.
 ; Requires: Core reader and macro evaluator; no descriptor preludes.
-; Used by: Descriptor bootstrap and, via generated kernel.forma, explicit file-module imports.
+; Used by: Descriptor bootstrap and, via generated modules/kernel.lisp, explicit file-module imports.
 ; -----------------------------------------------------------------------------
 ;; not — logical negation
 (macro (not x) `(if ~x false true))

@@ -53,7 +53,7 @@ export function parseTypeExpr(expr: SExpr): TypeExpr {
   try { return parseTypeExprInner(expr); }
   catch (error) {
     if (!(error instanceof InferenceError)) throw error;
-    throw new InferenceError({message:error.message.replace(/ \(at offset \d+\)$/, ""),
+    throw new InferenceError({message:error.message,
       origin:error.origin ?? {nodeId:`type:${expr.loc.start}`, kind:"type-expression", span:spanOf(expr)},
       details:{code:"lower/type-expression",...error.details}});
   }

@@ -1,3 +1,4 @@
+import { surfaceError } from "./errors.js";
 import { isNumeric, kEquals, numericDatum } from "../evaluator/types.js";
 import { resolveTypeAlias, optionalType } from "./type-alias.js";
 import { isKKeyword, isKSymbol, mapKey, mapKeyValue } from "../evaluator/types.js";
@@ -6,6 +7,7 @@ import type { FormDescriptor, DescriptorExtensionValue } from "../descriptor/For
 import type { KValue } from "../evaluator/types.js";
 import { head, name } from "./effect.js";
 import { splitTypeMetadata } from "./domain.js";
+import { InferenceError } from "../diagnostic/errors.js";
 
 const optional = (t: SExpr) => head(t) === "Option" && t._tag === "List";
 const field = (e: SExpr) => (name(e) ?? (e._tag === "Str" ? e.value : "")).replace(/^:/, "");
@@ -20,7 +22,14 @@ export function protocolType(t: SExpr, types: ReadonlyMap<string, SExpr> = new M
   const n = name(t);
   if (n) return ["String","Symbol","Keyword"].includes(n) ? {type:"string"} : n === "Int" ? {type:"integer"} : n === "Float" ? {type:"number"} : n === "Bool" ? {type:"boolean"} : n === "Unit" ? {type:"null"} : ["Type","Syntax","RuntimeExpr","Any","Json"].includes(n) ? {type:"unknown"} : {ref:n};
   if (t._tag === "List") {
-    if (head(t) === "List") return {array:descend(t.items[1]!)};
+    if (head(t) === "List") {
+      if (t.items.length !== 2) throw Object.assign(new InferenceError({
+        message: "List expects one type argument",
+        origin: {nodeId:`type:${t.loc.start}`,kind:"type-expression",span:{start:t.loc.start,end:t.loc.end,...(t.loc.sourceId ? {sourceId:t.loc.sourceId} : {})}},
+        details: {code:"surface/invalid-form"},
+      }), {loc:t.loc});
+      return {array:descend(t.items[1]!)};
+    }
     if (head(t) === "Map" || head(t) === "Record") return {record:descend(t.items.at(-1)!)};
     if (head(t) === "Union") return {union:t.items.slice(1).map(descend)};
     if (head(t) === "Brand") return descend(t.items.at(-1)!);
@@ -191,5 +200,5 @@ function projectRuntimeExpression(value: KValue): KValue {
 function contractKey(key: SExpr): string {
   if (key._tag === "Str") return mapKey(key.value)!;
   if (key._tag === "Sym" && key.name.startsWith(":")) return key.name;
-  throw new Error("Record type labels must be keywords or strings");
+  throw surfaceError("Record type labels must be keywords or strings", key);
 }

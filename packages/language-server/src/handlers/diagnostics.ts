@@ -6,7 +6,7 @@ import {
 import type { TextDocument } from "vscode-languageserver-textdocument";
 import type { Diagnostic as FormaDiagnostic } from "@formalang/ts/analysis";
 
-import { spanToRange } from "../document.js";
+import { spanToLocation, spanToRange } from "../document.js";
 import type { FormaWorkspace } from "../workspace.js";
 
 export function getDiagnostics(
@@ -18,14 +18,14 @@ export function getDiagnostics(
     version: document.version,
     diagnostics: workspace.analysis
       .diagnostics(document.uri)
-      .map((diagnostic) => toLspDiagnostic(document, diagnostic)),
+      .map((diagnostic) => toLspDiagnostic(document, diagnostic, workspace)),
   };
 }
 
-export function toLspDiagnostic(document: TextDocument, diagnostic: FormaDiagnostic): Diagnostic {
+export function toLspDiagnostic(document: TextDocument, diagnostic: FormaDiagnostic, workspace?: FormaWorkspace): Diagnostic {
   return {
     range: spanToRange(document, diagnostic.span ?? { startOffset: 0, endOffset: 0 }),
-    message: diagnostic.message,
+    message: diagnostic.help ? `${diagnostic.message}\nhelp: ${diagnostic.help}` : diagnostic.message,
     severity:
       diagnostic.severity === "warning"
         ? DiagnosticSeverity.Warning
@@ -34,5 +34,11 @@ export function toLspDiagnostic(document: TextDocument, diagnostic: FormaDiagnos
           : DiagnosticSeverity.Error,
     source: "forma",
     code: diagnostic.code,
+    ...(diagnostic.related ? {relatedInformation:diagnostic.related.flatMap(note => {
+      const location = workspace ? spanToLocation(workspace,note.span)
+        : note.span.sourceId === document.uri ? {uri:document.uri,range:spanToRange(document,note.span)} : undefined;
+      return location ? [{location,message:note.message}] : [];
+    })} : {}),
+    data: { fix: diagnostic.fix, details: diagnostic.details },
   };
 }

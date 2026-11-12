@@ -117,7 +117,7 @@ their contracts.
   reconstructs types and decides well-typedness. `type/lower-core.ts` lowers
   to a core expression, but nothing re-checks that core independently.
 - **One surface, and stage 0 of a second.** Forma's surface is engine code in
-  `surface/core.ts`. `preludes/clojure.forma` supplies Clojure spellings as
+  `surface/core.ts`. `preludes/modules/clojure.lisp` supplies Clojure spellings as
   macros over Forma semantics ([RFC 0021](./0021-languages-as-libraries.md),
   stage 0).
 - **One type-system profile.** Hindley–Milner with records and rows
@@ -128,6 +128,36 @@ their contracts.
   TypeScript, and the TypeScript evaluator and VM. The engine is TypeScript.
 
 ## Proposal
+
+### Kernel scope and evidence boundaries
+
+Keep the independent checker separate from the HM/mechanics consolidation in
+[RFC 0004](./0004-one-analysis-architecture.md). Today HM latent rows and
+mechanics' closed error/requirement sets are distinct representations; sharing
+mechanics analysis with host/editor paths does not mean there is one checker.
+Consolidation reduces disagreement; independent re-checking reduces trust in
+elaboration. Neither follows automatically from the other.
+
+Do not set a speculative 1,000-line target or require solver refinements in the
+first kernel. Start with an explicit supported HM/effect core, specify primitive
+typing and operational assumptions, and reject unsupported constructs rather
+than silently trusting them. Elaborator-supplied scope assumptions must be
+justified by core binders/declared primitives, not accepted as arbitrary axioms.
+Static hook input checking belongs to [RFC 0008](./0008-typed-form-results.md);
+well-typed type-syntax manipulation alone does not establish a correct typing rule.
+
+Kernel acceptance means a term satisfies the selected rules. It does not prove
+that the interpreter, VM, emitter, native handlers or external world implement
+those rules. Stage 1 must include corrupted-term rejection and independent
+expected-value conformance for executed terms, not just agreement between two
+potentially wrong backends. Preserve numeric overflow, evaluation order and
+resource behavior at each supported runtime boundary. Stronger preservation
+claims require their own semantics and evidence.
+
+Finite workflow/evidence laws precede solver or dependent profiles under
+[RFC 0028](./0028-bounded-verification.md). A finite-analysis prototype may use
+trusted domain checks before the kernel exists, provided its report says so.
+Do not market that prototype, or today's hooks, as proof-carrying execution.
 
 ### Principle: an extensible compiler, a small definition of correctness
 
@@ -286,7 +316,7 @@ promising to understand arbitrary programs.
 ```
 
 ```lisp
-;; greet.forma, a declaration file read alongside greet.clj (illustrative)
+;; greet.lisp, a declaration file read alongside greet.clj (illustrative)
 (: greet (-> String String))
 ```
 
@@ -326,7 +356,7 @@ target.
 Four Lisps are in scope, each as a surface ([RFC
 0021](./0021-languages-as-libraries.md)) and later as an emitter target.
 None of them is a backend today: Effect TypeScript, Effect Schema, and
-artifact IR are the only targets, and `preludes/clojure.forma` is a macro
+artifact IR are the only targets, and `preludes/modules/clojure.lisp` is a macro
 library, not a code generator.
 
 A target needs three things (RFC 0021, "Targets"): **resugaring**, which
@@ -508,7 +538,7 @@ its status:
 - The kernel's implementation language and whether it is a separate package
   that other engines could reuse.
 - Whether `elaborator` is a new head or `form` with a bidirectional hook.
-- Whether declaration files are separate `.forma` files, annotations inside
+- Whether declaration files are separate `.lisp` files, annotations inside
   dialect source, or both.
 - The casting semantics of `Dynamic` at each backend, and whether casts are
   checked by contracts (as in Typed Racket) or by generated validators.

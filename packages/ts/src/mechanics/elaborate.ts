@@ -29,6 +29,7 @@ export interface EffectProgramSpan {
 }
 
 export interface EffectProgramDiagnostic {
+  readonly details?: Readonly<Record<string, unknown>>;
   readonly phase: "read" | "project" | "check";
   readonly severity: "error" | "warning";
   readonly code: string;
@@ -89,7 +90,7 @@ export function elaborateEffectProgram(
           phase: "read",
           severity: "error",
           code: "read/syntax",
-          message: (isParseError(error) ? error.message : String(error)).replace(/ at line \d+, column \d+$/, ""),
+          message: (isParseError(error) ? error.message : String(error)),
           ...(loc ? { span: locate(loc.start, loc.end) } : {}),
         },
       ],
@@ -104,7 +105,7 @@ export function elaborateEffectProgram(
         phase: "read",
         severity: "error",
         code: "read/syntax",
-        message: error.loc ? error.message.replace(/ at line \d+, column \d+$/, "") : error.message,
+        message: error.message,
         ...(error.loc ? { span: locate(error.loc.start, error.loc.end) } : {}),
       })),
     };
@@ -191,6 +192,7 @@ function checkDiagnostic(
     severity: diagnostic.severity === "info" ? "warning" : diagnostic.severity,
     code: diagnostic.code,
     message: diagnostic.message,
+    ...(diagnostic.details ? {details:diagnostic.details} : {}),
     ...(diagnostic.span ? { span: locate(diagnostic.span.startOffset, diagnostic.span.endOffset) } : {}),
   };
 }

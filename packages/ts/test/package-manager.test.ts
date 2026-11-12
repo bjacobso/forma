@@ -1,15 +1,16 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { realpathSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { gzipSync, gunzipSync } from "node:zlib";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { managePackages, verifyPackages } from "../src/Node.js";
 import { gitSource, extractPackageArchive } from "../src/node/package-fetch.js";
 import { compareVersions, semver, type FormaManifest } from "../src/node/package-files.js";
 
 const temporary: string[] = [];
-const temp = () => { const root = mkdtempSync(join(tmpdir(), "forma-vendor-test-")); temporary.push(root); return root; };
+const temp = () => { const root = realpathSync(mkdtempSync(join(tmpdir(), "forma-vendor-test-"))); temporary.push(root); return root; };
 afterEach(() => { for (const root of temporary.splice(0)) rmSync(root, { recursive: true, force: true }); });
 const write = (root: string, path: string, value: unknown) => {
   mkdirSync(dirname(join(root, path)), { recursive: true });
@@ -26,9 +27,9 @@ function repository(name: string) {
   git(work, "remote", "add", "origin", bare);
   const source = (ref: string) => `git+${pathToFileURL(bare).href}@${ref}`;
   const release = (ref: string, dependencies: Record<string, string> = {}, extra: Record<string, string> = {}) => {
-    write(work, "forma.json", { name, version: ref.replace(/^v/, ""), exports: { ".": "src/index.forma" }, dependencies });
-    write(work, "src/index.forma", "(export answer) (define answer 42)");
-    write(work, "unused.forma", `(export unused) (define unused ${JSON.stringify(ref)})`);
+    write(work, "forma.json", { name, version: ref.replace(/^v/, ""), exports: { ".": "src/index.lisp" }, dependencies });
+    write(work, "src/index.lisp", "(export answer) (define answer 42)");
+    write(work, "unused.lisp", `(export unused) (define unused ${JSON.stringify(ref)})`);
     write(work, "README.md", "not vendored");
     for (const [path, text] of Object.entries(extra)) write(work, path, text);
     git(work, "add", ".");
@@ -53,8 +54,8 @@ describe("explicit dependency commands (local git only)", () => {
     const lock = await managePackages({ command: "add", name: "@acme/util", source: util.source("v1.0.0") }, root);
     expect(JSON.parse(readFileSync(join(root, "forma.json"), "utf8")).dependencies).toEqual({ "@acme/util": util.source("v1.0.0") });
     expect(lock.packages["@acme/util"]).toMatchObject({ source: util.source("v1.0.0"), resolved: "v1.0.0", commit });
-    expect(Object.keys(lock.packages["@acme/util"]!.files)).toEqual(["forma.json", "src/index.forma", "unused.forma"]);
-    expect(readdirSync(join(root, "vendor/@acme/util"))).toEqual(["forma.json", "src", "unused.forma"]);
+    expect(Object.keys(lock.packages["@acme/util"]!.files)).toEqual(["forma.json", "src/index.lisp", "unused.lisp"]);
+    expect(readdirSync(join(root, "vendor/@acme/util"))).toEqual(["forma.json", "src", "unused.lisp"]);
     expect(verifyPackages(root).table.packages.map(p => p.name)).toEqual(["@acme/util"]);
     const first = lockText(root);
     await managePackages({ command: "update" }, root);
@@ -113,22 +114,22 @@ describe("explicit dependency commands (local git only)", () => {
     await managePackages({ command: "vendor" }, root);
     expect(lockText(root)).toBe(original);
     expect(verifyPackages(root).table.packages).toHaveLength(1);
-    const edited = { ...locked, packages: { util: { ...locked.packages.util!, files: { ...locked.packages.util!.files, "unused.forma": "a".repeat(64) } } } };
+    const edited = { ...locked, packages: { util: { ...locked.packages.util!, files: { ...locked.packages.util!.files, "unused.lisp": "a".repeat(64) } } } };
     write(root, "forma.lock", edited);
     await expect(managePackages({ command: "vendor" }, root)).rejects.toMatchObject({ diagnostic: { code: "module/package-integrity" } });
-    expect(readFileSync(join(root, "vendor/util/unused.forma"), "utf8")).toContain('"main"');
+    expect(readFileSync(join(root, "vendor/util/unused.lisp"), "utf8")).toContain('"main"');
   }, 30_000);
 
   test("local monorepo dependencies resolve relative to each declaring manifest", async () => {
     const root = app({ a: "./packages/a", shared: "./packages/shared" });
     write(root, "packages/a/forma.json", { name: "a", exports: {}, dependencies: { shared: "../shared" } });
-    write(root, "packages/shared/forma.json", { name: "shared", exports: { ".": "index.forma" } });
-    write(root, "packages/shared/index.forma", "(export answer) (define answer 42)");
+    write(root, "packages/shared/forma.json", { name: "shared", exports: { ".": "index.lisp" } });
+    write(root, "packages/shared/index.lisp", "(export answer) (define answer 42)");
     const fetcher = { fetch: vi.fn(() => { throw new Error("must stay offline"); }) };
     const lock = await managePackages({ command: "update" }, root, { fetcher });
     expect(lock.packages.shared).toMatchObject({ commit: null, resolved: "local" });
     expect(verifyPackages(root).directories.get("shared")).toBe(join(root, "packages/shared"));
-    write(root, "packages/shared/index.forma", "(export answer) (define answer 43)");
+    write(root, "packages/shared/index.lisp", "(export answer) (define answer 43)");
     expect(() => verifyPackages(root)).toThrow();
     await expect(managePackages({ command: "vendor" }, root, { fetcher })).rejects.toThrow();
     await managePackages({ command: "update" }, root, { fetcher });
@@ -145,7 +146,7 @@ describe("explicit dependency commands (local git only)", () => {
     expect(readFileSync(join(root, "forma.json"), "utf8")).toBe(original);
     expect(existsSync(join(root, "forma.lock"))).toBe(false);
     expect(existsSync(join(root, "vendor"))).toBe(false);
-    write(root, "local/forma.json", { name: "util", exports: { ".": "missing.forma" } } satisfies FormaManifest);
+    write(root, "local/forma.json", { name: "util", exports: { ".": "missing.lisp" } } satisfies FormaManifest);
     await expect(managePackages({ command: "add", name: "util", source: "./local" }, root)).rejects.toMatchObject({ diagnostic: { code: "module/package-manifest" } });
   }, 30_000);
 
@@ -157,10 +158,10 @@ describe("explicit dependency commands (local git only)", () => {
     const fetched = temp(), a = join(fetched, "a"), b = join(fetched, "b");
     const source = (name: string) => `git+${pathToFileURL(join(fetched, name + ".git")).href}@main`;
     write(a, "forma.json", { name: "a", exports: {}, dependencies: { b: source("b") } });
-    write(a, "unused.forma", "original");
+    write(a, "unused.lisp", "original");
     write(b, "forma.json", { name: "b", exports: {} });
     const fetcher = { fetch: async (spec: string) => {
-      if (spec === source("b")) write(a, "unused.forma", "changed after hashing");
+      if (spec === source("b")) write(a, "unused.lisp", "changed after hashing");
       return { directory: spec === source("a") ? a : b, commit: "a".repeat(40) };
     } };
     await expect(managePackages({ command: "add", name: "a", source: source("a") }, root, { fetcher }))
@@ -226,10 +227,20 @@ describe("transport mapping and semver", () => {
     execFileSync("tar", ["-czf", archive, "-C", root, "repo"]);
     await extractPackageArchive(archive, join(root, "extracted"));
     expect(existsSync(join(root, "extracted/forma.json"))).toBe(true);
-    symlinkSync("../../outside", join(root, "repo/escape.forma"));
+    symlinkSync("../../outside", join(root, "repo/escape.lisp"));
     execFileSync("tar", ["-czf", join(root, "links.tar.gz"), "-C", root, "repo"]);
     await expect(extractPackageArchive(join(root, "links.tar.gz"), join(root, "bad"))).rejects.toThrow();
-    execFileSync("tar", ["-czf", join(root, "escape.tar.gz"), "--transform=s#repo#../outside#", "-C", root, "repo/forma.json"]);
+    // Rewrite a regular tar header directly: GNU tar's --transform is absent
+    // from macOS bsdtar. Keep a valid checksum so rejection tests traversal.
+    execFileSync("tar", ["-czf", join(root, "escape.tar.gz"), "-C", root, "repo/forma.json"]);
+    const tar = gunzipSync(readFileSync(join(root, "escape.tar.gz")));
+    expect([0, 48]).toContain(tar[156]); // NUL or '0': a regular file, not a metadata header.
+    tar.fill(0, 0, 100);
+    tar.write("../outside/forma.json", 0);
+    tar.fill(32, 148, 156);
+    const checksum = tar.subarray(0, 512).reduce((sum, byte) => sum + byte, 0);
+    tar.write(checksum.toString(8).padStart(6, "0") + "\0 ", 148);
+    writeFileSync(join(root, "escape.tar.gz"), gzipSync(tar));
     await expect(extractPackageArchive(join(root, "escape.tar.gz"), join(root, "bad"))).rejects.toThrow();
     expect(existsSync(join(root, "bad"))).toBe(false);
   }, 30_000);

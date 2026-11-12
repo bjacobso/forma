@@ -1,35 +1,10 @@
 /**
- * @formalang/ts
+ * Forma's TypeScript/Effect language engine: reading, expansion, checking,
+ * evaluation, elaboration, artifacts, and UI-free language services.
  *
- * Lisp infrastructure v2: pipeline-oriented architecture.
- *
- * Subpath exports:
- * - `@formalang/ts/reader`       — S-expression parser
- * - `@formalang/ts/source`       — Source identity and provenance
- * - `@formalang/ts/session`      — Loaded source/session state
- * - `@formalang/ts/engine`       — Engine-owned host operations
- * - `@formalang/ts/artifact`     — Validated artifact packaging
- * - `@formalang/ts/mechanics`    — Mechanics artifacts + hosted runtime
- * - `@formalang/ts/sexpr`        — Core AST types
- * - `@formalang/ts/evaluator`    — Direct interpreter
- * - `@formalang/ts/expander`     — Macro expansion
- * - `@formalang/ts/vm`           — Bytecode compiler + executor
- * - `@formalang/ts/builtins`     — Primitive operations
- * - `@formalang/ts/type`         — Hindley-Milner type system
- * - `@formalang/ts/core-expr`    — Typed core expression AST
- * - `@formalang/ts/env`          — Value environment
- * - `@formalang/ts/diagnostic`   — Errors and diagnostics
- * - `@formalang/ts/formatter`    — Code formatter
- * - `@formalang/ts/editor`       — Structural editing
- * - `@formalang/ts/syntax`       — Stable node identity across edits
- * - `@formalang/ts/lsp`          — Language server support
- * - `@formalang/ts/analysis`     — Workspace language services as memoized queries
- * - `@formalang/ts/codegen`      — S-expression builder for code gen
- * - `@formalang/ts/descriptor-codegen` — FormDescriptor → Effect Schema source generation
- * - `@formalang/ts/descriptor`   — Self-describing form system + bootstrap
- * - `@formalang/ts/preludes`     — Bundled Lisp preludes (not re-exported here)
- * - `@formalang/ts/node`         — Filesystem helpers (Node only; not re-exported here)
- * - `@formalang/ts/ontology`     — Typed ontology DSL elaboration (not re-exported here)
+ * This root exposes namespaces. See package.json for the complete subpath
+ * export map, including bundled preludes and Node-only filesystem helpers
+ * that are available separately from this root.
  */
 
 export * as SExpr from "./SExpr.js";

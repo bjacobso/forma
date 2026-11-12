@@ -1,0 +1,2 @@
+import { acceptProgram } from "../../accept-support.mjs";
+export const accept = dir => acceptProgram(dir, "(import \"./main.lisp\" [ticket-url home-url sample])\n(= [(ticket-url {:ticket \"two%20words\" :team \"ops\"}) (home-url {}) sample]\n   [\"/teams/ops/tickets/two%20words\" \"/\" \"/teams/support/tickets/T-42\"])", [{"source": "(import \"./main.lisp\" [ticket-url])\n(ticket-url {:team \"ops\" :ticket 42})", "code": "typecheck/type-mismatch"}]);

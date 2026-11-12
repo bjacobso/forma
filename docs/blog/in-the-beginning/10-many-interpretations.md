@@ -1,11 +1,12 @@
 ---
+date: 2026-11-07
 title: One Program, Many Interpretations
 description: Part 10 of From Lists to Languages. Build a formatter, an analyzer, a hover tool, and a documentation generator whose examples are checked, over the representations the language already has, and combine them into one report with Effect.
 ---
 
 # One Program, Many Interpretations
 
-<p class="blog-meta">Part 10 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act III, Effects in Practice · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 10 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act III, Effects in Practice · <time datetime="2026-11-07">November 7, 2026</time></p>
 
 > Programs become things we can reason about, not just execute.
 

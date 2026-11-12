@@ -6,14 +6,15 @@ import {
   resolveModuleGraph,
   sourceModuleResolver,
   type ModuleSource,
+  ModuleError,
 } from "../src/Modules.js";
 
 const root = resolve(import.meta.dirname, "../../..");
 const fixture = resolve(root, "conformance/clojure-spellings");
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 /** The library and its one dependency sit beside the fixtures they serve. */
-const preludes: readonly ModuleSource[] = ["clojure.forma", "kernel.forma"].map(
-  (name) => ({ id: name, source: read(`preludes/${name}`) }),
+const preludes: readonly ModuleSource[] = ["clojure.lisp", "kernel.lisp"].map(
+  (name) => ({ id: name, source: read(`preludes/modules/${name}`) }),
 );
 const fixtureSource = (name: string) =>
   readFileSync(resolve(fixture, name), "utf8");
@@ -29,7 +30,7 @@ const showType = (type: unknown): string =>
 
 describe("Clojure spellings (RFC 0021 stage 0)", () => {
   test("a module written with Clojure spellings typechecks and evaluates", () => {
-    const result = check("orders.forma");
+    const result = check("orders.lisp");
     expect(result.diagnostics).toEqual([]);
     const exports = new Map(
       result.interfaces.at(-1)?.exports.map((e) => [e.name, e]),
@@ -42,11 +43,11 @@ describe("Clojure spellings (RFC 0021 stage 0)", () => {
 
   // Spelling only: each Clojure habit below keeps Forma's meaning instead.
   test.each([
-    ["truthiness.forma", "Cannot unify Option<Int> with Bool", "coupon"],
-    ["nil-punning.forma", "Type mismatch: Unit vs Int", "nil"],
+    ["truthiness.lisp", "Expected Bool, found Option<Int>", "coupon"],
+    ["nil-punning.lisp", "Expected Int, found Unit", "nil"],
     [
-      "keyword-access.forma",
-      "Cannot unify :customer with",
+      "keyword-access.lisp",
+      "found :customer",
       "(:customer order)",
     ],
   ])("%s is rejected at the author's span", (name, message, text) => {
@@ -61,16 +62,20 @@ describe("Clojure spellings (RFC 0021 stage 0)", () => {
     ).toBe(text);
   });
 
-  // A gap, pinned so that fixing it is visible: the arity failure escapes
-  // macro expansion as an exception instead of a located diagnostic.
-  test("a multi-arity defn is rejected without an author diagnostic", () => {
-    expect(() => check("multi-arity.forma")).toThrow(
-      expect.objectContaining({ _tag: "ArityError", message: "" }),
-    );
+  test("a multi-arity defn reports a located module diagnostic", () => {
+    expect.assertions(2);
+    try { check("multi-arity.lisp"); }
+    catch (error) {
+      expect(error).toBeInstanceOf(ModuleError);
+      expect((error as ModuleError).diagnostic).toMatchObject({
+        code: "ArityError", message: "fn expects 2+ arguments, got 0",
+        span: { sourceId: expect.any(String), startLine: expect.any(Number) },
+      });
+    }
   });
 
   test("the library is only in scope where a module imports it", () => {
-    const entry = { id: "unclaimed.forma", source: "(defn f [x] x)" };
+    const entry = { id: "unclaimed.lisp", source: "(defn f [x] x)" };
     expect(() =>
       checkModuleGraph(
         resolveModuleGraph(entry, sourceModuleResolver([...preludes, entry])),

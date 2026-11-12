@@ -85,7 +85,7 @@ export interface EditorTypedSpan {
   readonly exprTag: string;
 }
 
-export interface EditorAnalysisError extends Pick<Diagnostic, "details" | "help" | "fix"> {
+export interface EditorAnalysisError extends Pick<Diagnostic, "details" | "help" | "fix" | "related"> {
   /** Compiler diagnostic identity, separate from the author source excerpt. */
   readonly diagnosticCode?: string | undefined;
   readonly message: string;
@@ -841,6 +841,7 @@ export interface ModuleGraphResult { readonly entry:string; readonly interfaces:
 export type ModuleLinkResult = LinkedEffectProgram;
 
 export interface LanguageHost {
+  describe?(request: { readonly sessionId: string; readonly sourceId?: string }): Promise<import("./description.js").LanguageDescription>;
   readonly name: string;
   emit?(request: EmitRequest): Promise<import("@formalang/ts/artifact").EmitResult>;
   emitMany?(request: EmitRequest): Promise<ReturnType<typeof import("@formalang/ts/artifact").emitMany>>;
@@ -857,6 +858,8 @@ export interface LanguageHost {
   expand(request: ExpandRequest): Promise<ExpandResult>;
   typecheck(request: TypecheckRequest): Promise<TypecheckResult>;
   evaluate(request: EvaluateRequest): Promise<EvaluationResult>;
+  /** Evaluate with per-expression observation enabled. */
+  observe?(request: EvaluateRequest): Promise<EvaluationResult>;
   evaluateInSession(request: EvaluateInSessionRequest): Promise<EvaluationState>;
   /** Atomically typecheck and evaluate, retaining bindings and types on success. */
   replSubmit?(request: EvaluateInSessionRequest & { readonly source: string }): Promise<EvaluationState>;

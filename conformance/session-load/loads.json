@@ -3,7 +3,7 @@
     {
       "id": "surface-error",
       "load": {
-        "sourceId": "bad.forma",
+        "sourceId": "bad.lisp",
         "source": "(let [{:k v} 1 y] v)"
       },
       "expected": {
@@ -14,7 +14,7 @@
     {
       "id": "retired-spelling-deferred",
       "load": {
-        "sourceId": "retired.forma",
+        "sourceId": "retired.lisp",
         "source": "(def x 1)"
       },
       "expected": {
@@ -25,7 +25,7 @@
     {
       "id": "forward-reference",
       "load": {
-        "sourceId": "forward.forma",
+        "sourceId": "forward.lisp",
         "source": "(+ future 1)"
       },
       "expected": {
@@ -36,7 +36,7 @@
     {
       "id": "checked-prelude",
       "load": {
-        "sourceId": "core.forma",
+        "sourceId": "core.lisp",
         "kind": "prelude",
         "source": "(define answer 42)"
       },
@@ -53,12 +53,12 @@
     {
       "id": "atomic-prelude-type-error",
       "initial": {
-        "sourceId": "core.forma",
+        "sourceId": "core.lisp",
         "kind": "prelude",
         "source": "(define answer 42)"
       },
       "load": {
-        "sourceId": "core.forma",
+        "sourceId": "core.lisp",
         "kind": "prelude",
         "source": "(define leaked 3) (define answer (if true 1 \"bad\"))"
       },
@@ -75,12 +75,12 @@
     {
       "id": "atomic-prelude-metacheck-error",
       "initial": {
-        "sourceId": "core.forma",
+        "sourceId": "core.lisp",
         "kind": "prelude",
         "source": "(define answer 42)"
       },
       "load": {
-        "sourceId": "core.forma",
+        "sourceId": "core.lisp",
         "kind": "prelude",
         "source": "(define answer 43) (__payload-contract Invalid (:contract Missing))"
       },

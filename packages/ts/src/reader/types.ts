@@ -168,13 +168,7 @@ export const ErrorNode = (message: string, loc: Loc): ErrorNode => ({
 export class ParseError extends Data.TaggedError("ParseError")<{
   readonly message: string;
   readonly loc?: Loc;
-}> {
-  override get message(): string {
-    return this.loc
-      ? `${super.message} at line ${this.loc.line}, column ${this.loc.col}`
-      : super.message;
-  }
-}
+}> {}
 
 // =============================================================================
 // Structural combinators

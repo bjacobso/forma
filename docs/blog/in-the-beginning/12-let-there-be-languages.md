@@ -1,11 +1,12 @@
 ---
+date: 2026-11-07
 title: A Language for Building Languages
 description: Part 12 of From Lists to Languages. Declare forms in the language itself, build a vendor-review policy language from them, run it with Effect services a host provides, and see how the pieces add up to a language-building platform.
 ---
 
 # A Language for Building Languages
 
-<p class="blog-meta">Part 12 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act III, Effects in Practice · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 12 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act III, Effects in Practice · <time datetime="2026-11-07">November 7, 2026</time></p>
 
 > The final product isn't a Lisp. It's a language-building platform.
 
@@ -295,11 +296,11 @@ emitting TypeScript that runs without the interpreter.
 This series is Forma's origin story. Here's the vendor example in Forma
 itself, with records, keyword unions, options, and pattern matching:
 
-<<< @/snippets/blog/in-the-beginning/12/vendor.forma{lisp}
+<<< @/snippets/blog/in-the-beginning/12/vendor-types.lisp{lisp}
 
 It type-checks as `Bool` and evaluates to `true`. Change `:risk :high` to
 `:risk :medium` and the checker reports
-`:medium is not one of Union<:low, :high>`. Leave out the `None` case and
+`Expected Union<:low, :high>, found :medium`. Leave out the `None` case and
 it warns `Non-exhaustive match: missing constructor(s) None`.
 
 Forma's forms are declared in the language too, with typed holes, checks

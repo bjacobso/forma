@@ -11,6 +11,16 @@ import type {
 
 export type ProtocolSchemaRefResolver = (ref: string) => string;
 
+/** Invalid host-supplied protocol generator configuration or descriptor list. */
+export class ProtocolGenerationError extends Error {
+  override readonly name = "ProtocolGenerationError";
+  readonly code = "descriptor/invalid-generator-input" as const;
+
+  constructor(message: string, readonly path: string) {
+    super(message);
+  }
+}
+
 export interface ProtocolModuleImportEmitterOptions {
   readonly moduleSpecifiers: Readonly<Record<string, string>>;
 }
@@ -80,8 +90,9 @@ export function emitProtocolModuleImports(
   for (const importDescriptor of module.imports) {
     const moduleSpecifier = options.moduleSpecifiers[importDescriptor.from];
     if (!moduleSpecifier) {
-      throw new Error(
+      throw new ProtocolGenerationError(
         `Missing TypeScript module specifier for protocol import '${importDescriptor.from}' in '${module.name}'`,
+        `options.moduleSpecifiers[${JSON.stringify(importDescriptor.from)}]`,
       );
     }
 
@@ -165,7 +176,7 @@ export function requiredProtocolUnion(
   name: string,
 ): ProtocolUnionDescriptor {
   const union = unions.find((candidate) => candidate.name === name);
-  if (!union) throw new Error(`Missing protocol union '${name}'`);
+  if (!union) throw new ProtocolGenerationError(`Missing protocol union '${name}'`, "unions");
   return union;
 }
 
@@ -174,7 +185,7 @@ export function requiredProtocolObject(
   name: string,
 ): ProtocolObjectDescriptor {
   const object = objects.find((candidate) => candidate.name === name);
-  if (!object) throw new Error(`Missing protocol object '${name}'`);
+  if (!object) throw new ProtocolGenerationError(`Missing protocol object '${name}'`, "objects");
   return object;
 }
 
@@ -183,7 +194,7 @@ export function requiredProtocolTypeAlias(
   name: string,
 ): ProtocolTypeAliasDescriptor {
   const alias = aliases.find((candidate) => candidate.name === name);
-  if (!alias) throw new Error(`Missing protocol type alias '${name}'`);
+  if (!alias) throw new ProtocolGenerationError(`Missing protocol type alias '${name}'`, "aliases");
   return alias;
 }
 
@@ -192,7 +203,7 @@ export function requiredProtocolEnum(
   name: string,
 ): ProtocolEnumDescriptor {
   const enumDescriptor = enums.find((candidate) => candidate.name === name);
-  if (!enumDescriptor) throw new Error(`Missing protocol enum '${name}'`);
+  if (!enumDescriptor) throw new ProtocolGenerationError(`Missing protocol enum '${name}'`, "enums");
   return enumDescriptor;
 }
 
@@ -201,7 +212,7 @@ export function requiredProtocolModule(
   name: string,
 ): ProtocolModuleDescriptor {
   const module = modules.find((candidate) => candidate.name === name);
-  if (!module) throw new Error(`Missing protocol module '${name}'`);
+  if (!module) throw new ProtocolGenerationError(`Missing protocol module '${name}'`, "modules");
   return module;
 }
 

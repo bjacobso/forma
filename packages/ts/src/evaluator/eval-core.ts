@@ -111,6 +111,9 @@ export function evalSym(
   runtime: EvaluatorRuntime,
   loc: Loc,
 ): Effect.Effect<KValue, KernelError> {
+  if (name.startsWith("?")) return Effect.fail(new KernelTypeError({
+    message: `Cannot evaluate hole ${name}`, expected: "complete expression", got: "hole", loc,
+  }));
   // Handle keyword symbols (e.g., :foo) as self-evaluating strings
   if (name.startsWith(":")) {
     return Effect.succeed(KKeyword(name));
@@ -263,7 +266,7 @@ export function evalList(
         if (!isKFn(value) && !isKBuiltin(value) && !isKMacro(value)) return value;
       }
       // Check builtins — args are NOT in tail position
-      if (head.name in runtime.builtins) {
+      if (head.name in runtime.builtins && !env.has(head.name)) {
         const prevTail = getTcoTail();
         setTcoTail(false);
         const args: KValue[] = [];
@@ -319,7 +322,7 @@ export function evalList(
     }
 
     // Check if it resolved to a builtin name — args are NOT in tail position
-    if (typeof fn === "string" && fn in runtime.builtins) {
+    if (isKBuiltin(fn) || (typeof fn === "string" && fn in runtime.builtins)) {
       const prevTail2 = getTcoTail();
       setTcoTail(false);
       const args: KValue[] = [];
@@ -329,7 +332,7 @@ export function evalList(
       setTcoTail(prevTail2);
       const applyFn = (kfn: KValue, fnArgs: readonly KValue[]) =>
         applyCallableValue(kfn, fnArgs, runtime);
-      return yield* runtime.builtins[fn]!(args, applyFn);
+      return yield* applyCallableValue(isKBuiltin(fn) ? fn : makeKBuiltin(fn), args, runtime);
     }
 
     return yield* new KernelTypeError({
@@ -363,7 +366,7 @@ export function applyKFn(
         if (currentArgs.length < fn.params.length) {
           return yield* Effect.fail(
             new ArityError({
-              name: "lambda",
+              name: fn.name ?? "lambda",
               expected: `${fn.params.length}+`,
               got: currentArgs.length,
             }),
@@ -372,7 +375,7 @@ export function applyKFn(
       } else if (currentArgs.length !== fn.params.length) {
         return yield* Effect.fail(
           new ArityError({
-            name: "lambda",
+            name: fn.name ?? "lambda",
             expected: fn.params.length,
             got: currentArgs.length,
           }),

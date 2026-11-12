@@ -1,0 +1,15 @@
+;; A form whose :check calls imported helpers. `within-limit?` is listed last,
+;; so it is bound in the innermost compile-time frame of this module.
+(import "./rules.lisp" [next-day within-limit?])
+(export spend SpendIR)
+(type SpendIR {:kind "Spend" :name Symbol :amount Int :due Int})
+(form (spend name amount day)
+  "Declare a spend."
+  :types {:name (Declares SpendDecl) :amount Int :day Int}
+  :ir SpendIR
+  :check (fn [h]
+    (if (within-limit? (get h :amount))
+      []
+      [{:severity :error :code "spend/over-limit" :slot :amount
+        :message "Spend is over the limit"}]))
+  {:kind "Spend" :name name :amount amount :due (next-day day)})

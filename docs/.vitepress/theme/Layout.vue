@@ -1,32 +1,25 @@
 <script setup lang="ts">
-import { useData } from "vitepress";
 import DefaultTheme from "vitepress/theme-without-fonts";
-import { ref, watchEffect } from "vue";
-
-const { frontmatter } = useData();
-const banner = ref<HTMLElement>();
-const bannerHeight = ref(0);
-
-// The mobile menu must leave room for the banner, including wrapped text.
-watchEffect((onCleanup) => {
-  if (!banner.value) return;
-  const element = banner.value;
-  const updateHeight = () => {
-    bannerHeight.value = element.getBoundingClientRect().height;
-  };
-  updateHeight();
-  const observer = new ResizeObserver(updateHeight);
-  observer.observe(element);
-  onCleanup(() => observer.disconnect());
-}, { flush: "post" });
+import family from "../family.json";
+import navigation from "../navigation.json";
 </script>
 
 <template>
-  <DefaultTheme.Layout :style="{ '--worldvm-banner-height': `${bannerHeight}px` }">
-    <template #layout-top>
-      <p v-if="frontmatter.pageClass === 'forma-index'" ref="banner" class="worldvm-banner">
-        Forma is an incubation project within <a href="https://worldvm.com/">WorldVM</a>.
-      </p>
+  <DefaultTheme.Layout>
+    <template #layout-bottom>
+      <aside class="family-strip" aria-label="WorldVM family">
+        <a v-for="project in family" :key="project.name" :href="project.site" :data-tier="project.tier">
+          <strong>{{ project.name }}</strong><span>{{ project.pitch }}</span>
+        </a>
+      </aside>
+      <footer class="shared-footer">
+        <nav aria-label="Footer navigation">
+          <a v-for="item in navigation" :key="item.text" :href="item.link">{{ item.text }}</a>
+          <a href="/feed.xml">Atom feed</a>
+        </nav>
+        <p><a href="https://worldvm.com">Part of the WorldVM family</a></p>
+        <p>Released under the MIT License. © 2026 Ben Jacobson</p>
+      </footer>
     </template>
   </DefaultTheme.Layout>
 </template>

@@ -1,0 +1,2 @@
+import { acceptProgram } from "../../accept-support.mjs";
+export const accept = dir => acceptProgram(dir, "(import \"./main.lisp\" [mirror-url revision-url health-url])\n(= [(mirror-url {:asset \"blue\"}) (revision-url {:rev \"9\" :asset \"logo\"}) (health-url {})]\n   [\"/mirror/blue/blue\" \"/assets/logo/revisions/9\" \"/health\"])", [{"source": "(import \"./main.lisp\" [revision-url])\n(revision-url {:asset \"a\" :rev 2})", "code": "typecheck/type-mismatch"}]);

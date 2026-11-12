@@ -4,7 +4,7 @@ Forma had two engines: TypeScript/Effect (`packages/ts`, hosted by
 `packages/host`) and OCaml (`packages/ocaml`, built natively and to JavaScript
 and WebAssembly). **The OCaml engine has been removed. TypeScript is the only
 implementation.** The TypeScript host's JSON CLI (the `forma` bin in
-`@formalang/host`) replaces the native `forma_cli` and its JSON ABI daemon.
+`@forma-language/forma`) replaces the native `forma_cli` and its JSON ABI daemon.
 
 This page records the decision, the work that made it possible, what remains,
 and the engine study of 2026-10-06 that informed it.
@@ -259,7 +259,7 @@ and run:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm --filter @formalang/ts build
+pnpm exec turbo run build --filter=@forma-language/forma
 pnpm build:ocaml
 cd packages/ocaml
 opam exec -- dune build --profile release bench/engine_bench.exe

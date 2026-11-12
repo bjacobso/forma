@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": minor
+"@forma-language/forma": minor
 ---
 
 Support `:infer-fn function-name` on ordinary `form` definitions, using the existing descriptor infer-hook protocol in the active checker context. Argument-dependent forms can forward inferred type metadata without widening nominal types or replacing checker methods. The option is mutually exclusive with `:type`; existing result hooks and public embedding signatures are unchanged.

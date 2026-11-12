@@ -1,3 +1,4 @@
+import { diagnosticLocator } from "../diagnostic/locations.js";
 import type { PackageableDeclaration } from "../artifact/artifact.js";
 import { checkModuleGraph } from "./check.js";
 import { inferredModuleSignatures } from "./signatures.js";
@@ -37,7 +38,7 @@ export function generatedBindingName(binding: ModuleBinding): string {
     : camelIdentifier(binding.symbol);
 }
 /** Project with graph-wide resolved metadata, preserving each expression's author file. */
-export function moduleMechanicsDeclarations(graph: ModuleGraph): {
+function moduleMechanicsDeclarationsUnlocated(graph: ModuleGraph): {
   declarations: readonly PackageableDeclaration[];
   diagnostics: readonly Diagnostic[];
 } {
@@ -96,7 +97,7 @@ export function moduleMechanicsDeclarations(graph: ModuleGraph): {
   return { declarations, diagnostics };
 }
 /** Native hosts pass their independently projected declarations through the same linker. */
-export function linkEffectModules(
+function linkEffectModulesUnlocated(
   graph: ModuleGraph,
   declarations?: readonly PackageableDeclaration[],
 ): LinkedEffectProgram {
@@ -284,4 +285,14 @@ export function linkEffectModules(
     modules,
     diagnostics,
   };
+}
+
+export function moduleMechanicsDeclarations(...args: Parameters<typeof moduleMechanicsDeclarationsUnlocated>): ReturnType<typeof moduleMechanicsDeclarationsUnlocated> {
+  const result = moduleMechanicsDeclarationsUnlocated(...args);
+  return { ...result, diagnostics: result.diagnostics.map(diagnosticLocator(id => args[0].modules.find(module => module.id === id)?.source)) };
+}
+
+export function linkEffectModules(...args: Parameters<typeof linkEffectModulesUnlocated>): ReturnType<typeof linkEffectModulesUnlocated> {
+  const result = linkEffectModulesUnlocated(...args);
+  return { ...result, diagnostics: result.diagnostics.map(diagnosticLocator(id => args[0].modules.find(module => module.id === id)?.source)) };
 }

@@ -39,7 +39,6 @@ const VM_REJECTED_RUNTIME_HEADS = new Set([
   "def-effect",
   "define-effect",
   "perform",
-  "handle",
   "defclass",
   "unquote",
   "unquote-splicing",

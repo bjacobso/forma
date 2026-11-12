@@ -1,11 +1,12 @@
 # Releases
 
-Run `pnpm changeset` for changes that affect public packages. Select the affected
-packages, a version bump, and a short user-facing summary. Commit the generated
-Markdown file with the implementation.
+Run `pnpm changeset` for changes that affect the public distribution. Select only
+`@forma-language/forma`, including for changes to private implementation
+workspaces, then choose a version bump and a short user-facing summary. Commit
+the generated Markdown file with the implementation.
 
 Include only public packages in a changeset's frontmatter. Private workspaces,
-such as the website and workbench apps, are excluded from versioning; mixing
+including the engine, host, editor, server and website, are excluded from versioning; mixing
 them with public packages prevents Changesets from creating a release plan.
 Start a breaking entry with `**Breaking:**` and say what consumers must change.
 Run `pnpm check:changesets` to validate the release plan. CI runs this validation
