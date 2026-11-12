@@ -43,7 +43,7 @@ pageClass: forma-index forma-elm
 <section id="live" class="fh-live" aria-label="Live command checker">
 <div class="fh-hero__demo">
 
-<WorkbenchEmbed example="elm-command" file="counter-command.forma" title="Live Effect workbench: counter command recovery" />
+<WorkbenchEmbed example="elm-command" file="counter-command.lisp" title="Live Effect workbench: counter command recovery" />
 
 </div>
 <p class="fh-caption">This embed runs the <strong>existing Effect dialect</strong>, showing the operation and recovery that underlie a command. Introduce an error to remove recovery and expose an unhandled typed failure, then restore it. The full <code>msg / command / update / view / app</code> prelude runs through <code>generateElmProgram</code> in a build script; it is not wired into the browser worker or language server.</p>
@@ -164,7 +164,7 @@ pageClass: forma-index forma-elm
 <article><h3>Schema-backed data</h3><p>Model and Msg become Effect schemas and TypeScript types. Message tags and payload fields survive generation.</p></article>
 <article><h3>Named commands</h3><p>Prelude emit hooks produce <code>Command.define</code>. An adapter turns checked command keywords into deferred Foldkit commands.</p></article>
 <article><h3>A mountable app</h3><p>The exported Counter configuration has Model, init, update, and view. Host code passes it, a container, and service layers to <code>Runtime.makeElement</code>.</p></article>
-<article><h3>An isolated generator</h3><p>Call <code>generateElmProgram</code> from <code>@formalang/ts/elm</code>. Prelude descriptors define the domain IR; existing mechanics checks the lowered expressions.</p></article>
+<article><h3>An isolated generator</h3><p>Call <code>generateElmProgram</code> from <code>@forma-language/forma/elm</code>. Prelude descriptors define the domain IR; existing mechanics checks the lowered expressions.</p></article>
 </div>
 <div class="fh-window"><div class="fh-window__bar"><span>counter.ts</span><span>actual generator output</span></div>
 

@@ -2,15 +2,30 @@
 
 ## Current foundation
 
-- Lossless reader, formatter, macro expansion, evaluator, and TypeScript VM.
-- Hindley–Milner inference with descriptor-aware typed core.
-- Operational effect inference and portable effect artifacts.
-- A JSON host ABI with a source-built `forma` JSON CLI and daemon.
-- Editor analysis, language server, and conformance suites with stored goldens.
-- Browser compiler explorer with live intermediate stages.
-- Consumer-prelude foundations (FX1–FX4): diagnostic catalogs/help/fixes,
-  authored syntax and named holes, multi-file preludes, and `forma schema`.
+- One public distribution, `@forma-language/forma`, prepared but not yet on npm.
+  Use a source checkout or a tarball packed from `main`; see [Publishing](/publishing).
+- One TypeScript engine: lossless reader, formatter, macros, Hindley–Milner
+  inference, descriptor-aware checking, evaluation, and a VM.
+- A human CLI: `check`, `run`, `test`, `fmt`, `repl`, `explain`, and `describe`;
+  `forma mcp` exposes language tools to agents. JSON commands and the daemon
+  remain available for automation.
+- `createLanguage` is the embedding facade, with typed holes and diagnostics
+  that carry source spans, help, and repair information.
+- Operational Effect inference, portable artifacts, editor services, a language
+  server, and the browser playground. Conformance fixtures pin observable behavior.
 - Native unary RPC/group generation through the [RPC prelude](./effect/rpc.md).
+
+## Trust work in progress
+
+Numeric semantics, runtime parity, checker convergence, and the remaining raw
+throw boundaries are active work. They are not claims of a verified language.
+The independent trusted kernel and elaborator protocol remain proposed.
+Memoization is design work only; a VS Code extension is on hold.
+
+Gate 3 targets agent repair on the hard tier: **at least 7 of 8 tasks**, with a
+**median of at most 2 repair rounds**. These are acceptance targets, not reported
+results. Typed holes, located diagnostics, `forma test`, and MCP provide the
+repair loop; the benchmark must measure whether that loop works.
 
 ## Elm-style application prototype
 
@@ -22,17 +37,11 @@ production-readiness claim.
 
 ## Next
 
-1. Tighten the language specification around observable behavior and turn
-   remaining untested assumptions into fixtures.
-2. Stabilize the host ABI and artifact schema around a small set of end-to-end
-   consumer examples.
-3. Improve incremental analysis, package caching, and editor latency without
-   weakening source provenance.
-4. Reduce TypeScript CLI and engine startup cost, and define the distribution
-   model for the eventual public packages.
-5. Complete the consumer-prelude workflow on the merged FX1–FX4 foundations.
-   Active-context typing hooks (PR #150) and validator scoping (PR #151) remain
-   open; the standalone distribution proposal is RFC 0025 in PR #142.
+1. Finish the Trust work with observable contracts and conformance evidence.
+2. Validate the single package in a clean consumer and prepare its first publication.
+3. Run Gate 3 and report measured task success and repair rounds.
+4. Stabilize the host ABI and artifact schema around end-to-end consumer examples.
+5. Improve incremental analysis and caching after their correctness contracts exist.
 
 ## Record row rollout
 
@@ -90,7 +99,7 @@ first language, and Lisp dialects such as a Clojure-shaped surface would be
 others. All of them would share one core, one type language, and one contract.
 Declarative surfaces would be invertible, which makes Lisp emitters such as
 `.cljc` possible. Stage 0 is implemented: a macro in scope may claim a
-retired spelling such as `defn`, and `preludes/clojure.forma` supplies Clojure
+retired spelling such as `defn`, and `preludes/modules/clojure.lisp` supplies Clojure
 spellings as an ordinary library, with a checked example, its diagnostics, and
 its limits in [Clojure spellings](./clojure.md). Later stages wait on an agent benchmark and
 are not implemented or scheduled.
@@ -151,8 +160,8 @@ The following is a dependency-aware proposal, not an implementation commitment:
    not an assumed `Option` type.
 3. Improve the authoring loop with
    [typed holes (0026)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0026-typed-holes.md)
-   and RFC 0015's proposed seeded properties/fault schedules. The first kernel
-   test framework exists only in a local implementation, not shared main.
+   and RFC 0015's proposed seeded properties/fault schedules. `forma test` ships with the kernel
+   test framework; richer property and fault scheduling remain proposed.
    Build generated Effect testing on that foundation, not a parallel runner.
 4. Run the small
    [finite workflow/evidence experiment (0028)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0028-bounded-verification.md)
@@ -183,8 +192,8 @@ on 2026-11-11, not open PRs or another thread's local edits:
 | Optional hook inputs are raw, not Options | Yes: the current hook ABI is documented in Writing a form; do not silently change it. |
 | Numeric, generic-row and Effect-wrapper gaps remain | Numeric argument inference in `type/infer-core.ts` can widen unannotated arguments to Float; RFCs 0018/0019 own that choice. Existing open record inference is not RFC 0006's qualified operations. Mechanics operation signatures still use closed sets; RFC 0023 owns polymorphism. |
 | LSP workspace parity is incomplete | Confirmed, but not absent Effect support: `analysis/workspace.ts` already consumes mechanics diagnostics/types; `language-server/src/workspace.ts` still lacks file/package graph resolution. |
-| Standalone CLI and consumer SDK gaps | Partial: `host/package.json` has a source-built `forma` bin; `host/src/cli.ts` has file/schema/explain/package commands. FX1–FX4 are merged. Standalone distribution and the complete authoring workflow remain separate work. |
-| Add typed-hole synthesis | Proposed, not shipped: captured syntax slots are implemented; unfinished-term goals are RFC 0026. |
+| Standalone CLI and consumer SDK | The single package contains the human CLI, MCP and `createLanguage`; first npm publication and remaining consumer workflow work are separate gates. |
+| Typed holes | Named `?name` holes and their goals ship; broader synthesis remains separate work. |
 | A hash proves wire compatibility or shared behavior | No: `artifact/contract-identity.ts` hashes root/reachable definitions, including metadata. Directional codec compatibility needs RFC 0027. |
 | Signatures enumerate every fault path | No: they constrain shapes/sets, not call occurrences, scheduling, recovery or business laws. RFC 0015 requires explicit generators and postconditions. |
 | Journals, multi-target lenses and an agent sandbox already work | No: RFCs 0016/0021/0012 remain proposals or partial foundations. Go/Rust are not shipped executable targets. RPC generation is merged, but a full-stack linker is not. |
@@ -202,8 +211,9 @@ can support these ideas are not established by this repository review.
 
 The RFC directory has pre-existing duplicate 0022 and 0023 numbers. Keep those
 filenames stable and use descriptive links. New proposals use unique 0026–0028;
-0024 is occupied and 0025 is reserved by open PR #142. The existing qualified-row
-and host-target designs are extended/referenced, not replaced by parallel RFCs.
+0024 is occupied and 0025 is accepted with amendments; implementation is in
+progress. The existing qualified-row and host-target designs are
+extended/referenced, not replaced by parallel RFCs.
 
 ## Deferred work
 

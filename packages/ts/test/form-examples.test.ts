@@ -19,7 +19,7 @@ describe("form documentation examples", () => {
   });
 
   test("file modules keep example programs outside name resolution", () => {
-    const library = { id: "p/examples.forma", source: "(export greet)\n" + source('[[(or true false)]]') };
+    const library = { id: "p/examples.lisp", source: "(export greet)\n" + source('[[(or true false)]]') };
     const graph = resolveModuleGraph(library, sourceModuleResolver([library]));
     expect(checkModuleGraph(graph).diagnostics).toEqual([]);
     const form = [...graph.modules.at(-1)!.compileTime!.forms.values()].find(form => form.identity.declaration === "greet")!;

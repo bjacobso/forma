@@ -1,82 +1,176 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
-const effectVersion = JSON.parse(await readFile(join(root, "package.json"), "utf8")).devDependencies.effect;
 const temporary = await mkdtemp(join(tmpdir(), "forma-release-check-"));
-const run = (command, args, cwd = root) => execFileSync(command, args, {
-  cwd, encoding: "utf8", timeout: 120_000, stdio: ["ignore", "pipe", "pipe"],
-});
-const targets = (value) => typeof value === "string" ? [value]
-  : value && typeof value === "object" ? Object.values(value).flatMap(targets) : [];
-
-try {
-  const packages = [];
-  for (const directory of await readdir(join(root, "packages"))) {
-    const cwd = join(root, "packages", directory);
-    if (!existsSync(join(cwd, "package.json"))) continue;
-    const manifest = JSON.parse(await readFile(join(cwd, "package.json"), "utf8"));
-    if (manifest.private) continue;
-    const archive = join(temporary, `${directory}.tgz`);
-    run("pnpm", ["pack", "--out", archive], cwd);
-    const entries = new Set(run("tar", ["-tzf", archive]).trim().split("\n"));
-    const packed = JSON.parse(run("tar", ["-xOzf", archive, "package/package.json"]));
-    assert(entries.has("package/README.md"), `${manifest.name}: missing README`);
-    assert(entries.has("package/LICENSE"), `${manifest.name}: missing license`);
-    for (const target of [manifest.main, manifest.types, ...targets(manifest.exports), ...targets(manifest.bin)]) {
-      assert(entries.has(`package/${target.replace(/^\.\//, "")}`), `${manifest.name}: missing ${target}`);
-    }
-    for (const spec of Object.values({ ...packed.dependencies, ...packed.optionalDependencies, ...packed.peerDependencies })) {
-      assert(!/^(workspace|catalog):/.test(spec), `${manifest.name}: unresolved dependency ${spec}`);
-    }
-    for (const name of Object.keys({ ...packed.dependencies, ...packed.optionalDependencies })) {
-      assert(!/^(effect|foldkit)$|^@(effect|foldkit)\//.test(name), `${manifest.name}: ${name} must be a peer dependency`);
-    }
-    if (manifest.devDependencies?.effect) {
-      assert.equal(manifest.devDependencies.effect, effectVersion, `${manifest.name}: test Effect must match the repository pin`);
-      assert.equal(packed.peerDependencies?.effect, `^${effectVersion}`, `${manifest.name}: packed Effect peer must admit the repository target`);
-    }
-    assert.equal(packed.publishConfig.access, "public");
-    assert.equal(packed.repository.url, "git+https://github.com/bjacobso/forma.git");
-    for (const entry of entries) {
-      assert(!/^package\/(src|test|node_modules)\//.test(entry), `${manifest.name}: unexpected ${entry}`);
-    }
-    packages.push({ directory, manifest, archive });
-    console.log(`Packed ${manifest.name}: exports and dependencies verified`);
+const run = (command, args, cwd = root) => {
+  try {
+    return execFileSync(command, args, { cwd, encoding: "utf8", timeout: 180_000, maxBuffer: 16 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"] });
+  } catch (error) {
+    console.error(error.stdout?.toString(), error.stderr?.toString());
+    throw error;
   }
-  assert.equal(packages.length, 4, "Expected four public packages; update the smoke check when adding packages");
+};
+const targets = value => typeof value === "string" ? [value]
+  : value && typeof value === "object" ? Object.values(value).flatMap(targets) : [];
+const name = "@forma-language/forma";
+const store = run("pnpm", ["store", "path"]).trim().replace(/[\\/]v\d+$/, "");
+try {
+  console.log(run(process.execPath, ["scripts/check-release-plan.mjs"]).trim());
+  console.log(run("pnpm", ["exec", "turbo", "run", "build", `--filter=${name}`]).trim());
+  console.log(run(process.execPath, ["scripts/check-distribution.mjs"]).trim());
+  const cwd = join(root, "packages/forma");
+  const archive = join(temporary, "forma.tgz");
+  run("pnpm", ["pack", "--out", archive], cwd);
+  const entries = run("tar", ["-tzf", archive]).trim().split("\n");
+  const packed = JSON.parse(run("tar", ["-xOzf", archive, "package/package.json"]));
+  assert.equal(packed.name, name);
+  assert.equal(packed.version, JSON.parse(await readFile(join(cwd, "package.json"), "utf8")).version);
+  assert.equal(packed.engines.node, ">=24");
+  assert.equal(packed.peerDependencies.effect, "^4.1.1");
+  assert.equal(packed.dependencies["@modelcontextprotocol/sdk"], "1.32.2");
+  assert.deepEqual(packed.peerDependenciesMeta, { react: { optional: true }, "react-dom": { optional: true } });
+  assert(!packed.dependencies.effect);
+  assert.equal(packed.publishConfig.access, "public");
+  assert.equal(packed.repository.url, "git+https://github.com/bjacobso/forma.git");
+  assert(!/@formalang\/|workspace:/.test(JSON.stringify(packed)), "private reference in manifest");
+  for (const target of [packed.main, packed.types, ...targets(packed.exports), ...targets(packed.bin)]) {
+    assert(entries.includes(`package/${target.replace(/^\.\//, "")}`), `missing target ${target}`);
+  }
+  for (const file of ["README.md", "LICENSE"]) assert(entries.includes(`package/${file}`));
+  for (const entry of entries) {
+    assert(/^package\/(dist\/[^\n]+|package.json|README.md|LICENSE)$/.test(entry), `unexpected archive entry ${entry}`);
+    if (!/\.(?:mjs|mts|json)$/.test(entry)) continue;
+    const source = run("tar", ["-xOzf", archive, entry]);
+    assert(!/@formalang\/|["'`]workspace:[*^~.\/]|(?:from\s*|import\s*\()["'][^"']*(?:\/src\/|packages\/)/.test(source), `private/source reference in ${entry}`);
+  }
   const consumer = join(temporary, "consumer");
   await mkdir(consumer);
-  await writeFile(join(consumer, "package.json"), JSON.stringify({ private: true, type: "module" }));
-  run("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", `effect@${effectVersion}`, ...packages.map(p => p.archive)], consumer);
-  const byDirectory = Object.fromEntries(packages.map(p => [p.directory, p.manifest.name]));
-  const smoke = `
+  // Reproduce the tested dependency closure offline. Cached registry metadata can
+  // otherwise select newer range-compatible tarballs that are not in the store.
+  const trees = JSON.parse(run("pnpm", ["list", "--filter", "@formalang/host", "--filter", "@formalang/editor", "--filter", "@formalang/language-server", "--prod", "--depth", "Infinity", "--json"]));
+  const overrides = {};
+  const collect = tree => {
+    for (const [dependency, value] of Object.entries(tree.dependencies ?? {})) {
+      if (!dependency.startsWith("@formalang/")) overrides[dependency] = value.version;
+      collect(value);
+    }
+  };
+  trees.forEach(collect);
+  await writeFile(join(consumer, "package.json"), JSON.stringify({ private: true, type: "module", pnpm: { overrides } }));
+  run("pnpm", ["add", "--store-dir", store, "--prefer-offline", "--ignore-scripts", "--config.auto-install-peers=false", archive, "effect@4.1.1"], consumer);
+  const installed = JSON.parse(run("pnpm", ["list", "--prod", "--depth", "Infinity", "--json"], consumer));
+  const packages = new Map();
+  const measure = tree => {
+    for (const [name, dependency] of Object.entries(tree.dependencies ?? {})) {
+      packages.set(`${name}@${dependency.version}`, dependency.path);
+      measure(dependency);
+    }
+  };
+  installed.forEach(measure);
+  let bytes = 0;
+  const size = async directory => {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      if (entry.name === "node_modules") continue;
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) await size(path);
+      else if (entry.isFile()) bytes += (await stat(path)).size;
+    }
+  };
+  for (const path of new Set(packages.values())) await size(path);
+  console.log(`Checking consumer: ${packages.size} packages, ${bytes} installed file bytes (excluding node_modules links and metadata)`);
+  const inert = Object.keys(packed.exports).filter(key => key !== "./editor/react").map(key => name + (key === "." ? "" : key.slice(1)));
+  await writeFile(join(consumer, "smoke.mjs"), `
     import assert from 'node:assert/strict';
     import { createRequire } from 'node:module';
+    import { fileURLToPath } from 'node:url';
     const require = createRequire(import.meta.url);
-    for (const name of ${JSON.stringify(packages.filter(p => p.manifest.peerDependencies?.effect).map(p => p.manifest.name))}) {
-      const libraryRequire = createRequire(import.meta.resolve(name));
-      assert.equal(libraryRequire.resolve('effect'), require.resolve('effect'), name + ' must share the consumer Effect runtime');
+    assert.throws(() => require.resolve('react'));
+    for (const specifier of ${JSON.stringify(inert)}) await import(specifier);
+    for (const subpath of ['session', 'evaluator', 'host/ts-host', 'authoring']) {
+      await assert.rejects(import('${name}/' + subpath), { code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });
     }
-    for (const name of ${JSON.stringify(packages.flatMap(p => Object.keys(p.manifest.exports).filter(e => e !== './server').map(e => p.manifest.name + (e === '.' ? '' : e.slice(1)))) )}) await import(name);
-    const { createDefaultLanguageHost } = await import(${JSON.stringify(byDirectory.host)});
-    assert.equal(typeof createDefaultLanguageHost().parseSync, 'function');
-    const { FormaWorkspace } = await import(${JSON.stringify(byDirectory['language-server'])});
+    const { createLanguage } = await import('${name}');
+    const language = await createLanguage();
+    try { assert.equal((await language.run('(+ 20 22)')).value, 42); }
+    finally { await language.close(); }
+    const libraryRequire = createRequire(import.meta.resolve('${name}'));
+    assert.equal(libraryRequire.resolve('effect'), require.resolve('effect'));
+    const { Client } = await import(libraryRequire.resolve('@modelcontextprotocol/sdk/client/index.js'));
+    const { StdioClientTransport } = await import(libraryRequire.resolve('@modelcontextprotocol/sdk/client/stdio.js'));
+    const client = new Client({ name: 'packed-smoke', version: '1.0.0' });
+    try {
+      await client.connect(new StdioClientTransport({ command: process.execPath, args: [fileURLToPath(new URL('./cli.mjs', import.meta.resolve('${name}'))), 'mcp'] }));
+      assert((await client.listTools()).tools.some(tool => tool.name === 'check'));
+      assert.equal((await client.callTool({ name: 'run', arguments: { source: '(+ 1 2)' } })).structuredContent.printed, '3');
+    } finally { await client.close(); }
+    const { createDefaultLanguageHost } = await import('${name}');
+    const host = createDefaultLanguageHost();
+    assert.equal((await host.version()).engineVersion, '${packed.version}');
+    assert.equal(host.parseSync({ source: '1' }).diagnostics.length, 0);
+    assert.equal(host.typecheckSync({ source: '(+ 1 2)' }).diagnostics.length, 0);
+    assert(host.typecheckSync({ source: '(+ 1 true)' }).diagnostics.length > 0);
+    assert.equal((await host.evaluate({ source: '(+ 1 2)' })).value.value, 3);
+    const { FormaWorkspace } = await import('${name}/language-server');
     const workspace = new FormaWorkspace({ preludePaths: [] });
-    workspace.analysis.setDocument('package-smoke', '(define (double n) (* n 2))\\n(double 4)');
-    assert.equal(workspace.analysis.analysis('package-smoke').resultType, 'Float');
     for (const [source, expectedType] of [['1', 'Int'], ['1.0', 'Float']]) {
       workspace.analysis.setDocument('numeric-smoke', source);
       assert.equal(workspace.analysis.analysis('numeric-smoke').resultType, expectedType);
     }
-    console.log('Installed tarballs: shared Effect runtime, all library exports, and the language server workspace work');
-  `;
-  await writeFile(join(consumer, "smoke.mjs"), smoke);
+    console.log('All non-React exports imported without React; shared Effect and version verified');
+  `);
   console.log(run(process.execPath, ["smoke.mjs"], consumer).trim());
+  const declarations = `
+    import { createDefaultLanguageHost, type LanguageHost, type ParseRequest } from '${name}';
+    import type { LanguageHost as Host } from '${name}/host/types';
+    import type { ParseRequest as EngineParseRequest } from '${name}/engine';
+    import { createDefaultEditorAnalysisHost } from '${name}/editor';
+    import * as CodeMirror from '${name}/editor/codemirror';
+    const host: Host = createDefaultLanguageHost();
+    const same: LanguageHost = host;
+    const request: ParseRequest = {} as EngineParseRequest;
+    void [same, request, CodeMirror, createDefaultEditorAnalysisHost];
+  `;
+  await writeFile(join(consumer, "consumer.mts"), declarations);
+  const tsc = join(root, "node_modules/typescript/bin/tsc");
+  for (const mode of ["NodeNext", "Bundler"]) {
+    run(process.execPath, [tsc, "--noEmit", "--strict", "--skipLibCheck", "false", "--target", "es2022", "--module", mode === "Bundler" ? "esnext" : "NodeNext", "--moduleResolution", mode, "consumer.mts"], consumer);
+  }
+  for (const [bin, arg] of [["forma", "help"], ["forma-language-server", "--help"]]) {
+    const path = join(consumer, "node_modules/.bin", bin);
+    assert(existsSync(path));
+    assert(run(path, [arg], consumer).includes(bin));
+  }
+  const version = JSON.parse(run(join(consumer, "node_modules/.bin/forma"), ["version"], consumer));
+  assert(JSON.stringify(version).includes(packed.version));
+  const forma = join(consumer, "node_modules/.bin/forma");
+  for (const [library, source, expected] of [
+    ["kernel", '(import "forma:kernel" [and not]) (and true (not false))', "true"],
+    ["clojure", '(import "forma:clojure" [defn ->]) (defn inc [n] (+ n 1)) (-> 41 (inc))', "42"],
+    ["routes", '(import "forma:routes" [route]) (route user ["users" [:id]]) (user {:id "ada"})', '"/users/ada"'],
+    ["test", '(import "forma:test" [test is=]) (test "bundled" (is= 42 42))', undefined],
+  ]) {
+    const path = join(consumer, `${library}-test.lisp`);
+    await writeFile(path, source);
+    run(forma, ["check", path], consumer);
+    if (expected !== undefined) assert.equal(run(forma, ["run", path], consumer).trim(), expected);
+    else assert.match(run(forma, ["test", path], consumer), /PASS bundled/);
+  }
+  run("pnpm", ["add", "--store-dir", store, "--prefer-offline", "--ignore-scripts", "--config.auto-install-peers=false",
+    `@codemirror/state@${packed.dependencies["@codemirror/state"]}`,
+    `@codemirror/view@${packed.dependencies["@codemirror/view"]}`], consumer);
+  run(process.execPath, ["--input-type=module", "-e", `
+    import { EditorState } from '@codemirror/state';
+    import { lispSupport } from '${name}/editor/codemirror';
+    EditorState.create({ doc: '(+ 1 2)', extensions: [lispSupport()] });
+  `], consumer);
+  run("pnpm", ["add", "--store-dir", store, "--prefer-offline", "--ignore-scripts", "--config.auto-install-peers=false", `react@${overrides.react}`, `react-dom@${overrides["react-dom"]}`], consumer);
+  run(process.execPath, ["--input-type=module", "-e", `await import('${name}/editor/react')`], consumer);
+  console.log(`Packed ${name}: ${entries.length} files; all exports, declarations and both bins verified`);
 } finally {
   await rm(temporary, { recursive: true, force: true });
 }

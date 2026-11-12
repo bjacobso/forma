@@ -1,0 +1,18 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: [{"code":"typecheck/type-mismatch","severity":"error","message":"Missing field(s) in record","phase":"typecheck","details":{"code":"typecheck/type-mismatch","message":"Missing field(s) in record","missingIn":"left","fields":[":asset-tag",":vendor"]},"span":{"sourceId":"agent.lisp","startOffset":112,"endOffset":177,"startLine":3,"startColumn":17,"endLine":3,"endColumn":82}}]
+
+false !== true
+
+    at file://<trial>/app.mjs:25:10 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.13.0

@@ -16,18 +16,28 @@ export interface PayloadValidator {
   readonly validate: (input: ValidatorInput) => readonly Diagnostic[];
 }
 
+/** A duplicate host registration; path identifies the offending input field. */
+export class ArtifactValidatorRegistrationError extends Error {
+  override readonly name = "ArtifactValidatorRegistrationError";
+  readonly code = "artifact/duplicate-validator" as const;
+
+  constructor(message: string, readonly path: "validator.name" | "validator.kind") {
+    super(message);
+  }
+}
+
 /** Host-owned registration. The packaging core has no domain-kind dispatch. */
 export class ArtifactValidatorRegistry {
   readonly #validators = new Map<string, ArtifactValidator>();
   readonly #payloads = new Map<string, PayloadValidator>();
 
   register(validator: ArtifactValidator): this {
-    if (this.#validators.has(validator.name)) throw new Error(`Duplicate artifact validator ${validator.name}`);
+    if (this.#validators.has(validator.name)) throw new ArtifactValidatorRegistrationError(`Duplicate artifact validator ${validator.name}`, "validator.name");
     this.#validators.set(validator.name, validator);
     return this;
   }
   registerPayload(validator: PayloadValidator): this {
-    if (this.#payloads.has(validator.kind)) throw new Error(`Duplicate payload validator ${validator.kind}`);
+    if (this.#payloads.has(validator.kind)) throw new ArtifactValidatorRegistrationError(`Duplicate payload validator ${validator.kind}`, "validator.kind");
     this.#payloads.set(validator.kind, validator);
     return this;
   }

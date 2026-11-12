@@ -1,0 +1,166 @@
+{
+  "name": "@forma-language/forma",
+  "version": "0.5.0",
+  "description": "Forma: a pre-alpha typed Lisp, language host, editor adapters and language server.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bjacobso/forma.git",
+    "directory": "packages/forma"
+  },
+  "homepage": "https://forma-lang.com",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "./reader": {
+      "types": "./dist/reader.d.mts",
+      "import": "./dist/reader.mjs"
+    },
+    "./engine": {
+      "types": "./dist/engine.d.mts",
+      "import": "./dist/engine.mjs"
+    },
+    "./mechanics": {
+      "types": "./dist/mechanics.d.mts",
+      "import": "./dist/mechanics.mjs"
+    },
+    "./expander": {
+      "types": "./dist/expander.d.mts",
+      "import": "./dist/expander.mjs"
+    },
+    "./type": {
+      "types": "./dist/type.d.mts",
+      "import": "./dist/type.mjs"
+    },
+    "./diagnostic": {
+      "types": "./dist/diagnostic.d.mts",
+      "import": "./dist/diagnostic.mjs"
+    },
+    "./formatter": {
+      "types": "./dist/formatter.d.mts",
+      "import": "./dist/formatter.mjs"
+    },
+    "./editor-services": {
+      "types": "./dist/editor-services.d.mts",
+      "import": "./dist/editor-services.mjs"
+    },
+    "./analysis": {
+      "types": "./dist/analysis.d.mts",
+      "import": "./dist/analysis.mjs"
+    },
+    "./http-api": {
+      "types": "./dist/http-api.d.mts",
+      "import": "./dist/http-api.mjs"
+    },
+    "./rpc": {
+      "types": "./dist/rpc.d.mts",
+      "import": "./dist/rpc.mjs"
+    },
+    "./descriptor": {
+      "types": "./dist/descriptor.d.mts",
+      "import": "./dist/descriptor.mjs"
+    },
+    "./preludes": {
+      "types": "./dist/preludes.d.mts",
+      "import": "./dist/preludes.mjs"
+    },
+    "./modules": {
+      "types": "./dist/modules.d.mts",
+      "import": "./dist/modules.mjs"
+    },
+    "./node": {
+      "node": {
+        "types": "./dist/node.d.mts",
+        "import": "./dist/node.mjs"
+      }
+    },
+    "./elm": {
+      "types": "./dist/elm.d.mts",
+      "import": "./dist/elm.mjs"
+    },
+    "./email": {
+      "types": "./dist/email.d.mts",
+      "import": "./dist/email.mjs"
+    },
+    "./host": {
+      "types": "./dist/host.d.mts",
+      "import": "./dist/host.mjs"
+    },
+    "./host/types": {
+      "types": "./dist/host/types.d.mts",
+      "import": "./dist/host/types.mjs"
+    },
+    "./host/json-abi": {
+      "types": "./dist/host/json-abi.d.mts",
+      "import": "./dist/host/json-abi.mjs"
+    },
+    "./editor": {
+      "types": "./dist/editor.d.mts",
+      "import": "./dist/editor.mjs"
+    },
+    "./editor/codemirror": {
+      "types": "./dist/editor/codemirror.d.mts",
+      "import": "./dist/editor/codemirror.mjs"
+    },
+    "./editor/react": {
+      "types": "./dist/editor/react.d.mts",
+      "import": "./dist/editor/react.mjs"
+    },
+    "./language-server": {
+      "node": {
+        "types": "./dist/language-server.d.mts",
+        "import": "./dist/language-server.mjs"
+      }
+    }
+  },
+  "bin": {
+    "forma": "./dist/cli.mjs",
+    "forma-language-server": "./dist/forma-language-server.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown && node scripts/executable.mjs",
+    "test": "node ../../scripts/check-distribution.mjs",
+    "typecheck": "node ../../scripts/check-distribution.mjs"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.18.6",
+    "@codemirror/commands": "^6.8.1",
+    "@codemirror/lang-markdown": "^6.5.0",
+    "@codemirror/language": "^6.11.0",
+    "@codemirror/lint": "^6.8.5",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.36.8",
+    "@lezer/highlight": "^1.2.1",
+    "@lezer/lr": "^1.4.2",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12"
+  },
+  "peerDependencies": {
+    "effect": "^4.1.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  }
+}

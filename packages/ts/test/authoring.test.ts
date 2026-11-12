@@ -34,8 +34,8 @@ describe("UI-free authoring helpers", () => {
   });
 
   it("replaces scratch declarations without dropping application expressions or imports", () => {
-    expect(mergeReplSource('(import "./math.forma" [double])\n(define value 1)\n(+ value 2)', '(define value 9)\n(define (double x) (* x 2))'))
-      .toBe('(import "./math.forma" [double])\n(+ value 2)\n(define value 9)\n(define (double x) (* x 2))');
+    expect(mergeReplSource('(import "./math.lisp" [double])\n(define value 1)\n(+ value 2)', '(define value 9)\n(define (double x) (* x 2))'))
+      .toBe('(import "./math.lisp" [double])\n(+ value 2)\n(define value 9)\n(define (double x) (* x 2))');
     expect(mergeReplSource('(define (f x) x)', '(define (f x) (+ x 1))')).toBe('(define (f x) (+ x 1))');
     expect(mergeReplSource('(define value 1)', '(unfinished')).toBe('(define value 1)\n(unfinished');
   });

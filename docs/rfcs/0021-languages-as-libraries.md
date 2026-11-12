@@ -93,7 +93,7 @@ four platforms.
   `defn` again after expansion, with longer messages. The VM rejects `def` and
   `defn` as runtime heads.
 - **Some sugar is already a library.** `when`, `unless`, `cond`, `and`, `or`,
-  `->`, and `->>` live in `preludes/kernel.forma`. In a file module, an
+  `->`, and `->>` live in `preludes/modules/kernel.lisp`. In a file module, an
   unimported use fails with `module/unimported-sugar` (`modules/graph.ts`).
 - **Projects already choose automatic imports.** `configureSession({ projects:
   [{ prelude }] })` gives each project's modules the exports of a selected
@@ -344,7 +344,7 @@ Source written today means the same thing under `forma/core`.
 
 | Stage | Work | Gate |
 | --- | --- | --- |
-| 0 | Retired spellings are rejected after expansion instead of before, so a macro in scope may use the name. A `preludes/clojure.forma` library supplies `defn` and related spellings as ordinary macros. | Fixtures: an imported `defn` expands and typechecks; an unbound `defn` still reports `Use define instead of defn` at the author's form. An agent benchmark compares repair rounds with and without the library before later stages start. |
+| 0 | Retired spellings are rejected after expansion instead of before, so a macro in scope may use the name. A `preludes/modules/clojure.lisp` library supplies `defn` and related spellings as ordinary macros. | Fixtures: an imported `defn` expands and typechecks; an unbound `defn` still reports `Use define instead of defn` at the author's form. An agent benchmark compares repair rounds with and without the library before later stages start. |
 | 1 | Sets-of-scopes hygiene for all binders and all macros. | Capture fixtures, including macro-generating macros, pass in evaluation and typechecking. |
 | 2 | Syntax categories and `syntax` forms; descriptor-derived tooling. | Call-site diagnostics for malformed holes; generated reference pages for syntax forms. |
 | 3 | `forma/core` replaces `normalizeCoreProgram`'s sugar. | All stored goldens byte-identical; `pnpm check` passes; analysis latency within an agreed budget. |

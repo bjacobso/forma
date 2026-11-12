@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { readFileSync } from "node:fs";
 
 import { Analysis } from "../src/index.js";
 
@@ -29,12 +30,78 @@ const workspace = (document: string, prelude = PRELUDE) => {
 };
 
 describe("AnalysisWorkspace", () => {
+  test("exposes binding queries without exposing checker environments", () => {
+    const ws = workspace('(define id (fn [x] x))\n(id base)');
+    const analysis = ws.analysis("doc.lisp");
+    expect(analysis).not.toHaveProperty("typeEnv");
+    expect(analysis).not.toHaveProperty("mechanicsBindingTypes");
+    expect(analysis.hasBinding("base")).toBe(true);
+    expect(analysis.hasBinding("id")).toBe(true);
+    expect(analysis.hasBinding("+")).toBe(true);
+    expect(analysis.hasBinding("missing")).toBe(false);
+    expect(analysis.bindingDisplay("base")).toBe("Int");
+    expect(analysis.bindingDisplay("id")).toMatch(/^forall (\w+)\. \1 -> \1$/);
+    expect(analysis.bindingDisplay("missing")).toBeUndefined();
+  });
+
+  test("keeps prelude generics and lexical shadowing displays and spans", () => {
+    const source = '(id "local")\n(let [base true] base)';
+    const ws = workspace(source, '(define base 10)\n(define id (fn [x] x))');
+    const analysis = ws.analysis("doc.lisp");
+    expect(analysis.bindingDisplay("base")).toBe("Int");
+    expect(analysis.bindingDisplay("id")).toMatch(/^forall (\w+)\. \1 -> \1$/);
+    const offset = source.lastIndexOf("base");
+    expect(ws.hover("doc.lisp", offset)).toMatchObject({
+      span: { sourceId: "doc.lisp", startOffset: offset, endOffset: offset + 4 },
+    });
+    expect(ws.hover("doc.lisp", offset)?.markdown).toContain("base : Bool");
+    expect(ws.completions("doc.lisp", source.length).find(item => item.label === "id")?.detail)
+      .toBe(analysis.bindingDisplay("id"));
+  });
+
+  test("merges mechanics bindings without borrowing prelude expression offsets", () => {
+    const prelude = '(: main (Effect Int)) (define main (succeed 1))';
+    const source = '(define plain 2)\nplain';
+    const ws = workspace(source, prelude);
+    const analysis = ws.analysis("doc.lisp");
+    expect(analysis.hasBinding("main")).toBe(true);
+    expect(analysis.bindingDisplay("main")).toBe("(Effect Int [] [])");
+    expect(analysis.bindingDisplay("plain", source.lastIndexOf("plain"))).toBe("Int");
+    expect(ws.analysis("prelude.lisp").bindingDisplay("plain")).toBeUndefined();
+    expect(analysis.typedSpans.every(span => span.end <= source.length)).toBe(true);
+  });
+
+  test("prefers mechanics bindings and keeps HM fallbacks outside mechanics expressions", () => {
+    const source = '(: main (Effect Int)) (define main (succeed 1))\n(define plain 2)';
+    const ws = workspace(source, '(define main 0)');
+    const analysis = ws.analysis("doc.lisp");
+    expect(ws.analysis("prelude.lisp").bindingDisplay("main")).toBe("Int");
+    expect(analysis.bindingDisplay("main")).toBe("(Effect Int [] [])");
+    expect(analysis.bindingDisplay("plain")).toBe("Int");
+    expect(analysis.bindingDisplay("plain", source.indexOf("succeed"))).toBeUndefined();
+    expect(analysis.bindingDisplay("plain", source.lastIndexOf("plain"))).toBe("Int");
+  });
+
+  test("offers form spelling fixes only for unbound near misses", () => {
+    const source = readFileSync(new URL("../../../conformance/analysis/unknown-form.lisp", import.meta.url), "utf8");
+    const diagnostics = workspace(source).diagnostics("doc.lisp");
+    expect(diagnostics.map(d => d.code)).toEqual(["elaborate/unknown-form"]);
+    expect(diagnostics.filter(d => d.code === "elaborate/unknown-form")).toMatchObject([
+      { details: { name: "workflwo" }, fix: [{ newText: "workflow", span: { startOffset: 1, endOffset: 9 } }] },
+    ]);
+    for (const bound of ["(define workflwo (fn [x] x))\n(workflwo 1)", "(workflwo 1)"]) {
+      const prelude = bound.startsWith("(define") ? PRELUDE : PRELUDE + "\n(define workflwo (fn [x] x))";
+      expect(workspace(bound, prelude).diagnostics("doc.lisp")).toEqual([]);
+    }
+    expect(workspace("(unrelated 1)").diagnostics("doc.lisp").map(d => d.code)).toEqual(["typecheck/unbound-symbol"]);
+  });
+
   test("types documents with the definitions and macros of their preludes", () => {
     const source = "(define double (fn [n] (twice n)))\n(double base)";
     const analysis = workspace(source).analysis("doc.lisp");
     expect(analysis.diagnostics).toEqual([]);
-    expect(analysis.resultType).toBe("Float");
-    expect(analysis.typeEnv.get("base")).toBeDefined();
+    expect(analysis.resultType).toBe("Int");
+    expect(analysis.bindingDisplay("base")).toBeDefined();
   });
 
   test("keeps typing the forms around one that does not parse", () => {
@@ -51,14 +118,14 @@ describe("AnalysisWorkspace", () => {
     const messages = ws.diagnostics("doc.lisp").map((diagnostic) => diagnostic.message);
     expect(messages.some((message) => message.includes("form expects"))).toBe(true);
     expect(messages.some((message) => message.includes("Unbound"))).toBe(false);
-    expect(ws.analysis("doc.lisp").typeEnv.get("two")).toBeDefined();
+    expect(ws.analysis("doc.lisp").bindingDisplay("two")).toBeDefined();
   });
 
   test("reports type errors at their source", () => {
     const source = '(define ok 1)\n(+ 1 "nope")';
     const [diagnostic] = workspace(source).diagnostics("doc.lisp");
     expect(diagnostic).toMatchObject({ code: "typecheck/type-mismatch", severity: "error" });
-    expect(diagnostic?.message).toContain("Type mismatch");
+    expect(diagnostic?.message).toContain("Expected");
     expect(diagnostic?.message).not.toContain("at offset");
   });
 
@@ -66,8 +133,9 @@ describe("AnalysisWorkspace", () => {
     const source = "(define double (fn [n] (* n 2)))\n(double base)";
     const ws = workspace(source);
     expect(ws.hover("doc.lisp", at(source, "double", 1, 1))?.markdown).toContain(
-      "double : Float -> Float",
+      "double : Int -> Int",
     );
+    expect(ws.hover("doc.lisp", at(source, "double", 1, 1))?.markdown).toContain("```lisp\n");
     const prelude = ws.hover("doc.lisp", at(source, "base", 1));
     expect(prelude?.markdown).toContain("base : Int");
     expect(prelude?.markdown).toContain("prelude.lisp");
@@ -194,7 +262,7 @@ describe("AnalysisWorkspace", () => {
     ws.setPrelude("a.lisp", "(define a 1)");
     ws.setPrelude("b.lisp", "(define b (+ a 1))");
     expect(ws.diagnostics("b.lisp")).toEqual([]);
-    expect(ws.analysis("b.lisp").typeEnv.get("b")).toBeDefined();
-    expect(ws.analysis("a.lisp").typeEnv.has("b")).toBe(false);
+    expect(ws.analysis("b.lisp").bindingDisplay("b")).toBeDefined();
+    expect(ws.analysis("a.lisp").hasBinding("b")).toBe(false);
   });
 });

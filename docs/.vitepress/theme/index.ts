@@ -5,6 +5,7 @@ import DefaultTheme from "vitepress/theme-without-fonts";
 import Layout from "./Layout.vue";
 import PreludeCards from "./PreludeCards.vue";
 import WorkbenchEmbed from "./WorkbenchEmbed.vue";
+import BlogPosts from "./BlogPosts.vue";
 import HomepageStories from "./HomepageStories.vue";
 
 import "./custom.css";
@@ -16,5 +17,6 @@ export default {
     app.component("WorkbenchEmbed", WorkbenchEmbed);
     app.component("PreludeCards", PreludeCards);
     app.component("HomepageStories", HomepageStories);
+    app.component("BlogPosts", BlogPosts);
   },
 } satisfies Theme;

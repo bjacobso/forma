@@ -23,9 +23,9 @@ const object: ProtocolObjectDescriptor = {
 describe("Effect 4 protocol schema projection", () => {
   test("data schema builds agree on recursive, refined, optional and nonempty data", () => {
     const sources = [
-      {sourceId:"slug.forma",source:'(type Slug (String :pattern "^[a-z]+$" :min-length 2))'},
-      {sourceId:"node.forma",source:'(type Node {:name Slug :note (Option String) :tags (List String :min-length 1) :count (Int :min 1 :max 9) :state (Union :ready :done) :unit Unit :children (List Node) :links (List Link)})'},
-      {sourceId:"link.forma",source:'(type Link {:node Node :weight Int})'},
+      {sourceId:"slug.lisp",source:'(type Slug (String :pattern "^[a-z]+$" :min-length 2))'},
+      {sourceId:"node.lisp",source:'(type Node {:name Slug :note (Option String) :tags (List String :min-length 1) :count (Int :min 1 :max 9) :state (Union :ready :done) :unit Unit :children (List Node) :links (List Link)})'},
+      {sourceId:"link.lisp",source:'(type Link {:node Node :weight Int})'},
     ];
     const result = generateTypeSchemas(sources);
     expect(result.diagnostics).toEqual([]);
@@ -55,14 +55,15 @@ describe("Effect 4 protocol schema projection", () => {
     for (const patch of [{name:"X"},{tags:[]},{count:0},{count:10},{state:"unknown"},{unit:undefined}]) {
       expect(() => Schema.decodeUnknownSync(schema)({...value,...patch})).toThrow();
     }
-  });
+  }, 30_000); // compiles generated TypeScript; slow under parallel load
 
   test("unsupported data types fail with source spans instead of emitting Unknown", () => {
     const source = '(type Bad {:value Missing})';
-    const result = generateTypeSchemas([{sourceId:"bad.forma",source}]);
-    expect(result).toMatchObject({ok:false,diagnostics:[{code:"schema/unsupported",span:{sourceId:"bad.forma"}}]});
+    const result = generateTypeSchemas([{sourceId:"bad.lisp",source}]);
+    expect(result).toMatchObject({ok:false,diagnostics:[{code:"schema/unsupported",span:{sourceId:"bad.lisp"}}]});
     const span = result.diagnostics[0]!.span!;
     expect(source.slice(span.startOffset,span.endOffset)).toBe("Missing");
+    expect(span).toMatchObject({startLine:1,startColumn:19,endLine:1,endColumn:26});
   });
 
   test("standalone mechanics schemas load and round-trip recursive records", () => {
@@ -77,7 +78,7 @@ describe("Effect 4 protocol schema projection", () => {
     expect(Schema.decodeUnknownSync(schema)(value)).toEqual(value);
     expect(Schema.encodeSync(schema)(value)).toEqual(value);
     expect(() => Schema.decodeUnknownSync(schema)({name:"root",children:[{name:1,children:[]}]})).toThrow();
-  });
+  }, 30_000); // compiles generated TypeScript; slow under parallel load
 
   test("typechecks and decodes the emitted record schema", () => {
     const code = [
@@ -111,7 +112,7 @@ describe("Effect 4 protocol schema projection", () => {
       labels: { team: "forma" },
     });
     expect(() => Schema.decodeUnknownSync(generated)({ labels: { team: 1 } })).toThrow();
-  });
+  }, 30_000); // compiles generated TypeScript; slow under parallel load
 });
 
 interface Payload {

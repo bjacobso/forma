@@ -1,0 +1,17 @@
+{
+  ".changeset/ts-form-slots.md": 1,
+  ".changeset/ts-symbol-index.md": 1,
+  "apps/website/src/pages/About.tsx": 1,
+  "conformance/fixtures/reader/consumer-descriptor-keyword-ast/expected.json": 1,
+  "conformance/fixtures/reader/consumer-descriptor-keyword-ast/fixture.json": 1,
+  "docs/rfcs/0001-unified-syntax.md": 16,
+  "docs/writing-a-form.md": 1,
+  "package.json": 4,
+  "packages/forma/CHANGELOG.md": 2,
+  "packages/host/src/types.ts": 2,
+  "packages/ts/README.md": 1,
+  "preludes/README.md": 1,
+  "scripts/check-define-form.mjs": 2,
+  "scripts/check-define-form.test.mjs": 8,
+  "scripts/legacy-forms-allowlist.json": 2
+}

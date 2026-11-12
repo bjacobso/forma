@@ -96,7 +96,7 @@ export function lowerGet(lower: LowerFn, span: Span, items: readonly SExpr[]): C
   const record = lower(items[1]!);
   const labelExpr = items[2]!;
   const label = labelExpr._tag === "Sym" && labelExpr.name.startsWith(":") ? labelExpr.name : labelExpr._tag === "Str" ? mapKey(labelExpr.value)! : undefined;
-  return label === undefined ? { ...CGet(span, record, ""), key: lower(labelExpr) } : CGet(span, record, label);
+  return label === undefined ? { ...CGet(span, record, ""), key: lower(labelExpr) } : {...CGet(span, record, label),...(labelExpr.loc.start > span.start ? {labelSpan:spanOf(labelExpr)} : {})};
 }
 
 export function lowerAscribe(lower: LowerFn, span: Span, items: readonly SExpr[]): CoreExpr {

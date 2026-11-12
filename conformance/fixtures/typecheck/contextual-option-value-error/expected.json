@@ -1,0 +1,26 @@
+{
+  "normalized": {
+    "diagnostics": [
+      {
+        "code": "typecheck/type-mismatch",
+        "message": "Expected String, found Int",
+        "span": {
+          "start": 112,
+          "end": 114
+        }
+      }
+    ]
+  },
+  "success": false,
+  "expectation": {
+    "kind": "error",
+    "diagnostic": {
+      "code": "typecheck/type-mismatch",
+      "message": "Expected String, found Int",
+      "span": {
+        "start": 112,
+        "end": 114
+      }
+    }
+  }
+}

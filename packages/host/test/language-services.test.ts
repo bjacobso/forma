@@ -12,7 +12,7 @@ describe("structural editor services on the TypeScript host", () => {
   :types {:name (Declares Item) :fields (Record Type)}
   :ir ItemIR {:kind "Item" :name name})
 (item A {:x Strnig})`;
-    const result = await host.analyzeEditor({sourceId:"world.forma",source});
+    const result = await host.analyzeEditor({sourceId:"world.lisp",source});
     expect(result.success).toBe(false);
     expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({
       details: expect.objectContaining({form:"item",hole:"fields",name:"Strnig",expected:"Type",actual:"Strnig"}),
@@ -340,7 +340,7 @@ describe("structural editor services on the TypeScript host", () => {
 it("checks Effect declarations consistently through host checks, emission and editor analysis", async () => {
   const host = new TsLanguageHost();
   const {sessionId} = await host.openSession();
-  const sourceId = "effect.forma";
+  const sourceId = "effect.lisp";
   const source = '(service Clock (: now (Effect Int)))\n(: main (Effect Int [] [Clock.now])) (define main Clock.now)';
   for (const context of [{}, {sessionId}]) {
     expect((await host.typecheck({...context, sourceId, source})).diagnostics).toEqual([]);

@@ -1,0 +1,29 @@
+{
+  "cases": [
+    {
+      "id": "abi-major-mismatch",
+      "request": { "op": "version", "abiVersion": "1.0.0" },
+      "expected": { "ok": false, "diagnostics": [{ "code": "abi/version-mismatch" }] }
+    },
+    {
+      "id": "json-symbol-index",
+      "request": { "op": "symbolIndex", "sourceId": "bindings.lisp", "source": "(define answer 42)\nanswer" },
+      "expected": { "ok": true, "value": { "sourceId": "bindings.lisp", "definitions": [{ "name": "answer", "kind": "value" }] }, "diagnostics": [] }
+    },
+    {
+      "id": "json-observation",
+      "request": { "op": "observe", "source": "42" },
+      "expected": { "ok": true, "value": { "value": { "kind": "int", "value": 42 }, "observations": { "records": [{ "count": 1, "value": { "kind": "int", "value": 42 } }], "truncated": false } }, "diagnostics": [] }
+    },
+    {
+      "id": "invalid-edit-script",
+      "request": { "op": "applyEditScript", "source": "42", "script": {} },
+      "expected": { "ok": false, "value": { "ok": false }, "diagnostics": [{ "code": "edit-script/invalid" }] }
+    },
+    {
+      "id": "unknown-edit-target",
+      "request": { "op": "applyEditScript", "source": "42", "script": { "version": 1, "ops": [{ "op": "delete", "target": "missing" }] } },
+      "expected": { "ok": false, "value": { "ok": false }, "diagnostics": [{ "code": "edit/unknown-node" }] }
+    }
+  ]
+}

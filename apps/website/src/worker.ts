@@ -1,4 +1,4 @@
-import { aboutDescription, galleryDescription, plainText, playgroundDescription } from "./lib/siteCopy";
+import { galleryDescription, plainText, playgroundDescription } from "./lib/siteCopy";
 import { getPipeline } from "./pipelines";
 import { FORMA_WORKBENCH_URL } from "./lib/workbenchLocation";
 import { loadPlayground, playgroundApi, type PlaygroundEnv } from "./playgroundStore";
@@ -27,12 +27,23 @@ export default {
     }
 
     const url = new URL(request.url);
+    const discoveryType = ({ "/feed.xml": "application/atom+xml", "/sitemap.xml": "application/xml", "/robots.txt": "text/plain" } as Record<string, string>)[url.pathname];
+    if (discoveryType) {
+      const response = await env.ASSETS.fetch(request);
+      if (response.headers.get("content-type")?.includes("text/html")) return new Response("Not found", { status: 404 });
+      const headers = new Headers(response.headers);
+      headers.set("content-type", `${discoveryType}; charset=utf-8`);
+      return new Response(response.body, { status: response.status, headers });
+    }
+    if (["/about", "/about/", "/playground/about", "/playground/about/"].includes(url.pathname)) {
+      return Response.redirect(new URL("/language", url).toString(), 301);
+    }
     if (url.pathname === "/workbench/demo" || url.pathname === "/workbench/demo/") {
       const destination = new URL(FORMA_WORKBENCH_URL);
       destination.search = url.search;
       return Response.redirect(destination.toString(), 302);
     }
-    if (url.pathname === "/about" || url.pathname === "/demo" || url.pathname.startsWith("/demo/")) {
+    if (url.pathname === "/demo" || url.pathname.startsWith("/demo/")) {
       url.pathname = `/playground${url.pathname}`;
       return Response.redirect(url.toString(), 301);
     }
@@ -58,7 +69,7 @@ export default {
     const headers = new Headers(response.headers);
     headers.set("content-type", "text/html; charset=utf-8");
 
-    return new Response(injectMeta(html, meta, url.origin), {
+    return new Response(injectMeta(html, meta, "https://forma-lang.com"), {
       status: response.status,
       statusText: response.statusText,
       headers,
@@ -75,14 +86,6 @@ function metaForPath(pathname: string): RouteMeta | null {
       title: "Forma Playground",
       description: playgroundDescription,
       path: "/",
-    };
-  }
-
-  if (pathname === "/about") {
-    return {
-      title: "About Forma",
-      description: aboutDescription,
-      path: "/about",
     };
   }
 
@@ -114,7 +117,7 @@ function injectMeta(html: string, meta: RouteMeta, origin: string): string {
   const title = escapeHtml(meta.title);
   const description = escapeHtml(meta.description);
   const url = escapeHtml(new URL(`/playground${meta.path === "/" ? "" : meta.path}`, origin).toString());
-  const image = escapeHtml(new URL("/playground/og-image.svg", origin).toString());
+  const image = escapeHtml(new URL("/og-image.png", origin).toString());
 
   return html
     .replace(/<title>.*?<\/title>/, `<title>${title}</title>`)
@@ -132,7 +135,7 @@ function injectMeta(html: string, meta: RouteMeta, origin: string): string {
     )
     .replace(
       /<meta\s+property="og:image"\s+content="[^"]*"\s*\/>/,
-      `<meta property="og:image" content="${image}" />\n    <meta property="og:url" content="${url}" />`,
+      `<meta property="og:image" content="${image}" />\n    <meta property="og:url" content="${url}" />\n    <link rel="canonical" href="${url}" />`,
     );
 }
 

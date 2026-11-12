@@ -1,8 +1,9 @@
+import { surfaceError } from "./errors.js";
 import type { SExpr } from "../reader/types.js";
 import { patternBindings } from "./members.js";
 import { head, name, sym, list, vector } from "./effect.js";
 
-interface ActionSignature { readonly inputs: readonly SExpr[]; readonly result: SExpr }
+interface ActionSignature { readonly inputs: readonly SExpr[]; readonly result: SExpr; readonly at: SExpr }
 
 /** Signatures identify ontology operations; definitions retain authored syntax in IR. */
 export function lowerActionProgram(expressions: readonly SExpr[], knownActions: ReadonlySet<string> = new Set()): readonly SExpr[] {
@@ -17,13 +18,13 @@ export function lowerActionProgram(expressions: readonly SExpr[], knownActions: 
     const result = parts.at(-1);
     if (head(result) === "Action" && result?._tag === "List" && result.items.length === 2) {
       const n = name(e.items[1])!;
-      if (signatures.has(n)) throw new Error(`Duplicate Action signature ${n}`);
-      signatures.set(n, {inputs: parts.slice(0, -1), result: result.items[1]!});
+      if (signatures.has(n)) throw surfaceError(`Duplicate Action signature ${n}`, e);
+      signatures.set(n, {inputs: parts.slice(0, -1), result: result.items[1]!, at: e});
     }
   }
   for (const n of signatures.keys()) {
     const definitions = expressions.filter(e => head(e) === "define" && e._tag === "List" && name(e.items[1]) === n);
-    if (definitions.length !== 1) throw new Error(`Action ${n} requires exactly one definition`);
+    if (definitions.length !== 1) throw surfaceError(`Action ${n} requires exactly one definition`, signatures.get(n)!.at);
   }
   return expressions.map(e => {
     if (e._tag !== "List") return e;
@@ -34,8 +35,8 @@ export function lowerActionProgram(expressions: readonly SExpr[], knownActions: 
     const fn = e.items[2];
     const params = fn?._tag === "Vector" ? fn.items : head(fn) === "fn" && fn?._tag === "List" && fn.items[1]?._tag === "Vector" ? fn.items[1].items : [];
     const bodies = fn?._tag === "Vector" ? e.items.slice(3) : head(fn) === "fn" && fn?._tag === "List" ? fn.items.slice(2) : e.items.slice(2);
-    if (params.length !== signature.inputs.length || params.some(p => p._tag !== "Sym" || !/^[a-z]/.test(p.name)) || new Set(params.map(name)).size !== params.length) throw new Error(`Action ${name(e.items[1])} parameters must match its signature`);
-    if (!bodies.length) throw new Error(`Action ${name(e.items[1])} requires a body`);
+    if (params.length !== signature.inputs.length || params.some(p => p._tag !== "Sym" || !/^[a-z]/.test(p.name)) || new Set(params.map(name)).size !== params.length) throw surfaceError(`Action ${name(e.items[1])} parameters must match its signature`, e);
+    if (!bodies.length) throw surfaceError(`Action ${name(e.items[1])} requires a body`, e);
     const body = bodies.length === 1 ? bodies[0]! : list(e, [sym(e, "do"), ...bodies]);
     const entities = new Map<string, SExpr>(), relations = new Map<string, SExpr>(), documents = new Map<string, SExpr>(), calls = new Map<string, SExpr>();
     const ownerOf = (t: SExpr | undefined): string | undefined => head(t) === "Id" && t?._tag === "List" ? name(t.items[1]) : undefined;
@@ -71,14 +72,14 @@ export function lowerActionProgram(expressions: readonly SExpr[], knownActions: 
       if (operation && (signatures.has(operation) || knownActions.has(operation))) calls.set(operation, value.items[0]!);
       if (["do!", "let"].includes(operation ?? "")) {
         const bindings = value.items[1];
-        if (bindings?._tag !== "Vector" || bindings.items.length % 2) throw new Error(`${operation} requires binding/value pairs`);
+        if (bindings?._tag !== "Vector" || bindings.items.length % 2) throw surfaceError(`${operation} requires binding/value pairs`, value);
         const scope = new Map(locals);
         const sequence = (items: readonly SExpr[]): SExpr[] => {
           const out: SExpr[] = [];
           for (let i = 0; i < items.length; i += 2) {
             const binding = items[i]!, expression = items[i + 1]!;
             if (operation === "do!" && name(binding) === ":let") {
-              if (expression._tag !== "Vector" || expression.items.length % 2) throw new Error(":let requires binding/value pairs");
+              if (expression._tag !== "Vector" || expression.items.length % 2) throw surfaceError(":let requires binding/value pairs", expression);
               out.push(binding, vector(expression, sequence(expression.items)));
             } else {
               const t = valueType(expression, scope);
@@ -97,7 +98,7 @@ export function lowerActionProgram(expressions: readonly SExpr[], knownActions: 
         const arms: SExpr[] = [];
         for (let i = 2; i < value.items.length; i += 2) {
           const pattern = value.items[i]!, body = value.items[i + 1];
-          if (!body) throw new Error("match requires pattern/body pairs");
+          if (!body) throw surfaceError("match requires pattern/body pairs", value);
           const scope = new Map(locals);
           for (const n of bindings(pattern)) scope.delete(n);
           arms.push(pattern, check(body, scope, project));
@@ -111,19 +112,19 @@ export function lowerActionProgram(expressions: readonly SExpr[], knownActions: 
       }
       if (operation === "link!") {
         const relation = value.items[1];
-        if (relation?._tag !== "Sym" || value.items.length !== 5) throw new Error("link! requires a relation, source id, target id and field record");
+        if (relation?._tag !== "Sym" || value.items.length !== 5) throw surfaceError("link! requires a relation, source id, target id and field record", value);
         relations.set(relation.name, relation);
         return project ? list(value, [sym(value, `__action.link/${relation.name}`), ...value.items.slice(2).map(recur)]) : list(value, [value.items[0]!, relation, ...value.items.slice(2).map(recur)]);
       }
       if (operation === "instantiate!") {
         const document = value.items[1], entity = value.items[2];
-        if (document?._tag !== "Sym" || entity?._tag !== "Sym" || value.items.length !== 4) throw new Error("instantiate! requires a document, entity and id");
+        if (document?._tag !== "Sym" || entity?._tag !== "Sym" || value.items.length !== 4) throw surfaceError("instantiate! requires a document, entity and id", value);
         documents.set(document.name, document); entities.set(entity.name, entity);
         return project ? list(value, [sym(value, `__action.instantiate/${entity.name}`), list(document, [sym(document, "quote"), document]), recur(value.items[3]!)]) : list(value, [value.items[0]!, document, entity, recur(value.items[3]!)]);
       }
       if (operation === "task!") {
         const entity = value.items[1];
-        if (entity?._tag !== "Sym" || value.items.length !== 3) throw new Error("task! requires an entity and a task record");
+        if (entity?._tag !== "Sym" || value.items.length !== 3) throw surfaceError("task! requires an entity and a task record", value);
         entities.set(entity.name, entity);
         return list(value, [project ? sym(value, `__action.task/${entity.name}`) : value.items[0]!, ...(project ? [] : [entity]), recur(value.items[2]!)]);
       }
@@ -132,11 +133,11 @@ export function lowerActionProgram(expressions: readonly SExpr[], knownActions: 
         const implicit = operation === "update!" && value.items.length === 3 || operation === "retract!" && value.items.length === 2;
         if (implicit && entity) {
           const owner = ownerOf(valueType(entity, locals));
-          if (!owner) throw new Error(`${operation} requires an Id with a known entity type`);
+          if (!owner) throw surfaceError(`${operation} requires an Id with a known entity type`, value);
           args = value.items.slice(1); entity = sym(entity, owner);
         }
-        if (entity?._tag !== "Sym" || entity.name.startsWith(":")) throw new Error(`${operation} requires an entity symbol`);
-        if (args.length !== (operation === "update!" ? 2 : 1)) throw new Error(`${operation} has invalid arguments`);
+        if (entity?._tag !== "Sym" || entity.name.startsWith(":")) throw surfaceError(`${operation} requires an entity symbol`, value);
+        if (args.length !== (operation === "update!" ? 2 : 1)) throw surfaceError(`${operation} has invalid arguments`, value);
         entities.set(entity.name, entity);
         return list(value, [project ? sym(value, `__action.${operation!.slice(0, -1)}/${entity.name}`) : value.items[0]!, ...(project ? [] : [entity]), ...args.map(recur)]);
       }

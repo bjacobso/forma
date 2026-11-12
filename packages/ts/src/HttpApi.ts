@@ -35,7 +35,7 @@ export function generateHttpApiProgram(
   source: string,
   options: { readonly sourceId?: string } = {},
 ): HttpApiProgramResult {
-  const sourceId = options.sourceId ?? "http-api.forma";
+  const sourceId = options.sourceId ?? "http-api.lisp";
   const prelude = bootstrapHttpApiPreludes();
   let projected: ReturnType<typeof elaborateProgram>;
   try {

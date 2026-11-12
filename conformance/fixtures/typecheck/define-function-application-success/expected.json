@@ -1,7 +1,7 @@
 {
   "normalized": {
     "diagnostics": [],
-    "type": "Float"
+    "type": "Int"
   },
   "success": true,
   "expectation": {

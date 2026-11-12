@@ -10,7 +10,7 @@ generates an Effect 4 module that reads like hand-written Effect code:
 `Effect.gen` functions, and `Layer` values.
 
 ```ts
-import { Mechanics } from "@formalang/ts";
+import * as Mechanics from "@forma-language/forma/mechanics";
 
 const result = Mechanics.generateEffectProgram(source, { sourceId: "users.lisp" });
 if (!result.ok) {

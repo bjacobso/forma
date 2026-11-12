@@ -55,6 +55,7 @@ import {
 } from "./types.js";
 
 export interface MechanicsCheckDiagnostic {
+  readonly details?: Readonly<Record<string, unknown>>;
   readonly code: string;
   readonly message: string;
   readonly severity: "error" | "warning";
@@ -232,8 +233,8 @@ class Checker {
           this.checkFunction(payload, span);
           break;
         case "ValueDef": {
-          this.checkTypeReferences(payload["type"], span);
           const type = this.constants.get(String(payload["name"]));
+          this.checkTypeReferences(payload["type"], span, type?.kind === "function");
           this.pureOwner = `Constant ${String(payload["name"])}`;
           if (type) this.value(payload["value"], new Map(), type);
           this.pureOwner = undefined;
@@ -371,7 +372,7 @@ class Checker {
           });
           break;
         case "ValueDef":
-          this.constants.set(name, typeFromJson(payload["type"], this.env));
+          this.constants.set(name, typeFromJson(payload["type"], isRecord(payload["type"]) && payload["type"]["kind"] === "Function" ? this.functionEnv : this.env));
           break;
         default:
           break;
@@ -1786,6 +1787,14 @@ class Checker {
   }
 
   private variable(name: string, scope: Scope, expected: MType | undefined, span: JsonValue | undefined, node?: JsonRecord): MType {
+    if (name.startsWith("?")) {
+      const type = expected ?? tUnknown;
+      const location = toSourceSpan(span);
+      this.diagnostics.push({code:"typecheck/hole", severity:"error",
+        message:`Hole ${name} needs ${showType(type)}`, details:{name, expected:showType(type), candidates:[]},
+        ...(location ? {span:location} : {})});
+      return type;
+    }
     const local = scope.get(name);
     if (local) return local;
     switch (name) {
@@ -1820,6 +1829,19 @@ class Checker {
     if (this.layerPayloads.has(name)) {
       const layer = this.layerInfo(name, span);
       return layer ? { kind: "layer", layer: layer.type } : tUnknown;
+    }
+    if (arithmeticOperators.has(name)) {
+      const target = expected?.kind === "function" ? expected : undefined;
+      const params = target?.params ?? [tNumber, tNumber];
+      const result = name === "/" ? tNumber : params.find(type => type.kind === "var" && type.numeric) ?? (params.every(type => isAssignable(type, tInt, this.env)) ? tInt : tNumber);
+      if (node) this.info.calls.set(node, {kind:"arithmetic", operator:name});
+      return {kind:"function", params, result};
+    }
+    if (name === "abs") {
+      const input = expected?.kind === "function" ? expected.params[0] ?? tNumber : tNumber;
+      const overload = {...builtins.get(name)![0]!, params:[input], result:input};
+      if (node) this.info.calls.set(node, {kind:"builtin", name, overload});
+      return {kind:"function", params:[input], result:input};
     }
     const overloads = builtins.get(name);
     if (overloads) {
@@ -1956,6 +1978,11 @@ class Checker {
       }
       resolveAs({ kind: "local", name });
       return this.callFunction(name, local.params, local.result, args, scope, span);
+    }
+    const constant = this.constants.get(name);
+    if (constant?.kind === "function") {
+      resolveAs({kind:"function", name});
+      return this.callFunction(name, constant.params, constant.result, args, scope, span);
     }
 
     switch (name) {
@@ -2136,6 +2163,18 @@ class Checker {
       resolveAs({ kind: "stream", name });
       return this.stream(name, args, scope, span);
     }
+    const reducer = args[0];
+    if (name === "reduce" && args.length === 3 && isRecord(reducer) && reducer["kind"] === "Var" && arithmeticOperators.has(String(reducer["name"]))) {
+      const seed = widenDeep(this.value(args[1], scope, tNumber));
+      const list = this.value(args[2], scope);
+      if (list.kind === "array") {
+        const item = widenDeep(list.item);
+        const result = reducer["name"] === "/" || seed.kind === "prim" && seed.name === "Float" ? tNumber : item;
+        this.value(reducer, scope, {kind:"function", params:[result, item], result});
+        this.info.calls.set(node, {kind:"builtin", name, overload:builtins.get(name)![0]!});
+        return result;
+      }
+    }
     const operator = arithmeticOperators.get(name);
     if (operator) {
       resolveAs({ kind: "arithmetic", operator });
@@ -2143,10 +2182,15 @@ class Checker {
         this.error(span, "mechanics/arity", `${name} expects at least 1 operand.`);
       }
       let allInt = true;
+      let numericVariable: MType | undefined;
+      let floatOperand = false;
       for (const arg of args) {
         const type = this.value(arg, scope, tNumber);
+        if (type.kind === "var" && type.numeric) numericVariable = type;
+        else if (!isAssignable(type, tInt, this.env)) floatOperand = true;
         if (!isAssignable(type, tInt, this.env)) allInt = false;
       }
+      if (name !== "/" && numericVariable && !floatOperand) return numericVariable;
       return name === "/" ? tNumber : allInt ? tInt : tNumber;
     }
     const overloads = builtins.get(name);
@@ -2275,7 +2319,37 @@ class Checker {
       this.error(span, "mechanics/arity", `${name} expects ${params.length} argument(s), received ${args.length}.`);
     }
     const subst:Substitution=new Map();
-    args.forEach((arg,index)=>{
+    const numericInputs = new Map<number, MType>();
+    const collectNumeric = (parameter: MType, actual: MType): void => {
+      if (parameter.kind === "var" && parameter.numeric) {
+        const widened = widenDeep(actual);
+        const previous = numericInputs.get(parameter.id);
+        numericInputs.set(parameter.id, previous ? join(previous, widened, this.env) : widened);
+      } else if (parameter.kind === "array" && actual.kind === "array") collectNumeric(parameter.item, actual.item);
+      else if (parameter.kind === "struct" && actual.kind === "struct") {
+        for (const field of parameter.fields) {
+          const value = actual.fields.find(item => item.name === field.name);
+          if (value) collectNumeric(field.type, value.type);
+        }
+      }
+    };
+    const hasNumeric = (type: MType): boolean => type.kind === "var" ? Boolean(type.numeric)
+      : type.kind === "array" ? hasNumeric(type.item)
+      : type.kind === "struct" && type.fields.some(field => hasNumeric(field.type));
+    args.forEach((arg, index) => {
+      const parameter = params[index];
+      if (parameter && hasNumeric(parameter)) collectNumeric(parameter, this.value(arg, scope));
+    });
+    for (const [id, actual] of numericInputs) {
+      if (!(actual.kind === "var" && actual.id === id) && isAssignable(actual, tNumber, this.env)) subst.set(id, actual);
+    }
+    // Computed arguments supply the context for literals sharing a generic
+    // parameter, even when the literal is written first.
+    const deferred = (arg: JsonValue, index: number) => params[index] && hasVariables(params[index]!) &&
+      isRecord(arg) && (arg["kind"] === "Vector" || arg["kind"] === "Literal");
+    const ordered = args.map((arg, index) => ({ arg, index })).sort((a, b) =>
+      Number(Boolean(deferred(a.arg, a.index))) - Number(Boolean(deferred(b.arg, b.index))));
+    ordered.forEach(({arg,index})=>{
       const param=params[index];
       if (!param) {this.value(arg,scope);return;}
       const expected=applySubstitution(param,subst);
@@ -2889,7 +2963,7 @@ function hasVariables(type: MType): boolean {
 function eraseVariables(type: MType): MType {
   const subst: Substitution = new Map();
   const collect = (item: MType): void => {
-    if (item.kind === "var") subst.set(item.id, tNever);
+    if (item.kind === "var" && !item.numeric) subst.set(item.id, tNever);
     else if (item.kind === "array" || item.kind === "option" || item.kind === "ref") collect(item.item);
     else if (item.kind === "map") collect(item.value);
     else if (item.kind === "tuple") item.items.forEach(collect);

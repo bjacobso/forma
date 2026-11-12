@@ -161,7 +161,7 @@ export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true,
       case "service": {
         if (!n) return e;
         const methods = args.map(m => {
-          if (m._tag !== "List" || head(m) !== ":" || m.items.length !== 3) throw new Error("service members require (: name Type)");
+          if (m._tag !== "List" || head(m) !== ":" || m.items.length !== 3) throw Object.assign(new Error("service members require (: name Type)"), { loc: m.loc, details: { code: "surface/invalid-form" } });
           const t = normalizeEffectTypes(m.items[2]!);
           const params: SExpr[] = [];
           const isFunction = head(t) === "->" && t._tag === "List";

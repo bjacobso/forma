@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#faf8f3"/>
+  <path d="M72 92h1056" stroke="#d9d5cb"/>
+  <text x="72" y="160" fill="#2557a7" font-family="sans-serif" font-size="36">( forma )</text>
+  <g fill="#222620" font-family="sans-serif" font-size="68" font-weight="600">
+    <text x="72" y="295">Define your domain.</text>
+    <text x="72" y="380">Check its programs.</text>
+  </g>
+  <text x="72" y="484" fill="#596057" font-family="sans-serif" font-size="28">A pre-alpha typed Lisp. Domain languages as preludes.</text>
+  <text x="72" y="558" fill="#2557a7" font-family="monospace" font-size="24">forma-lang.com</text>
+</svg>

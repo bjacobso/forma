@@ -1,6 +1,6 @@
 # Routes: a library computes a checked contract
 
-`preludes/routes.forma` is an ordinary, explicitly imported macro library.
+`preludes/modules/routes.lisp` is an ordinary, explicitly imported macro library.
 There is no route-specific compiler code or host-side generator. It demonstrates
 the route/format idea from the Blood syntax examples: author a template once,
 compute its required fields while expanding the program, then let Forma's
@@ -11,7 +11,7 @@ ordinary record checker enforce those fields at uses of the derived function.
 From a file beside these fixtures:
 
 ```lisp
-(import "../../preludes/routes.forma" [route])
+(import "../../preludes/modules/routes.lisp" [route])
 (export post-url)
 
 (route post-url ["users" [:id] "posts" [:post]])
@@ -41,10 +41,10 @@ type-arrow datum rather than resolving the threading macro of the same spelling.
 
 | Fixture | Rejection | Exact diagnostic span |
 | --- | --- | --- |
-| `missing.forma` | Required `:post` is absent | `{:id "alice"}` |
-| `wrong-type.forma` | `Int` supplied for a String capture | `42` |
-| `typo.forma` | `params has no field poost (did you mean post?); fields: id, post` | `(get params :poost)` |
-| `wrong-segment.forma` | Non-capture segment must be String | Whole authored `route` call |
+| `missing.lisp` | Required `:post` is absent | `{:id "alice"}` |
+| `wrong-type.lisp` | `Int` supplied for a String capture | `42` |
+| `typo.lisp` | `params has no field poost (did you mean post?); fields: id, post` | `(get params :poost)` |
+| `wrong-segment.lisp` | Non-capture segment must be String | Whole authored `route` call |
 
 The typo fixture first passes `params` to `post-url`, so the field-access checker
 learns its closed record contract from the generated function. The error is not

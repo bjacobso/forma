@@ -105,7 +105,7 @@ export interface OntologyModel {
 }
 
 export interface ElaborateOntologyOptions {
-  /** Identifies a single string source. Defaults to `"source.forma"`. */
+  /** Identifies a single string source. Defaults to `"source.lisp"`. */
   readonly sourceId?: string;
   /** Defaults to a shared bootstrap of the bundled ontology preludes. */
   readonly prelude?: BootstrappedPrelude;
@@ -151,7 +151,7 @@ export function elaborateOntology(
 ): ElaborateOntologyResult {
   const prelude = options.prelude ?? (sharedPrelude ??= bootstrapOntologyPreludes());
   const sources =
-    typeof source === "string" ? [{ sourceId: options.sourceId ?? "source.forma", source }] : source;
+    typeof source === "string" ? [{ sourceId: options.sourceId ?? "source.lisp", source }] : source;
   const program = elaborateSources(sources, {
     prelude,
     ...(options.forms !== undefined ? { forms: options.forms } : {}),

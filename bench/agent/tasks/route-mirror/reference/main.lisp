@@ -1,0 +1,5 @@
+(import "./preludes/modules/routes.lisp" [route])
+(export mirror-url revision-url health-url)
+(route mirror-url ["mirror" [:asset] [:asset]])
+(route revision-url ["assets" [:asset] "revisions" [:rev]])
+(route health-url ["health"])

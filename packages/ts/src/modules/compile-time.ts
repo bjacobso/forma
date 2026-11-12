@@ -719,6 +719,9 @@ export function prepareCompileTimeModule(
     ) {
       const symbol = `@application_${index}`;
       applications.set(symbol, expression);
+      const slot = env.bindMutable(symbol, null);
+      env = slot.env;
+      setters.set(symbol, slot.set);
       checkApplication(symbol);
     }
   });

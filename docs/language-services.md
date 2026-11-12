@@ -4,7 +4,7 @@ This note records the decisions behind the language services that a
 structural, outline-based Forma editor needs. Its first consumer is a
 workbench in which every outline row is one Forma form, shows its own value
 and errors, and is edited by refactorings and an assistant instead of text
-patches. The services live in `@formalang/ts` and `@formalang/host`, have no
+patches. The services live in the engine subpaths of `@forma-language/forma` and its host, have no
 UI dependencies, and are equally useful to the language server, the
 CodeMirror editor, and the playground.
 
@@ -39,13 +39,13 @@ The string-based bootstrap signature still works. To keep individual file
 identities, pass named sources rather than concatenating files:
 
 ```ts
-import { bootstrapFromSources, ElaborationFailure } from "@formalang/ts/descriptor";
-import { closestName } from "@formalang/ts/diagnostic";
+import { bootstrapFromSources, ElaborationFailure } from "@forma-language/forma/descriptor";
+import { closestName } from "@forma-language/forma/diagnostic";
 
 const prelude = bootstrapFromSources([
-  { sourceId: "types.forma", source: typesSource },
-  { sourceId: "entities.forma", source: entitySource },
-  { sourceId: "rules.forma", source: ruleSource },
+  { sourceId: "types.lisp", source: typesSource },
+  { sourceId: "entities.lisp", source: entitySource },
+  { sourceId: "rules.lisp", source: ruleSource },
 ]);
 const forms = prelude.descriptions.list();
 const children = prelude.descriptions.getChildForms("rule", "clauses");
@@ -65,9 +65,9 @@ are implied by this overload: the caller supplies the complete source bundle.
 
 - **Offsets stay the ground truth.** Every record carries a span. Ids are an
   index over spans that survives edits; they never replace spans.
-- **Pure functions in `@formalang/ts`, optional methods on the host.** Each
+- **Pure functions in engine subpaths, optional methods on the host.** Each
   service is a pure function over source text (plus descriptors where
-  relevant) exported from `@formalang/ts`. `LanguageHost` gains optional
+  relevant) exported from explicit engine subpaths of `@forma-language/forma`. `LanguageHost` gains optional
   methods with JSON-safe requests and results, and `version().capabilities`
   lists the ones a host implements. Requests that already exist gain only
   optional fields.
@@ -274,7 +274,7 @@ type EditOp =
   form that contains it. Its parameters are the form's free locals (symbols
   bound by an enclosing local scope), and the form is replaced by a call.
 
-The existing offset-based `@formalang/ts/editor` transforms stay for
+The existing offset-based `@forma-language/forma/editor-services` transforms stay for
 keyboard commands in text editors. The edit script shares their text
 splicing approach but resolves targets through ids.
 
@@ -352,10 +352,24 @@ from the same sources as the symbol index.
 
 ## 7. Analysis workspace
 
-`AnalysisWorkspace` in `@formalang/ts/analysis` holds ordered preludes and
+`AnalysisWorkspace` in `@forma-language/forma/analysis` holds ordered preludes and
 open documents and answers every service above, plus hover, completion,
 rename, document symbols, search, semantic tokens, and formatting, as
 memoized queries. It is the language server's whole implementation.
+
+The language server appends diagnostic help as `help: ` on a new line so
+editors display it with the message. LSP's `relatedInformation` describes
+locations rather than standalone advice. Diagnostic `data` retains the
+engine's `details` and `fix` edits. `textDocument/codeAction` exposes these
+edits as `quickfix` actions, applying all edits for one diagnostic together
+against the requested document's unchanged source. The only available fix
+is marked preferred. Unknown-form diagnostics are currently filtered out by
+the analysis workspace, so their misspelled-head fixes do not yet reach LSP
+clients.
+
+Document formatting is enabled by default without an environment opt-in.
+The server returns one full-document replacement, or no edits if the source
+is already formatted or does not parse.
 
 - **Search.** `search` ranks forms and global definitions by how many query
   words match their names and documentation, name matches first. A form's
@@ -425,7 +439,8 @@ The regressions and properties live in `language-service-regressions.test.ts`;
 
 ## UI-free authoring helpers
 
-`@formalang/ts/authoring` preserves reusable language logic from the structural
+The engine's internal authoring module (not a public subpath of
+`@forma-language/forma`) preserves reusable language logic from the structural
 workbench, which is now owned by Foldworks. It exports capability reachability
 (`requirementsFor`), declaration replay preparation (`mergeReplSource` and
 `replDefinitions`), outline/source coordinate mapping (`rowLayouts`, `nodeAt`,
@@ -439,11 +454,11 @@ presentation. See the [workbench boundary](./workbench.md).
 Consumer preludes can generate data contracts without walking checker internals:
 
 ```ts
-import { generateTypeSchemas } from "@formalang/ts/mechanics";
+import { generateTypeSchemas } from "@forma-language/forma/mechanics";
 
 const result = generateTypeSchemas([
-  { sourceId: "names.forma", source: '(type Name (String :min-length 1))' },
-  { sourceId: "tree.forma", source: '(type Tree {:name Name :children (List Tree)})' },
+  { sourceId: "names.lisp", source: '(type Name (String :min-length 1))' },
+  { sourceId: "tree.lisp", source: '(type Tree {:name Name :children (List Tree)})' },
 ]);
 if (result.ok) {
   // result.files contains schema.ts, types.ts, and schema.json.
@@ -455,8 +470,8 @@ if (result.ok) {
 The Node CLI writes those three deterministic files:
 
 ```sh
-forma schema names.forma tree.forma --out generated
-forma schema names.forma tree.forma --out generated --check
+forma schema names.lisp tree.lisp --out generated
+forma schema names.lisp tree.lisp --out generated --check
 ```
 
 `--check` exits with status 1 for missing or stale output and never writes files.
@@ -478,3 +493,39 @@ Generic/computed types, non-string map keys, `Option` outside record fields,
 unsupported refinements, and types without a JSON data encoding fail with
 diagnostics instead of producing `Unknown`. This is a build step for supplied
 type declarations, not RFC 0011's still-proposed host export/reflection service.
+
+## Argument-dependent form typing
+
+An ordinary `form` can opt into the existing descriptor typing protocol with
+`:infer-fn function-name`. The named function receives a descriptor hook input;
+`meta/positional-arg` exposes authored arguments and `meta/infer-expr-type`
+infers one in the **active** lexical environment and substitution context.
+Return its type metadata directly, or compose the documented meta type values.
+Do not stringify and reparse types: forwarding the metadata preserves nominal
+identity and shared inference variables.
+
+```lisp
+(type TableIR {:kind "Table"})
+(define infer-table [input]
+  (meta/infer-expr-type input (meta/positional-arg input 0)))
+(form (table rows) :types {:rows Syntax} :ir TableIR
+  :infer-fn infer-table {:kind "Table"})
+
+(type Status (Brand Keyword))
+(define lookup [status]
+  (get (get (table {:main {:status status}}) :main) :status))
+(lookup (Status :active)) ; Brand<Status, Keyword>, not Keyword
+```
+
+Load the form and helper as a normal prelude and use `descriptorFormProvider`
+from `@forma-language/forma/type`; source-local forms use the same protocol. No runtime
+replacement of `inferExpression` or `childScope` is necessary. The hook owns
+typing the expressions it uses; an unvisited `Syntax` hole remains opaque.
+The example demonstrates a typing contract, not a runtime table implementation:
+runtime lowering and the emitted IR remain the consumer's responsibility.
+
+`:infer-fn` takes a named ordinary one-argument function (or an existing infer
+hook), not a lambda. It is mutually exclusive with `:type`, so there is no
+implicit precedence between syntax-driven result computation and active-context
+inference. Existing `:type` hooks and legacy descriptors keep their behavior.
+This is not RFC 0008's proposed checked result-template language.

@@ -1,0 +1,23 @@
+# Embed Forma in Node
+
+Use Node 24. After publication, run `npm install` here, then `npm start` and
+`npm test`. `@forma-language/forma` is not yet published. From the repository
+root, build and pack it locally instead:
+
+```sh
+pnpm exec turbo run build --filter=@forma-language/forma
+pnpm --dir packages/forma pack --out /tmp/forma.tgz
+cd examples/embed-node
+npm install /tmp/forma.tgz effect@4.1.1
+npm start
+npm test
+```
+
+`index.mjs` loads `prelude.lisp` and grants only `notify`. Checking a call does
+not execute the handler; running checks first, then calls it. The prelude defines
+`greeting`, whose `:check` rejects an empty message during elaboration. The tests
+exercise valid and invalid form emission and an ungranted capability. Always
+close the language when finished. The facade is experimental.
+
+From the repository root, `pnpm check:examples` runs this example against an
+offline tarball installation without changing this directory.

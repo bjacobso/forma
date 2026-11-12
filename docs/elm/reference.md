@@ -12,7 +12,7 @@ Effect mechanics checker. No new application concepts live in the core checker.
 
 ```ts
 import { writeFileSync } from "node:fs";
-import { generateElmProgram } from "@formalang/ts/elm";
+import { generateElmProgram } from "@forma-language/forma/elm";
 
 const result = generateElmProgram(source, { sourceId: "counter.lisp" });
 if (!result.ok) throw new Error(result.diagnostics.map(d => d.message).join("\n"));

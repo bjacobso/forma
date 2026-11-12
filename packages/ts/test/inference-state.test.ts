@@ -5,7 +5,7 @@ import { InferContext, makeInferContext, makeOwnedInferContext } from "../src/ty
 import { inferExpr } from "../src/type/infer.js";
 import { inferSource, inferSourceAll } from "../src/type/index.js";
 import { analyzeLsp } from "../src/lsp/hm-lsp.js";
-import { applyEnv, applyScheme, type Subst } from "../src/type/substitution.js";
+import { applyEnv, applyScheme, applyType, freeVarsEnv, type Subst } from "../src/type/substitution.js";
 import { unify, unifyRows, unifyERows } from "../src/type/unify.js";
 import {
   Constraint, EEmpty, EExtend, EVar, REmpty, RExtend, RVar, Scheme,
@@ -15,6 +15,43 @@ import {
 import { CApp, CIf, CLit, CVar, LBool, LInt } from "../src/type/core-expr.js";
 
 describe("scheme substitution ownership and quantifiers", () => {
+  test("shares schemes outside the substitution domain, with independently owned environments", () => {
+    const closed = Scheme(["a"], [], TFun(TVar("a"), TVar("a")));
+    const open = mono(TVar("free"));
+    const env = new Map([["closed", closed], ["open", open]]);
+    const unrelated: Subst = { tvars: new Map([["other", tBool]]), rvars: new Map(), evars: new Map() };
+    expect(applyScheme(unrelated, closed)).toBe(closed);
+    expect(applyScheme(unrelated, open)).toBe(open);
+    const applied = applyEnv(unrelated, env);
+    applied.delete("open");
+    expect(env.get("open")).toBe(open);
+    expect(applyScheme({ ...unrelated, tvars: new Map([["free", tStr]]) }, open).type).toEqual(tStr);
+  });
+
+  test("dependency checks include nullary results and effects inside record fields", () => {
+    const type: Type = {
+      ...TRow(RExtend("callback", TFun(tBool, tStr, EVar("effect")), RVar("row"))),
+      nullaryResult: TVar("result"),
+    };
+    const scheme = mono(type);
+    const s: Subst = {
+      tvars: new Map([["result", tStr]]),
+      rvars: new Map([["row", REmpty]]),
+      evars: new Map([["effect", EEmpty]]),
+    };
+    for (const substitution of [s, { ...s, tvars: new Map(), rvars: new Map() }, { ...s, rvars: new Map(), evars: new Map() }]) {
+      expect(applyScheme(substitution, scheme).type).toEqual(applyType(substitution, type));
+    }
+  });
+
+  test("free variable results do not expose cached sets or cache mutable environments", () => {
+    const env = new Map([["value", mono(TVar("a"))]]);
+    freeVarsEnv(env).tvars.clear();
+    expect([...freeVarsEnv(env).tvars]).toEqual(["a"]);
+    env.set("value", mono(TVar("b")));
+    expect([...freeVarsEnv(env).tvars]).toEqual(["b"]);
+  });
+
   test("excludes every quantified key, including keys after an absent quantifier", () => {
     const s: Subst = {
       tvars: new Map<string, Type>([["a", tBool], ["b", tStr]]),
@@ -220,12 +257,12 @@ describe("inference annotations", () => {
   });
 
   test("a failed public check retains provenance and does not leak state into recovery", () => {
-    const failed = Engine.typecheck({ source: '(define field [r] r.value)\n(+ 1 "bad")', sourceId: "failed.forma" });
+    const failed = Engine.typecheck({ source: '(define field [r] r.value)\n(+ 1 "bad")', sourceId: "failed.lisp" });
     expect(failed.diagnostics).toHaveLength(1);
-    expect(failed.diagnostics[0]?.span).toMatchObject({ sourceId: "failed.forma", startOffset: 32, endOffset: 37 });
-    const fresh = Engine.typecheck({ source: "field", sourceId: "fresh.forma" });
+    expect(failed.diagnostics[0]?.span).toMatchObject({ sourceId: "failed.lisp", startOffset: 32, endOffset: 37 });
+    const fresh = Engine.typecheck({ source: "field", sourceId: "fresh.lisp" });
     expect(fresh.diagnostics).toHaveLength(1);
-    expect(fresh.diagnostics[0]?.span?.sourceId).toBe("fresh.forma");
+    expect(fresh.diagnostics[0]?.span?.sourceId).toBe("fresh.lisp");
     expect(Engine.typecheck({ source: '(define field [x] x) (field "ok")' }).display).toBe("String");
   });
 

@@ -1,0 +1,2 @@
+{ "name": "expense-rules", "private": true, "type": "module",
+  "dependencies": { "@forma-language/forma": "file:./forma-language-forma.tgz", "effect": "4.1.1" } }

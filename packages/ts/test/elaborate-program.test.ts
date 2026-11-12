@@ -116,7 +116,7 @@ describe("elaborateProgram", () => {
     expect(result.ok).toBe(false);
     expect(result.declarations).toEqual([]);
     expect(result.diagnostics[0]).toMatchObject({ code: "parse/syntax", phase: "parse" });
-    expect(result.diagnostics[0]!.span?.sourceId).toBe("source.forma");
+    expect(result.diagnostics[0]!.span?.sourceId).toBe("source.lisp");
   });
 
   test("throws a single failure carrying every diagnostic", () => {
@@ -167,8 +167,8 @@ describe("elaborateProgram", () => {
   :ir NodeIR {:kind "Root" :name name})`);
     const source = `(root Tree (leaf One {:x [1 2]}) (leaf Two (nested a b) :doc "second"))`;
     const result = elaborateSources([
-      {sourceId:"empty.forma",source:""},
-      {sourceId:"tree.forma",source},
+      {sourceId:"empty.lisp",source:""},
+      {sourceId:"tree.lisp",source},
     ], {prelude:consumer});
     expect(result.diagnostics).toEqual([]);
     const declaration = result.declarations[0]!;
@@ -181,7 +181,7 @@ describe("elaborateProgram", () => {
     const first = children[0]!.holes.value![0]!;
     const second = children[1]!.holes.value![0]!;
     expect(first.expression._tag).toBe("Map");
-    expect(first.span.sourceId).toBe("tree.forma");
+    expect(first.span.sourceId).toBe("tree.lisp");
     expect(source.slice(first.span.startOffset,first.span.endOffset)).toBe("{:x [1 2]}");
     expect(source.slice(second.span.startOffset,second.span.endOffset)).toBe("(nested a b)");
     expect(children[0]!.holes.doc).toBeUndefined();

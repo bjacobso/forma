@@ -1,2 +1,2 @@
-truthiness.forma:7:7 error typecheck/type-mismatch
-  Cannot unify Option<Int> with Bool
+truthiness.lisp:7:7 error typecheck/type-mismatch
+  Expected Bool, found Option<Int>
