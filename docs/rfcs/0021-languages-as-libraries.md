@@ -405,6 +405,17 @@ from `/diagnostic`. These are introspection over today's descriptors, not the
 proposed syntax categories, export visibility, lexical profiles, or a new
 parallel language design.
 
+## Implemented payload-validator ownership
+
+Bundled domain payload checks now use the existing named-validator extension:
+ontology forms declare
+`:extensions {:artifact {:validators ["domain-payload"]}}`. Kind spelling
+alone no longer invokes those checks. This also isolates a consumer's `Entity`
+or `Document` when both preludes are loaded together; the consumer's own IR
+contract remains checked. Direct declaration producers opt in with their
+`validators` list. This is the payload-boundary slice of library ownership,
+not the language/profile or elaborator stages proposed above.
+
 ## Related designs
 
 Racket's `#lang`, module languages, and the `#%app`, `#%datum`, and `#%top`

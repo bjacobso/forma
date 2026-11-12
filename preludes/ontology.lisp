@@ -118,6 +118,7 @@
       :id-pattern (Option String)
       :tier (Option (Union :user :meta))}
   :ir EntityDeclarationIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   {
     :kind (if (= tier :meta) "MetaEntity" "Entity")
     :name name
@@ -139,6 +140,7 @@
       :target (Refers SchemaDecl)
       :fields (Record Type)}
   :ir RelationIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   {
     :kind "Relation"
     :name name
@@ -198,6 +200,7 @@
       :id (Declares RecordDef String)
       :fields (Record Json)}
   :ir RecordIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   :check
     (fn [{:keys [entity fields]}]
       (schema/validate-record (seed-row entity) (seed-values entity fields)))
@@ -225,6 +228,7 @@
       :target String
       :fields (Record Json)}
   :ir LinkIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   :check
     (fn [{:keys [relation source target fields]}]
       (concat
@@ -306,6 +310,7 @@
   :scope {:where (fn [{:keys [from]}] (entity-fields from))}
   :type (fn [{:keys [from select]}] (List (row-of from select)))
   :ir QueryIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   {
     :kind "Query"
     :name name
@@ -342,6 +347,7 @@
       :home (Option (Refers ViewDef))
       :views (Option (List (Refers ViewDef)))}
   :ir WorkspaceIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   {
     :kind "Workspace"
     :name name
@@ -626,6 +632,7 @@
   :check (fn [{:keys [child]}] (process/check child))
   :scope {:child (fn [{:keys [child]}] (process/scope child))}
   :ir ProcessIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   {
     :kind "Process"
     :name name
@@ -1285,6 +1292,7 @@
       :page (List document-page)}
   :check (fn [{:keys [page]}] (document/check page))
   :ir DocumentIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   {:kind "Document" :name name :description description :pages page})
 
 ; =============================================================================
@@ -1326,6 +1334,7 @@
       :guidance (Option Symbol)
       :scope (Option Json)}
   :ir TaskDefinitionIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   {
     :kind "TaskDefinition"
     :name name
@@ -1481,6 +1490,7 @@
       :child (List document-locale-child)}
   :check (fn [{:keys [document child]}] (document/locale-check document child))
   :ir DocumentLocaleIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   {
     :kind "DocumentLocale"
     :documentName document
@@ -1511,6 +1521,7 @@
       :locales (List String)
       :default-locale (Option String)}
   :ir DocumentLocalizedIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   :check
     (fn [{:keys [locales default-locale]}]
       (if (or (nil? default-locale) (contains? locales default-locale))
@@ -1653,6 +1664,7 @@
       :document (Option (Refers DocumentDef))
       :mapping (List pdf-entry)}
   :ir PdfMappingIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   {
     :kind "PdfMapping"
     :name name
@@ -1836,6 +1848,7 @@
             :message "A constraint requires exactly one of :when or :query"}]
         []))
   :ir ConstraintIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   {
     :kind "Constraint"
     :name name
@@ -1893,6 +1906,7 @@
         {:find [?person] :where [[?person :person/name ?name]]})]]
   :types {:name (Declares QueryDef) :expression Syntax}
   :ir QueryIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   {:kind "Query" :name name :from '* :datalog expression :select []})
 
 ; A view and an embeddable fragment have one shape. State and inputs use records.
@@ -2019,6 +2033,7 @@
       :layout (Option Syntax)
       :column (List view-column)}
   :ir ViewIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   (let [definition (view/defs defs state queries input)
         root       (meta/compile-descriptor-tree "viewspec" layout)
         root
@@ -2095,6 +2110,7 @@
         (fn [{:keys [fields entities relations calls]}]
           (action/scope fields entities relations calls))}
   :ir ActionIR
+  :extensions {:artifact {:validators ["domain-payload"]}}
   {
     :kind "Action"
     :name name

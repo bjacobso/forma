@@ -42,9 +42,10 @@ const families = {
 } as const;
 
 export function registerDomainPayloadValidators(registry: ArtifactValidatorRegistry): void {
+  const validators = new Map<string, (input: ValidatorInput) => readonly Diagnostic[]>();
   for (const [kind, schema] of Object.entries(domainPayloadSchemas)) {
     const code = `artifact/${families[kind as keyof typeof families]}-payload`;
-    registry.registerPayload({ kind, validate: (input) => {
+    validators.set(kind, (input) => {
       const diagnostics: Diagnostic[] = [];
       const result = Schema.decodeUnknownResult(schema)(input.declaration.payload, { errors: "all" });
       if (Result.isFailure(result)) for (const issue of SchemaIssue.makeFormatterStandardSchemaV1()(result.failure.issue).issues) {
@@ -60,8 +61,9 @@ export function registerDomainPayloadValidators(registry: ArtifactValidatorRegis
         if (kind === "PdfMapping" && Array.isArray(p["mappings"])) validateMappingShapes(input, p["mappings"], diagnostics);
       }
       return diagnostics;
-    } });
+    });
   }
+  registry.register({name:"domain-payload",validate:inputs => inputs.flatMap(input => validators.get(input.declaration.summary.kind)?.(input) ?? [])});
 }
 
 function validateMappingShapes(input: ValidatorInput, mappings: unknown[], diagnostics: Diagnostic[]): void {
