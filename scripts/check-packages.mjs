@@ -66,7 +66,9 @@ try {
   await writeFile(join(consumer, "package.json"), JSON.stringify({ private: true, type: "module", pnpm: { overrides } }));
   const tools = Object.entries(packed.peerDependencies)
     .filter(([name]) => !["effect", "react", "react-dom"].includes(name))
-    .map(([name, range]) => `${name}@${range}`);
+    // Add tools at the tested versions: a fresh range beside pinned transitive
+    // copies would load two @codemirror/state instances.
+    .map(([name, range]) => `${name}@${overrides[name] ?? range}`);
   run("pnpm", ["add", "--store-dir", store, "--prefer-offline", "--ignore-scripts", "--config.auto-install-peers=false", archive, "effect@4.1.1", ...tools], consumer);
   const installed = JSON.parse(run("pnpm", ["list", "--prod", "--depth", "Infinity", "--json"], consumer));
   const packages = new Map();
