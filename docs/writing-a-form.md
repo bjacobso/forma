@@ -241,8 +241,8 @@ without `--out`, reference Markdown is returned in the JSON response.
 The browser-safe SDK is available from the existing prelude entry point:
 
 ```ts
-import { checkPrelude } from "@formalang/ts/preludes";
-import { DiagnosticCatalog } from "@formalang/ts/diagnostic";
+import { checkPrelude } from "@forma-language/forma/preludes";
+import { DiagnosticCatalog } from "@forma-language/forma/diagnostic";
 
 const catalog = new DiagnosticCatalog();
 // catalog.register({ code, summary, explanation, stability });
@@ -261,7 +261,7 @@ It stores validated descriptor data and closed, import-free macro-library scopes
 JavaScript hooks are recreated from the current build, never deserialized.
 Mutable sessions, host builtin factories, deferred validation, and arbitrary
 imported module state are not cached. Node embeddings can opt in with
-`enablePreludeCache()` from `@formalang/ts/node`; browser SDK calls do not touch
+`enablePreludeCache()` from `@forma-language/forma/node`; browser SDK calls do not touch
 the filesystem.
 
 The default location is `$XDG_CACHE_HOME/forma/preludes` (or
