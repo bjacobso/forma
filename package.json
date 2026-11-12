@@ -32,7 +32,7 @@
     "check:diagnostics": "node scripts/check-diagnostics.mjs && node --test scripts/check-diagnostics.test.mjs",
     "check:define-form": "node --test scripts/check-define-form.test.mjs && node scripts/check-define-form.mjs",
     "check:branding": "bash scripts/check-branding.sh",
-    "check:changesets": "node scripts/check-release-plan.mjs",
+    "check:changesets": "node --test scripts/check-release-plan.test.mjs && node scripts/check-release-plan.mjs",
     "check:alchemy": "node --test scripts/check-alchemy.mjs scripts/preview-output.test.mjs",
     "check:llms": "node scripts/llms.mjs",
     "website:build": "turbo run build --filter=@formalang/website && pnpm docs:build && node scripts/assemble-website.mjs && node scripts/llms.mjs dist-site",
@@ -43,7 +43,8 @@
     "check:cheatsheet": "node scripts/check-cheatsheet.mjs",
     "check:preludes": "node packages/ts/scripts/derive-domain-protocol.mjs --check && node packages/ts/scripts/generate-preludes.mjs --check && node scripts/check-prelude-docs.mjs",
     "bench:validate": "node --test bench/agent/harness.test.mjs && node bench/agent/validate.mjs",
-    "bench:latency": "node scripts/bench-latency.mjs"
+    "bench:latency": "node scripts/bench-latency.mjs",
+    "check:tarball": "node scripts/check-main-tarball.mjs"
   },
   "devDependencies": {
     "@alchemy.run/cloudflare": "2.0.0-beta.84",

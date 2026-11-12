@@ -1,6 +1,10 @@
 # T3: make numeric inference and runtime tags agree
 
-Status: proposal for decision; no language changes implemented.
+Status: Stage 2 inference is implemented, including numeric constraint transport
+through module signatures and mechanics/Effect consumers (pulled forward from
+Stage 4). Stage 3 branch-join coercion remains planned. The measurements below
+record the pre-implementation baseline; see [design decisions](../design-decisions.md)
+for the shipped rules.
 
 ## Evidence and reproduction
 

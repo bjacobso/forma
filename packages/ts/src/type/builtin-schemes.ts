@@ -36,12 +36,10 @@ export const WELL_KNOWN_KEYWORDS = new Set([
   ":false",
 ]);
 
-function arithBinop(): Scheme {
-  return mono(fnType([tFloat, tFloat], tFloat));
-}
-
-function arithUnary(): Scheme {
-  return mono(fnType([tFloat], tFloat));
+function numericScheme(name: string, arity: number, result?: import("./types.js").Type): Scheme {
+  const id = "__numeric";
+  const input = TVar(id);
+  return mkScheme([id], [], {...fnType(Array.from({length:arity}, () => input), result ?? input), numericOperator:name}, [], [{className:"$Numeric", args:[input]}]);
 }
 
 export function builtinScheme(name: string): Scheme | undefined {
@@ -56,18 +54,18 @@ export function builtinScheme(name: string): Scheme | undefined {
     case "/":
     case "min":
     case "max":
-      return mono({ ...fnType([tFloat, tFloat], tFloat), numericOperator: name });
+      return numericScheme(name, 2, name === "/" ? tFloat : undefined);
     case "mod":
     case "quot": return mono(fnType([tInt, tInt], tInt));
     case "pow":
-      return arithBinop();
+      return numericScheme(name, 2, tFloat);
     case "abs":
     case "sqrt":
-      return arithUnary();
+      return numericScheme(name, 1, name === "sqrt" ? tFloat : undefined);
     case "floor":
     case "ceil":
     case "round":
-      return mono(fnType([tFloat], tInt));
+      return numericScheme(name, 1, tInt);
     case "=":
     case "!=": {
       // forall a. a -> a -> Bool
@@ -79,7 +77,7 @@ export function builtinScheme(name: string): Scheme | undefined {
     case "<=":
     case ">":
     case ">=":
-      return mono(fnType([tFloat, tFloat], tBool));
+      return numericScheme(name, 2, tBool);
     case "format":
     case "str":
       return mono(TVariadic(tUnknown,tStr));

@@ -169,25 +169,25 @@ This table is generated from the checker's builtin contracts. It lists names
 with both a default runtime implementation and an HM scheme. The Effect target
 supports a subset. A signature is a checker contract; see the language guide
 for individual runtime operations. Variables such as `a0` are generic types.
-Numeric rows show the default Float scheme for a value use such as
-`(reduce + 0 xs)`; in call position `+ - * / min max` take any number of
-arguments, and all-Int arithmetic checks as Int. `Unknown` marks a permissive contract, not a guarantee about values.
+Numeric rows retain a `Numeric` constraint until inputs determine Int or Float.
+For example, `(reduce + 0 [1 2 3])` checks as Int. In call position
+`+ - * / min max` take any number of arguments; `/` always returns Float. `Unknown` marks a permissive contract, not a guarantee about values.
 
 <!-- builtin-contracts:start -->
 | Name | Signature |
 | --- | --- |
-| `-` | `Float -> Float -> Float` |
+| `-` | `(Numeric a0) => forall a0. a0 -> a0 -> a0` |
 | `!=` | `forall a0. a0 -> a0 -> Bool` |
-| `*` | `Float -> Float -> Float` |
-| `/` | `Float -> Float -> Float` |
-| `+` | `Float -> Float -> Float` |
-| `<` | `Float -> Float -> Bool` |
-| `<=` | `Float -> Float -> Bool` |
+| `*` | `(Numeric a0) => forall a0. a0 -> a0 -> a0` |
+| `/` | `(Numeric a0) => forall a0. a0 -> a0 -> Float` |
+| `+` | `(Numeric a0) => forall a0. a0 -> a0 -> a0` |
+| `<` | `(Numeric a0) => forall a0. a0 -> a0 -> Bool` |
+| `<=` | `(Numeric a0) => forall a0. a0 -> a0 -> Bool` |
 | `=` | `forall a0. a0 -> a0 -> Bool` |
-| `>` | `Float -> Float -> Bool` |
-| `>=` | `Float -> Float -> Bool` |
-| `abs` | `Float -> Float` |
-| `ceil` | `Float -> Int` |
+| `>` | `(Numeric a0) => forall a0. a0 -> a0 -> Bool` |
+| `>=` | `(Numeric a0) => forall a0. a0 -> a0 -> Bool` |
+| `abs` | `(Numeric a0) => forall a0. a0 -> a0` |
+| `ceil` | `(Numeric a0) => forall a0. a0 -> Int` |
 | `concat` | `(-> (List a) (List a) (List a))` |
 | `conj` | `(-> (List a) a (List a))` |
 | `count` | `forall a0. List<a0> -> Int` |
@@ -196,17 +196,17 @@ arguments, and all-Int arithmetic checks as Int. `Unknown` marks a permissive co
 | `fail` | `String -> Never` |
 | `filter` | `forall a0. (a0 -> Bool) -> List<a0> -> List<a0>` |
 | `first` | `forall a0. List<a0> -> a0` |
-| `floor` | `Float -> Int` |
+| `floor` | `(Numeric a0) => forall a0. a0 -> Int` |
 | `format` | `...Unknown -> String` |
 | `id` | `forall a0. a0 -> String` |
 | `keyword` | `Unknown -rest Unknown-> Keyword` |
 | `keyword?` | `forall a0. a0 -> Bool` |
 | `keyword/name` | `Unknown -> String` |
 | `map` | `forall a0 a1. (a0 -> a1) -> List<a0> -> List<a1>` |
-| `max` | `Float -> Float -> Float` |
+| `max` | `(Numeric a0) => forall a0. a0 -> a0 -> a0` |
 | `meta` | `Unknown -> Unknown -> Unknown -> Unknown` |
 | `meta/get` | `Unknown -> Unknown -> Unknown` |
-| `min` | `Float -> Float -> Float` |
+| `min` | `(Numeric a0) => forall a0. a0 -> a0 -> a0` |
 | `mod` | `Int -> Int -> Int` |
 | `nth` | `forall a0. List<a0> -> Int -> a0` |
 | `Ok` | `forall a0 a1. a0 -> Result<a0, a1>` |
@@ -217,7 +217,7 @@ arguments, and all-Int arithmetic checks as Int. `Unknown` marks a permissive co
 | `Result.Err` | `forall a0 a1. a1 -> Result<a0, a1>` |
 | `Result.Ok` | `forall a0 a1. a0 -> Result<a0, a1>` |
 | `reverse` | `(-> (List a) (List a))` |
-| `round` | `Float -> Int` |
+| `round` | `(Numeric a0) => forall a0. a0 -> Int` |
 | `Some` | `forall a0. a0 -> Option<a0>` |
 | `split` | `String -> String -> List<String>` |
 | `sqrt` | `(-> Float Float)` |

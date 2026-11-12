@@ -1,0 +1,15 @@
+[
+  {"id":"E2","stage":2,"source":"(define square [x] (* x x)) (map square [1 2 3])","type":"List<Int>","printed":"[1 4 9]"},
+  {"id":"G1","stage":2,"source":"(map (fn [x] (+ x 1)) [0])","type":"List<Int>","printed":"[1]"},
+  {"id":"G2","stage":2,"source":"(filter (fn [x] (> x 0)) [0 1])","type":"List<Int>","printed":"[1]"},
+  {"id":"G3","stage":2,"source":"(reduce (fn [a b] (+ a b)) 0 [1])","type":"Int","printed":"1"},
+  {"id":"G4","stage":3,"source":"(if false 0.0 1)","type":"Float","printed":"1.0"},
+  {"id":"G5","stage":3,"source":"(if true 0 1.0)","type":"Float","printed":"0.0"},
+  {"id":"total","stage":2,"source":"(define total [xs] (reduce + 0 xs)) (total [1 2 3])","type":"Int","printed":"6"},
+  {"id":"square-float-reuse","stage":2,"source":"(define square [x] (* x x)) (map square [1 2 3]) (map square [1.5 2.0])","type":"List<Float>","printed":"[2.25 4.0]"},
+  {"id":"total-float-reuse","stage":2,"source":"(define total [xs] (reduce + 0 xs)) (total [1 2 3]) (total [1.5 2.0])","type":"Float","printed":"3.5"},
+  {"id":"mixed-collection","stage":2,"source":"(define square [x] (* x x)) (map square [1 2.0])","type":"List<Float>","printed":"[1 4.0]"},
+  {"id":"dispatch","stage":2,"source":"(typeclass (NumericLabel a) (: label (-> a String))) (instance (NumericLabel Int) (define label [x] \"int\")) (instance (NumericLabel Float) (define label [x] \"float\")) (define square [x] (* x x)) [(label (square 2)) (label (square 2.0))]","type":"List<String>","printed":"[\"int\" \"float\"]"},
+  {"id":"overflow","stage":2,"source":"(define square [x] (* x x)) (square 9007199254740991)","type":"Int","runtimeError":true},
+  {"id":"division","stage":2,"source":"(define half [x] (/ x 2)) (half 4)","type":"Float","printed":"2.0"}
+]

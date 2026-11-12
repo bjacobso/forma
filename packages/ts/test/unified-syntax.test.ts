@@ -71,7 +71,7 @@ describe("unified core surface and runtime semantics", () => {
     await expect(Effect.runPromise(Type.inferSourceStr("(defn f [x] x)"))).rejects.toThrow("Use define instead of defn");
     const claimed = "(macro (defn name params body ...) `(define ~name (fn ~params ~@body))) (defn twice [x] (* x 2)) (twice 21)";
     expect(await evaluate(claimed)).toBe(42);
-    expect(await Effect.runPromise(Type.inferSourceStr(claimed))).toBe("Float");
+    expect(await Effect.runPromise(Type.inferSourceStr(claimed))).toBe("Int");
   });
   test("sexpr-vector? tells a parameter vector from other syntax", async () => {
     const source = '(macro (kind x) (if (sexpr-vector? x) "vector" "other")) [(kind [a]) (kind (a)) (kind "a")]';

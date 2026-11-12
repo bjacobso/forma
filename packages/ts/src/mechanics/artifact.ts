@@ -1637,6 +1637,11 @@ function typeExprToJson(sourceId: string, expr: SExpr): MechanicsJsonResult {
   if (expr._tag === "List" && expr.items.length > 0) {
     const head = symName(expr.items[0]);
     switch (head) {
+      case "Numeric": {
+        if (expr.items.length !== 2) return failed(sourceId, expr, "artifact/type", "Numeric type expects one variable.");
+        const type = typeExprToJson(sourceId, expr.items[1]!);
+        return type.ok ? {ok:true, value:{kind:"Numeric", type:type.value}} : type;
+      }
       case "Effect":
         return effectTypeToJson(sourceId, expr);
       case "Option":

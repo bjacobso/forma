@@ -1,0 +1,5 @@
+(type LeafIR {})
+(form (leaf) :types {} :ir LeafIR {})
+(type IR {})
+(form (sample child) :types {:child leaf} :ir IR :scope {:child (fn [holes] 42)} {})
+(sample (leaf))

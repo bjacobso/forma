@@ -266,7 +266,7 @@ export function evalList(
         if (!isKFn(value) && !isKBuiltin(value) && !isKMacro(value)) return value;
       }
       // Check builtins — args are NOT in tail position
-      if (head.name in runtime.builtins) {
+      if (head.name in runtime.builtins && !env.has(head.name)) {
         const prevTail = getTcoTail();
         setTcoTail(false);
         const args: KValue[] = [];

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -63,6 +63,26 @@ try {
   trees.forEach(collect);
   await writeFile(join(consumer, "package.json"), JSON.stringify({ private: true, type: "module", pnpm: { overrides } }));
   run("pnpm", ["add", "--store-dir", store, "--prefer-offline", "--ignore-scripts", "--config.auto-install-peers=false", archive, "effect@4.1.1"], consumer);
+  const installed = JSON.parse(run("pnpm", ["list", "--prod", "--depth", "Infinity", "--json"], consumer));
+  const packages = new Map();
+  const measure = tree => {
+    for (const [name, dependency] of Object.entries(tree.dependencies ?? {})) {
+      packages.set(`${name}@${dependency.version}`, dependency.path);
+      measure(dependency);
+    }
+  };
+  installed.forEach(measure);
+  let bytes = 0;
+  const size = async directory => {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      if (entry.name === "node_modules") continue;
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) await size(path);
+      else if (entry.isFile()) bytes += (await stat(path)).size;
+    }
+  };
+  for (const path of new Set(packages.values())) await size(path);
+  console.log(`Checking consumer: ${packages.size} packages, ${bytes} installed file bytes (excluding node_modules links and metadata)`);
   const inert = Object.keys(packed.exports).filter(key => key !== "./editor/react").map(key => name + (key === "." ? "" : key.slice(1)));
   await writeFile(join(consumer, "smoke.mjs"), `
     import assert from 'node:assert/strict';
@@ -71,6 +91,13 @@ try {
     const require = createRequire(import.meta.url);
     assert.throws(() => require.resolve('react'));
     for (const specifier of ${JSON.stringify(inert)}) await import(specifier);
+    for (const subpath of ['session', 'evaluator', 'host/ts-host', 'authoring']) {
+      await assert.rejects(import('${name}/' + subpath), { code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });
+    }
+    const { createLanguage } = await import('${name}');
+    const language = await createLanguage();
+    try { assert.equal((await language.run('(+ 20 22)')).value, 42); }
+    finally { await language.close(); }
     const libraryRequire = createRequire(import.meta.resolve('${name}'));
     assert.equal(libraryRequire.resolve('effect'), require.resolve('effect'));
     const { Client } = await import(libraryRequire.resolve('@modelcontextprotocol/sdk/client/index.js'));

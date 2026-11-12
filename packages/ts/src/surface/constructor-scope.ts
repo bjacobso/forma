@@ -1,6 +1,7 @@
 import type { SExpr } from "../reader/types.js";
 import { copySourceTrace } from "../evaluator/source-trace.js";
 import { head, name, sym } from "./effect.js";
+import { InferenceError } from "../diagnostic/errors.js";
 
 type Bindings = ReadonlyMap<string, SExpr | undefined>;
 
@@ -102,6 +103,11 @@ export function resolveConstructors(program: readonly SExpr[]): readonly SExpr[]
       return rebuild(expr, [expr.items[0]!, copySourceTrace(expr.items[1], {...expr.items[1], items}), ...expr.items.slice(2).map((body, i, bodies) => visit(body, i === bodies.length-1 ? expected : undefined, local))]);
     }
     if (h === "match" && expr.items[1]) {
+      if (expr.items.length % 2 !== 0) throw Object.assign(new InferenceError({
+        message: "match requires pattern/body pairs",
+        origin: {nodeId:`match:${expr.loc.start}`,kind:"match",span:{start:expr.loc.start,end:expr.loc.end,...(expr.loc.sourceId ? {sourceId:expr.loc.sourceId} : {})}},
+        details: {code:"surface/invalid-form"},
+      }), {loc:expr.loc});
       const value = visit(expr.items[1], undefined, bindings), type = typeOf(value, bindings), items = [expr.items[0]!, value];
       for (let i = 2; i < expr.items.length; i += 2) items.push(pattern(expr.items[i]!, type), visit(expr.items[i+1]!, expected, bindings));
       return rebuild(expr, items);
