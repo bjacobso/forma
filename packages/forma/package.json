@@ -1,6 +1,6 @@
 {
   "name": "@forma-language/forma",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Forma: a pre-alpha typed Lisp, language host, editor adapters and language server.",
   "type": "module",
   "license": "MIT",

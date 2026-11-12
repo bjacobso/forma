@@ -1,5 +1,33 @@
 # @forma-language/forma
 
+## 0.6.0
+
+### Minor Changes
+
+- 494b282: Add the `checkPrelude` SDK and `forma prelude check` command for consumer descriptor metachecks, docstrings, executable examples, diagnostic catalog coverage, and reference Markdown generation.
+- 5540791: Move CodeMirror/Lezer, the MCP SDK and the language-server libraries to optional peers so checking and runtime installs need only Forma and Effect. For `/editor/codemirror`, install the declared `@codemirror/*`, `@lezer/highlight` and `@lezer/lr` peers; `/editor/react` also needs React and React DOM 19. For `forma mcp`, install `@modelcontextprotocol/sdk@1.32.2`. For `/language-server` and `forma-language-server`, install `vscode-languageserver@^9.0.1` and `vscode-languageserver-textdocument@^1.0.12`. UI-free `/editor` needs no additional peers. Missing-tool bins now print the required install command.
+- 494b282: Persist validated prelude descriptor data and closed macro-library scopes across CLI processes. Reconstruct hooks from the current build, invalidate on source/build/runtime changes, and fall back on corrupt or unwritable caches. Expose opt-in Node SDK caching and a reproducible cold-process benchmark.
+- ff54ab8: Support `:infer-fn function-name` on ordinary `form` definitions, using the existing descriptor infer-hook protocol in the active checker context. Argument-dependent forms can forward inferred type metadata without widening nominal types or replacing checker methods. The option is mutually exclusive with `:type`; existing result hooks and public embedding signatures are unchanged.
+  
+  The descriptor type provider recognizes domain forms as applications, not meta-phase type descriptions. Source-local nominal constructors therefore keep their normal HM types instead of becoming `Declaration` values.
+
+### Patch Changes
+
+- a04cdfd: Preserve the declared union type of qualified tagged constructors through
+  standalone Effect normalization, local bindings, vectors, conditionals, and
+  collection joins. Optional record fields now accept compatible existing
+  Options as well as plain values. Generated TypeScript evaluates each Option
+  once and omits absent keys under exactOptionalPropertyTypes.
+  
+  Add strict generated-TypeScript and runtime conformance cases for RFC 0019
+  E1–E3, located rejection controls, and checks for the updated domain-modeling
+  guide examples. Named Effect callbacks and literal refinements remain separate
+  follow-up work.
+- 1480b18: Scope bundled domain payload validators to descriptors that explicitly request `domain-payload`. Consumer IR kinds such as `Entity` and `Document` no longer accidentally select the bundled ontology contracts, including in mixed-prelude sessions. Bundled ontology forms opt in and retain their checks; consumer IR and hole contracts remain enforced.
+  
+  No public signatures change. Breaking behavioral change for direct producers: hosts constructing canonical domain declarations directly must add `validators: ["domain-payload"]` to retain the bundled checks; legacy descriptors must request the named validator in their artifact extension. Custom registries used with bundled ontology forms must register that validator. The default registry already does so.
+- ce4b201: Resolve type names returned by a form's `:type` hook through the prelude's alias map, as hole types already were. A hook returning `(quote Truth)` for `(type Truth (Brand Bool))` again satisfies an `(Expr Truth)` hole instead of failing with `value expects Brand<Truth, Bool>, found Truth`.
+
 ## 0.5.0
 
 ### Minor Changes
