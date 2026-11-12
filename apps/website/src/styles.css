@@ -1081,3 +1081,10 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--forma-blue); ou
   .site-header { flex-wrap: wrap; gap: 12px; padding-top: 16px; padding-bottom: 16px; }
   .site-nav { order: 2; width: 100%; flex-wrap: wrap; justify-content: flex-start; gap: 12px 20px; padding-right: 0; }
 }
+
+/* The custom playground is a full-height tool page below the shared header
+   (73px: min-height 72px plus its bottom border). */
+.site-header ~ .prelude-playground.live-workbench { height: calc(100dvh - 73px); }
+@media (max-width: 1100px) {
+  .site-header ~ .prelude-playground.live-workbench { height: auto; min-height: calc(100dvh - 73px); }
+}
