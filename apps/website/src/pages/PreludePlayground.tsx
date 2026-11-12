@@ -92,7 +92,7 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
     setValidating(true);
     setError(null);
     const timer = window.setTimeout(() => {
-      void client.run(demo.source, ["typecheck"], "example.forma", undefined, demo.prelude)
+      void client.run(demo.source, ["typecheck"], "example.lisp", undefined, demo.prelude)
         .then(value => { if (active) { setResult(value); setValidating(false); } })
         .catch((reason: unknown) => { if (active) { setError(reason instanceof Error ? reason.message : String(reason)); setValidating(false); } });
     }, 300);
@@ -124,7 +124,7 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
     finally { setSaving(false); setConfirmShare(false); shareButton.current?.focus(); }
   };
   const revealSpan = (span: NonNullable<RunResult["diagnostics"][number]["span"]>) => {
-    const target = span.sourceId === "prelude.forma" ? "prelude" : "source";
+    const target = span.sourceId === "prelude.lisp" ? "prelude" : "source";
     setFile(target); setReveal({ file: target, span: [span.startOffset, span.endOffset] });
   };
   const syntax = file === "prelude" ? debug?.preludeSyntax : passOf(result?.passResults ?? [], "parse");
@@ -173,8 +173,8 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
         </div>
         <div className={`studio-editors ${bothFiles ? "studio-editors-both" : ""}`}>
           {(["prelude", "source"] as const).map(key => <section key={key} id={key === "prelude" ? "prelude-editor" : "example-editor"} className={`studio-file ${file === key ? "studio-file-active" : ""}`} aria-label={key === "prelude" ? "Prelude" : "Example"}>
-            <div className="studio-file-heading">{bothFiles ? `${key === "prelude" ? "Language definition" : "Program"} · ` : ""}{key === "prelude" ? "prelude.forma" : "example.forma"}<span>Editable</span></div>
-            <WorkbenchEditor ariaLabel={key === "prelude" ? "Prelude source" : "Example source"} source={key === "prelude" ? demo.prelude : demo.source} mode={theme} palette="ocean" reveal={reveal?.file === key ? reveal.span : null} onInspect={() => setFile(key)} diagnostics={validating || error ? [] : diagnostics.filter(d => key === "prelude" ? d.span?.sourceId === "prelude.forma" : d.span?.sourceId !== "prelude.forma")} onChange={value => edit({ ...demo, [key]: value })} />
+            <div className="studio-file-heading">{bothFiles ? `${key === "prelude" ? "Language definition" : "Program"} · ` : ""}{key === "prelude" ? "prelude.lisp" : "example.lisp"}<span>Editable</span></div>
+            <WorkbenchEditor ariaLabel={key === "prelude" ? "Prelude source" : "Example source"} source={key === "prelude" ? demo.prelude : demo.source} mode={theme} palette="ocean" reveal={reveal?.file === key ? reveal.span : null} onInspect={() => setFile(key)} diagnostics={validating || error ? [] : diagnostics.filter(d => key === "prelude" ? d.span?.sourceId === "prelude.lisp" : d.span?.sourceId !== "prelude.lisp")} onChange={value => edit({ ...demo, [key]: value })} />
           </section>)}
         </div>
       </section>
@@ -201,7 +201,7 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
               {!payloads.length ? <p className="workbench-empty">No declarations yet. Define a form in the language definition and use it in your program.</p> : null}
             </>
             : tab === "ir" ? <><p className="studio-output-note">{errors ? "Partial output. Fix the diagnostics below." : "No diagnostics. Typed output from your example."}</p><TargetCodeView code={JSON.stringify(result.declarations ?? [], null, 2)} language="json" mode={theme} palette="ocean" /></>
-            : tab === "syntax" ? <><p className="studio-output-note">Reading {file === "prelude" ? "prelude.forma" : "example.forma"}. Select a node to reveal its source.</p><SExprTree ast={syntax?.ast ?? []} selectedSpan={reveal?.file === file ? reveal.span : null} onSelectSpan={span => { if (span) setReveal({ file, span }); }} /></>
+            : tab === "syntax" ? <><p className="studio-output-note">Reading {file === "prelude" ? "prelude.lisp" : "example.lisp"}. Select a node to reveal its source.</p><SExprTree ast={syntax?.ast ?? []} selectedSpan={reveal?.file === file ? reveal.span : null} onSelectSpan={span => { if (span) setReveal({ file, span }); }} /></>
             : tab === "forms" ? <><p className="studio-output-note">Form definitions loaded from your prelude.</p>{debug?.forms.map(form => <details className="studio-form" key={form.name}><summary>{form.name}</summary><TargetCodeView code={JSON.stringify(form.definition, null, 2)} language="json" mode={theme} palette="ocean" /></details>)}</>
             : tab === "maps" ? <><p className="studio-output-note">Select a payload path to reveal the authored source.</p>{debug?.declarations.map((declaration, index) => <article className="studio-mapping" key={index}><h2>{declaration.name} <code>{declaration.resultType}</code></h2>{declaration.sourceMap.map((entry, entryIndex) => <button type="button" key={entryIndex} onClick={() => revealSpan(entry.span)}><code>{entry.path || "/"}</code><span>{entry.span.startOffset}:{entry.span.endOffset}</span></button>)}</article>)}{!debug?.declarations.length ? <p className="workbench-empty">No declarations to map.</p> : null}</>
             : <><p className="studio-output-note">Measured compiler stages and declaration provenance. This playground elaborates forms; it does not execute a workflow runtime.</p><dl className="studio-timings">{debug?.timings.map(timing => <div key={timing.phase}><dt>{timing.phase}</dt><dd>{timing.durationMs.toFixed(1)} ms</dd></div>)}</dl><details className="studio-form"><summary>Complete debug data</summary><TargetCodeView code={JSON.stringify(debug, null, 2) ?? "{}"} language="json" mode={theme} palette="ocean" /></details></>}

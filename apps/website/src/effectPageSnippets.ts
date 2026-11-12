@@ -27,10 +27,10 @@ export function effectPageSnippets(): Record<string, string> {
     "orders.lisp": `${ordersSource}\n`,
     "orders.ts": generated(ordersSource, "orders.lisp"),
     "orders-undeclared.lisp": `${ordersUndeclaredSource}\n`,
-    "orders-undeclared.forma.txt": formaDiagnostics(ordersUndeclaredSource, "orders.lisp"),
+    "orders-undeclared.lisp.txt": formaDiagnostics(ordersUndeclaredSource, "orders.lisp"),
     "orders-undeclared.tsc.txt": uncheckedTsc(ordersUndeclaredSource, "orders.ts"),
     "strict.lisp": `${strictSource}\n`,
-    "strict.forma.txt": formaDiagnostics(strictSource, "strict.lisp"),
+    "strict.lisp.txt": formaDiagnostics(strictSource, "strict.lisp"),
     "strict.tsc.txt": uncheckedTsc(strictSource, "strict.ts"),
     "sizes.md": sizesTable(),
   };

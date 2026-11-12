@@ -75,8 +75,8 @@ describe("validated artifact boundary", () => {
 
   test.each(fixture("http-cases.json").cases as { name: string; declarations: Record<string, JsonValue>[]; expectedCodes: string[] }[])("shared HTTP validator $name", ({ declarations, expectedCodes }) => {
     const session = openSession({ id: "http-validator" });
-    session.rememberSource({ id: "http.forma", text: "" });
-    const inputs: PackageableDeclaration[] = declarations.map((payload, formIndex) => ({ summary: { kind: String(payload["kind"]), name: String(payload["name"]), resultType: String(payload["kind"]) }, payload, sourceId: "http.forma", formIndex, validators: ["http"], span: { sourceId: "http.forma", startOffset: formIndex, endOffset: formIndex + 1 } }));
+    session.rememberSource({ id: "http.lisp", text: "" });
+    const inputs: PackageableDeclaration[] = declarations.map((payload, formIndex) => ({ summary: { kind: String(payload["kind"]), name: String(payload["name"]), resultType: String(payload["kind"]) }, payload, sourceId: "http.lisp", formIndex, validators: ["http"], span: { sourceId: "http.lisp", startOffset: formIndex, endOffset: formIndex + 1 } }));
     const result = validateDeclarations(session, inputs);
     expect(result.ok).toBe(expectedCodes.length === 0);
     if (!result.ok) expect(result.diagnostics.map(d => d.code)).toEqual(expectedCodes);
@@ -86,10 +86,10 @@ describe("validated artifact boundary", () => {
     const source = readFileSync(resolve(root, "conformance/effect-typescript/cases/http-api/program.lisp"), "utf8");
     const session = openSession({ id: "http-emit" });
     for (const name of ["compiler.lisp", "http-api.lisp"] as const) session.rememberSource({ kind: "prelude", id: name, text: preludeSource(name) });
-    session.rememberSource({ id: "http.forma", text: source });
+    session.rememberSource({ id: "http.lisp", text: source });
     const emitted = emit({ session });
     expect(emitted.ok, JSON.stringify(emitted)).toBe(true);
-    session.rememberSource({ id: "http.forma", text: source.replace(":errors [UserNotFound]", "") });
+    session.rememberSource({ id: "http.lisp", text: source.replace(":errors [UserNotFound]", "") });
     const invalid = emit({ session });
     expect(invalid.ok).toBe(false);
     if (!invalid.ok) expect(invalid.diagnostics.map(d => d.code)).toContain("http-api/undeclared-error");

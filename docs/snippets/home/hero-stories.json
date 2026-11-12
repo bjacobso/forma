@@ -2,10 +2,10 @@
   {
     "id": "release",
     "label": "Release plan",
-    "sourceId": "release.forma",
+    "sourceId": "release.lisp",
     "title": "Give a plan its own vocabulary.",
     "introduction": "A tiny custom prelude defines workflow, step and a closed set of actions.",
-    "preludeLabel": "release.prelude.forma · excerpt",
+    "preludeLabel": "release.prelude.lisp · excerpt",
     "preludeExcerpt": "(type Action\n  (Union \"process.test\" \"human.approve\"))\n\n(form (step name action)\n  :types {:name (Declares Step) :action Action}\n  :ir StepIR …)",
     "prelude": "(type Action (Union \"process.test\" \"human.approve\"))\n\n(type StepIR {:kind \"Step\" :name Symbol :action Action})\n(form (step name action)\n  :types {:name (Declares Step) :action Action}\n  :ir StepIR\n  {:kind \"Step\" :name name :action action})\n\n(type WorkflowIR {:kind \"Workflow\" :name Symbol :steps (List StepIR)})\n(form (workflow name step ...)\n  :types {:name (Declares Workflow) :step (List step)}\n  :ir WorkflowIR\n  {:kind \"Workflow\" :name name :steps step})",
     "source": "(workflow release\n  (step verify \"process.test\")\n  (step approve \"human.approve\"))",
@@ -22,7 +22,7 @@
       "message": "action must be one of \"process.test\", \"human.approve\"",
       "phase": "elaborate",
       "span": {
-        "sourceId": "release.forma",
+        "sourceId": "release.lisp",
         "startOffset": 33,
         "endOffset": 47,
         "startLine": 2,
@@ -58,7 +58,7 @@
   {
     "id": "query",
     "label": "Schema & query",
-    "sourceId": "schema.forma",
+    "sourceId": "schema.lisp",
     "title": "Let a schema shape its query language.",
     "introduction": "The ontology prelude introduces entity fields into a query’s scope and requires a Bool predicate.",
     "preludeLabel": "ontology.lisp · query excerpt",
@@ -78,7 +78,7 @@
       "message": "where expects Bool, found String",
       "phase": "elaborate",
       "span": {
-        "sourceId": "schema.forma",
+        "sourceId": "schema.lisp",
         "startOffset": 180,
         "endOffset": 184,
         "startLine": 9,
@@ -110,7 +110,7 @@
   {
     "id": "effect",
     "label": "Effect contract",
-    "sourceId": "log.forma",
+    "sourceId": "log.lisp",
     "title": "Make a service requirement explicit.",
     "introduction": "The supported Effect language tracks the failures and service requirements of an operation.",
     "preludeLabel": "Effect vocabulary · program excerpt",
@@ -130,7 +130,7 @@
       "code": "mechanics/undeclared-requirement",
       "message": "Operation log requires Console.print, but its signature declares no requirements.",
       "span": {
-        "sourceId": "log.forma",
+        "sourceId": "log.lisp",
         "startOffset": 217,
         "endOffset": 240,
         "startLine": 8,

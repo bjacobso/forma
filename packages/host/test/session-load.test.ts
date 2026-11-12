@@ -43,7 +43,7 @@ describe("transactional session loading", () => {
     expect((await host.loadSource({ sessionId, sourceId: "file", source: "(+ future 1)" })).diagnostics).toEqual([]);
     const before = await host.sessionInfo({ sessionId });
     const bad = await host.loadSource({ sessionId, sourceId: "file", source: "(let [{:k v} 1 y] v)" });
-    expect(bad.diagnostics).toMatchObject([{ code: "surface/invalid-form", span: { sourceId: "file", startOffset: 0, endOffset: 20 } }]);
+    expect(bad.diagnostics).toMatchObject([{ code: "surface/invalid-form", span: { sourceId: "file", startOffset: 5, endOffset: 17 } }]);
     expect(await host.sessionInfo({ sessionId })).toEqual(before);
     expect((await host.loadSource({ sessionId, sourceId: "quote", source: "'(def x 2)" })).diagnostics).toEqual([]);
     // A macro in another source may claim a retired spelling, so it is checked by analysis, not on load.

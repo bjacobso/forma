@@ -1,5 +1,9 @@
 # Module contracts
 
+`bundled/` checks and runs a two-file graph importing `forma:kernel` without
+host-supplied library files. The CLI assertion lives in
+`packages/host/test/test-cli.test.ts`. `conformance/tests/` uses `forma:test`.
+
 These source fixtures exercise exported identities, brands, tagged constructors,
 polymorphic portable schemes, and linked Effect modules. The host suite in
 `packages/host/test/modules.test.ts` checks TypeScript against the stored
@@ -21,3 +25,10 @@ expectation, rewrite the files from TypeScript output and review the JSON diff:
 ```sh
 FORMA_UPDATE_GOLDEN=1 pnpm --filter @formalang/host exec vitest run test/modules.test.ts test/compile-time-modules.test.ts
 ```
+
+`run-forms/` pins successful checking and runtime values for a form library,
+a module that declares a greeting and ordinary values, and an importing entry.
+`expected.json` is asserted by `packages/ts/test/check-run-modules.test.ts`;
+it also verifies descriptor identity and that runtime evaluation does not rerun
+form hooks. `unnamed.lisp` pins projected IR values, and `multiple-names.lisp`
+checks that every `Declares` hole introduces a runtime binding.

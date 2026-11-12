@@ -6,7 +6,7 @@ import type { KernelError } from "../diagnostic/errors.js";
 import { Env } from "../Env.js";
 import { compileMatchPattern, matchCompiledPattern } from "./match.js";
 import type { KValue, KFn } from "./types.js";
-import { isTruthy } from "./types.js";
+import { isTruthy, isKFn } from "./types.js";
 import type { EvaluatorRuntime, EvalFn } from "./eval-types.js";
 import { getTcoTail, setTcoTail } from "./eval-types.js";
 import { expandMapDestructure, expandSeqDestructure } from "./destructure.js";
@@ -174,7 +174,7 @@ export function evalLet(
 
       const bindName = trySym(nameSym);
       if (bindName) {
-        letEnv = letEnv.bind(bindName, val);
+        letEnv = letEnv.bind(bindName, isKFn(val) && headSym(bindingsExpr.items[i + 1]!) === "fn" ? {...val, name: bindName} : val);
       } else if (nameSym._tag === "Map") {
         letEnv = applyMapDestructureRuntime(nameSym, val, letEnv);
       } else if (nameSym._tag === "Vector") {
@@ -318,7 +318,8 @@ export function evalDef(
         return yield* new ArityError({ name: "define", expected: 2, got: items.length - 1, loc });
       }
       const { env: defEnv, set } = env.bindMutable(defSymName, null);
-      const val = yield* evalExpr(items[2]!, defEnv, runtime);
+      const evaluated = yield* evalExpr(items[2]!, defEnv, runtime);
+      const val = isKFn(evaluated) && headSym(items[2]!) === "fn" ? {...evaluated, name: defSymName} : evaluated;
       set(val);
       return val;
     }
@@ -336,7 +337,8 @@ export function evalDef(
         loc: nameExpr.loc,
       };
       const { env: defEnv, set } = env.bindMutable(fnName, null);
-      const val = yield* evalExpr(fnExpr, defEnv, runtime);
+      const evaluated = yield* evalExpr(fnExpr, defEnv, runtime);
+      const val = isKFn(evaluated) ? {...evaluated, name: fnName} : evaluated;
       set(val);
       return val;
     }

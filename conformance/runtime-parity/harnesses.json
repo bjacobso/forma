@@ -1,0 +1,15 @@
+{
+  "session": {
+    "sources": ["(define offset 2) (define (add-offset x) (+ x offset))", "(map add-offset [1 2 3])"],
+    "expected": "[3 4 5]"
+  },
+  "modules": [
+    { "id": "counter.lisp", "source": "(export increment) (define (increment x) (+ x 1))" },
+    { "id": "main.lisp", "source": "(import \"./counter.lisp\" [increment]) (map increment [1 2 3])" }
+  ],
+  "moduleExpected": "[2 3 4]",
+  "service": {
+    "source": "(service Console (: print (-> String (Effect Unit)))) (: log (-> String (Effect Unit [] [Console.print]))) (define log [message] (Console.print message))",
+    "calls": ["first", "second"]
+  }
+}

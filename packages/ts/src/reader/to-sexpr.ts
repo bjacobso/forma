@@ -142,7 +142,7 @@ export function toSExpr(node: RedNode): SExpr {
 /**
  * Convert all top-level forms from a Root node
  */
-export function toSExprMany(root: RedNode): readonly SExpr[] {
+export function toSExprMany(root: RedNode, sourceId?: string): readonly SExpr[] {
   const result: SExpr[] = [];
 
   for (const child of root.children()) {
@@ -155,7 +155,19 @@ export function toSExprMany(root: RedNode): readonly SExpr[] {
     // Skip bare tokens (EOF)
   }
 
-  return result;
+  return sourceId === undefined ? result : result.map(expression => withSourceId(expression, sourceId));
+}
+
+function withSourceId(expression: SExpr, sourceId: string): SExpr {
+  const loc = { ...expression.loc, sourceId };
+  switch (expression._tag) {
+    case "List": case "Vector": case "Set":
+      return { ...expression, loc, items: expression.items.map(item => withSourceId(item, sourceId)) };
+    case "Map":
+      return { ...expression, loc, pairs: expression.pairs.map(([key, value]) => [withSourceId(key, sourceId), withSourceId(value, sourceId)] as const) };
+    default:
+      return { ...expression, loc };
+  }
 }
 
 /**

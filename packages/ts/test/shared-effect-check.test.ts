@@ -14,10 +14,10 @@ const invalid = '(: answer (Effect Int))\n(define answer (succeed "wrong"))';
 
 describe("shared Effect checking", () => {
   test("canonical emission rejects the same body mismatch as the generator", () => {
-    const generated = elaborateEffectProgram(invalid, { sourceId: "test.forma" });
+    const generated = elaborateEffectProgram(invalid, { sourceId: "test.lisp" });
     expect(generated.ok).toBe(false);
     const session = openSession({ id: "shared" });
-    const emitted = emit({ session, source: invalid, sourceId: "test.forma" });
+    const emitted = emit({ session, source: invalid, sourceId: "test.lisp" });
     expect(emitted.ok).toBe(false);
     expect(emitted.diagnostics.map(d => d.code)).toEqual(generated.diagnostics.map(d => d.code));
   });
@@ -28,7 +28,7 @@ const program = (name: string) => readFileSync(resolve(casesDir, name, "program.
 const cases = ["multi-service-checkout", "pure-domain-logic", "concurrent-workflow", "config-and-logging", "stream-pipeline", "reject-undeclared-error", "reject-undeclared-requirement", "reject-argument-type", "reject-finalizer-failure"];
 
 test.each(cases)("%s agrees across generator, canonical emission, author checks and workspace", name => {
-  const source = program(name), sourceId = `${name}.forma`;
+  const source = program(name), sourceId = `${name}.lisp`;
   const generated = elaborateEffectProgram(source, {sourceId});
   const session = openSession({id: name});
   const emitted = emit({session, source, sourceId});
@@ -85,31 +85,31 @@ test("editing Effect declarations and preludes invalidates checks and author off
 
 test("selected module emission checks dependencies before filtering, keeping lexical identities", () => {
   const sources = [
-    {id:"a.forma", source:'(export value) (: value (Effect Int)) (define value (succeed 1))'},
-    {id:"b.forma", source:'(export value) (: value (Effect String)) (define value (succeed "b"))'},
-    {id:"main.forma", source:'(import "./a.forma" :as a) (import "./b.forma" :as b) (export main) (: main (Effect Int)) (define main a/value)'},
+    {id:"a.lisp", source:'(export value) (: value (Effect Int)) (define value (succeed 1))'},
+    {id:"b.lisp", source:'(export value) (: value (Effect String)) (define value (succeed "b"))'},
+    {id:"main.lisp", source:'(import "./a.lisp" :as a) (import "./b.lisp" :as b) (export main) (: main (Effect Int)) (define main a/value)'},
   ];
   const session = openSession({id:"modules"});
   sources.forEach(s => session.rememberSource({id:s.id, text:s.source}));
   const graph = resolveModuleGraph(sources[2]!, sourceModuleResolver(sources));
   expect(checkModuleGraph(graph).diagnostics).toEqual([]);
   expect(linkEffectModules(graph).diagnostics).toEqual([]);
-  const emitted = emit({session, sourceId:"main.forma"});
+  const emitted = emit({session, sourceId:"main.lisp"});
   expect(emitted.ok, JSON.stringify(emitted.diagnostics)).toBe(true);
-  if (emitted.ok) expect(emitted.artifacts[0]!.content.declarations.every(d => d.sourceId === "main.forma")).toBe(true);
+  if (emitted.ok) expect(emitted.artifacts[0]!.content.declarations.every(d => d.sourceId === "main.lisp")).toBe(true);
   const broken = sources[0]!.source.replace("succeed 1", 'succeed "bad"');
-  session.rememberSource({id:"a.forma", text:broken});
-  const rejected = emit({session, sourceId:"main.forma"});
+  session.rememberSource({id:"a.lisp", text:broken});
+  const rejected = emit({session, sourceId:"main.lisp"});
   expect(rejected.ok).toBe(false);
-  expect(rejected.diagnostics.some(d => d.code === "mechanics/type-mismatch" && d.span?.sourceId === "a.forma")).toBe(true);
+  expect(rejected.diagnostics.some(d => d.code === "mechanics/type-mismatch" && d.span?.sourceId === "a.lisp")).toBe(true);
 });
 
 test("mixed descriptor and mechanics artifacts retain domain validation", () => {
   const session = openSession({id:"mixed"});
   for (const name of ["kernel.lisp", "compiler.lisp", "ontology.lisp"] as const) session.rememberSource({id:name, kind:"prelude", text:preludeSource(name)});
   const source = '(entity Person {:name String})\n(: main (Effect Int)) (define main (succeed 1))';
-  expect(emit({session, source, sourceId:"mixed.forma"}).ok).toBe(true);
-  expect(emit({session, source:source.replace("succeed 1", 'succeed "bad"'), sourceId:"mixed.forma"}).ok).toBe(false);
+  expect(emit({session, source, sourceId:"mixed.lisp"}).ok).toBe(true);
+  expect(emit({session, source:source.replace("succeed 1", 'succeed "bad"'), sourceId:"mixed.lisp"}).ok).toBe(false);
 });
 
 
@@ -151,8 +151,8 @@ test("mixed descriptor preludes retain their own checks alongside Effect checks"
 test("mixed module artifacts retain domain declarations and author export names", () => {
   const session = openSession({id:"mixed-modules"});
   for (const name of ["compiler.lisp", "ontology.lisp"] as const) session.rememberSource({id:name, kind:"prelude", text:preludeSource(name)});
-  session.rememberSource({id:"mixed.forma", text:'(export Person main) (entity Person {:name String}) (: main (Effect Int)) (define main (succeed 1))'});
-  const result = emit({session, sourceId:"mixed.forma"});
+  session.rememberSource({id:"mixed.lisp", text:'(export Person main) (entity Person {:name String}) (: main (Effect Int)) (define main (succeed 1))'});
+  const result = emit({session, sourceId:"mixed.lisp"});
   expect(result.ok, JSON.stringify(result.diagnostics)).toBe(true);
   if (result.ok) {
     expect(result.artifacts[0]!.content.declarations.map(d => d.summary.kind)).toEqual(["Entity", "EffectDef"]);
@@ -182,9 +182,9 @@ test("HTTP validators link authored domain references to lexical mechanics ident
   const session = openSession({id:"http-module"});
   for (const name of ["compiler.lisp", "http-api.lisp"] as const) session.rememberSource({id:name, kind:"prelude", text:preludeSource(name)});
   const source = '(export lookup User UserId UserNotFound UserRepo)\n' + program("http-api");
-  const result = emit({session, sourceId:"http.forma", source});
+  const result = emit({session, sourceId:"http.lisp", source});
   expect(result.ok, JSON.stringify(result.diagnostics)).toBe(true);
-  const invalid = emit({session, sourceId:"http.forma", source:source.replace(":errors [UserNotFound]", "")});
+  const invalid = emit({session, sourceId:"http.lisp", source:source.replace(":errors [UserNotFound]", "")});
   expect(invalid.ok).toBe(false);
   expect(invalid.diagnostics.map(d => d.code)).toContain("http-api/undeclared-error");
 });
@@ -226,9 +226,9 @@ test("selection includes services named only in a requirement signature", () => 
 test("domain re-exports remain valid beside mechanics module checking", () => {
   const session = openSession({id:"domain-barrel"});
   for (const name of ["compiler.lisp", "ontology.lisp"] as const) session.rememberSource({id:name, kind:"prelude", text:preludeSource(name)});
-  session.rememberSource({id:"people.forma", text:'(export Person) (entity Person {:name String})'});
-  session.rememberSource({id:"public.forma", text:'(export-from "./people.forma" [Person])'});
-  session.rememberSource({id:"main.forma", text:'(import "./public.forma" [Person]) (export main) (: main (Effect Int)) (define main (succeed 1))'});
+  session.rememberSource({id:"people.lisp", text:'(export Person) (entity Person {:name String})'});
+  session.rememberSource({id:"public.lisp", text:'(export-from "./people.lisp" [Person])'});
+  session.rememberSource({id:"main.lisp", text:'(import "./public.lisp" [Person]) (export main) (: main (Effect Int)) (define main (succeed 1))'});
   const result = emit({session});
   expect(result.ok, JSON.stringify(result.diagnostics)).toBe(true);
 });

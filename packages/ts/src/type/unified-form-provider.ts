@@ -25,7 +25,9 @@ export function unifiedFormProvider(
   const definitionErrors = checkDescriptors([{sourceId:"source",source}], {prelude:parent?.descriptorPrelude,checkReferences:false});
   const firstError = definitionErrors[0];
   if (firstError) throw new InferenceError({message:firstError.message,details:{...firstError.details,code:firstError.code},help:firstError.help,fix:firstError.fix,origin:{nodeId:"descriptor",kind:"descriptor",span:{start:firstError.span!.startOffset,end:firstError.span!.endOffset}}});
-  const local = bootstrapFromSources("", "", ...(parent?.descriptorPrelude?.sources ?? []), source);
+  const local = parent?.descriptorPrelude?.sourceInputs
+    ? bootstrapFromSources([...parent.descriptorPrelude.sourceInputs, {sourceId:"source",source}])
+    : bootstrapFromSources("", "", ...(parent?.descriptorPrelude?.sources ?? []), source);
   const inherited = parent?.descriptorPrelude;
   if (inherited) {
     for (const d of inherited.descriptions.list()) if (!local.descriptions.has(d.name)) local.descriptions.register(d);
@@ -144,7 +146,7 @@ export function descriptorFormProvider(
       ? descriptorApplication(prelude, provider, env, expr, expected)
       : parent?.typeApplication?.(env, expr, expected) ?? noDescriptorRule(),
     isKnownForm: (name) =>
-      prelude.descriptions.has(name) || !!parent?.isKnownForm(name),
+      prelude.descriptions.get(name)?.phase === "domain" || !!parent?.isKnownForm(name),
     getSlots: (name) => parent?.getSlots(name) ?? [],
     getResultType: (name) =>
       prelude.descriptions.has(name)

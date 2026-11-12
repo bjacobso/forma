@@ -1,0 +1,9 @@
+[
+  { "text": "Learn", "link": "/language" },
+  { "text": "Preludes", "link": "/preludes/" },
+  { "text": "Blog", "link": "/blog/" },
+  { "text": "Examples", "link": "/playground/demo" },
+  { "text": "Your DSL", "link": "/playground/custom" },
+  { "text": "Playground", "link": "/playground" },
+  { "text": "GitHub", "link": "https://github.com/bjacobso/forma" }
+]

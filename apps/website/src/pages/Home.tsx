@@ -16,7 +16,7 @@ export function Home() {
       <section className="hero">
         <div className="hero-copy">
           <span className="eyebrow">Forma playground</span>
-          <h1>Watch a domain language compile.</h1>
+          <h1>Forma playground</h1>
           <p>
             Forma is a programmable type system for Lisp: preludes define domain keywords, and one
             checker decides what a well-typed program means. Each example takes one program through
@@ -59,7 +59,7 @@ export function Home() {
           source to see its inferred type.
         </p>
         <p>
-          <strong>Live</strong> examples run <code>@formalang/ts</code> in a Web Worker, so edits
+          <strong>Live</strong> examples run <code>@forma-language/forma</code> in a Web Worker, so edits
           recompile as you type. <strong>Preview</strong> examples also show a target that is not
           recomputed from your edits, and the target pane says where it comes from. The entities
           example, for instance, shows pinned{" "}
@@ -68,14 +68,7 @@ export function Home() {
         <p>Forma is pre-alpha. APIs, syntax, and artifact formats will change.</p>
       </section>
 
-      <footer className="site-footer">
-        <span>Research project. APIs unstable.</span>
-        <nav>
-          <a href="/">Home</a>
-          <Link to="/demo">All examples</Link>
-          <Link to="/about">About</Link>
-        </nav>
-      </footer>
+
     </main>
   );
 }

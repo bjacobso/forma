@@ -34,6 +34,8 @@ export {
   type MechanicsEffectSchemaModule,
 } from "./mechanics/effect-schema.js";
 
+export { generateTypeSchemas, type TypeSchemaBuild } from "./mechanics/schema-build.js";
+
 export {
   generateMechanicsEffectTypeScriptModule,
   type MechanicsEffectTypeScriptModule,

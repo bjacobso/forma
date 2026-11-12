@@ -69,7 +69,7 @@ describe("@formalang/ts type inference", () => {
   test("infers primitive and function types", async () => {
     expect(await Effect.runPromise(Type.inferSourceStr("42"))).toBe("Int");
     expect(await Effect.runPromise(Type.inferSourceStr("(fn [x] (+ x 1))"))).toBe(
-      "Float -> Float",
+      "Int -> Int",
     );
   });
 
@@ -83,7 +83,7 @@ describe("@formalang/ts type inference", () => {
       await Effect.runPromise(
         Type.inferSourceStr(readFileSync(join(fixturesDir, "closures-map.lisp"), "utf8")),
       ),
-    ).toBe("List<Float>");
+    ).toBe("List<Int>");
     expect(
       await Effect.runPromise(
         Type.inferSourceStr(readFileSync(join(fixturesDir, "cond-grades.lisp"), "utf8")),

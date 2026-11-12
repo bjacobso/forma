@@ -1,0 +1,26 @@
+{
+  "normalized": {
+    "diagnostics": [
+      {
+        "code": "typecheck/type-mismatch",
+        "message": "Expected Union<\"manager\", \"finance\">, found \"intruder\"",
+        "span": {
+          "start": 156,
+          "end": 166
+        }
+      }
+    ]
+  },
+  "success": false,
+  "expectation": {
+    "kind": "error",
+    "diagnostic": {
+      "code": "typecheck/type-mismatch",
+      "message": "Expected Union<\"manager\", \"finance\">, found \"intruder\"",
+      "span": {
+        "start": 156,
+        "end": 166
+      }
+    }
+  }
+}

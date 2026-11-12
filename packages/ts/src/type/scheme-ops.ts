@@ -8,6 +8,9 @@ import { applyType, freeVarsEnv, type TypeEnv, type Subst } from "./substitution
 import { InferContext } from "./context.js";
 import type { PendingConstraint } from "./context.js";
 import type { Origin } from "./errors.js";
+import { InferenceError } from "./errors.js";
+import { unify } from "./unify.js";
+import { TCon } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Generalize & instantiate
@@ -46,13 +49,31 @@ export const generalizeBinding = (
   env: TypeEnv,
   t: Type,
   pendingStart: number,
-): Effect.Effect<Scheme, never, InferContext> =>
+): Effect.Effect<Scheme, InferenceError, InferContext> =>
   Effect.gen(function* () {
     const ctx = yield* InferContext;
-    const pending = yield* Ref.get(ctx.pendingConstraints);
+    // Only numeric variables supplied by a reusable function's inputs may
+    // generalize. An otherwise ambiguous numeric value defaults to Int.
+    const inputs = new Set<string>();
+    let cursor = t;
+    while (cursor._tag === "TFun") {
+      ftvType(cursor.arg, inputs);
+      if (cursor.rest) ftvType(cursor.rest, inputs);
+      cursor = cursor.res;
+    }
+    if (cursor._tag === "TVariadic") ftvType(cursor.rest, inputs);
+    const envVars = freeVarsEnv(env).tvars;
+    for (const pc of (yield* Ref.get(ctx.pendingConstraints)).slice(pendingStart)) {
+      if (pc.constraint.className !== "$Numeric") continue;
+      const arg = applyType(yield* Ref.get(ctx.subst), pc.constraint.args[0]!);
+      if (arg._tag === "TVar" && !inputs.has(arg.id) && !envVars.has(arg.id)) yield* unify(arg, TCon("Int"), pc.origin);
+    }
+    const subst = yield* Ref.get(ctx.subst);
+    const pending = (yield* Ref.get(ctx.pendingConstraints)).map(pc => ({...pc, constraint:{...pc.constraint, args:pc.constraint.args.map(arg => applyType(subst, arg))}}));
+    yield* Ref.set(ctx.pendingConstraints, pending);
     const retainedPending = pending.slice(0, pendingStart);
     const bindingPending = pending.slice(pendingStart);
-    const scheme = generalize(env, t);
+    const scheme = generalize(env, applyType(subst, t));
 
     if (bindingPending.length === 0 || scheme.tvars.length === 0) {
       return scheme;

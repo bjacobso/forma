@@ -1,9 +1,11 @@
 # Forma
 
-> Forma is a pre-alpha programmable type system for Lisp: a typed, homoiconic Lisp whose preludes define typed forms for domain-specific languages and portable artifacts. Install the TypeScript engine with `pnpm add @formalang/ts`, or try the browser playground at https://forma-lang.com/playground.
+> Forma is a pre-alpha programmable type system for Lisp: a typed, homoiconic Lisp whose preludes define typed forms for domain-specific languages and portable artifacts. The public package `@forma-language/forma` is not yet published; after publication install with `npm install @forma-language/forma effect`, or try the browser playground at https://forma-lang.com/playground.
+
+Forma source files use `.lisp`; project metadata uses `forma.json` and `forma.lock`.
 
 APIs, package boundaries, syntax, and artifact formats are still evolving.
-The TypeScript host includes a source-built `forma` JSON CLI and daemon, with
+The TypeScript host includes a source-built `forma` CLI (check, run, test, fmt, repl, explain, describe, mcp, and JSON commands) and daemon, with
 filesystem module commands described in [File modules](https://forma-lang.com/modules).
 The TypeScript engine is the only implementation; it also powers the browser
 tools and language server. The earlier OCaml engine was removed.
@@ -19,15 +21,19 @@ A fresh clone uses
 
 ## Getting started
 
+- [Core cheat sheet](https://raw.githubusercontent.com/bjacobso/forma/main/docs/cheatsheet.md): Checked syntax, types, modules, forms, effects, builtin signatures, and fixes for common diagnostics.
+- [Embedding](https://forma-lang.com/embedding): Experimental promise-based host facade for checking, running, capabilities, form discovery, and canonical IR emission without Effect imports.
+- [Authoring](https://raw.githubusercontent.com/bjacobso/forma/main/docs/authoring.md): Install from source before publication, check and run a first file, then use file modules, typed forms, diagnostics, formatting, and the REPL. Links to runnable project and Node embedding examples.
 - [Quick start](https://raw.githubusercontent.com/bjacobso/forma/main/README.md): Setup, examples, package layout, and current project status.
 - [TypeScript engine](https://raw.githubusercontent.com/bjacobso/forma/main/packages/ts/README.md): Embedding the reader, evaluator, typechecker, VM, and elaborator.
 - [Language guide](https://raw.githubusercontent.com/bjacobso/forma/main/docs/language.md): Syntax, values, types, macros, effects, and elaboration.
 - [Structure and Interpretation of Forma Programs](https://raw.githubusercontent.com/bjacobso/forma/main/docs/structure-and-interpretation.md): SICP-style introduction covering functions, processes, data abstraction, symbolic data, effects, streams, an interpreter, macros, and typed forms, with examples run on the current engine.
 - [Domain modeling in Forma](https://raw.githubusercontent.com/bjacobso/forma/main/docs/domain-modeling.md): A wholesale ordering workflow designed in the style of *Domain Modeling Made Functional*, with brands, refinements, tagged choices, typed errors, and service requirements, compiled to Effect TypeScript; lists current modeling limits.
-- [Authoring your own program](https://raw.githubusercontent.com/bjacobso/forma/main/docs/authoring.md): Write files and run `forma file typecheck`, `file evaluate` (typechecks first; `--unchecked` skips it) and `file declarations` (elaborates forms and lists each application's IR); kernel imports for file modules, a table of checked and evaluate-only builtins, Option filling across modules, polymorphism rules, a test pattern, hook hole values, diagnostics with lines and columns, and the absence of a date type.
 - [File modules](https://raw.githubusercontent.com/bjacobso/forma/main/docs/modules.md): Explicit imports, exports, compile-time form libraries, project preludes, and offline package imports through `forma.json`, verified `forma.lock`, committed vendor sources, and explicit add/update/verify/vendor commands.
 
 ## For agents
+
+- [MCP server](https://forma-lang.com/mcp): Configure Claude Code or Codex with structured check, run, format, diagnostic explanation, and node-addressed editing tools.
 
 - [Writing a form](https://raw.githubusercontent.com/bjacobso/forma/main/docs/writing-a-form.md): Define domain vocabulary with typed forms, form-local constant extensions, checked documentation examples, and elaboration hooks.
 - [Preludes](https://forma-lang.com/preludes/): Catalog of the repository preludes with maturity labels; each reference page is generated at site build from form descriptors, `(: name type)` signatures, docstrings, comments, and per-form examples checked by `pnpm check`.
@@ -37,7 +43,7 @@ A fresh clone uses
 - [Forma for Elm-style apps](https://raw.githubusercontent.com/bjacobso/forma/main/docs/elm.md): Foldkit prototype with exhaustive update, checked command recovery, and pure views; shared HttpApi client generation remains proposed.
 - [Elm prototype reference](https://raw.githubusercontent.com/bjacobso/forma/main/docs/elm/reference.md): Isolated prelude generator, supported forms, mounting, and current limits.
 - [Forma for email automation](https://raw.githubusercontent.com/bjacobso/forma/main/docs/email.md): Email rule prelude prototype with closed lanes, first-match decisions, pure rules, and typed delivery recovery; scheduling, rate enforcement, and dry runs are not implemented.
-- [Clojure spellings](https://raw.githubusercontent.com/bjacobso/forma/main/docs/clojure.md): `preludes/clojure.forma`, a shipped macro library giving Forma modules Clojure spellings (`def`, `defn`, `if-let`, threading) over Forma semantics; keyword access, set and function literals, multi-arity `defn`, and any Clojure surface, adapter, or emitter are not implemented.
+- [Clojure spellings](https://raw.githubusercontent.com/bjacobso/forma/main/docs/clojure.md): `preludes/modules/clojure.lisp`, a shipped macro library giving Forma modules Clojure spellings (`def`, `defn`, `if-let`, threading) over Forma semantics; keyword access, set and function literals, multi-arity `defn`, and any Clojure surface, adapter, or emitter are not implemented.
 - [Effect reference](https://raw.githubusercontent.com/bjacobso/forma/main/docs/effect/reference.md): Supported schemas, services, errors, resources, and operations.
 - [Language services](https://raw.githubusercontent.com/bjacobso/forma/main/docs/language-services.md): Analysis, node identity, observations, and structural edit scripts.
 

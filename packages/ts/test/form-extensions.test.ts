@@ -82,9 +82,9 @@ describe("form-local extensions", () => {
   });
 
   test("retains metadata and private map macros on imported forms", () => {
-    const library = { id: "p/library.forma", source: '(import "./kernel.forma" [or])\n' + macroSource + "\n" + read("prelude.lisp") + "\n(export label release)" };
-    const main = { id: "p/main.forma", source: '(import "./library.forma" [label release])\n' + read("program.lisp") };
-    const graph = resolveModuleGraph(main, sourceModuleResolver([library, main, { id: "p/kernel.forma", source: readFileSync(resolve(fixture, "../../preludes/kernel.forma"), "utf8") }]));
+    const library = { id: "p/library.lisp", source: '(import "./kernel.lisp" [or])\n' + macroSource + "\n" + read("prelude.lisp") + "\n(export label release)" };
+    const main = { id: "p/main.lisp", source: '(import "./library.lisp" [label release])\n' + read("program.lisp") };
+    const graph = resolveModuleGraph(main, sourceModuleResolver([library, main, { id: "p/kernel.lisp", source: readFileSync(resolve(fixture, "../../preludes/modules/kernel.lisp"), "utf8") }]));
     expect(checkModuleGraph(graph).diagnostics).toEqual([]);
     const imported = [...graph.modules.at(-1)!.compileTime!.forms.values()].find(form => form.identity.declaration === "label")!.descriptor;
     expect(imported.extensions?.["catalog/label"]).toEqual(expected.extensions.label);

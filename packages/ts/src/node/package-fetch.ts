@@ -3,6 +3,15 @@ import { execFile } from "node:child_process";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { promisify } from "node:util";
 import { packageError, safeFile, sourceParts } from "./package-files.js";
+import { ModuleError } from "../modules/graph.js";
+
+async function packageFetchBoundary<T>(run: () => Promise<T>): Promise<T> {
+  try { return await run(); }
+  catch (error) {
+    if (error instanceof ModuleError) throw error;
+    return packageError("package-fetch", `Package transport failed: ${String(error)}`);
+  }
+}
 
 const execute = promisify(execFile);
 async function command(program: string, args: readonly string[], cwd?: string): Promise<string> {
@@ -78,6 +87,10 @@ async function forgeCommit(source: GitSource): Promise<string | undefined> {
 }
 /** Validate archive entries before extraction; no links or paths outside one archive root. */
 export async function extractPackageArchive(archive: string, destination: string): Promise<void> {
+  return packageFetchBoundary(() => extractArchive(archive, destination));
+}
+
+async function extractArchive(archive: string, destination: string): Promise<void> {
   const entries = (await command("tar", ["-tzf", archive])).split("\n");
   const roots = new Set<string>();
   for (const entry of entries) {
@@ -92,38 +105,40 @@ export async function extractPackageArchive(archive: string, destination: string
   mkdirSync(destination, { recursive: true });
   await command("tar", ["-xzf", archive, "--directory", destination, "--strip-components=1", "--no-same-owner", "--no-same-permissions"]);
 }
-export const defaultPackageFetcher: PackageFetcher = {
-  async fetch(spec, destination, pinned) {
-    const source = gitSource(spec);
-    if (pinned !== undefined && !/^[a-f0-9]{40,64}$/.test(pinned))
-      return packageError("package-source", "Pinned commits must be full git commit IDs.");
-    if (source.archive) {
-      let commit: string | undefined;
-      try { commit = pinned ?? await forgeCommit(source); } catch { /* git fallback retains native credentials. */ }
-      if (commit) {
-        let bytes: Uint8Array | undefined;
-        try {
-          const response = await fetch(source.archive(commit), { signal: AbortSignal.timeout(30_000) });
-          if (response.ok) {
-            const chunks: Uint8Array[] = [];
-            let size = 0;
-            for await (const chunk of response.body!) {
-              size += chunk.length;
-              if (size > 64 * 1024 * 1024) throw new Error("Archive exceeds 64 MiB.");
-              chunks.push(chunk);
-            }
-            bytes = Buffer.concat(chunks);
+const fetchPackage: PackageFetcher["fetch"] = async (spec, destination, pinned) => {
+  const source = gitSource(spec);
+  if (pinned !== undefined && !/^[a-f0-9]{40,64}$/.test(pinned))
+    return packageError("package-source", "Pinned commits must be full git commit IDs.");
+  if (source.archive) {
+    let commit: string | undefined;
+    try { commit = pinned ?? await forgeCommit(source); } catch { /* git fallback retains native credentials. */ }
+    if (commit) {
+      let bytes: Uint8Array | undefined;
+      try {
+        const response = await fetch(source.archive(commit), { signal: AbortSignal.timeout(30_000) });
+        if (response.ok) {
+          const chunks: Uint8Array[] = [];
+          let size = 0;
+          for await (const chunk of response.body!) {
+            size += chunk.length;
+            if (size > 64 * 1024 * 1024) return packageError("package-fetch", "Archive exceeds 64 MiB.");
+            chunks.push(chunk);
           }
-        } catch { /* Fall back to git if the archive endpoint is unavailable. */ }
-        if (bytes) {
-          const archive = destination + ".tar.gz";
-          writeFileSync(archive, bytes);
-          try { await extractPackageArchive(archive, destination); }
-          finally { rmSync(archive, { force: true }); }
-          return { directory: destination, commit };
+          bytes = Buffer.concat(chunks);
         }
+      } catch { /* Fall back to git if the archive endpoint is unavailable. */ }
+      if (bytes) {
+        const archive = destination + ".tar.gz";
+        writeFileSync(archive, bytes);
+        try { await extractPackageArchive(archive, destination); }
+        finally { rmSync(archive, { force: true }); }
+        return { directory: destination, commit };
       }
     }
-    return gitFetch(source, destination, pinned);
-  },
+  }
+  return gitFetch(source, destination, pinned);
+};
+
+export const defaultPackageFetcher: PackageFetcher = {
+  fetch: (spec, destination, pinned) => packageFetchBoundary(() => fetchPackage(spec, destination, pinned)),
 };

@@ -1,0 +1,37 @@
+(import "./policy.lisp" [Category ApprovalRole Expense required-approvals approvable? valid-details?])
+(type Case {:name String :ok Bool})
+(: is (-> String a a Case))
+(define is [name actual expected] {:name name :ok (= actual expected)})
+(: sample (-> Int Category Expense))
+(define sample [amount category]
+  {:employee "alice" :amount amount :category category :date 20768
+   :vendor None :asset-tag None})
+(: manager-only (List ApprovalRole))
+(define manager-only ["manager"])
+(: both-roles (List ApprovalRole))
+(define both-roles ["manager" "finance"])
+(define cases
+  [(is "meal at threshold" (required-approvals (sample 7500 "meals")) [])
+   (is "meal over threshold" (required-approvals (sample 7501 "meals")) manager-only)
+   (is "travel no meal threshold" (required-approvals (sample 7501 "travel")) [])
+   (is "finance boundary" (required-approvals (sample 250000 "equipment")) [])
+   (is "meal finance boundary" (required-approvals (sample 250000 "meals")) manager-only)
+   (is "large travel needs both" (required-approvals (sample 250001 "travel")) both-roles)
+   (is "large meal needs both" (required-approvals (sample 250001 "meals")) both-roles)
+   (is "large software needs both" (required-approvals (sample 250001 "software")) both-roles)
+   (is "large equipment needs both" (required-approvals (sample 250001 "equipment")) both-roles)
+   (is "self manager denied" (approvable? (sample 250001 "travel") "alice" "manager") false)
+   (is "self finance denied" (approvable? (sample 250001 "travel") "alice" "finance") false)
+   (is "other manager allowed" (approvable? (sample 7501 "meals") "bob" "manager") true)
+   (is "unneeded finance denied" (approvable? (sample 7501 "meals") "bob" "finance") false)
+   (is "other finance allowed" (approvable? (sample 250001 "travel") "bob" "finance") true)
+   (is "software missing vendor" (valid-details? (sample 100 "software")) false)
+   (is "equipment missing tag" (valid-details? (sample 100 "equipment")) false)
+   (is "travel no metadata" (valid-details? (sample 100 "travel")) true)
+   (is "software named vendor"
+       (valid-details? {:employee "alice" :amount 100 :category "software" :date 1 :vendor (Some "Acme") :asset-tag None}) true)
+   (is "blank vendor denied"
+       (valid-details? {:employee "alice" :amount 100 :category "software" :date 1 :vendor (Some "  ") :asset-tag None}) false)
+   (is "equipment tagged"
+       (valid-details? {:employee "alice" :amount 100 :category "equipment" :date 1 :vendor None :asset-tag (Some "A-1")}) true)])
+(map (fn [c] c.name) (filter (fn [c] (if c.ok false true)) cases))

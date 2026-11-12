@@ -80,7 +80,7 @@ None of this is built into the compiler. The words a rule can use (`send`, `tag?
 </div>
 <div class="fh-hero__demo">
 
-<WorkbenchEmbed example="email-rule" file="warmup.forma" title="Live email rule workbench" />
+<WorkbenchEmbed example="email-rule" file="warmup.lisp" title="Live email rule workbench" />
 
 </div>
 </section>

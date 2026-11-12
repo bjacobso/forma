@@ -18,8 +18,8 @@ const read = (path: string) => readFileSync(resolve(repoRoot, path), "utf8");
 /** The page and the conformance fixtures read the same files. */
 const fixture = (name: string) =>
   read(`conformance/clojure-spellings/${name}`);
-const preludes: readonly ModuleSource[] = ["clojure.forma", "kernel.forma"].map(
-  (name) => ({ id: name, source: read(`preludes/${name}`) }),
+const preludes: readonly ModuleSource[] = ["clojure.lisp", "kernel.lisp"].map(
+  (name) => ({ id: name, source: read(`preludes/modules/${name}`) }),
 );
 
 function check(id: string, source: string): ModuleCheckResult {
@@ -99,7 +99,7 @@ function excerpt(name: string, from: string, until: string): string {
 }
 
 const setLiteralSource = [
-  '(import "./clojure.forma" [def])',
+  '(import "./clojure.lisp" [def])',
   "(export tags)",
   '(def tags #{"new" "vip"})',
 ].join("\n");
@@ -112,15 +112,15 @@ const setLiteralSource = [
  */
 export function clojurePageSnippets(): Record<string, string> {
   return {
-    "orders.excerpt.forma": excerpt("orders.forma", "(: quote-for", "(define receipt"),
-    "orders.checked.txt": checkedInterface("orders.forma"),
-    "truthiness.txt": rejection("truthiness.forma", fixture("truthiness.forma")),
-    "nil-punning.txt": rejection("nil-punning.forma", fixture("nil-punning.forma")),
+    "orders.excerpt.lisp": excerpt("orders.lisp", "(: quote-for", "(define receipt"),
+    "orders.checked.txt": checkedInterface("orders.lisp"),
+    "truthiness.txt": rejection("truthiness.lisp", fixture("truthiness.lisp")),
+    "nil-punning.txt": rejection("nil-punning.lisp", fixture("nil-punning.lisp")),
     "keyword-access.txt": rejection(
-      "keyword-access.forma",
-      fixture("keyword-access.forma"),
+      "keyword-access.lisp",
+      fixture("keyword-access.lisp"),
     ),
-    "set-literal.txt": rejection("tags.forma", setLiteralSource),
-    "unimported.txt": rejection("report.forma", "(defn report [x] x)"),
+    "set-literal.txt": rejection("tags.lisp", setLiteralSource),
+    "unimported.txt": rejection("report.lisp", "(defn report [x] x)"),
   };
 }

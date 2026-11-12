@@ -13,10 +13,10 @@ missing seats, zero, and more than six seats are rejected before handlers run.
 
 Read the files in this order:
 
-1. `domain.forma`: shared schemas/refinements, errors, Booking service, and the
+1. `domain.lisp`: shared schemas/refinements, errors, Booking service, and the
    checked `lookup` / `reserve` operations calling that service.
-2. `http.forma`: GET `/workshops/:id`, POST `/reservations`, checked handler links.
-3. `rpc.forma`: the same queries/commands as `GetWorkshop` and `ReserveSeats`.
+2. `http.lisp`: GET `/workshops/:id`, POST `/reservations`, checked handler links.
+3. `rpc.lisp`: the same queries/commands as `GetWorkshop` and `ReserveSeats`.
 4. `../../preludes/rpc.lisp`: the reusable typed RPC prelude, with Forma
    `:emit` hooks producing native `Rpc.make` and `RpcGroup.make` calls.
 5. `generate.mjs`: the HTTP and RPC host adapters. `schemasFrom` imports shared
@@ -50,13 +50,18 @@ Use Node 24 and pnpm 10.20 from the repository root:
 
 ```sh
 pnpm install --frozen-lockfile
+pnpm exec turbo run build --filter=@forma-language/forma
+pnpm --dir packages/forma pack --out /tmp/forma.tgz
+npm install --prefix examples/http-rpc /tmp/forma.tgz effect@4.1.1
 bash examples/http-rpc/check.sh
 node examples/http-rpc/server.ts
 ```
 
+The generator imports `@forma-language/forma/http-api` and `/rpc`. The package
+is not yet published, so the commands above install a local tarball.
 The check builds the compiler, checks saved generation against sources, strictly
 typechecks generated and native code, and runs contract-negative and transport
-integration tests. To regenerate after editing a `.forma` file:
+integration tests. To regenerate after editing a `.lisp` file:
 
 ```sh
 node examples/http-rpc/generate.mjs
@@ -115,7 +120,7 @@ The tests assert this distinction and verify rejected requests leave state intac
   sockets; the walkthrough above was also run against the supervised server.
 - HTTP lowering is the existing shipped spike, not universal HTTP support.
   Its documented middleware, streaming and module-import limits still apply.
-- RPC contracts use the dedicated `rpc.lisp` prelude and `@formalang/ts/rpc`
+- RPC contracts use the dedicated `rpc.lisp` prelude and `@forma-language/forma/rpc`
   adapter, which support named unary groups and checked schemas without changes
   to mechanics. Native handler registration is still explicit; streaming,
   middleware and Forma file-module RPC linking are not implemented.
@@ -126,5 +131,6 @@ The tests assert this distinction and verify rejected requests leave state intac
   suspension, so it is atomic in one JavaScript process, not across replicas.
   No persistence, authentication, cancellation policy, idempotency or production
   reservation lifecycle is claimed. Swagger covers HTTP, not RPC.
-- These checks are intentionally local to the example, not added to root CI.
+- The full transport checks are local to the example. CI checks saved generation
+  and negative generator cases against the packed distribution.
   Generated code remains reviewable; `--check` fails rather than rewriting drift.

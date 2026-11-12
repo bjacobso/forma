@@ -81,7 +81,7 @@ export const program = Effect.gen(function* () {
     ['(rpc "Bad" :payload Int :success Int)', "rpc/top-level"],
     ['(rpc-group X (rpc "Bad" :payload Int :success Int)', "rpc/parse"],
   ])("rejects invalid contracts: %s", (source, error) => {
-    const generated = generateRpcProgram(source, { sourceId: "invalid.forma" });
+    const generated = generateRpcProgram(source, { sourceId: "invalid.lisp" });
     expect(generated.ok).toBe(false);
     expect(generated.code).toBeUndefined();
     expect(JSON.stringify(generated.diagnostics)).toContain(error);

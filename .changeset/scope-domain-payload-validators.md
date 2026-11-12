@@ -1,5 +1,5 @@
 ---
-"@formalang/ts": patch
+"@forma-language/forma": patch
 ---
 
 Scope bundled domain payload validators to descriptors that explicitly request `domain-payload`. Consumer IR kinds such as `Entity` and `Document` no longer accidentally select the bundled ontology contracts, including in mixed-prelude sessions. Bundled ontology forms opt in and retain their checks; consumer IR and hole contracts remain enforced.

@@ -1,3 +1,4 @@
+import { diagnosticLocator } from "../diagnostic/locations.js";
 /** Definition and application validation. Artifact contracts plug into checkForm. */
 import { closestName } from "../diagnostic/closest-name.js";
 import { typeDefinition } from "../surface/type-alias.js";
@@ -137,7 +138,7 @@ export function checkDescriptors(sources: readonly DescriptorSource[], options: 
     };
     for (const expr of source.expressions) visit(expr);
   }
-  return diagnostics;
+  return diagnostics.map(diagnosticLocator(id => sources.find(source => source.sourceId === id)?.source));
 }
 
 /** Application structure is checked even when expansion produced the form. */

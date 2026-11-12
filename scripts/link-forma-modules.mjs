@@ -7,7 +7,7 @@ import { TsLanguageHost } from "../packages/host/dist/index.mjs";
 const [entry, output] = process.argv.slice(2);
 if (!entry || !output) {
   console.error(
-    "Usage: node scripts/link-forma-modules.mjs <entry.forma> <output-directory>",
+    "Usage: node scripts/link-forma-modules.mjs <entry.lisp> <output-directory>",
   );
   process.exit(64);
 }

@@ -187,14 +187,14 @@ export function parseMetaFnDecl(expr: SExpr): MetaFnDecl | undefined {
  * Uses error-tolerant parsing since preludes may contain comments/syntax issues.
  * For duplicate __form-hook names, keeps the LAST occurrence (which has the full body).
  */
-export function parsePrelude(source: string, sharedTypes?: ReadonlyMap<string,SExpr>, sharedHelpers: readonly SExpr[] = []): {
+export function parsePrelude(source: string, sharedTypes?: ReadonlyMap<string,SExpr>, sharedHelpers: readonly SExpr[] = [], sourceId?: string): {
   forms: FormDescriptor[];
   metaFns: MetaFnDecl[];
   elaborations: ElaborationDescriptor[];
   helpers: readonly SExpr[];
 } {
   const { redTree } = parse(source);
-  const exprs = toSExprMany(redTree);
+  const exprs = toSExprMany(redTree, sourceId);
 
   const forms: FormDescriptor[] = [];
   const metaFnMap = new Map<string, MetaFnDecl>();

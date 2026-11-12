@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { realpathSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
@@ -23,34 +23,34 @@ describe("packages through the host", () => {
       op: "configureSession", sessionId,
       packages: {
         packages: [
-          { name: "@acme/ir", version: "1.0.0", exports: { ".": "ir.forma" } },
-          { name: "@acme/flows", version: "2.1.0", exports: { ".": "index.forma" }, dependencies: ["@acme/ir"] },
+          { name: "@acme/ir", version: "1.0.0", exports: { ".": "ir.lisp" } },
+          { name: "@acme/flows", version: "2.1.0", exports: { ".": "index.lisp" }, dependencies: ["@acme/ir"] },
         ],
         dependencies: ["@acme/flows"],
       },
     })).toMatchObject({ ok: true });
     await send({ op: "loadSourceBundle", sessionId, sources: [
-      { kind: "source", sourceId: "pkg:@acme/ir/ir.forma", source: irSource },
-      { kind: "source", sourceId: "pkg:@acme/flows/index.forma", source: flowsSource },
-      { kind: "source", sourceId: "main.forma", source: mainSource },
+      { kind: "source", sourceId: "pkg:@acme/ir/ir.lisp", source: irSource },
+      { kind: "source", sourceId: "pkg:@acme/flows/index.lisp", source: flowsSource },
+      { kind: "source", sourceId: "main.lisp", source: mainSource },
     ] });
-    const graph = await send({ op: "moduleGraph", sessionId, sourceId: "main.forma" });
+    const graph = await send({ op: "moduleGraph", sessionId, sourceId: "main.lisp" });
     expect(graph).toMatchObject({ ok: true, diagnostics: [] });
-    expect(graph.value.interfaces.map((i: { moduleId: string }) => i.moduleId)).toEqual(["pkg:@acme/ir/ir.forma", "pkg:@acme/flows/index.forma", "main.forma"]);
-    expect(await send({ op: "moduleGraph", sessionId, sourceId: "main.forma", source: `(import "@acme/ir" [FlowIR])` })).toMatchObject({
+    expect(graph.value.interfaces.map((i: { moduleId: string }) => i.moduleId)).toEqual(["pkg:@acme/ir/ir.lisp", "pkg:@acme/flows/index.lisp", "main.lisp"]);
+    expect(await send({ op: "moduleGraph", sessionId, sourceId: "main.lisp", source: `(import "@acme/ir" [FlowIR])` })).toMatchObject({
       ok: false, diagnostics: [{ code: "module/undeclared-dependency" }],
     });
   });
 
   test("the forma CLI checks a file against its verified vendored packages", () => {
-    const root = mkdtempSync(join(tmpdir(), "forma-cli-packages-"));
+    const root = realpathSync(mkdtempSync(join(tmpdir(), "forma-cli-packages-")));
     const files: Record<string, unknown> = {
       "forma.json": { name: "app", exports: {}, dependencies: { "@acme/flows": "github.com/acme/flows@v2.1.0" } },
-      "vendor/@acme/ir/forma.json": { name: "@acme/ir", version: "1.0.0", exports: { ".": "./ir.forma" } },
-      "vendor/@acme/ir/ir.forma": irSource,
-      "vendor/@acme/flows/forma.json": { name: "@acme/flows", version: "2.1.0", dependencies: { "@acme/ir": "gitlab.com/acme/ir@v1.0.0" }, exports: { ".": "./index.forma" } },
-      "vendor/@acme/flows/index.forma": flowsSource,
-      "src/main.forma": mainSource,
+      "vendor/@acme/ir/forma.json": { name: "@acme/ir", version: "1.0.0", exports: { ".": "./ir.lisp" } },
+      "vendor/@acme/ir/ir.lisp": irSource,
+      "vendor/@acme/flows/forma.json": { name: "@acme/flows", version: "2.1.0", dependencies: { "@acme/ir": "gitlab.com/acme/ir@v1.0.0" }, exports: { ".": "./index.lisp" } },
+      "vendor/@acme/flows/index.lisp": flowsSource,
+      "src/main.lisp": mainSource,
     };
     for (const [path, content] of Object.entries(files)) {
       mkdirSync(dirname(join(root, path)), { recursive: true });
@@ -67,26 +67,26 @@ describe("packages through the host", () => {
       }])),
     }));
     const run = (operation: string) => {
-      const result = spawnSync(process.execPath, [cli, "file", operation, join(root, "src/main.forma")], { encoding: "utf8", timeout: 20_000 });
+      const result = spawnSync(process.execPath, [cli, "file", operation, join(root, "src/main.lisp")], { encoding: "utf8", timeout: 20_000 });
       return JSON.parse(result.stdout);
     };
     expect(run("typecheck")).toMatchObject({ ok: true, diagnostics: [] });
     const interfaces = run("interface");
     expect(interfaces).toMatchObject({ ok: true });
     expect(interfaces.value.interfaces.at(-1).exports[0].data.contractId).toMatch(/^[a-f0-9]{64}$/);
-    writeFileSync(join(root, "vendor/@acme/ir/ir.forma"), "edited");
+    writeFileSync(join(root, "vendor/@acme/ir/ir.lisp"), "edited");
     expect(run("typecheck")).toMatchObject({ ok: false, diagnostics: [{ code: "module/package-integrity" }] });
   }, 30_000);
 
   test("dependency commands add local packages, verify offline, and refresh local edits", () => {
-    const root = mkdtempSync(join(tmpdir(), "forma-cli-dependencies-"));
+    const root = realpathSync(mkdtempSync(join(tmpdir(), "forma-cli-dependencies-")));
     const files: Record<string, unknown> = {
       "forma.json": { name: "app", exports: {} },
-      "local/flows/forma.json": { name: "@acme/flows", exports: { ".": "index.forma" }, dependencies: { "@acme/ir": "../ir" } },
-      "local/flows/index.forma": flowsSource,
-      "local/ir/forma.json": { name: "@acme/ir", exports: { ".": "ir.forma" } },
-      "local/ir/ir.forma": irSource,
-      "main.forma": mainSource,
+      "local/flows/forma.json": { name: "@acme/flows", exports: { ".": "index.lisp" }, dependencies: { "@acme/ir": "../ir" } },
+      "local/flows/index.lisp": flowsSource,
+      "local/ir/forma.json": { name: "@acme/ir", exports: { ".": "ir.lisp" } },
+      "local/ir/ir.lisp": irSource,
+      "main.lisp": mainSource,
     };
     for (const [path, content] of Object.entries(files)) {
       mkdirSync(dirname(join(root, path)), { recursive: true });
@@ -98,8 +98,8 @@ describe("packages through the host", () => {
     };
     expect(run("add", "@acme/flows", "./local/flows")).toMatchObject({ status: 0, ok: true });
     expect(run("verify")).toMatchObject({ status: 0, ok: true, value: { packages: ["@acme/flows", "@acme/ir"] } });
-    expect(run("file", "typecheck", "main.forma")).toMatchObject({ status: 0, ok: true, diagnostics: [] });
-    writeFileSync(join(root, "local/ir/ir.forma"), irSource + "\n; local edit\n");
+    expect(run("file", "typecheck", "main.lisp")).toMatchObject({ status: 0, ok: true, diagnostics: [] });
+    writeFileSync(join(root, "local/ir/ir.lisp"), irSource + "\n; local edit\n");
     expect(run("verify")).toMatchObject({ status: 1, ok: false, diagnostics: [{ code: "module/package-integrity" }] });
     expect(run("update", "@acme/ir")).toMatchObject({ status: 0, ok: true });
     expect(run("vendor")).toMatchObject({ status: 0, ok: true });

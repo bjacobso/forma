@@ -18,6 +18,6 @@ describe("Elm prelude", () => {
     const result = generateElmProgram(program);
     expect(result.ok).toBe(false);
     expect(result.code).toBeUndefined();
-    expect(result.diagnostics.every(d => d.span?.sourceId === "app.forma")).toBe(true);
+    expect(result.diagnostics.every(d => d.span?.sourceId === "app.lisp")).toBe(true);
   });
 });

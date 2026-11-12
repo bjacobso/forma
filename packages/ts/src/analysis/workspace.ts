@@ -1,3 +1,4 @@
+import { diagnosticLocator, type LocatedDiagnostic } from "../diagnostic/locations.js";
 /**
  * An analysis workspace: the preludes and documents an editor has open, and
  * every language service over them as a memoized query.
@@ -26,19 +27,15 @@ import {
 } from "../editor/symbols.js";
 import { formatLispSource } from "../Formatter.js";
 import { blankBrokenForms } from "../lsp/recovery.js";
-import { analyzeLsp, type LspResult } from "../lsp/hm-lsp.js";
+import { analyzeBindings, type BindingQueries } from "./bindings.js";
 import { parse, toSExprMany } from "../reader/index.js";
-import { head } from "../surface/effect.js";
 import {
   identifySyntax,
   indexSyntax,
   type SyntaxIndex,
   type SyntaxNode,
 } from "../syntax/identity.js";
-import { builtinScheme } from "../type/builtin-schemes.js";
 import type { MakeInferContextOptions } from "../type/context.js";
-import type { TypeEnv } from "../type/substitution.js";
-import { showScheme } from "../type/types.js";
 import { completionsAt, type CompletionItem } from "./completion.js";
 import { searchDefinitions, type SearchQuery, type SearchResult } from "./search.js";
 import {
@@ -62,16 +59,13 @@ export interface TypedSpan {
   readonly exprTag: string;
 }
 
-export interface DocumentAnalysis {
+export interface DocumentAnalysis extends BindingQueries {
   readonly sourceId: string;
   /** The type of the last form, when every form typed. */
   readonly resultType?: string | undefined;
   /** Typed expressions in document order. */
   readonly typedSpans: readonly TypedSpan[];
-  readonly diagnostics: readonly Diagnostic[];
-  /** Types of the document's definitions and everything in scope before it. */
-  readonly typeEnv: TypeEnv;
-  readonly mechanicsBindingTypes?: ReadonlyMap<string, string>;
+  readonly diagnostics: readonly LocatedDiagnostic[];
 }
 
 export interface Hover {
@@ -187,7 +181,7 @@ export class AnalysisWorkspace {
     );
   }
 
-  diagnostics(sourceId: string): readonly Diagnostic[] {
+  diagnostics(sourceId: string): readonly LocatedDiagnostic[] {
     return this.analysis(sourceId).diagnostics;
   }
 
@@ -238,8 +232,7 @@ export class AnalysisWorkspace {
       const type =
         typed && typed.start === node.span.start && typed.end === node.span.end
           ? typed.type
-          : this.analysis(sourceId).mechanicsBindingTypes?.get(name) ??
-            (mechanicsExpression ? undefined : this.#typeOfName(sourceId, name));
+          : this.analysis(sourceId).bindingDisplay(name, offset);
       const descriptor = this.#descriptors().find((candidate) => candidate.name === name);
       if (descriptor) sections.push(describeForm(descriptor));
       else if (type !== undefined) sections.push(codeBlock(`${name} : ${type}`));
@@ -428,11 +421,7 @@ export class AnalysisWorkspace {
   }
 
   #typeOfName(sourceId: string, name: string): string | undefined {
-    const analysis = this.analysis(sourceId);
-    const mechanicsType = analysis.mechanicsBindingTypes?.get(name);
-    if (mechanicsType) return mechanicsType;
-    const scheme = analysis.typeEnv.get(name) ?? builtinScheme(name);
-    return scheme ? showScheme(scheme) : undefined;
+    return this.analysis(sourceId).bindingDisplay(name);
   }
 }
 
@@ -461,23 +450,15 @@ function analyzeDocument(
   // Forms that do not parse are blanked, keeping every offset, so the forms
   // around them are still typed.
   const typedText = parsed.errors.length > 0 ? blankBrokenForms(text) : text;
-  let typeEnv: TypeEnv = scope.typeEnv;
-  const result: LspResult = Effect.runSync(
-    analyzeLsp(typedText, {
-      ...analyzeOptions(scope, inferOptions),
-      sourceId,
-      captureEnv: (env) => {
-        typeEnv = env;
-      },
-    }),
-  );
+  const { result, bindings } = analyzeBindings(sourceId, typedText, analyzeOptions(scope, inferOptions));
   for (const error of result.errors) {
     diagnostics.push({
       code: error.diagnosticCode ?? "typecheck/type-mismatch",
       severity: "error",
-      message: withoutOffset(error.message),
+      message: error.message,
       ...(error.details ? {details:error.details} : {}),
       ...(error.help ? {help:error.help} : {}),
+      ...(error.related ? {related:error.related} : {}),
       ...(error.fix ? {fix:error.fix} : {}),
       phase: "typecheck",
       span: {
@@ -494,6 +475,7 @@ function analyzeDocument(
       message: diagnostic.message,
       ...(diagnostic.details ? {details:diagnostic.details} : {}),
       ...(diagnostic.help ? {help:diagnostic.help} : {}),
+      ...(diagnostic.related ? {related:diagnostic.related} : {}),
       ...(diagnostic.fix ? {fix:diagnostic.fix} : {}),
       phase: "typecheck",
       span: {
@@ -503,13 +485,33 @@ function analyzeDocument(
       },
     });
   }
-  if (parsed.errors.length === 0) diagnostics.push(...formDiagnostics(sourceId, text, scope).filter(diagnostic => {
-    if (diagnostic.code === "elaborate/unknown-form") return false;
+  const describedDiagnostics = parsed.errors.length === 0 ? formDiagnostics(sourceId, text, scope).filter(diagnostic => {
+    // Ordinary calls are checked above. Only an unbound form spelling
+    // suggestion adds useful information (and an editor quick fix).
+    if (diagnostic.code === "elaborate/unknown-form") {
+      const name = diagnostic.details?.name;
+      return diagnostic.fix?.length === 1 && typeof name === "string" &&
+        !bindings.hasBinding(name) && !scope.macroEnv?.has(name);
+    }
     return diagnostic.code !== "elaborate/hole-type" || !diagnostics.some(existing =>
       existing.span && diagnostic.span && existing.span.startOffset >= diagnostic.span.startOffset &&
       existing.span.endOffset <= diagnostic.span.endOffset &&
       ["elaborate/form-check", "typecheck/type-mismatch", "typecheck/unbound-symbol"].includes(existing.code));
-  }));
+  }) : [];
+  for (const diagnostic of describedDiagnostics) {
+    if (diagnostic.code !== "elaborate/unknown-form") continue;
+    const headSpan = diagnostic.fix![0]!.span;
+    // The form diagnostic carries the more specific advice for this head.
+    // Retain checker errors for arguments and all other ordinary calls.
+    for (let index = diagnostics.length - 1; index >= 0; index--) {
+      const existing = diagnostics[index]!;
+      if (existing.code === "typecheck/unbound-symbol" &&
+          existing.span?.startOffset === headSpan.startOffset && existing.span.endOffset === headSpan.endOffset) {
+        diagnostics.splice(index, 1);
+      }
+    }
+  }
+  diagnostics.push(...describedDiagnostics);
   return {
     sourceId,
     ...(result.resultTypeString !== undefined ? { resultType: result.resultTypeString } : {}),
@@ -519,9 +521,8 @@ function analyzeDocument(
       type: span.typeString,
       exprTag: span.exprTag,
     }))],
-    diagnostics: dedupe(diagnostics),
-    typeEnv,
-    ...(result.mechanics ? { mechanicsBindingTypes: result.mechanics.bindingTypes } : {}),
+    diagnostics: dedupe(diagnostics).map(diagnosticLocator(() => text)),
+    ...bindings,
   };
 }
 
@@ -529,10 +530,6 @@ function analyzeDocument(
 function formDiagnostics(sourceId: string, text: string, scope: Scope): readonly Diagnostic[] {
   const prelude = scope.prelude;
   if (!prelude) return [];
-  const described = toSExprMany(parse(text).redTree).some((expr) =>
-    prelude.descriptions.has(head(expr) ?? ""),
-  );
-  if (!described) return [];
   try {
     return elaborateSources([{ sourceId, source: text }], { prelude }).diagnostics.filter(
       (diagnostic) => diagnostic.span?.sourceId === sourceId && diagnostic.code !== "elaborate/no-construct-hook",
@@ -543,9 +540,6 @@ function formDiagnostics(sourceId: string, text: string, scope: Scope): readonly
 }
 
 
-function withoutOffset(message: string): string {
-  return message.replace(/ \(at offset \d+\)$/, "");
-}
 
 /**
  * One diagnostic per message and span. A diagnostic without a position is
@@ -589,7 +583,7 @@ function isSymbolName(name: string): boolean {
 }
 
 function codeBlock(text: string): string {
-  return `\`\`\`forma\n${text}\n\`\`\``;
+  return `\`\`\`lisp\n${text}\n\`\`\``;
 }
 
 function describeForm(descriptor: FormDescriptor): string {

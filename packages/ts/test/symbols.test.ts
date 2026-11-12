@@ -236,19 +236,19 @@ describe("indexSymbols with a cache", () => {
   test("refreshes module definition targets while reusing unchanged imports", () => {
     const cache = Editor.createSymbolIndexCache();
     const main = {
-      sourceId: "main.forma",
-      source: '(import "./barrel.forma" [double]) (double 21) secret',
+      sourceId: "main.lisp",
+      source: '(import "./barrel.lisp" [double]) (double 21) secret',
     };
     const barrel = {
-      sourceId: "barrel.forma",
-      source: '(export-from "./math.forma" [double])',
+      sourceId: "barrel.lisp",
+      source: '(export-from "./math.lisp" [double])',
     };
-    const moduleSourceIds = ["math.forma", barrel.sourceId, main.sourceId];
+    const moduleSourceIds = ["math.lisp", barrel.sourceId, main.sourceId];
     for (const source of [
       '(export double) (define secret 1) (define double [x] (+ x x))',
       '(export double) (define secret 99) (define double [x] (* x 2))',
     ]) {
-      const documents = [{ sourceId: "math.forma", source }, barrel, main];
+      const documents = [{ sourceId: "math.lisp", source }, barrel, main];
       const cached = Editor.indexSymbols(documents, { cache, moduleSourceIds });
       const fresh = Editor.indexSymbols(documents, { moduleSourceIds });
       expect(cached).toEqual(fresh);
@@ -256,7 +256,7 @@ describe("indexSymbols with a cache", () => {
         sourceId: main.sourceId,
         offset: main.source.indexOf("double 21") + 1,
       });
-      expect(found.definition?.sourceId).toBe("math.forma");
+      expect(found.definition?.sourceId).toBe("math.lisp");
       expect(found.definition && textOf(source, found.definition)).toBe("double");
       expect(cached.references.find((reference) => reference.name === "secret")?.resolution)
         .toBe("unresolved");

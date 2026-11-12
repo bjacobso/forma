@@ -4,7 +4,6 @@ import ts from "typescript";
 import { typecheck } from "@formalang/ts/engine";
 import { serializablePassResult, timeoutRunResult } from "./engine/protocol";
 import { getPipeline, pipelines } from "./pipelines";
-import { aboutDescription } from "./lib/siteCopy";
 import worker from "./worker";
 import { FORMA_WORKBENCH_URL } from "./lib/workbenchLocation";
 
@@ -64,18 +63,28 @@ describe("forma website worker metadata", () => {
     expect(html).toContain(
       '<meta property="og:title" content="Types Without Writing Types - Forma" />',
     );
+    expect(html).toContain('<meta property="og:image" content="https://forma-lang.com/og-image.png" />');
+    expect(html).toContain('<link rel="canonical" href="https://forma-lang.com/playground/demo/types" />');
     expect(html).toContain('<meta property="og:url" content="https://forma-lang.com/playground/demo/types" />');
     expect(env.ASSETS.fetch).toHaveBeenCalledWith(expect.objectContaining({ url: "https://forma-lang.com/playground/" }));
   });
 
-  test("injects route metadata for /about", async () => {
-    const response = await worker.fetch(new Request("https://forma-lang.com/playground/about"), mockEnv());
-    const html = await response.text();
+  test.each(["/about", "/playground/about"])("redirects retired %s to the language guide", async (path) => {
+    const env = mockEnv();
+    const response = await worker.fetch(new Request(`https://forma-lang.com${path}`), env);
+    expect(response.status).toBe(301);
+    expect(response.headers.get("location")).toBe("https://forma-lang.com/language");
+    expect(env.ASSETS.fetch).not.toHaveBeenCalled();
+  });
 
-    expect(html).toContain("<title>About Forma</title>");
-    expect(html).toContain(
-      `<meta property="og:description" content="${aboutDescription}" />`,
-    );
+  test.each([
+    ["/feed.xml", "application/atom+xml", "<feed>posts</feed>"],
+    ["/sitemap.xml", "application/xml", "<urlset>routes</urlset>"],
+    ["/robots.txt", "text/plain", "User-agent: *"],
+  ])("serves %s with its discovery content type", async (path, type, body) => {
+    const response = await worker.fetch(new Request(`https://forma-lang.com${path}`), mockEnv(new Response(body)));
+    expect(response.headers.get("content-type")).toBe(`${type}; charset=utf-8`);
+    expect(await response.text()).toBe(body);
   });
 
   test("serves a cold custom playground with social metadata", async () => {

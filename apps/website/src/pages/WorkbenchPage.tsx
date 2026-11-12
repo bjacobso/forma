@@ -1,10 +1,13 @@
 import { useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { LiveWorkbench } from "../components/LiveWorkbench";
+import { useDocumentMeta } from "../lib/documentMeta";
+import { playgroundDescription } from "../lib/siteCopy";
 import { useTheme } from "../lib/theme";
 
 export function WorkbenchPage({ embedded = false }: { embedded?: boolean }) {
   const { exampleId } = useParams();
+  useDocumentMeta({ title: "Live Forma workbench", description: playgroundDescription });
   const [search] = useSearchParams();
   const { setTheme } = useTheme();
   useEffect(() => {

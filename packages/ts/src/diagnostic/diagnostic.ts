@@ -1,6 +1,7 @@
 /**
  * The diagnostic every compiler phase reports. Spans are offsets into a named
- * source; lines and columns are optional projections.
+ * source. Offset-only spans are also used by syntax and intermediate phases;
+ * `LocatedSpan` requires the full projection once author source is available.
  *
  * @module
  */
@@ -64,6 +65,7 @@ export interface Diagnostic<C extends string = string> {
   readonly phase?: DiagnosticPhase;
   readonly span?: Span | undefined;
   readonly details?: DiagnosticDetails<C> | undefined;
+  readonly related?: readonly { readonly span: Span; readonly message: string }[] | undefined;
   readonly help?: string | undefined;
   readonly fix?: readonly DiagnosticTextEdit[] | undefined;
 }
@@ -84,15 +86,14 @@ export type DiagnosticPhase =
 
 /** A diagnostic for anything a phase threw or failed with. */
 interface FailureLoc { readonly sourceId?: string; readonly start: number; readonly end: number; readonly line: number; readonly col: number }
-/** Where an evaluation failed: the innermost named function (or the definition
- * `enclosing` finds around the location) and its author location. */
+/** The innermost named function (or the definition `enclosing` finds around
+ * the failure). Positions belong in the diagnostic span, never this context. */
 export function failureLocation(error: unknown, enclosing?: (loc: FailureLoc) => string | undefined): string {
   const failure = error as { readonly loc?: FailureLoc; readonly stackTrace?: readonly { readonly name: string; readonly loc?: FailureLoc }[] };
   const frame = failure.stackTrace?.[0];
   const loc = frame?.loc ?? failure.loc;
-  const where = loc ? `${loc.sourceId ? `${loc.sourceId} ` : ""}line ${loc.line}, column ${loc.col}` : undefined;
   const helper = frame?.name ? authorNames(frame.name) : loc ? enclosing?.(loc) : undefined;
-  return helper && where ? ` (in ${helper}, ${where})` : helper ? ` (in ${helper})` : where ? ` (at ${where})` : "";
+  return helper ? ` (in ${helper})` : "";
 }
 
 /** Strip module-resolution suffixes (`name__forma_<module>_d<name>`), leaving author names. */
@@ -123,12 +124,13 @@ export function diagnosticFromUnknown(
       got?: string | number;
       name?: string;
       limit?: number;
+      related?: Diagnostic["related"];
       help?: string;
       fix?: readonly DiagnosticTextEdit[];
     };
     const span: Span | undefined = candidate.origin?.span
       ? {
-          sourceId,
+          sourceId: candidate.loc?.sourceId ?? sourceId,
           startOffset: candidate.origin.span.start ?? 0,
           endOffset: candidate.origin.span.end ?? candidate.origin.span.start ?? 0,
         }
@@ -158,12 +160,13 @@ export function diagnosticFromUnknown(
       details: {
         ...(candidate.expected !== undefined ? {expected:candidate.expected} : {}),
         ...(candidate.got !== undefined ? {actual:candidate.got} : {}),
-        ...(candidate._tag === "ArityError" ? {name:candidate.name} : {}),
+        ...(candidate._tag === "ArityError" && candidate.name !== undefined ? {name:authorNames(candidate.name)} : {}),
         ...(candidate.limit !== undefined ? {limit:candidate.limit} : {}),
         ...candidate.details,
       },
+      ...(candidate.related ? {related:candidate.related.map(note => ({...note,span:{...note.span,sourceId:note.span.sourceId || sourceId}}))} : {}),
       ...(candidate.help ? {help:candidate.help} : {}),
-      ...(candidate.fix ? {fix:candidate.fix} : {}),
+      ...(candidate.fix ? {fix:candidate.fix.map(edit => ({...edit, span: {...edit.span, sourceId: edit.span.sourceId || sourceId}}))} : {}),
     };
   }
   return {

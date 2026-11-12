@@ -1,3 +1,4 @@
+import { diagnosticTypePrinter } from "./diagnostic-types.js";
 import { Effect, Ref } from "effect";
 import { InferContext } from "./context.js";
 import type { CoreExpr } from "./core-expr.js";
@@ -29,7 +30,15 @@ const rowType = (fields: ReadonlyMap<string, Type>, tail: Row): Type => {
 export const inferCollectionOperation = (env: TypeEnv, expr: CoreExpr & { _tag: "App" }, op: string, infer: InferFn) => Effect.gen(function* () {
   const ctx = yield* InferContext;
   const origin = originOf(expr, op);
-  const fail = (message: string, code = "typecheck/type-mismatch") => ctx.fail(origin, { message, code, ...(message.includes("closed record") ? {code:"typecheck/open-record"} : {}) });
+  const fail = (message: string, code = "typecheck/type-mismatch", expected: string | Type = "Record or Map", actual?: Type) => {
+    if (message.includes("closed record")) return ctx.fail(origin,{message,code:"typecheck/open-record"});
+    if (code !== "typecheck/type-mismatch") return ctx.fail(origin,{message,code});
+    const print = diagnosticTypePrinter();
+    const required = typeof expected === "string" ? expected : print(expected);
+    const found = actual ?? types[0];
+    const got = found ? print(found) : "no value";
+    return ctx.fail(origin,{code,expected:required,got,message:`${message}: Expected ${required}, found ${got}`});
+  };
   const inferred: Type[] = [];
   for (const [index,arg] of expr.args.entries()) {
     const keys = op === "select-keys" && index === 1 && arg._tag === "App" && arg.fn._tag === "Var" && arg.fn.name === "__vector";
@@ -51,7 +60,7 @@ export const inferCollectionOperation = (env: TypeEnv, expr: CoreExpr & { _tag: 
     if (!types.length) return TRow({ _tag: "REmpty" });
     if (dictionary(first)) {
       for (const next of types.slice(1)) {
-        if (!dictionary(next)) return yield* fail("merge requires dictionaries of the same type");
+        if (!dictionary(next)) return yield* fail("merge requires dictionaries of the same type",undefined,first,next);
         yield* assignType(next, first, origin);
       }
       return first;
@@ -59,7 +68,7 @@ export const inferCollectionOperation = (env: TypeEnv, expr: CoreExpr & { _tag: 
     const fields = new Map<string, Type>();
     let tail: Row = { _tag: "REmpty" };
     for (const type of types) {
-      if (type._tag !== "TRow") return yield* fail("merge requires records or dictionaries");
+      if (type._tag !== "TRow") return yield* fail("merge requires records or dictionaries",undefined,"Record or Map",type);
       const row = flattenRow(type.row);
       if (row.tail._tag !== "REmpty" && types.length > 1) return yield* fail("Merging records requires closed records or typed Maps");
       if (row.tail._tag !== "REmpty") {
@@ -70,10 +79,10 @@ export const inferCollectionOperation = (env: TypeEnv, expr: CoreExpr & { _tag: 
     }
     return rowType(fields, tail);
   }
-  if (!first) return yield* fail(`${op} requires a collection`);
+  if (!first) return yield* fail(`${op} requires a collection`,undefined,"String, List, Record, or Map");
   if (["count", "empty?"].includes(op)) {
     if (types.length !== 1) return yield* fail(`${op} expects one argument`, "typecheck/arity");
-    if (first._tag !== "TRow" && !dictionary(first) && !(first._tag === "TApp" && first.con._tag === "TCon" && first.con.name === "List") && !(first._tag === "TCon" && first.name === "String")) return yield* fail(`${op} requires a collection`);
+    if (first._tag !== "TRow" && !dictionary(first) && !(first._tag === "TApp" && first.con._tag === "TCon" && first.con.name === "List") && !(first._tag === "TCon" && first.name === "String")) return yield* fail(`${op} requires a collection`,undefined,"String, List, Record, or Map");
     return TCon(op === "count" ? "Int" : "Bool");
   }
   if (op === "contains?" && first._tag === "TCon" && first.name === "String") {
@@ -113,7 +122,7 @@ export const inferCollectionOperation = (env: TypeEnv, expr: CoreExpr & { _tag: 
     const result = new Map(fields);
     for (let i = 1; i < types.length; i += 2) {
       const label = literalKey(expr.args[i]!);
-      if (label === undefined) return yield* fail("Record association requires a literal key");
+      if (label === undefined) return yield* fail("Record association requires a literal key",undefined,"literal record key",types[i]);
       if (tail._tag !== "REmpty" && !fields.has(label)) return yield* fail("Updating an unknown field requires a closed record or a typed Map");
       result.set(label, types[i + 1]!);
     }
@@ -131,7 +140,7 @@ export const inferCollectionOperation = (env: TypeEnv, expr: CoreExpr & { _tag: 
     } else for (let i = 1; i < types.length; i++) yield* assignType(actualKey(i), first.args[0]!, origin);
     return first;
   }
-  if (!keys || keys.some(key => literalKey(key) === undefined)) return yield* fail("Record selection requires literal keys");
+  if (!keys || keys.some(key => literalKey(key) === undefined)) return yield* fail("Record selection requires literal keys",undefined,"literal record keys",types[1]);
   const { fields, tail } = flattenRow(first.row);
   const labels = new Set(keys.map(key => literalKey(key)!));
   if (tail._tag !== "REmpty" && (op === "dissoc" || [...labels].some(label => !fields.has(label)))) return yield* fail("Selecting or removing an unknown field requires a closed record or a typed Map");

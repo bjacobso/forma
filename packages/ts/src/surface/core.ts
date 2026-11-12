@@ -1,3 +1,4 @@
+import { surfaceError } from "./errors.js";
 import { copySourceTrace } from "../evaluator/source-trace.js";
 import { typeSyntaxErrors, retiredNumericTypeErrors, schemaMetadata, taggedPayloadProblem } from "./type-syntax.js";
 import { InferenceError } from "../diagnostic/errors.js";
@@ -23,7 +24,11 @@ export function retiredSpellingError(e: SExpr): Error | undefined {
   const h = head(e);
   const replacement = h === undefined ? undefined : RETIRED_SPELLINGS.get(h);
   if (replacement === undefined) return undefined;
-  return Object.assign(new Error(`Use ${replacement} instead of ${h}`), { loc: e.loc, details: { code: "surface/invalid-form" } });
+  const headExpr = e._tag === "List" ? e.items[0] : undefined;
+  return Object.assign(new Error(`Use ${replacement} instead of ${h}`), {
+    loc:e.loc,details:{code:"surface/invalid-form"},
+    ...(headExpr && (h !== "defmacro" || e._tag === "List" && e.items[1]?._tag === "List") ? {fix:[{span:{sourceId:headExpr.loc.sourceId ?? "",startOffset:headExpr.loc.start,endOffset:headExpr.loc.end},newText:replacement}]} : {}),
+  });
 }
 
 /** Surface sugar common to expansion, inference and evaluation. */
@@ -39,7 +44,11 @@ export function normalizeCoreProgram(exprs: readonly SExpr[], coerce = true, con
 }
 
 function normalizeCore(e: SExpr, top = false): SExpr {
-  return copySourceTrace(e, normalizeCoreInner(e, top));
+  try { return copySourceTrace(e, normalizeCoreInner(e, top)); }
+  catch (error) {
+    if (error instanceof Error && !("loc" in error)) Object.assign(error, { loc: e.loc });
+    throw error;
+  }
 }
 
 function normalizeCoreInner(e: SExpr, top = false): SExpr {
@@ -57,25 +66,34 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
   if (e._tag !== "List") return e;
   const h = head(e);
   if (h === "quote" || h === "quasiquote" || h === "__schema" || h === "__sum-type") return e;
+  if (h === "fn" && e.items.length >= 3 && e.items[1]?._tag !== "Vector") {
+    const at = e.items[1]!.loc;
+    throw Object.assign(new InferenceError({
+      message: "fn parameters must be a vector",
+      origin: { nodeId: `fn-parameters:${at.start}`, kind: "fn", span: at },
+      details: { code: "lower/lambda" },
+      help: "Write a parameter vector followed by a body, for example (fn [x] x).",
+    }), { loc: at });
+  }
   if (h === ":" && e.items.length === 3) {
     const errors = typeSyntaxErrors(e.items[2]!, schemaMetadata);
-    if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:e.items[2]!.loc, details:{code:"surface/invalid-form"}});
+    if (errors.length) throw surfaceError(errors.join("; "), e.items[2]!);
     return e;
   }
   if (top && (h === "class" || h === "error")) {
     const fields = e.items[2]?._tag === "Map" ? e.items[2] : { _tag: "Map", pairs: [], loc: e.loc } as SExpr;
-    if (!name(e.items[1]) || fields._tag !== "Map") throw new Error(`${h} requires a name and a record type`);
+    if (!name(e.items[1]) || fields._tag !== "Map") throw surfaceError(`${h} requires a name and a record type`, e);
     const options=e.items.slice(e.items[2]?._tag === "Map" ? 3 : 2);
-    for (let i=0;i<options.length;i+=2) {const value=options[i+1]; if (i>0 || h!=="error" || name(options[i])!==":status" || value?._tag!=="Num" || !Number.isInteger(value.value) || value.value<400 || value.value>599) throw new Error("error options support :status with an HTTP error status (400–599)");}
+    for (let i=0;i<options.length;i+=2) {const value=options[i+1]; if (i>0 || h!=="error" || name(options[i])!==":status" || value?._tag!=="Num" || !Number.isInteger(value.value) || value.value<400 || value.value>599) throw surfaceError("error options support :status with an HTTP error status (400–599)", e);}
     const errors = typeSyntaxErrors(fields, schemaMetadata);
-    if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:e.items[2]!.loc, details:{code:"surface/invalid-form"}});
+    if (errors.length) throw surfaceError(errors.join("; "), e.items[2]!);
     return call(e, "__record-type", e.items[1]!, fields, sym(e, h));
   }
   if (top && h === "type" && e.items.length === 3) {
     const n = e.items[1]!;
     const t = e.items[2]!;
     const declaredName = name(n) ?? head(n);
-    if (declaredName === "Number" || declaredName === "Num") throw Object.assign(new Error(`${declaredName} is no longer supported. Use Int or Float.`), {loc:n.loc});
+    if (declaredName === "Number" || declaredName === "Num") throw surfaceError(`${declaredName} is no longer supported. Use Int or Float.`, n);
     const problem = taggedPayloadProblem(t);
     if (problem) throw Object.assign(new InferenceError({
       message: problem.message,
@@ -84,7 +102,7 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
     }), { loc: problem.expression.loc });
     const errors = head(t) === "Brand" && t._tag === "List" && t.items.length === 2
       ? typeSyntaxErrors(t.items[1]!, schemaMetadata) : typeSyntaxErrors(t, schemaMetadata);
-    if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:e.items[2]!.loc, details:{code:"surface/invalid-form"}});
+    if (errors.length) throw surfaceError(errors.join("; "), e.items[2]!);
     if (head(t) === "Tagged" && t._tag === "List") {
       const arms = t.items.slice(name(t.items[1]) === ":tag" ? 3 : 1).map(a => a._tag === "Sym" ? list(a, [a]) : a);
       const declaration = call(e, "__sum-type", n._tag === "Sym" ? list(n, [n]) : n, ...arms, call(t,":tag", name(t.items[1]) === ":tag" ? t.items[2]! : sym(t,"_tag")));
@@ -108,7 +126,7 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
       else {
         if (head(a) === ":" && a._tag === "List" && a.items[2]) {
           const errors = retiredNumericTypeErrors(a.items[2]);
-          if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:a.items[2].loc});
+          if (errors.length) throw surfaceError(errors.join("; "), a.items[2]);
         }
         args.push(head(a) === ":" && a._tag === "List" ? list(a, a.items.slice(1)) : a);
       }
@@ -118,7 +136,7 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
   if (top && h === "instance" && e.items[1]?._tag === "List") {
     for (const type of e.items[1].items.slice(1)) {
       const errors = retiredNumericTypeErrors(type);
-      if (errors.length) throw Object.assign(new Error(errors.join("; ")), {loc:type.loc});
+      if (errors.length) throw surfaceError(errors.join("; "), type);
     }
   }
   if (h === "define" && e.items[1]?._tag === "Sym" && e.items[2]?._tag === "Vector" && e.items.length >= 4) {
@@ -140,7 +158,7 @@ function normalizeCoreInner(e: SExpr, top = false): SExpr {
   }
   if (h === "let" && e.items[1]?._tag === "Vector" && e.items[1].items.some((p,i)=>i%2===0 && !(p._tag === "Sym" && /^[a-z_$]/.test(p.name) && p.name !== "nil"))) {
     const bindings = e.items[1].items;
-    if (bindings.length % 2) throw new Error("let expects pattern/value pairs");
+    if (bindings.length % 2) throw surfaceError("let expects pattern/value pairs", e.items[1]);
     let body = e.items.length === 3 ? normalizeCore(e.items[2]!) : call(e,"do",...e.items.slice(2).map(v=>normalizeCore(v)));
     for (let i=bindings.length-2;i>=0;i-=2) {
       const pattern = bindings[i]!, value = normalizeCore(bindings[i+1]!);

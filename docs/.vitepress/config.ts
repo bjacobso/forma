@@ -1,6 +1,8 @@
+import navigation from "./navigation.json" with { type: "json" };
+import { loadPosts, siteOrigin, writeDiscovery } from "../../scripts/site-content.mjs";
 import { resolve } from "node:path";
 
-import { defineConfig, type DefaultTheme } from "vitepress";
+import { defineConfig, type DefaultTheme, type HeadConfig, type PageData } from "vitepress";
 
 import { groupTitles, loadPreludes, type PreludeGroup } from "./preludes.ts";
 
@@ -27,34 +29,27 @@ const preludeSidebar: DefaultTheme.SidebarItem[] = [
   })),
 ];
 
-// Unpublished parts are listed without links so the series shows its whole arc.
-const blogSidebar: DefaultTheme.SidebarItem[] = [
-  {
-    text: "Blog",
-    items: [
-      { text: "All posts", link: "/blog/" },
-      { text: "The Reader Is the Bottleneck", link: "/blog/reader-is-the-bottleneck" },
-    ],
-  },
-  {
-    text: "From Lists to Languages",
-    items: [
-      { text: "About the series", link: "/blog/in-the-beginning/" },
-      { text: "01 · Start with a List", link: "/blog/in-the-beginning/01-the-list" },
-      { text: "02 · Giving the List a Schema", link: "/blog/in-the-beginning/02-list-became-schema" },
-      { text: "03 · Errors Are Not Exceptions", link: "/blog/in-the-beginning/03-errors-are-not-exceptions" },
-      { text: "04 · The Environment Is Not the World", link: "/blog/in-the-beginning/04-environment-is-not-the-world" },
-      { text: "05 · Types Before Execution", link: "/blog/in-the-beginning/05-types-before-execution" },
-      { text: "06 · The Interpreter Becomes a Compiler", link: "/blog/in-the-beginning/06-interpreter-becomes-compiler" },
-      { text: "07 · Macros Are Programs About Programs", link: "/blog/in-the-beginning/07-macros" },
-      { text: "08 · The Prelude Is the Language", link: "/blog/in-the-beginning/08-prelude-is-the-language" },
-      { text: "09 · Effects Are Part of the Type", link: "/blog/in-the-beginning/09-effects-are-part-of-the-type" },
-      { text: "10 · One Program, Many Interpretations", link: "/blog/in-the-beginning/10-many-interpretations" },
-      { text: "11 · The Agent Can Read the Language", link: "/blog/in-the-beginning/11-agent-can-read-the-language" },
-      { text: "12 · A Language for Building Languages", link: "/blog/in-the-beginning/12-let-there-be-languages" },
-    ],
-  },
-];
+const blogSidebar: DefaultTheme.SidebarItem[] = [{
+  text: "Blog",
+  items: [
+    { text: "All posts", link: "/blog/" },
+    { text: "From Lists to Languages", link: "/blog/in-the-beginning/" },
+    ...loadPosts().map(post => ({ text: `${post.date} · ${post.title}`, link: post.path })),
+  ],
+}];
+
+function pageMetadata(pageData: PageData): HeadConfig[] {
+  const path = "/" + pageData.relativePath.replace(/index\.md$/, "").replace(/\.md$/, "");
+  const url = siteOrigin + path;
+  const description = pageData.description || "Define your domain. Check its programs.";
+  return [
+    ["link", { rel: "canonical", href: url }],
+    ["meta", { property: "og:url", content: url }],
+    ["meta", { property: "og:title", content: pageData.title === "Forma" ? "Forma" : `${pageData.title} · Forma` }],
+    ["meta", { property: "og:description", content: description }],
+    ["meta", { property: "og:image", content: `${siteOrigin}/og-image.png` }],
+  ];
+}
 
 export default defineConfig({
   lang: "en-US",
@@ -62,8 +57,10 @@ export default defineConfig({
   titleTemplate: ":title · Forma",
   description: "A programmable type system for Lisp.",
   cleanUrls: true,
+  appearance: { initialValue: "auto", storageKey: "forma-theme" },
+  async buildEnd(config) { await writeDiscovery(config.outDir); },
   // RFCs are design records for the repository, not site pages.
-  srcExclude: ["rfcs/**"],
+  srcExclude: ["rfcs/**", "proposals/**"],
   lastUpdated: true,
   outDir: resolve(import.meta.dirname, "../../dist-docs"),
   head: [
@@ -78,40 +75,27 @@ export default defineConfig({
       dark: codeTheme,
     },
     languages: ["json", "lisp", "scheme", "sh", "ts"],
-    // `.forma` modules are Forma source; highlight them as the Lisp they are.
+    // `.lisp` modules are Forma source; highlight them as the Lisp they are.
     languageAlias: { forma: "lisp" },
   },
   transformPageData(pageData) {
     // Generated prelude pages carry their metadata as route params.
     const params = pageData.params;
-    if (!params?.slug || !pageData.relativePath.startsWith("preludes/")) return;
-    pageData.title = String(params.title);
-    pageData.description = String(params.description);
-    pageData.frontmatter.outline = params.outline;
+    if (params?.slug && pageData.relativePath.startsWith("preludes/")) {
+      pageData.title = String(params.title);
+      pageData.description = String(params.description);
+      pageData.frontmatter.outline = params.outline;
+    }
+    pageData.frontmatter.head = [...(pageData.frontmatter.head ?? []), ...pageMetadata(pageData)];
+  },
+  transformHead({ pageData }) {
+    // VitePress synthesizes its 404 without calling transformPageData.
+    return pageData.frontmatter.head?.some(([tag, attrs]) => tag === "link" && attrs.rel === "canonical")
+      ? [] : pageMetadata(pageData);
   },
   themeConfig: {
     siteTitle: "forma",
-    nav: [
-      {
-        text: "Learn",
-        items: [
-          { text: "Language guide", link: "/language" },
-          { text: "Authoring your own program", link: "/authoring" },
-          { text: "Structure and interpretation", link: "/structure-and-interpretation" },
-          { text: "Domain modeling", link: "/domain-modeling" },
-          { text: "Writing a form", link: "/writing-a-form" },
-          { text: "Clojure spellings", link: "/clojure" },
-          { text: "File modules", link: "/modules" },
-          { text: "Vision", link: "/vision" },
-          { text: "Architecture", link: "/architecture" },
-          { text: "Roadmap", link: "/roadmap" },
-        ],
-      },
-      { text: "Preludes", link: "/preludes/", activeMatch: "^/(preludes|effect|elm|email|clojure)" },
-      { text: "Blog", link: "/blog/", activeMatch: "^/blog/" },
-      { text: "Examples", link: "/playground/demo", target: "_self", rel: "" },
-      { text: "Playground", link: "/playground", target: "_self", rel: "" },
-    ],
+    nav: navigation.map(item => ({ ...item, target: "_self", rel: "" })),
     sidebar: {
       "/preludes/": preludeSidebar,
       "/blog/": blogSidebar,
@@ -122,6 +106,7 @@ export default defineConfig({
             { text: "Preludes", link: "/preludes/" },
             { text: "Vision", link: "/vision" },
             { text: "Language", link: "/language" },
+            { text: "Core cheat sheet", link: "/cheatsheet" },
             { text: "Authoring your own program", link: "/authoring" },
             { text: "Structure and interpretation", link: "/structure-and-interpretation" },
             { text: "Roots of Lisp crib sheet", link: "/roots-of-lisp" },
@@ -144,6 +129,7 @@ export default defineConfig({
             { text: "Design decisions", link: "/design-decisions" },
             { text: "Retiring the OCaml engine", link: "/engine-consolidation" },
             { text: "Language services", link: "/language-services" },
+            { text: "Embedding Forma", link: "/embedding" },
             { text: "File modules", link: "/modules" },
           ],
         },
@@ -151,7 +137,13 @@ export default defineConfig({
           text: "Project",
           items: [
             { text: "For agents", link: "/agents" },
+            { text: "MCP server", link: "/mcp" },
             { text: "Roadmap", link: "/roadmap" },
+            { text: "Publishing", link: "/publishing" },
+            { text: "Consumer upgrade notes", link: "/consumer-upgrade-1317204" },
+            { text: "Workbench", link: "/workbench" },
+            { text: "Workbench embeds", link: "/workbench-embeds" },
+            { text: "Workbench vision", link: "/workbench-vision" },
           ],
         },
       ],
@@ -171,9 +163,6 @@ export default defineConfig({
     lastUpdated: { text: "Last updated" },
     docFooter: { prev: "Previous", next: "Continue" },
     externalLinkIcon: true,
-    footer: {
-      message: "Released under the MIT License.",
-      copyright: "© 2026 Ben Jacobson",
-    },
+
   },
 });

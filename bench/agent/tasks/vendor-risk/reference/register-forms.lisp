@@ -1,0 +1,82 @@
+;; A small vendor-register language. Source: the trial brief.
+;; `vendor` declares a vendor; its :check calls the policy in src/policy.lisp,
+;; so "Procurement must not mark a vendor active while its review is incomplete
+;; or expired" is enforced as an authoring diagnostic at the `:status` option.
+(import "./preludes/modules/kernel.lisp" [and not cond])
+(import "./policy.lisp" [Role Vendor activation-blockers])
+(export vendor VendorIR VendorStatus Approver)
+
+(type VendorStatus (Union "proposed" "active" "offboarded"))
+(type Approver (Union "" "ciso" "security-analyst" "procurement" "vendor-manager"))
+(type VendorIR
+  {:kind "Vendor" :name Symbol :status VendorStatus :as-of Int
+   :blockers (List String)})
+
+;; Register facts as the hook receives them. Day numbers are Ints; -1 and ""
+;; mean "not on file". Optional holes would arrive in a hook as nil or the bare
+;; value rather than as Option values, so the register uses required holes.
+(type Facts {:touches-customer-data Bool :processes-customer-personal-data Bool
+             :dpa-on-file Bool :reviewed-on Int :questionnaire-complete Bool
+             :soc2-issued-on Int :exception-by Approver :exception-reason String
+             :exception-on Int})
+
+(: on-file (-> Int (Option Int)))
+(define on-file [day] (if (< day 0) None (Some day)))
+
+(: role (-> Approver Role))
+(define role [approver]
+  (cond (= approver "ciso") :ciso
+        (= approver "security-analyst") :security-analyst
+        (= approver "procurement") :procurement
+        :else :vendor-manager))
+
+;; The policy's Vendor for a register entry.
+(: vendor-of (-> Facts Vendor))
+(define vendor-of [f]
+  {:name "register entry"
+   :touches-customer-data (get f :touches-customer-data)
+   :processes-customer-personal-data (get f :processes-customer-personal-data)
+   :dpa-on-file (get f :dpa-on-file)
+   :review (if (< (get f :reviewed-on) 0)
+             None
+             (Some {:completed-on (get f :reviewed-on)
+                    :questionnaire-complete (get f :questionnaire-complete)
+                    :soc2-type2-issued-on (on-file (get f :soc2-issued-on))
+                    :exception (if (= (get f :exception-by) "")
+                                 None
+                                 (Some {:approved-by (role (get f :exception-by))
+                                        :reason (get f :exception-reason)
+                                        :approved-on (get f :exception-on)}))}))})
+
+(: blockers (-> Facts Int (List String)))
+(define blockers [facts as-of] (activation-blockers (vendor-of facts) as-of))
+
+(form (vendor name {:keys [status as-of touches-customer-data processes-customer-personal-data
+                           dpa-on-file reviewed-on questionnaire-complete soc2-issued-on
+                           exception-by exception-reason exception-on]})
+  "Declare a vendor in the register. :as-of is the Int day the status is asserted."
+  :examples [[(vendor acme :status "proposed" :as-of 1000 :touches-customer-data false
+                     :processes-customer-personal-data false :dpa-on-file false
+                     :questionnaire-complete false :reviewed-on -1 :soc2-issued-on -1
+                     :exception-by "" :exception-reason "" :exception-on -1)]]
+  :types {:name (Declares VendorDecl) :status VendorStatus :as-of Int
+          :touches-customer-data Bool :processes-customer-personal-data Bool
+          :dpa-on-file Bool :reviewed-on Int :questionnaire-complete Bool
+          :soc2-issued-on Int :exception-by Approver :exception-reason String
+          :exception-on Int}
+  :ir VendorIR
+  :check (fn [h]
+    (let [found (blockers h (get h :as-of))]
+      (if (and (= (get h :status) "active") (not (empty? found)))
+        [{:severity :error :code "vendor/active-without-review" :slot :status
+          :message (str "Cannot mark vendor active: " found)}]
+        [])))
+  {:kind "Vendor" :name name :status status :as-of as-of
+   :blockers (blockers {:touches-customer-data touches-customer-data
+                        :processes-customer-personal-data processes-customer-personal-data
+                        :dpa-on-file dpa-on-file :reviewed-on reviewed-on
+                        :questionnaire-complete questionnaire-complete
+                        :soc2-issued-on soc2-issued-on :exception-by exception-by
+                        :exception-reason exception-reason :exception-on exception-on}
+                       as-of)})
+

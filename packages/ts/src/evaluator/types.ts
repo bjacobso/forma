@@ -115,6 +115,7 @@ export interface KBuiltin {
  * A closure captured from `(fn [params] body)`.
  */
 export interface KFn {
+  readonly name?: string;
   readonly _tag: "KFn";
   readonly params: readonly string[];
   readonly restParam?: string;
@@ -248,8 +249,8 @@ export function asList(v: KValue, context: string): readonly KValue[] {
   return v;
 }
 
-export function asKFn(v: KValue, context: string): KFn {
-  if (!isKFn(v)) {
+export function asKFn(v: KValue, context: string): KFn | KBuiltin {
+  if (!isKFn(v) && !isKBuiltin(v)) {
     throw new TypeCheckError(context, "function", describeType(v));
   }
   return v;

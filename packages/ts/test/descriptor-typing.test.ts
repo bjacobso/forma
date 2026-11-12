@@ -162,6 +162,25 @@ describe("descriptor protocol compatibility", () => {
 });
 
 describe("ordinary function hooks", () => {
+  it("supports argument-dependent unified forms without widening nominal lookups", () => {
+    const prelude = `
+      (type TableIR {:kind "Table"})
+      (define infer-table [input]
+        (meta/infer-expr-type input (meta/positional-arg input 0)))
+      (form (table rows) :types {:rows Syntax} :ir TableIR
+        :infer-fn infer-table {:kind "Table"})`;
+    const dslProvider = descriptorFormProvider(bootstrapFromSources("", "", prelude));
+    const source = `(type Status (Brand Keyword))
+      (define lookup [status] (get (get (table {:main {:status status}}) :main) :status))
+      (lookup (Status :active))`;
+    expect(Effect.runSync(analyzeLsp(source, {dslProvider}))).toMatchObject({resultTypeString:"Brand<Status, Keyword>",errors:[],diagnostics:[]});
+    expect(Effect.runSync(analyzeLsp(prelude + source))).toMatchObject({resultTypeString:"Brand<Status, Keyword>",errors:[],diagnostics:[]});
+    expect(Effect.runSync(analyzeLsp(source.replace('(Status :active)', '42'), {dslProvider}))).toMatchObject({resultTypeString:"Int",errors:[],diagnostics:[]});
+    const typed = `(: require-status (-> Status Bool)) (define require-status [status] true)`;
+    expect(Effect.runSync(analyzeLsp(source + typed + ' (require-status (lookup (Status :active)))', {dslProvider}))).toMatchObject({resultTypeString:"Bool",errors:[],diagnostics:[]});
+    expect(Effect.runSync(analyzeLsp(source + typed + ' (require-status (lookup :active))', {dslProvider})).errors).not.toEqual([]);
+    expect(() => bootstrapFromSources("", "", prelude.replace(":infer-fn infer-table", ":infer-fn infer-table :type Int"))).toThrow("choose :type or :infer-fn");
+  });
   it("retains ordinary program inference for unrelated functions", () => {
     expect(Effect.runSync(analyzeLsp(`${prelude} (define twice [x] (+ x x)) (twice true)`)).errors).toHaveLength(1);
   });

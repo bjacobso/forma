@@ -14,7 +14,7 @@ test("diagnostics underline authored calls and generated output follows repairs 
   await expect(page.locator(".cm-lintRange-error")).toBeVisible();
   await expect(page.locator(".workbench-contract")).toContainText("PaymentDeclined");
   await expect(page.locator(".workbench-check-state")).toHaveText("× Check failed");
-  await expect(page.locator(".workbench-diagnostic-meta")).toContainText(/orders\.forma:\d+:\d+/);
+  await expect(page.locator(".workbench-diagnostic-meta")).toContainText(/orders\.lisp:\d+:\d+/);
   await expect(page.locator(".workbench-diagnostic-source mark")).not.toBeEmpty();
   const beforeGuidance = await page.getByRole("textbox", { name: "Forma source" }).innerText();
   await page.getByText("Example guidance", { exact: false }).click();

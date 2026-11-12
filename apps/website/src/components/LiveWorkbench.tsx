@@ -190,6 +190,6 @@ export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = 
       {errors > 0 ? <details className="workbench-guidance"><summary>Example guidance <span>Authored, not an automatic fix</span></summary><p>{example.prompt}</p><p>Reset restores the original example; it does not apply a compiler-suggested repair.</p></details> : null}
       {status === "ready" && !diagnostics.length ? <p className="workbench-clean">Program checks. All output above comes from this source.</p> : null}
     </div>
-    <footer className="workbench-footer"><span>Runs in your browser · @formalang/ts{example.dialect === "email" ? " · email.lisp prelude · Effect checker" : example.dialect ? " · Effect checker" : ""}</span>{compact ? <span>Your host supplies execution and authorization.</span> : <a href={FORMA_WORKBENCH_URL} target={embedded ? "_top" : undefined}>Structural workbench in Foldworks ↗</a>}</footer>
+    <footer className="workbench-footer"><span>Runs in your browser · @forma-language/forma{example.dialect === "email" ? " · email.lisp prelude · Effect checker" : example.dialect ? " · Effect checker" : ""}</span>{compact ? <span>Your host supplies execution and authorization.</span> : <a href={FORMA_WORKBENCH_URL} target={embedded ? "_top" : undefined}>Structural workbench in Foldworks ↗</a>}</footer>
   </section>;
 }

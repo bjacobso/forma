@@ -1,3 +1,4 @@
+import { surfaceError } from "./errors.js";
 import { stripTypeMetadata } from "./domain.js";
 import type { SExpr } from "../reader/types.js";
 import { head, name, list, sym, vector } from "./effect.js";
@@ -21,16 +22,16 @@ export function lowerOntologyOperations(expressions: readonly SExpr[]): readonly
   const generated: SExpr[] = [];
   const methods = new Map<string, SExpr>();
   const anchor = actions.find(e => head(e) === "__action")!;
-  if (occupied.has("OntologyRuntime")) throw new Error("OntologyRuntime is the service derived from ontology operations and cannot be redeclared");
-  const claim = (n: string) => {
-    if (occupied.has(n)) throw new Error(`Ontology operation type ${n} conflicts with an existing declaration`);
+  if (occupied.has("OntologyRuntime")) throw surfaceError("OntologyRuntime is the service derived from ontology operations and cannot be redeclared", expressions.find(e => e._tag === "List" && name(e.items[1]) === "OntologyRuntime")!);
+  const claim = (n: string, at: SExpr) => {
+    if (occupied.has(n)) throw surfaceError(`Ontology operation type ${n} conflicts with an existing declaration`, at);
     occupied.add(n);
   };
   const idName = (n: string) => `${n}.Id`;
   const type = (e: SExpr): SExpr => {
     if (head(e) === "Id" && e._tag === "List") {
       const n = name(e.items[1]);
-      if (!n || e.items.length !== 2 || !entities.has(n)) throw new Error("Id requires a declared entity");
+      if (!n || e.items.length !== 2 || !entities.has(n)) throw surfaceError("Id requires a declared entity", e);
       return sym(e, idName(n));
     }
     if (["quote", "quasiquote"].includes(head(e) ?? "")) return e;
@@ -43,12 +44,12 @@ export function lowerOntologyOperations(expressions: readonly SExpr[]): readonly
     if (e._tag !== "List") continue;
     if (head(e) === "entity") {
       const n = name(e.items[1]), fields = e.items[2];
-      if (!n || fields?._tag !== "Map") throw new Error("entity requires a name and a field type record");
-      if (entities.has(n)) throw new Error(`Duplicate entity ${n}`);
+      if (!n || fields?._tag !== "Map") throw surfaceError("entity requires a name and a field type record", e);
+      if (entities.has(n)) throw surfaceError(`Duplicate entity ${n}`, e);
       entities.set(n, fields);
     } else if (head(e) === "relation") {
       const n = name(e.items[1]), source = e.items[2], target = e.items[3], fields = e.items[4];
-      if (!n || !source || !target || fields?._tag !== "Map") throw new Error("relation requires a name, source entity, target entity and field type record");
+      if (!n || !source || !target || fields?._tag !== "Map") throw surfaceError("relation requires a name, source entity, target entity and field type record", e);
       relations.set(n, { source, target, fields });
     }
   }
@@ -59,9 +60,9 @@ export function lowerOntologyOperations(expressions: readonly SExpr[]): readonly
     return [k, type(optional && head(b) !== "Option" ? call(t, "Option", b) : b)] as const;
   }));
   for (const [n, fields] of entities) {
-    claim(idName(n));
+    claim(idName(n), fields);
     generated.push(call(fields, "type", sym(fields, idName(n)), call(fields, "Brand", sym(fields, "String"))));
-    if (fields.pairs.some(([k]) => name(k) === ":id")) throw new Error(`Entity ${n} reserves the id field`);
+    if (fields.pairs.some(([k]) => name(k) === ":id")) throw surfaceError(`Entity ${n} reserves the id field`, fields.pairs.find(([k]) => name(k) === ":id")![0]);
     generated.push(call(fields, "type", sym(fields, n), record(fields, [[sym(fields, ":id"), sym(fields, idName(n))], ...(row(fields) as Extract<SExpr, { _tag: "Map" }>).pairs])));
   }
   const effect = (e: SExpr, result: SExpr, requirement = false) => call(e, "Effect", result, vector(e, []), vector(e, requirement ? [sym(e, "OntologyRuntime")] : []));
@@ -76,7 +77,7 @@ export function lowerOntologyOperations(expressions: readonly SExpr[]): readonly
     const op = head(e);
     if (["create!", "update!", "retract!", "task!", "instantiate!"].includes(op ?? "")) {
       const owner = name(e.items[op === "instantiate!" ? 2 : 1]), fields = entities.get(owner ?? "");
-      if (!owner || !fields) throw new Error(`${op} requires a declared entity`);
+      if (!owner || !fields) throw surfaceError(`${op} requires a declared entity`, e);
       const id = sym(e, idName(owner));
       let params: readonly SExpr[], result: SExpr;
       switch (op) {
@@ -97,7 +98,7 @@ export function lowerOntologyOperations(expressions: readonly SExpr[]): readonly
     }
     if (op === "link!") {
       const n = name(e.items[1]), relation = relations.get(n ?? "");
-      if (!n || !relation) throw new Error("link! requires a declared relation");
+      if (!n || !relation) throw surfaceError("link! requires a declared relation", e);
       const params = [type(call(e, "Id", relation.source)), type(call(e, "Id", relation.target)), row(relation.fields)];
       return call(e, method(e, `link/${n}`, params, sym(e, "Unit")), ...e.items.slice(2).map(body));
     }

@@ -1,23 +1,25 @@
 # File modules
 
+Forma source files use `.lisp`; project metadata uses `forma.json` and `forma.lock`.
+
 RFC 0002 implements isolated file modules and a stage 2 compile-time library
 slice in the TypeScript engine. A file's definitions are private. Source loading registers files;
 it does not publish their bindings into a host session.
 
 ```lisp
-;; identity.forma
+;; identity.lisp
 (export identity)
 (define identity [value] value)
 
-;; names.forma
+;; names.lisp
 (export Name label)
 (type Name (Brand String))
 (: label (-> Name String))
 (define label [name] (str "Hello, " name))
 
-;; main.forma
-(import "./identity.forma" [identity])
-(import "./names.forma" :as names)
+;; main.lisp
+(import "./identity.lisp" [identity])
+(import "./names.lisp" :as names)
 (export greeting)
 (define greeting (names/label (names/Name (identity "Ada"))))
 greeting
@@ -29,19 +31,19 @@ Each imported polymorphic function is instantiated independently at each call.
 A barrel preserves those identities:
 
 ```lisp
-;; public.forma
-(export-from "./names.forma" [Name label])
+;; public.lisp
+(export-from "./names.lisp" [Name label])
 ```
 
 Exporting a tagged type makes its constructors available through that type:
 
 ```lisp
-;; status.forma
+;; status.lisp
 (export Status)
 (type Status (Tagged (Ready {:message String}) Empty))
 
-;; reader.forma
-(import "./status.forma" [Status])
+;; reader.lisp
+(import "./status.lisp" [Status])
 (Status.Ready {:message "Ready"})
 ;; Ready is not a bare imported name.
 ```
@@ -55,8 +57,8 @@ are not implemented.
 The implicit module core consists of intrinsic syntax, evaluation primitives,
 primitive/container types, and the current Effect-value authoring forms. `type`,
 `class`, `error`, `service`, `layer`, and `do!` remain built in. Kernel sugar can be
-imported from `preludes/kernel.forma`; it is not automatically loaded into file
-modules. `preludes/clojure.forma` is a second such library with Clojure
+imported as `forma:kernel`; it is not automatically loaded into file
+modules. `forma:clojure` is a second such library with Clojure
 spellings such as `defn` and `if-let`, described in
 [Clojure spellings](./clojure.md). A macro in scope may claim a retired
 spelling (`def`, `defn`, `defmacro`, `lambda`, `let*`); an unclaimed one reports
@@ -64,6 +66,28 @@ spelling (`def`, `defn`, `defmacro`, `lambda`, `let*`); an unclaimed one reports
 Explicitly configured host variables remain available. Source-loading and legacy
 descriptor-prelude APIs do not add library bindings to module scopes.
 Typeclass instance imports and coherence remain deferred.
+
+## Bundled libraries
+
+Reserved specifiers import the libraries shipped with the engine:
+
+```lisp
+(import "forma:kernel" [and or not])
+(import "forma:test" [test is is=])
+(import "forma:clojure" [defn if-let])
+(import "forma:routes" [route])
+```
+
+The available names are `kernel`, `test`, `clojure`, and `routes`. They need no
+`forma.json` dependency, vendored copy, or filesystem path. Their source strings
+are embedded from `preludes/modules/` and work in Node, browser hosts, and the
+installed npm distribution. The engine reserves the `forma:` scheme before host
+or package lookup; unknown names report `module/specifier` with available names.
+Each module's ID is its specifier, such as `forma:kernel`, so interfaces and
+binding/contract identities contain no checkout or installation path. Bundled
+sources follow the engine version rather than a separately locked dependency.
+Relative imports inside these libraries resolve only to other embedded library
+sources. Importing libraries does not add their exports to unrelated modules.
 
 ## Compile-time libraries
 
@@ -75,7 +99,7 @@ hygiene covers generated `fn` and `let` binders; other binding constructs still
 need further work.
 
 ```lisp
-;; stripe.forma
+;; stripe.lisp
 (export price)
 (type PriceDecl Symbol)
 (type PriceIR {:name Symbol :label String :amount Int})
@@ -85,8 +109,8 @@ need further work.
   :ir PriceIR
   {:name name :label (display-label label) :amount amount})
 
-;; billing.forma
-(import "./stripe.forma" [price])
+;; billing.lisp
+(import "./stripe.lisp" [price])
 (export Monthly Annual prices)
 (price Monthly "Monthly" 1200)
 (price Annual "Annual" 12000)
@@ -125,14 +149,14 @@ await host.configureSession({
   projects: [{
     id: "billing",
     base: "billing/project",
-    prelude: "./prelude.forma",
-    modules: ["billing/main.forma", "billing/prelude.forma"],
+    prelude: "./prelude.lisp",
+    modules: ["billing/main.lisp", "billing/prelude.lisp"],
   }],
 });
 ```
 
 `base` is the resolver's importing-file base: the example resolves the setting to
-`billing/prelude.forma`. A project's source modules receive the selected module's
+`billing/prelude.lisp`. A project's source modules receive the selected module's
 exports under ordinary named-import collision rules. The prelude and its explicit
 dependency closure bootstrap without that project's automatic imports. Each
 module uses its owning project's selection, so two projects can use distinct
@@ -152,7 +176,7 @@ A package declares its public files and dependency source map in `forma.json`:
 {
   "name": "@acme/flows",
   "version": "2.1.0",
-  "exports": { ".": "./src/index.forma", "./ir": "./src/ir.forma" },
+  "exports": { ".": "./src/index.lisp", "./ir": "./src/ir.lisp" },
   "dependencies": { "@acme/ir": "gitlab.com/acme/ir@v1.0.0" }
 }
 ```
@@ -168,7 +192,7 @@ directories. A dependency key must equal the package's own declared name.
 Semver tags use highest-minimum selection across the graph; other refs must
 agree exactly. Coexisting majors need distinct, matching declared names.
 
-Commit dependencies under `vendor/<name>/`, with their manifest and all `.forma`
+Commit dependencies under `vendor/<name>/`, with their manifest and all `.lisp`
 files, and commit `forma.lock` with resolved refs, commits, and SHA-256 hashes.
 The Node adapter verifies the entire dependency closure before compiling.
 Relative dependencies stay local and are hashed too. Vendored or local edits,
@@ -199,12 +223,12 @@ include `module/undeclared-dependency`, `module/package-not-found`,
 `module/package-private`, `module/package-escape`, and `module/specifier`.
 An optional `prelude` gives the package's own modules automatic imports.
 
-Package modules have IDs such as `pkg:@acme/flows/src/index.forma`, independent
+Package modules have IDs such as `pkg:@acme/flows/src/index.lisp`, independent
 of hosting or checkout location. Binding identities and `contractId`s stay the
 same for unchanged definitions. A graph has one version per name. Modules of
 the package being developed keep file IDs for diagnostics.
 
-`forma file <op> entry.forma` and `readModuleGraph` in `@formalang/ts/node` find
+`forma file <op> entry.lisp` and `readModuleGraph` in `@forma-language/forma/node` find
 the nearest `forma.json`, verify `forma.lock`, and read `vendor/` and relative
 dependencies without network access. Other hosts pass a table to
 `configureSession` and store package sources under their `pkg:` IDs:
@@ -214,16 +238,16 @@ await host.configureSession({
   sessionId,
   packages: {
     packages: [
-      { name: "@acme/ir", version: "1.0.0", exports: { ".": "ir.forma" } },
-      { name: "@acme/flows", exports: { ".": "index.forma" }, dependencies: ["@acme/ir"] },
+      { name: "@acme/ir", version: "1.0.0", exports: { ".": "ir.lisp" } },
+      { name: "@acme/flows", exports: { ".": "index.lisp" }, dependencies: ["@acme/ir"] },
     ],
     dependencies: ["@acme/flows"], // what modules outside every package may import
   },
 });
 await host.loadSourceBundle({ sessionId, sources: [
-  { kind: "source", sourceId: "pkg:@acme/ir/ir.forma", source: irSource },
-  { kind: "source", sourceId: "pkg:@acme/flows/index.forma", source: flowsSource },
-  { kind: "source", sourceId: "main.forma", source: mainSource },
+  { kind: "source", sourceId: "pkg:@acme/ir/ir.lisp", source: irSource },
+  { kind: "source", sourceId: "pkg:@acme/flows/index.lisp", source: flowsSource },
+  { kind: "source", sourceId: "main.lisp", source: mainSource },
 ] });
 ```
 
@@ -233,30 +257,30 @@ The language server does not resolve packages yet.
 
 `TsLanguageHost` supports source-bundle, `moduleGraph`, `typecheck`, `expand`,
 `evaluateInSession`, and `linkEffectModules` workflows. The host and the
-`@formalang/ts/modules` entry point work in browsers without filesystem APIs:
+`@forma-language/forma/modules` entry point work in browsers without filesystem APIs:
 
 ```typescript
-import { TsLanguageHost } from "@formalang/host/ts-host";
+import { TsLanguageHost } from "@forma-language/forma/host";
 
 const host = new TsLanguageHost();
 const { sessionId } = await host.openSession();
 await host.loadSourceBundle({
   sessionId,
   sources: [
-    { kind: "source", sourceId: "identity.forma",
+    { kind: "source", sourceId: "identity.lisp",
       source: "(export identity) (define identity [value] value)" },
-    { kind: "source", sourceId: "main.forma",
-      source: '(import "./identity.forma" [identity]) (identity 42)' },
+    { kind: "source", sourceId: "main.lisp",
+      source: '(import "./identity.lisp" [identity]) (identity 42)' },
   ],
 });
-const checked = await host.moduleGraph({ sessionId, sourceId: "main.forma" });
-const evaluated = await host.evaluateInSession({ sessionId, sourceId: "main.forma" });
+const checked = await host.moduleGraph({ sessionId, sourceId: "main.lisp" });
+const evaluated = await host.evaluateInSession({ sessionId, sourceId: "main.lisp" });
 await host.closeSession({ sessionId });
 ```
 
 Loading order does not affect resolution. The host supplies a synchronous resolver
 `(specifier, importerId) => { id, source } | undefined`. In-memory bundles resolve
-normalized relative paths. The Node adapter in `@formalang/ts/node` and the `forma`
+normalized relative paths. The Node adapter in `@forma-language/forma/node` and the `forma`
 CLI use canonical filesystem paths. Cycles report the complete import chain;
 missing files, private exports, collisions, and namespace mistakes report the
 importing author's span.
@@ -264,7 +288,14 @@ importing author's span.
 Kernel module evaluation initializes pure definitions once per runtime instance
 and dependency version. Entry expressions run on explicit evaluation; importing
 that file does not run those expressions. Updating a file creates new instances
-for it and its dependents. Observation requests create a fresh entry instance so
+for it and its dependents. Form definitions are compile-time declarations and
+are not called by the runtime. A named form application initializes its declared
+name with the already elaborated descriptor (`:identity`, `:classification`,
+and projected `:data`), matching checked scope. Its value is that descriptor;
+an unnamed application evaluates to its projected IR. Checks and projections
+are reused from graph resolution, so evaluation does not run hooks again.
+Ordinary pure definitions in form libraries still initialize under the same
+module rules. Observation requests create a fresh entry instance so
 that the complete execution can be observed. Effect programs execute through the
 linked Effect target; kernel evaluation reports `module/effect-runtime` instead
 of executing an Effect initializer.
@@ -279,21 +310,20 @@ prepares that value; application code supplies the service and runs the Effect.
 After building the TypeScript packages:
 
 ```sh
-pnpm --filter @formalang/ts build
-pnpm --filter @formalang/host build
-node scripts/link-forma-modules.mjs conformance/modules/main.forma .context/linked
+pnpm exec turbo run build --filter=@forma-language/forma
+node scripts/link-forma-modules.mjs conformance/modules/main.lisp .context/linked
 # The host package installs the forma executable; from a checkout:
-node packages/host/dist/cli.mjs file interface conformance/modules/main.forma
-node packages/host/dist/cli.mjs file typecheck conformance/modules/main.forma
+node packages/host/dist/cli.mjs file interface conformance/modules/main.lisp
+node packages/host/dist/cli.mjs file typecheck conformance/modules/main.lisp
 ```
 
 The TypeScript `forma` executable also accepts a JSON request argument or stdin:
 
 ```sh
-forma request '{"op":"typecheck","sourceId":"example.forma","source":"(+ 1 2)"}'
+forma request '{"op":"typecheck","sourceId":"example.lisp","source":"(+ 1 2)"}'
 printf '%s\n' '{"op":"parseSummary","source":"1 2"}' '{"op":"version"}' | forma daemon
-forma file evaluate path/to/main.forma
-forma file declarations path/to/main.forma
+forma file evaluate path/to/main.lisp
+forma file declarations path/to/main.lisp
 ```
 
 `file evaluate` typechecks the graph first and returns the typecheck response,
@@ -313,7 +343,7 @@ Typecheck also exposes its display string in `type`. Malformed requests use
 and unexpected engine failures use `internal/error`. Request failures do not
 terminate the daemon. Filesystem failures use `io/error`.
 
-The exported `@formalang/host/json-abi` entry provides `JsonRequest`, `JsonResponse`,
+The exported `@forma-language/forma/host/json-abi` entry provides `JsonRequest`, `JsonResponse`,
 `TypeScheme`, and `JsonValueProjection` Effect schemas and a `JsonAbi` dispatcher.
 Its operations cover parsing, expansion, typechecking, evaluation, modules,
 session configuration, loading, retained values, and suspended host calls.
@@ -341,7 +371,7 @@ The remaining optional `LanguageHost` methods are editor APIs:
 `describeNodes`, `editScriptSchema`, `sourceToOutline`, `outlineToSource`, and
 `formSlots`. They remain available through the in-process host, which carries
 syntax identities and editor projections; this process ABI covers compiler and
-session operations. Elaboration is not a separate ABI operation. The standalone `elaborateProgram` and `elaborateSources` APIs in `@formalang/ts/descriptor` return declaration projections;
+session operations. Elaboration is not a separate ABI operation. The standalone `elaborateProgram` and `elaborateSources` APIs in `@forma-language/forma/descriptor` return declaration projections;
 use session `emit`/`emitMany` for validated, packaged artifacts.
 Host schemes reject unknown names and malformed structure, including nested
 schemes. `Int` and `Float` are distinct host types; `Number` and `Num` are rejected

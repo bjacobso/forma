@@ -1,11 +1,12 @@
 ---
+date: 2026-11-07
 title: The Interpreter Becomes a Compiler
 description: Part 6 of From Lists to Languages. Elaborate surface syntax into a small typed core with resolved names, run core with an evaluator that trusts it, and save compiled core as a Schema-checked artifact.
 ---
 
 # The Interpreter Becomes a Compiler
 
-<p class="blog-meta">Part 06 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act II, Types and Extension · <time datetime="2026-11-08">November 8, 2026</time></p>
+<p class="blog-meta">Part 06 of <a href="/blog/in-the-beginning/">From Lists to Languages</a> · Act II, Types and Extension · <time datetime="2026-11-07">November 7, 2026</time></p>
 
 > Syntax is what you write. Core is what it means.
 
