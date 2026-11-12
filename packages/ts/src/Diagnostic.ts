@@ -13,6 +13,7 @@ export {
 } from "./diagnostic/errors.js";
 
 export { InferenceError, type Origin } from "./diagnostic/errors.js";
+export { SurfaceInputError } from "./surface/errors.js";
 
 // Re-export ParseError for convenience
 export { ParseError } from "./reader/types.js";
