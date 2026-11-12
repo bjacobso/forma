@@ -10,8 +10,8 @@ assert.equal(manifest.name, "@forma-language/forma");
 assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
 assert.deepEqual(Object.keys(manifest.exports).sort(), [
   ".", "engine", "reader", "modules", "diagnostic", "formatter",
-  "editor-services", "descriptor", "preludes", "mechanics", "http-api", "rpc",
-  "type", "email", "elm", "expander", "node", "host", "host/types",
+  "editor-services", "analysis", "descriptor", "preludes", "mechanics", "http-api", "rpc",
+  "type", "email", "elm", "expander", "node", "host", "host/types", "host/json-abi",
   "editor", "editor/codemirror", "editor/react", "language-server",
 ].map(key => key === "." ? key : `./${key}`).sort());
 const neutral = Object.keys(manifest.exports).filter(key => !["./node", "./language-server", "./editor/react", "./editor/codemirror"].includes(key));

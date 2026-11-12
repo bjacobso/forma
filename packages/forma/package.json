@@ -55,6 +55,10 @@
       "types": "./dist/editor-services.d.mts",
       "import": "./dist/editor-services.mjs"
     },
+    "./analysis": {
+      "types": "./dist/analysis.d.mts",
+      "import": "./dist/analysis.mjs"
+    },
     "./http-api": {
       "types": "./dist/http-api.d.mts",
       "import": "./dist/http-api.mjs"
@@ -96,6 +100,10 @@
     "./host/types": {
       "types": "./dist/host/types.d.mts",
       "import": "./dist/host/types.mjs"
+    },
+    "./host/json-abi": {
+      "types": "./dist/host/json-abi.d.mts",
+      "import": "./dist/host/json-abi.mjs"
     },
     "./editor": {
       "types": "./dist/editor.d.mts",

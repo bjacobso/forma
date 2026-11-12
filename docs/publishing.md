@@ -42,18 +42,20 @@ operations, and the default host. These are the retained public subpaths:
 
 | Use | Subpaths |
 | --- | --- |
-| Checking and source tools | `/engine`, `/reader`, `/modules`, `/diagnostic`, `/formatter`, `/editor-services`, `/expander`, `/type` |
+| Checking and source tools | `/engine`, `/reader`, `/modules`, `/diagnostic`, `/formatter`, `/editor-services`, `/analysis`, `/expander`, `/type` |
 | Vocabulary and generators | `/descriptor`, `/preludes`, `/mechanics`, `/http-api`, `/rpc`, `/email`, `/elm` |
-| Embedding | `/host`, `/host/types`, `/node` |
+| Embedding | `/host`, `/host/types`, `/host/json-abi`, `/node` |
 | Editor and server adapters | `/editor`, `/editor/codemirror`, `/editor/react`, `/language-server` |
 
-This removes 20 internal subpaths: `/analysis`, `/source`, `/session`, `/artifact`,
+This removes 18 internal subpaths: `/source`, `/session`, `/artifact`,
 `/sexpr`, `/evaluator`, `/vm`, `/builtins`, `/core-expr`, `/env`, `/syntax`, `/lsp`,
 `/codegen`, `/descriptor-codegen`, `/ontology`, `/authoring`, `/host/default-host`,
-`/host/editor`, `/host/ts-host` and `/host/json-abi`. These internal entry points
+`/host/editor` and `/host/ts-host`. These internal entry points
 are no longer supported. (The previous manifest had 42 subpaths plus the
-root; the retained manifest has 22 plus the root.) Use the root or `/engine` for
-checking, `/host` for advanced host operations and `/editor` for UI-free analysis.
+root; the retained manifest has 24 plus the root.) Use the root or `/engine` for
+checking, `/host` for advanced host operations (including `TsLanguageHost`),
+`/host/json-abi` for the process ABI types and schema, and `/analysis` for the
+UI-free language-service workspace (`AnalysisWorkspace`).
 `/email` and `/elm` remain experimental; the website exercises both generators.
 
 WorldVM's required imports remain public, with these exact symbols (including

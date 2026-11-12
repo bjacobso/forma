@@ -91,7 +91,7 @@ try {
     const require = createRequire(import.meta.url);
     assert.throws(() => require.resolve('react'));
     for (const specifier of ${JSON.stringify(inert)}) await import(specifier);
-    for (const subpath of ['analysis', 'session', 'evaluator', 'host/ts-host']) {
+    for (const subpath of ['session', 'evaluator', 'host/ts-host', 'authoring']) {
       await assert.rejects(import('${name}/' + subpath), { code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });
     }
     const { createLanguage } = await import('${name}');
