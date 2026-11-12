@@ -18,7 +18,7 @@ export default defineConfig({
   clean: true,
   deps: {
     alwaysBundle: [/^@formalang\//],
-    neverBundle: [/^(effect|react|react-dom)(\/|$)/, /^@codemirror\//, /^@lezer\//, /^vscode-/],
+    neverBundle: [/^(effect|react|react-dom)(\/|$)/, /^@codemirror\//, /^@lezer\//, /^@modelcontextprotocol\//, /^vscode-/],
   },
   alias: { "@formalang/host/cli": resolve("../host/dist/cli.mjs") },
   plugins: [{

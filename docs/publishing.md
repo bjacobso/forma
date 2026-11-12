@@ -31,8 +31,8 @@ Record the checkout's `git rev-parse HEAD` alongside the tarball: pre-alpha
 commits within a release can differ. `pnpm check:tarball` clones the current
 commit with `git clone --shared`, performs a frozen install and fresh build,
 then installs its tarball plus Effect in an empty npm project. It checks root
-imports, `check`, `run`, `test` with `forma:test`, `createLanguage`, and both bins.
-It tests committed source, so uncommitted edits are deliberately excluded.
+imports, `check`, `run`, `test` with `forma:test`, `createLanguage`, and missing-tool install guidance, then adds optional tooling and checks both bins.
+By default it tests committed source, so uncommitted edits are deliberately excluded.
 CI runs it after `pnpm pack:check`.
 
 ## Public contract and dependency weight
@@ -73,24 +73,57 @@ WorldVM must change the package prefix from `@formalang/ts` to
 `@forma-language/forma`. Its convergence script still vendors the private engine;
 `pnpm --filter @formalang/ts pack` remains supported during this transition.
 
-**Dependency choice:** retain CodeMirror/Lezer, the MCP SDK and LSP libraries as
-regular dependencies so both `forma` and `forma-language-server` work after a
-plain `npm install @forma-language/forma effect`. These tools load through their
-specific subpaths or executables. Root and runtime-neutral subpaths must bundle
-without importing those dependencies; `check-distribution.mjs` enforces this,
-including MCP. React and React DOM 19 remain optional peers for `/editor/react`.
-Effect is the required peer (`^4.1.1`), with 4.1.1 the tested baseline.
+Checking, evaluation, the ordinary CLI commands and UI-free `/editor` need only
+Forma and its required Effect peer. Tooling dependencies are optional peers:
 
-Dependency weight is intentionally unchanged: the existing installed checking
-closure, excluding optional React roots, has **119 dependency packages,
-79,313,133 file bytes before and after**. The baseline tarball adds 2,348,069
-uncompressed file bytes (81,661,202 total); the 0.5.0 tarball adds 2,345,942
-bytes (81,659,075 total). These are measurements of the
-existing workspace's installed dependency closure, not a completed clean
-consumer install: offline sandbox installs lacked the CodeMirror markdown
-tarball. `pnpm pack:check` prints the actual clean consumer package count and
-installed file bytes before adding optional UI peers. File bytes exclude
-`node_modules` links and package-manager metadata; disk block usage varies.
+| Entry or command | Additional packages |
+| --- | --- |
+| `/editor` | None (UI-free analysis) |
+| `/editor/codemirror` | The CodeMirror and Lezer group below |
+| `/editor/react` | The CodeMirror and Lezer group, plus `react@^19.0.0` and `react-dom@^19.0.0` |
+| `forma mcp` | `@modelcontextprotocol/sdk@1.32.2` |
+| `/language-server`, `forma-language-server` | `vscode-languageserver@^9.0.1` and `vscode-languageserver-textdocument@^1.0.12` |
+
+Install only the groups you use (quote ranges when needed by your shell):
+
+```sh
+# CodeMirror / Lezer editor adapters
+npm install @codemirror/autocomplete@^6.18.6 @codemirror/commands@^6.8.1 @codemirror/lang-markdown@^6.5.0 @codemirror/language@^6.11.0 @codemirror/lint@^6.8.5 @codemirror/state@^6.5.2 @codemirror/view@^6.36.8 @lezer/highlight@^1.2.1 @lezer/lr@^1.4.2
+# React adapter (also install the editor group above)
+npm install react@^19.0.0 react-dom@^19.0.0
+# MCP server
+npm install @modelcontextprotocol/sdk@1.32.2
+# Language server
+npm install vscode-languageserver@^9.0.1 vscode-languageserver-textdocument@^1.0.12
+```
+
+Editor adapter and language-server subpath imports can fail immediately if their
+peers are missing. The bins exit with an install command when a required tooling
+peer is missing. For global bins, install the corresponding peers globally too.
+
+Effect is the required peer (`^4.1.1`), with 4.1.1 the tested baseline.
+`check-distribution.mjs` enforces runtime-neutral browser boundaries, while
+`optional-dependencies.test.mjs` checks ordinary built exports and missing-peer
+bin messages in an isolated consumer with only Effect linked.
+
+Measure clean installs before and after with the same method:
+
+```sh
+node scripts/measure-install.mjs /absolute/path/to/before.tgz
+node scripts/measure-install.mjs /absolute/path/to/after.tgz
+```
+
+Each run installs the archive plus `effect@4.1.1` with npm in a fresh temporary
+project, prints `packages=<n> bytes=<n>`, then removes the project. The count is
+installed package instances from npm's lockfile, including Forma and Effect.
+Bytes sum compressed registry tarball sizes from `npm pack --json` for those
+instances plus the actual local Forma archive size. This is compressed transfer
+size, not installed disk size. Both install and pack use `--prefer-offline`.
+Registry access is needed for cache misses; the sandbox could not complete the
+baseline registry install, so before/after totals remain to be measured outside
+it. `pnpm check:tarball` prints the lean package count and checks both missing
+and explicitly installed tooling. To test an uncommitted build, pass its archive:
+`pnpm check:tarball /absolute/path/to/forma.tgz`.
 
 ## Version rule and release checks
 

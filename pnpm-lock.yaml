@@ -220,6 +220,16 @@ importers:
 
   packages/forma:
     dependencies:
+      effect:
+        specifier: ^4.1.1
+        version: 4.1.1
+      react:
+        specifier: ^19.0.0
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
       '@codemirror/autocomplete':
         specifier: ^6.18.6
         version: 6.20.3
@@ -250,15 +260,6 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: 1.32.2
         version: 1.32.2(zod@4.6.7)
-      effect:
-        specifier: ^4.1.1
-        version: 4.1.1
-      react:
-        specifier: ^19.0.0
-        version: 19.2.8
-      react-dom:
-        specifier: ^19.0.0
-        version: 19.2.8(react@19.2.8)
       vscode-languageserver:
         specifier: ^9.0.1
         version: 9.0.1

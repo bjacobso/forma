@@ -7,7 +7,12 @@ including symlink targets. It does not grant host capabilities to evaluated code
 The public package `@forma-language/forma` is not yet published. Until publication,
 build from source and use `node /absolute/path/to/forma/packages/host/dist/cli.mjs mcp`
 as the server command. Once published, install `@forma-language/forma` and its
-`effect` peer dependency in your project so the `forma` executable is available.
+`effect` peer dependency and the optional `@modelcontextprotocol/sdk@1.32.2` peer
+in your project so the `forma` executable can start its MCP server:
+
+```sh
+npm install @forma-language/forma effect@4.1.1 @modelcontextprotocol/sdk@1.32.2
+```
 
 ## Setup
 
@@ -18,7 +23,7 @@ claude mcp add forma -- npx forma mcp
 ```
 
 For an installation independent of an existing local executable, the explicit
-package invocation is `npx --package @forma-language/forma --package effect forma mcp`
+package invocation is `npx --package @forma-language/forma --package effect --package @modelcontextprotocol/sdk@1.32.2 forma mcp`
 after publication.
 
 For Codex, add this to `~/.codex/config.toml` (replace the working directory):
