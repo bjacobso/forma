@@ -1,5 +1,7 @@
 import { payloadContractsFromSources, type PayloadContracts } from "../artifact/descriptor-contracts.js";
 import { typeDefinition } from "../surface/type-alias.js";
+import { preludeSnapshotCache } from "../preludes/snapshot-cache.js";
+import { capturePrelude, restorePrelude, type PreludeSnapshot } from "./snapshot.js";
 /**
  * Bootstrap — load prelude sources and register form descriptors + __form-hook hooks.
  *
@@ -116,6 +118,11 @@ export function bootstrapFromSources(
   const compilerSource = named ? named[0]?.source ?? "" : compilerSourceOrSources as string;
   const domainSource = named ? named[1]?.source ?? "" : domainSourceOrOptions as string;
   const additionalInputs = named?.slice(2) ?? additionalSources.map(source => ({ source, sourceId: undefined }));
+  // Host factories and deferred validation must never reuse a validated snapshot.
+  const cacheKey = preludeSnapshotCache && options.checkReferences !== false && !options.hostedMetaBuiltins && !options.hostedDsls?.length
+    ? JSON.stringify(["descriptors", named ?? [compilerSource,domainSource,...additionalSources]]) : undefined;
+  const snapshot = cacheKey ? preludeSnapshotCache?.get<PreludeSnapshot>(cacheKey) : undefined;
+  if (snapshot) return restorePrelude(snapshot);
   if (named) {
     const diagnostics = checkDescriptors(named, { checkReferences: false });
     if (diagnostics.some(d => d.severity === "error")) throw new ElaborationFailure(diagnostics);
@@ -221,7 +228,7 @@ export function bootstrapFromSources(
     validateDescriptorReferences({ descriptions, elaboration, elaborationDescriptors });
   }
 
-  return {
+  const result: BootstrappedPrelude = {
     sources,
     ...(named ? {sourceInputs: named} : {}),
     typingHooks: deduped,
@@ -247,6 +254,8 @@ export function bootstrapFromSources(
       elaborations: dedupedElaborations.size,
     },
   };
+  if (cacheKey) preludeSnapshotCache?.set(cacheKey,capturePrelude(result));
+  return result;
 }
 
 function validateMetaFnDeclarations(metaFns: readonly MetaFnDecl[]): void {

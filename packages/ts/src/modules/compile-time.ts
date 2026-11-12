@@ -3,6 +3,7 @@ import { irContractId } from "../artifact/contract-identity.js";
 import { isKFloat } from "../evaluator/types.js";
 import { Effect } from "effect";
 import { Env } from "../Env.js";
+import { preludeSnapshotCache } from "../preludes/snapshot-cache.js";
 import { defaultBuiltins } from "../Builtins.js";
 import { evaluateCompileTimeExprs } from "../evaluator/eval.js";
 import { expandKernelExprsSync } from "../evaluator/frontend.js";
@@ -536,13 +537,18 @@ export function prepareCompileTimeModule(
     (e) => head(e) === "macro",
   );
   if (macroExpressions.length) {
-    env = Effect.runSync(
+    // Only closed macro libraries: no imported state, lazy values, or host callbacks.
+    const cacheKey = preludeSnapshotCache && imported.length === 0 && macroExpressions.length === module.expressions.length
+      ? JSON.stringify(["module-macros",module.id,macroExpressions]) : undefined;
+    const cached = cacheKey ? preludeSnapshotCache?.get<Env>(cacheKey) : undefined;
+    env = cached ?? Effect.runSync(
       evaluateCompileTimeExprs(normalizeCoreProgram(macroExpressions), {
         env,
         builtins: defaultBuiltins,
         stepLimit: 100_000,
       }),
     ).env;
+    if (cacheKey && !cached) preludeSnapshotCache?.set(cacheKey,env);
     for (const expression of macroExpressions)
       if (expression._tag === "List" && expression.items[1]?._tag === "List")
         ready.add(name(expression.items[1].items[0])!);

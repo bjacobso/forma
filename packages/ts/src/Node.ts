@@ -1,4 +1,5 @@
 /** Node-only helpers; browser entry points do not import this module. */
+export { enablePreludeCache } from "./node/prelude-cache.js";
 import { readFileSync } from "node:fs";
 import {
   bootstrapFromSources,

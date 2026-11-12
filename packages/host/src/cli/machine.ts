@@ -4,6 +4,7 @@ import type { JsonAbi } from "../json-abi.js";
 import { file } from "./file.js";
 import { schemaBuild } from "./schema.js";
 import { packages } from "./packages.js";
+import { preludeCheck } from "../prelude-check.js";
 import { located, printJson } from "./output.js";
 
 export async function machine(abi: JsonAbi, command: string, args: readonly string[]): Promise<boolean> {
@@ -16,6 +17,10 @@ export async function machine(abi: JsonAbi, command: string, args: readonly stri
     if (!unchecked && !(args.length === 2 && ["typecheck", "evaluate", "interface", "declarations"].includes(args[0]!))) return false;
     const result = await file(abi, args[0]!, args[unchecked ? 2 : 1]!, unchecked);
     printJson(located(result));
+    if (!result.ok) process.exitCode = 1;
+  } else if (command === "prelude" && args[0] === "check") {
+    const result = preludeCheck(args.slice(1));
+    printJson(result);
     if (!result.ok) process.exitCode = 1;
   } else if (command === "schema") {
     const result = schemaBuild(args);

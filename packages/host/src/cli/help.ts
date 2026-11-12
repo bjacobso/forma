@@ -22,6 +22,9 @@ Machine commands (JSON):
   file interface <entry.lisp>          Print module interfaces.
   schema <sources...> --out <dir> [--check]
                                       Generate data codecs, types, and JSON Schema.
+  prelude check <sources...> [--dependency <source>] [--catalog <json>] [--out <md>]
+                                      Check descriptors, docs, examples and diagnostic coverage.
+                                      Emit reference Markdown inline or to --out on success.
   request ['<json>']                   Handle one JSON request (argument or stdin).
   daemon                              Handle one JSON request per stdin line.
   mcp                                 Serve structured agent tools over MCP stdio.

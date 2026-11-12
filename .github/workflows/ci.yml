@@ -34,6 +34,8 @@ jobs:
         if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/main'
         run: pnpm check:changesets
       - run: pnpm check
+      - name: Guard prelude startup latency
+        run: node scripts/bench-prelude-startup.mjs --check
       - name: Report latency budget
         continue-on-error: true
         run: pnpm bench:latency --out scripts/benchmarks/latency-results.json

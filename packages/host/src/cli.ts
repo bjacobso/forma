@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** Node transports; compiler and session behavior stays in FormaHost. */
 import { ModuleError } from "@formalang/ts/modules";
+import { enablePreludeCache } from "@formalang/ts/node";
 import { JsonAbi, hostAbiSchema, type JsonResponse } from "./json-abi.js";
 import { human } from "./cli/human.js";
 import { machine } from "./cli/machine.js";
@@ -8,6 +9,8 @@ import { usage } from "./cli/help.js";
 import { located, printJson, report } from "./cli/output.js";
 
 const [command = "", ...args] = process.argv.slice(2);
+// File-reading commands reuse cached prelude snapshots; a cache problem never fails compilation.
+if (["file", "prelude", "check", "run", "test", "describe"].includes(command)) enablePreludeCache();
 const humanCommand = ["check", "run", "test", "fmt", "repl", "explain", "describe"].includes(command);
 try {
   const abi = new JsonAbi();
