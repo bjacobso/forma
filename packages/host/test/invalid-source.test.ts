@@ -4,12 +4,30 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { expect, test } from "vitest";
 import { diagnosticCatalog } from "@formalang/ts/diagnostic";
+import { bootstrapFromSources, elaborateProgram } from "@formalang/ts/descriptor";
 import { TsLanguageHost } from "../src/ts-host.js";
 
 const cli = resolve(import.meta.dirname, "../dist/cli.mjs");
 const fixtures = resolve(import.meta.dirname, "../../../conformance/invalid-source");
 const cases = Object.fromEntries(readdirSync(fixtures).filter(name => name.endsWith(".lisp"))
   .map(name => [name, readFileSync(join(fixtures, name), "utf8")]));
+
+// These programs exercise standalone elaboration against an already loaded
+// source prelude, a separate entry point from module check/run.
+for (const name of readdirSync(join(fixtures, "elaboration")).filter(name => name.endsWith(".lisp"))) {
+  test(`author mistakes are located during standalone elaboration: ${name}`, () => {
+    const source = readFileSync(join(fixtures, "elaboration", name), "utf8");
+    const result = elaborateProgram(source, { prelude: bootstrapFromSources("", source), sourceId: name });
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics.length).toBeGreaterThan(0);
+    for (const diagnostic of result.diagnostics) {
+      expect(diagnostic.code).not.toBe("internal/error");
+      expect(diagnosticCatalog.get(diagnostic.code)).toBeDefined();
+      expect(diagnostic.span).toMatchObject({ sourceId: name, startLine: expect.any(Number), startColumn: expect.any(Number) });
+      expect(diagnostic.message).not.toMatch(/__forma_|\bt\d+\b/);
+    }
+  });
+}
 
 // Prelude syntax is validated during load, before check/run/declarations can
 // execute. Ordinary module bindings named `protocol` are not manifests.
