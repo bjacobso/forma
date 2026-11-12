@@ -9,12 +9,10 @@ const manifest = JSON.parse(await readFile(new URL("packages/forma/package.json"
 assert.equal(manifest.name, "@forma-language/forma");
 assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
 assert.deepEqual(Object.keys(manifest.exports).sort(), [
-  ".", "engine", "reader", "source", "session", "modules", "diagnostic", "formatter",
-  "analysis", "syntax", "editor-services", "authoring", "lsp", "artifact", "descriptor",
-  "preludes", "mechanics", "descriptor-codegen", "codegen", "http-api", "ontology", "rpc",
-  "sexpr", "expander", "evaluator", "vm", "builtins", "type", "core-expr", "env", "email",
-  "elm", "node", "host", "host/default-host", "host/editor", "host/ts-host", "host/types",
-  "host/json-abi", "editor", "editor/codemirror", "editor/react", "language-server",
+  ".", "engine", "reader", "modules", "diagnostic", "formatter",
+  "editor-services", "descriptor", "preludes", "mechanics", "http-api", "rpc",
+  "type", "email", "elm", "expander", "node", "host", "host/types",
+  "editor", "editor/codemirror", "editor/react", "language-server",
 ].map(key => key === "." ? key : `./${key}`).sort());
 const neutral = Object.keys(manifest.exports).filter(key => !["./node", "./language-server", "./editor/react", "./editor/codemirror"].includes(key));
 await build({
@@ -27,7 +25,7 @@ await build({
   platform: "browser", target: "es2022", write: false, logLevel: "silent",
   deps: { alwaysBundle: [/.*/] },
   plugins: [{ name: "browser-boundary", resolveId(id) {
-    assert(!/^(node:|react(?:\/|$)|react-dom(?:\/|$)|@codemirror\/|@lezer\/|vscode-)/.test(id), `runtime-neutral entry imports ${id}`);
+    assert(!/^(node:|react(?:\/|$)|react-dom(?:\/|$)|@codemirror\/|@lezer\/|@modelcontextprotocol\/|vscode-)/.test(id), `runtime-neutral entry imports ${id}`);
     return null;
   } }],
 });
