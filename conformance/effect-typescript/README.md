@@ -58,6 +58,7 @@ For each positive case the runner checks that:
 | `checker-parity-records` | RFC 0019 E1–E3: qualified constructors through local bindings and collection joins; copying optional fields, `Some`, `None`, and plain field values |
 | `stream-pipeline` | Stream construction, effectful mapping with concurrency, `take`, folds, `runForEach`, functions returning streams |
 | `operational-effects` | The shared operational-effects fixture (`../operational-effects`) |
+| `cluster-account` | A `cluster.lisp` entity: persisted, deduplicated commands, a guarded withdrawal, a forked query, and an unkeyed control that applies a retried deposit twice on `TestRunner` |
 | `edge-cases` | Regressions from adversarial testing: escaping, binder capture, prototype keys, shadowing, literal widening, literal and error matches, `provide` inside layer methods |
 | `elm-pure` | No-command app, pure init/update, nested let/if transitions, static view, mounting types |
 | `elm-counter` | `preludes/elm.lisp`, exhaustive update, pure Hiccup view, typed command recovery, headless Foldkit init/update/commands |
@@ -79,6 +80,11 @@ See [the prototype reference](../../docs/elm/reference.md).
 The `email.json` marker selects `generateEmailProgram` for the isolated email
 rule prototype and its `email-*` rejection cases, with the same checks. Its
 verdicts are also `not-generated`. See [Forma for email automation](../../docs/email.md).
+
+The `cluster.json` marker selects `generateClusterProgram` for the
+`cluster-account` entity and its `cluster-*` rejection cases, with the same
+checks and `not-generated` verdicts. See
+[Prelude-defined Cluster entities](../../docs/effect/cluster.md).
 
 ## Negative cases
 

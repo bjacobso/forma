@@ -107,11 +107,16 @@ export function schemaExpressionTs(schema: JsonValue | undefined, naming: Schema
 }
 
 function structSchema(fields: JsonValue | undefined, naming: SchemaNaming): string {
+  return `Schema.Struct(${structFieldsTs(fields, naming)})`;
+}
+
+/** Renders a Struct node's fields as the `Schema.Struct.Fields` object literal. */
+export function structFieldsTs(fields: JsonValue | undefined, naming: SchemaNaming): string {
   const entries = arrayItems(fields).flatMap((field) => {
     if (!isRecord(field) || typeof field["name"] !== "string") return [];
     return [`${propertyName(field["name"])}: ${schemaExpressionTs(field["schema"], naming)}`];
   });
-  return entries.length === 0 ? "Schema.Struct({})" : `Schema.Struct({ ${entries.join(", ")} })`;
+  return entries.length === 0 ? "{}" : `{ ${entries.join(", ")} }`;
 }
 
 function taggedUnionSchema(schema: Readonly<Record<string, JsonValue>>, naming: SchemaNaming): string {

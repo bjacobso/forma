@@ -1,0 +1,15 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "elaborate",
+      "severity": "error",
+      "code": "cluster/unkeyed-command",
+      "message": "A persisted command that updates state needs :dedupe-by. Without a primary key, Effect Cluster runs a retried request again and applies the update twice.",
+      "line": 8,
+      "column": 15,
+      "endLine": 8,
+      "endColumn": 25
+    }
+  ]
+}

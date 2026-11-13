@@ -122,7 +122,8 @@ The internal `emitFormTypeScript` generator (not a public subpath) evaluates the
 Symbols in its output name target bindings; strings and keyword map labels
 are escaped as TypeScript literals. `ts/ref` constructs a validated target
 reference. `ts/schema` lowers a Forma Type hole; `ts/schemas` lowers a list of
-schemas; `ts/children` recursively invokes child emitters. `ts/method` and
+schemas; `ts/fields` lowers a record type to `Schema.Struct.Fields` (a named
+record becomes `Name.fields`); `ts/children` recursively invokes child emitters. `ts/method` and
 `ts/arrow` describe method calls and arrow functions, and `ts/chain` composes
 child method expressions over a named base. Pure helpers and macros may be
 used inside emit hooks.

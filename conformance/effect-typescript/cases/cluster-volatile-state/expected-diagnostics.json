@@ -1,0 +1,15 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "elaborate",
+      "severity": "error",
+      "code": "cluster/volatile-state",
+      "message": "This entity keeps its state in memory, but Deposit is persisted. After passivation or a restart, a retried Deposit returns its stored reply while the state starts again from :initial.",
+      "line": 8,
+      "column": 15,
+      "endLine": 8,
+      "endColumn": 25
+    }
+  ]
+}

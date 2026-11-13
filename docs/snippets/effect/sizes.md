@@ -2,6 +2,7 @@
 | --- | ---: | ---: | ---: |
 | `builtin-contracts` | 12 | 18 | 1.50× |
 | `checker-parity-records` | 31 | 64 | 2.06× |
+| `cluster-account` | 21 | 56 | 2.67× |
 | `concurrent-workflow` | 95 | 120 | 1.26× |
 | `config-and-logging` | 46 | 38 | 0.83× |
 | `crud-users` | 139 | 158 | 1.14× |
@@ -20,4 +21,4 @@
 | `stream-pipeline` | 60 | 70 | 1.17× |
 | `surface-review` | 45 | 95 | 2.11× |
 | `typed-errors` | 59 | 76 | 1.29× |
-| **All cases** | **1148** | **1562** | **1.36×** |
+| **All cases** | **1169** | **1618** | **1.38×** |

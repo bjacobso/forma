@@ -12,7 +12,7 @@ import {
   type BuiltinFn,
   type KValue,
 } from "../evaluator/types.js";
-import { schemaExpressionTs } from "../mechanics/effect-schema.js";
+import { schemaExpressionTs, structFieldsTs } from "../mechanics/effect-schema.js";
 import { isRecord } from "../mechanics/types.js";
 import { mechanicsPackageableDeclarations } from "../mechanics/artifact.js";
 import { camelIdentifier, typeName } from "../mechanics/naming.js";
@@ -222,6 +222,16 @@ export function emitFormExpression(
       return value.map((v) =>
         isKSExpr(v) ? v : { _tag: "KSExpr", expr: nested(v) },
       );
+    }),
+    // Schema.Struct.Fields for a record type: inline records render their
+    // fields; a named record refers to its schema's `.fields`.
+    "ts/fields": pure((args) => {
+      const value = emissionSchema(args[0]!);
+      if (isRecord(value) && value["kind"] === "Struct")
+        return targetCode(structFieldsTs(value["fields"], { schemaConst: typeName }));
+      if (isRecord(value) && value["kind"] === "Ref" && typeof value["name"] === "string")
+        return targetCode(`${typeName(value["name"])}.fields`);
+      throw new Error("ts/fields expects a record type or the name of one");
     }),
     "ts/declaration": pure((args) =>
       isKSExpr(args[0]!) ? args[0]! : reference(typeName(String(args[0]))),

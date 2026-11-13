@@ -10,6 +10,7 @@ import { bootstrapElmPreludes, generateElmProgram } from "../packages/ts/dist/El
 import { bootstrapEmailPreludes, generateEmailProgram } from "../packages/ts/dist/Email.mjs";
 import { bootstrapHttpApiPreludes, generateHttpApiProgram } from "../packages/ts/dist/HttpApi.mjs";
 import { bootstrapRpcPreludes, generateRpcProgram } from "../packages/ts/dist/Rpc.mjs";
+import { bootstrapClusterPreludes, generateClusterProgram } from "../packages/ts/dist/Cluster.mjs";
 
 const ontology = bootstrapOntologyPreludes();
 const stacks = {
@@ -17,8 +18,9 @@ const stacks = {
   elm: bootstrapElmPreludes(), email: bootstrapEmailPreludes(),
   "http-api": bootstrapHttpApiPreludes(),
   rpc: bootstrapRpcPreludes(),
+  cluster: bootstrapClusterPreludes(),
 };
-const linkers = { elm: generateElmProgram, email: generateEmailProgram, "http-api": generateHttpApiProgram, rpc: generateRpcProgram };
+const linkers = { elm: generateElmProgram, email: generateEmailProgram, "http-api": generateHttpApiProgram, rpc: generateRpcProgram, cluster: generateClusterProgram };
 const parse = source => Effect.runSync(parseManyToSExpr(source));
 const syntax = source => JSON.parse(JSON.stringify(parse(source), (key, value) => key === "loc" ? undefined : value));
 let forms = 0, examples = 0;
