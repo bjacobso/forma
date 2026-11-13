@@ -33,12 +33,12 @@ function group(names: string, runtime: boolean, hm: boolean, effect: boolean, re
 }
 
 group("+ - * / min max mod abs floor ceil round < <= > >= map filter count first trim starts-with? ends-with? split", true, true, true);
-group("= != Some Option.Some Ok Result.Ok Err Result.Err str format keyword sym keyword? symbol? rest nth id fail meta meta/get type/base keyword/name", true, true, false,
+group("= != Some Option.Some Ok Result.Ok Err Result.Err str format keyword sym keyword? nil? symbol? rest nth id fail meta meta/get type/base keyword/name", true, true, false,
   "Kernel or hook builtin; Effect uses its own syntax/constructors or has no pure lowering yet.");
 group("reduce conj concat reverse sqrt quot", true, true, true);
 group("every? empty? keys vals dissoc", true, false, true,
   "Legacy runtime/Effect operation; no HM scheme yet (outside the six stage-1 contracts).");
-group("upper lower contains? list sort-by group-by flat-map some distinct into get get-in path assoc merge select-keys nil? string? number? boolean? list? map? fn? apply pipe __dictionary __map-get", true, false, false,
+group("upper lower contains? list sort-by group-by flat-map some distinct into get get-in path assoc merge select-keys string? number? boolean? list? map? fn? apply pipe __dictionary __map-get", true, false, false,
   "Unchecked runtime operation or internal lowering helper; no ordinary HM scheme or Effect builtin entry yet.");
 group("gensym sexpr-list? sexpr-vector? sexpr-items sexpr-sym-name", true, false, false,
   "Expansion-time syntax helpers, intentionally outside ordinary value checking and Effect lowering.");

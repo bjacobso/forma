@@ -80,3 +80,26 @@ describe("builtin contracts", () => {
     ]) expect(() => run(text, interpreter), text).toThrow();
   });
 });
+
+describe("file-module helper predicates", () => {
+  it("infers and executes the polymorphic nil? conformance input", async () => {
+    const text = readFileSync(new URL("../../../conformance/file-module-families/helper-predicates.lisp", import.meta.url), "utf8");
+    expect(await Effect.runPromise(Type.inferSourceStr(text))).toBe("List<Bool>");
+    for (const interpreter of [false, true]) expect(run(text, interpreter)).toEqual([true, false, false]);
+  });
+
+  it.each(['(nil?)', '(nil? 1 2)', '(+ (nil? 1) 1)'])("rejects an invalid nil? use: %s", async text => {
+    await expect(Effect.runPromise(Type.inferSourceStr(text))).rejects.toThrow();
+  });
+
+  it("records why some cannot soundly have a Bool result scheme", async () => {
+    for (const interpreter of [false, true]) {
+      expect(run('(some (fn [x] (= x 1)) [])', interpreter)).toBe(null);
+      expect(run('(some (fn [x] (= x 1)) [1])', interpreter)).toBe(true);
+      expect(run('(some (fn [x] x) ["found"])', interpreter)).toBe("found");
+    }
+    // A sound nullable result cannot be consumed by the unchanged library's
+    // Bool-only conditions. Giving some a Bool scheme would hide this mismatch.
+    await expect(Effect.runPromise(Type.inferSourceStr('(if nil [] [])'))).rejects.toThrow();
+  });
+});

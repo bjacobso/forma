@@ -108,6 +108,7 @@ export function builtinScheme(name: string): Scheme | undefined {
       return mono(fnType([TApp(tList, [tStr]), tStr], tStr));
     case "keyword?":
     case "symbol?":
+    case "nil?":
     case "is-nil":
     case "is-string":
     case "is-number":

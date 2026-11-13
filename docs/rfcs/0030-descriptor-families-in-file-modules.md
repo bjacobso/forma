@@ -264,15 +264,32 @@ vocabulary and makes a parent library's internals part of every call site's
 imports. Retaining reachable descriptors by identity gives lexical execution
 without granting the importer ordinary access to private bindings.
 
-## Implementation gate (phase 2)
+**Skip HM checking for hook-only helpers.** This would distinguish helpers used
+only by form hooks from ordinary module values. That is a separate decision
+about phase distinctions and is outside this RFC. The chosen direction is to
+supply sound ordinary HM schemes for required builtins, preserving the existing
+checking boundary.
+
+## Implementation gate (phase 3)
 
 The three engine paths have an initial implementation with neutral regression
-fixtures, but acceptance is blocked. The unchanged connectors library resolves
-and elaborates after those changes; `checkModuleGraph` then rejects its private
-`name-of` helper at `nil?`. `builtins/contracts.ts` explicitly records `nil?`,
-`some`, `flat-map`, and `get` as runtime operations without ordinary HM schemes.
-Supporting these helpers in plain `forma check` needs a separate decision about
-builtin type coverage or the checking boundary for compile-time helpers. The
-implementation stops at the brief's scope gate rather than introducing either
-policy implicitly. The requested final status “Accepted; implemented in this PR”
-must wait for that gate and the remaining test plan to pass.
+fixtures, but acceptance remains blocked. The unchanged connectors library now
+checks its `name-of` helper using the new polymorphic `nil?: a -> Bool` scheme.
+The next missing builtin is `some`. Its runtime implementation in
+`builtins/collections.ts` returns the first truthy callback result, or nil when
+no result matches (including an empty input). Consequently even a Bool callback
+does not justify the proposed `(a -> Bool) -> List a -> Bool` scheme. A sound
+nullable result cannot feed the unchanged library's Bool-only `if` conditions.
+Changing runtime behavior or the condition-checking boundary needs a separate
+decision; neither is introduced here. Regression tests pin this evidence.
+
+`same?` is the library's private definition, not a builtin. `keyword?` already
+has a polymorphic predicate scheme and `keyword/name` already returns String.
+Literal-key `get` calls lower to core `Get`; `infer-record.ts` infers an open
+record for an unconstrained receiver and uses its existing record/Map/Unknown
+rules. No new ordinary `get` scheme is required for these calls. `flat-map`
+already has authority analysis alongside `map`, but its ordinary HM scheme
+remains deferred at the stop gate.
+
+The final status “Accepted; implemented in this PR” must wait for this gate and
+the remaining test plan to pass. No stored expected output has been rewritten.
