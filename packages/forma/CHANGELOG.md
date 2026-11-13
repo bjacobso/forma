@@ -1,5 +1,23 @@
 # @forma-language/forma
 
+## 0.7.0
+
+### Minor Changes
+
+- c495919: **Experimental.** Add a prototype Effect Cluster prelude (`cluster.lisp`) and `@forma-language/forma/cluster`. `entity`, `command`, and `query` declare an entity's state, pure transitions, and delivery; `generateClusterProgram` checks each transition as an ordinary Effect function and emits native `Entity.make`, `Rpc.make`, and `Entity.toLayer` code for Effect 4.1.1. The prelude rejects persisted state-changing commands without a `:dedupe-by` key, keys that are not String or Int payload fields, persisted commands over in-memory state without `:accept-state-loss true`, and queries that update state. State is in memory only. Form emit hooks gain `ts/fields`, which renders a record type as `Schema.Struct.Fields`.
+  
+  The `/cluster` and `/effect-system` subpaths and `generateEffectSystem`'s `extensions` option are experimental; expect them to change in a minor release. Importing `forma:effect/rpc`, `/http-api` or `/cluster` is the preferred way to select a library, and the `extensions` option remains for single-source programs.
+- 78289fa: Select bundled Effect RPC, HTTP API, and Cluster libraries with lexical Forma imports. Check and generate multi-file Effect programs with real TypeScript imports between generated modules, and preserve author error tags across module boundaries. Deprecate the RPC generator's `schemasFrom` option in favor of file-module imports.
+  
+  The experimental `/modules` linker exposes `linkEffectModules` and `moduleOutputName`, preserves readable `.lisp` → `.ts` output paths, and accepts a host `outputPath` override. Generated Effect library modules use author names and readable import aliases for collisions.
+- 44272f7: **Experimental.** Add `@forma-language/forma/effect-system`. `generateEffectSystem` links RPC groups, HTTP APIs, and Cluster entities with ordinary Effect declarations into one checked native Effect module, and returns a graph of the program's services, operations, endpoints, RPCs, entities, and their relations. The RPC, HTTP API, and Cluster generators now share this linker; in their output, library imports now come after the `effect` import.
+  
+  The `/cluster` and `/effect-system` subpaths and `generateEffectSystem`'s `extensions` option are experimental; expect them to change in a minor release. Importing `forma:effect/rpc`, `/http-api` or `/cluster` is the preferred way to select a library, and the `extensions` option remains for single-source programs.
+
+### Patch Changes
+
+- ecb8fa8: Support Node.js 22.19 or later; the package previously declared `>=24` but uses no Node 24 API. CI now runs the engine, host, packaging, tarball and example checks on Node 22.19 too. Widen the optional `@modelcontextprotocol/sdk` peer from exactly `1.32.2` to `^1.32.2`, so consumers on a later 1.x patch or minor resolve it.
+
 ## 0.6.0
 
 ### Minor Changes
