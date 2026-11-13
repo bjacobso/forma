@@ -1,3 +1,4 @@
+import { moduleImportPath, type EffectModuleOutputOptions } from "./output-path.js";
 import { hasEffectLibraries, linkEffectLibraryModules, ordinaryEffectGraph } from "../effect-system/modules.js";
 import { diagnosticLocator } from "../diagnostic/locations.js";
 import type { PackageableDeclaration } from "../artifact/artifact.js";
@@ -29,7 +30,7 @@ export interface LinkedEffectProgram {
   readonly modules: readonly LinkedEffectModule[];
   readonly diagnostics: readonly Diagnostic[];
 }
-/** Flat, injective output names keep arbitrary virtual IDs out of filesystem paths. */
+/** @experimental Flat injective filenames for virtual IDs and legacy mechanics linking. */
 export function moduleOutputName(id: string): string {
   return `module_${[...new TextEncoder().encode(id)].map((b) => b.toString(16).padStart(2, "0")).join("")}.ts`;
 }
@@ -105,11 +106,13 @@ function moduleMechanicsDeclarationsUnlocated(graph: ModuleGraph): {
 function linkEffectModulesUnlocated(
   graph: ModuleGraph,
   declarations?: readonly PackageableDeclaration[],
+  options: EffectModuleOutputOptions = {},
 ): LinkedEffectProgram {
+  const outputPath = options.outputPath ?? moduleOutputName;
   if (hasEffectLibraries(graph)) {
     const checked = checkModuleGraph(ordinaryEffectGraph(graph));
-    if (!checked.ok) return { ok: false, entry: moduleOutputName(graph.entry), interfaces: checked.interfaces, declarations: [], modules: [], diagnostics: checked.diagnostics };
-    return linkEffectLibraryModules(graph, checked.environments);
+    if (!checked.ok) return { ok: false, entry: outputPath(graph.entry), interfaces: checked.interfaces, declarations: [], modules: [], diagnostics: checked.diagnostics };
+    return linkEffectLibraryModules(graph, checked.environments, options);
   }
   const projected = declarations
     ? { declarations, diagnostics: [] as readonly Diagnostic[] }
@@ -246,7 +249,7 @@ function linkEffectModulesUnlocated(
       ])) {
         const names = byOwner.get(owner);
         const path = JSON.stringify(
-          `./${moduleOutputName(owner).replace(/\.ts$/, ".js")}`,
+          moduleImportPath(outputPath(module.id), outputPath(owner)).replace(/\.ts$/, ".js"),
         );
         imports.push(
           names?.length
@@ -278,18 +281,18 @@ function linkEffectModulesUnlocated(
         .filter((b) => b.identity.moduleId !== module.id)
         .map(
           (b) =>
-            `export { ${[generatedBindingName(b), ...(b.constructors.length ? [`${typeName(b.symbol)}Constructors`] : [])].join(", ")} } from ${JSON.stringify(`./${moduleOutputName(b.identity.moduleId).replace(/\.ts$/, ".js")}`)};`,
+            `export { ${[generatedBindingName(b), ...(b.constructors.length ? [`${typeName(b.symbol)}Constructors`] : [])].join(", ")} } from ${JSON.stringify(moduleImportPath(outputPath(module.id), outputPath(b.identity.moduleId)).replace(/\.ts$/, ".js"))};`,
         );
       modules.push({
         moduleId: module.id,
-        fileName: moduleOutputName(module.id),
+        fileName: outputPath(module.id),
         code: [...imports, ...reexports, generated.code].join("\n"),
       });
     }
   }
   return {
     ok: !diagnostics.some((d) => d.severity === "error"),
-    entry: moduleOutputName(graph.entry),
+    entry: outputPath(graph.entry),
     interfaces,
     declarations: projected.declarations,
     modules,
@@ -302,6 +305,7 @@ export function moduleMechanicsDeclarations(...args: Parameters<typeof moduleMec
   return { ...result, diagnostics: result.diagnostics.map(diagnosticLocator(id => args[0].modules.find(module => module.id === id)?.source)) };
 }
 
+/** @experimental Link a checked Forma module graph to native Effect TypeScript modules. */
 export function linkEffectModules(...args: Parameters<typeof linkEffectModulesUnlocated>): ReturnType<typeof linkEffectModulesUnlocated> {
   const result = linkEffectModulesUnlocated(...args);
   return { ...result, diagnostics: result.diagnostics.map(diagnosticLocator(id => args[0].modules.find(module => module.id === id)?.source)) };

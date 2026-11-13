@@ -23,8 +23,8 @@ Read the files in this order:
    and RPC import `domain.lisp` and their `forma:effect/*` libraries explicitly.
 6. `generated/domain.ts`, `generated/http.ts`, and `generated/rpc.ts`: reproducible
    output, saved for inspection. Domain output owns the shared schemas; HTTP and
-   RPC import those exact values. The generator maps the linker’s injective flat
-   filenames to these three readable names and adjusts their ES import paths.
+   RPC import those exact values. The linker derives these readable
+   paths and their relative `.ts` imports directly from the source paths.
 7. `runtime.ts`: **hand-authored**, explicit native Effect Booking implementation,
    RPC registration, HTTP/RPC transport layers and Swagger. The native RPC handlers
    reuse the generated operations; both transports reach the same repository.

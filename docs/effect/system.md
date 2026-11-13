@@ -103,13 +103,16 @@ const result = generateEffectSystem(graph);
 
 Each source module emits once. Forma file imports become real ES imports of the
 owning generated module, so RPC and HTTP contracts share domain schema values.
-The existing `moduleOutputName` mapping encodes the module ID's UTF-8 bytes as
-`module_<hex>.ts`; ES imports use its `.js` counterpart. Resolved identities keep
-same-spelled declarations in different files distinct. Authored exports also have
-readable TypeScript aliases, including a library declaration's derived exports.
+The experimental `linkEffectModules` linker maps `.lisp` paths to `.ts`,
+preserving directories and using relative `.ts` imports between generated
+library modules. Its optional third argument accepts `outputPath(moduleId)` for
+hosts that choose different paths. `moduleOutputName` retains the
+flat mapping for virtual IDs and the legacy mechanics linker. Generated
+library modules use author names, with short numeric suffixes when imports
+collide. Injective binding identities remain in checking, declarations, and
+system graph metadata so distinct source declarations cannot be confused.
 The [HTTP/RPC example](https://github.com/bjacobso/forma/tree/main/examples/http-rpc)
-presents its three known outputs as `domain.ts`, `http.ts`, and `rpc.ts` by
-remapping these filenames and import paths in its generator.
+writes `domain.ts`, `http.ts`, and `rpc.ts` directly from the linker result.
 
 ## The system graph
 

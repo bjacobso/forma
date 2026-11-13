@@ -7,7 +7,8 @@ import { inferredModuleSignatures } from "../modules/signatures.js";
 import type { Scheme } from "../type/types.js";
 import { head } from "../surface/effect.js";
 import type { ModuleGraph, ResolvedModule } from "../modules/graph.js";
-import { moduleOutputName, generatedBindingName, type LinkedEffectProgram, type LinkedEffectModule } from "../modules/link.js";
+import { moduleOutputName, type LinkedEffectProgram, type LinkedEffectModule } from "../modules/link.js";
+import { moduleImportPath, type EffectModuleOutputOptions } from "../modules/output-path.js";
 import { effectLibraries, isEffectLibrary } from "./libraries.js";
 import { linkEffectSystem, type EffectExtension, type EffectSystemGraph } from "./link.js";
 
@@ -37,8 +38,11 @@ export function ordinaryEffectGraph(graph: ModuleGraph): ModuleGraph {
   }) };
 }
 
-/** Each module emits once. Imports use the existing flat, injective module output names. */
-export function linkEffectLibraryModules(graph: ModuleGraph, environments: ReadonlyMap<string, ReadonlyMap<string, Scheme>> = new Map()): LinkedEffectProgram & { readonly system: EffectSystemGraph } {
+/** Keep injective identities for graph checking and metadata. Only the emission
+ * projection uses module-local author names, with readable collision suffixes. */
+export function linkEffectLibraryModules(graph: ModuleGraph, environments: ReadonlyMap<string, ReadonlyMap<string, Scheme>> = new Map(), options: EffectModuleOutputOptions = {}): LinkedEffectProgram & { readonly system: EffectSystemGraph } {
+  const outputPath = options.outputPath ?? (id => id.endsWith(".lisp") && !id.includes(":") ? id.replace(/\.lisp$/, ".ts") : moduleOutputName(id));
+  const emittedNames = new Map<string, ReadonlyMap<string, string>>();
   const declarations: PackageableDeclaration[] = [];
   const diagnostics: Diagnostic[] = [];
   const modules: LinkedEffectModule[] = [];
@@ -74,19 +78,38 @@ export function linkEffectLibraryModules(graph: ModuleGraph, environments: Reado
     linked.system?.nodes.forEach(node => nodes.set(node.id, node));
     linked.system?.edges.forEach(edge => edges.set(JSON.stringify(edge), edge));
     completed.set(module.id, { declarations: linked.declarations, scope: authored.filter(e => !moduleExtensions(module).some(extension => extension.forms.includes(head(e) ?? ""))) });
+    const names = emissionNames(graph, module, linked.code);
+    const emitted = linkEffectSystem(module.source, moduleExtensions(module), { sourceId: module.id, namespace: "effect-system" }, {
+      authored: renameSymbols(authored, names), scope: renameSymbols(scope, names), dependencies: renameSymbols(dependencies, names),
+    });
+    diagnostics.push(...emitted.diagnostics);
+    if (!emitted.ok || emitted.code === undefined) break;
+    const generatedName = (name: string): string => {
+      for (const [symbol, readable] of names) {
+        for (const naming of [typeName, camelIdentifier]) {
+          const internal = naming(symbol);
+          if (name.startsWith(internal))
+            return naming(readable) + name.slice(internal.length);
+        }
+      }
+      return name;
+    };
+    const ownExports = [...linked.code.matchAll(/^export (?:const|class|type) ([\w$]+)/gm)].map(m => m[1]!);
+    emittedNames.set(module.id, new Map(ownExports.map(name => [name, generatedName(name)])));
     const imports: string[] = [];
-    // Generated dependency names are already resolved identities. This includes
-    // schema values referenced only by descriptor IR (not ordinary mechanics).
     for (const dependency of modules) {
       if (!ancestors.has(dependency.moduleId)) continue;
-      const exports = [...dependency.code.matchAll(/^export (?:const|class|type) ([\w$]+)/gm)].map(m => m[1]!);
-      const names = [...new Set(exports)].filter(name => {
+      const exports = emittedNames.get(dependency.moduleId)!;
+      const imported = [...exports].filter(([name]) => {
         const identifier = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         return new RegExp(`(?<![\\w$])${identifier}(?![\\w$])`).test(linked.code!);
+      }).map(([internal, exported]) => {
+        const local = generatedName(internal);
+        return exported === local ? exported : `${exported} as ${local}`;
       });
-      if (names.length || module.dependencies.includes(dependency.moduleId)) {
-        const path = JSON.stringify(`./${dependency.fileName.replace(/\.ts$/, ".js")}`);
-        imports.push(names.length ? `import { ${names.sort().join(", ")} } from ${path};` : `import ${path};`);
+      if (imported.length || module.dependencies.includes(dependency.moduleId)) {
+        const path = JSON.stringify(moduleImportPath(outputPath(module.id), dependency.fileName));
+        imports.push(imported.length ? `import { ${[...new Set(imported)].sort().join(", ")} } from ${path};` : `import ${path};`);
       }
     }
     const aliases = new Map<string, string>();
@@ -110,20 +133,64 @@ export function linkEffectLibraryModules(graph: ModuleGraph, environments: Reado
         }
       }
     }
-    const reexports = module.interface.exports.filter(binding => binding.identity.moduleId !== module.id && !isEffectLibrary(binding.identity.moduleId)).map(binding => {
-      const name = generatedBindingName(binding);
+    const reexports = module.interface.exports.filter(binding => binding.identity.moduleId !== module.id && !isEffectLibrary(binding.identity.moduleId)).flatMap(binding => {
+      const dependencyNames = emittedNames.get(binding.identity.moduleId);
+      const internal = ["type", "class", "error", "service", "layer", "declaration"].includes(binding.kind) ? typeName(binding.symbol) : camelIdentifier(binding.symbol);
       const publicName = ["type", "class", "error", "service", "layer", "declaration"].includes(binding.kind) ? typeName(binding.name) : camelIdentifier(binding.name);
-      return `export { ${name}, ${name} as ${publicName} } from ${JSON.stringify(`./${moduleOutputName(binding.identity.moduleId).replace(/\.ts$/, ".js")}`)};`;
+      return [...dependencyNames ?? []].filter(([name]) => name === internal || name.startsWith(`${internal}Constructors`) || binding.kind === "declaration" && name.startsWith(internal)).map(([name, exported]) => {
+        const alias = publicName + name.slice(internal.length);
+        return `export { ${exported === alias ? exported : `${exported} as ${alias}`} } from ${JSON.stringify(moduleImportPath(outputPath(module.id), outputPath(binding.identity.moduleId)))};`;
+      });
     });
-    const publicExports = [...aliases].filter(([internal, name]) => internal !== name)
-      .map(([internal, name]) => `export { ${internal} as ${name} };`);
-    modules.push({ moduleId: module.id, fileName: moduleOutputName(module.id), code: `${[...imports, ...reexports, linked.code.trimEnd(), ...publicExports].join("\n")}\n` });
+    const importNames = importedNames(emitted.code);
+    const publicExports = [...aliases].map(([internal, name]) => [generatedName(internal), name])
+      .filter(([internal, name]) => internal !== name && !importNames.has(name!)).map(([internal, name]) => `export { ${internal} as ${name} };`);
+    modules.push({ moduleId: module.id, fileName: outputPath(module.id), code: `${[...imports, ...reexports, emitted.code.trimEnd(), ...publicExports].join("\n")}\n` });
   }
   const locate = diagnosticLocator(id => graph.modules.find(m => m.id === id)?.source);
   const located = diagnostics.map(d => locate({ ...d, message: authorNames(d.message) }));
   return {
-    ok: !located.some(d => d.severity === "error"), entry: moduleOutputName(graph.entry),
+    ok: !located.some(d => d.severity === "error"), entry: outputPath(graph.entry),
     system: { nodes: [...nodes.values()], edges: [...edges.values()].filter(edge => nodes.has(edge.from) && nodes.has(edge.to)) },
     interfaces: graph.modules.map(m => m.interface), declarations, modules: located.some(d => d.severity === "error") ? [] : modules, diagnostics: located,
   };
+}
+
+/** Local declarations get first choice, then dependencies in graph order. */
+function emissionNames(graph: ModuleGraph, module: ResolvedModule, code: string): ReadonlyMap<string, string> {
+  const names = new Map<string, string>();
+  const used = importedNames(code);
+  for (const owner of [module, ...graph.modules.filter(m => m.id !== module.id && !isEffectLibrary(m.id))]) {
+    const exported = new Set(owner.interface.exports.map(binding => binding.symbol));
+    const bindings = [...owner.bindings.values()].sort((a, b) => Number(exported.has(b.symbol)) - Number(exported.has(a.symbol)));
+    for (const binding of bindings) {
+      if (names.has(binding.symbol)) continue;
+      const preferred = binding.identity.declaration;
+      let name = preferred, suffix = 2;
+      const naming = ["type", "class", "error", "service", "layer", "declaration"].includes(binding.kind) ? typeName : camelIdentifier;
+      while (used.has(naming(name))) name = `${preferred}${suffix++}`;
+      used.add(naming(name));
+      names.set(binding.symbol, name);
+    }
+  }
+  return names;
+}
+
+/** Project resolved syntax and IR, never source text or emitted TypeScript.
+ * Source locations retain object identity: mechanics uses it to assign ownership. */
+function renameSymbols<T>(value: T, names: ReadonlyMap<string, string>): T {
+  if (typeof value === "string") {
+    const dot = value.indexOf(".");
+    const symbol = dot < 0 ? value : value.slice(0, dot);
+    const name = names.get(symbol);
+    return (name ? name + value.slice(symbol.length) : value) as T;
+  }
+  if (Array.isArray(value)) return value.map(v => renameSymbols(v, names)) as T;
+  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, v]) =>
+    [key, ["loc", "span", "sourceId"].includes(key) ? v : renameSymbols(v, names)])) as T;
+  return value;
+}
+
+function importedNames(code: string): Set<string> {
+  return new Set([...code.matchAll(/^import \{ ([^}]+) \} from /gm)].flatMap(match => match[1]!.split(", ")));
 }

@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { resolveModuleGraph, sourceModuleResolver, linkEffectModules, moduleOutputName } from "@forma-language/forma/modules";
+import { resolveModuleGraph, sourceModuleResolver, linkEffectModules } from "@forma-language/forma/modules";
 
 const read = name => readFileSync(new URL(name, import.meta.url), "utf8");
 export function compile(domain = read("domain.lisp"), http = read("http.lisp"), rpc = read("rpc.lisp")) {
@@ -11,14 +11,7 @@ export function compile(domain = read("domain.lisp"), http = read("http.lisp"), 
     const result = linkEffectModules(graph);
     if (!result.ok) throw new Error(JSON.stringify(result.diagnostics, null, 2));
     for (const module of result.modules) {
-      let code = module.code;
-      // The general module linker uses injective flat output names for arbitrary
-      // virtual IDs. This example has three known files and presents their names.
-      for (const source of sources) code = code.replaceAll(
-        `./${moduleOutputName(source.id).replace(/\.ts$/, ".js")}`,
-        `./${source.id.replace(/\.lisp$/, ".ts")}`,
-      );
-      generated[module.moduleId.replace(/\.lisp$/, ".ts")] = code;
+      generated[module.fileName] = module.code;
     }
   }
   return generated;

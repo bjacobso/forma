@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 import { generateEffectSystem } from "../src/EffectSystem.js";
-import { checkModuleGraph, generatedBindingName, linkEffectModules, resolveModuleGraph, sourceModuleResolver } from "../src/Modules.js";
+import { checkModuleGraph, linkEffectModules, resolveModuleGraph, sourceModuleResolver } from "../src/Modules.js";
 
 const fixture = (name: string) => readFileSync(resolve(import.meta.dirname, "../../../conformance/effect-typescript/modules/library-imports", name), "utf8");
 const domain = { id: "domain.lisp", source: fixture("domain.lisp") };
@@ -17,14 +17,59 @@ describe("import-selected Effect libraries", () => {
     expect(linked.modules.filter(m => !m.moduleId.startsWith("forma:"))).toHaveLength(2);
     const code = linked.modules.find(m => m.moduleId === rpc.id)!.code;
     expect(code).toContain('from "effect/rpc"');
-    const binding = graph.modules.find(m => m.id === rpc.id)!.interface.exports.find(b => b.name === "Greetings")!;
-    expect(code).toContain(`export const ${generatedBindingName(binding)} =`);
-    expect(code).toMatch(/import \{ .*Greeting.* \} from "\.\/module_.*\.js";/);
+    expect(code).toContain("export const Greetings =");
+    expect(code).toContain('import { Greeting } from "./domain.ts";');
+    expect(code).not.toMatch(/__forma_|Forma[0-9a-f]{8}/);
     expect(code).not.toContain("Schema.Struct");
     const generated = generateEffectSystem(graph);
     expect(generated.diagnostics).toEqual([]);
     expect(generated.modules).toHaveLength(2);
     expect(generated.system!.edges.some(edge => edge.kind === "uses" && edge.to.startsWith("schema:Greeting"))).toBe(true);
+  });
+
+  test("preserves directories and supports host output paths", () => {
+    const entry = { ...rpc, id: "app/rpc.lisp", source: rpc.source.replace("./domain.lisp", "../model/domain.lisp") };
+    const graph = resolveModuleGraph(entry, sourceModuleResolver([{ ...domain, id: "model/domain.lisp" }]));
+    const linked = linkEffectModules(graph);
+    expect(linked.entry).toBe("app/rpc.ts");
+    expect(linked.modules.find(m => m.moduleId === entry.id)!.code).toContain('from "../model/domain.ts"');
+    const custom = linkEffectModules(graph, undefined, { outputPath: id => `generated/${id.replace(/\.lisp$/, ".mts")}` });
+    expect(custom.entry).toBe("generated/app/rpc.mts");
+    expect(custom.modules.find(m => m.moduleId === entry.id)!.code).toContain('from "../model/domain.mts"');
+    const hidden = linkEffectModules(graph, undefined, { outputPath: id => id === entry.id ? "rpc.ts" : ".domain.ts" });
+    expect(hidden.modules.find(m => m.moduleId === entry.id)!.code).toContain('from "./.domain.ts"');
+  });
+
+  test("renames imported collisions with short deterministic suffixes", () => {
+    const other = { id: "other.lisp", source: fixture("other.lisp") };
+    const entry = { id: "main.lisp", source: fixture("collision.lisp") };
+    const graph = resolveModuleGraph(entry, sourceModuleResolver([domain, other]));
+    const linked = linkEffectModules(graph);
+    expect(linked.diagnostics).toEqual([]);
+    const code = linked.modules.find(m => m.moduleId === entry.id)!.code;
+    expect(code).toContain('import { Greeting as Greeting2 } from "./domain.ts";');
+    expect(code).toContain('import { Greeting as Greeting3 } from "./other.ts";');
+    expect(code).toContain('const Greeting =');
+    expect(code).toContain('"payload": Greeting2, "success": Greeting3');
+    expect(linkEffectModules(graph).modules).toEqual(linked.modules);
+  });
+
+  test("keeps schema and function names that differ by case", () => {
+    const entry = { id: "main.lisp", source: '(import "forma:effect/rpc" []) (export Reserve reserve) (type Reserve Int) (: reserve (-> Int Int)) (define reserve [x] x)' };
+    const linked = linkEffectModules(resolveModuleGraph(entry, sourceModuleResolver([])));
+    expect(linked.diagnostics).toEqual([]);
+    expect(linked.modules[0]!.code).toContain('export const Reserve =');
+    expect(linked.modules[0]!.code).toContain('export const reserve =');
+    expect(linked.modules[0]!.code).not.toContain('reserve2');
+  });
+
+  test("renames a declaration that collides with a required library import", () => {
+    const entry = { id: "main.lisp", source: '(import "forma:effect/rpc" [rpc-group rpc]) (export Rpc) (type Rpc String) (rpc-group Greetings (rpc "Greet" :payload Rpc :success String))' };
+    const linked = linkEffectModules(resolveModuleGraph(entry, sourceModuleResolver([])));
+    expect(linked.diagnostics).toEqual([]);
+    expect(linked.modules[0]!.code).toContain('export const Rpc2 =');
+    expect(linked.modules[0]!.code).toContain('"payload": Rpc2');
+    expect(linked.modules[0]!.code).not.toContain("as Rpc }");
   });
 
   test.each([
@@ -45,7 +90,7 @@ describe("import-selected Effect libraries", () => {
     const graph = resolveModuleGraph({ id: "main.lisp", source: '(import "forma:effect/rpc" :as r) (export Greetings) (r/rpc-group Greetings (r/rpc "Greet" :payload String :success String))' }, sourceModuleResolver([]));
     const linked = linkEffectModules(graph);
     expect(linked.diagnostics).toEqual([]);
-    expect(linked.modules[0]!.code).toContain(" as Greetings }");
+    expect(linked.modules[0]!.code).toContain("export const Greetings =");
   });
 
   test("preserves author error tags across module boundaries", () => {
