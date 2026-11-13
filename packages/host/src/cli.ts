@@ -20,7 +20,7 @@ try {
       await (await import("./cli/mcp.js")).mcp(abi);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ERR_MODULE_NOT_FOUND" || !String(error).includes("'@modelcontextprotocol/sdk'")) throw error;
-      process.stderr.write("forma mcp needs @modelcontextprotocol/sdk. Install it: npm install @modelcontextprotocol/sdk@1.32.2\n");
+      process.stderr.write("forma mcp needs @modelcontextprotocol/sdk. Install it: npm install @modelcontextprotocol/sdk@^1.32.2\n");
       process.exitCode = 1;
     }
   }

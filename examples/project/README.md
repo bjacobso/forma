@@ -1,6 +1,6 @@
 # A standalone Forma project
 
-Use Node 24 and pnpm 10.20. Run `pnpm install` here, then
+Use Node 22.19 or later and pnpm 10.20. Run `pnpm install` here, then
 `sh check.sh`.
 To try unreleased changes, build and pack the package from the repository root
 instead:

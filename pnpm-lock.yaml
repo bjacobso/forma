@@ -258,7 +258,7 @@ importers:
         specifier: ^1.4.2
         version: 1.4.10
       '@modelcontextprotocol/sdk':
-        specifier: 1.32.2
+        specifier: ^1.32.2
         version: 1.32.2(zod@4.6.7)
       vscode-languageserver:
         specifier: ^9.0.1

@@ -7,6 +7,9 @@ module. It also returns the program's structure as a graph: services, layers,
 operations, schemas, errors, and each library's declarations, with the
 relations between them.
 
+**Experimental.** `/effect-system` and the `extensions` option are expected to
+change: libraries will be selected by importing `forma:effect/*` modules.
+
 Each library is an extension of one linker: a prelude plus hooks that check its
 declarations, emit native code, and add its graph nodes. `generateRpcProgram`,
 `generateHttpApiProgram`, and `generateClusterProgram` are that linker with one

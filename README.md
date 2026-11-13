@@ -304,7 +304,7 @@ it does not emit a placeholder program.
 
 ## Quick start
 
-Use Node.js 24. The public distribution is `@forma-language/forma` 0.6.0, with
+Use Node.js 22.19 or later. The public distribution is `@forma-language/forma` 0.6.0, with
 Effect as a required peer:
 
 ```sh
@@ -312,7 +312,7 @@ npm install @forma-language/forma effect
 ```
 
 This installs the language and runtime without editor, MCP or language-server
-libraries. For `forma mcp`, add `@modelcontextprotocol/sdk@1.32.2`. For
+libraries. For `forma mcp`, add `@modelcontextprotocol/sdk@^1.32.2`. For
 `forma-language-server`, add `vscode-languageserver@^9.0.1` and
 `vscode-languageserver-textdocument@^1.0.12`. Editor adapters use optional
 CodeMirror/Lezer peers; `/editor/react` also needs React and React DOM 19.

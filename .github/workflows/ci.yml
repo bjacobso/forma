@@ -65,3 +65,29 @@ jobs:
             ~/.config/.wrangler/logs/
           include-hidden-files: true
           retention-days: 7
+
+  node22:
+    # The repository develops on Node 24, but the published package supports
+    # Node 22.19 or later. Run the engine, host and consumer checks there too.
+    name: Package on Node 22.19
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+          cache: pnpm
+      - uses: ./.github/actions/install
+      # Host tests import the engine's built dist; pnpm check builds it via
+      # turbo in the main job, so build explicitly here.
+      - run: pnpm exec turbo run build --filter=@forma-language/forma
+      - run: pnpm --filter @formalang/ts test
+      - run: pnpm --filter @formalang/host test
+      - run: pnpm pack:check
+      - run: pnpm check:tarball
+      - run: pnpm check:examples

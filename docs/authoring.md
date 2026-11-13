@@ -17,7 +17,7 @@ and read the results. Forma is pre-alpha; command behavior and APIs may still ch
 
 ## Setup
 
-Use Node.js 24. Install the public distribution and its required Effect peer:
+Use Node.js 22.19 or later. Install the public distribution and its required Effect peer:
 
 ```sh
 npm install @forma-language/forma effect

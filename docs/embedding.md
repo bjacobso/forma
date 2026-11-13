@@ -79,8 +79,10 @@ Only configured names become host builtins. A call to an ungranted name fails
 checking with an unbound-symbol diagnostic. Any unexpected suspended call without
 a handler also fails with `host-effect/failed` instead of waiting indefinitely.
 A capability may supply the host's `typeScheme`; otherwise its parameters and
-result use the host's permissive `{ kind: "any" }` scheme, with its declared arity. Use an explicit scheme for stronger
-checks. Handlers must honor that scheme; returned JSON is not checked against it.
+result use the host's permissive `{ kind: "any" }` scheme, with its declared arity. A check then reports
+the call's result type as `Unknown` (`{"kind":"display","display":"Unknown"}`), and
+any argument is accepted. Use an explicit scheme, as in the example at the top of
+this page, for stronger checks. Handlers must honor that scheme; returned JSON is not checked against it.
 
 Handlers receive the existing plain-JSON value projection. Nil becomes `null`,
 lists and vectors become arrays, and maps become objects. Keywords keep their

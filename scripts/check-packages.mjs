@@ -30,9 +30,9 @@ try {
   const packed = JSON.parse(run("tar", ["-xOzf", archive, "package/package.json"]));
   assert.equal(packed.name, name);
   assert.equal(packed.version, JSON.parse(await readFile(join(cwd, "package.json"), "utf8")).version);
-  assert.equal(packed.engines.node, ">=24");
+  assert.equal(packed.engines.node, ">=22.19");
   assert.equal(packed.peerDependencies.effect, "^4.1.1");
-  assert.equal(packed.peerDependencies["@modelcontextprotocol/sdk"], "1.32.2");
+  assert.equal(packed.peerDependencies["@modelcontextprotocol/sdk"], "^1.32.2");
   assert(!packed.dependencies || Object.keys(packed.dependencies).length === 0);
   for (const dependency of Object.keys(packed.peerDependencies).filter(name => name !== "effect")) {
     assert.equal(packed.peerDependenciesMeta[dependency]?.optional, true, dependency);
