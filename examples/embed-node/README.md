@@ -1,6 +1,6 @@
 # Embed Forma in Node
 
-Use Node 24. Run `npm install` here, then `npm start` and
+Use Node 22.19 or later. Run `npm install` here, then `npm start` and
 `npm test`.
 To try unreleased changes, build and pack the package from the repository root
 instead:

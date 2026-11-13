@@ -50,7 +50,7 @@ try {
   assert.match(run("npx", ["--no-install", "forma", "test", "main-test.lisp"], consumer), /PASS tarball/);
   run("npx", ["--no-install", "forma", "describe", "main.lisp"], consumer);
   for (const [bin, args, name, range] of [
-    ["forma", ["mcp"], "@modelcontextprotocol/sdk", "1.32.2"],
+    ["forma", ["mcp"], "@modelcontextprotocol/sdk", "^1.32.2"],
     ["forma-language-server", ["--stdio"], "vscode-languageserver", "^9.0.1"],
   ]) {
     const result = spawnSync(join(consumer, "node_modules/.bin", bin), args, { cwd: consumer, encoding: "utf8", timeout: 30_000 });

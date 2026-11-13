@@ -12,10 +12,11 @@ import { parse, typecheck, evaluate, createDefaultLanguageHost } from "@forma-la
 ```
 
 Use explicit subpaths for advanced operations. `/node` and `/language-server`
-require Node 24 or later. `/editor` provides UI-free analysis; use
+are Node-only (22.19 or later). `/editor` provides UI-free analysis; use
 `/editor/codemirror` or `/editor/react` for UI adapters. The React adapter needs
 its optional peers installed separately.
-`/email` and `/elm` are experimental.
+`/email`, `/elm`, `/cluster` and `/effect-system` are experimental, as is
+`generateEffectSystem`'s `extensions` option; expect them to change in a minor release.
 
 Local installations provide `pnpm exec forma help` and
 `pnpm exec forma-language-server --stdio`. For global installation after
@@ -36,7 +37,7 @@ Forma and its required Effect peer. Tooling dependencies are optional peers:
 | `/editor` | None (UI-free analysis) |
 | `/editor/codemirror` | The CodeMirror and Lezer group below |
 | `/editor/react` | The CodeMirror and Lezer group, plus `react@^19.0.0` and `react-dom@^19.0.0` |
-| `forma mcp` | `@modelcontextprotocol/sdk@1.32.2` |
+| `forma mcp` | `@modelcontextprotocol/sdk@^1.32.2` |
 | `/language-server`, `forma-language-server` | `vscode-languageserver@^9.0.1` and `vscode-languageserver-textdocument@^1.0.12` |
 
 Install only the groups you use (quote ranges when needed by your shell):
@@ -47,7 +48,7 @@ npm install @codemirror/autocomplete@^6.18.6 @codemirror/commands@^6.8.1 @codemi
 # React adapter (also install the editor group above)
 npm install react@^19.0.0 react-dom@^19.0.0
 # MCP server
-npm install @modelcontextprotocol/sdk@1.32.2
+npm install @modelcontextprotocol/sdk@^1.32.2
 # Language server
 npm install vscode-languageserver@^9.0.1 vscode-languageserver-textdocument@^1.0.12
 ```

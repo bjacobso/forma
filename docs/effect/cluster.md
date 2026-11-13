@@ -7,7 +7,8 @@ expression. The cluster linker checks those transitions as ordinary Effect
 functions and emits native `Entity.make`, `Rpc.make`, and `Entity.toLayer`
 code. It adds no Cluster cases to the mechanics checker and no runtime helper.
 
-This is a prototype. State lives in memory only; see [Current limits](#current-limits).
+This is an experimental prototype, and `/cluster` may change in a minor release.
+State lives in memory only; see [Current limits](#current-limits).
 
 ## Declare an entity
 

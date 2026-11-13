@@ -281,7 +281,7 @@ pageClass: forma-index
 </div>
 <p class="fh-proof"><a href="https://worldvm.com">WorldVM's world language is a Forma prelude.</a></p>
 
-Install from npm (Node.js 24):
+Install from npm (Node.js 22.19 or later):
 
 ```sh
 npm install @forma-language/forma effect

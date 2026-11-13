@@ -5,12 +5,12 @@ in your project directory: paths and file imports are confined to that directory
 including symlink targets. It does not grant host capabilities to evaluated code.
 
 Install `@forma-language/forma`, its `effect` peer dependency and the optional
-`@modelcontextprotocol/sdk@1.32.2` peer in your project so the `forma`
+`@modelcontextprotocol/sdk@^1.32.2` peer in your project so the `forma`
 executable can start its MCP server (from a source checkout, use
 `node /absolute/path/to/forma/packages/host/dist/cli.mjs mcp` as the server command):
 
 ```sh
-npm install @forma-language/forma effect@4.1.1 @modelcontextprotocol/sdk@1.32.2
+npm install @forma-language/forma effect@4.1.1 @modelcontextprotocol/sdk@^1.32.2
 ```
 
 ## Setup
@@ -22,7 +22,7 @@ claude mcp add forma -- npx forma mcp
 ```
 
 For an installation independent of an existing local executable, the explicit
-package invocation is `npx --package @forma-language/forma --package effect --package @modelcontextprotocol/sdk@1.32.2 forma mcp`.
+package invocation is `npx --package @forma-language/forma --package effect --package @modelcontextprotocol/sdk@^1.32.2 forma mcp`.
 
 For Codex, add this to `~/.codex/config.toml` (replace the working directory):
 

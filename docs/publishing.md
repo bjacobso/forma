@@ -42,7 +42,7 @@ operations, and the default host. These are the retained public subpaths:
 | Use | Subpaths |
 | --- | --- |
 | Checking and source tools | `/engine`, `/reader`, `/modules`, `/diagnostic`, `/formatter`, `/editor-services`, `/analysis`, `/expander`, `/type` |
-| Vocabulary and generators | `/descriptor`, `/preludes`, `/mechanics`, `/http-api`, `/rpc`, `/email`, `/elm` |
+| Vocabulary and generators | `/descriptor`, `/preludes`, `/mechanics`, `/http-api`, `/rpc`, `/cluster`, `/effect-system`, `/email`, `/elm` |
 | Embedding | `/host`, `/host/types`, `/host/json-abi`, `/node` |
 | Editor and server adapters | `/editor`, `/editor/codemirror`, `/editor/react`, `/language-server` |
 
@@ -56,6 +56,9 @@ checking, `/host` for advanced host operations (including `TsLanguageHost`),
 `/host/json-abi` for the process ABI types and schema, and `/analysis` for the
 UI-free language-service workspace (`AnalysisWorkspace`).
 `/email` and `/elm` remain experimental; the website exercises both generators.
+`/cluster`, `/effect-system` and `generateEffectSystem`'s `extensions` option are
+experimental too: libraries are expected to be selected by importing
+`forma:effect/*` modules instead.
 
 WorldVM's required imports remain public, with these exact symbols (including
 its legacy mechanics consumer):
@@ -80,7 +83,7 @@ Forma and its required Effect peer. Tooling dependencies are optional peers:
 | `/editor` | None (UI-free analysis) |
 | `/editor/codemirror` | The CodeMirror and Lezer group below |
 | `/editor/react` | The CodeMirror and Lezer group, plus `react@^19.0.0` and `react-dom@^19.0.0` |
-| `forma mcp` | `@modelcontextprotocol/sdk@1.32.2` |
+| `forma mcp` | `@modelcontextprotocol/sdk@^1.32.2` |
 | `/language-server`, `forma-language-server` | `vscode-languageserver@^9.0.1` and `vscode-languageserver-textdocument@^1.0.12` |
 
 Install only the groups you use (quote ranges when needed by your shell):
@@ -91,7 +94,7 @@ npm install @codemirror/autocomplete@^6.18.6 @codemirror/commands@^6.8.1 @codemi
 # React adapter (also install the editor group above)
 npm install react@^19.0.0 react-dom@^19.0.0
 # MCP server
-npm install @modelcontextprotocol/sdk@1.32.2
+npm install @modelcontextprotocol/sdk@^1.32.2
 # Language server
 npm install vscode-languageserver@^9.0.1 vscode-languageserver-textdocument@^1.0.12
 ```

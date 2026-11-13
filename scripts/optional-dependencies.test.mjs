@@ -11,7 +11,7 @@ const optional = {
   "@codemirror/autocomplete": "^6.18.6", "@codemirror/commands": "^6.8.1",
   "@codemirror/lang-markdown": "^6.5.0", "@codemirror/language": "^6.11.0",
   "@codemirror/lint": "^6.8.5", "@codemirror/state": "^6.5.2", "@codemirror/view": "^6.36.8",
-  "@lezer/highlight": "^1.2.1", "@lezer/lr": "^1.4.2", "@modelcontextprotocol/sdk": "1.32.2",
+  "@lezer/highlight": "^1.2.1", "@lezer/lr": "^1.4.2", "@modelcontextprotocol/sdk": "^1.32.2",
   "vscode-languageserver": "^9.0.1", "vscode-languageserver-textdocument": "^1.0.12",
 };
 
@@ -59,7 +59,7 @@ test("lean distribution loads ordinary entries and explains missing bin dependen
       assert(result.stderr.includes(`npm install ${name}@${range}`), result.stderr);
       assert.equal(result.stdout, "");
     };
-    missing([join(library, "dist/cli.mjs"), "mcp"], "@modelcontextprotocol/sdk", "1.32.2");
+    missing([join(library, "dist/cli.mjs"), "mcp"], "@modelcontextprotocol/sdk", "^1.32.2");
     const server = join(library, "dist/forma-language-server.mjs");
     missing([server, "--stdio"], "vscode-languageserver", "^9.0.1");
     // Check each LSP peer independently: the server package's own transitive
