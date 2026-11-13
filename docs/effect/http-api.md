@@ -65,6 +65,9 @@ const routes = HttpApiBuilder.layer(Shop).pipe(
 const { handler, dispose } = HttpRouter.toWebHandler(routes);
 ```
 
+To emit an API in the same module as RPC groups and Cluster entities, use
+[`generateEffectSystem`](./system.md).
+
 ## Generate a TypeScript DSL
 
 ```ts

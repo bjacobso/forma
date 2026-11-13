@@ -7,6 +7,7 @@
 | `config-and-logging` | 46 | 38 | 0.83× |
 | `crud-users` | 139 | 158 | 1.14× |
 | `edge-cases` | 106 | 152 | 1.43× |
+| `effect-system-bank` | 25 | 65 | 2.60× |
 | `elm-counter` | 25 | 88 | 3.52× |
 | `elm-pure` | 7 | 33 | 4.71× |
 | `email-warmup` | 22 | 69 | 3.14× |
@@ -21,4 +22,4 @@
 | `stream-pipeline` | 60 | 70 | 1.17× |
 | `surface-review` | 45 | 95 | 2.11× |
 | `typed-errors` | 59 | 76 | 1.29× |
-| **All cases** | **1169** | **1618** | **1.38×** |
+| **All cases** | **1194** | **1683** | **1.41×** |

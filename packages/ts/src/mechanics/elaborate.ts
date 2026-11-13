@@ -56,13 +56,10 @@ export interface EffectProgramTypeScript extends EffectProgramElaboration {
   readonly operationNames?: readonly string[];
 }
 
-export function elaborateEffectProgram(
-  source: string,
-  options: EffectProgramOptions = {},
-): EffectProgramElaboration {
-  const sourceId = options.sourceId ?? "program.lisp";
+/** Line and column spans for offsets into `source`. */
+function sourceSpans(source: string, sourceId: string): (startOffset: number, endOffset: number) => EffectProgramSpan {
   const lines = lineStarts(source);
-  const locate = (startOffset: number, endOffset: number): EffectProgramSpan => {
+  return (startOffset, endOffset) => {
     const start = position(lines, startOffset);
     const end = position(lines, endOffset);
     return {
@@ -75,6 +72,14 @@ export function elaborateEffectProgram(
       endColumn: end.column,
     };
   };
+}
+
+export function elaborateEffectProgram(
+  source: string,
+  options: EffectProgramOptions = {},
+): EffectProgramElaboration {
+  const sourceId = options.sourceId ?? "program.lisp";
+  const locate = sourceSpans(source, sourceId);
 
   let parsed: ReturnType<typeof parse>;
   try {
@@ -111,8 +116,22 @@ export function elaborateEffectProgram(
     };
   }
 
+  return elaborateEffectForms(toSExprMany(redTree), source, options);
+}
+
+/**
+ * Project, check, and report already-read forms located in `source`. Prelude
+ * linkers call this with their own forms lowered to ordinary Effect forms, so
+ * every program shares one projection and checking path.
+ */
+export function elaborateEffectForms(
+  authored: readonly SExpr[],
+  source: string,
+  options: EffectProgramOptions = {},
+): EffectProgramElaboration {
+  const sourceId = options.sourceId ?? "program.lisp";
+  const locate = sourceSpans(source, sourceId);
   let exprs: readonly SExpr[];
-  const authored = toSExprMany(redTree);
   const surfaceDiagnostic = (error: unknown, expression?: SExpr): EffectProgramDiagnostic => {
     const loc = error instanceof Error && "loc" in error ? error.loc as SExpr["loc"] : expression?.loc;
     const code = error instanceof InferenceError && typeof error.details["code"] === "string" ? error.details["code"] : "mechanics/ontology-operation";

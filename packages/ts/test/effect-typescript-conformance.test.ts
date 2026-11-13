@@ -21,6 +21,7 @@ import { generateElmProgram } from "../src/Elm.js";
 import { generateClusterProgram } from "../src/Cluster.js";
 import { generateEmailProgram } from "../src/Email.js";
 import { generateHttpApiProgram, generateHttpApiBuilders } from "../src/HttpApi.js";
+import { generateEffectSystem } from "../src/EffectSystem.js";
 import { parse } from "../src/reader/parser.js";
 import { toSExprMany } from "../src/reader/to-sexpr.js";
 import { packageArtifact, validateDeclarations } from "../src/Artifact.js";
@@ -66,7 +67,10 @@ const isHttpApiCase = (item: ConformanceCase): boolean => existsSync(resolve(ite
 const isElmCase = (item: ConformanceCase): boolean => existsSync(resolve(item.dir, "elm.json"));
 const isEmailCase = (item: ConformanceCase): boolean => existsSync(resolve(item.dir, "email.json"));
 const isClusterCase = (item: ConformanceCase): boolean => existsSync(resolve(item.dir, "cluster.json"));
-const generate = (item: ConformanceCase) => isClusterCase(item)
+const isSystemCase = (item: ConformanceCase): boolean => existsSync(resolve(item.dir, "effect-system.json"));
+const generate = (item: ConformanceCase) => isSystemCase(item)
+  ? generateEffectSystem(item.source, {sourceId:sourceId(item)})
+  : isClusterCase(item)
   ? generateClusterProgram(item.source, {sourceId:sourceId(item)})
   : isElmCase(item)
   ? generateElmProgram(item.source, {sourceId:sourceId(item)})
@@ -88,7 +92,8 @@ interface DiagnosticRecord {
 }
 
 function diagnosticRecords(source: string, item: ConformanceCase): readonly DiagnosticRecord[] {
-  return (isClusterCase(item) ? generateClusterProgram(source, { sourceId: sourceId(item) })
+  return (isSystemCase(item) ? generateEffectSystem(source, { sourceId: sourceId(item) })
+    : isClusterCase(item) ? generateClusterProgram(source, { sourceId: sourceId(item) })
     : isElmCase(item) ? generateElmProgram(source, { sourceId: sourceId(item) })
     : isEmailCase(item) ? generateEmailProgram(source, { sourceId: sourceId(item) }) : Mechanics.elaborateEffectProgram(source, { sourceId: sourceId(item) })).diagnostics.map((diagnostic) => ({
     phase: diagnostic.phase ?? "check",
@@ -121,7 +126,7 @@ function typescriptVerdicts(): ReadonlyMap<string, TypeScriptVerdict> {
   const result = new Map<string, TypeScriptVerdict>();
   const files = new Map<string, string>();
   for (const item of negative) {
-    if (isElmCase(item) || isEmailCase(item) || isClusterCase(item)) { result.set(item.name, "not-generated"); continue; }
+    if (isElmCase(item) || isEmailCase(item) || isClusterCase(item) || isSystemCase(item)) { result.set(item.name, "not-generated"); continue; }
     let parsed: ReturnType<typeof parse>;
     try {
       parsed = parse(item.source);

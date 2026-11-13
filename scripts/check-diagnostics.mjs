@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url";
 import ts from "typescript";
 
 const root = resolve(import.meta.dirname, "..");
-const namespaces = new Set("abi artifact cluster descriptor edit edit-script elaborate email elm evaluation host-effect http http-api internal io lower mechanics module ontology parse read reader rpc session surface typecheck value-ref".split(" "));
+const namespaces = new Set("abi artifact cluster descriptor edit edit-script effect-system elaborate email elm evaluation host-effect http http-api internal io lower mechanics module ontology parse read reader rpc session surface typecheck value-ref".split(" "));
 
 function files(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap(entry => {

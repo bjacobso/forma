@@ -1,24 +1,20 @@
 /** Prelude-defined Effect Cluster entities targeting native Effect 4.
  * The prelude owns the vocabulary, delivery rules, and target templates. This
- * linker lowers each message's pure transition to an ordinary Effect function,
- * so the existing mechanics checker types it against the declared state,
- * payload, success, and errors. It adds no Cluster cases to mechanics and no
- * runtime helper: the output is Entity.make, Rpc.make, and Entity.toLayer.
+ * extension lowers each message's pure transition to an ordinary Effect
+ * function, so the existing mechanics checker types it against the declared
+ * state, payload, success, and errors. It adds no Cluster cases to mechanics
+ * and no runtime helper: the output is Entity.make, Rpc.make, and Entity.toLayer.
  */
 import type { PackageableDeclaration } from "./artifact/artifact.js";
 import type { Diagnostic } from "./diagnostic/diagnostic.js";
 import { bootstrapPreludes } from "./Preludes.js";
-import { elaborateProgram, sourceLocator, type DeclarationSyntax, type ElaboratedDeclaration } from "./descriptor/elaborate.js";
+import type { DeclarationSyntax, ElaboratedDeclaration } from "./descriptor/elaborate.js";
 import { emissionDatum, emitFormExpression, renderTypeScript } from "./descriptor/form-emitter.js";
-import { mechanicsPackageableDeclarations } from "./mechanics/artifact.js";
-import { checkMechanicsDeclarations } from "./mechanics/check.js";
-import { effectProgramStrayForms } from "./mechanics/elaborate.js";
-import { generateMechanicsEffectTypeScriptModule } from "./mechanics/effect-typescript.js";
+import { linkEffectSystem, type EffectExtension } from "./effect-system/link.js";
 import { typeName } from "./mechanics/naming.js";
 import { arrayItems, isRecord } from "./mechanics/types.js";
-import { parse, toSExprMany } from "./reader/index.js";
 import type { SExpr } from "./reader/types.js";
-import { head, list, name, normalizeEffectProgram, sym, vector } from "./surface/effect.js";
+import { head, list, name, sym, vector } from "./surface/effect.js";
 
 export const bootstrapClusterPreludes = () => bootstrapPreludes(["compiler.lisp", "cluster.lisp"]);
 
@@ -31,44 +27,16 @@ export interface ClusterProgramResult {
 
 /** Names the transition binds; payload fields may not shadow them. */
 const reservedFields = new Set(["state", "state-ref", "payload"]);
-/** Imports the emitted wiring needs alongside the mechanics module's own. */
-const targetImports = ["Effect", "Ref", "Schema", "Entity", "ClusterSchema", "Rpc"];
 
-/** Generate a module of schemas, checked transition functions, entities, and
- * their handler layers. Process wiring (runners, storage) stays native.
- */
-export function generateClusterProgram(source: string, options: { readonly sourceId?: string } = {}): ClusterProgramResult {
-  const sourceId = options.sourceId ?? "cluster.lisp";
-  const diagnostics: Diagnostic[] = [];
-  let declarations: readonly PackageableDeclaration[] = [];
-  const failed = () => diagnostics.some(d => d.severity === "error");
-  const result = (code?: string): ClusterProgramResult => ({
-    ok: !failed(), declarations, diagnostics, ...(code !== undefined && !failed() ? { code } : {}),
-  });
-  const span = sourceLocator(source, sourceId);
-  const locate = (loc: SExpr["loc"]) => {
-    const prefix = source.slice(0, loc.start);
-    return span({ ...loc, line: prefix.split("\n").length, col: loc.start - prefix.lastIndexOf("\n") });
-  };
-  const report = (at: SExpr, code: string, message: string) =>
-    diagnostics.push({ code: `cluster/${code}`, message, severity: "error", phase: "typecheck", span: locate(at.loc) });
-  try {
-    const parsed = parse(source);
-    for (const error of parsed.errors) diagnostics.push({
-      code: "cluster/parse", severity: "error", phase: "parse", message: error.message,
-      ...(error.loc ? { span: span(error.loc) } : {}),
-    });
-    if (failed()) return result();
-    const authored = toSExprMany(parsed.redTree);
-    const prelude = bootstrapClusterPreludes();
-    const projected = elaborateProgram(source, { prelude, sourceId });
-    diagnostics.push(...projected.diagnostics);
-    if (failed()) return result();
-    for (const e of authored) if (["command", "query"].includes(head(e) ?? ""))
-      report(e, "top-level", "Declare commands and queries inside an entity.");
-    const entities = projected.declarations.filter(d => d.formName === "entity");
-    const entityStarts = new Set(entities.map(d => d.span.startOffset));
-
+/** Entities emit Entity.make and a toLayer handler layer over checked transitions. */
+export const clusterExtension: EffectExtension = {
+  namespace: "cluster",
+  prelude: "cluster.lisp",
+  forms: ["entity", "command", "query"],
+  imports: { "effect/cluster": ["ClusterSchema", "Entity"], "effect/rpc": ["Rpc"] },
+  prepare: ({ declarations, authored, locate, report }) => {
+    for (const d of declarations) if (d.formName !== "entity")
+      report(d.span, "top-level", "Declare commands and queries inside an entity.");
     // Named payload records resolve through the author's own type forms.
     const types = new Map(authored.flatMap(e => head(e) === "type" && e._tag === "List" && name(e.items[1])
       ? [[name(e.items[1])!, e.items[2]!] as const] : []));
@@ -82,61 +50,52 @@ export function generateClusterProgram(source: string, options: { readonly sourc
       if (n === "Brand" && t?._tag === "List") return keyType(t.items[1], seen);
       return n !== undefined && types.has(n) && !seen.has(n) && keyType(types.get(n), new Set([...seen, n]));
     };
-
-    const lowered: SExpr[] = [];
-    for (const entity of entities) lowered.push(...lowerEntity(entity, { report, recordFields, keyType }));
-    if (failed()) return result();
-
-    const program = [...authored.filter(e => !entityStarts.has(e.loc.start)), ...lowered];
-    const normalized = normalizeEffectProgram(program);
-    for (const { expr, message } of effectProgramStrayForms(normalized)) report(expr, "top-level-form", message);
-    if (failed()) return result();
-    const issues = (ds: readonly { code: string; message: string; severity?: "error" | "warning"; span?: { startOffset: number; endOffset: number } }[]) => {
-      for (const d of ds) diagnostics.push({
-        code: d.code, message: d.message, severity: d.severity ?? "error", phase: "typecheck",
-        ...(d.span ? { span: locate({ start: d.span.startOffset, end: d.span.endOffset, line: 1, col: 1 }) } : {}),
-      });
+    const at = (e: SExpr, code: string, message: string) => report(locate(e), code, message);
+    return declarations.filter(d => d.formName === "entity")
+      .flatMap(entity => lowerEntity(entity, { report: at, recordFields, keyType }));
+  },
+  emit: (d, { prelude }) => {
+    if (d.formName !== "entity") return [];
+    const exported = typeName(String((d.payload as Record<string, unknown>)["name"]));
+    const emitted = emitFormExpression(prelude.descriptions.get("entity")!, emissionDatum(d.payload), prelude.descriptions.list());
+    const part = (key: string) => {
+      const pair = emitted._tag === "Map" ? emitted.pairs.find(([k]) => name(k) === key) : undefined;
+      if (!pair) throw new Error(`The entity emitter returned no ${key}`);
+      return renderTypeScript(pair[1]);
     };
-    const mechanics = mechanicsPackageableDeclarations(normalized, sourceId, true);
-    if (!mechanics.ok) { issues(mechanics.diagnostics); return result(); }
-    const checked = checkMechanicsDeclarations(mechanics.declarations);
-    issues(checked.diagnostics);
-    declarations = [...mechanics.declarations, ...projected.declarations];
-    if (failed()) return result();
-
-    const module = generateMechanicsEffectTypeScriptModule(mechanics.declarations, { check: checked.info }).code;
-    const names = new Set([...module.matchAll(/^export (?:const|class|type) ([\w$]+)/gm)].map(m => m[1]!));
-    const chunks: string[] = [];
-    for (const entity of entities) {
-      const exported = typeName(String((entity.payload as Record<string, unknown>)["name"]));
-      const nameNode = entity.syntax.holes["name"]?.[0]?.expression ?? entity.authored;
-      for (const n of [exported, `${exported}Live`]) {
-        if (names.has(n) || targetImports.includes(n)) report(nameNode, "name-collision", `Generated name ${n} is already in use.`);
-        names.add(n);
-      }
-      const emitted = emitFormExpression(prelude.descriptions.get("entity")!, emissionDatum(entity.payload), prelude.descriptions.list());
-      const part = (key: string) => {
-        const pair = emitted._tag === "Map" ? emitted.pairs.find(([k]) => name(k) === key) : undefined;
-        if (!pair) throw new Error(`The entity emitter returned no ${key}`);
-        return renderTypeScript(pair[1]);
-      };
-      chunks.push(`export const ${exported} = ${part(":entity")};\n\nexport const ${exported}Live = ${part(":layer")};`);
+    return [{ name: exported, code: part(":entity") }, { name: `${exported}Live`, code: part(":layer") }];
+  },
+  graph: (d, _context, add) => {
+    if (d.formName !== "entity" || !isRecord(d.payload)) return;
+    const entity = String(d.payload["name"]);
+    const id = add.node("entity", entity, d.span, {
+      storage: String(d.payload["storage"]),
+      ...(typeof d.payload["max-idle"] === "string" ? { maxIdle: d.payload["max-idle"] } : {}),
+    });
+    add.edge(id, `schema:${String(d.payload["state-type"])}`, "state");
+    for (const m of arrayItems(d.payload["messages"]).filter(isRecord)) {
+      const message = add.node("message", `${entity}/${String(m["name"])}`, undefined, {
+        kind: m["kind"] === "ClusterQuery" ? "query" : "command",
+        delivery: typeof m["delivery"] === "string" ? m["delivery"] : "volatile",
+        ...(typeof m["dedupe-by"] === "string" ? { dedupeBy: m["dedupe-by"] } : {}),
+      });
+      add.edge(id, message, "contains");
+      add.edge(message, `operation:${String(m["handler"])}`, "implemented-by");
+      add.uses(message, m["payload"]);
+      add.uses(message, m["success"]);
+      add.uses(message, m["error"], "raises");
     }
-    if (failed()) return result();
-    const target = chunks.join("\n\n");
-    // Merge the names the wiring uses into the mechanics module's effect import.
-    const effectImport = /^import \{ ([^}]*) \} from "effect";$/m;
-    const present = module.match(effectImport)?.[1]?.split(", ") ?? [];
-    const needed = ["Effect", "Ref", "Schema"].filter(n => present.includes(n) || target.includes(`${n}.`));
-    const merged = `import { ${[...new Set([...present, ...needed])].sort().join(", ")} } from "effect";`;
-    const cluster = ["ClusterSchema", "Entity"].filter(n => target.includes(`${n}.`));
-    const header = [merged, `import { ${cluster.join(", ")} } from "effect/cluster";`, 'import { Rpc } from "effect/rpc";'].join("\n");
-    const body = effectImport.test(module) ? module.replace(effectImport, header) : `${header}\n${module}`;
-    return result(`${body.trimEnd()}\n\n${target}\n`);
-  } catch (error) {
-    diagnostics.push({ code: "cluster/emit", severity: "error", phase: "typecheck", message: String(error) });
-    return result();
-  }
+  },
+};
+
+/** Generate a module of schemas, checked transition functions, entities, and
+ * their handler layers. Process wiring (runners, storage) stays native.
+ */
+export function generateClusterProgram(source: string, options: { readonly sourceId?: string } = {}): ClusterProgramResult {
+  const { system: _, ...result } = linkEffectSystem(source, [clusterExtension], {
+    sourceId: options.sourceId ?? "cluster.lisp", namespace: "cluster",
+  });
+  return result;
 }
 
 interface LowerContext {

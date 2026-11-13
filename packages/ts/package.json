@@ -121,6 +121,10 @@
       "types": "./dist/Cluster.d.mts",
       "import": "./dist/Cluster.mjs"
     },
+    "./effect-system": {
+      "types": "./dist/EffectSystem.d.mts",
+      "import": "./dist/EffectSystem.mjs"
+    },
     "./descriptor": {
       "types": "./dist/Descriptor.d.mts",
       "import": "./dist/Descriptor.mjs"
