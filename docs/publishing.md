@@ -1,14 +1,13 @@
 # Publishing Forma
 
-`@forma-language/forma` **0.6.0** is the next release, prepared but not yet
-published. The canonical repository is
+`@forma-language/forma` **0.6.0** is the current release on npm. The canonical repository is
 [github.com/bjacobso/forma](https://github.com/bjacobso/forma).
 The engine, host, editor and language-server workspaces remain private
 `@formalang/*` implementation packages.
 
 ## Installing from main
 
-Until publication, consumers can pack a clean checkout of `main`. Use Node 24
+To try unreleased changes, consumers can pack a clean checkout of `main`. Use Node 24
 and pnpm 10.20.0. Build before packing; source archives do not contain `dist`.
 
 ```sh

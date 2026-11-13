@@ -101,8 +101,7 @@ media type is `application/vnd.forma.ir+json`.
 ## Compatibility follows publication
 
 Forma is pre-alpha. The single public distribution, `@forma-language/forma`,
-is prepared but not yet published to npm. Use a source checkout or a tarball
-packed from `main`; see [Publishing](/publishing) and
+is published to npm; see [Publishing](/publishing) and
 [RFC 0025](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0025-single-npm-distribution.md).
 There is no compatibility promise before 1.0; APIs, package boundaries, and
 wire contracts may change, with migration notes accompanying releases.

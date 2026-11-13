@@ -1,8 +1,9 @@
 # Embed Forma in Node
 
-Use Node 24. After publication, run `npm install` here, then `npm start` and
-`npm test`. `@forma-language/forma` is not yet published. From the repository
-root, build and pack it locally instead:
+Use Node 24. Run `npm install` here, then `npm start` and
+`npm test`.
+To try unreleased changes, build and pack the package from the repository root
+instead:
 
 ```sh
 pnpm exec turbo run build --filter=@forma-language/forma

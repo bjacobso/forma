@@ -12,8 +12,8 @@
 
 `pnpm check:examples` installs the packed `@forma-language/forma` tarball offline
 into temporary copies of `embed-node` and `project`, then runs their tests.
-CI runs this after `pnpm pack:check`. The public package is not yet published;
-see each example for a local tarball installation.
+CI runs this after `pnpm pack:check`. Each example also shows a local tarball
+installation for trying unreleased changes.
 
 ## Source corpus
 

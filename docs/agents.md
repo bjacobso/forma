@@ -1,6 +1,6 @@
 # Forma
 
-> Forma is a pre-alpha programmable type system for Lisp: a typed, homoiconic Lisp whose preludes define typed forms for domain-specific languages and portable artifacts. The public package `@forma-language/forma` is not yet published; after publication install with `npm install @forma-language/forma effect`, or try the browser playground at https://forma-lang.com/playground.
+> Forma is a pre-alpha programmable type system for Lisp: a typed, homoiconic Lisp whose preludes define typed forms for domain-specific languages and portable artifacts. Install the public package with `npm install @forma-language/forma effect`, or try the browser playground at https://forma-lang.com/playground.
 
 Forma source files use `.lisp`; project metadata uses `forma.json` and `forma.lock`.
 

@@ -1,8 +1,9 @@
 # A standalone Forma project
 
-Use Node 24 and pnpm 10.20. After publication, run `pnpm install` here, then
-`sh check.sh`. `@forma-language/forma` is not yet published. From the repository
-root, build and pack it locally instead:
+Use Node 24 and pnpm 10.20. Run `pnpm install` here, then
+`sh check.sh`.
+To try unreleased changes, build and pack the package from the repository root
+instead:
 
 ```sh
 pnpm exec turbo run build --filter=@forma-language/forma
