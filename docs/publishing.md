@@ -57,8 +57,8 @@ checking, `/host` for advanced host operations (including `TsLanguageHost`),
 UI-free language-service workspace (`AnalysisWorkspace`).
 `/email` and `/elm` remain experimental; the website exercises both generators.
 `/cluster`, `/effect-system` and `generateEffectSystem`'s `extensions` option are
-experimental too: libraries are expected to be selected by importing
-`forma:effect/*` modules instead.
+experimental too. Prefer selecting libraries by importing `forma:effect/*`
+modules.
 
 WorldVM's required imports remain public, with these exact symbols (including
 its legacy mechanics consumer):
