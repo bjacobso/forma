@@ -304,7 +304,7 @@ it does not emit a placeholder program.
 
 ## Quick start
 
-Use Node.js 22.19 or later. The public distribution is `@forma-language/forma` 0.6.0, with
+Use Node.js 22.19 or later. The public distribution is `@forma-language/forma` 0.7.0, with
 Effect as a required peer:
 
 ```sh

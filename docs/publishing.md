@@ -1,6 +1,6 @@
 # Publishing Forma
 
-`@forma-language/forma` **0.6.0** is the current release on npm. The canonical repository is
+`@forma-language/forma` **0.7.0** is the current release on npm. The canonical repository is
 [github.com/bjacobso/forma](https://github.com/bjacobso/forma).
 The engine, host, editor and language-server workspaces remain private
 `@formalang/*` implementation packages.
@@ -20,7 +20,7 @@ cd ..
 mkdir forma-consumer
 cd forma-consumer
 npm init -y
-npm install ../forma/forma-language-forma-0.6.0.tgz effect@4.1.1
+npm install ../forma/forma-language-forma-0.7.0.tgz effect@4.1.1
 printf '(+ 20 22)\n' > main.lisp
 npx forma check main.lisp
 npx forma run main.lisp
