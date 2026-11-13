@@ -105,6 +105,9 @@ export const AccountLive = Account.toLayer(
 );
 ```
 
+To declare entities alongside RPC groups and HTTP APIs in one module, use
+[`generateEffectSystem`](./system.md).
+
 The emitted code is a single line per declaration; it is shown formatted here.
 Payloads are emitted as `Schema.Struct.Fields` because `Rpc.make` accepts
 `primaryKey` only with a fields record.

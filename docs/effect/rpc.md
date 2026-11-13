@@ -61,6 +61,9 @@ needs those domain declarations for checking. The caller must provide a module
 exporting the corresponding generated schema names; TypeScript checks that module
 boundary. This option is not Forma file-module import resolution.
 
+To emit RPC groups in the same module as HTTP APIs and Cluster entities, use
+[`generateEffectSystem`](./system.md).
+
 ## Implement and serve with native Effect
 
 Handlers retain Effect's inferred payload, success, error and service types:

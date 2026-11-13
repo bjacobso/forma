@@ -16,6 +16,8 @@
 - Native unary RPC/group generation through the [RPC prelude](./effect/rpc.md).
 - Prototype Effect Cluster entities with in-memory state and checked delivery
   rules through the [cluster prelude](./effect/cluster.md).
+- One linker for the RPC, HTTP API, and Cluster preludes, emitting one module
+  and a [system graph](./effect/system.md) from a mixed program.
 
 ## Trust work in progress
 

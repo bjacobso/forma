@@ -71,6 +71,10 @@
       "types": "./dist/cluster.d.mts",
       "import": "./dist/cluster.mjs"
     },
+    "./effect-system": {
+      "types": "./dist/effect-system.d.mts",
+      "import": "./dist/effect-system.mjs"
+    },
     "./descriptor": {
       "types": "./dist/descriptor.d.mts",
       "import": "./dist/descriptor.mjs"

@@ -59,6 +59,7 @@ For each positive case the runner checks that:
 | `stream-pipeline` | Stream construction, effectful mapping with concurrency, `take`, folds, `runForEach`, functions returning streams |
 | `operational-effects` | The shared operational-effects fixture (`../operational-effects`) |
 | `cluster-account` | A `cluster.lisp` entity: persisted, deduplicated commands, a guarded withdrawal, a forked query, and an unkeyed control that applies a retried deposit twice on `TestRunner` |
+| `effect-system-bank` | One domain served by an RPC group, an HTTP API, and a Cluster entity in one module; the harness calls each through native Effect with one `Ledger` implementation |
 | `edge-cases` | Regressions from adversarial testing: escaping, binder capture, prototype keys, shadowing, literal widening, literal and error matches, `provide` inside layer methods |
 | `elm-pure` | No-command app, pure init/update, nested let/if transitions, static view, mounting types |
 | `elm-counter` | `preludes/elm.lisp`, exhaustive update, pure Hiccup view, typed command recovery, headless Foldkit init/update/commands |
@@ -85,6 +86,10 @@ The `cluster.json` marker selects `generateClusterProgram` for the
 `cluster-account` entity and its `cluster-*` rejection cases, with the same
 checks and `not-generated` verdicts. See
 [Prelude-defined Cluster entities](../../docs/effect/cluster.md).
+
+The `effect-system.json` marker selects `generateEffectSystem`, which links
+the RPC, HTTP API, and Cluster preludes into one module. See
+[One Effect system](../../docs/effect/system.md).
 
 ## Negative cases
 
